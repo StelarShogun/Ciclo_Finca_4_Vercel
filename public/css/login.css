@@ -1,0 +1,315 @@
+.auth-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--background-main) 0%, #e8f5e9 100%);
+}
+
+.auth-form {
+    display: none;
+    width: 100%;
+    max-width: 400px;
+    animation: slideInUp 0.4s ease-out;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideOutDown {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}
+
+.auth-form .formulario-card {
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: 1px solid var(--sidebar-border-strong);
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-form .formulario-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
+}
+
+/* Cabecera de auth */
+.auth-form .formulario-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.auth-form .formulario-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.3rem 0;
+}
+
+.auth-form .formulario-header p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.auth-switch p {
+    margin: 0 0 0.3rem 0;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.auth-link {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+}
+
+.auth-link:hover {
+    color: var(--color-primary-dark);
+}
+
+.btn.full-width {
+    width: 100%;
+    justify-content: center;
+}
+
+#loginForm .formulario-body {
+    gap: 1.25rem;
+}
+
+#loginForm .form-group {
+    margin-bottom: 0;
+}
+
+.auth-form .form-group input:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(46, 125, 50, 0.12);
+}
+
+.auth-logo {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.auth-logo img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--color-primary);
+    padding: 3px;
+    background: white;
+}
+
+.auth-form .btn.loading {
+    background: var(--color-primary-dark);
+}
+
+.auth-form .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
+}
+
+@media (max-width: 768px) {
+    .auth-container {
+        padding: 0.75rem;
+    }
+    
+    .auth-form .formulario-card {
+        padding: 1.25rem 1rem;
+    }
+    
+    .auth-form .formulario-header h1 {
+        font-size: 1.35rem;
+    }
+    
+    .auth-switch {
+        margin-top: 1.25rem;
+        padding-top: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 0.5rem;
+    }
+    
+    .auth-form .formulario-card {
+        padding: 1rem 0.75rem;
+        border-radius: 6px;
+    }
+    
+    .auth-form .formulario-header h1 {
+        font-size: 1.25rem;
+    }
+}
+.auth-form {
+    transition: all 0.2s ease-in-out;
+}
+
+.auth-form:not(.active) {
+    animation: slideOutDown 0.2s ease-in-out forwards;
+}
+
+#registroForm.auth-form {
+    max-width: 500px; 
+}
+
+#registroForm .formulario-card {
+    padding: 1.5rem;
+}
+
+#registroForm .form-row {
+    gap: 0.75rem;
+}
+
+#registroForm .formulario-body {
+    gap: 1.25rem;
+}
+
+#registroForm .form-group input,
+#registroForm .form-group select {
+    padding: 0.6rem;
+    font-size: 0.85rem;
+}
+
+#registroForm .form-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+
+#registroForm .form-actions {
+    margin-top: 1.5rem;
+    gap: 0.75rem;
+}
+
+#registroForm .btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+    #registroForm.auth-form {
+        max-width: 100%;
+    }
+    
+    #registroForm .formulario-card {
+        padding: 1.25rem 1rem;
+    }
+    
+    #registroForm .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    #registroForm .form-row .form-group {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #registroForm .formulario-card {
+        padding: 1rem 0.75rem;
+    }
+    
+    #registroForm .form-actions {
+        margin-top: 1.25rem;
+    }
+}
+
+.auth-form .form-group {
+    gap: 0.3rem;
+}
+
+.auth-form .feedback-message {
+    padding: 0.6rem;
+    margin-bottom: 1rem;
+    font-size: 0.75rem;
+}
+
+.auth-form .info-section {
+    padding: 0.8rem;
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.auth-form .btn.loading::after {
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+}
+
+/* Estilos para la alerta de acceso restringido */
+.alert {
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.alert-info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #b6d4da;
+}
+
+.alert i {
+    margin-right: 0.5rem;
+}
+
+.alert strong {
+    font-weight: 600;
+}
+
+/* Ajustes adicionales para el header del formulario */
+.formulario-header .alert {
+    text-align: left;
+    margin-top: 0.75rem;
+}
+
+/* Estilo para mensajes de error en login */
+.feedback-message.error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}

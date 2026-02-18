@@ -1,0 +1,220 @@
+/* ===== ESTADOS DE CARGA Y INDICADORES VISUALES ===== */
+
+/* Botones con estado de carga */
+.btn.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.btn.loading i.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* Botones de acción con estado de carga */
+.action-btn.action-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+    transform: scale(0.95);
+    transition: all 0.3s ease;
+}
+
+.action-btn.action-loading i.fa-spinner {
+    animation: spin 1s linear infinite;
+    color: var(--color-primary);
+}
+
+/* Animación de rotación */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Estados de carga en formularios */
+.form-loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.form-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.form-loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--color-primary);
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 11;
+}
+
+/* Indicadores de progreso sutiles */
+.progress-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+    z-index: 9999;
+    transform: translateX(-100%);
+    animation: progressSlide 2s ease-in-out infinite;
+}
+
+@keyframes progressSlide {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(0%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Estados de hover mejorados */
+.action-btn:hover:not(.action-loading) {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+.action-btn:active:not(.action-loading) {
+    transform: scale(0.95);
+}
+
+/* Feedback visual para acciones exitosas */
+.action-success {
+    animation: successPulse 0.6s ease-in-out;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); background-color: var(--color-success); }
+    100% { transform: scale(1); }
+}
+
+/* Feedback visual para acciones de error */
+.action-error {
+    animation: errorShake 0.6s ease-in-out;
+}
+
+@keyframes errorShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Estados de carga en modales */
+.modal-content.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.modal-content.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
+    border: 3px solid var(--color-primary);
+    border-top: 3px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 1001;
+}
+
+/* Indicadores de estado en tiempo real */
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.loading {
+    background-color: var(--color-warning);
+}
+
+.status-indicator.success {
+    background-color: var(--color-success);
+}
+
+.status-indicator.error {
+    background-color: var(--color-danger);
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Mejoras para accesibilidad */
+.btn:focus,
+.action-btn:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.btn:disabled,
+.action-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Transiciones suaves para todos los estados */
+.btn,
+.action-btn,
+.modal-content {
+    transition: all 0.3s ease;
+}
+
+/* Estados específicos para diferentes tipos de acciones */
+.action-btn.view.action-loading i {
+    color: var(--color-info);
+}
+
+.action-btn.edit.action-loading i {
+    color: var(--color-warning);
+}
+
+.action-btn.delete.action-loading i {
+    color: var(--color-danger);
+}
+
+/* Indicador de progreso para operaciones largas */
+.long-operation-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--color-primary);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.long-operation-indicator i {
+    animation: spin 1s linear infinite;
+}

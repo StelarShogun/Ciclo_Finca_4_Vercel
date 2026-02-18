@@ -1,0 +1,320 @@
+/* ===== MODALS CSS - ESTILOS UNIFICADOS ===== */
+/* Este archivo contiene todos los estilos compartidos para modales */
+
+/* ===== MODAL BASE ===== */
+.edit-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-overlay.active,
+.edit-modal.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+/* ===== CONTENIDO DEL MODAL ===== */
+.modal-content {
+  position: relative;
+  background: var(--background-white);
+  border-radius: var(--border-radius-large);
+  width: fit-content !important;
+  min-width: 400px;
+  max-width: min(90vw, 900px) !important;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-heavy);
+  display: flex;
+  flex-direction: column;
+  z-index: 2001;
+  animation: modalSlideIn 0.3s ease;
+}
+
+/* Modales que se adaptan automáticamente al contenido */
+.modal-content.modal-auto-size {
+  width: fit-content !important;
+  min-width: 400px;
+  max-width: min(90vw, 900px) !important;
+}
+
+/* Excepción: modal de importación NO debe usar el max-width limitado */
+#import-modal .modal-content.modal-auto-size {
+  max-width: min(95vw, 1000px) !important;
+  min-width: 800px !important;
+}
+
+/* ===== HEADER DEL MODAL ===== */
+.modal-header {
+  padding: 1.5rem;
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.modal-header h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: white;
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* ===== BODY DEL MODAL ===== */
+.modal-body {
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== FOOTER DEL MODAL ===== */
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+/* ===== TAMAÑOS ESPECÍFICOS POR MODAL ===== */
+/* Modales de productos */
+#new-product-modal .modal-content,
+#edit-modal .modal-content {
+  min-width: 600px;
+  width: fit-content !important;
+  max-width: min(90vw, 800px) !important;
+}
+
+#view-product-modal .modal-content {
+  min-width: 500px;
+  width: fit-content !important;
+  max-width: min(90vw, 700px) !important;
+}
+
+/* Modales de importación/exportación */
+#import-modal .modal-content {
+  min-width: 800px !important;
+  width: fit-content !important;
+  max-width: min(95vw, 1000px) !important; 
+}
+
+/* Sobrescribir modal-auto-size para el modal de importación */
+#import-modal .modal-content.modal-auto-size {
+  min-width: 800px !important;
+  width: fit-content !important;
+  max-width: min(95vw, 1000px) !important;
+}
+
+/* Ajustar padding del body del modal de importación para mejor distribución */
+#import-modal .modal-body {
+  padding: 1.5rem 2rem;
+}
+
+#export-modal .modal-content {
+  min-width: 500px;
+  width: fit-content !important;
+  max-width: min(90vw, 700px) !important;
+}
+
+/* Modales de ventas */
+#new-sale-modal .modal-content {
+  min-width: 800px;
+  width: fit-content !important;
+  max-width: min(90vw, 1000px) !important;
+}
+
+#view-sale-modal .modal-content {
+  min-width: 600px;
+  width: fit-content !important;
+  max-width: min(90vw, 800px) !important;
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ===== INTEGRACIÓN CON SWEETALERT2 ===== */
+/* Asegurar que SweetAlert2 se muestre por encima de modales */
+.swal2-container {
+  z-index: 10000 !important;
+}
+
+.swal2-popup {
+  z-index: 10001 !important;
+}
+
+.swal2-backdrop {
+  z-index: 9999 !important;
+}
+
+.swal-high-z-index {
+  z-index: 10000 !important;
+}
+
+/* ===== MENSAJES DE ERROR EN MODALES ===== */
+.modal-body .error-message {
+  color: #dc2626;
+  font-size: 0.8125rem;
+  margin-top: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 3px solid #dc2626;
+  border-radius: 6px;
+  display: none; /* Oculto por defecto */
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* Mostrar solo cuando tiene contenido */
+.modal-body .error-message:not(:empty) {
+  display: flex;
+}
+
+.modal-body .error-message:empty {
+  display: none !important;
+}
+
+.modal-body .error-message i {
+  font-size: 0.875rem;
+  color: #dc2626;
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95% !important;
+    min-width: 300px !important;
+    max-width: 95vw !important;
+    margin: 1rem;
+  }
+
+  /* Modal de importación mantiene más ancho incluso en móviles */
+  #import-modal .modal-content,
+  #import-modal .modal-content.modal-auto-size {
+    min-width: 95vw !important;
+    max-width: 95vw !important;
+  }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .modal-footer {
+    padding: 1rem;
+    flex-direction: column;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .edit-modal,
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 95vh;
+    border-radius: var(--border-radius);
+  }
+
+  #new-sale-modal .modal-content {
+    min-width: 100% !important;
+  }
+}
+

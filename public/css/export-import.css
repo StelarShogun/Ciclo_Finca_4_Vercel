@@ -1,0 +1,448 @@
+/* Estilos para botones mejorados */
+.header-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.button-primary {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.button-primary:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1px);
+}
+
+.button-secondary {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    color: white;
+    box-shadow: 0 2px 4px rgba(107, 114, 128, 0.3);
+}
+
+.button-secondary:hover {
+    background: linear-gradient(135deg, #4b5563, #374151);
+    box-shadow: 0 4px 8px rgba(107, 114, 128, 0.4);
+    transform: translateY(-1px);
+}
+
+/* Estilos para modales de exportar/importar */
+.export-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.export-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.export-option:hover {
+    border-color: #10b981;
+    background-color: #f0fdf4;
+}
+
+.export-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border-radius: 0.5rem;
+    font-size: 1.25rem;
+}
+
+.export-info {
+    flex: 1;
+}
+
+.export-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.export-info p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Mejoras en alertas */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+    font-size: 0.875rem;
+}
+
+.alert-success {
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+
+.alert-danger {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+}
+
+.alert-info {
+    background-color: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+}
+
+/* Mejoras en formularios */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.form-help {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* Estilos para el modal de importación mejorado */
+.file-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    border: 2px dashed #d1d5db;
+    border-radius: 0.75rem;
+    background-color: #f9fafb;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    min-height: 120px;
+}
+
+.file-upload-label:hover {
+    border-color: #10b981;
+    background-color: #f0fdf4;
+}
+
+.file-upload-label i {
+    font-size: 3rem;
+    color: #10b981;
+    margin-bottom: 0.5rem;
+}
+
+.file-upload-label span {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.file-info {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+}
+
+.file-info.hidden {
+    display: none;
+}
+
+.file-info-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.file-info-content i {
+    font-size: 2rem;
+    color: #10b981;
+}
+
+.file-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.file-details strong {
+    color: #1f2937;
+    font-size: 0.875rem;
+}
+
+.file-format-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background-color: #10b981;
+    color: white;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+}
+
+.file-details small {
+    color: #6b7280;
+    font-size: 0.75rem;
+}
+
+.btn-remove-file {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+.btn-remove-file:hover {
+    background-color: #fee2e2;
+}
+
+#format-detected {
+    margin-top: 1rem;
+}
+
+#format-detected.hidden {
+    display: none;
+}
+
+.format-help-text {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.alert-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.formats-guide {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.format-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    background-color: white;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.format-icon {
+    font-size: 1.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+}
+
+.format-icon.xml {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.format-icon.csv {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+}
+
+.format-icon.json {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+}
+
+.format-item strong {
+    display: block;
+    color: #1f2937;
+    font-size: 0.875rem;
+}
+
+.format-item small {
+    display: block;
+    color: #6b7280;
+    font-size: 0.75rem;
+}
+
+.required-fields-list {
+    margin: 0.5rem 0 0 1.25rem;
+    padding: 0;
+    list-style: none;
+}
+
+.required-fields-list li {
+    margin: 0.25rem 0;
+    font-size: 0.875rem;
+    color: #78350f;
+    line-height: 1.6;
+}
+
+/* Mejorar legibilidad en el modal de importación */
+#import-modal .required-fields-list li {
+    color: #78350f;
+    font-weight: 500;
+}
+
+.required-fields-list code {
+    background-color: #fef3c7;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    color: #92400e;
+    font-weight: 700;
+    border: 1px solid #fcd34d;
+}
+
+/* Mejorar código en el modal de importación */
+#import-modal .required-fields-list code {
+    background-color: #fef3c7;
+    color: #92400e;
+    border-color: #fbbf24;
+}
+
+.alert-warning {
+    background-color: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #7c2d12;
+}
+
+/* Mejorar legibilidad específicamente en el modal de importación */
+#import-modal .alert-warning {
+    background-color: #fff7ed;
+    border: 1px solid #fdba74;
+    color: #7c2d12;
+}
+
+#import-modal .alert-warning strong {
+    color: #78350f;
+    font-weight: 700;
+}
+
+#confirm-import:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== ANCHO DEL MODAL DE IMPORTACIÓN ===== */
+/* Esta regla se carga al final para asegurar prioridad sobre otros estilos */
+#import-modal .modal-content,
+#import-modal .modal-content.modal-auto-size {
+    min-width: 800px !important;
+    width: fit-content !important;
+    max-width: min(95vw, 1000px) !important;
+}
+
+/* Optimizar espaciado interno del modal de importación */
+#import-modal .modal-body {
+    padding: 1.5rem 2rem;
+}
+
+#import-modal .form-group {
+    margin-bottom: 1.25rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .export-option {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .file-upload-label {
+        padding: 1.5rem;
+        min-height: 120px;
+    }
+
+    .file-upload-label i {
+        font-size: 2rem;
+    }
+
+    /* Modal de importación en pantallas pequeñas */
+    #import-modal .modal-content,
+    #import-modal .modal-content.modal-auto-size {
+        min-width: 95vw !important;
+        max-width: 95vw !important;
+    }
+}

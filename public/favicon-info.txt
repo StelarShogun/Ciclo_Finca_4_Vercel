@@ -1,0 +1,40 @@
+FAVICON - CICLO PÉREZ
+======================
+
+Este proyecto utiliza un sistema moderno de favicons para garantizar 
+la mejor visualización en todos los navegadores y dispositivos.
+
+ARCHIVOS INCLUIDOS:
+------------------
+- favicon.svg           : Favicon vectorial moderno (formato preferido)
+- favicon-16x16.png     : Favicon 16x16 píxeles
+- favicon-32x32.png     : Favicon 32x32 píxeles  
+- favicon.ico           : Favicon legacy (compatibilidad navegadores antiguos)
+- apple-touch-icon.png  : Icono para dispositivos iOS (180x180)
+- android-chrome-192x192.png : Icono Android (192x192)
+- android-chrome-512x512.png : Icono Android (512x512)
+- site.webmanifest      : Manifiesto PWA
+
+DISEÑO:
+-------
+- Colores: Verde (#2e7d32 a #1b5e20)
+- Letras: "CP" (Ciclo Pérez)
+- Estilo: Moderno con gradiente
+
+IMPLEMENTACIÓN:
+--------------
+Los favicons están configurados en todas las vistas principales del proyecto
+con la siguiente estructura:
+
+<link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+<link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+<link rel="manifest" href="{{ asset('site.webmanifest') }}">
+
+NOTA: Si deseas cambiar el diseño, puedes:
+1. Editar favicon.svg directamente (es un archivo de texto XML)
+2. Usar herramientas como favicon.io o realfavicongenerator.net
+3. Regenerar todos los tamaños PNG desde el SVG
+
