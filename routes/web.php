@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductoController;
-use App\Http\Controllers\ProveedorController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UsuarioController;
@@ -72,7 +72,7 @@ Route::get('/inventory/export/{format?}', [ProductoController::class, 'export'])
 Route::post('/products/import', [ProductoController::class, 'import'])->name('products.import');
 
 // Proveedores Routes
-Route::resource('proveedores', ProveedorController::class);
+Route::resource('proveedores', SupplierController::class);
 
 // Sales module (100% English)
 Route::resource('sales', SalesController::class);

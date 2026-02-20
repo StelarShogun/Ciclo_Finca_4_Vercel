@@ -4,14 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Proveedor;
+use App\Models\Supplier;
 
-class ProveedorController extends Controller
+class SupplierController extends Controller
 {
     // Listar proveedores con búsqueda y paginación
     public function index()
     {
-        $query = Proveedor::query();
+        $query = Supplier::query();
 
         // Aplicar filtros
         if (request('nombre')) {
@@ -102,7 +102,7 @@ class ProveedorController extends Controller
         }
 
         try {
-            $proveedor = Proveedor::create($request->only(
+            $Supplier = Supplier::create($request->only(
                 'nombre',
                 'contacto_principal',
                 'telefono',
@@ -116,7 +116,7 @@ class ProveedorController extends Controller
                 'success' => true,
                 'message' => 'Proveedor registrado exitosamente.',
                 'redirect' => route('proveedores.index'),
-                'data' => $proveedor
+                'data' => $Supplier
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -129,8 +129,8 @@ class ProveedorController extends Controller
     // Mostrar un proveedor
     public function show(string $id)
     {
-        $proveedor = Proveedor::find($id);
-        if (!$proveedor) {
+        $supplier = Supplier::find($id);
+        if (!$supplier) {
             return response()->json([
                 'success' => false,
                 'message' => 'Proveedor no encontrado.'
@@ -141,13 +141,13 @@ class ProveedorController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'nombre' => $proveedor->nombre,
-                'email' => $proveedor->correo_electronico,
-                'telefono' => $proveedor->telefono,
-                'direccion' => $proveedor->direccion,
-                'evaluacion' => $proveedor->evaluacion ?? '0',
+                'nombre' => $supplier->nombre,
+                'email' => $supplier->correo_electronico,
+                'telefono' => $supplier->telefono,
+                'direccion' => $supplier->direccion,
+                'evaluacion' => $supplier->evaluacion ?? '0',
                 'estado' => 'Activo', // Campo calculado si es necesario
-                'created_at' => $proveedor->fecha_creacion,
+                'created_at' => $supplier->fecha_creacion,
             ]
         ]);
     }
@@ -155,8 +155,8 @@ class ProveedorController extends Controller
     // Mostrar formulario de edición
     public function edit(string $id)
     {
-        $proveedor = Proveedor::find($id);
-        if (!$proveedor) {
+        $supplier = Supplier::find($id);
+        if (!$supplier) {
             return redirect()->back()->with('error', 'Proveedor no encontrado.');
         }
         return view('proveedores.edit', compact('proveedor'));
@@ -165,8 +165,8 @@ class ProveedorController extends Controller
     // Actualizar proveedor
     public function update(Request $request, string $id)
     {
-        $proveedor = Proveedor::find($id);
-        if (!$proveedor) {
+        $supplier = Supplier::find($id);
+        if (!$supplier) {
             return response()->json([
                 'success' => false,
                 'message' => 'Proveedor no encontrado.'
@@ -177,7 +177,7 @@ class ProveedorController extends Controller
             'nombre' => 'required|string|max:100|min:2',
             'contacto_principal' => 'required|string|max:100|min:2|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\'\s]+$/',
             'telefono' => 'required|string|min:8|max:20',
-            'correo_electronico' => 'required|email|max:100|min:10|unique:proveedores,correo_electronico,' . $proveedor->proveedor_id . ',proveedor_id',
+            'correo_electronico' => 'required|email|max:100|min:10|unique:proveedores,correo_electronico,' . $supplier->supplier_id . ',proveedor_id',
             'direccion' => 'required|string|min:5|max:255',
             'tiempo_entrega' => 'required|integer|min:1|max:365',
             'evaluacion' => 'nullable|numeric|min:0|max:5',
@@ -212,7 +212,7 @@ class ProveedorController extends Controller
         }
 
         try {
-            $proveedor->update($request->only(
+            $supplier->update($request->only(
                 'nombre',
                 'contacto_principal',
                 'telefono',
@@ -226,7 +226,7 @@ class ProveedorController extends Controller
                 'success' => true,
                 'message' => 'Proveedor actualizado exitosamente.',
                 'redirect' => route('proveedores.index'),
-                'data' => $proveedor
+                'data' => $supplier
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -239,8 +239,8 @@ class ProveedorController extends Controller
     // Eliminar proveedor
     public function destroy(string $id)
     {
-        $proveedor = Proveedor::find($id);
-        if (!$proveedor) {
+        $supplier = Supplier::find($id);
+        if (!$supplier) {
             return response()->json([
                 'success' => false,
                 'message' => 'Proveedor no encontrado.'
@@ -248,7 +248,7 @@ class ProveedorController extends Controller
         }
 
         try {
-            $proveedor->delete();
+            $supplier->delete();
             return response()->json([
                 'success' => true,
                 'message' => 'Proveedor eliminado exitosamente.'

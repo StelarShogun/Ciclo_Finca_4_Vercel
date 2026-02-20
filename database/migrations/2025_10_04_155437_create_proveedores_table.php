@@ -3,46 +3,46 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('proveedores', function (Blueprint $table) {
-            $table->id('proveedor_id');
-            
-            // Campos con longitudes específicas y nullable
-            $table->string('nombre', 150);
-            $table->string('contacto_principal', 100)->nullable();
-            $table->string('telefono', 20)->nullable();
-            $table->string('correo_electronico', 100)->nullable();
-            $table->text('direccion')->nullable();
-            
-            // Campos numéricos con valores por defecto
-            $table->integer('tiempo_entrega')->default(0)->comment('Tiempo en días');
-            $table->decimal('evaluacion', 3, 2)->default(0.00)->comment('Evaluación de 0.00 a 5.00');
-            
-            // Campo estado con ENUM
-            $table->enum('estado', ['activo', 'inactivo', 'suspendido'])->default('activo');
-            
-            // Timestamps personalizados
-            $table->timestamp('fecha_creacion')->useCurrent();
-            $table->timestamp('fecha_modificacion')->useCurrent()->useCurrentOnUpdate();
-            
-            // Índices
-            $table->index('nombre', 'idx_proveedor_nombre');
-            $table->index('correo_electronico', 'idx_proveedor_email');
-            $table->index('estado', 'idx_proveedor_estado');
+        Schema::create('suppliers', function (Blueprint $table) {
+            $table->id('supplier_id');
+
+            // String fields with specific lengths
+            $table->string('name', 150);
+            $table->string('primary_contact', 100)->nullable();
+            $table->string('phone', 20)->nullable();
+            $table->string('email', 100)->nullable();
+            $table->text('address')->nullable();
+
+            // Numeric fields with default values
+            $table->integer('delivery_time')->default(0)->comment('Delivery time in days');
+            $table->decimal('rating', 3, 2)->default(0.00)->comment('Rating from 0.00 to 5.00');
+
+            // ENUM status field
+            $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
+
+            // Custom timestamps
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+
+            // Indexes
+            $table->index('name', 'idx_supplier_name');
+            $table->index('email', 'idx_supplier_email');
+            $table->index('status', 'idx_supplier_status');
         });
-        
-        // Agregar restricciones CHECK después de crear la tabla
-        DB::statement('ALTER TABLE proveedores ADD CONSTRAINT chk_evaluacion CHECK (evaluacion >= 0.00 AND evaluacion <= 5.00)');
-        DB::statement('ALTER TABLE proveedores ADD CONSTRAINT chk_tiempo_entrega CHECK (tiempo_entrega >= 0)');
+
+        // CHECK constraints
+        DB::statement('ALTER TABLE suppliers ADD CONSTRAINT chk_rating CHECK (rating >= 0.00 AND rating <= 5.00)');
+        DB::statement('ALTER TABLE suppliers ADD CONSTRAINT chk_delivery_time CHECK (delivery_time >= 0)');
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('proveedores');
+        Schema::dropIfExists('suppliers');
     }
 };

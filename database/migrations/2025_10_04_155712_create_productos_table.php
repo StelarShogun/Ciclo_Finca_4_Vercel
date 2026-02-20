@@ -8,7 +8,7 @@ return new class extends Migration {
         Schema::create('productos', function(Blueprint $table){
             $table->id('producto_id');
             $table->foreignId('categoria_id')->nullable()->constrained('categorias','categoria_id')->onDelete('set null');
-            $table->foreignId('proveedor_id')->nullable()->constrained('proveedores','proveedor_id')->onDelete('set null');
+            $table->foreignId('supplier_id')->nullable()->constrained('suppliers','supplier_id')->onDelete('set null');
             $table->string('nombre', 200);
             $table->text('descripcion')->nullable();
             $table->decimal('precio_venta', 10, 2)->default(0.00);
@@ -22,7 +22,7 @@ return new class extends Migration {
             // Índices
             $table->index('nombre');
             $table->index('categoria_id');
-            $table->index('proveedor_id');
+            $table->index('supplier_id');
             $table->index('estado');
             $table->index('stock_actual');
             // fullText no es compatible con SQLite, se omite para las pruebas
