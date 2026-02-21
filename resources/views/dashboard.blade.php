@@ -261,7 +261,7 @@
                         </div>
                     </a>
 
-                    <a href="{{ route('proveedores.create') }}" class="action-card">
+                    <a href="{{ route('suppliers.create') }}" class="action-card">
                         <div class="action-icon">
                             <i class="fas fa-truck"></i>
                         </div>

@@ -1,23 +1,22 @@
-
 services:
-  app:
+  app_ciclo:
     build: .
-    container_name: laravel_app
+    container_name: laravel_app_ciclo
     ports:
       - "8080:80"
     volumes:
       - .:/var/www/html
     environment:
-      - DB_HOST=db
+      - DB_HOST=db_ciclo
       - DB_DATABASE=${DB_DATABASE}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
     depends_on:
-      - db
+      - db_ciclo
 
-  db:
+  db_ciclo:
     image: mysql:8.0
-    container_name: mysql_db
+    container_name: mysql_db_ciclo
     restart: always
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
@@ -27,20 +26,20 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - dbdata:/var/lib/mysql
+      - dbdata_ciclo:/var/lib/mysql
 
-  phpmyadmin:
+  phpmyadmin_ciclo:
     image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
+    container_name: phpmyadmin_ciclo
     restart: always
     environment:
-      PMA_HOST: db
+      PMA_HOST: db_ciclo
       PMA_USER: ${DB_USERNAME}
       PMA_PASSWORD: ${DB_PASSWORD}
     ports:
       - "8081:80"
     depends_on:
-      - db
+      - db_ciclo
 
 volumes:
-  dbdata:
+  dbdata_ciclo:

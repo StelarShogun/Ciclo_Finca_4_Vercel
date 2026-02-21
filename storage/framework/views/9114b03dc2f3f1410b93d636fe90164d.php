@@ -16,8 +16,8 @@
                     <span class="sidebar-label">Inventario</span>
                 </a>
             </li>
-            <li class="<?php echo e(request()->routeIs('proveedores.*') ? 'active' : ''); ?>">
-                <a href="<?php echo e(route('proveedores.index')); ?>">
+            <li class="<?php echo e(request()->routeIs('suppliers.*') ? 'active' : ''); ?>">
+                <a href="<?php echo e(route('suppliers.index')); ?>">
                     <i class="fas fa-truck"></i>
                     <span class="sidebar-label">Proveedores</span>
                 </a>

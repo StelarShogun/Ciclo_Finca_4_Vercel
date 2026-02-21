@@ -228,7 +228,7 @@
                                     <td colspan="5" class="text-center">
                                         <div class="empty-state">
                                             <i class="fas fa-shopping-cart"></i>
-                                            <p>No recent sales</p>
+                                            <p>No hay ventas recientes</p>
                                         </div>
                                     </td>
                                 </tr>
