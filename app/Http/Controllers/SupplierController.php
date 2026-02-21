@@ -8,20 +8,17 @@ use App\Models\Supplier;
 
 class SupplierController extends Controller
 {
-    // Listar proveedores con búsqueda y paginación
+    // List suppliers with optional search filters and pagination
     public function index()
     {
         $query = Supplier::query();
 
-        // Aplicar filtros
         if (request('name')) {
-            $name = request('name');
-            $query->where('name', 'like', "%{$name}%");
+            $query->where('name', 'like', '%' . request('name') . '%');
         }
 
         if (request('contact')) {
-            $contact = request('contact');
-            $query->where('primary_contact', 'like', "%{$contact}%");
+            $query->where('primary_contact', 'like', '%' . request('contact') . '%');
         }
 
         $averageRating = $query->avg('rating');
@@ -30,43 +27,18 @@ class SupplierController extends Controller
         return view('suppliers.index', compact('suppliers', 'averageRating'));
     }
 
-    // Mostrar formulario de creación
     public function create()
     {
         return view('suppliers.create');
     }
 
-    // Guardar nuevo proveedor
     public function store(Request $request)
     {
-        // #region agent log
-        $logPath = base_path('.cursor/debug.log');
-        $logDir = dirname($logPath);
-        if (!is_dir($logDir)) {
-            @mkdir($logDir, 0755, true);
-        }
-        $logData = [
-            'location' => 'SupplierController.php:38',
-            'message' => 'Store method called - CSRF check',
-            'data' => [
-                'hasCsrfToken' => $request->has('_token'),
-                'hasXCsrfHeader' => $request->hasHeader('X-CSRF-TOKEN'),
-                'method' => $request->method(),
-                'isAjax' => $request->ajax(),
-                'wantsJson' => $request->wantsJson(),
-            ],
-            'timestamp' => time() * 1000,
-            'sessionId' => 'debug-session',
-            'runId' => 'run1',
-            'hypothesisId' => 'B'
-        ];
-        @file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND | LOCK_EX);
-        // #endregion
-
         $validator = Validator::make($request->all(), [
             'name'            => 'required|string|max:100|min:2',
             'primary_contact' => 'required|string|max:100|min:2|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\'\s]+$/',
             'phone'           => 'required|string|min:8|max:20',
+            // Unique email check scoped to the suppliers table
             'email'           => 'required|email|max:100|min:10|unique:suppliers,email',
             'address'         => 'required|string|min:5|max:255',
             'delivery_time'   => 'required|integer|min:1|max:365',
@@ -126,35 +98,30 @@ class SupplierController extends Controller
         }
     }
 
-    // Mostrar un proveedor
     public function show(string $id)
     {
         $supplier = Supplier::find($id);
         if (!$supplier) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Proveedor no encontrado.'
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Proveedor no encontrado.'], 404);
         }
 
         return response()->json([
             'success' => true,
             'data' => [
-                'supplier_id'     => $supplier->supplier_id,  
+                'supplier_id'     => $supplier->supplier_id,
                 'name'            => $supplier->name,
-                'primary_contact' => $supplier->primary_contact,  
+                'primary_contact' => $supplier->primary_contact,
                 'email'           => $supplier->email,
                 'phone'           => $supplier->phone,
                 'address'         => $supplier->address,
-                'delivery_time'   => $supplier->delivery_time,  
-                'rating'          => $supplier->rating ?? '0',
+                'delivery_time'   => $supplier->delivery_time,
+                'rating'          => $supplier->rating ?? '0', // default to 0 if unrated
                 'status'          => 'Activo',
                 'created_at'      => $supplier->created_at,
             ]
         ]);
     }
 
-    // Mostrar formulario de edición
     public function edit(string $id)
     {
         $supplier = Supplier::find($id);
@@ -164,21 +131,18 @@ class SupplierController extends Controller
         return view('suppliers.edit', compact('supplier'));
     }
 
-    // Actualizar proveedor
     public function update(Request $request, string $id)
     {
         $supplier = Supplier::find($id);
         if (!$supplier) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Proveedor no encontrado.'
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Proveedor no encontrado.'], 404);
         }
 
         $validator = Validator::make($request->all(), [
             'name'            => 'required|string|max:100|min:2',
             'primary_contact' => 'required|string|max:100|min:2|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\'\s]+$/',
             'phone'           => 'required|string|min:8|max:20',
+            // Exclude current supplier from unique check using its primary key
             'email'           => 'required|email|max:100|min:10|unique:suppliers,email,' . $supplier->supplier_id . ',supplier_id',
             'address'         => 'required|string|min:5|max:255',
             'delivery_time'   => 'required|integer|min:1|max:365',
@@ -238,23 +202,16 @@ class SupplierController extends Controller
         }
     }
 
-    // Eliminar proveedor
     public function destroy(string $id)
     {
         $supplier = Supplier::find($id);
         if (!$supplier) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Proveedor no encontrado.'
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Proveedor no encontrado.'], 404);
         }
 
         try {
             $supplier->delete();
-            return response()->json([
-                'success' => true,
-                'message' => 'Proveedor eliminado exitosamente.'
-            ]);
+            return response()->json(['success' => true, 'message' => 'Proveedor eliminado exitosamente.']);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

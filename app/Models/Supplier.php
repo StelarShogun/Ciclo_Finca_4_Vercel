@@ -48,5 +48,3 @@ class Supplier extends Model
         return $this->hasMany(Producto::class, 'proveedor_id', 'proveedor_id');
     }
 }
-    
-
