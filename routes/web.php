@@ -71,8 +71,8 @@ Route::delete('/products/{id}/force-delete', [ProductoController::class, 'forceD
 Route::get('/inventory/export/{format?}', [ProductoController::class, 'export'])->name('products.export');
 Route::post('/products/import', [ProductoController::class, 'import'])->name('products.import');
 
-// Proveedores Routes
-Route::resource('proveedores', SupplierController::class);
+// Suppliers Routes
+Route::resource('suppliers', SupplierController::class);
 
 // Sales module (100% English)
 Route::resource('sales', SalesController::class);

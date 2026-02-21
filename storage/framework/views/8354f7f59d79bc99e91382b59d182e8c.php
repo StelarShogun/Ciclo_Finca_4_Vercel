@@ -1,37 +1,37 @@
-@extends('proveedores')
 
-@section('Titulo pagina')
+
+<?php $__env->startSection('Titulo pagina'); ?>
 Proveedores
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('aside')
-    @include('partes.aside')
-@endsection
+<?php $__env->startSection('aside'); ?>
+    <?php echo $__env->make('partes.aside', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php $__env->stopSection(); ?>
 
-@section('header')
-    <header class="usuarios-header">
+<?php $__env->startSection('header'); ?>
+    <header class="page-header">
         <div>
             <h1>Gestión de Proveedores</h1>
             <p>Administra los proveedores del sistema</p>
         </div>
-        <div class="usuarios-actions">
+        <div class="page-header-actions">
             <button class="btn btn-primary" id="open-new-supplier-modal">
                 <i class="fas fa-plus"></i>
                 Nuevo Proveedor
             </button>
         </div>
     </header>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('contenido')
-    <div class="proveedores-container">
-        <!-- Estadísticas -->
+<?php $__env->startSection('contenido'); ?>
+    <div class="suppliers-container">
+        <!-- Statistics -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-header">
                     <div>
                         <p class="stat-title">Total Proveedores</p>
-                        <p class="stat-value" id="totalProveedores">{{ $proveedores->total() }}</p>
+                        <p class="stat-value" id="totalProveedores"><?php echo e($suppliers->total()); ?></p>
                     </div>
                     <div class="stat-icon blue">
                         <i class="fas fa-truck"></i>
@@ -44,7 +44,8 @@ Proveedores
                     <div>
                         <p class="stat-title">Promedio Evaluación</p>
                         <p class="stat-value" id="promedioEvaluacion">
-                            {{ number_format($promedioEvaluacion, 2) }}
+                            <?php echo e(number_format($averageRating, 2)); ?>
+
                         </p>
                     </div>
                     <div class="stat-icon green">
@@ -54,17 +55,17 @@ Proveedores
             </div>
         </div>
 
-        <!-- Filtros -->
+        <!-- Filters -->
         <div class="filters-section">
             <div class="filters-container">
                 <div class="search-input">
                     <input type="text" id="buscarNombre" placeholder="Buscar por nombre de proveedor..."
-                        value="{{ request('nombre') }}">
+                        value="<?php echo e(request('name')); ?>">
                 </div>
 
                 <div class="search-input">
                     <input type="text" id="buscarContacto" placeholder="Buscar por contacto principal..."
-                        value="{{ request('contacto') }}">
+                        value="<?php echo e(request('contact')); ?>">
                 </div>
 
                 <button type="button" class="button button-primary" id="btnBuscar">
@@ -72,19 +73,19 @@ Proveedores
                     Buscar
                 </button>
 
-                @if (request('nombre') || request('contacto'))
+                <?php if(request('name') || request('contact')): ?>
                     <button type="button" class="button button-secondary" id="limpiarFiltros">
                         <i class="fas fa-times"></i>
                         Limpiar Filtros
                     </button>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
 
-        <!-- Tabla de Proveedores -->
-        <div class="proveedores-table-container">
+        <!-- Suppliers Table -->
+        <div class="suppliers-table-wrapper">
             <div class="table-responsive">
-                <table class="proveedores-table">
+                <table class="suppliers-table">
                     <thead>
                         <tr>
                             <th>Proveedor</th>
@@ -96,35 +97,36 @@ Proveedores
                         </tr>
                     </thead>
                     <tbody id="tablaProveedores">
-                        @forelse($proveedores as $proveedor)
-                            <tr class="proveedor-row">
+                        <?php $__empty_1 = true; $__currentLoopData = $suppliers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $supplier): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <tr class="supplier-row">
                                 <td>
                                     <div class="provider-info">
                                         <div class="provider-avatar">
-                                            {{ substr($proveedor->nombre, 0, 1) }}
+                                            <?php echo e(substr($supplier->name, 0, 1)); ?>
+
                                         </div>
                                         <div class="provider-details">
-                                            <h4 class="proveedor-nombre">{{ $proveedor->nombre }}</h4>
+                                            <h4 class="supplier-name"><?php echo e($supplier->name); ?></h4>
                                         </div>
                                     </div>
                                 </td>
-                                <td>{{ $proveedor->contacto_principal }}</td>
-                                <td>{{ $proveedor->telefono }}</td>
-                                <td>{{ $proveedor->correo_electronico }}</td>
-                                <td>{{ $proveedor->direccion }}</td>
+                                <td><?php echo e($supplier->primary_contact); ?></td>
+                                <td><?php echo e($supplier->phone); ?></td>
+                                <td><?php echo e($supplier->email); ?></td>
+                                <td><?php echo e($supplier->address); ?></td>
                                 <td>
                                     <div class="actions-container">
-                                        <button onclick="verDetalle('{{ $proveedor->proveedor_id }}')" class="action-btn view" title="Ver detalles">
+                                        <button onclick="viewSupplierDetail('<?php echo e($supplier->supplier_id); ?>')" class="action-btn view" title="Ver detalles">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        <button onclick="editarProveedor({{ $proveedor->proveedor_id }})"
+                                        <button onclick="loadSupplierForEdit(<?php echo e($supplier->supplier_id); ?>)"
                                             class="action-btn edit" title="Editar proveedor">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <form action="{{ route('proveedores.destroy', $proveedor->proveedor_id) }}"
-                                            method="POST" onsubmit="return eliminarProveedor(event)" class="inline">
-                                            @csrf
-                                            @method('DELETE')
+                                        <form action="<?php echo e(route('suppliers.destroy', $supplier->supplier_id)); ?>"
+                                            method="POST" onsubmit="return deleteSupplier(event)" class="inline">
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('DELETE'); ?>
                                             <button type="submit" class="action-btn delete" title="Eliminar proveedor">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -132,7 +134,7 @@ Proveedores
                                     </div>
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="6">
                                     <div class="empty-state">
@@ -142,31 +144,49 @@ Proveedores
                                     </div>
                                 </td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Paginación -->
-        <x-pagination :paginator="$proveedores" label="de proveedores" />
+        <!-- Pagination -->
+        <?php if (isset($component)) { $__componentOriginal41032d87daf360242eb88dbda6c75ed1 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal41032d87daf360242eb88dbda6c75ed1 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.pagination','data' => ['paginator' => $suppliers,'label' => 'de proveedores']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('pagination'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['paginator' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($suppliers),'label' => 'de proveedores']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal41032d87daf360242eb88dbda6c75ed1)): ?>
+<?php $attributes = $__attributesOriginal41032d87daf360242eb88dbda6c75ed1; ?>
+<?php unset($__attributesOriginal41032d87daf360242eb88dbda6c75ed1); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal41032d87daf360242eb88dbda6c75ed1)): ?>
+<?php $component = $__componentOriginal41032d87daf360242eb88dbda6c75ed1; ?>
+<?php unset($__componentOriginal41032d87daf360242eb88dbda6c75ed1); ?>
+<?php endif; ?>
     </div>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ asset('js/proveedores.js') }}"></script>
-    
+    <script src="<?php echo e(asset('js/suppliers.js')); ?>"></script>
+
     <script>
-        // Las funciones están definidas en proveedores.js
-        
-        if (typeof eliminarProveedor === 'undefined') {
-            function eliminarProveedor(event) {
+        // Fallback en caso de que suppliers.js no cargue
+        if (typeof deleteSupplier === 'undefined') {
+            function deleteSupplier(event) {
                 event.preventDefault();
-                
+
                 const form = event.target.closest('form');
                 const url = form.action;
                 const csrfToken = form.querySelector('input[name="_token"]').value;
-                
+
                 Swal.fire({
                     title: '¿Estás seguro?',
                     text: 'Esta acción no se puede deshacer',
@@ -219,32 +239,32 @@ Proveedores
                 });
             }
         }
-        
-        // Función para limpiar filtros
+
+        // Limpiar filtros
         document.addEventListener('DOMContentLoaded', function() {
-            const limpiarBtn = document.getElementById('limpiarFiltros');
-            if (limpiarBtn) {
-                limpiarBtn.addEventListener('click', function() {
-                    document.getElementById('buscar').value = '';
-                    window.location.href = '{{ route("proveedores.index") }}';
+            const clearBtn = document.getElementById('limpiarFiltros');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    document.getElementById('buscarNombre').value = '';
+                    window.location.href = '<?php echo e(route("suppliers.index")); ?>';
                 });
             }
         });
     </script>
-@endpush
+<?php $__env->stopPush(); ?>
 
-<!-- Modal para ver detalles del proveedor -->
+<!-- Modal: Detalles del Proveedor -->
 <div id="modalDetalleProveedor" class="edit-modal">
     <div class="modal-backdrop"></div>
     <div class="modal-content modal-auto-size">
         <div class="modal-header">
             <h3><i class="fas fa-eye"></i> Detalles del Proveedor</h3>
-            <button onclick="cerrarModal()" class="modal-close" id="close-proveedor-modal">
+            <button onclick="closeModal()" class="modal-close" id="close-proveedor-modal">
                 <i class="fas fa-times"></i>
             </button>
         </div>
         <div class="modal-body">
-            <div class="proveedor-details">
+            <div class="supplier-details">
                 <div class="detail-row">
                     <label>Nombre:</label>
                     <span id="modalProveedorNombre">-</span>
@@ -269,49 +289,21 @@ Proveedores
                     <label>Estado:</label>
                     <span id="modalProveedorEstado">-</span>
                 </div>
-                <div class="modal-body">
-                    <div style="display: grid; gap: 1rem;">
-                        <div>
-                            <strong>Nombre:</strong>
-                            <p id="modalProveedorNombre" style="margin: 0.5rem 0 0 0; color: #666;">-</p>
-                        </div>
-                        <div>
-                            <strong>Email:</strong>
-                            <p id="modalProveedorEmail" style="margin: 0.5rem 0 0 0; color: #666;">-</p>
-                        </div>
-                        <div>
-                            <strong>Teléfono:</strong>
-                            <p id="modalProveedorTelefono" style="margin: 0.5rem 0 0 0; color: #666;">-</p>
-                        </div>
-                        <div>
-                            <strong>Dirección:</strong>
-                            <p id="modalProveedorDireccion" style="margin: 0.5rem 0 0 0; color: #666;">-</p>
-                        </div>
-                        <div>
-                            <strong>Evaluación:</strong>
-                            <p id="modalProveedorEvaluacion" style="margin: 0.5rem 0 0 0; color: #666;">-</p>
-                        </div>
-                        <div>
-                            <strong>Estado:</strong>
-                            <p id="modalProveedorEstado" style="margin: 0.5rem 0 0 0; color: #666;">-</p>
-                        </div>
-                        <div>
-                            <strong>Fecha de Registro:</strong>
-                            <p id="modalProveedorFechaRegistro" style="margin: 0.5rem 0 0 0; color: #666;">-</p>
-                        </div>
-                    </div>
+                <div class="detail-row">
+                    <label>Fecha de Registro:</label>
+                    <span id="modalProveedorFechaRegistro">-</span>
                 </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="button button-secondary" onclick="cerrarModal()">
+            <button type="button" class="button button-secondary" onclick="closeModal()">
                 <i class="fas fa-times"></i> Cerrar
             </button>
         </div>
     </div>
 </div>
 
-<!-- Modal para crear nuevo proveedor -->
+<!-- Modal: Nuevo Proveedor -->
 <div id="new-supplier-modal" class="edit-modal">
     <div class="modal-backdrop"></div>
     <div class="modal-content modal-auto-size">
@@ -323,24 +315,24 @@ Proveedores
         </div>
         <div class="modal-body">
             <form id="new-supplier-form">
-                @csrf
+                <?php echo csrf_field(); ?>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="new-supplier-nombre">Nombre del Proveedor *</label>
-                        <input type="text" id="new-supplier-nombre" name="nombre" class="form-input" required>
-                        <div class="error-message" id="error-new-nombre"></div>
+                        <input type="text" id="new-supplier-nombre" name="name" class="form-input" required>
+                        <div class="error-message" id="error-new-name"></div>
                     </div>
                     <div class="form-group">
                         <label for="new-supplier-contacto">Contacto Principal *</label>
-                        <input type="text" id="new-supplier-contacto" name="contacto_principal" class="form-input" required>
-                        <div class="error-message" id="error-new-contacto"></div>
+                        <input type="text" id="new-supplier-contacto" name="primary_contact" class="form-input" required>
+                        <div class="error-message" id="error-new-primary_contact"></div>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="new-supplier-telefono">Teléfono *</label>
-                        <input type="tel" id="new-supplier-telefono" name="telefono" class="form-input" required>
-                        <div class="error-message" id="error-new-telefono"></div>
+                        <input type="tel" id="new-supplier-telefono" name="phone" class="form-input" required>
+                        <div class="error-message" id="error-new-phone"></div>
                     </div>
                     <div class="form-group">
                         <label for="new-supplier-email">Correo Electrónico *</label>
@@ -350,19 +342,19 @@ Proveedores
                 </div>
                 <div class="form-group">
                     <label for="new-supplier-direccion">Dirección *</label>
-                    <textarea id="new-supplier-direccion" name="direccion" class="form-textarea" rows="3" required></textarea>
-                    <div class="error-message" id="error-new-direccion"></div>
+                    <textarea id="new-supplier-direccion" name="address" class="form-textarea" rows="3" required></textarea>
+                    <div class="error-message" id="error-new-address"></div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="new-supplier-tiempo">Tiempo de Entrega (días) *</label>
-                        <input type="number" id="new-supplier-tiempo" name="tiempo_entrega" class="form-input" min="1" max="365" required>
-                        <div class="error-message" id="error-new-tiempo"></div>
+                        <input type="number" id="new-supplier-tiempo" name="delivery_time" class="form-input" min="1" max="365" required>
+                        <div class="error-message" id="error-new-delivery_time"></div>
                     </div>
                     <div class="form-group">
                         <label for="new-supplier-evaluacion">Evaluación (0-5)</label>
-                        <input type="number" id="new-supplier-evaluacion" name="evaluacion" class="form-input" min="0" max="5" step="0.1">
-                        <div class="error-message" id="error-new-evaluacion"></div>
+                        <input type="number" id="new-supplier-evaluacion" name="rating" class="form-input" min="0" max="5" step="0.1">
+                        <div class="error-message" id="error-new-rating"></div>
                     </div>
                 </div>
             </form>
@@ -378,7 +370,7 @@ Proveedores
     </div>
 </div>
 
-<!-- Modal para editar proveedor -->
+<!-- Modal: Editar Proveedor -->
 <div id="edit-supplier-modal" class="edit-modal">
     <div class="modal-backdrop"></div>
     <div class="modal-content modal-auto-size">
@@ -390,26 +382,26 @@ Proveedores
         </div>
         <div class="modal-body">
             <form id="edit-supplier-form">
-                @csrf
-                @method('PUT')
-                <input type="hidden" id="edit-supplier-id" name="proveedor_id">
+                <?php echo csrf_field(); ?>
+                <?php echo method_field('PUT'); ?>
+                <input type="hidden" id="edit-supplier-id" name="supplier_id">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="edit-supplier-nombre">Nombre del Proveedor *</label>
-                        <input type="text" id="edit-supplier-nombre" name="nombre" class="form-input" required>
-                        <div class="error-message" id="error-edit-nombre"></div>
+                        <input type="text" id="edit-supplier-nombre" name="name" class="form-input" required>
+                        <div class="error-message" id="error-edit-name"></div>
                     </div>
                     <div class="form-group">
                         <label for="edit-supplier-contacto">Contacto Principal *</label>
-                        <input type="text" id="edit-supplier-contacto" name="contacto_principal" class="form-input" required>
-                        <div class="error-message" id="error-edit-contacto"></div>
+                        <input type="text" id="edit-supplier-contacto" name="primary_contact" class="form-input" required>
+                        <div class="error-message" id="error-edit-primary_contact"></div>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="edit-supplier-telefono">Teléfono *</label>
-                        <input type="tel" id="edit-supplier-telefono" name="telefono" class="form-input" required>
-                        <div class="error-message" id="error-edit-telefono"></div>
+                        <input type="tel" id="edit-supplier-telefono" name="phone" class="form-input" required>
+                        <div class="error-message" id="error-edit-phone"></div>
                     </div>
                     <div class="form-group">
                         <label for="edit-supplier-email">Correo Electrónico *</label>
@@ -419,19 +411,19 @@ Proveedores
                 </div>
                 <div class="form-group">
                     <label for="edit-supplier-direccion">Dirección *</label>
-                    <textarea id="edit-supplier-direccion" name="direccion" class="form-textarea" rows="3" required></textarea>
-                    <div class="error-message" id="error-edit-direccion"></div>
+                    <textarea id="edit-supplier-direccion" name="address" class="form-textarea" rows="3" required></textarea>
+                    <div class="error-message" id="error-edit-address"></div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="edit-supplier-tiempo">Tiempo de Entrega (días) *</label>
-                        <input type="number" id="edit-supplier-tiempo" name="tiempo_entrega" class="form-input" min="1" max="365" required>
-                        <div class="error-message" id="error-edit-tiempo"></div>
+                        <input type="number" id="edit-supplier-tiempo" name="delivery_time" class="form-input" min="1" max="365" required>
+                        <div class="error-message" id="error-edit-delivery_time"></div>
                     </div>
                     <div class="form-group">
                         <label for="edit-supplier-evaluacion">Evaluación (0-5)</label>
-                        <input type="number" id="edit-supplier-evaluacion" name="evaluacion" class="form-input" min="0" max="5" step="0.1">
-                        <div class="error-message" id="error-edit-evaluacion"></div>
+                        <input type="number" id="edit-supplier-evaluacion" name="rating" class="form-input" min="0" max="5" step="0.1">
+                        <div class="error-message" id="error-edit-rating"></div>
                     </div>
                 </div>
             </form>
@@ -447,12 +439,9 @@ Proveedores
     </div>
 </div>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('css/proveedores/variables.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/proveedores/main.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/proveedores/admin.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/proveedores/pagination-sidebar.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/proveedores/proveedores.css') }}">
-@endpush
+<?php $__env->startPush('styles'); ?>
+    <link rel="stylesheet" href="<?php echo e(asset('css/suppliers/supplier.css')); ?>">
+<?php $__env->stopPush(); ?>
+<?php echo $__env->make('suppliers', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/html/resources/views/suppliers/index.blade.php ENDPATH**/ ?>

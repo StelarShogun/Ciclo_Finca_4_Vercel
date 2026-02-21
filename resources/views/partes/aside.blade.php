@@ -16,8 +16,8 @@
                     <span class="sidebar-label">Inventario</span>
                 </a>
             </li>
-            <li class="{{ request()->routeIs('proveedores.*') ? 'active' : '' }}">
-                <a href="{{ route('proveedores.index') }}">
+            <li class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
+                <a href="{{ route('suppliers.index') }}">
                     <i class="fas fa-truck"></i>
                     <span class="sidebar-label">Proveedores</span>
                 </a>

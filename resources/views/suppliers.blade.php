@@ -13,8 +13,6 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    
-    <link rel="stylesheet" href="{{ asset('estilos.php') }}">
 
     <!-- Estilos por vista -->
     @stack('styles')
@@ -35,7 +33,7 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ asset('js/proveedores.js') }}"></script>
+    <script src="{{ asset('js/suppliers.js') }}"></script>
     @stack('scripts')
 </body>
 

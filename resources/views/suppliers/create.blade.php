@@ -1,4 +1,4 @@
-@extends('proveedores')
+@extends('suppliers')
 
 @section('Titulo pagina', 'Registrar Proveedor')
 
@@ -7,74 +7,74 @@
 @endsection
 
 @section('contenido')
-    <div class="formulario-container">
-        <!-- Cabecera -->
-        <div class="formulario-header">
+    <div class="form-container">
+        <!-- Header -->
+        <div class="form-header">
             <h1>Registrar Nuevo Proveedor</h1>
             <p>Completa el formulario para agregar un proveedor</p>
         </div>
 
-        <!-- Tarjeta del formulario -->
-        <div class="formulario-card">
-            <!-- Mensaje de feedback -->
+        <!-- Form card -->
+        <div class="form-card">
+            <!-- Feedback message -->
             <div id="mensajeFeedbackRegistro" class="feedback-message hidden">
                 <i class="fas fa-info-circle"></i>
                 <span></span>
             </div>
 
-            <form id="formRegistro" class="formulario-body" action="{{ route('proveedores.store') }}" method="POST">
+            <form id="formRegistro" class="form-body" action="{{ route('suppliers.store') }}" method="POST">
                 @csrf
 
-                <!-- Nombre del proveedor -->
+                <!-- Supplier name -->
                 <div class="form-group">
-                    <label for="nombre">Nombre del Proveedor</label>
-                    <input type="text" id="nombre" name="nombre" required 
+                    <label for="name">Nombre del Proveedor</label>
+                    <input type="text" id="name" name="name" required 
                            placeholder="Ej: Distribuidora ABC S.A.">
                 </div>
 
-                <!-- Contacto principal -->
+                <!-- Primary contact -->
                 <div class="form-group">
-                    <label for="contacto_principal">Contacto Principal</label>
-                    <input type="text" id="contacto_principal" name="contacto_principal" required 
+                    <label for="primary_contact">Contacto Principal</label>
+                    <input type="text" id="primary_contact" name="primary_contact" required 
                            placeholder="Ej: María González">
                 </div>
 
-                <!-- Fila de teléfono y email -->
+                <!-- Phone and email row -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="telefono">Teléfono</label>
-                        <input type="tel" id="telefono" name="telefono" required 
+                        <label for="phone">Teléfono</label>
+                        <input type="tel" id="phone" name="phone" required 
                                placeholder="Ej: 88887777">
                     </div>
                     <div class="form-group">
-                        <label for="correo_electronico">Correo Electrónico</label>
-                        <input type="email" id="correo_electronico" name="correo_electronico" required 
+                        <label for="email">Correo Electrónico</label>
+                        <input type="email" id="email" name="email" required 
                                placeholder="contacto@proveedor.com">
                     </div>
                 </div>
 
-                <!-- Dirección -->
+                <!-- Address -->
                 <div class="form-group">
-                    <label for="direccion">Dirección</label>
-                    <textarea id="direccion" name="direccion" required rows="2" 
+                    <label for="address">Dirección</label>
+                    <textarea id="address" name="address" required rows="2" 
                               placeholder="Ej: San José, 200m norte de la iglesia"></textarea>
                 </div>
 
-                <!-- Fila de tiempo de entrega y evaluación -->
+                <!-- Delivery time and rating row -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="tiempo_entrega">Tiempo de Entrega (días)</label>
-                        <input type="number" id="tiempo_entrega" name="tiempo_entrega" required 
+                        <label for="delivery_time">Tiempo de Entrega (días)</label>
+                        <input type="number" id="delivery_time" name="delivery_time" required 
                                min="1" max="365" placeholder="Ej: 7">
                     </div>
                     <div class="form-group optional">
-                        <label for="evaluacion">Evaluación (0-5)</label>
-                        <input type="number" id="evaluacion" name="evaluacion" 
+                        <label for="rating">Evaluación (0-5)</label>
+                        <input type="number" id="rating" name="rating" 
                                min="0" max="5" step="0.1" placeholder="Ej: 4.5">
                     </div>
                 </div>
 
-                <!-- Información adicional -->
+                <!-- Additional info -->
                 <div class="info-section">
                     <p>
                         <strong>Información importante</strong><br>
@@ -83,15 +83,15 @@
                     </p>
                 </div>
 
-                <!-- Acciones del formulario -->
+                <!-- Form actions -->
                 <div class="form-actions">
                     <button type="submit" id="btnRegistroSubmit" class="btn btn-primary" 
-                            onclick="registrarProveedor(event)">
+                            onclick="registerSupplier(event)">
                         <i class="fas fa-truck"></i>
                         <span id="btnRegistroTexto">Registrar Proveedor</span>
                         <span id="btnRegistroCargando" class="hidden">Registrando...</span>
                     </button>
-                    <a href="{{ route('proveedores.index') }}" class="btn btn-secondary">
+                    <a href="{{ route('suppliers.index') }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i>
                         Volver al Listado
                     </a>
@@ -102,8 +102,5 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/proveedores/variables.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/proveedores/main.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/proveedores/admin.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/proveedores/formularios.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/suppliers/supplier.css') }}">
 @endpush

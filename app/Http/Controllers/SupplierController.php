@@ -14,26 +14,26 @@ class SupplierController extends Controller
         $query = Supplier::query();
 
         // Aplicar filtros
-        if (request('nombre')) {
-            $nombre = request('nombre');
-            $query->where('nombre', 'like', "%{$nombre}%");
+        if (request('name')) {
+            $name = request('name');
+            $query->where('name', 'like', "%{$name}%");
         }
 
-        if (request('contacto')) {
-            $contacto = request('contacto');
-            $query->where('contacto_principal', 'like', "%{$contacto}%");
+        if (request('contact')) {
+            $contact = request('contact');
+            $query->where('primary_contact', 'like', "%{$contact}%");
         }
 
-        $promedioEvaluacion = $query->avg('evaluacion');
-        $proveedores = $query->paginate(10);
+        $averageRating = $query->avg('rating');
+        $suppliers = $query->paginate(10);
 
-        return view('proveedores.index', compact('proveedores', 'promedioEvaluacion'));
+        return view('suppliers.index', compact('suppliers', 'averageRating'));
     }
 
     // Mostrar formulario de creación
     public function create()
     {
-        return view('proveedores.create');
+        return view('suppliers.create');
     }
 
     // Guardar nuevo proveedor
@@ -46,7 +46,7 @@ class SupplierController extends Controller
             @mkdir($logDir, 0755, true);
         }
         $logData = [
-            'location' => 'ProveedorController.php:38',
+            'location' => 'SupplierController.php:38',
             'message' => 'Store method called - CSRF check',
             'data' => [
                 'hasCsrfToken' => $request->has('_token'),
@@ -62,61 +62,61 @@ class SupplierController extends Controller
         ];
         @file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND | LOCK_EX);
         // #endregion
-        
+
         $validator = Validator::make($request->all(), [
-            'nombre' => 'required|string|max:100|min:2',
-            'contacto_principal' => 'required|string|max:100|min:2|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\'\s]+$/',
-            'telefono' => 'required|string|min:8|max:20',
-            'correo_electronico' => 'required|email|max:100|min:10|unique:proveedores,correo_electronico',
-            'direccion' => 'required|string|min:5|max:255',
-            'tiempo_entrega' => 'required|integer|min:1|max:365',
-            'evaluacion' => 'nullable|numeric|min:0|max:5',
+            'name'            => 'required|string|max:100|min:2',
+            'primary_contact' => 'required|string|max:100|min:2|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\'\s]+$/',
+            'phone'           => 'required|string|min:8|max:20',
+            'email'           => 'required|email|max:100|min:10|unique:suppliers,email',
+            'address'         => 'required|string|min:5|max:255',
+            'delivery_time'   => 'required|integer|min:1|max:365',
+            'rating'          => 'nullable|numeric|min:0|max:5',
         ], [
-            'nombre.required' => 'El nombre es obligatorio.',
-            'nombre.min' => 'El nombre debe tener al menos 2 caracteres.',
-            'nombre.max' => 'El nombre no puede tener más de 100 caracteres.',
-            'contacto_principal.required' => 'El contacto principal es obligatorio.',
-            'contacto_principal.min' => 'El contacto principal debe tener al menos 2 caracteres.',
-            'contacto_principal.regex' => 'El contacto solo puede contener letras y espacios.',
-            'telefono.required' => 'El teléfono es obligatorio.',
-            'telefono.min' => 'El teléfono debe tener al menos 8 dígitos.',
-            'correo_electronico.required' => 'El correo electrónico es obligatorio.',
-            'correo_electronico.email' => 'Debe ser un correo electrónico válido.',
-            'correo_electronico.unique' => 'Este correo ya está registrado.',
-            'correo_electronico.max' => 'El correo electrónico no puede tener más de 100 caracteres.',
-            'correo_electronico.min' => 'El correo electrónico debe tener al menos 10 caracteres.',
-            'direccion.required' => 'La dirección es obligatoria.',
-            'direccion.min' => 'La dirección debe tener al menos 5 caracteres.',
-            'tiempo_entrega.required' => 'El tiempo de entrega es obligatorio.',
-            'tiempo_entrega.min' => 'El tiempo de entrega debe ser al menos 1 día.',
-            'tiempo_entrega.max' => 'El tiempo de entrega no puede ser mayor a 365 días.',
-            'evaluacion.max' => 'La evaluación no puede ser mayor a 5.',
+            'name.required'            => 'El nombre es obligatorio.',
+            'name.min'                 => 'El nombre debe tener al menos 2 caracteres.',
+            'name.max'                 => 'El nombre no puede tener más de 100 caracteres.',
+            'primary_contact.required' => 'El contacto principal es obligatorio.',
+            'primary_contact.min'      => 'El contacto principal debe tener al menos 2 caracteres.',
+            'primary_contact.regex'    => 'El contacto solo puede contener letras y espacios.',
+            'phone.required'           => 'El teléfono es obligatorio.',
+            'phone.min'                => 'El teléfono debe tener al menos 8 dígitos.',
+            'email.required'           => 'El correo electrónico es obligatorio.',
+            'email.email'              => 'Debe ser un correo electrónico válido.',
+            'email.unique'             => 'Este correo ya está registrado.',
+            'email.max'                => 'El correo electrónico no puede tener más de 100 caracteres.',
+            'email.min'                => 'El correo electrónico debe tener al menos 10 caracteres.',
+            'address.required'         => 'La dirección es obligatoria.',
+            'address.min'              => 'La dirección debe tener al menos 5 caracteres.',
+            'delivery_time.required'   => 'El tiempo de entrega es obligatorio.',
+            'delivery_time.min'        => 'El tiempo de entrega debe ser al menos 1 día.',
+            'delivery_time.max'        => 'El tiempo de entrega no puede ser mayor a 365 días.',
+            'rating.max'               => 'La evaluación no puede ser mayor a 5.',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors(),
+                'errors'  => $validator->errors(),
                 'message' => 'Error de validación.'
             ], 422);
         }
 
         try {
-            $Supplier = Supplier::create($request->only(
-                'nombre',
-                'contacto_principal',
-                'telefono',
-                'correo_electronico',
-                'direccion',
-                'tiempo_entrega',
-                'evaluacion'
+            $supplier = Supplier::create($request->only(
+                'name',
+                'primary_contact',
+                'phone',
+                'email',
+                'address',
+                'delivery_time',
+                'rating'
             ));
 
             return response()->json([
-                'success' => true,
-                'message' => 'Proveedor registrado exitosamente.',
-                'redirect' => route('proveedores.index'),
-                'data' => $Supplier
+                'success'  => true,
+                'message'  => 'Proveedor registrado exitosamente.',
+                'redirect' => route('suppliers.index'),
+                'data'     => $supplier
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -136,18 +136,20 @@ class SupplierController extends Controller
                 'message' => 'Proveedor no encontrado.'
             ], 404);
         }
-        
-        // Mapear los campos al formato esperado por el frontend
+
         return response()->json([
             'success' => true,
             'data' => [
-                'nombre' => $supplier->nombre,
-                'email' => $supplier->correo_electronico,
-                'telefono' => $supplier->telefono,
-                'direccion' => $supplier->direccion,
-                'evaluacion' => $supplier->evaluacion ?? '0',
-                'estado' => 'Activo', // Campo calculado si es necesario
-                'created_at' => $supplier->fecha_creacion,
+                'supplier_id'     => $supplier->supplier_id,  
+                'name'            => $supplier->name,
+                'primary_contact' => $supplier->primary_contact,  
+                'email'           => $supplier->email,
+                'phone'           => $supplier->phone,
+                'address'         => $supplier->address,
+                'delivery_time'   => $supplier->delivery_time,  
+                'rating'          => $supplier->rating ?? '0',
+                'status'          => 'Activo',
+                'created_at'      => $supplier->created_at,
             ]
         ]);
     }
@@ -159,7 +161,7 @@ class SupplierController extends Controller
         if (!$supplier) {
             return redirect()->back()->with('error', 'Proveedor no encontrado.');
         }
-        return view('proveedores.edit', compact('proveedor'));
+        return view('suppliers.edit', compact('supplier'));
     }
 
     // Actualizar proveedor
@@ -174,59 +176,59 @@ class SupplierController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'nombre' => 'required|string|max:100|min:2',
-            'contacto_principal' => 'required|string|max:100|min:2|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\'\s]+$/',
-            'telefono' => 'required|string|min:8|max:20',
-            'correo_electronico' => 'required|email|max:100|min:10|unique:proveedores,correo_electronico,' . $supplier->supplier_id . ',proveedor_id',
-            'direccion' => 'required|string|min:5|max:255',
-            'tiempo_entrega' => 'required|integer|min:1|max:365',
-            'evaluacion' => 'nullable|numeric|min:0|max:5',
+            'name'            => 'required|string|max:100|min:2',
+            'primary_contact' => 'required|string|max:100|min:2|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\'\s]+$/',
+            'phone'           => 'required|string|min:8|max:20',
+            'email'           => 'required|email|max:100|min:10|unique:suppliers,email,' . $supplier->supplier_id . ',supplier_id',
+            'address'         => 'required|string|min:5|max:255',
+            'delivery_time'   => 'required|integer|min:1|max:365',
+            'rating'          => 'nullable|numeric|min:0|max:5',
         ], [
-            'nombre.required' => 'El nombre es obligatorio.',
-            'nombre.min' => 'El nombre debe tener al menos 2 caracteres.',
-            'nombre.max' => 'El nombre no puede tener más de 100 caracteres.',
-            'contacto_principal.required' => 'El contacto principal es obligatorio.',
-            'contacto_principal.min' => 'El contacto principal debe tener al menos 2 caracteres.',
-            'contacto_principal.regex' => 'El contacto solo puede contener letras y espacios.',
-            'telefono.required' => 'El teléfono es obligatorio.',
-            'telefono.min' => 'El teléfono debe tener al menos 8 dígitos.',
-            'correo_electronico.required' => 'El correo electrónico es obligatorio.',
-            'correo_electronico.email' => 'Debe ser un correo electrónico válido.',
-            'correo_electronico.max' => 'El correo electrónico no puede tener más de 100 caracteres.',
-            'email.min' => 'El correo electrónico debe tener al menos 10 caracteres.',
-            'email.unique' => 'Este correo ya está registrado.',
-            'direccion.required' => 'La dirección es obligatoria.',
-            'direccion.min' => 'La dirección debe tener al menos 5 caracteres.',
-            'tiempo_entrega.required' => 'El tiempo de entrega es obligatorio.',
-            'tiempo_entrega.min' => 'El tiempo de entrega debe ser al menos 1 día.',
-            'tiempo_entrega.max' => 'El tiempo de entrega no puede ser mayor a 365 días.',
-            'evaluacion.max' => 'La evaluación no puede ser mayor a 5.',
+            'name.required'            => 'El nombre es obligatorio.',
+            'name.min'                 => 'El nombre debe tener al menos 2 caracteres.',
+            'name.max'                 => 'El nombre no puede tener más de 100 caracteres.',
+            'primary_contact.required' => 'El contacto principal es obligatorio.',
+            'primary_contact.min'      => 'El contacto principal debe tener al menos 2 caracteres.',
+            'primary_contact.regex'    => 'El contacto solo puede contener letras y espacios.',
+            'phone.required'           => 'El teléfono es obligatorio.',
+            'phone.min'                => 'El teléfono debe tener al menos 8 dígitos.',
+            'email.required'           => 'El correo electrónico es obligatorio.',
+            'email.email'              => 'Debe ser un correo electrónico válido.',
+            'email.max'                => 'El correo electrónico no puede tener más de 100 caracteres.',
+            'email.min'                => 'El correo electrónico debe tener al menos 10 caracteres.',
+            'email.unique'             => 'Este correo ya está registrado.',
+            'address.required'         => 'La dirección es obligatoria.',
+            'address.min'              => 'La dirección debe tener al menos 5 caracteres.',
+            'delivery_time.required'   => 'El tiempo de entrega es obligatorio.',
+            'delivery_time.min'        => 'El tiempo de entrega debe ser al menos 1 día.',
+            'delivery_time.max'        => 'El tiempo de entrega no puede ser mayor a 365 días.',
+            'rating.max'               => 'La evaluación no puede ser mayor a 5.',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors(),
+                'errors'  => $validator->errors(),
                 'message' => 'Error de validación.'
             ], 422);
         }
 
         try {
             $supplier->update($request->only(
-                'nombre',
-                'contacto_principal',
-                'telefono',
-                'correo_electronico',
-                'direccion',
-                'tiempo_entrega',
-                'evaluacion'
+                'name',
+                'primary_contact',
+                'phone',
+                'email',
+                'address',
+                'delivery_time',
+                'rating'
             ));
 
             return response()->json([
-                'success' => true,
-                'message' => 'Proveedor actualizado exitosamente.',
-                'redirect' => route('proveedores.index'),
-                'data' => $supplier
+                'success'  => true,
+                'message'  => 'Proveedor actualizado exitosamente.',
+                'redirect' => route('suppliers.index'),
+                'data'     => $supplier
             ]);
         } catch (\Exception $e) {
             return response()->json([
