@@ -35,26 +35,26 @@
                 @foreach($productosDestacados as $producto)
                     <div class="product-card">
                         <div class="product-image">
-                            <img src="{{ asset('assets/images/products/' . ($producto->imagen ?? 'default.png')) }}" 
-                                 alt="{{ $producto->nombre }}"
+                            <img src="{{ asset('assets/images/products/' . ($producto->image ?? 'default.png')) }}" 
+                                 alt="{{ $producto->name }}"
                                  onerror="this.src='{{ asset('favicon.svg') }}'">
-                            @if($producto->stock_actual <= 10)
+                            @if($producto->stock_current <= 10)
                                 <span class="product-badge stock-low">Stock Bajo</span>
                             @endif
                         </div>
                         <div class="product-info">
-                            <div class="product-category">{{ $producto->categoria->nombre ?? 'Sin categoría' }}</div>
-                            <h3 class="product-name">{{ $producto->nombre }}</h3>
-                            @if($producto->descripcion)
-                                <p class="product-description">{{ Str::limit($producto->descripcion, 80) }}</p>
+                            <div class="product-category">{{ $producto->category->name ?? 'Uncategorized' }}</div>
+                            <h3 class="product-name">{{ $producto->name }}</h3>
+                            @if($producto->description)
+                                <p class="product-description">{{ Str::limit($producto->description, 80) }}</p>
                             @endif
                             <div class="product-footer">
-                                <div class="product-price">₡{{ number_format($producto->precio_venta, 0, ',', '.') }}</div>
+                                <div class="product-price">₡{{ number_format($producto->sale_price, 0, ',', '.') }}</div>
                                 <button class="btn btn-primary btn-sm add-to-cart-btn" 
-                                        data-product-id="{{ $producto->producto_id }}"
-                                        data-product-name="{{ $producto->nombre }}"
-                                        data-product-price="{{ $producto->precio_venta }}"
-                                        data-product-stock="{{ $producto->stock_actual }}">
+                                        data-product-id="{{ $producto->product_id }}"
+                                        data-product-name="{{ $producto->name }}"
+                                        data-product-price="{{ $producto->sale_price }}"
+                                        data-product-stock="{{ $producto->stock_current }}">
                                     <i class="fas fa-cart-plus"></i>
                                     Agregar
                                 </button>
@@ -90,13 +90,13 @@
         
         <div class="categories-grid">
             @foreach($categorias as $categoria)
-                <a href="{{ route('clientes.catalogo', ['categoria_id' => $categoria->categoria_id]) }}" class="category-card">
+                <a href="{{ route('clientes.catalogo', ['categoria_id' => $categoria->category_id]) }}" class="category-card">
                     <div class="category-icon">
                         <i class="fas fa-bicycle"></i>
                     </div>
-                    <h3 class="category-name">{{ $categoria->nombre }}</h3>
-                    @if($categoria->descripcion)
-                        <p class="category-description">{{ Str::limit($categoria->descripcion, 60) }}</p>
+                    <h3 class="category-name">{{ $categoria->name }}</h3>
+                    @if($categoria->description)
+                        <p class="category-description">{{ Str::limit($categoria->description, 60) }}</p>
                     @endif
                     <span class="category-link">
                         Ver productos

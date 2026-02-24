@@ -35,26 +35,26 @@
                 <?php $__currentLoopData = $productosDestacados; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $producto): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="product-card">
                         <div class="product-image">
-                            <img src="<?php echo e(asset('assets/images/products/' . ($producto->imagen ?? 'default.png'))); ?>" 
-                                 alt="<?php echo e($producto->nombre); ?>"
+                            <img src="<?php echo e(asset('assets/images/products/' . ($producto->image ?? 'default.png'))); ?>" 
+                                 alt="<?php echo e($producto->name); ?>"
                                  onerror="this.src='<?php echo e(asset('favicon.svg')); ?>'">
-                            <?php if($producto->stock_actual <= 10): ?>
+                            <?php if($producto->stock_current <= 10): ?>
                                 <span class="product-badge stock-low">Stock Bajo</span>
                             <?php endif; ?>
                         </div>
                         <div class="product-info">
-                            <div class="product-category"><?php echo e($producto->categoria->nombre ?? 'Sin categoría'); ?></div>
-                            <h3 class="product-name"><?php echo e($producto->nombre); ?></h3>
-                            <?php if($producto->descripcion): ?>
-                                <p class="product-description"><?php echo e(Str::limit($producto->descripcion, 80)); ?></p>
+                            <div class="product-category"><?php echo e($producto->category->name ?? 'Uncategorized'); ?></div>
+                            <h3 class="product-name"><?php echo e($producto->name); ?></h3>
+                            <?php if($producto->description): ?>
+                                <p class="product-description"><?php echo e(Str::limit($producto->description, 80)); ?></p>
                             <?php endif; ?>
                             <div class="product-footer">
-                                <div class="product-price">₡<?php echo e(number_format($producto->precio_venta, 0, ',', '.')); ?></div>
+                                <div class="product-price">₡<?php echo e(number_format($producto->sale_price, 0, ',', '.')); ?></div>
                                 <button class="btn btn-primary btn-sm add-to-cart-btn" 
-                                        data-product-id="<?php echo e($producto->producto_id); ?>"
-                                        data-product-name="<?php echo e($producto->nombre); ?>"
-                                        data-product-price="<?php echo e($producto->precio_venta); ?>"
-                                        data-product-stock="<?php echo e($producto->stock_actual); ?>">
+                                        data-product-id="<?php echo e($producto->product_id); ?>"
+                                        data-product-name="<?php echo e($producto->name); ?>"
+                                        data-product-price="<?php echo e($producto->sale_price); ?>"
+                                        data-product-stock="<?php echo e($producto->stock_current); ?>">
                                     <i class="fas fa-cart-plus"></i>
                                     Agregar
                                 </button>
@@ -90,13 +90,13 @@
         
         <div class="categories-grid">
             <?php $__currentLoopData = $categorias; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $categoria): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <a href="<?php echo e(route('clientes.catalogo', ['categoria_id' => $categoria->categoria_id])); ?>" class="category-card">
+                <a href="<?php echo e(route('clientes.catalogo', ['categoria_id' => $categoria->category_id])); ?>" class="category-card">
                     <div class="category-icon">
                         <i class="fas fa-bicycle"></i>
                     </div>
-                    <h3 class="category-name"><?php echo e($categoria->nombre); ?></h3>
-                    <?php if($categoria->descripcion): ?>
-                        <p class="category-description"><?php echo e(Str::limit($categoria->descripcion, 60)); ?></p>
+                    <h3 class="category-name"><?php echo e($categoria->name); ?></h3>
+                    <?php if($categoria->description): ?>
+                        <p class="category-description"><?php echo e(Str::limit($categoria->description, 60)); ?></p>
                     <?php endif; ?>
                     <span class="category-link">
                         Ver productos

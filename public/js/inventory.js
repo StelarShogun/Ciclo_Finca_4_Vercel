@@ -492,15 +492,15 @@ if (typeof Swal !== 'undefined') {
                 if(data.success){
                     const product = data.data;
                     editProductForm.action = `/products/${productId}`;
-                    qs('#edit-name').value = product.nombre || '';
-                    qs('#edit-description').value = product.descripcion || '';
-                    qs('#edit-category').value = product.categoria_id || '';
-                    qs('#edit-provider').value = product.proveedor_id || '';
-                    qs('#edit-price-buy').value = product.precio_compra || '';
-                    qs('#edit-price-sell').value = product.precio_venta || '';
-                    qs('#edit-stock').value = product.stock_actual || '';
-                    qs('#edit-stock-min').value = product.stock_minimo || '';
-                    qs('#edit-status').value = product.estado || 'activo';
+                    qs('#edit-name').value = product.name || '';
+                    qs('#edit-description').value = product.description || '';
+                    qs('#edit-category').value = product.category_id || '';
+                    qs('#edit-provider').value = product.supplier_id || '';
+                    qs('#edit-price-buy').value = product.purchase_price || '';
+                    qs('#edit-price-sell').value = product.sale_price || '';
+                    qs('#edit-stock').value = product.stock_current || '';
+                    qs('#edit-stock-min').value = product.stock_minimum || '';
+                    qs('#edit-status').value = product.status || 'active';
                     editModal.classList.add('active');
                 } else {
                     Swal.fire({
@@ -649,43 +649,43 @@ if (typeof Swal !== 'undefined') {
                         <div class="product-details-grid">
                             <div class="product-details-item">
                                 <label><i class="fas fa-image icon"></i> Imagen:</label>
-                                ${product.imagen ? `<img src="/assets/images/products/${product.imagen}" alt="${product.nombre}" style="max-width: 100%; height: auto; border-radius: var(--border-radius); margin-top: 10px;">` : '<p>No hay imagen</p>'}
+                                ${product.image ? `<img src="/assets/images/products/${product.image}" alt="${product.name}" style="max-width: 100%; height: auto; border-radius: var(--border-radius); margin-top: 10px;">` : '<p>No hay imagen</p>'}
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-tag icon"></i> Nombre:</label>
-                                <p>${product.nombre}</p>
+                                <p>${product.name}</p>
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-align-left icon"></i> Descripción:</label>
-                                <p>${product.descripcion || '-'}</p>
+                                <p>${product.description || '-'}</p>
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-boxes icon"></i> Categoría:</label>
-                                <p>${product.categoria.nombre}</p>
+                                <p>${product.category?.name || '-'}</p>
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-truck icon"></i> Proveedor:</label>
-                                <p>${product.proveedor.nombre}</p>
+                                <p>${product.supplier?.name || '-'}</p>
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-dollar-sign icon"></i> Precio de Compra:</label>
-                                <p>₡${product.precio_compra}</p>
+                                <p>₡${product.purchase_price}</p>
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-money-bill-wave icon"></i> Precio de Venta:</label>
-                                <p>₡${product.precio_venta}</p>
+                                <p>₡${product.sale_price}</p>
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-warehouse icon"></i> Stock Actual:</label>
-                                <p>${product.stock_actual}</p>
+                                <p>${product.stock_current}</p>
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-minus-circle icon"></i> Stock Mínimo:</label>
-                                <p>${product.stock_minimo}</p>
+                                <p>${product.stock_minimum}</p>
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-info-circle icon"></i> Estado:</label>
-                                <p>${product.estado}</p>
+                                <p>${product.status}</p>
                             </div>
                         </div>
                     `;

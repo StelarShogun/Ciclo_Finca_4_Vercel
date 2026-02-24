@@ -1,66 +1,66 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\Producto;
-use App\Models\Categoria;
-use App\Models\Proveedor;
-use App\Http\Requests\StoreProductoRequest;
-use App\Http\Requests\UpdateProductoRequest;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\Supplier;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
-class ProductoController extends Controller
+class ProductController extends Controller
 {
 
     public function index(Request $request)
     {
         if ($request->wantsJson() || $request->ajax()) {
             $perPage = $request->get('per_page', 10);
-            $productos = Producto::with(['categoria', 'proveedor'])
-                ->orderBy('producto_id', 'desc')
+            $products = Product::with(['category', 'supplier'])
+                ->orderBy('product_id', 'desc')
                 ->paginate($perPage);
-            return response()->json($productos);
+            return response()->json($products);
         }
 
         return $this->inventory($request);
     }
 
 
-    public function store(StoreProductoRequest $request)
+    public function store(StoreProductRequest $request)
     {
         try {
             // Transacción para crear producto
-            $producto = DB::transaction(function () use ($request) {
+            $product = DB::transaction(function () use ($request) {
                 $data = $request->validated();
 
-                if ($request->hasFile('imagen')) {
-                    $imageName = time().'.'.$request->imagen->extension();
-                    $request->imagen->move(public_path('assets/images/products'), $imageName);
-                    $data['imagen'] = $imageName;
+                if ($request->hasFile('image')) {
+                    $imageName = time().'.'.$request->image->extension();
+                    $request->image->move(public_path('assets/images/products'), $imageName);
+                    $data['image'] = $imageName;
                 }
 
-                return Producto::create($data);
+                return Product::create($data);
             });
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Producto creado exitosamente',
-                    'data' => $producto->load(['categoria', 'proveedor'])
+                    'message' => 'Product created successfully',
+                    'data' => $product->load(['category', 'supplier'])
                 ]);
             }
 
-            return redirect()->route('inventory')->with('status','Producto creado exitosamente');
+            return redirect()->route('inventory')->with('status','Product created successfully');
         } catch (ValidationException $e) {
             $errors = $e->errors();
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'errors' => $errors,
-                    'message' => 'Por favor corrige los errores en el formulario',
+                    'message' => 'Please fix the errors in the form',
                 ], 422);
             }
             return redirect()->back()->withErrors($errors)->withInput();
@@ -68,54 +68,54 @@ class ProductoController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No se pudo crear el producto. Inténtalo de nuevo.',
+                    'message' => 'The product could not be created. Please try again.',
                 ], 500);
             }
-            return redirect()->back()->with('error', 'No se pudo crear el producto. Inténtalo de nuevo.')->withInput();
+            return redirect()->back()->with('error', 'The product could not be created. Please try again.')->withInput();
         }
     }
 
     public function show($id)
     {
         try {
-            $producto = Producto::with(['categoria','proveedor'])->findOrFail($id);
+            $product = Product::with(['category','supplier'])->findOrFail($id);
             
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'data' => $producto
+                    'data' => $product
                 ]);
             }
             
-            return view('productos.show', compact('producto'));
+            return view('products.show', compact('product'));
         } catch (\Exception $e) {
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Producto no encontrado',
+                    'message' => 'Product not found',
                     'error' => $e->getMessage()
                 ], 404);
             }
             
-            return redirect()->route('inventory')->with('error', 'Producto no encontrado');
+            return redirect()->route('inventory')->with('error', 'Product not found');
         }
     }
 
-    public function update(UpdateProductoRequest $request, $id)
+    public function update(UpdateProductRequest $request, $id)
     {
         try {
-            $producto = DB::transaction(function() use ($request, $id) {
-                $p = Producto::findOrFail($id);
+            $product = DB::transaction(function() use ($request, $id) {
+                $p = Product::findOrFail($id);
                 $data = $request->validated();
 
-                if ($request->hasFile('imagen')) {
+                if ($request->hasFile('image')) {
                     // Eliminar imagen anterior si existe
-                    if ($p->imagen && file_exists(public_path('assets/images/products/' . $p->imagen))) {
-                        unlink(public_path('assets/images/products/' . $p->imagen));
+                    if ($p->image && file_exists(public_path('assets/images/products/' . $p->image))) {
+                        unlink(public_path('assets/images/products/' . $p->image));
                     }
-                    $imageName = time().'.'.$request->imagen->extension();
-                    $request->imagen->move(public_path('assets/images/products'), $imageName);
-                    $data['imagen'] = $imageName;
+                    $imageName = time().'.'.$request->image->extension();
+                    $request->image->move(public_path('assets/images/products'), $imageName);
+                    $data['image'] = $imageName;
                 }
 
                 $p->update($data);
@@ -125,19 +125,19 @@ class ProductoController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Producto actualizado exitosamente',
-                    'data' => $producto->load(['categoria', 'proveedor'])
+                    'message' => 'Product updated successfully',
+                    'data' => $product->load(['category', 'supplier'])
                 ]);
             }
 
-            return redirect()->route('inventory')->with('status','Producto actualizado exitosamente');
+            return redirect()->route('inventory')->with('status','Product updated successfully');
         } catch (ValidationException $e) {
             $errors = $e->errors();
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'errors' => $errors,
-                    'message' => 'Por favor corrige los errores en el formulario',
+                    'message' => 'Please fix the errors in the form',
                 ], 422);
             }
             return redirect()->back()->withErrors($errors)->withInput();
@@ -151,10 +151,10 @@ class ProductoController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No se pudo actualizar el producto. Inténtalo de nuevo.',
+                    'message' => 'The product could not be updated. Please try again.',
                 ], 500);
             }
-            return redirect()->back()->with('error', 'No se pudo actualizar el producto. Inténtalo de nuevo.')->withInput();
+            return redirect()->back()->with('error', 'The product could not be updated. Please try again.')->withInput();
         }
     }
 
@@ -162,25 +162,25 @@ class ProductoController extends Controller
     {
         try {
             DB::transaction(function() use ($id) {
-                $p = Producto::findOrFail($id);
-                $p->update(['estado' => 'inactivo']);
+                $p = Product::findOrFail($id);
+                $p->update(['status' => 'inactive']);
             });
 
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Producto inactivado correctamente',
+                    'message' => 'Product deactivated successfully',
                 ]);
             }
-            return redirect()->route('inventory')->with('status','Producto inactivado correctamente');
+            return redirect()->route('inventory')->with('status','Product deactivated successfully');
         } catch (\Throwable $e) {
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Error al inactivar el producto: ' . $e->getMessage(),
+                    'message' => 'Error deactivating product: ' . $e->getMessage(),
                 ], 500);
             }
-            return redirect()->back()->with('error', 'Error al inactivar el producto');
+            return redirect()->back()->with('error', 'Error deactivating product');
         }
     }
 
@@ -188,133 +188,136 @@ class ProductoController extends Controller
     {
         try {
             DB::transaction(function() use ($id) {
-                $p = Producto::findOrFail($id);
+                $p = Product::findOrFail($id);
                 $p->delete(); // Eliminación definitiva
             });
 
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Producto eliminado definitivamente',
+                    'message' => 'Product permanently deleted',
                 ]);
             }
-            return redirect()->route('inventory')->with('status','Producto eliminado definitivamente');
+            return redirect()->route('inventory')->with('status','Product permanently deleted');
         } catch (\Throwable $e) {
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Error al eliminar el producto: ' . $e->getMessage(),
+                    'message' => 'Error deleting product: ' . $e->getMessage(),
                 ], 500);
             }
-            return redirect()->back()->with('error', 'Error al eliminar el producto');
+            return redirect()->back()->with('error', 'Error deleting product');
         }
     }
 
     public function create()
     {
-        return view('productos.create');
+        return view('products.create');
     }
 
     public function edit($id)
     {
-        $producto = Producto::findOrFail($id);
-        return view('productos.edit', compact('producto'));
+        $product = Product::findOrFail($id);
+        return view('products.edit', compact('product'));
     }
 
     public function inventory(Request $request)
     {
-        $query = Producto::with(['categoria', 'proveedor']);
+        $query = Product::with(['category', 'supplier']);
 
         // Aplicar filtros
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
-                $q->where('nombre', 'like', '%' . $request->search . '%')
-                  ->orWhere('descripcion', 'like', '%' . $request->search . '%');
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
             });
         }
 
-        if ($request->filled('categoria_id')) {
-            $query->where('categoria_id', $request->categoria_id);
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
         }
 
         if ($request->filled('stock_status')) {
             switch ($request->stock_status) {
                 case 'in-stock':
-                    $query->where('stock_actual', '>', 10);
+                    $query->where('stock_current', '>', 10);
                     break;
                 case 'low':
-                    $query->where('stock_actual', '>', 0)->where('stock_actual', '<=', 10);
+                    $query->where('stock_current', '>', 0)->where('stock_current', '<=', 10);
                     break;
                 case 'out':
-                    $query->where('stock_actual', 0);
+                    $query->where('stock_current', 0);
                     break;
             }
         }
 
-        if ($request->filled('estado')) {
-            $query->where('estado', $request->estado);
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
         // Ordenamiento
-        $sort = $request->get('sort', 'producto_id');
+        $sort = $request->get('sort', 'product_id');
         $order = $request->get('order', 'desc');
         $query->orderBy($sort, $order);
 
         // Paginación
         $perPage = $request->get('per_page', 10);
-        $productos = $query->paginate($perPage);
+        $paginator = $query->paginate($perPage);
 
         // Transformar datos para la vista
-        $products = $productos->getCollection()->map(function($producto) {
+        $products = $paginator->getCollection()->map(function($product) {
             return (object)[
-                'producto_id' => $producto->producto_id,
-                'id' => $producto->producto_id, // Mantener compatibilidad
-                'nombre' => $producto->nombre,
-                'name' => $producto->nombre, // Mantener compatibilidad
-                'sku' => 'BK-' . str_pad($producto->producto_id, 3, '0', STR_PAD_LEFT),
-                'image' => $producto->imagen ?? 'default.png',
-                'category' => (object)['name' => $producto->categoria->nombre ?? 'Sin categoría'],
-                'stock' => $producto->stock_actual,
-                'stock_status_class' => $producto->stock_actual > 10 ? 'success' : 
-                                      ($producto->stock_actual > 0 ? 'warning' : 'danger'),
-                'price' => $producto->precio_venta,
-                'status' => ucfirst($producto->estado),
-                'status_class' => $producto->estado === 'activo' ? 'success' : 
-                                ($producto->estado === 'inactivo' ? 'warning' : 'secondary')
+                'product_id' => $product->product_id,
+                'id' => $product->product_id,
+                'name' => $product->name,
+                'sku' => 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT),
+                'image' => $product->image ?? 'default.png',
+                'category' => (object)['name' => $product->category->name ?? 'Uncategorized'],
+                'stock' => $product->stock_current,
+                'stock_status_class' => $product->stock_current > 10 ? 'success' :
+                                      ($product->stock_current > 0 ? 'warning' : 'danger'),
+                'price' => $product->sale_price,
+                'status' => ucfirst(str_replace('_', ' ', $product->status)),
+                'status_class' => $product->status === 'active' ? 'success' :
+                                ($product->status === 'inactive' ? 'warning' : 'secondary')
             ];
         });
 
         // Obtener categorías para el filtro
-        $categorias = Categoria::orderBy('nombre')->get(['categoria_id', 'nombre']);
+        $categories = Category::orderBy('name')->get(['category_id', 'name']);
 
-        return view('inventory', compact('products', 'productos', 'categorias'));
+        return view('products.inventory', [
+            'products' => $products,
+            'paginator' => $paginator,
+            'categories' => $categories,
+        ]);
     }
 
     public function export(Request $request, $format = null)
     {
         $format = strtolower($format ?? $request->get('format', 'csv'));
     
-        $data = Producto::with(['categoria:categoria_id,nombre','proveedor:proveedor_id,nombre'])
-            ->orderBy('nombre')
+        $data = Product::with(['category:category_id,name','supplier:supplier_id,name'])
+            ->orderBy('name')
             ->get();
     
         if ($format === 'xml') {
-            $xml = new \SimpleXMLElement('<productos/>');
+            $xml = new \SimpleXMLElement('<products/>');
             foreach ($data as $p) {
-                $n = $xml->addChild('producto');
-                $n->addChild('id', $p->producto_id);
-                $n->addChild('nombre', htmlspecialchars($p->nombre));
-                $n->addChild('descripcion', htmlspecialchars($p->descripcion ?? ''));
-                $n->addChild('categoria', htmlspecialchars(optional($p->categoria)->nombre));
-                $n->addChild('proveedor', htmlspecialchars(optional($p->proveedor)->nombre));
-                $n->addChild('precio_compra', number_format((float)$p->precio_compra,2,'.',''));
-                $n->addChild('precio_venta', number_format((float)$p->precio_venta,2,'.',''));
-                $n->addChild('stock_actual', (string)$p->stock_actual);
-                $n->addChild('stock_minimo', (string)$p->stock_minimo);
-                $n->addChild('estado', $p->estado);
-                $n->addChild('fecha_creacion', (string)$p->fecha_creacion);
+                $n = $xml->addChild('product');
+                $n->addChild('id', $p->product_id);
+                $n->addChild('name', htmlspecialchars($p->name));
+                $n->addChild('description', htmlspecialchars($p->description ?? ''));
+                $n->addChild('category', htmlspecialchars(optional($p->category)->name));
+                $n->addChild('supplier', htmlspecialchars(optional($p->supplier)->name));
+                $n->addChild('purchase_price', number_format((float)$p->purchase_price,2,'.',''));
+                $n->addChild('sale_price', number_format((float)$p->sale_price,2,'.',''));
+                $n->addChild('stock_current', (string)$p->stock_current);
+                $n->addChild('stock_minimum', (string)$p->stock_minimum);
+                $n->addChild('status', $p->status);
+                $n->addChild('created_at', (string)$p->created_at);
             }
-            $filename = 'productos_'.date('Ymd_His').'.xml';
+            $filename = 'products_'.date('Ymd_His').'.xml';
             return response($xml->asXML(), 200, [
                 'Content-Type' => 'application/xml',
                 'Content-Disposition' => "attachment; filename=\"$filename\"",
@@ -324,20 +327,20 @@ class ProductoController extends Controller
         if ($format === 'json') {
             $payload = $data->map(function($p){
                 return [
-                    'id' => $p->producto_id,
-                    'nombre' => $p->nombre,
-                    'descripcion' => $p->descripcion,
-                    'categoria' => optional($p->categoria)->nombre,
-                    'proveedor' => optional($p->proveedor)->nombre,
-                    'precio_compra' => $p->precio_compra,
-                    'precio_venta' => $p->precio_venta,
-                    'stock_actual' => $p->stock_actual,
-                    'stock_minimo' => $p->stock_minimo,
-                    'estado' => $p->estado,
-                    'fecha_creacion' => $p->fecha_creacion,
+                    'id' => $p->product_id,
+                    'name' => $p->name,
+                    'description' => $p->description,
+                    'category' => optional($p->category)->name,
+                    'supplier' => optional($p->supplier)->name,
+                    'purchase_price' => $p->purchase_price,
+                    'sale_price' => $p->sale_price,
+                    'stock_current' => $p->stock_current,
+                    'stock_minimum' => $p->stock_minimum,
+                    'status' => $p->status,
+                    'created_at' => $p->created_at,
                 ];
             });
-            $filename = 'productos_'.date('Ymd_His').'.json';
+            $filename = 'products_'.date('Ymd_His').'.json';
             return response()->streamDownload(function() use ($payload){
                 // Usar print en lugar de echo para mejor control en closures
                 print($payload->toJson(JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT));
@@ -345,26 +348,26 @@ class ProductoController extends Controller
         }
         
         if ($format === 'pdf') {
-            $filename = 'productos_'.date('Ymd_His').'.pdf';
+            $filename = 'products_'.date('Ymd_His').'.pdf';
             
             // Preparar datos para la vista PDF
             $products = $data->map(function($p) {
                 return (object)[
-                    'id' => $p->producto_id,
-                    'nombre' => $p->nombre,
-                    'descripcion' => $p->descripcion ?? 'Sin descripción',
-                    'categoria' => optional($p->categoria)->nombre ?? 'Sin categoría',
-                    'proveedor' => optional($p->proveedor)->nombre ?? 'Sin proveedor',
-                    'precio_compra' => number_format((float)$p->precio_compra, 2),
-                    'precio_venta' => number_format((float)$p->precio_venta, 2),
-                    'stock_actual' => $p->stock_actual,
-                    'stock_minimo' => $p->stock_minimo,
-                    'estado' => ucfirst($p->estado),
-                    'fecha_creacion' => $p->fecha_creacion ? $p->fecha_creacion->format('d/m/Y') : 'N/A',
+                    'id' => $p->product_id,
+                    'name' => $p->name,
+                    'description' => $p->description ?? 'No description',
+                    'category' => optional($p->category)->name ?? 'Uncategorized',
+                    'supplier' => optional($p->supplier)->name ?? 'No supplier',
+                    'purchase_price' => number_format((float)$p->purchase_price, 2),
+                    'sale_price' => number_format((float)$p->sale_price, 2),
+                    'stock_current' => $p->stock_current,
+                    'stock_minimum' => $p->stock_minimum,
+                    'status' => ucfirst(str_replace('_', ' ', $p->status)),
+                    'created_at' => $p->created_at ? $p->created_at->format('d/m/Y') : 'N/A',
                 ];
             });
             
-            $pdf = PDF::loadView('exports.productos-pdf', [
+            $pdf = PDF::loadView('products.products-pdf', [
                 'products' => $products,
                 'total' => $products->count(),
                 'fecha_exportacion' => now()->format('d/m/Y H:i:s')
@@ -374,25 +377,25 @@ class ProductoController extends Controller
         }
     
         // CSV por defecto
-        $filename = 'productos_'.date('Ymd_His').'.csv';
+        $filename = 'products_'.date('Ymd_His').'.csv';
         return response()->streamDownload(function() use ($data){
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF"); // BOM UTF-8
-            fputcsv($out, ['ID','Nombre','Descripción','Imagen','Categoría','Proveedor','Precio Compra','Precio Venta','Stock','Mínimo','Estado','Creación']);
+            fputcsv($out, ['ID','Name','Description','Image','Category','Supplier','Purchase Price','Sale Price','Stock','Minimum','Status','Created']);
             foreach ($data as $p) {
                 fputcsv($out, [
-                    $p->producto_id, 
-                    $p->nombre, 
-                    $p->descripcion,
-                    $p->imagen ?? '',
-                    optional($p->categoria)->nombre, 
-                    optional($p->proveedor)->nombre,
-                    $p->precio_compra, 
-                    $p->precio_venta, 
-                    $p->stock_actual, 
-                    $p->stock_minimo, 
-                    $p->estado,
-                    $p->fecha_creacion ? $p->fecha_creacion->format('Y-m-d H:i:s') : ''
+                    $p->product_id,
+                    $p->name,
+                    $p->description,
+                    $p->image ?? '',
+                    optional($p->category)->name,
+                    optional($p->supplier)->name,
+                    $p->purchase_price,
+                    $p->sale_price,
+                    $p->stock_current,
+                    $p->stock_minimum,
+                    $p->status,
+                    $p->created_at ? $p->created_at->format('Y-m-d H:i:s') : ''
                 ]);
             }
             fclose($out);
@@ -619,28 +622,28 @@ class ProductoController extends Controller
     {
         try {
             // Buscar categoría por nombre
-            $categoria = Categoria::where('nombre', $data['categoria'])->first();
-            if (!$categoria) {
-                return ['success' => false, 'error' => "Categoría no encontrada: " . $data['categoria']];
+            $category = Category::where('name', $data['categoria'])->first();
+            if (!$category) {
+                return ['success' => false, 'error' => "Category not found: " . $data['categoria']];
             }
 
             // Buscar proveedor por nombre
-            $proveedor = Proveedor::where('nombre', $data['proveedor'])->first();
-            if (!$proveedor) {
-                return ['success' => false, 'error' => "Proveedor no encontrado: " . $data['proveedor']];
+            $supplier = Supplier::where('name', $data['proveedor'])->first();
+            if (!$supplier) {
+                return ['success' => false, 'error' => "Supplier not found: " . $data['proveedor']];
             }
 
             // Crear producto
-            Producto::create([
-                'categoria_id' => $categoria->categoria_id,
-                'proveedor_id' => $proveedor->proveedor_id,
-                'nombre' => $data['nombre'],
-                'descripcion' => $data['descripcion'] ?? '',
-                'precio_compra' => $data['precio_compra'],
-                'precio_venta' => $data['precio_venta'],
-                'stock_actual' => $data['stock_actual'],
-                'stock_minimo' => $data['stock_minimo'],
-                'estado' => $data['estado'] ?? 'activo',
+            Product::create([
+                'category_id' => $category->category_id,
+                'supplier_id' => $supplier->supplier_id,
+                'name' => $data['nombre'],
+                'description' => $data['descripcion'] ?? '',
+                'purchase_price' => $data['precio_compra'],
+                'sale_price' => $data['precio_venta'],
+                'stock_current' => $data['stock_actual'],
+                'stock_minimum' => $data['stock_minimo'],
+                'status' => $this->mapLegacyStatus($data['estado'] ?? 'activo'),
             ]);
 
             return ['success' => true];
@@ -649,6 +652,17 @@ class ProductoController extends Controller
         } catch (\Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    private function mapLegacyStatus(string $status): string
+    {
+        return match (strtolower($status)) {
+            'activo' => 'active',
+            'inactivo' => 'inactive',
+            'agotado' => 'out_of_stock',
+            'descontinuado' => 'discontinued',
+            default => $status,
+        };
     }
 
     private function handleImportResult($importados, $errores)

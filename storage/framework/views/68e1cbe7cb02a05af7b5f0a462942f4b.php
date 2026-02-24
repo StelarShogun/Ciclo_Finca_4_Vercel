@@ -162,15 +162,15 @@
                                 <tr>
                                     <td>
                                         <div class="product-info">
-                                            <img src="<?php echo e(asset('assets/images/products/' . ($product->imagen ?? 'default.png'))); ?>" 
-                                                 alt="<?php echo e($product->nombre); ?>" class="product-thumb">
-                                            <span><?php echo e($product->nombre); ?></span>
+                                            <img src="<?php echo e(asset('assets/images/products/' . ($product->image ?? 'default.png'))); ?>" 
+                                                 alt="<?php echo e($product->name); ?>" class="product-thumb">
+                                            <span><?php echo e($product->name); ?></span>
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="stock-badge danger"><?php echo e($product->stock_actual); ?></span>
+                                        <span class="stock-badge danger"><?php echo e($product->stock_current); ?></span>
                                     </td>
-                                    <td><?php echo e($product->stock_minimo); ?></td>
+                                    <td><?php echo e($product->stock_minimum); ?></td>
                                     <td>
                                         <span class="status-badge warning">Stock Bajo</span>
                                     </td>
@@ -263,7 +263,7 @@
                         </div>
                     </a>
 
-                    <a href="<?php echo e(route('proveedores.create')); ?>" class="action-card">
+                    <a href="<?php echo e(route('suppliers.create')); ?>" class="action-card">
                         <div class="action-icon">
                             <i class="fas fa-truck"></i>
                         </div>

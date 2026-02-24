@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Usuario;
-use App\Models\Producto;
+use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -109,14 +109,14 @@ class SalesController extends Controller
                     'sale_items' => $sale->saleItems->map(function ($item) {
                         return [
                             'id' => $item->id,
-                            'producto_id' => $item->producto_id,
+                            'product_id' => $item->product_id,
                             'quantity' => $item->quantity,
                             'unit_price' => $item->unit_price,
                             'total' => $item->total,
                             'product' => $item->product ? [
-                                'producto_id' => $item->product->producto_id,
-                                'nombre' => $item->product->nombre,
-                                'sku' => 'BK-' . str_pad($item->product->producto_id, 3, '0', STR_PAD_LEFT)
+                                'product_id' => $item->product->product_id,
+                                'name' => $item->product->name,
+                                'sku' => 'BK-' . str_pad($item->product->product_id, 3, '0', STR_PAD_LEFT)
                             ] : null
                         ];
                     })
@@ -149,10 +149,19 @@ class SalesController extends Controller
             'notes' => $notes
         ]);
 
+        // Normalize legacy keys before validating
+        $normalizedItems = collect($request->items)->map(function ($item) {
+            $item['product_id'] = $item['product_id'] ?? $item['producto_id'] ?? null;
+            $item['quantity'] = $item['quantity'] ?? $item['cantidad'] ?? 1;
+            return $item;
+        })->all();
+        $request->merge(['items' => $normalizedItems]);
+
         $request->validate([
             'customer_id' => 'required|exists:usuarios,usuario_id',
             'items' => 'required|array|min:1',
-            'items.*.producto_id' => 'required|exists:productos,producto_id',
+            'items.*.product_id' => 'required|exists:products,product_id',
+            'items.*.producto_id' => 'nullable',
             'items.*.quantity' => 'nullable|integer|min:1',
             'items.*.cantidad' => 'nullable|integer|min:1',
             'items.*.precio_unitario' => 'required|numeric|min:0',
@@ -168,21 +177,16 @@ class SalesController extends Controller
             'payment_method.in' => 'Payment method must be cash, sinpe or transfer.',
         ]);
 
-        // Normalize quantity key (form may send cantidad or quantity)
-        $items = collect($request->items)->map(function ($item) {
-            $item['quantity'] = $item['quantity'] ?? $item['cantidad'] ?? 1;
-            return $item;
-        })->all();
-        $request->merge(['items' => $items]);
+        // Items are already normalized at this point
 
         DB::beginTransaction();
         try {
             foreach ($request->items as $item) {
-                $product = Producto::find($item['producto_id']);
-                if (!$product || $item['quantity'] > $product->stock_actual) {
+                $product = Product::find($item['product_id']);
+                if (!$product || $item['quantity'] > $product->stock_current) {
                     DB::rollBack();
-                    $name = $product ? $product->nombre : 'ID ' . $item['producto_id'];
-                    $available = $product ? $product->stock_actual : 0;
+                    $name = $product ? $product->name : 'ID ' . $item['product_id'];
+                    $available = $product ? $product->stock_current : 0;
                     return response()->json([
                         'success' => false,
                         'message' => "Insufficient stock for \"{$name}\". Available: {$available}"
@@ -206,21 +210,21 @@ class SalesController extends Controller
             $subtotal = 0;
 
             foreach ($request->items as $item) {
-                $product = Producto::find($item['producto_id']);
+                $product = Product::find($item['product_id']);
                 $quantity = $item['quantity'];
                 $price = $item['precio_unitario'];
                 $itemTotal = $item['total'];
 
                 SaleItem::create([
                     'sale_id' => $sale->sale_id,
-                    'producto_id' => $item['producto_id'],
+                    'product_id' => $item['product_id'],
                     'quantity' => $quantity,
                     'unit_price' => $price,
                     'total' => $itemTotal
                 ]);
 
                 $subtotal += $itemTotal;
-                $product->decrement('stock_actual', $quantity);
+                $product->decrement('stock_current', $quantity);
             }
 
             $discount = $request->discount ?? 0;
@@ -341,7 +345,7 @@ class SalesController extends Controller
 
             foreach ($sale->saleItems as $item) {
                 if ($item->product) {
-                    $item->product->increment('stock_actual', $item->quantity);
+                    $item->product->increment('stock_current', $item->quantity);
                 }
             }
 
@@ -404,7 +408,7 @@ class SalesController extends Controller
                 ->when($request->payment_method, fn ($q) => $q->where('payment_method', $request->payment_method))
                 ->when($request->search, function ($q) use ($request) {
                     return $q->whereHas('customer', function ($sub) use ($request) {
-                        $sub->where('nombre', 'like', '%' . $request->search . '%')
+                        $sub->where('name', 'like', '%' . $request->search . '%')
                             ->orWhere('email', 'like', '%' . $request->search . '%');
                     })->orWhere('sale_id', 'like', '%' . $request->search . '%');
                 })
@@ -425,7 +429,7 @@ class SalesController extends Controller
                 ], ';');
 
                 foreach ($sales as $sale) {
-                    $items = $sale->saleItems->map(fn ($item) => $item->product->nombre . ' (x' . $item->quantity . ')')->implode(', ');
+                    $items = $sale->saleItems->map(fn ($item) => $item->product->name . ' (x' . $item->quantity . ')')->implode(', ');
                     fputcsv($file, [
                         $sale->sale_id,
                         $sale->customer->nombre ?? 'N/A',

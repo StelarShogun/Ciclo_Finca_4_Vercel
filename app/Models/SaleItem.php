@@ -11,7 +11,7 @@ class SaleItem extends Model
 
     protected $fillable = [
         'sale_id',
-        'producto_id',
+        'product_id',
         'quantity',
         'unit_price',
         'unit_discount',
@@ -31,7 +31,7 @@ class SaleItem extends Model
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Producto::class, 'producto_id', 'producto_id');
+        return $this->belongsTo(Product::class, 'product_id', 'product_id');
     }
 
     public function scopeBySale($query, $saleId)
@@ -41,7 +41,7 @@ class SaleItem extends Model
 
     public function scopeByProduct($query, $productId)
     {
-        return $query->where('producto_id', $productId);
+        return $query->where('product_id', $productId);
     }
 
     public function getFinalPriceAttribute()

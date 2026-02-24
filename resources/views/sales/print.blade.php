@@ -55,7 +55,7 @@
         <tbody>
             @foreach($sale->saleItems as $item)
             <tr>
-                <td>{{ $item->product->nombre ?? 'Product not found' }}</td>
+                <td>{{ $item->product->name ?? 'Product not found' }}</td>
                 <td>{{ $item->quantity }}</td>
                 <td>₡{{ number_format($item->unit_price, 0, ',', '.') }}</td>
                 <td>₡{{ number_format($item->total, 0, ',', '.') }}</td>

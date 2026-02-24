@@ -36,7 +36,7 @@ function closeCartSidebar() {
 
 // Cargar contenido del carrito en el sidebar
 function loadCartContent() {
-    const cartUrl = '/carrito';
+    const cartUrl = '/cart';
     
     fetch(cartUrl)
         .then(response => response.text())
@@ -66,15 +66,15 @@ function loadCartContent() {
                 cartContent.innerHTML = `
                     <div class="cart-empty">
                         <i class="fas fa-shopping-cart"></i>
-                        <p>Tu carrito está vacío</p>
-                        <a href="/catalogo" class="btn btn-primary">Ver Catálogo</a>
+                        <p>Your cart is empty</p>
+                        <a href="/catalog" class="btn btn-primary">View Catalog</a>
                     </div>
                 `;
                 cartFooterElement.style.display = 'none';
             }
         })
         .catch(error => {
-            console.error('Error al cargar el carrito:', error);
+            console.error('Error loading cart:', error);
         });
 }
 
@@ -82,15 +82,15 @@ function loadCartContent() {
 function addToCart(productId, quantity = 1) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     
-    fetch('/carrito/agregar', {
+    fetch('/cart/add', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': csrfToken
         },
         body: JSON.stringify({
-            producto_id: productId,
-            cantidad: quantity
+            product_id: productId,
+            quantity: quantity
         })
     })
     .then(response => response.json())
@@ -238,12 +238,12 @@ document.addEventListener('DOMContentLoaded', function() {
 function removeFromCart(productId) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     
-    fetch(`/carrito/eliminar/${productId}`, {
+    fetch(`/cart/remove/${productId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': csrfToken
-        }
+        },
     })
     .then(response => response.json())
     .then(data => {

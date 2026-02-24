@@ -71,7 +71,7 @@
             </tr>
             @foreach($sale->saleItems as $item)
             <tr class="item">
-                <td>{{ $item->product->nombre ?? 'N/A' }} (x{{ $item->quantity }})</td>
+                <td>{{ $item->product->name ?? 'N/A' }} (x{{ $item->quantity }})</td>
                 <td>{{ number_format($item->total, 2) }}</td>
             </tr>
             @endforeach

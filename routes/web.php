@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\DashboardController;
@@ -12,14 +12,14 @@ use Illuminate\Http\Request;
 
 // Rutas públicas para clientes
 Route::get('/', [ClienteController::class, 'home'])->name('clientes.home');
-Route::get('/catalogo', [ClienteController::class, 'catalogo'])->name('clientes.catalogo');
-Route::get('/producto/{id}', [ClienteController::class, 'producto'])->name('clientes.producto');
+Route::get('/catalog', [ClienteController::class, 'catalogo'])->name('clientes.catalogo');
+Route::get('/product/{id}', [ClienteController::class, 'producto'])->name('clientes.producto');
 
 // Rutas del carrito
-Route::post('/carrito/agregar', [ClienteController::class, 'addToCart'])->name('clientes.carrito.agregar');
-Route::get('/carrito', [ClienteController::class, 'cart'])->name('clientes.carrito');
-Route::put('/carrito/actualizar', [ClienteController::class, 'updateCart'])->name('clientes.carrito.actualizar');
-Route::delete('/carrito/eliminar/{id}', [ClienteController::class, 'removeFromCart'])->name('clientes.carrito.eliminar');
+Route::post('/cart/add', [ClienteController::class, 'addToCart'])->name('clientes.carrito.agregar');
+Route::get('/cart', [ClienteController::class, 'cart'])->name('clientes.carrito');
+Route::put('/cart/update', [ClienteController::class, 'updateCart'])->name('clientes.carrito.actualizar');
+Route::delete('/cart/remove/{id}', [ClienteController::class, 'removeFromCart'])->name('clientes.carrito.eliminar');
 
 // Authentication Routes
 Route::get('/login', [UsuarioController::class, 'showLogin'])->name('login.show');
@@ -65,11 +65,11 @@ Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData']
 Route::get('/dashboard/export', [DashboardController::class, 'exportReport'])->name('dashboard.export');
 
 // Inventory/Products Routes
-Route::get('/inventory', [ProductoController::class, 'inventory'])->name('inventory');
-Route::resource('products', ProductoController::class)->except(['create']);
-Route::delete('/products/{id}/force-delete', [ProductoController::class, 'forceDelete'])->name('products.force-delete');
-Route::get('/inventory/export/{format?}', [ProductoController::class, 'export'])->name('products.export');
-Route::post('/products/import', [ProductoController::class, 'import'])->name('products.import');
+Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');
+Route::resource('products', ProductController::class)->except(['create']);
+Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
+Route::get('/inventory/export/{format?}', [ProductController::class, 'export'])->name('products.export');
+Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
 
 // Suppliers Routes
 Route::resource('suppliers', SupplierController::class);

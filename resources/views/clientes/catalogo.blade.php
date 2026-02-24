@@ -40,9 +40,9 @@
                             <select id="categoria_id" name="categoria_id" class="form-control">
                                 <option value="">Todas las categorías</option>
                                 @foreach($categorias as $categoria)
-                                    <option value="{{ $categoria->categoria_id }}" 
-                                            {{ request('categoria_id') == $categoria->categoria_id ? 'selected' : '' }}>
-                                        {{ $categoria->nombre }}
+                                    <option value="{{ $categoria->category_id }}" 
+                                            {{ request('categoria_id') == $categoria->category_id ? 'selected' : '' }}>
+                                        {{ $categoria->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -116,32 +116,32 @@
                             @foreach($productos as $producto)
                                 <div class="product-card">
                                     <div class="product-image">
-                                        <a href="{{ route('clientes.producto', $producto->producto_id) }}">
-                                            <img src="{{ asset('assets/images/products/' . ($producto->imagen ?? 'default.png')) }}" 
-                                                 alt="{{ $producto->nombre }}"
+                                        <a href="{{ route('clientes.producto', $producto->product_id) }}">
+                                            <img src="{{ asset('assets/images/products/' . ($producto->image ?? 'default.png')) }}" 
+                                                 alt="{{ $producto->name }}"
                                                  onerror="this.src='{{ asset('favicon.svg') }}'">
                                         </a>
-                                        @if($producto->stock_actual <= 10)
+                                        @if($producto->stock_current <= 10)
                                             <span class="product-badge stock-low">Stock Bajo</span>
                                         @endif
                                     </div>
                                     <div class="product-info">
-                                        <div class="product-category">{{ $producto->categoria->nombre ?? 'Sin categoría' }}</div>
+                                        <div class="product-category">{{ $producto->category->name ?? 'Uncategorized' }}</div>
                                         <h3 class="product-name">
-                                            <a href="{{ route('clientes.producto', $producto->producto_id) }}">
-                                                {{ $producto->nombre }}
+                                            <a href="{{ route('clientes.producto', $producto->product_id) }}">
+                                                {{ $producto->name }}
                                             </a>
                                         </h3>
-                                        @if($producto->descripcion)
-                                            <p class="product-description">{{ Str::limit($producto->descripcion, 100) }}</p>
+                                        @if($producto->description)
+                                            <p class="product-description">{{ Str::limit($producto->description, 100) }}</p>
                                         @endif
                                         <div class="product-footer">
-                                            <div class="product-price">₡{{ number_format($producto->precio_venta, 0, ',', '.') }}</div>
+                                            <div class="product-price">₡{{ number_format($producto->sale_price, 0, ',', '.') }}</div>
                                             <button class="btn btn-primary btn-sm add-to-cart-btn" 
-                                                    data-product-id="{{ $producto->producto_id }}"
-                                                    data-product-name="{{ $producto->nombre }}"
-                                                    data-product-price="{{ $producto->precio_venta }}"
-                                                    data-product-stock="{{ $producto->stock_actual }}">
+                                                    data-product-id="{{ $producto->product_id }}"
+                                                    data-product-name="{{ $producto->name }}"
+                                                    data-product-price="{{ $producto->sale_price }}"
+                                                    data-product-stock="{{ $producto->stock_current }}">
                                                 <i class="fas fa-cart-plus"></i>
                                                 Agregar
                                             </button>
