@@ -202,11 +202,11 @@
                             <div class="product-row">
                                 <div class="form-group">
                                     <label>Producto</label>
-                                    <select name="items[0][producto_id]" class="product-select" required>
+                                    <select name="items[0][product_id]" class="product-select" required>
                                         <option value="">Seleccionar producto</option>
-                                        @foreach(\App\Models\Producto::where('estado', 'activo')->get() as $producto)
-                                        <option value="{{ $producto->producto_id }}" data-precio="{{ $producto->precio_venta }}" data-stock="{{ $producto->stock_actual }}">
-                                            {{ $producto->nombre }} - ₡{{ number_format((float)$producto->precio_venta, 0, ',', '.') }} (Stock: {{ $producto->stock_actual }})
+                                        @foreach(\App\Models\Product::where('status', 'active')->get() as $product)
+                                        <option value="{{ $product->product_id }}" data-precio="{{ $product->sale_price }}" data-stock="{{ $product->stock_current }}">
+                                            {{ $product->name }} - ₡{{ number_format((float)$product->sale_price, 0, ',', '.') }} (Stock: {{ $product->stock_current }})
                                         </option>
                                         @endforeach
                                     </select>
@@ -297,11 +297,11 @@
             newRow.innerHTML = `
                 <div class="form-group">
                     <label>Producto</label>
-                    <select name="items[${productIndex}][producto_id]" class="product-select" required>
+                    <select name="items[${productIndex}][product_id]" class="product-select" required>
                         <option value="">Seleccionar producto</option>
-                        @foreach(\App\Models\Producto::where('estado', 'activo')->get() as $producto)
-                        <option value="{{ $producto->producto_id }}" data-precio="{{ $producto->precio_venta }}" data-stock="{{ $producto->stock_actual }}">
-                            {{ $producto->nombre }} - ₡{{ number_format((float)$producto->precio_venta, 0, ',', '.') }} (Stock: {{ $producto->stock_actual }})
+                        @foreach(\App\Models\Product::where('status', 'active')->get() as $product)
+                        <option value="{{ $product->product_id }}" data-precio="{{ $product->sale_price }}" data-stock="{{ $product->stock_current }}">
+                            {{ $product->name }} - ₡{{ number_format((float)$product->sale_price, 0, ',', '.') }} (Stock: {{ $product->stock_current }})
                         </option>
                         @endforeach
                     </select>
@@ -396,7 +396,7 @@
                         const qty = item.quantity;
                         const up = parseFloat(item.unit_price || 0);
                         const tot = parseFloat(item.total || 0);
-                        return `<tr><td>${prod.nombre || 'N/A'}</td><td class="text-center">${qty}</td><td class="text-right">₡${up.toLocaleString('es-CR', {minimumFractionDigits: 2})}</td><td class="text-right"><strong>₡${tot.toLocaleString('es-CR', {minimumFractionDigits: 2})}</strong></td></tr>`;
+                        return `<tr><td>${prod.name || 'N/A'}</td><td class="text-center">${qty}</td><td class="text-right">₡${up.toLocaleString('es-CR', {minimumFractionDigits: 2})}</td><td class="text-right"><strong>₡${tot.toLocaleString('es-CR', {minimumFractionDigits: 2})}</strong></td></tr>`;
                     }).join('');
 
                     const customerName = sale.customer ? (sale.customer.nombre || '') + ' ' + (sale.customer.apellido || '') : 'N/A';

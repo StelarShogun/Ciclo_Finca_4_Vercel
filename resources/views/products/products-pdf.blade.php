@@ -192,32 +192,32 @@
             <tr>
                 <td class="text-center">{{ $product->id }}</td>
                 <td>
-                    <strong>{{ $product->nombre }}</strong>
-                    @if($product->descripcion && $product->descripcion !== 'Sin descripción')
-                        <br><small style="color: #666;">{{ Str::limit($product->descripcion, 50) }}</small>
+                    <strong>{{ $product->name }}</strong>
+                    @if($product->description && $product->description !== 'No description')
+                        <br><small style="color: #666;">{{ Str::limit($product->description, 50) }}</small>
                     @endif
                 </td>
-                <td>{{ $product->categoria }}</td>
-                <td>{{ $product->proveedor }}</td>
+                <td>{{ $product->category }}</td>
+                <td>{{ $product->supplier }}</td>
                 <td class="text-center">
-                    @if($product->stock_actual > 10)
-                        <span class="stock-high">{{ $product->stock_actual }}</span>
-                    @elseif($product->stock_actual > 0)
-                        <span class="stock-medium">{{ $product->stock_actual }}</span>
+                    @if($product->stock_current > 10)
+                        <span class="stock-high">{{ $product->stock_current }}</span>
+                    @elseif($product->stock_current > 0)
+                        <span class="stock-medium">{{ $product->stock_current }}</span>
                     @else
-                        <span class="stock-low">{{ $product->stock_actual }}</span>
+                        <span class="stock-low">{{ $product->stock_current }}</span>
                     @endif
                 </td>
-                <td class="text-center">{{ $product->stock_minimo }}</td>
-                <td class="price">₡{{ $product->precio_compra }}</td>
-                <td class="price">₡{{ $product->precio_venta }}</td>
+                <td class="text-center">{{ $product->stock_minimum }}</td>
+                <td class="price">₡{{ $product->purchase_price }}</td>
+                <td class="price">₡{{ $product->sale_price }}</td>
                 <td class="text-center">
-                    @if($product->estado === 'Activo')
-                        <span class="status-active">{{ $product->estado }}</span>
-                    @elseif($product->estado === 'Inactivo')
-                        <span class="status-inactive">{{ $product->estado }}</span>
+                    @if($product->status === 'Active')
+                        <span class="status-active">{{ $product->status }}</span>
+                    @elseif($product->status === 'Inactive')
+                        <span class="status-inactive">{{ $product->status }}</span>
                     @else
-                        <span class="status-discontinued">{{ $product->estado }}</span>
+                        <span class="status-discontinued">{{ $product->status }}</span>
                     @endif
                 </td>
             </tr>

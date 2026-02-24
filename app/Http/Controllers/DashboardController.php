@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Producto;
+use App\Models\Product;
 use App\Models\Sale;
-use App\Models\Proveedor;
-use App\Models\Categoria;
+use App\Models\Supplier;
+use App\Models\Category;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -37,20 +37,20 @@ class DashboardController extends Controller
         
         try {
             // Verificar que las tablas existan y tengan datos
-            if (!\Schema::hasTable('productos') || !\Schema::hasTable('categorias') || !\Schema::hasTable('proveedores') || !\Schema::hasTable('sales')) {
+            if (!\Schema::hasTable('products') || !\Schema::hasTable('categories') || !\Schema::hasTable('suppliers') || !\Schema::hasTable('sales')) {
                 throw new \Exception('Database tables not found');
             }
             
             // Verificar categorías existentes (solo en modo debug)
             if (config('app.debug')) {
-                $categoriasExistentes = Categoria::count();
+                $categoriasExistentes = Category::count();
                 \Log::debug("Categorías en DB: {$categoriasExistentes}");
             }
             
             // Obtener estadísticas principales
-            $totalProducts = Producto::count();
-            $totalSuppliers = Proveedor::count();
-            $totalCategories = Categoria::count();
+            $totalProducts = Product::count();
+            $totalSuppliers = Supplier::count();
+            $totalCategories = Category::count();
 
             // Daily sales
             $todaySales = Sale::whereDate('sale_date', Carbon::today())
@@ -58,15 +58,15 @@ class DashboardController extends Controller
                 ->sum('total');
 
             // Productos con stock bajo (menos de 10 unidades)
-            $lowStockProducts = Producto::where('stock_actual', '<', 10)
-                ->where('estado', 'activo')
+            $lowStockProducts = Product::where('stock_current', '<', 10)
+                ->where('status', 'active')
                 ->count();
 
             // Lista de productos con stock bajo
-            $lowStockProductsList = Producto::with(['categoria', 'proveedor'])
-                ->where('stock_actual', '<', 10)
-                ->where('estado', 'activo')
-                ->orderBy('stock_actual', 'asc')
+            $lowStockProductsList = Product::with(['category', 'supplier'])
+                ->where('stock_current', '<', 10)
+                ->where('status', 'active')
+                ->orderBy('stock_current', 'asc')
                 ->limit(5)
                 ->get();
 
@@ -94,15 +94,15 @@ class DashboardController extends Controller
                 ->get();
 
             // Productos por categoría - usando relación Eloquent
-            $productsByCategory = Categoria::withCount(['productos' => function($query) {
-                    $query->where('estado', 'activo');
+            $productsByCategory = Category::withCount(['products' => function($query) {
+                    $query->where('status', 'active');
                 }])
-                ->orderBy('productos_count', 'desc')
+                ->orderBy('products_count', 'desc')
                 ->get()
                 ->map(function($categoria) {
                     return [
-                        'categoria' => $categoria->nombre,
-                        'total' => $categoria->productos_count
+                        'categoria' => $categoria->name,
+                        'total' => $categoria->products_count
                     ];
                 });
 
@@ -129,24 +129,24 @@ class DashboardController extends Controller
 
             // Top selling products
             $topProducts = DB::table('sale_items')
-                ->join('productos', 'sale_items.producto_id', '=', 'productos.producto_id')
+                ->join('products', 'sale_items.product_id', '=', 'products.product_id')
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.sale_id')
                 ->where('sales.status', 'completed')
                 ->where('sales.sale_date', '>=', Carbon::now()->subDays(30))
                 ->select(
-                    'productos.nombre',
-                    'productos.imagen',
+                    'products.name',
+                    'products.image',
                     DB::raw('SUM(sale_items.quantity) as total_vendido'),
                     DB::raw('SUM(sale_items.total) as ingresos')
                 )
-                ->groupBy('productos.producto_id', 'productos.nombre', 'productos.imagen')
+                ->groupBy('products.product_id', 'products.name', 'products.image')
                 ->orderBy('total_vendido', 'desc')
                 ->limit(5)
                 ->get();
 
             // Proveedores con más productos
-            $topSuppliers = Proveedor::withCount('productos')
-                ->orderBy('productos_count', 'desc')
+            $topSuppliers = Supplier::withCount('products')
+                ->orderBy('products_count', 'desc')
                 ->limit(5)
                 ->get();
 

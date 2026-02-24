@@ -181,10 +181,10 @@
             <tbody>
                 @foreach($lowStockProductsList as $product)
                 <tr>
-                    <td>{{ $product->nombre }}</td>
-                    <td>{{ $product->stock_actual }}</td>
-                    <td>{{ $product->stock_minimo }}</td>
-                    <td>{{ $product->categoria->nombre ?? 'N/A' }}</td>
+                    <td>{{ $product->name }}</td>
+                    <td>{{ $product->stock_current }}</td>
+                    <td>{{ $product->stock_minimum }}</td>
+                    <td>{{ $product->category->name ?? 'N/A' }}</td>
                     <td>
                         <span class="status-badge status-warning">Stock Bajo</span>
                     </td>
@@ -212,13 +212,13 @@
             <tbody>
                 @foreach($recentSales as $sale)
                 <tr>
-                    <td>{{ $sale->numero_factura ?? '#' . $sale->venta_id }}</td>
-                    <td>{{ $sale->cliente->nombre ?? 'N/A' }} {{ $sale->cliente->apellido ?? '' }}</td>
+                    <td>{{ $sale->invoice_number ?? '#' . $sale->sale_id }}</td>
+                    <td>{{ $sale->customer ? trim(($sale->customer->nombre ?? '') . ' ' . ($sale->customer->apellido ?? '')) : 'N/A' }}</td>
                     <td>₡{{ number_format($sale->total, 0, ',', '.') }}</td>
-                    <td>{{ $sale->fecha_venta->format('d/m/Y H:i') }}</td>
+                    <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
                     <td>
-                        <span class="status-badge status-{{ $sale->estado === 'completada' ? 'success' : ($sale->estado === 'pendiente' ? 'warning' : 'danger') }}">
-                            {{ ucfirst($sale->estado) }}
+                        <span class="status-badge status-{{ $sale->status === 'completed' ? 'success' : ($sale->status === 'pending' ? 'warning' : 'danger') }}">
+                            {{ ucfirst($sale->status) }}
                         </span>
                     </td>
                 </tr>

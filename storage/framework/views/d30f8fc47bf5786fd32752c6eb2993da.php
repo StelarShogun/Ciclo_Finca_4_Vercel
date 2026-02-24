@@ -40,9 +40,9 @@
                             <select id="categoria_id" name="categoria_id" class="form-control">
                                 <option value="">Todas las categorías</option>
                                 <?php $__currentLoopData = $categorias; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $categoria): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <option value="<?php echo e($categoria->categoria_id); ?>" 
-                                            <?php echo e(request('categoria_id') == $categoria->categoria_id ? 'selected' : ''); ?>>
-                                        <?php echo e($categoria->nombre); ?>
+                                    <option value="<?php echo e($categoria->category_id); ?>" 
+                                            <?php echo e(request('categoria_id') == $categoria->category_id ? 'selected' : ''); ?>>
+                                        <?php echo e($categoria->name); ?>
 
                                     </option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -117,33 +117,33 @@
                             <?php $__currentLoopData = $productos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $producto): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <div class="product-card">
                                     <div class="product-image">
-                                        <a href="<?php echo e(route('clientes.producto', $producto->producto_id)); ?>">
-                                            <img src="<?php echo e(asset('assets/images/products/' . ($producto->imagen ?? 'default.png'))); ?>" 
-                                                 alt="<?php echo e($producto->nombre); ?>"
+                                        <a href="<?php echo e(route('clientes.producto', $producto->product_id)); ?>">
+                                            <img src="<?php echo e(asset('assets/images/products/' . ($producto->image ?? 'default.png'))); ?>" 
+                                                 alt="<?php echo e($producto->name); ?>"
                                                  onerror="this.src='<?php echo e(asset('favicon.svg')); ?>'">
                                         </a>
-                                        <?php if($producto->stock_actual <= 10): ?>
+                                        <?php if($producto->stock_current <= 10): ?>
                                             <span class="product-badge stock-low">Stock Bajo</span>
                                         <?php endif; ?>
                                     </div>
                                     <div class="product-info">
-                                        <div class="product-category"><?php echo e($producto->categoria->nombre ?? 'Sin categoría'); ?></div>
+                                        <div class="product-category"><?php echo e($producto->category->name ?? 'Uncategorized'); ?></div>
                                         <h3 class="product-name">
-                                            <a href="<?php echo e(route('clientes.producto', $producto->producto_id)); ?>">
-                                                <?php echo e($producto->nombre); ?>
+                                            <a href="<?php echo e(route('clientes.producto', $producto->product_id)); ?>">
+                                                <?php echo e($producto->name); ?>
 
                                             </a>
                                         </h3>
-                                        <?php if($producto->descripcion): ?>
-                                            <p class="product-description"><?php echo e(Str::limit($producto->descripcion, 100)); ?></p>
+                                        <?php if($producto->description): ?>
+                                            <p class="product-description"><?php echo e(Str::limit($producto->description, 100)); ?></p>
                                         <?php endif; ?>
                                         <div class="product-footer">
-                                            <div class="product-price">₡<?php echo e(number_format($producto->precio_venta, 0, ',', '.')); ?></div>
+                                            <div class="product-price">₡<?php echo e(number_format($producto->sale_price, 0, ',', '.')); ?></div>
                                             <button class="btn btn-primary btn-sm add-to-cart-btn" 
-                                                    data-product-id="<?php echo e($producto->producto_id); ?>"
-                                                    data-product-name="<?php echo e($producto->nombre); ?>"
-                                                    data-product-price="<?php echo e($producto->precio_venta); ?>"
-                                                    data-product-stock="<?php echo e($producto->stock_actual); ?>">
+                                                    data-product-id="<?php echo e($producto->product_id); ?>"
+                                                    data-product-name="<?php echo e($producto->name); ?>"
+                                                    data-product-price="<?php echo e($producto->sale_price); ?>"
+                                                    data-product-stock="<?php echo e($producto->stock_current); ?>">
                                                 <i class="fas fa-cart-plus"></i>
                                                 Agregar
                                             </button>

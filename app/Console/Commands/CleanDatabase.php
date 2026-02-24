@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\Producto;
-use App\Models\Categoria;
-use App\Models\Proveedor;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\Supplier;
 use Illuminate\Support\Facades\DB;
 
 class CleanDatabase extends Command
@@ -22,110 +22,111 @@ class CleanDatabase extends Command
      *
      * @var string
      */
-    protected $description = 'Limpia la base de datos eliminando productos de relleno y datos de prueba';
+    protected $description = 'Clean the database by removing test products and data';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $this->info('🧹 Iniciando limpieza de la base de datos...');
+        $this->info('🧹 Starting database cleaning...');
 
         try {
             DB::beginTransaction();
 
-            // Eliminar productos de relleno (que tengan nombres genéricos o de prueba)
-            $productosEliminados = Producto::where(function($query) {
-                $query->where('nombre', 'like', '%test%')
-                      ->orWhere('nombre', 'like', '%prueba%')
-                      ->orWhere('nombre', 'like', '%sample%')
-                      ->orWhere('nombre', 'like', '%demo%')
-                      ->orWhere('nombre', 'like', '%lorem%')
-                      ->orWhere('nombre', 'like', '%ipsum%')
-                      ->orWhere('nombre', 'like', '%dolor%')
-                      ->orWhere('nombre', 'like', '%sit%')
-                      ->orWhere('nombre', 'like', '%amet%')
-                      ->orWhere('nombre', 'like', '%consectetur%')
-                      ->orWhere('nombre', 'like', '%adipiscing%')
-                      ->orWhere('nombre', 'like', '%elit%')
-                      ->orWhere('nombre', 'like', '%sed%')
-                      ->orWhere('nombre', 'like', '%do%')
-                      ->orWhere('nombre', 'like', '%eiusmod%')
-                      ->orWhere('nombre', 'like', '%tempor%')
-                      ->orWhere('nombre', 'like', '%incididunt%')
-                      ->orWhere('nombre', 'like', '%labore%')
-                      ->orWhere('nombre', 'like', '%dolore%')
-                      ->orWhere('nombre', 'like', '%magna%')
-                      ->orWhere('nombre', 'like', '%aliqua%')
-                      ->orWhere('nombre', 'like', '%ut%')
-                      ->orWhere('nombre', 'like', '%enim%')
-                      ->orWhere('nombre', 'like', '%ad%')
-                      ->orWhere('nombre', 'like', '%minim%')
-                      ->orWhere('nombre', 'like', '%veniam%')
-                      ->orWhere('nombre', 'like', '%quis%')
-                      ->orWhere('nombre', 'like', '%nostrud%')
-                      ->orWhere('nombre', 'like', '%exercitation%')
-                      ->orWhere('nombre', 'like', '%ullamco%')
-                      ->orWhere('nombre', 'like', '%laboris%')
-                      ->orWhere('nombre', 'like', '%nisi%')
-                      ->orWhere('nombre', 'like', '%aliquip%')
-                      ->orWhere('nombre', 'like', '%ex%')
-                      ->orWhere('nombre', 'like', '%ea%')
-                      ->orWhere('nombre', 'like', '%commodo%')
-                      ->orWhere('nombre', 'like', '%consequat%')
-                      ->orWhere('nombre', 'like', '%duis%')
-                      ->orWhere('nombre', 'like', '%aute%')
-                      ->orWhere('nombre', 'like', '%irure%')
-                      ->orWhere('nombre', 'like', '%reprehenderit%')
-                      ->orWhere('nombre', 'like', '%voluptate%')
-                      ->orWhere('nombre', 'like', '%velit%')
-                      ->orWhere('nombre', 'like', '%esse%')
-                      ->orWhere('nombre', 'like', '%cillum%')
-                      ->orWhere('nombre', 'like', '%fugiat%')
-                      ->orWhere('nombre', 'like', '%nulla%')
-                      ->orWhere('nombre', 'like', '%pariatur%')
-                      ->orWhere('nombre', 'like', '%excepteur%')
-                      ->orWhere('nombre', 'like', '%sint%')
-                      ->orWhere('nombre', 'like', '%occaecat%')
-                      ->orWhere('nombre', 'like', '%cupidatat%')
-                      ->orWhere('nombre', 'like', '%non%')
-                      ->orWhere('nombre', 'like', '%proident%')
-                      ->orWhere('nombre', 'like', '%sunt%')
-                      ->orWhere('nombre', 'like', '%culpa%')
-                      ->orWhere('nombre', 'like', '%qui%')
-                      ->orWhere('nombre', 'like', '%officia%')
-                      ->orWhere('nombre', 'like', '%deserunt%')
-                      ->orWhere('nombre', 'like', '%mollit%')
-                      ->orWhere('nombre', 'like', '%anim%')
-                      ->orWhere('nombre', 'like', '%id%')
-                      ->orWhere('nombre', 'like', '%est%')
-                      ->orWhere('nombre', 'like', '%laborum%');
+            // Remove test products (with generic or test names)
+            $productsRemoved = Product::where(function($query) {
+                $query->where('name', 'like', '%test%')
+                      ->orWhere('name', 'like', '%prueba%')
+                      ->orWhere('name', 'like', '%sample%')
+                      ->orWhere('name', 'like', '%demo%')
+                      ->orWhere('name', 'like', '%lorem%')
+                      ->orWhere('name', 'like', '%ipsum%')
+                      ->orWhere('name', 'like', '%dolor%')
+                      ->orWhere('name', 'like', '%sit%')
+                      ->orWhere('name', 'like', '%amet%')
+                      ->orWhere('name', 'like', '%consectetur%')
+                      ->orWhere('name', 'like', '%adipiscing%')
+                      ->orWhere('name', 'like', '%elit%')
+                      ->orWhere('name', 'like', '%sed%')
+                      ->orWhere('name', 'like', '%do%')
+                      ->orWhere('name', 'like', '%eiusmod%')
+                      ->orWhere('name', 'like', '%tempor%')
+                      ->orWhere('name', 'like', '%incididunt%')
+                      ->orWhere('name', 'like', '%labore%')
+                      ->orWhere('name', 'like', '%dolore%')
+                      ->orWhere('name', 'like', '%magna%')
+                      ->orWhere('name', 'like', '%aliqua%')
+                      ->orWhere('name', 'like', '%ut%')
+                      ->orWhere('name', 'like', '%enim%')
+                      ->orWhere('name', 'like', '%ad%')
+                      ->orWhere('name', 'like', '%minim%')
+                      ->orWhere('name', 'like', '%veniam%')
+                      ->orWhere('name', 'like', '%quis%')
+                      ->orWhere('name', 'like', '%nostrud%')
+                      ->orWhere('name', 'like', '%exercitation%')
+                      ->orWhere('name', 'like', '%ullamco%')
+                      ->orWhere('name', 'like', '%laboris%')
+                      ->orWhere('name', 'like', '%nisi%')
+                      ->orWhere('name', 'like', '%aliquip%')
+                      ->orWhere('name', 'like', '%ex%')
+                      ->orWhere('name', 'like', '%ea%')
+                      ->orWhere('name', 'like', '%commodo%')
+                      ->orWhere('name', 'like', '%consequat%')
+                      ->orWhere('name', 'like', '%duis%')
+                      ->orWhere('name', 'like', '%aute%')
+                      ->orWhere('name', 'like', '%irure%')
+                      ->orWhere('name', 'like', '%reprehenderit%')
+                      ->orWhere('name', 'like', '%voluptate%')
+                      ->orWhere('name', 'like', '%velit%')
+                      ->orWhere('name', 'like', '%esse%')
+                      ->orWhere('name', 'like', '%cillum%')
+                      ->orWhere('name', 'like', '%fugiat%')
+                      ->orWhere('name', 'like', '%nulla%')
+                      ->orWhere('name', 'like', '%pariatur%')
+                      ->orWhere('name', 'like', '%excepteur%')
+                      ->orWhere('name', 'like', '%sint%')
+                      ->orWhere('name', 'like', '%occaecat%')
+                      ->orWhere('name', 'like', '%cupidatat%')
+                      ->orWhere('name', 'like', '%non%')
+                      ->orWhere('name', 'like', '%proident%')
+                      ->orWhere('name', 'like', '%sunt%')
+                      ->orWhere('name', 'like', '%culpa%')
+                      ->orWhere('name', 'like', '%qui%')
+                      ->orWhere('name', 'like', '%officia%')
+                      ->orWhere('name', 'like', '%deserunt%')
+                      ->orWhere('name', 'like', '%mollit%')
+                      ->orWhere('name', 'like', '%anim%')
+                      ->orWhere('name', 'like', '%id%')
+                      ->orWhere('name', 'like', '%est%')
+                      ->orWhere('name', 'like', '%laborum%');
             })->delete();
 
-            $this->info("✅ Eliminados {$productosEliminados} productos de relleno");
+            $this->info("✅ Removed {$productsRemoved} test products");
 
-            // Limpiar tablas relacionadas que puedan tener datos de prueba
+            // Clean related tables that may have test data
             try {
-                $historialEliminado = DB::table('historial_inventario')->where('motivo', 'like', '%test%')->delete();
-                $this->info("✅ Eliminados {$historialEliminado} registros de historial de prueba");
+                $historyRemoved = DB::table('inventory_history')->where('reason', 'like', '%test%')->delete();
+                $this->info("✅ Removed {$historyRemoved} test history records");
             } catch (\Exception $e) {
-                $this->warn("⚠️  Tabla historial_inventario no encontrada, continuando...");
+                $this->warn("⚠️  Table inventory_history not found, continuing...");
             }
 
-            // Verificar que las categorías y proveedores principales estén intactos
-            $categoriasCount = Categoria::count();
-            $proveedoresCount = Proveedor::count();
-            
-            $this->info("📊 Estado actual de la base de datos:");
-            $this->info("   - Categorías: {$categoriasCount}");
-            $this->info("   - Proveedores: {$proveedoresCount}");
-            $this->info("   - Productos restantes: " . Producto::count());
+            // Verify that main categories and suppliers are intact
+            $categoriesCount = Category::count();
+            $suppliersCount = Supplier::count();
+
+            $this->info("📊 Current database state:");
+            $this->info("   - Categories: {$categoriesCount}");
+            $this->info("   - Suppliers: {$suppliersCount}");
+            $this->info("   - Remaining products: " . Product::count());
 
             DB::commit();
-            $this->info('🎉 Limpieza completada exitosamente');
+            $this->info('🎉 Cleaning completed successfully');
 
         } catch (\Exception $e) {
             DB::rollback();
+            $this->error('❌ Error during cleaning: ' . $e->getMessage());
             $this->error('❌ Error durante la limpieza: ' . $e->getMessage());
             return 1;
         }

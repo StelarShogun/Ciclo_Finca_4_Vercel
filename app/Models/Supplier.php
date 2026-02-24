@@ -42,9 +42,9 @@ class Supplier extends Model
         'updated_at'    => 'datetime',
     ];
 
-    // Relación con productos
-    public function productos()
+    // Relationship with products
+    public function products()
     {
-        return $this->hasMany(Producto::class, 'proveedor_id', 'proveedor_id');
+        return $this->hasMany(Product::class, 'supplier_id', 'supplier_id');
     }
 }

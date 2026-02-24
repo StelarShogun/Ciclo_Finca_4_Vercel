@@ -40,7 +40,7 @@ Abre `.env` con el bloc de notas (o tu editor) y **cambia** estas tres líneas c
 - `DB_USERNAME=usuario`               → por ejemplo: `DB_USERNAME=laravel`
 - `DB_PASSWORD=contraseña`            → por ejemplo: `DB_PASSWORD=MiPassword123`
 
-Guarda el archivo. No cambies `DB_HOST`: Docker Compose inyecta `DB_HOST=db` dentro del contenedor.
+Guarda el archivo. No cambies `DB_HOST`: Docker Compose inyecta `DB_HOST=db_ciclo` dentro del contenedor.
 
 ---
 
@@ -50,14 +50,14 @@ Guarda el archivo. No cambies `DB_HOST`: Docker Compose inyecta `DB_HOST=db` den
 docker compose up --build -d
 ```
 
-Espera a que termine (puede tardar un poco la primera vez). Deberías ver los tres servicios: **app**, **db**, **phpmyadmin**.
+Espera a que termine (puede tardar un poco la primera vez). Deberías ver los tres servicios: **app_ciclo**, **db_ciclo**, **phpmyadmin_ciclo**.
 
 ---
 
 ## Paso 5: Instalar dependencias de PHP (Composer)
 
 ```powershell
-docker compose exec app composer install
+docker compose exec app_ciclo composer install
 ```
 
 ---
@@ -65,7 +65,7 @@ docker compose exec app composer install
 ## Paso 6: Generar la clave de la aplicación
 
 ```powershell
-docker compose exec app php artisan key:generate
+docker compose exec app_ciclo php artisan key:generate
 ```
 
 ---
@@ -73,7 +73,7 @@ docker compose exec app php artisan key:generate
 ## Paso 7: Crear tablas y datos de prueba (migraciones + seeders)
 
 ```powershell
-docker compose exec app php artisan migrate --seed
+docker compose exec app_ciclo php artisan migrate --seed
 ```
 
 ---
@@ -105,9 +105,9 @@ copy .env.example .env
 # Edita .env y pon DB_DATABASE, DB_USERNAME, DB_PASSWORD
 
 docker compose up --build -d
-docker compose exec app composer install
-docker compose exec app php artisan key:generate
-docker compose exec app php artisan migrate --seed
+docker compose exec app_ciclo composer install
+docker compose exec app_ciclo php artisan key:generate
+docker compose exec app_ciclo php artisan migrate --seed
 ```
 
 Luego abre http://localhost:8080 y http://localhost:8081.
@@ -118,9 +118,9 @@ Luego abre http://localhost:8080 y http://localhost:8081.
 
 - **Puerto en uso:** otro programa usa 8080, 8081 o 3306. Cierra esa aplicación o cambia los puertos en `docker-compose.yml`.
 - **Error 500 en la app:** ejecuta  
-  `docker compose exec app chmod -R 775 storage bootstrap/cache`  
+  `docker compose exec app_ciclo chmod -R 775 storage bootstrap/cache`  
   y  
-  `docker compose exec app chown -R www-data:www-data storage bootstrap/cache`
+  `docker compose exec app_ciclo chown -R www-data:www-data storage bootstrap/cache`
 - **No conecta a la base de datos:** espera 30–60 segundos después de `docker compose up -d` (MySQL tarda en iniciar) y vuelve a intentar. Revisa que `.env` tenga bien `DB_DATABASE`, `DB_USERNAME` y `DB_PASSWORD`.
 - **Parar todo:** `docker compose down`  
   **Parar y borrar la base de datos:** `docker compose down -v`

@@ -3,14 +3,14 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Producto;
+use App\Models\Product;
 
-class ProductoSeeder extends Seeder
+class ProductsSeeder extends Seeder
 {
     public function run(): void
     {
         // Productos específicos del mundo del ciclismo
-        $productos = [
+        $products = [
             // BICICLETAS
             [
                 'categoria_id' => 1, // Bicicletas
@@ -213,8 +213,18 @@ class ProductoSeeder extends Seeder
             ]
         ];
 
-        foreach ($productos as $producto) {
-            Producto::create($producto);
+        foreach ($products as $product) {
+            Product::create([
+                'category_id' => $product['categoria_id'],
+                'supplier_id' => $product['proveedor_id'],
+                'name' => $product['nombre'],
+                'description' => $product['descripcion'],
+                'purchase_price' => $product['precio_compra'],
+                'sale_price' => $product['precio_venta'],
+                'stock_current' => $product['stock_actual'],
+                'stock_minimum' => $product['stock_minimo'],
+                'status' => 'active',
+            ]);
         }
     }
 }

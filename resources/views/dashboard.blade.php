@@ -161,15 +161,15 @@
                                 <tr>
                                     <td>
                                         <div class="product-info">
-                                            <img src="{{ asset('assets/images/products/' . ($product->imagen ?? 'default.png')) }}" 
-                                                 alt="{{ $product->nombre }}" class="product-thumb">
-                                            <span>{{ $product->nombre }}</span>
+                                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}" 
+                                                 alt="{{ $product->name }}" class="product-thumb">
+                                            <span>{{ $product->name }}</span>
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="stock-badge danger">{{ $product->stock_actual }}</span>
+                                        <span class="stock-badge danger">{{ $product->stock_current }}</span>
                                     </td>
-                                    <td>{{ $product->stock_minimo }}</td>
+                                    <td>{{ $product->stock_minimum }}</td>
                                     <td>
                                         <span class="status-badge warning">Stock Bajo</span>
                                     </td>

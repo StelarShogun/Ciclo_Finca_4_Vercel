@@ -16,9 +16,9 @@ class DatabaseSeeder extends Seeder
     {
         // Semillas base
         $this->call([
-            CategoriaSeeder::class,
-            ProveedorSeeder::class,
-            ProductoSeeder::class,
+            CategorySeeder::class,
+            SupplierSeeder::class,
+            ProductsSeeder::class,
         ]);
 
         // Crear un admin en tabla usuarios si no existe

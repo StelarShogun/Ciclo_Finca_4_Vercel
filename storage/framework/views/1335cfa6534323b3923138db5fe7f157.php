@@ -4,23 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title>Gestión de Inventario - Ciclo Pérez Admin</title>
     
     <!-- Favicons modernos -->
-    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="<?php echo e(asset('favicon.svg')); ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo e(asset('favicon-32x32.png')); ?>">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?php echo e(asset('favicon-16x16.png')); ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo e(asset('apple-touch-icon.png')); ?>">
+    <link rel="icon" type="image/x-icon" href="<?php echo e(asset('favicon.ico')); ?>">
     
-    <link rel="stylesheet" href="{{ asset('estilos.php') }}">
+    <link rel="stylesheet" href="<?php echo e(asset('estilos.php')); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body class="admin-layout">
-    @include('partes.aside')
+    <?php echo $__env->make('partes.aside', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <main class="admin-main">
         <div class="inventory-container">
@@ -45,19 +45,21 @@
                 </div>
             </header>
 
-        @if(session('status'))
+        <?php if(session('status')): ?>
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i>
-                {{ session('status') }}
-            </div>
-        @endif
+                <?php echo e(session('status')); ?>
 
-        @if(session('error'))
+            </div>
+        <?php endif; ?>
+
+        <?php if(session('error')): ?>
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-circle"></i>
-                {{ session('error') }}
+                <?php echo e(session('error')); ?>
+
             </div>
-        @endif
+        <?php endif; ?>
 
             <!-- Filtros -->
             <div class="filters-section">
@@ -66,37 +68,38 @@
                     <div class="filters-grid">
                         <div class="filter-group">
                             <label for="category">Categoría</label>
-                            <select id="category" name="categoria_id">
+                            <select id="category" name="category_id">
                                 <option value="">Todas las categorías</option>
-                                @foreach($categorias as $categoria)
-                                <option value="{{ $categoria->categoria_id }}" @selected(request('categoria_id')==='{{ $categoria->categoria_id }}')>
-                                        {{ $categoria->nombre }}
+                                <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($category->category_id); ?>" <?php if(request('category_id')==='<?php echo e($category->category_id); ?>'): echo 'selected'; endif; ?>>
+                                        <?php echo e($category->name); ?>
+
                                     </option>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="filter-group">
                             <label for="stock">Estado de Stock</label>
                             <select id="stock" name="stock_status">
                                 <option value="">Todos los estados</option>
-                                <option value="in-stock" @selected(request('stock_status')==='in-stock' )>En Stock</option>
-                                <option value="low" @selected(request('stock_status')==='low' )>Stock Bajo</option>
-                                <option value="out" @selected(request('stock_status')==='out' )>Sin Stock</option>
+                                <option value="in-stock" <?php if(request('stock_status')==='in-stock' ): echo 'selected'; endif; ?>>En Stock</option>
+                                <option value="low" <?php if(request('stock_status')==='low' ): echo 'selected'; endif; ?>>Stock Bajo</option>
+                                <option value="out" <?php if(request('stock_status')==='out' ): echo 'selected'; endif; ?>>Sin Stock</option>
                             </select>
                         </div>
                         <div class="filter-group">
                             <label for="status">Estado del Producto</label>
-                            <select id="status" name="estado">
+                            <select id="status" name="status">
                                 <option value="">Todos los estados</option>
-                                <option value="activo" @selected(request('estado')==='activo' )>Activo</option>
-                                <option value="inactivo" @selected(request('estado')==='inactivo' )>Inactivo</option>
-                                <option value="agotado" @selected(request('estado')==='agotado' )>Agotado</option>
-                                <option value="descontinuado" @selected(request('estado')==='descontinuado' )>Descontinuado</option>
+                                <option value="active" <?php if(request('status')==='active' ): echo 'selected'; endif; ?>>Activo</option>
+                                <option value="inactive" <?php if(request('status')==='inactive' ): echo 'selected'; endif; ?>>Inactivo</option>
+                                <option value="out_of_stock" <?php if(request('status')==='out_of_stock' ): echo 'selected'; endif; ?>>Agotado</option>
+                                <option value="discontinued" <?php if(request('status')==='discontinued' ): echo 'selected'; endif; ?>>Descontinuado</option>
                             </select>
                         </div>
                         <div class="filter-group">
                             <label for="search">Buscar</label>
-                            <input type="text" id="search" name="search" placeholder="Nombre o código" value="{{ request('search') }}">
+                            <input type="text" id="search" name="search" placeholder="Nombre o código" value="<?php echo e(request('search')); ?>">
                         </div>
                         <div class="filter-group">
                             <button type="submit" class="btn btn-primary">
@@ -121,7 +124,7 @@
                 </div>
                 <div class="products-header">
                     <div class="products-count">
-                        <span>{{ $productos->total() }} productos</span>
+                        <span><?php echo e($paginator->total()); ?> products</span>
                     </div>
                     <div class="view-options">
                         <button class="view-btn active" data-view="table">
@@ -147,44 +150,44 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($productos as $producto)
+                            <?php $__currentLoopData = $paginator; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr>
                                 <td class="product-cell">
-                                    @if($producto->imagen)
-                                        <img src="{{ asset('assets/images/products/' . $producto->imagen) }}" alt="{{ $producto->nombre }}">
-                                    @else
-                                        <img src="{{ asset('assets/images/products/default.png') }}" alt="{{ $producto->nombre }}">
-                                    @endif
+                                    <?php if($product->image): ?>
+                                        <img src="<?php echo e(asset('assets/images/products/' . $product->image)); ?>" alt="<?php echo e($product->name); ?>">
+                                    <?php else: ?>
+                                        <img src="<?php echo e(asset('assets/images/products/default.png')); ?>" alt="<?php echo e($product->name); ?>">
+                                    <?php endif; ?>
                                     <div class="product-info">
-                                        <h4>{{ $producto->nombre }}</h4>
-                                        <span class="sku">SKU: {{ $producto->sku }}</span>
+                                        <h4><?php echo e($product->name); ?></h4>
+                                        <span class="sku">SKU: <?php echo e('BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT)); ?></span>
                                     </div>
                                 </td>
-                                <td>{{ $producto->categoria->nombre }}</td>
+                                <td><?php echo e($product->category->name); ?></td>
                                 <td>
-                                    <span class="stock-badge {{ $producto->stock_status_class }}">{{ $producto->stock_actual }}</span>
+                                    <span class="stock-badge <?php echo e($product->stock_current > 10 ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger')); ?>"><?php echo e($product->stock_current); ?></span>
                                 </td>
-                                <td>₡{{ number_format($producto->precio_venta, 0, ',', '.') }}</td>
+                                <td>₡<?php echo e(number_format($product->sale_price, 0, ',', '.')); ?></td>
                                 <td>
-                                    <span class="status-badge {{ $producto->status_class }}">{{ $producto->estado }}</span>
+                                    <span class="status-badge <?php echo e($product->status === 'active' ? 'success' : ($product->status === 'inactive' ? 'warning' : 'secondary')); ?>"><?php echo e($product->status === 'active' ? 'Activo' : ($product->status === 'inactive' ? 'Inactivo' : ($product->status === 'out_of_stock' ? 'Agotado' : 'Descontinuado'))); ?></span>
                                 </td>
                                 <td>
                                     <div class="actions-container">
-                                        <button class="action-btn view view-details-btn" data-product-id="{{ $producto->producto_id }}" title="Ver detalles">
+                                        <button class="action-btn view view-details-btn" data-product-id="<?php echo e($product->product_id); ?>" title="View details">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        <button class="action-btn edit edit-btn" data-product-id="{{ $producto->producto_id }}" title="Editar producto">
+                                        <button class="action-btn edit edit-btn" data-product-id="<?php echo e($product->product_id); ?>" title="Edit product">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <button class="action-btn delete" data-action="delete"
-                                            data-product-id="{{ $producto->producto_id }}"
-                                            data-product-name="{{ $producto->nombre }}" title="Eliminar producto">
+                                            data-product-id="<?php echo e($product->product_id); ?>"
+                                            data-product-name="<?php echo e($product->name); ?>" title="Delete product">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
@@ -192,62 +195,81 @@
                 <!-- Vista de cuadrícula -->
                 <div class="products-table grid-view">
                     <div class="products-grid">
-                        @foreach ($productos as $producto)
+                        <?php $__currentLoopData = $paginator; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="product-card">
                             <div class="product-card-header">
-                                @if($producto->imagen)
-                                    <img src="{{ asset('assets/images/products/' . $producto->imagen) }}" alt="{{ $producto->nombre }}" class="product-card-image">
-                                @else
-                                    <img src="{{ asset('assets/images/products/default.png') }}" alt="{{ $producto->nombre }}" class="product-card-image">
-                                @endif
+                                <?php if($product->image): ?>
+                                    <img src="<?php echo e(asset('assets/images/products/' . $product->image)); ?>" alt="<?php echo e($product->name); ?>" class="product-card-image">
+                                <?php else: ?>
+                                    <img src="<?php echo e(asset('assets/images/products/default.png')); ?>" alt="<?php echo e($product->name); ?>" class="product-card-image">
+                                <?php endif; ?>
                                 <div class="product-card-info">
-                                    <h4>{{ $producto->nombre }}</h4>
-                                    <span class="sku">SKU: {{ $producto->sku }}</span>
+                                    <h4><?php echo e($product->name); ?></h4>
+                                    <span class="sku">SKU: <?php echo e('BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT)); ?></span>
                                 </div>
                             </div>
                             <div class="product-card-details">
                                 <div class="product-card-detail">
                                     <span class="product-card-detail-label">Categoría</span>
-                                    <span class="product-card-detail-value">{{ $producto->categoria->nombre }}</span>
+                                    <span class="product-card-detail-value"><?php echo e($product->category->name); ?></span>
                                 </div>
                                 <div class="product-card-detail">
                                     <span class="product-card-detail-label">Stock</span>
                                     <span class="product-card-detail-value">
-                                        <span class="stock-badge {{ $producto->stock_status_class }}">{{ $producto->stock_actual }}</span>
+                                        <span class="stock-badge <?php echo e($product->stock_current > 10 ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger')); ?>"><?php echo e($product->stock_current); ?></span>
                                     </span>
                                 </div>
                                 <div class="product-card-detail">
                                     <span class="product-card-detail-label">Precio</span>
-                                    <span class="product-card-detail-value">₡{{ number_format($producto->precio_venta, 0, ',', '.') }}</span>
+                                    <span class="product-card-detail-value">₡<?php echo e(number_format($product->sale_price, 0, ',', '.')); ?></span>
                                 </div>
                                 <div class="product-card-detail">
                                     <span class="product-card-detail-label">Estado</span>
                                     <span class="product-card-detail-value">
-                                        <span class="status-badge {{ $producto->status_class }}">{{ $producto->estado }}</span>
+                                        <span class="status-badge <?php echo e($product->status === 'active' ? 'success' : ($product->status === 'inactive' ? 'warning' : 'secondary')); ?>"><?php echo e($product->status === 'active' ? 'Activo' : ($product->status === 'inactive' ? 'Inactivo' : ($product->status === 'out_of_stock' ? 'Agotado' : 'Descontinuado'))); ?></span>
                                     </span>
                                 </div>
                             </div>
                             <div class="product-card-actions">
                                 <div class="actions-container">
-                                    <button class="action-btn view view-details-btn" data-product-id="{{ $producto->producto_id }}" title="Ver detalles">
+                                    <button class="action-btn view view-details-btn" data-product-id="<?php echo e($product->product_id); ?>" title="View details">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button class="action-btn edit edit-btn" data-product-id="{{ $producto->producto_id }}" title="Editar producto">
+                                    <button class="action-btn edit edit-btn" data-product-id="<?php echo e($product->product_id); ?>" title="Edit product">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="action-btn delete" data-action="delete"
-                                        data-product-id="{{ $producto->producto_id }}"
-                                        data-product-name="{{ $producto->nombre }}" title="Eliminar producto">
+                                        data-product-id="<?php echo e($product->product_id); ?>"
+                                        data-product-name="<?php echo e($product->name); ?>" title="Delete product">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
                 </div>
 
-                                <x-pagination :paginator="$productos" label="de inventario" />
+                                <?php if (isset($component)) { $__componentOriginal41032d87daf360242eb88dbda6c75ed1 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal41032d87daf360242eb88dbda6c75ed1 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.pagination','data' => ['paginator' => $paginator,'label' => 'inventory']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('pagination'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['paginator' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($paginator),'label' => 'inventory']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal41032d87daf360242eb88dbda6c75ed1)): ?>
+<?php $attributes = $__attributesOriginal41032d87daf360242eb88dbda6c75ed1; ?>
+<?php unset($__attributesOriginal41032d87daf360242eb88dbda6c75ed1); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal41032d87daf360242eb88dbda6c75ed1)): ?>
+<?php $component = $__componentOriginal41032d87daf360242eb88dbda6c75ed1; ?>
+<?php unset($__componentOriginal41032d87daf360242eb88dbda6c75ed1); ?>
+<?php endif; ?>
             </section>
         </div>
     </main>
@@ -263,69 +285,69 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form id="new-product-form" action="{{ route('products.store') }}" method="POST">
-                    @csrf
+                <form id="new-product-form" action="<?php echo e(route('products.store')); ?>" method="POST" enctype="multipart/form-data">
+                    <?php echo csrf_field(); ?>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="new-name">Nombre del Producto *</label>
-                            <input type="text" id="new-name" name="nombre" placeholder="Ej: Llanta para bicicleta" required>
+                            <input type="text" id="new-name" name="name" placeholder="e.g., Bike tire" required>
                         </div>
                         <div class="form-group">
                             <label for="new-description">Descripción</label>
-                            <textarea id="new-description" name="descripcion" rows="3" placeholder="Ej: Llanta de alta calidad para todo terreno"></textarea>
+                            <textarea id="new-description" name="description" rows="3" placeholder="e.g., High quality off-road tire"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="new-image">Imagen del Producto </label>
-                        <input type="file" id="new-image" name="imagen" accept="image/*">
+                        <input type="file" id="new-image" name="image" accept="image/*">
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="new-category">Categoría *</label>
-                            <select id="new-category" name="categoria_id" required>
+                            <select id="new-category" name="category_id" required>
                                 <option value="">Seleccionar categoría</option>
-                                @foreach(\App\Models\Categoria::all() as $categoria)
-                                <option value="{{ $categoria->categoria_id }}">{{ $categoria->nombre }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = \App\Models\Category::all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($category->category_id); ?>"><?php echo e($category->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="new-provider">Proveedor *</label>
-                            <select id="new-provider" name="proveedor_id" required>
+                            <select id="new-provider" name="supplier_id" required>
                                 <option value="">Seleccionar proveedor</option>
-                                @foreach(\App\Models\Proveedor::where('estado', 'activo')->get() as $proveedor)
-                                <option value="{{ $proveedor->proveedor_id }}">{{ $proveedor->nombre }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = \App\Models\Supplier::where('status', 'active')->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $supplier): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($supplier->supplier_id); ?>"><?php echo e($supplier->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="new-price-buy">Precio de Compra (₡) *</label>
-                            <input type="number" id="new-price-buy" name="precio_compra" min="0" step="0.01" placeholder="Ej: 10000" required>
+                            <input type="number" id="new-price-buy" name="purchase_price" min="0" step="0.01" placeholder="e.g., 10000" required>
                         </div>
                         <div class="form-group">
                             <label for="new-price-sell">Precio de Venta (₡) *</label>
-                            <input type="number" id="new-price-sell" name="precio_venta" min="0" step="0.01" placeholder="Ej: 15000" required>
+                            <input type="number" id="new-price-sell" name="sale_price" min="0" step="0.01" placeholder="e.g., 15000" required>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="new-stock">Stock Actual *</label>
-                            <input type="number" id="new-stock" name="stock_actual" min="0" placeholder="Ej: 50" required>
+                            <input type="number" id="new-stock" name="stock_current" min="0" placeholder="e.g., 50" required>
                         </div>
                         <div class="form-group">
                             <label for="new-stock-min">Stock Mínimo *</label>
-                            <input type="number" id="new-stock-min" name="stock_minimo" min="0" placeholder="Ej: 10" required>
+                            <input type="number" id="new-stock-min" name="stock_minimum" min="0" placeholder="e.g., 10" required>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="new-status">Estado *</label>
-                        <select id="new-status" name="estado" required>
-                            <option value="activo">Activo</option>
-                            <option value="inactivo">Inactivo</option>
-                            <option value="agotado">Agotado</option>
-                            <option value="descontinuado">Descontinuado</option>
+                        <select id="new-status" name="status" required>
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                            <option value="out_of_stock">Agotado</option>
+                            <option value="discontinued">Descontinuado</option>
                         </select>
                     </div>
                 </form>
@@ -355,71 +377,71 @@
             <div class="modal-body">
                 <!-- El formulario se completará dinámicamente a través de JavaScript -->
                 <form id="edit-product-form" method="POST">
-                    @csrf
+                    <?php echo csrf_field(); ?>
                     <!-- Campo oculto para simular método PUT -->
                     <input type="hidden" name="_method" value="PUT">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="edit-name">Nombre del Producto *</label>
-                            <input type="text" id="edit-name" name="nombre" required>
+                            <input type="text" id="edit-name" name="name" required>
                         </div>
                         <div class="form-group">
                             <label for="edit-description">Descripción</label>
-                            <textarea id="edit-description" name="descripcion" rows="3"></textarea>
+                            <textarea id="edit-description" name="description" rows="3"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="edit-image">Imagen del Producto </label>
-                        <input type="file" id="edit-image" name="imagen" accept="image/*">
+                        <input type="file" id="edit-image" name="image" accept="image/*">
                         <div id="current-image-preview" style="margin-top: 10px;"></div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="edit-category">Categoría *</label>
-                            <select id="edit-category" name="categoria_id" required>
+                            <select id="edit-category" name="category_id" required>
                                 <option value="">Seleccionar categoría</option>
-                                @foreach(\App\Models\Categoria::all() as $categoria)
-                                    <option value="{{ $categoria->categoria_id }}">{{ $categoria->nombre }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = \App\Models\Category::all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($category->category_id); ?>"><?php echo e($category->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="edit-provider">Proveedor *</label>
-                            <select id="edit-provider" name="proveedor_id" required>
+                            <select id="edit-provider" name="supplier_id" required>
                                 <option value="">Seleccionar proveedor</option>
-                                @foreach(\App\Models\Proveedor::where('estado', 'activo')->get() as $proveedor)
-                                    <option value="{{ $proveedor->proveedor_id }}">{{ $proveedor->nombre }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = \App\Models\Supplier::where('status', 'active')->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $supplier): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($supplier->supplier_id); ?>"><?php echo e($supplier->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="edit-price-buy">Precio de Compra (₡) *</label>
-                            <input type="number" id="edit-price-buy" name="precio_compra" min="0" step="0.01" required>
+                            <input type="number" id="edit-price-buy" name="purchase_price" min="0" step="0.01" required>
                         </div>
                         <div class="form-group">
                             <label for="edit-price-sell">Precio de Venta (₡) *</label>
-                            <input type="number" id="edit-price-sell" name="precio_venta" min="0" step="0.01" required>
+                            <input type="number" id="edit-price-sell" name="sale_price" min="0" step="0.01" required>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="edit-stock">Stock Actual *</label>
-                            <input type="number" id="edit-stock" name="stock_actual" min="0" required>
+                            <input type="number" id="edit-stock" name="stock_current" min="0" required>
                         </div>
                         <div class="form-group">
                             <label for="edit-stock-min">Stock Mínimo *</label>
-                            <input type="number" id="edit-stock-min" name="stock_minimo" min="0" required>
+                            <input type="number" id="edit-stock-min" name="stock_minimum" min="0" required>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="edit-status">Estado *</label>
-                        <select id="edit-status" name="estado" required>
-                            <option value="activo">Activo</option>
-                            <option value="inactivo">Inactivo</option>
-                            <option value="agotado">Agotado</option>
-                            <option value="descontinuado">Descontinuado</option>
+                        <select id="edit-status" name="status" required>
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                            <option value="out_of_stock">Agotado</option>
+                            <option value="discontinued">Descontinuado</option>
                         </select>
                     </div>
                 </form>
@@ -455,7 +477,7 @@
                             <h4>XML</h4>
                             <p>Formato estructurado para intercambio de datos</p>
                         </div>
-                        <a href="{{ route('products.export', 'xml') }}" class="btn btn-primary">
+                        <a href="<?php echo e(route('products.export', 'xml')); ?>" class="btn btn-primary">
                             <i class="fas fa-download"></i>
                             Exportar XML
                         </a>
@@ -468,7 +490,7 @@
                             <h4>CSV</h4>
                             <p>Formato de hoja de cálculo compatible con Excel</p>
                         </div>
-                        <a href="{{ route('products.export', 'csv') }}" class="btn btn-primary">
+                        <a href="<?php echo e(route('products.export', 'csv')); ?>" class="btn btn-primary">
                             <i class="fas fa-download"></i>
                             Exportar CSV
                         </a>
@@ -481,7 +503,7 @@
                             <h4>JSON</h4>
                             <p>Formato ligero para aplicaciones web</p>
                         </div>
-                        <a href="{{ route('products.export', 'json') }}" class="btn btn-primary">
+                        <a href="<?php echo e(route('products.export', 'json')); ?>" class="btn btn-primary">
                             <i class="fas fa-download"></i>
                             Exportar JSON
                         </a>
@@ -494,7 +516,7 @@
                             <h4>PDF</h4>
                             <p>Documento profesional para impresión</p>
                         </div>
-                        <a href="{{ route('products.export', 'pdf') }}" class="btn btn-primary">
+                        <a href="<?php echo e(route('products.export', 'pdf')); ?>" class="btn btn-primary">
                             <i class="fas fa-download"></i>
                             Exportar PDF
                         </a>
@@ -515,8 +537,8 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form action="{{ route('products.import') }}" method="POST" enctype="multipart/form-data" id="import-form">
-                    @csrf
+                <form action="<?php echo e(route('products.import')); ?>" method="POST" enctype="multipart/form-data" id="import-form">
+                    <?php echo csrf_field(); ?>
                     
                     <!-- Área de carga de archivo -->
                     <div class="form-group">
@@ -635,7 +657,7 @@
         </div>
     </div>
 
-    <script src="{{ asset('js/inventory.js') }}"></script>
+    <script src="<?php echo e(asset('js/inventory.js')); ?>"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // Modal de exportar
@@ -661,4 +683,4 @@
 
 </html>
 
-</html>
+</html><?php /**PATH /var/www/html/resources/views/products/inventory.blade.php ENDPATH**/ ?>

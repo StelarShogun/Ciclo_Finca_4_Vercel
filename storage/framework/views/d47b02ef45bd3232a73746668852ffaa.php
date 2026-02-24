@@ -1,3 +1,5 @@
+
+
 <?php $__env->startSection('title', 'Carrito de Compras - Ciclo Pérez'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -184,7 +186,7 @@
     });
     
     function updateCart(productId, quantity) {
-        fetch('/carrito/actualizar', {
+        fetch('/cart/update', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -211,7 +213,7 @@
     }
     
     function removeFromCart(productId) {
-        fetch(`/carrito/eliminar/${productId}`, {
+        fetch(`/cart/remove/${productId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
