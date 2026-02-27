@@ -46,11 +46,16 @@ class Usuario extends Authenticatable
         'password',
     ];
 
-    // Encriptar contraseña automáticamente (solo si no es null)
+    // Encriptar contraseña automáticamente solo si no está hasheada
     public function setPasswordAttribute($value)
     {
         if ($value !== null && $value !== '') {
-            $this->attributes['password'] = bcrypt($value);
+            // Si ya está hasheada (bcrypt siempre empieza con $2y$ o $2b$)
+            if (preg_match('/^\$2[aby]\$/', $value)) {
+                $this->attributes['password'] = $value;
+            } else {
+                $this->attributes['password'] = bcrypt($value);
+            }
         } else {
             $this->attributes['password'] = null;
         }
