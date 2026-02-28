@@ -38,19 +38,19 @@ Esto levanta: **app** (Laravel en el puerto 8080), **db** (MySQL en 3306), **php
 ### 2. Instalar dependencias de PHP dentro del contenedor
 
 ```bash
-docker compose exec app composer install
+docker compose exec app_ciclo composer install
 ```
 
 ### 3. Generar la clave de aplicación
 
 ```bash
-docker compose exec app php artisan key:generate
+docker compose exec app_ciclo php artisan key:generate
 ```
 
 ### 4. Ejecutar migraciones y seeders
 
 ```bash
-docker compose exec app php artisan migrate --seed
+docker compose exec app_ciclo php artisan migrate --seed
 ```
 
 (Si este proyecto tiene el comando `db:setup`, puedes usar en su lugar: `docker compose exec app php artisan db:setup`.)
