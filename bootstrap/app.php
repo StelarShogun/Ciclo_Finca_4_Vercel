@@ -11,12 +11,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Solo excluir rutas API de CSRF, todas las rutas web deben tener CSRF
+        $middleware->trustProxies(at: '*');
+
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);
         
-        // Registrar middleware personalizado
         $middleware->alias([
             'admin.only' => \App\Http\Middleware\AdminOnly::class,
             'prevent.direct' => \App\Http\Middleware\PreventDirectAccess::class,
