@@ -443,3 +443,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 });
+
+window.mostrarLogin = mostrarLogin;
+window.mostrarRegistro = mostrarRegistro;
+window.loginUsuario = loginUsuario;
+window.registrarUsuario = registrarUsuario;
+window.cerrarModal = cerrarModal;
+window.verDetalle = verDetalle;
+window.eliminarUsuario = eliminarUsuario;
+window.filtrarUsuarios = filtrarUsuarios;
+window.limpiarFiltros = limpiarFiltros;
+window.exportUsers = exportUsers;
+window.closeAlert = closeAlert;

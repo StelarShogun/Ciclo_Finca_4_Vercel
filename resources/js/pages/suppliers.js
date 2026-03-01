@@ -543,3 +543,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 });
+
+window.registerSupplier = registerSupplier;
+window.editSupplier = editSupplier;
+window.viewSupplierDetail = viewSupplierDetail;
+window.loadSupplierForEdit = loadSupplierForEdit;
+window.closeModal = closeModal;
+window.openNewSupplierModal = openNewSupplierModal;
+window.closeNewSupplierModal = closeNewSupplierModal;
+window.closeEditSupplierModal = closeEditSupplierModal;
+window.validateForm = validateForm;
+window.showMessage = showMessage;
