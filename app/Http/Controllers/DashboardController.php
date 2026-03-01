@@ -202,27 +202,23 @@ class DashboardController extends Controller
     public function getDashboardData()
     {
         try {
-            // Verificar que las tablas existan
-            if (!\Schema::hasTable('productos') || !\Schema::hasTable('categorias') || !\Schema::hasTable('proveedores') || !\Schema::hasTable('sales')) {
+            if (!\Schema::hasTable('products') || !\Schema::hasTable('categories') || !\Schema::hasTable('suppliers') || !\Schema::hasTable('sales')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Database tables not found'
                 ], 500);
             }
-            
-            // Obtener estadísticas principales
-            $totalProducts = Producto::count();
-            $totalSuppliers = Proveedor::count();
-            $totalCategories = Categoria::count();
 
-            // Daily sales
+            $totalProducts = Product::count();
+            $totalSuppliers = Supplier::count();
+            $totalCategories = Category::count();
+
             $todaySales = Sale::whereDate('sale_date', Carbon::today())
                 ->where('status', 'completed')
                 ->sum('total');
 
-            // Productos con stock bajo
-            $lowStockProducts = Producto::where('stock_actual', '<', 10)
-                ->where('estado', 'activo')
+            $lowStockProducts = Product::where('stock_current', '<', 10)
+                ->where('status', 'active')
                 ->count();
 
             return response()->json([
@@ -236,7 +232,7 @@ class DashboardController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Error en getDashboardData: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener datos del dashboard'
@@ -265,16 +261,15 @@ class DashboardController extends Controller
                 ->orderBy('date')
                 ->get();
 
-            // Datos de productos por categoría
-            $categoryData = Categoria::withCount(['productos' => function($query) {
-                    $query->where('estado', 'activo');
+            $categoryData = Category::withCount(['products' => function($query) {
+                    $query->where('status', 'active');
                 }])
-                ->orderBy('productos_count', 'desc')
+                ->orderBy('products_count', 'desc')
                 ->get()
-                ->map(function($categoria) {
+                ->map(function($category) {
                     return [
-                        'categoria' => $categoria->nombre,
-                        'total' => $categoria->productos_count
+                        'categoria' => $category->name,
+                        'total' => $category->products_count
                     ];
                 });
 
@@ -357,13 +352,13 @@ class DashboardController extends Controller
     private function getDashboardDataInternal()
     {
         return [
-            'totalProducts' => Producto::count(),
-            'totalSuppliers' => Proveedor::count(),
+            'totalProducts' => Product::count(),
+            'totalSuppliers' => Supplier::count(),
             'todaySales' => Sale::whereDate('sale_date', Carbon::today())
                 ->where('status', 'completed')
                 ->sum('total'),
-            'lowStockProducts' => Producto::where('stock_actual', '<', 10)
-                ->where('estado', 'activo')
+            'lowStockProducts' => Product::where('stock_current', '<', 10)
+                ->where('status', 'active')
                 ->count(),
             'monthlySales' => Sale::whereMonth('sale_date', Carbon::now()->month)
                 ->whereYear('sale_date', Carbon::now()->year)
