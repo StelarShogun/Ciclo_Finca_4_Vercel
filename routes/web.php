@@ -20,6 +20,20 @@ Route::get('/run-migrations', function () {
         return "❌ Error ejecutando migraciones: " . $e->getMessage();
     }
 });
+
+Route::get('/run-seeders/{class?}', function ($class = null) {
+    try {
+        $params = ['--force' => true];
+        if ($class) {
+            $params['--class'] = $class;
+        }
+        Artisan::call('db:seed', $params);
+        return "✅ Seeder ejecutado:<br><pre>" . Artisan::output() . "</pre>";
+    } catch (\Exception $e) {
+        return "❌ Error: " . $e->getMessage();
+    }
+});
+
 // Rutas públicas para clientes
 Route::get('/', [ClienteController::class, 'home'])->name('clientes.home');
 Route::get('/catalog', [ClienteController::class, 'catalogo'])->name('clientes.catalogo');
