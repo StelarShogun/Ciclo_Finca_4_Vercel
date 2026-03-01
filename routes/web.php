@@ -9,7 +9,17 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ClienteController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 
+Route::get('/run-migrations', function () {
+    try {
+        // Esto ejecuta el comando 'php artisan migrate --force' desde el navegador
+        Artisan::call('migrate', ['--force' => true]);
+        return "✅ Migraciones ejecutadas con éxito: <br><pre>" . Artisan::output() . "</pre>";
+    } catch (\Exception $e) {
+        return "❌ Error ejecutando migraciones: " . $e->getMessage();
+    }
+});
 // Rutas públicas para clientes
 Route::get('/', [ClienteController::class, 'home'])->name('clientes.home');
 Route::get('/catalog', [ClienteController::class, 'catalogo'])->name('clientes.catalogo');
