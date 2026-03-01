@@ -106,5 +106,5 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/suppliers/supplier.css') }}">
+    @vite(['resources/css/suppliers/supplier-entry.css'])
 @endpush

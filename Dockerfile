@@ -1,9 +1,12 @@
 FROM php:8.2-apache
 
-# Instalamos dependencias y los certificados del sistema (ca-certificates)
 RUN apt-get update && \
-    apt-get install -y unzip git zip libzip-dev libpng-dev && \
+    apt-get install -y unzip git zip libzip-dev libpng-dev curl && \
     docker-php-ext-install pdo pdo_mysql zip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN a2enmod rewrite
@@ -18,7 +21,12 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 
 WORKDIR /var/www/html
 
+COPY package.json package-lock.json* ./
+RUN npm ci
+
 COPY . .
+
+RUN npm run build
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 

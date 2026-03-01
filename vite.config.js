@@ -1,4 +1,3 @@
-// vite.config.js
 import { defineConfig } from 'vite'
 import laravel from 'laravel-vite-plugin'
 
@@ -8,8 +7,12 @@ export default defineConfig({
       input: [
         'resources/js/app.js',
         'resources/js/admin.js',
-        'resources/js/view-controls.js',
+        'resources/js/clientes.js',
+        'resources/js/dashboard.js',
         'resources/js/inventory.js',
+        'resources/js/usuarios.js',
+        'resources/js/suppliers.js',
+        'resources/css/suppliers/supplier-entry.css',
       ],
       refresh: true,
     }),

@@ -13,7 +13,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     
-    <link rel="stylesheet" href="{{ asset('estilos.php') }}">
+    @vite(['resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -370,7 +370,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- <script src="{{ asset('js/admin.js') }}"></script> -->
     <!-- <script src="{{ asset('js/animations.js') }}"></script> -->
-    <script src="{{ asset('js/usuarios.js') }}"></script>
+    @vite(['resources/js/usuarios.js'])
     <script>
         // Verificar que las funciones estén disponibles
         document.addEventListener('DOMContentLoaded', function() {

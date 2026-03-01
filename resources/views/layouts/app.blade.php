@@ -15,8 +15,7 @@
     <link rel="manifest" href="{{ asset('site.webmanifest') }}">
     <meta name="theme-color" content="#2e7d32">
     
-    <!-- Estilos CSS Unificados -->
-    <link rel="stylesheet" href="{{ asset('estilos.php') }}">
+    @vite(['resources/js/app.js'])
     @stack('styles')
     
     <!-- Fuentes e iconos -->
@@ -49,8 +48,7 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ asset('js/admin.js') }}"></script>
-    <script src="{{ asset('js/animations.js') }}"></script>
+    @vite(['resources/js/admin.js'])
     @stack('scripts')
 </body>
 </html>

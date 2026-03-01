@@ -13,9 +13,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     
-    <!-- Estilos CSS -->
-    <link rel="stylesheet" href="{{ asset('estilos.php') }}">
-    <link rel="stylesheet" href="{{ asset('css/clientes.css') }}">
+    @vite(['resources/js/app.js'])
     @stack('styles')
     
     <!-- Fuentes e iconos -->
@@ -219,7 +217,7 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ asset('js/clientes.js') }}"></script>
+    @vite(['resources/js/clientes.js'])
     @stack('scripts')
 </body>
 </html>

@@ -92,6 +92,3 @@
     </div>
 @endsection
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('estilos.php') }}">
-@endpush

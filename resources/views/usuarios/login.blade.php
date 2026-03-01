@@ -127,10 +127,6 @@
     </div>
 @endsection
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('estilos.php') }}">
-@endpush
-
 @push('scripts')
-    <script src="{{ asset('js/usuarios.js') }}"></script>
+    @vite(['resources/js/usuarios.js'])
 @endpush
