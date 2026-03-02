@@ -1,4 +1,4 @@
-# Ciclo Finca — Sistema de Gestión
+# Ciclo Finca 4 — Sistema de Gestión
 
 Aplicación web full-stack para la gestión de una tienda de ciclismo: catálogo público, carrito de compras, ventas, inventario, proveedores y panel de administración.
 
@@ -6,7 +6,7 @@ Aplicación web full-stack para la gestión de una tienda de ciclismo: catálogo
 
 ## a. Descripción del sistema
 
-**Ciclo Finca** es un sistema de gestión que permite:
+**Ciclo Finca 4** es un sistema de gestión que permite:
 
 - **Lado público (clientes):**
   - Ver inicio y catálogo de productos (bicicletas, componentes, accesorios, indumentaria, herramientas, seguridad, nutrición).
@@ -111,7 +111,3 @@ La aplicación se despliega como **una sola URL** (frontend y backend en el mism
 - **Backend/API:** misma URL; los endpoints de API y rutas web están bajo ese dominio.
 
 ---
-
-## Licencia
-
-El framework Laravel es software de código abierto bajo la [licencia MIT](https://opensource.org/licenses/MIT).
