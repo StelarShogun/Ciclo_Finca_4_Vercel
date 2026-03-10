@@ -21,7 +21,7 @@
                     <i class="fas fa-truck"></i>
                     <span class="sidebar-label">Proveedores</span>
                 </a>
-            </li>
+            </li>  
             <li class="<?php echo e(request()->routeIs('sales.*') ? 'active' : ''); ?>">
                 <a href="<?php echo e(route('sales.index')); ?>">
                     <i class="fas fa-cash-register"></i>
