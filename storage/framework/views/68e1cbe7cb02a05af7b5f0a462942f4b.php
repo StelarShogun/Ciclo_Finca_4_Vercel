@@ -263,7 +263,7 @@
                         </div>
                     </a>
 
-                    <a href="<?php echo e(route('proveedores.create')); ?>" class="action-card">
+                    <a href="<?php echo e(route('suppliers.create')); ?>" class="action-card">
                         <div class="action-icon">
                             <i class="fas fa-truck"></i>
                         </div>
