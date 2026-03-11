@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Inicio - Ciclo Pérez'); ?>
 
 <?php $__env->startSection('content'); ?>

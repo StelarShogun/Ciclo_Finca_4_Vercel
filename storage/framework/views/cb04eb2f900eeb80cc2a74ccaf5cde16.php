@@ -13,7 +13,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="<?php echo e(asset('apple-touch-icon.png')); ?>">
     <link rel="icon" type="image/x-icon" href="<?php echo e(asset('favicon.ico')); ?>">
     
-    <link rel="stylesheet" href="<?php echo e(asset('estilos.php')); ?>">
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/js/app.js']); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -394,7 +394,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- <script src="<?php echo e(asset('js/admin.js')); ?>"></script> -->
     <!-- <script src="<?php echo e(asset('js/animations.js')); ?>"></script> -->
-    <script src="<?php echo e(asset('js/usuarios.js')); ?>"></script>
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/js/usuarios.js']); ?>
     <script>
         // Verificar que las funciones estén disponibles
         document.addEventListener('DOMContentLoaded', function() {
