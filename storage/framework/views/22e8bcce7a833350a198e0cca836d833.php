@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', $producto->name . ' - Ciclo Pérez'); ?>
 
 <?php $__env->startSection('content'); ?>

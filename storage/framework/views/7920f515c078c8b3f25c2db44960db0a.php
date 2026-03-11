@@ -6,8 +6,7 @@
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title>Ventas - Ciclo Pérez Admin</title>
     <link rel="icon" type="image/x-icon" href="<?php echo e(asset('favicon.ico')); ?>">
-    <?php $cssVer = file_exists(public_path('css/sales.css')) ? filemtime(public_path('css/sales.css')) : time(); ?>
-    <link rel="stylesheet" href="<?php echo e(asset('estilos.php')); ?>?v=<?php echo e($cssVer); ?>">
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/js/app.js']); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -222,11 +221,11 @@
                             <div class="product-row">
                                 <div class="form-group">
                                     <label>Producto</label>
-                                    <select name="items[0][producto_id]" class="product-select" required>
+                                    <select name="items[0][product_id]" class="product-select" required>
                                         <option value="">Seleccionar producto</option>
-                                        <?php $__currentLoopData = \App\Models\Producto::where('estado', 'activo')->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $producto): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                        <option value="<?php echo e($producto->producto_id); ?>" data-precio="<?php echo e($producto->precio_venta); ?>" data-stock="<?php echo e($producto->stock_actual); ?>">
-                                            <?php echo e($producto->nombre); ?> - ₡<?php echo e(number_format((float)$producto->precio_venta, 0, ',', '.')); ?> (Stock: <?php echo e($producto->stock_actual); ?>)
+                                        <?php $__currentLoopData = \App\Models\Product::where('status', 'active')->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($product->product_id); ?>" data-precio="<?php echo e($product->sale_price); ?>" data-stock="<?php echo e($product->stock_current); ?>">
+                                            <?php echo e($product->name); ?> - ₡<?php echo e(number_format((float)$product->sale_price, 0, ',', '.')); ?> (Stock: <?php echo e($product->stock_current); ?>)
                                         </option>
                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
@@ -317,11 +316,11 @@
             newRow.innerHTML = `
                 <div class="form-group">
                     <label>Producto</label>
-                    <select name="items[${productIndex}][producto_id]" class="product-select" required>
+                    <select name="items[${productIndex}][product_id]" class="product-select" required>
                         <option value="">Seleccionar producto</option>
-                        <?php $__currentLoopData = \App\Models\Producto::where('estado', 'activo')->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $producto): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <option value="<?php echo e($producto->producto_id); ?>" data-precio="<?php echo e($producto->precio_venta); ?>" data-stock="<?php echo e($producto->stock_actual); ?>">
-                            <?php echo e($producto->nombre); ?> - ₡<?php echo e(number_format((float)$producto->precio_venta, 0, ',', '.')); ?> (Stock: <?php echo e($producto->stock_actual); ?>)
+                        <?php $__currentLoopData = \App\Models\Product::where('status', 'active')->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($product->product_id); ?>" data-precio="<?php echo e($product->sale_price); ?>" data-stock="<?php echo e($product->stock_current); ?>">
+                            <?php echo e($product->name); ?> - ₡<?php echo e(number_format((float)$product->sale_price, 0, ',', '.')); ?> (Stock: <?php echo e($product->stock_current); ?>)
                         </option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
@@ -416,7 +415,7 @@
                         const qty = item.quantity;
                         const up = parseFloat(item.unit_price || 0);
                         const tot = parseFloat(item.total || 0);
-                        return `<tr><td>${prod.nombre || 'N/A'}</td><td class="text-center">${qty}</td><td class="text-right">₡${up.toLocaleString('es-CR', {minimumFractionDigits: 2})}</td><td class="text-right"><strong>₡${tot.toLocaleString('es-CR', {minimumFractionDigits: 2})}</strong></td></tr>`;
+                        return `<tr><td>${prod.name || 'N/A'}</td><td class="text-center">${qty}</td><td class="text-right">₡${up.toLocaleString('es-CR', {minimumFractionDigits: 2})}</td><td class="text-right"><strong>₡${tot.toLocaleString('es-CR', {minimumFractionDigits: 2})}</strong></td></tr>`;
                     }).join('');
 
                     const customerName = sale.customer ? (sale.customer.nombre || '') + ' ' + (sale.customer.apellido || '') : 'N/A';
