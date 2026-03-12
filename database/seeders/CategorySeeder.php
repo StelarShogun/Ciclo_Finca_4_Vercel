@@ -11,13 +11,13 @@ class CategorySeeder extends Seeder
     {
         $categories = [
             // Main cycling categories
-            ['name' => 'Bicycles', 'description' => 'Complete bicycles of different types', 'parent_category_id' => null],
-            ['name' => 'Components', 'description' => 'Bicycle components and spare parts', 'parent_category_id' => null],
-            ['name' => 'Accessories', 'description' => 'Cycling accessories and equipment', 'parent_category_id' => null],
-            ['name' => 'Sportswear', 'description' => 'Specialized clothing for cycling', 'parent_category_id' => null],
-            ['name' => 'Tools', 'description' => 'Bicycle maintenance tools', 'parent_category_id' => null],
-            ['name' => 'Safety', 'description' => 'Helmets, lights and safety gear', 'parent_category_id' => null],
-            ['name' => 'Nutrition', 'description' => 'Supplements and sports drinks', 'parent_category_id' => null],
+            ['name' => 'Bicicletas', 'description' => 'Bicicletas completas de diferentes tipos', 'parent_category_id' => null],
+            ['name' => 'Componentes', 'description' => 'Componentes y repuestos para bicicleta', 'parent_category_id' => null],
+            ['name' => 'Accesorios', 'description' => 'Accesorios y equipamiento para ciclismo', 'parent_category_id' => null],
+            ['name' => 'Ropa deportiva', 'description' => 'Vestimenta especializada para ciclismo', 'parent_category_id' => null],
+            ['name' => 'Herramientas', 'description' => 'Herramientas para mantenimiento de bicicletas', 'parent_category_id' => null],
+            ['name' => 'Seguridad', 'description' => 'Cascos, luces y equipo de seguridad', 'parent_category_id' => null],
+            ['name' => 'Nutrición', 'description' => 'Suplementos y bebidas deportivas', 'parent_category_id' => null],
         ];
 
         foreach ($categories as $category) {
