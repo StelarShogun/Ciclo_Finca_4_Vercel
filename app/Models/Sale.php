@@ -81,4 +81,57 @@ class Sale extends Model
     {
         return in_array($this->status, ['pending', 'completed']);
     }
-}
+
+      /**
+     * Días de vigencia configurados para eliminación automática.
+     */
+    public static function getOrderExpirationDays(): int 
+    {
+        return (int) config('sales.order_expiration_days');
+    }
+
+    /**
+     * Fecha límite: después de esta fecha el pedido será eliminado.
+     */
+    public function getExpiresAtAttribute(): \Carbon\Carbon
+      {
+        $days = static::getOrderExpirationDays();
+        return $this->sale_date->addDays($days);
+      }
+    
+      /**
+     * Días restantes hasta la eliminación automática (0 si ya expiró).
+     */
+      public function getDaysRemainingUntilExpiration(): int
+       {
+        $expiresAt = $this->expires_at;
+        $now = now();
+        if ($expiresAt <= $now) {
+            return 0;
+        }
+        return (int) $now->diffInDays($expiresAt , false);
+       }
+
+
+       /**
+     * Indica si quedan dos días o menos (para mostrar alerta).
+     */
+     public function getIsExpriryWarningAttribute(): bool
+      {
+        return $this->days_remaining_until_expiration <= config('sales.expiry_alert_days')
+            && $this->days_remaining_until_expiration > 0;
+      }
+
+        /**
+     * Scope: solo pedidos que aún no han superado el tiempo de vigencia.
+     */
+      public function scopeNotExpired($query)
+      {
+        $days = static::getOrderExpirationDays();
+        $limitDate = now()->addDays($days);
+        return $query->where('sale_date', '>=', $limitDate);
+      }
+
+
+    }
+
