@@ -1,4 +1,12 @@
+/vendor/
+/node_modules/
 .env
-/node_modules
-/public/build
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
 /public/hot
+/public/storage
+bootstrap/cache/*
+.DS_Store
+Thumbs.db
