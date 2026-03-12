@@ -55,7 +55,7 @@
 
 @push('scripts')
 <script>
-document.getElementById('toggle-password').addEventListener('click', function() {
+ document.getElementById('toggle-password').addEventListener('click', function() {
     const input = document.getElementById('login-password');
     const icon = document.getElementById('eye-icon');
     if (input.type === 'password') {

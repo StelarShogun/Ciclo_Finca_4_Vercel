@@ -19,6 +19,7 @@ class ClientUserSeeder extends Seeder
             'second_surname' => 'Chavarría',
             'gmail' => 'darwinn990@gmail.com',
             'password' => Hash::make('Darwin1234$'),
+            'remember_token' => bin2hex(random_bytes(10)),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

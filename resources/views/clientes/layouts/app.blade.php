@@ -43,33 +43,36 @@
                     </a>
                 </nav>
                 
-                <div class="header-actions">
+                <div class="header-actions" style="display: flex; align-items: center; gap: 24px;">
                     <button class="cart-btn" id="cart-toggle" data-cart-count="{{ $cartCount ?? 0 }}">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
                     </button>
-                    @auth
-                        @if(session('client_id'))
-                            <div class="user-menu" id="user-menu">
-                                <button type="button" class="user-menu-trigger" id="user-menu-trigger" aria-haspopup="true" aria-expanded="false" title="Mi perfil">
-                                    <i class="fas fa-user-circle"></i>
-                                    <span>{{ session('client_name') }} {{ session('client_first_surname') }} {{ session('client_second_surname') }}</span>
-                                </button>
-                                <form action="{{ route('logout') }}" method="POST" class="logout-form">
-                                    @csrf
-                                    <button type="submit" class="user-dropdown-item user-dropdown-logout" title="Cerrar Sesión">
-                                        <i class="fas fa-sign-out-alt"></i>
-                                        <span>Cerrar Sesión</span>
-                                    </button>
-                                </form>
+                    @if(request()->routeIs('login.show'))
+                        <a href="/" class="btn btn-outline-secondary btn-sm" style="display:flex;align-items:center;gap:6px;">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Regresar</span>
+                        </a>
+                    @elseif(session('client_id'))
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <i class="fas fa-user-circle" style="font-size: 2rem; color: #218838;"></i>
+                                <span style="font-size: 0.95rem; color: #218838; margin-top: 2px;">{{ session('client_name') }}</span>
                             </div>
-                        @else
-                            <a href="/login" class="btn btn-primary btn-sm">
-                                <i class="fas fa-sign-in-alt"></i>
-                                <span>Iniciar Sesión</span>
-                            </a>
-                        @endif
-                    @endauth
+                            <form action="{{ route('logout') }}" method="POST" class="logout-form" style="margin: 0;">
+                                @csrf
+                                <button type="submit" class="user-dropdown-item user-dropdown-logout" style="color:#dc3545;font-weight:600;background:none;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;gap:4px;" title="Cerrar Sesión">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Cerrar Sesión</span>
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <a href="/login" class="btn btn-primary btn-sm">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Iniciar Sesión</span>
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>

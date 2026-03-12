@@ -319,12 +319,12 @@ document.addEventListener('click', function (event) {
     closeUserDropdown();
 });
 
-// ===== LOGIN MODAL =====
+// ===== LOGIN  =====
 const loginModalTrigger = document.getElementById('login-modal-trigger');
 
 if (loginModalTrigger) {
     loginModalTrigger.addEventListener('click', function() {
-        window.location.href = '/login'; // Redirige a la página de login
+        window.location.href = '/login'; 
     });
 }
 
@@ -354,6 +354,7 @@ if (publicLoginForm) {
         e.preventDefault();
         
         const formData = new FormData(this);
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
         const submitBtn = document.getElementById('login-submit-btn');
         const loadingSpan = document.getElementById('login-loading');
         const submitSpan = submitBtn.querySelector('span:not(.btn-loading)');
@@ -367,11 +368,19 @@ if (publicLoginForm) {
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
-        .then(data => {
+        .then(async response => {
+            let data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                // Si no es JSON, probablemente es HTML por error de validación o redirect
+                window.location.reload(); // O redirige al catálogo si la sesión está activa
+                return;
+            }
             if (data.success) {
                 Swal.fire({
                     icon: 'success',
@@ -388,7 +397,6 @@ if (publicLoginForm) {
                     title: 'Error',
                     text: data.message || 'Error al iniciar sesión'
                 });
-                
                 // Restaurar botón
                 submitBtn.disabled = false;
                 if (submitSpan) submitSpan.classList.remove('hidden');
@@ -402,7 +410,6 @@ if (publicLoginForm) {
                 title: 'Error',
                 text: 'Ocurrió un error al iniciar sesión'
             });
-            
             // Restaurar botón
             submitBtn.disabled = false;
             if (submitSpan) submitSpan.classList.remove('hidden');

@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->string('second_surname')->nullable();
             $table->string('gmail')->unique();
             $table->string('password');
+            $table->rememberToken();
             $table->timestamps();
         });
     }
