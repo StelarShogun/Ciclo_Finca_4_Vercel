@@ -225,12 +225,12 @@ class ClienteController extends Controller
         // Actualizar carrito en sesión (eliminar productos que ya no están activos)
         Session::put('carrito', array_map(function($item) {
             return [
-                'product_id' => $item['product_id'],
-                'name' => $item['name'],
-                'price' => $item['price'],
-                'image' => $item['image'],
-                'quantity' => $item['quantity'],
-                'stock_available' => $item['stock_available']
+                'product_id' => $item['producto_id'],
+                'name' => $item['nombre'],
+                'price' => $item['precio'],
+                'image' => $item['imagen'],
+                'quantity' => $item['cantidad'],
+                'stock_available' => $item['stock_disponible']
             ];
         }, $cartItems));
 
@@ -304,16 +304,12 @@ class ClienteController extends Controller
 
         Session::put('carrito', array_values($cart));
 
-        if (request()->wantsJson() || request()->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Producto eliminado del carrito',
-                'cart_count' => $this->getCartCount(),
-                'cart_total' => $this->getCartTotal()
-            ]);
-        }
-
-        return redirect()->route('clientes.carrito')->with('status', 'Producto eliminado del carrito');
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto eliminado del carrito',
+            'cart_count' => $this->getCartCount(),
+            'cart_total' => $this->getCartTotal()
+        ]);
     }
 
     /**
