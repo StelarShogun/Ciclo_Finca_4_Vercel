@@ -7,7 +7,7 @@ export default defineConfig({
       input: [
         'resources/js/app.js',
         'resources/js/admin.js',
-        'resources/js/clientes.js',
+        'resources/js/customers.js',
         'resources/js/dashboard.js',
         'resources/js/inventory.js',
         'resources/js/usuarios.js',
