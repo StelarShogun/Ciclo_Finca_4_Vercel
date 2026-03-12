@@ -5,6 +5,12 @@
 @section('content')
 <div class="login-page-center">
     <div class="login-form-box">
+        @if(request()->get('session_expired'))
+            <div class="alert alert-warning mb-3" role="alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                La sesión expiró o el token no es válido. Intenta iniciar sesión de nuevo.
+            </div>
+        @endif
         <h2 class="text-center mb-4">Iniciar Sesión</h2>
         <form id="public-login-form" method="POST" action="{{ route('login') }}">
             @csrf

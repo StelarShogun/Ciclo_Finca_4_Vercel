@@ -320,6 +320,7 @@ document.addEventListener('click', function (event) {
 });
 
 // ===== LOGIN  =====
+const publicLoginForm = document.getElementById('public-login-form');
 const loginModalTrigger = document.getElementById('login-modal-trigger');
 
 if (loginModalTrigger) {
@@ -352,33 +353,45 @@ function closeLoginModalFunc() {
 if (publicLoginForm) {
     publicLoginForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
+        // Token CSRF desde el propio formulario (@csrf), más fiable que meta en todos los entornos (Windows/Linux)
+        const tokenInput = this.querySelector('input[name="_token"]');
+        const csrfToken = tokenInput ? tokenInput.value : (document.querySelector('meta[name="csrf-token"]')?.content || '');
+        if (!csrfToken) {
+            window.location.href = '/login?session_expired=1';
+            return;
+        }
+
         const formData = new FormData(this);
-        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
         const submitBtn = document.getElementById('login-submit-btn');
         const loadingSpan = document.getElementById('login-loading');
-        const submitSpan = submitBtn.querySelector('span:not(.btn-loading)');
-        
-        // Cambiar estado del botón
+        const submitSpan = submitBtn?.querySelector('span:not(.btn-loading)');
+
         submitBtn.disabled = true;
         if (submitSpan) submitSpan.classList.add('hidden');
         if (loadingSpan) loadingSpan.classList.remove('hidden');
-        
+
         fetch('/login', {
             method: 'POST',
             body: formData,
+            credentials: 'same-origin',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-CSRF-TOKEN': csrfToken,
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
         .then(async response => {
+            // 419 = CSRF token mismatch (común en Linux si la cookie de sesión no coincide)
+            if (response.status === 419) {
+                window.location.href = '/login?session_expired=1';
+                return;
+            }
             let data;
             try {
                 data = await response.json();
-            } catch (e) {
-                // Si no es JSON, probablemente es HTML por error de validación o redirect
-                window.location.reload(); // O redirige al catálogo si la sesión está activa
+            } catch (err) {
+                // Respuesta HTML (p. ej. página de error) en lugar de JSON
+                window.location.href = '/login?session_expired=1';
                 return;
             }
             if (data.success) {
@@ -397,7 +410,6 @@ if (publicLoginForm) {
                     title: 'Error',
                     text: data.message || 'Error al iniciar sesión'
                 });
-                // Restaurar botón
                 submitBtn.disabled = false;
                 if (submitSpan) submitSpan.classList.remove('hidden');
                 if (loadingSpan) loadingSpan.classList.add('hidden');
@@ -410,7 +422,6 @@ if (publicLoginForm) {
                 title: 'Error',
                 text: 'Ocurrió un error al iniciar sesión'
             });
-            // Restaurar botón
             submitBtn.disabled = false;
             if (submitSpan) submitSpan.classList.remove('hidden');
             if (loadingSpan) loadingSpan.classList.add('hidden');
