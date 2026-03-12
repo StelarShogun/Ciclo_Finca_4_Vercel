@@ -152,6 +152,7 @@ return array(
     'Database\\Factories\\ProductFactory' => $baseDir . '/database/factories/ProductFactory.php',
     'Database\\Seeders\\AdminSeeder' => $baseDir . '/database/seeders/AdminSeeder.php',
     'Database\\Seeders\\CategorySeeder' => $baseDir . '/database/seeders/CategorySeeder.php',
+    'Database\\Seeders\\ClientUserSeeder' => $baseDir . '/database/seeders/ClientUserSeeder.php',
     'Database\\Seeders\\DatabaseSeeder' => $baseDir . '/database/seeders/DatabaseSeeder.php',
     'Database\\Seeders\\ProductsSeeder' => $baseDir . '/database/seeders/ProductsSeeder.php',
     'Database\\Seeders\\SupplierSeeder' => $baseDir . '/database/seeders/SupplierSeeder.php',

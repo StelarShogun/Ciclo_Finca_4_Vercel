@@ -712,4 +712,4 @@
     </script>
 </body>
 </html>
-<?php /**PATH /var/www/html/resources/views/usuarios/index.blade.php ENDPATH**/ ?>
+<?php /**PATH /var/www/html/resources/views/clients_users/index.blade.php ENDPATH**/ ?>

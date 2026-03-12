@@ -129,4 +129,4 @@
     <?php echo app('Illuminate\Foundation\Vite')(['resources/js/usuarios.js']); ?>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('usuarios', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/html/resources/views/usuarios/login.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('usuarios', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/html/resources/views/clients_users/login.blade.php ENDPATH**/ ?>

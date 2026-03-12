@@ -49,36 +49,26 @@
                         <span class="cart-count" id="cart-count"><?php echo e($cartCount ?? 0); ?></span>
                     </button>
                     <?php if(auth()->guard()->check()): ?>
-                        <div class="user-menu" id="user-menu">
-                            <button type="button" class="user-menu-trigger" id="user-menu-trigger" aria-haspopup="true" aria-expanded="false" title="Mi perfil">
-                                <i class="fas fa-user-circle"></i>
-                            </button>
-                            <div class="user-dropdown" id="user-dropdown" aria-label="Menú de usuario">
-                                <div class="user-dropdown-header">
-                                    <div class="user-dropdown-name"><?php echo e(Auth::user()->nombre); ?> <?php echo e(Auth::user()->apellido); ?></div>
-                                </div>
-                                <div class="user-dropdown-actions">
-                                    <?php if(Auth::user()->rol === 'admin'): ?>
-                                        <a class="user-dropdown-item" href="<?php echo e(route('dashboard')); ?>">
-                                            <i class="fas fa-chart-line"></i>
-                                            <span>Entrar a Dashboard</span>
-                                        </a>
-                                    <?php endif; ?>
-                                    <form action="<?php echo e(route('logout')); ?>" method="POST" class="logout-form">
-                                        <?php echo csrf_field(); ?>
-                                        <button type="submit" class="user-dropdown-item user-dropdown-logout" title="Cerrar Sesión">
-                                            <i class="fas fa-sign-out-alt"></i>
-                                            <span>Cerrar Sesión</span>
-                                        </button>
-                                    </form>
-                                </div>
+                        <?php if(session('client_id')): ?>
+                            <div class="user-menu" id="user-menu">
+                                <button type="button" class="user-menu-trigger" id="user-menu-trigger" aria-haspopup="true" aria-expanded="false" title="Mi perfil">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span><?php echo e(session('client_name')); ?> <?php echo e(session('client_first_surname')); ?> <?php echo e(session('client_second_surname')); ?></span>
+                                </button>
+                                <form action="<?php echo e(route('logout')); ?>" method="POST" class="logout-form">
+                                    <?php echo csrf_field(); ?>
+                                    <button type="submit" class="user-dropdown-item user-dropdown-logout" title="Cerrar Sesión">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span>Cerrar Sesión</span>
+                                    </button>
+                                </form>
                             </div>
-                        </div>
-                    <?php else: ?>
-                        <button class="btn btn-primary btn-sm" id="login-modal-trigger">
-                            <i class="fas fa-sign-in-alt"></i>
-                            <span>Iniciar Sesión</span>
-                        </button>
+                        <?php else: ?>
+                            <a href="/login" class="btn btn-primary btn-sm">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>Iniciar Sesión</span>
+                            </a>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -157,65 +147,6 @@
         </div>
     </div>
     <div class="cart-overlay" id="cart-overlay"></div>
-
-    <!-- Modal de Login -->
-    <div class="modal" id="login-modal">
-        <div class="modal-content modal-md">
-            <div class="modal-header">
-                <h3>Iniciar Sesión</h3>
-                <button class="modal-close" id="close-login-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <!-- Formulario de Login -->
-                <form id="public-login-form" method="POST" action="<?php echo e(route('login')); ?>">
-                    <?php echo csrf_field(); ?>
-                    <div class="form-group">
-                        <label for="login-email">Correo Electrónico</label>
-                        <input type="email" id="login-email" name="email" class="form-control" required placeholder="ejemplo@correo.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="login-password">Contraseña</label>
-                        <input type="password" id="login-password" name="password" class="form-control" required placeholder="Ingresa tu contraseña">
-                    </div>
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="remember" id="remember">
-                            <span>Recordarme</span>
-                        </label>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="login-submit-btn">
-                        <i class="fas fa-sign-in-alt"></i>
-                        <span>Iniciar Sesión</span>
-                        <span class="btn-loading hidden" id="login-loading">Iniciando...</span>
-                    </button>
-                </form>
-                
-                <div class="login-divider">
-                    <span>o</span>
-                </div>
-                
-                <!-- Botones OAuth -->
-                <div class="oauth-buttons">
-                    <a href="<?php echo e(route('auth.google')); ?>" class="oauth-btn google-btn">
-                        <i class="fab fa-google"></i>
-                        <span>Continuar con Google</span>
-                    </a>
-                    <a href="<?php echo e(route('auth.facebook')); ?>" class="oauth-btn facebook-btn">
-                        <i class="fab fa-facebook"></i>
-                        <span>Continuar con Facebook</span>
-                    </a>
-                </div>
-                
-                <div class="login-footer">
-                    <p>¿No tienes una cuenta? <a href="#" id="show-register-form">Regístrate aquí</a></p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="modal-overlay" id="login-modal-overlay"></div>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

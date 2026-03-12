@@ -321,30 +321,28 @@ document.addEventListener('click', function (event) {
 
 // ===== LOGIN MODAL =====
 const loginModalTrigger = document.getElementById('login-modal-trigger');
-const loginModal = document.getElementById('login-modal');
-const loginModalOverlay = document.getElementById('login-modal-overlay');
-const closeLoginModal = document.getElementById('close-login-modal');
-const publicLoginForm = document.getElementById('public-login-form');
 
 if (loginModalTrigger) {
     loginModalTrigger.addEventListener('click', function() {
-        loginModal.classList.add('active');
-        loginModalOverlay.classList.add('active');
+        window.location.href = '/login'; // Redirige a la página de login
     });
 }
 
-if (closeLoginModal) {
-    closeLoginModal.addEventListener('click', function() {
-        closeLoginModalFunc();
-    });
-}
+// Cerrar modales con ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeUserDropdown();
+        if (loginModal && loginModal.classList.contains('active')) {
+            closeLoginModalFunc();
+        }
+        document.querySelectorAll('.modal.active').forEach(modal => {
+            modal.classList.remove('active');
+        });
+        closeCartSidebar();
+    }
+});
 
-if (loginModalOverlay) {
-    loginModalOverlay.addEventListener('click', function() {
-        closeLoginModalFunc();
-    });
-}
-
+// Función para cerrar el modal de login
 function closeLoginModalFunc() {
     loginModal.classList.remove('active');
     loginModalOverlay.classList.remove('active');
@@ -412,17 +410,3 @@ if (publicLoginForm) {
         });
     });
 }
-
-// Cerrar modales con ESC
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        closeUserDropdown();
-        if (loginModal && loginModal.classList.contains('active')) {
-            closeLoginModalFunc();
-        }
-        document.querySelectorAll('.modal.active').forEach(modal => {
-            modal.classList.remove('active');
-        });
-        closeCartSidebar();
-    }
-});

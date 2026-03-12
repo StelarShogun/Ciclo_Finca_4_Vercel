@@ -10,6 +10,7 @@ use App\Http\Controllers\ClienteController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\ClientUserController;
 
 Route::get('/run-migrations', function () {
     try {
@@ -46,8 +47,8 @@ Route::put('/cart/update', [ClienteController::class, 'updateCart'])->name('clie
 Route::delete('/cart/remove/{id}', [ClienteController::class, 'removeFromCart'])->name('clientes.carrito.eliminar');
 
 // Authentication Routes
-Route::get('/login', [UsuarioController::class, 'showLogin'])->name('login.show');
-Route::post('/login', [UsuarioController::class, 'login'])
+Route::get('/login', [ClientUserController::class, 'showLoginForm'])->name('login.show');
+Route::post('/login', [ClientUserController::class, 'login'])
     ->middleware('throttle:5,1') // 5 intentos por minuto para prevenir fuerza bruta
     ->name('login');
 Route::post('/logout', function(Request $request) {
@@ -55,7 +56,6 @@ Route::post('/logout', function(Request $request) {
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
-    
     return redirect()->route('clientes.home')->with('status', 'Sesión cerrada correctamente.');
 })->name('logout');
 

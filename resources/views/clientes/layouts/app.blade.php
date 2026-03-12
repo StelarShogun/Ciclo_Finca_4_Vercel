@@ -49,36 +49,26 @@
                         <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
                     </button>
                     @auth
-                        <div class="user-menu" id="user-menu">
-                            <button type="button" class="user-menu-trigger" id="user-menu-trigger" aria-haspopup="true" aria-expanded="false" title="Mi perfil">
-                                <i class="fas fa-user-circle"></i>
-                            </button>
-                            <div class="user-dropdown" id="user-dropdown" aria-label="Menú de usuario">
-                                <div class="user-dropdown-header">
-                                    <div class="user-dropdown-name">{{ Auth::user()->nombre }} {{ Auth::user()->apellido }}</div>
-                                </div>
-                                <div class="user-dropdown-actions">
-                                    @if(Auth::user()->rol === 'admin')
-                                        <a class="user-dropdown-item" href="{{ route('dashboard') }}">
-                                            <i class="fas fa-chart-line"></i>
-                                            <span>Entrar a Dashboard</span>
-                                        </a>
-                                    @endif
-                                    <form action="{{ route('logout') }}" method="POST" class="logout-form">
-                                        @csrf
-                                        <button type="submit" class="user-dropdown-item user-dropdown-logout" title="Cerrar Sesión">
-                                            <i class="fas fa-sign-out-alt"></i>
-                                            <span>Cerrar Sesión</span>
-                                        </button>
-                                    </form>
-                                </div>
+                        @if(session('client_id'))
+                            <div class="user-menu" id="user-menu">
+                                <button type="button" class="user-menu-trigger" id="user-menu-trigger" aria-haspopup="true" aria-expanded="false" title="Mi perfil">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>{{ session('client_name') }} {{ session('client_first_surname') }} {{ session('client_second_surname') }}</span>
+                                </button>
+                                <form action="{{ route('logout') }}" method="POST" class="logout-form">
+                                    @csrf
+                                    <button type="submit" class="user-dropdown-item user-dropdown-logout" title="Cerrar Sesión">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span>Cerrar Sesión</span>
+                                    </button>
+                                </form>
                             </div>
-                        </div>
-                    @else
-                        <button class="btn btn-primary btn-sm" id="login-modal-trigger">
-                            <i class="fas fa-sign-in-alt"></i>
-                            <span>Iniciar Sesión</span>
-                        </button>
+                        @else
+                            <a href="/login" class="btn btn-primary btn-sm">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>Iniciar Sesión</span>
+                            </a>
+                        @endif
                     @endauth
                 </div>
             </div>
@@ -155,65 +145,6 @@
         </div>
     </div>
     <div class="cart-overlay" id="cart-overlay"></div>
-
-    <!-- Modal de Login -->
-    <div class="modal" id="login-modal">
-        <div class="modal-content modal-md">
-            <div class="modal-header">
-                <h3>Iniciar Sesión</h3>
-                <button class="modal-close" id="close-login-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <!-- Formulario de Login -->
-                <form id="public-login-form" method="POST" action="{{ route('login') }}">
-                    @csrf
-                    <div class="form-group">
-                        <label for="login-email">Correo Electrónico</label>
-                        <input type="email" id="login-email" name="email" class="form-control" required placeholder="ejemplo@correo.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="login-password">Contraseña</label>
-                        <input type="password" id="login-password" name="password" class="form-control" required placeholder="Ingresa tu contraseña">
-                    </div>
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="remember" id="remember">
-                            <span>Recordarme</span>
-                        </label>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="login-submit-btn">
-                        <i class="fas fa-sign-in-alt"></i>
-                        <span>Iniciar Sesión</span>
-                        <span class="btn-loading hidden" id="login-loading">Iniciando...</span>
-                    </button>
-                </form>
-                
-                <div class="login-divider">
-                    <span>o</span>
-                </div>
-                
-                <!-- Botones OAuth -->
-                <div class="oauth-buttons">
-                    <a href="{{ route('auth.google') }}" class="oauth-btn google-btn">
-                        <i class="fab fa-google"></i>
-                        <span>Continuar con Google</span>
-                    </a>
-                    <a href="{{ route('auth.facebook') }}" class="oauth-btn facebook-btn">
-                        <i class="fab fa-facebook"></i>
-                        <span>Continuar con Facebook</span>
-                    </a>
-                </div>
-                
-                <div class="login-footer">
-                    <p>¿No tienes una cuenta? <a href="#" id="show-register-form">Regístrate aquí</a></p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="modal-overlay" id="login-modal-overlay"></div>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
