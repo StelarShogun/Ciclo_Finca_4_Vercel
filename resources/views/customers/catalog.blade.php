@@ -145,7 +145,7 @@
 @push('scripts')
 <script>
 (function() {
-    var catalogUrl = '{{ route('customers.catalog') }}';
+    var catalogUrl = "{{ route('customers.catalog') }}"; 
     var container = document.getElementById('catalog-results-container');
     var form = document.getElementById('filter-form');
 

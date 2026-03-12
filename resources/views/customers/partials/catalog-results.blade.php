@@ -4,6 +4,8 @@
     </p>
 </div>
 
+@php $fallbackImage = asset('favicon.svg'); @endphp
+
 @if($productos->count() > 0)
     <div class="products-grid">
         @foreach($productos as $producto)
@@ -12,7 +14,7 @@
                     <a href="{{ route('customers.product', $producto->product_id) }}">
                         <img src="{{ asset('assets/images/products/' . ($producto->image ?? 'default.png')) }}" 
                              alt="{{ $producto->name }}"
-                             onerror="this.src='{{ asset('favicon.svg') }}'">
+                             onerror="this.src='{{ $fallbackImage }}'">
                     </a>
                     @if($producto->stock_current <= 10)
                         <span class="product-badge stock-low">Stock Bajo</span>
