@@ -2,3 +2,27 @@
 /node_modules
 /public/build
 /public/hot
+
+# Laravel
+/vendor
+storage/*.key
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# Tests y caché PHP
+.phpunit.result.cache
+.phpunit.cache
+
+# IDE y editores
+.idea/
+.vscode/
+.cursor/
+
+
+# Logs y temporales
+*.log
+.env.backup
+.env.production
+storage/logs/laravel.log

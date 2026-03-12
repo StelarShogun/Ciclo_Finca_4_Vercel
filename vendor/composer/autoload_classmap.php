@@ -9,6 +9,7 @@ return array(
     'App\\Console\\Commands\\CheckTables' => $baseDir . '/app/Console/Commands/CheckTables.php',
     'App\\Console\\Commands\\CleanDatabase' => $baseDir . '/app/Console/Commands/CleanDatabase.php',
     'App\\Console\\Commands\\SetupDatabase' => $baseDir . '/app/Console/Commands/SetupDatabase.php',
+    'App\\Exceptions\\Handler' => $baseDir . '/app/Exceptions/Handler.php',
     'App\\Http\\Controllers\\ClientUserController' => $baseDir . '/app/Http/Controllers/ClientUserController.php',
     'App\\Http\\Controllers\\ClienteController' => $baseDir . '/app/Http/Controllers/ClienteController.php',
     'App\\Http\\Controllers\\Controller' => $baseDir . '/app/Http/Controllers/Controller.php',
