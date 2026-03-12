@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
-    <title><?php echo $__env->yieldContent('title', 'Ciclo Pérez - Tienda de Bicicletas'); ?></title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'Ciclo Pérez - Tienda de Bicicletas')</title>
     
     <!-- Favicons modernos -->
-    <link rel="icon" type="image/svg+xml" href="<?php echo e(asset('favicon.svg')); ?>">
-    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo e(asset('favicon-32x32.png')); ?>">
-    <link rel="icon" type="image/png" sizes="16x16" href="<?php echo e(asset('favicon-16x16.png')); ?>">
-    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo e(asset('apple-touch-icon.png')); ?>">
-    <link rel="icon" type="image/x-icon" href="<?php echo e(asset('favicon.ico')); ?>">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     
-    <?php echo app('Illuminate\Foundation\Vite')(['resources/js/app.js']); ?>
-    <?php echo $__env->yieldPushContent('styles'); ?>
+    @vite(['resources/js/app.js'])
+    @stack('styles')
     
     <!-- Fuentes e iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -26,46 +26,46 @@
         <div class="header-container">
             <div class="header-content">
                 <div class="logo-section">
-                    <a href="<?php echo e(route('clientes.home')); ?>" class="logo-link">
-                        <img src="<?php echo e(asset('assets/images/logo.png')); ?>" alt="Ciclo Pérez" class="logo-img" onerror="this.src='<?php echo e(asset('favicon.svg')); ?>'">
+                    <a href="{{ route('customers.home') }}" class="logo-link">
+                        <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Pérez" class="logo-img" onerror="this.src='{{ asset('favicon.svg') }}'">
                         <span class="logo-text">Ciclo Pérez</span>
                     </a>
                 </div>
                 
                 <nav class="main-nav">
-                    <a href="<?php echo e(route('clientes.home')); ?>" class="nav-link <?php echo e(request()->routeIs('clientes.home') ? 'active' : ''); ?>">
+                    <a href="{{ route('customers.home') }}" class="nav-link {{ request()->routeIs('customers.home') ? 'active' : '' }}">
                         <i class="fas fa-home"></i>
                         <span>Inicio</span>
                     </a>
-                    <a href="<?php echo e(route('clientes.catalogo')); ?>" class="nav-link <?php echo e(request()->routeIs('clientes.catalogo') ? 'active' : ''); ?>">
+                    <a href="{{ route('customers.catalog') }}" class="nav-link {{ request()->routeIs('customers.catalog') ? 'active' : '' }}">
                         <i class="fas fa-th"></i>
                         <span>Catálogo</span>
                     </a>
                 </nav>
                 
                 <div class="header-actions">
-                    <button class="cart-btn" id="cart-toggle" data-cart-count="<?php echo e($cartCount ?? 0); ?>">
+                    <button class="cart-btn" id="cart-toggle" data-cart-count="{{ $cartCount ?? 0 }}">
                         <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-count" id="cart-count"><?php echo e($cartCount ?? 0); ?></span>
+                        <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
                     </button>
-                    <?php if(auth()->guard()->check()): ?>
+                    @auth
                         <div class="user-menu" id="user-menu">
                             <button type="button" class="user-menu-trigger" id="user-menu-trigger" aria-haspopup="true" aria-expanded="false" title="Mi perfil">
                                 <i class="fas fa-user-circle"></i>
                             </button>
                             <div class="user-dropdown" id="user-dropdown" aria-label="Menú de usuario">
                                 <div class="user-dropdown-header">
-                                    <div class="user-dropdown-name"><?php echo e(Auth::user()->nombre); ?> <?php echo e(Auth::user()->apellido); ?></div>
+                                    <div class="user-dropdown-name">{{ Auth::user()->nombre }} {{ Auth::user()->apellido }}</div>
                                 </div>
                                 <div class="user-dropdown-actions">
-                                    <?php if(Auth::user()->rol === 'admin'): ?>
-                                        <a class="user-dropdown-item" href="<?php echo e(route('dashboard')); ?>">
+                                    @if(Auth::user()->rol === 'admin')
+                                        <a class="user-dropdown-item" href="{{ route('dashboard') }}">
                                             <i class="fas fa-chart-line"></i>
                                             <span>Entrar a Dashboard</span>
                                         </a>
-                                    <?php endif; ?>
-                                    <form action="<?php echo e(route('logout')); ?>" method="POST" class="logout-form">
-                                        <?php echo csrf_field(); ?>
+                                    @endif
+                                    <form action="{{ route('logout') }}" method="POST" class="logout-form">
+                                        @csrf
                                         <button type="submit" class="user-dropdown-item user-dropdown-logout" title="Cerrar Sesión">
                                             <i class="fas fa-sign-out-alt"></i>
                                             <span>Cerrar Sesión</span>
@@ -74,12 +74,12 @@
                                 </div>
                             </div>
                         </div>
-                    <?php else: ?>
+                    @else
                         <button class="btn btn-primary btn-sm" id="login-modal-trigger">
                             <i class="fas fa-sign-in-alt"></i>
                             <span>Iniciar Sesión</span>
                         </button>
-                    <?php endif; ?>
+                    @endauth
                 </div>
             </div>
         </div>
@@ -87,23 +87,21 @@
 
     <!-- Main Content -->
     <main class="cliente-main">
-        <?php if(session('status')): ?>
+        @if(session('status'))
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i>
-                <?php echo e(session('status')); ?>
-
+                {{ session('status') }}
             </div>
-        <?php endif; ?>
+        @endif
 
-        <?php if(session('error')): ?>
+        @if(session('error'))
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-circle"></i>
-                <?php echo e(session('error')); ?>
-
+                {{ session('error') }}
             </div>
-        <?php endif; ?>
+        @endif
 
-        <?php echo $__env->yieldContent('content'); ?>
+        @yield('content')
     </main>
 
     <!-- Footer -->
@@ -117,8 +115,8 @@
                 <div class="footer-section">
                     <h4>Enlaces</h4>
                     <ul class="footer-links">
-                        <li><a href="<?php echo e(route('clientes.home')); ?>">Inicio</a></li>
-                        <li><a href="<?php echo e(route('clientes.catalogo')); ?>">Catálogo</a></li>
+                        <li><a href="{{ route('customers.home') }}">Inicio</a></li>
+                        <li><a href="{{ route('customers.catalog') }}">Catálogo</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
@@ -127,7 +125,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; <?php echo e(date('Y')); ?> Ciclo Pérez. Todos los derechos reservados.</p>
+                <p>&copy; {{ date('Y') }} Ciclo Pérez. Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>
@@ -145,7 +143,7 @@
             <div class="cart-empty">
                 <i class="fas fa-shopping-cart"></i>
                 <p>Tu carrito está vacío</p>
-                <a href="<?php echo e(route('clientes.catalogo')); ?>" class="btn btn-primary">Ver Catálogo</a>
+                <a href="{{ route('customers.catalog') }}" class="btn btn-primary">Ver Catálogo</a>
             </div>
         </div>
         <div class="cart-sidebar-footer" id="cart-footer" style="display: none;">
@@ -153,7 +151,7 @@
                 <span>Total:</span>
                 <span class="cart-total-amount" id="cart-total">₡0</span>
             </div>
-            <a href="<?php echo e(route('clientes.carrito')); ?>" class="btn btn-primary btn-block">Ver Carrito</a>
+            <a href="{{ route('customers.cart') }}" class="btn btn-primary btn-block">Ver Carrito</a>
         </div>
     </div>
     <div class="cart-overlay" id="cart-overlay"></div>
@@ -169,8 +167,8 @@
             </div>
             <div class="modal-body">
                 <!-- Formulario de Login -->
-                <form id="public-login-form" method="POST" action="<?php echo e(route('login')); ?>">
-                    <?php echo csrf_field(); ?>
+                <form id="public-login-form" method="POST" action="{{ route('login') }}">
+                    @csrf
                     <div class="form-group">
                         <label for="login-email">Correo Electrónico</label>
                         <input type="email" id="login-email" name="email" class="form-control" required placeholder="ejemplo@correo.com">
@@ -198,11 +196,11 @@
                 
                 <!-- Botones OAuth -->
                 <div class="oauth-buttons">
-                    <a href="<?php echo e(route('auth.google')); ?>" class="oauth-btn google-btn">
+                    <a href="{{ route('auth.google') }}" class="oauth-btn google-btn">
                         <i class="fab fa-google"></i>
                         <span>Continuar con Google</span>
                     </a>
-                    <a href="<?php echo e(route('auth.facebook')); ?>" class="oauth-btn facebook-btn">
+                    <a href="{{ route('auth.facebook') }}" class="oauth-btn facebook-btn">
                         <i class="fab fa-facebook"></i>
                         <span>Continuar con Facebook</span>
                     </a>
@@ -219,7 +217,7 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <?php echo app('Illuminate\Foundation\Vite')(['resources/js/clientes.js']); ?>
-    <?php echo $__env->yieldPushContent('scripts'); ?>
+    @vite(['resources/js/customers.js'])
+    @stack('scripts')
 </body>
-</html><?php /**PATH /var/www/html/resources/views/clientes/layouts/app.blade.php ENDPATH**/ ?>
+</html>

@@ -1,4 +1,4 @@
-@extends('clientes.layouts.app')
+@extends('customers.layouts.app')
 
 @section('title', 'Catálogo - Ciclo Pérez')
 
@@ -22,7 +22,7 @@
                         Filtros
                     </h3>
                     
-                    <form method="GET" action="{{ route('clientes.catalogo') }}" id="filter-form">
+                    <form method="GET" action="{{ route('customers.catalog') }}" id="filter-form">
                         <!-- Búsqueda -->
                         <div class="filter-group">
                             <label for="buscar">Buscar</label>
@@ -92,7 +92,7 @@
                                 <i class="fas fa-search"></i>
                                 Aplicar Filtros
                             </button>
-                            <a href="{{ route('clientes.catalogo') }}" class="btn btn-secondary btn-block">
+                            <a href="{{ route('customers.catalog') }}" class="btn btn-secondary btn-block">
                                 <i class="fas fa-redo"></i>
                                 Limpiar
                             </a>
@@ -103,68 +103,8 @@
 
             <!-- Contenido Principal -->
             <main class="catalog-content">
-                <!-- Resultados -->
-                <div class="catalog-results">
-                    <div class="results-header">
-                        <p class="results-count">
-                            Mostrando {{ $productos->firstItem() ?? 0 }}-{{ $productos->lastItem() ?? 0 }} de {{ $productos->total() }} productos
-                        </p>
-                    </div>
-                    
-                    @if($productos->count() > 0)
-                        <div class="products-grid">
-                            @foreach($productos as $producto)
-                                <div class="product-card">
-                                    <div class="product-image">
-                                        <a href="{{ route('clientes.producto', $producto->product_id) }}">
-                                            <img src="{{ asset('assets/images/products/' . ($producto->image ?? 'default.png')) }}" 
-                                                 alt="{{ $producto->name }}"
-                                                 onerror="this.src='{{ asset('favicon.svg') }}'">
-                                        </a>
-                                        @if($producto->stock_current <= 10)
-                                            <span class="product-badge stock-low">Stock Bajo</span>
-                                        @endif
-                                    </div>
-                                    <div class="product-info">
-                                        <div class="product-category">{{ $producto->category->name ?? 'Uncategorized' }}</div>
-                                        <h3 class="product-name">
-                                            <a href="{{ route('clientes.producto', $producto->product_id) }}">
-                                                {{ $producto->name }}
-                                            </a>
-                                        </h3>
-                                        @if($producto->description)
-                                            <p class="product-description">{{ Str::limit($producto->description, 100) }}</p>
-                                        @endif
-                                        <div class="product-footer">
-                                            <div class="product-price">₡{{ number_format($producto->sale_price, 0, ',', '.') }}</div>
-                                            <button class="btn btn-primary btn-sm add-to-cart-btn" 
-                                                    data-product-id="{{ $producto->product_id }}"
-                                                    data-product-name="{{ $producto->name }}"
-                                                    data-product-price="{{ $producto->sale_price }}"
-                                                    data-product-stock="{{ $producto->stock_current }}">
-                                                <i class="fas fa-cart-plus"></i>
-                                                Agregar
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                        
-                        <!-- Paginación -->
-                        <div class="pagination-wrapper">
-                            {{ $productos->links() }}
-                        </div>
-                    @else
-                        <div class="empty-state">
-                            <i class="fas fa-search"></i>
-                            <h3>No se encontraron productos</h3>
-                            <p>Intenta ajustar tus filtros de búsqueda</p>
-                            <a href="{{ route('clientes.catalogo') }}" class="btn btn-primary">
-                                Ver Todos los Productos
-                            </a>
-                        </div>
-                    @endif
+                <div class="catalog-results" id="catalog-results-container">
+                    @include('customers.partials.catalog-results', ['productos' => $productos])
                 </div>
             </main>
         </div>
@@ -204,50 +144,111 @@
 
 @push('scripts')
 <script>
-    // Manejo del modal de agregar al carrito (mismo código que en home)
-    let currentProductId = null;
-    
-    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            currentProductId = this.dataset.productId;
-            const productName = this.dataset.productName;
-            const productPrice = parseFloat(this.dataset.productPrice);
-            const productStock = parseInt(this.dataset.productStock);
-            
+(function() {
+    var catalogUrl = '{{ route('customers.catalog') }}';
+    var container = document.getElementById('catalog-results-container');
+    var form = document.getElementById('filter-form');
+
+    function loadCatalog(urlOrParams) {
+        var url = (typeof urlOrParams === 'string' && urlOrParams.indexOf('catalog') !== -1)
+            ? urlOrParams
+            : catalogUrl + (urlOrParams ? '?' + urlOrParams : '');
+        if (container) container.classList.add('loading');
+
+        fetch(url, {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    if (typeof Swal !== 'undefined') Swal.fire('Aviso', data.error, 'warning');
+                    return;
+                }
+                if (data.html && container) container.innerHTML = data.html;
+                if (typeof url === 'string' && url.indexOf('?') !== -1) {
+                    var u = new URL(url, window.location.origin);
+                    window.history.replaceState({}, '', u.pathname + u.search);
+                }
+                bindPaginationLinks();
+            })
+            .catch(function() {
+                if (container) container.innerHTML = '<p class="text-danger">Error al cargar los productos.</p>';
+            })
+            .finally(function() {
+                if (container) container.classList.remove('loading');
+            });
+    }
+
+    function bindPaginationLinks() {
+        if (!container) return;
+        var links = container.querySelectorAll('.pagination-wrapper a[href]');
+        links.forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                var href = this.getAttribute('href');
+                if (!href || href.indexOf('catalog') === -1) return;
+                e.preventDefault();
+                loadCatalog(href);
+            });
+        });
+    }
+
+    var filterInputs = form.querySelectorAll('#buscar, #categoria_id, #precio_min, #precio_max, #ordenar, #direccion');
+    var searchTimeout;
+    filterInputs.forEach(function(el) {
+        el.addEventListener('change', function() {
+            loadCatalog(new URLSearchParams(new FormData(form)));
+        });
+        if (el.id === 'buscar') {
+            el.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    loadCatalog(new URLSearchParams(new FormData(form)));
+                }, 400);
+            });
+        }
+    });
+
+    var currentProductId = null;
+    var catalogContent = document.querySelector('.catalog-content');
+    if (catalogContent) {
+        catalogContent.addEventListener('click', function(e) {
+            var btn = e.target.closest('.add-to-cart-btn');
+            if (!btn) return;
+            e.preventDefault();
+            currentProductId = btn.dataset.productId;
+            var productName = btn.dataset.productName;
+            var productPrice = parseFloat(btn.dataset.productPrice);
+            var productStock = parseInt(btn.dataset.productStock);
+
             document.getElementById('preview-name').textContent = productName;
             document.getElementById('preview-price').textContent = '₡' + productPrice.toLocaleString('es-CR');
             document.getElementById('preview-stock').textContent = 'Stock disponible: ' + productStock;
             document.getElementById('cart-quantity').max = productStock;
             document.getElementById('cart-quantity').value = 1;
-            
-            const productCard = this.closest('.product-card');
-            const productImage = productCard.querySelector('.product-image img');
-            if (productImage) {
-                document.getElementById('preview-image').src = productImage.src;
-            }
-            
+
+            var productCard = btn.closest('.product-card');
+            var productImage = productCard ? productCard.querySelector('.product-image img') : null;
+            if (productImage) document.getElementById('preview-image').src = productImage.src;
+
             document.getElementById('add-to-cart-modal').classList.add('active');
         });
-    });
-    
+    }
+
     document.getElementById('confirm-add-to-cart').addEventListener('click', function() {
-        const quantity = parseInt(document.getElementById('cart-quantity').value);
-        
+        var quantity = parseInt(document.getElementById('cart-quantity').value, 10);
         if (quantity < 1) {
-            Swal.fire('Error', 'La cantidad debe ser mayor a 0', 'error');
+            if (typeof Swal !== 'undefined') Swal.fire('Error', 'La cantidad debe ser mayor a 0', 'error');
             return;
         }
-        
         addToCart(currentProductId, quantity);
     });
-    
     document.getElementById('cancel-add-to-cart').addEventListener('click', function() {
         document.getElementById('add-to-cart-modal').classList.remove('active');
     });
-    
     document.getElementById('close-add-to-cart-modal').addEventListener('click', function() {
         document.getElementById('add-to-cart-modal').classList.remove('active');
     });
+})();
 </script>
 @endpush
-

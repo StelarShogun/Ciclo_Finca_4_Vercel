@@ -6,7 +6,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UsuarioController;
-use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\CustomerController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -34,16 +34,16 @@ Route::get('/run-seeders/{class?}', function ($class = null) {
     }
 });
 
-// Rutas públicas para clientes
-Route::get('/', [ClienteController::class, 'home'])->name('clientes.home');
-Route::get('/catalog', [ClienteController::class, 'catalogo'])->name('clientes.catalogo');
-Route::get('/product/{id}', [ClienteController::class, 'producto'])->name('clientes.producto');
+// Public customer routes
+Route::get('/', [CustomerController::class, 'home'])->name('customers.home');
+Route::get('/catalog', [CustomerController::class, 'catalog'])->name('customers.catalog');
+Route::get('/product/{id}', [CustomerController::class, 'product'])->name('customers.product');
 
-// Rutas del carrito
-Route::post('/cart/add', [ClienteController::class, 'addToCart'])->name('clientes.carrito.agregar');
-Route::get('/cart', [ClienteController::class, 'cart'])->name('clientes.carrito');
-Route::put('/cart/update', [ClienteController::class, 'updateCart'])->name('clientes.carrito.actualizar');
-Route::delete('/cart/remove/{id}', [ClienteController::class, 'removeFromCart'])->name('clientes.carrito.eliminar');
+// Cart routes
+Route::post('/cart/add', [CustomerController::class, 'addToCart'])->name('customers.cart.add');
+Route::get('/cart', [CustomerController::class, 'cart'])->name('customers.cart');
+Route::put('/cart/update', [CustomerController::class, 'updateCart'])->name('customers.cart.update');
+Route::delete('/cart/remove/{id}', [CustomerController::class, 'removeFromCart'])->name('customers.cart.remove');
 
 // Authentication Routes
 Route::get('/login', [UsuarioController::class, 'showLogin'])->name('login.show');
@@ -56,7 +56,7 @@ Route::post('/logout', function(Request $request) {
     $request->session()->invalidate();
     $request->session()->regenerateToken();
     
-    return redirect()->route('clientes.home')->with('status', 'Sesión cerrada correctamente.');
+    return redirect()->route('customers.home')->with('status', 'Sesión cerrada correctamente.');
 })->name('logout');
 
 // OAuth Routes

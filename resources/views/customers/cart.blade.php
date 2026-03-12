@@ -1,4 +1,4 @@
-@extends('clientes.layouts.app')
+@extends('customers.layouts.app')
 
 @section('title', 'Carrito de Compras - Ciclo Pérez')
 
@@ -10,7 +10,7 @@
                 <i class="fas fa-shopping-cart"></i>
                 Carrito de Compras
             </h1>
-            <a href="{{ route('clientes.catalogo') }}" class="btn btn-secondary">
+            <a href="{{ route('customers.catalog') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i>
                 Continuar Comprando
             </a>
@@ -101,7 +101,7 @@
                     <i class="fas fa-shopping-cart"></i>
                     <h2>Tu carrito está vacío</h2>
                     <p>Agrega productos desde nuestro catálogo</p>
-                    <a href="{{ route('clientes.catalogo') }}" class="btn btn-primary btn-lg">
+                    <a href="{{ route('customers.catalog') }}" class="btn btn-primary btn-lg">
                         <i class="fas fa-th"></i>
                         Ver Catálogo
                     </a>
@@ -200,7 +200,6 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Recargar la página para actualizar los totales
                 window.location.reload();
             } else {
                 Swal.fire('Error', data.message || 'No se pudo actualizar el carrito', 'error');
@@ -223,14 +222,11 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Eliminar el elemento del DOM
                 document.querySelector(`.cart-item[data-product-id="${productId}"]`)?.remove();
                 
-                // Si no hay más items, recargar para mostrar el estado vacío
                 if (document.querySelectorAll('.cart-item').length === 1) {
                     window.location.reload();
                 } else {
-                    // Actualizar totales
                     updateCartTotals(data.cart_total);
                 }
                 
@@ -251,4 +247,3 @@
     }
 </script>
 @endpush
-
