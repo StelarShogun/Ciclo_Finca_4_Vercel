@@ -4,8 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Sale;
+use App\Models\SaleItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class ClienteController extends Controller
 {
@@ -310,6 +314,101 @@ class ClienteController extends Controller
             'cart_count' => $this->getCartCount(),
             'cart_total' => $this->getCartTotal()
         ]);
+    }
+
+    /**
+     * Procesa el checkout: crea la venta, vacía el carrito
+     */
+    public function checkout(Request $request)
+    {
+        $cart = Session::get('carrito', []);
+
+        if (empty($cart)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El carrito está vacío'
+            ], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            $subtotal = 0;
+            $validatedItems = [];
+
+            foreach ($cart as $item) {
+                $product = Product::find($item['product_id']);
+
+                if (!$product || $product->status !== 'active') {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El producto "' . ($item['name'] ?? '') . '" ya no está disponible'
+                    ], 400);
+                }
+
+                if ($product->stock_current < $item['quantity']) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Stock insuficiente para "' . $product->name . '". Disponible: ' . $product->stock_current
+                    ], 400);
+                }
+
+                $itemTotal = $item['price'] * $item['quantity'];
+                $subtotal += $itemTotal;
+
+                $validatedItems[] = [
+                    'product' => $product,
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total' => $itemTotal
+                ];
+            }
+
+            $sale = Sale::create([
+                'invoice_number' => (new Sale())->generateInvoiceNumber(),
+                'customer_id' => Auth::id(),
+                'seller_id' => Auth::id(),
+                'sale_date' => now(),
+                'payment_method' => 'cash',
+                'status' => 'pending',
+                'subtotal' => $subtotal,
+                'iva' => 0,
+                'discount' => 0,
+                'total' => $subtotal,
+                'notes' => 'Pedido realizado desde la tienda en línea'
+            ]);
+
+            foreach ($validatedItems as $item) {
+                SaleItem::create([
+                    'sale_id' => $sale->sale_id,
+                    'product_id' => $item['product']->product_id,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['price'],
+                    'unit_discount' => 0,
+                    'total' => $item['total']
+                ]);
+
+                $item['product']->decrement('stock_current', $item['quantity']);
+            }
+
+            Session::forget('carrito');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pedido creado exitosamente',
+                'sale_id' => $sale->sale_id,
+                'invoice_number' => $sale->invoice_number
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar el pedido: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

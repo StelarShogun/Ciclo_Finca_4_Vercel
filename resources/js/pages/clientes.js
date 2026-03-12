@@ -265,10 +265,53 @@ document.addEventListener('DOMContentLoaded', function() {
     if (proceedBtn) {
         proceedBtn.addEventListener('click', function() {
             Swal.fire({
-                title: '¡Gracias por tu pedido!',
-                text: 'Nos pondremos en contacto contigo pronto para confirmar los detalles.',
-                icon: 'success',
-                confirmButtonText: 'Entendido'
+                title: '¿Confirmar compra?',
+                text: 'Se enviará tu pedido para retiro en tienda.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, confirmar',
+                cancelButtonText: 'Cancelar'
+            }).then(function(result) {
+                if (!result.isConfirmed) return;
+
+                proceedBtn.disabled = true;
+                proceedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+                fetch('/cart/checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (!data.success) {
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo procesar el pedido' });
+                        proceedBtn.disabled = false;
+                        proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
+                        return;
+                    }
+
+                    updateCartCount(0);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Pedido enviado con éxito!',
+                        html: 'Su pedido fue enviado con éxito.<br><br>Tiene un lapso de <b>3 días</b> para retirarlo en nuestro local.<br><br>El pago se realiza de forma presencial mediante <b>SINPE, efectivo o tarjeta</b>.',
+                        confirmButtonText: 'Entendido'
+                    }).then(function() {
+                        window.location.reload();
+                    });
+                })
+                .catch(function(err) {
+                    console.error('Error:', err);
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al procesar el pedido' });
+                    proceedBtn.disabled = false;
+                    proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
+                });
             });
         });
     }
