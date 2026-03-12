@@ -52,7 +52,8 @@ Route::post('/login', [ClientUserController::class, 'login'])
     ->middleware('throttle:5,1') // 5 intentos por minuto para prevenir fuerza bruta
     ->name('login');
 Route::post('/logout', function(Request $request) {
-    // Logout más seguro
+    // Cerrar sesión en ambos guards (web = admin, clients = cliente) para evitar estado inconsistente
+    Auth::guard('clients')->logout();
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();

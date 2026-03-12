@@ -59,7 +59,9 @@ class ClientUserController extends Controller
     // Logout
     public function logout(Request $request)
     {
-        $request->session()->forget('client_id');
-        return redirect()->route('clients.login');
+        Auth::guard('clients')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login.show')->with('status', 'Sesión cerrada correctamente.');
     }
 }
