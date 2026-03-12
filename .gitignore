@@ -1,12 +1,34 @@
-/vendor/
-/node_modules/
 .env
-/storage/framework/cache/data/*
-/storage/framework/sessions/*
-/storage/framework/views/*
-/storage/logs/*
+/node_modules
+/public/build
 /public/hot
-/public/storage
-bootstrap/cache/*
+
+# Laravel
+/vendor
+storage/*.key
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# Tests y caché PHP
+.phpunit.result.cache
+.phpunit.cache
+
+# IDE y editores
+.idea/
+.vscode/
+.cursor/
+
+# Sistema operativo
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
+
+# Logs y temporales
+*.log
+.env.backup
+.env.production
+storage/logs/laravel.log

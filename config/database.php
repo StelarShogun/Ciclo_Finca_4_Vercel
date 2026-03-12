@@ -59,14 +59,10 @@ return [
             'strict' => true,
             'engine' => null,
             // Aiven requiere SSL (ssl-mode=REQUIRED). Se usa ca.pem como CA.
-            'options' => extension_loaded('pdo_mysql') ? (
-                env('MYSQL_ATTR_SSL_CA') && trim(env('MYSQL_ATTR_SSL_CA')) !== ''
-                    ? array_filter([
-                        PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-                        PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => filter_var(env('DB_SSL_VERIFY', true), FILTER_VALIDATE_BOOLEAN),
-                    ])
-                    : []
-            ) : [],
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA', base_path('ca.pem')),
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => filter_var(env('DB_SSL_VERIFY', true), FILTER_VALIDATE_BOOLEAN),
+            ]) : [],
         ],
 
     
