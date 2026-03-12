@@ -1,4 +1,4 @@
-@extends('customers.layouts.app')
+@extends('clientes.layouts.app')
 
 @section('title', $producto->name . ' - Ciclo Pérez')
 
@@ -6,9 +6,9 @@
 <div class="product-detail-container">
     <div class="container">
         <nav class="breadcrumb">
-            <a href="{{ route('customers.home') }}">Inicio</a>
+            <a href="{{ route('clientes.home') }}">Inicio</a>
             <span>/</span>
-            <a href="{{ route('customers.catalog') }}">Catálogo</a>
+            <a href="{{ route('clientes.catalogo') }}">Catálogo</a>
             <span>/</span>
             <span>{{ $producto->name }}</span>
         </nav>
@@ -83,7 +83,7 @@
                     @foreach($productosRelacionados as $relacionado)
                         <div class="product-card">
                             <div class="product-image">
-                                <a href="{{ route('customers.product', $relacionado->product_id) }}">
+                                <a href="{{ route('clientes.producto', $relacionado->product_id) }}">
                                     <img src="{{ asset('assets/images/products/' . ($relacionado->image ?? 'default.png')) }}" 
                                          alt="{{ $relacionado->name }}"
                                          onerror="this.src='{{ asset('favicon.svg') }}'">
@@ -92,13 +92,13 @@
                             <div class="product-info">
                                 <div class="product-category">{{ $relacionado->category->name ?? 'Uncategorized' }}</div>
                                 <h3 class="product-name">
-                                    <a href="{{ route('customers.product', $relacionado->product_id) }}">
+                                    <a href="{{ route('clientes.producto', $relacionado->product_id) }}">
                                         {{ $relacionado->name }}
                                     </a>
                                 </h3>
                                 <div class="product-footer">
                                     <div class="product-price">₡{{ number_format($relacionado->sale_price, 0, ',', '.') }}</div>
-                                    <a href="{{ route('customers.product', $relacionado->product_id) }}" class="btn btn-primary btn-sm">
+                                    <a href="{{ route('clientes.producto', $relacionado->product_id) }}" class="btn btn-primary btn-sm">
                                         Ver Detalles
                                     </a>
                                 </div>
@@ -153,3 +153,4 @@
     });
 </script>
 @endpush
+

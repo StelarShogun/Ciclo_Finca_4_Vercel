@@ -1,6 +1,6 @@
 /**
- * Customer frontend JavaScript
- * Cart sidebar, modals and interactive behavior
+ * JavaScript para la interfaz de clientes
+ * Maneja el carrito, modales y funcionalidades interactivas
  */
 
 // ===== CARRITO SIDEBAR =====

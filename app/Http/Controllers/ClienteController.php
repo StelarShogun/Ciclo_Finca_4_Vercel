@@ -7,13 +7,14 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
-class CustomerController extends Controller
+class ClienteController extends Controller
 {
     /**
-     * Home page with featured products and categories
+     * Muestra la página home con productos destacados y categorías
      */
     public function home()
     {
+        // Obtener productos destacados (activos, con stock, limitados)
         $productosDestacados = Product::with(['category'])
             ->where('status', 'active')
             ->where('stock_current', '>', 0)
@@ -21,50 +22,41 @@ class CustomerController extends Controller
             ->limit(8)
             ->get();
 
+        // Obtener categorías principales
         $categorias = Category::whereNull('parent_category_id')
             ->orderBy('name')
             ->get();
 
+        // Contar items en carrito
         $cartCount = $this->getCartCount();
 
-        return view('customers.home', compact('productosDestacados', 'categorias', 'cartCount'));
+        return view('clientes.home', compact('productosDestacados', 'categorias', 'cartCount'));
     }
 
     /**
-     * Product catalog with filters and search
+     * Muestra el catálogo de productos con filtros y búsqueda
      */
-    public function catalog(Request $request)
+    public function catalogo(Request $request)
     {
         $query = Product::with(['category'])
             ->where('status', 'active')
             ->where('stock_current', '>', 0);
 
+        // Búsqueda por nombre o descripción
         if ($request->filled('buscar')) {
             $searchTerm = $request->buscar;
-            $query->where(function ($q) use ($searchTerm) {
+            $query->where(function($q) use ($searchTerm) {
                 $q->where('name', 'like', '%' . $searchTerm . '%')
                   ->orWhere('description', 'like', '%' . $searchTerm . '%');
             });
         }
 
+        // Filtro por categoría
         if ($request->filled('categoria_id')) {
             $query->where('category_id', $request->categoria_id);
         }
 
-        // Validate price range before applying
-        if ($request->filled('precio_min') && $request->filled('precio_max')) {
-            if ((float) $request->precio_min > (float) $request->precio_max) {
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'error' => 'El precio mínimo no puede ser mayor que el precio máximo.',
-                        'html'  => null,
-                    ], 422);
-                }
-                return redirect()->route('customers.catalog', $request->except(['precio_min', 'precio_max']))
-                    ->withErrors(['precio' => 'El precio mínimo no puede ser mayor que el precio máximo.']);
-            }
-        }
-
+        // Filtro por rango de precio
         if ($request->filled('precio_min')) {
             $query->where('sale_price', '>=', $request->precio_min);
         }
@@ -72,9 +64,10 @@ class CustomerController extends Controller
             $query->where('sale_price', '<=', $request->precio_max);
         }
 
+        // Ordenamiento
         $sort = $request->get('ordenar', 'fecha_creacion');
         $order = $request->get('direccion', 'desc');
-
+        
         if ($sort === 'precio') {
             $query->orderBy('sale_price', $order);
         } elseif ($sort === 'nombre') {
@@ -83,33 +76,31 @@ class CustomerController extends Controller
             $query->orderBy('created_at', $order);
         }
 
+        // Paginación
         $perPage = $request->get('por_pagina', 12);
         $productos = $query->paginate($perPage)->withQueryString();
 
+        // Obtener categorías para el filtro
         $categorias = Category::whereNull('parent_category_id')
             ->orderBy('name')
             ->get();
 
+        // Contar items en carrito
         $cartCount = $this->getCartCount();
 
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'html' => view('customers.partials.catalog-results', compact('productos'))->render(),
-            ]);
-        }
-
-        return view('customers.catalog', compact('productos', 'categorias', 'cartCount'));
+        return view('clientes.catalogo', compact('productos', 'categorias', 'cartCount'));
     }
 
     /**
-     * Single product detail
+     * Vista detallada de un producto
      */
-    public function product($id)
+    public function producto($id)
     {
         $producto = Product::with(['category', 'supplier'])
             ->where('status', 'active')
             ->findOrFail($id);
 
+        // Productos relacionados (misma categoría)
         $productosRelacionados = Product::with(['category'])
             ->where('category_id', $producto->category_id)
             ->where('product_id', '!=', $producto->product_id)
@@ -120,11 +111,11 @@ class CustomerController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        return view('customers.product', compact('producto', 'productosRelacionados', 'cartCount'));
+        return view('clientes.producto', compact('producto', 'productosRelacionados', 'cartCount'));
     }
 
     /**
-     * Add product to cart
+     * Agrega un producto al carrito
      */
     public function addToCart(Request $request)
     {
@@ -138,27 +129,30 @@ class CustomerController extends Controller
 
         $request->validate([
             'product_id' => 'required|exists:products,product_id',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:1'
         ]);
 
         $producto = Product::findOrFail($request->product_id);
 
+        // Validar que el producto esté activo y tenga stock
         if ($producto->status !== 'active') {
             return response()->json([
                 'success' => false,
-                'message' => 'Este producto no está disponible',
+                'message' => 'Este producto no está disponible'
             ], 400);
         }
 
         if ($producto->stock_current < $request->quantity) {
             return response()->json([
                 'success' => false,
-                'message' => 'Stock insuficiente. Disponible: ' . $producto->stock_current,
+                'message' => 'Stock insuficiente. Disponible: ' . $producto->stock_current
             ], 400);
         }
 
+        // Obtener carrito actual
         $cart = Session::get('carrito', []);
 
+        // Verificar si el producto ya está en el carrito
         $productoIndex = null;
         foreach ($cart as $index => $item) {
             if (($item['product_id'] ?? $item['producto_id'] ?? null) == $request->product_id) {
@@ -168,24 +162,26 @@ class CustomerController extends Controller
         }
 
         if ($productoIndex !== null) {
+            // Actualizar cantidad
             $nuevaCantidad = ($cart[$productoIndex]['quantity'] ?? $cart[$productoIndex]['cantidad'] ?? 0) + $request->quantity;
-
+            
             if ($nuevaCantidad > $producto->stock_current) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Stock insuficiente. Disponible: ' . $producto->stock_current,
+                    'message' => 'Stock insuficiente. Disponible: ' . $producto->stock_current
                 ], 400);
             }
 
             $cart[$productoIndex]['quantity'] = $nuevaCantidad;
         } else {
+            // Agregar nuevo producto
             $cart[] = [
                 'product_id' => $producto->product_id,
                 'name' => $producto->name,
                 'price' => $producto->sale_price,
                 'image' => $producto->image ?? 'default.png',
                 'quantity' => $request->quantity,
-                'stock_available' => $producto->stock_current,
+                'stock_available' => $producto->stock_current
             ];
         }
 
@@ -195,12 +191,12 @@ class CustomerController extends Controller
             'success' => true,
             'message' => 'Producto agregado al carrito',
             'cart_count' => $this->getCartCount(),
-            'cart_total' => $this->getCartTotal(),
+            'cart_total' => $this->getCartTotal()
         ]);
     }
 
     /**
-     * Cart page
+     * Muestra el carrito
      */
     public function cart()
     {
@@ -213,7 +209,7 @@ class CustomerController extends Controller
             if ($producto && $producto->status === 'active') {
                 $subtotal = $item['price'] * $item['quantity'];
                 $total += $subtotal;
-
+                
                 $cartItems[] = [
                     'producto_id' => $producto->product_id,
                     'nombre' => $producto->name,
@@ -221,18 +217,30 @@ class CustomerController extends Controller
                     'imagen' => $producto->image ?? 'default.png',
                     'cantidad' => $item['quantity'],
                     'stock_disponible' => $producto->stock_current,
-                    'subtotal' => $subtotal,
+                    'subtotal' => $subtotal
                 ];
             }
         }
 
+        // Actualizar carrito en sesión (eliminar productos que ya no están activos)
+        Session::put('carrito', array_map(function($item) {
+            return [
+                'product_id' => $item['product_id'],
+                'name' => $item['name'],
+                'price' => $item['price'],
+                'image' => $item['image'],
+                'quantity' => $item['quantity'],
+                'stock_available' => $item['stock_available']
+            ];
+        }, $cartItems));
+
         $cartCount = $this->getCartCount();
 
-        return view('customers.cart', compact('cartItems', 'total', 'cartCount'));
+        return view('clientes.carrito', compact('cartItems', 'total', 'cartCount'));
     }
 
     /**
-     * Update cart item quantity
+     * Actualiza la cantidad de un producto en el carrito
      */
     public function updateCart(Request $request)
     {
@@ -246,7 +254,7 @@ class CustomerController extends Controller
 
         $request->validate([
             'product_id' => 'required|exists:products,product_id',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:1'
         ]);
 
         $product = Product::findOrFail($request->product_id);
@@ -254,14 +262,14 @@ class CustomerController extends Controller
         if ($product->status !== 'active') {
             return response()->json([
                 'success' => false,
-                'message' => 'Este producto no está disponible',
+                'message' => 'Este producto no está disponible'
             ], 400);
         }
 
         if ($product->stock_current < $request->quantity) {
             return response()->json([
                 'success' => false,
-                'message' => 'Stock insuficiente. Disponible: ' . $product->stock_current,
+                'message' => 'Stock insuficiente. Disponible: ' . $product->stock_current
             ], 400);
         }
 
@@ -280,17 +288,17 @@ class CustomerController extends Controller
             'success' => true,
             'message' => 'Carrito actualizado',
             'cart_count' => $this->getCartCount(),
-            'cart_total' => $this->getCartTotal(),
+            'cart_total' => $this->getCartTotal()
         ]);
     }
 
     /**
-     * Remove item from cart
+     * Elimina un producto del carrito
      */
     public function removeFromCart($id)
     {
         $cart = Session::get('carrito', []);
-        $cart = array_filter($cart, function ($item) use ($id) {
+        $cart = array_filter($cart, function($item) use ($id) {
             return $item['product_id'] != $id;
         });
 
@@ -301,20 +309,25 @@ class CustomerController extends Controller
                 'success' => true,
                 'message' => 'Producto eliminado del carrito',
                 'cart_count' => $this->getCartCount(),
-                'cart_total' => $this->getCartTotal(),
+                'cart_total' => $this->getCartTotal()
             ]);
         }
 
-        return redirect()->route('customers.cart')->with('status', 'Producto eliminado del carrito');
+        return redirect()->route('clientes.carrito')->with('status', 'Producto eliminado del carrito');
     }
 
+    /**
+     * Obtiene el conteo de items en el carrito
+     */
     private function getCartCount()
     {
         $cart = Session::get('carrito', []);
-
         return count($cart);
     }
 
+    /**
+     * Obtiene el total del carrito
+     */
     private function getCartTotal()
     {
         $cart = Session::get('carrito', []);

@@ -363,7 +363,7 @@ class UsuarioController extends Controller
         if ($isAdmin) {
             $redirectTo = $intended ?: route('dashboard');
         } else {
-            $redirectTo = route('customers.home');
+            $redirectTo = route('clientes.home');
         }
 
         // Si el frontend manda redirect_to, úsalo solo si corresponde al rol y es una URL interna
@@ -375,7 +375,7 @@ class UsuarioController extends Controller
                     $redirectTo = $requestedRedirect;
                 } else {
                     // Usuarios no-admin no deben ser enviados a rutas admin
-                    $redirectTo = $requestedRedirect === '/dashboard' ? route('customers.home') : $requestedRedirect;
+                    $redirectTo = $requestedRedirect === '/dashboard' ? route('clientes.home') : $requestedRedirect;
                 }
             }
         }
@@ -437,11 +437,11 @@ class UsuarioController extends Controller
             Auth::login($usuario);
             $request->session()->regenerate();
 
-            return redirect()->route('customers.home')->with('status', 'Inicio de sesión exitoso con Google');
+            return redirect()->route('clientes.home')->with('status', 'Inicio de sesión exitoso con Google');
 
         } catch (\Exception $e) {
             Log::error('Error en Google OAuth: ' . $e->getMessage());
-            return redirect()->route('customers.home')->with('error', 'Error al iniciar sesión con Google');
+            return redirect()->route('clientes.home')->with('error', 'Error al iniciar sesión con Google');
         }
     }
 
@@ -495,11 +495,11 @@ class UsuarioController extends Controller
             Auth::login($usuario);
             $request->session()->regenerate();
 
-            return redirect()->route('customers.home')->with('status', 'Inicio de sesión exitoso con Facebook');
+            return redirect()->route('clientes.home')->with('status', 'Inicio de sesión exitoso con Facebook');
 
         } catch (\Exception $e) {
             Log::error('Error en Facebook OAuth: ' . $e->getMessage());
-            return redirect()->route('customers.home')->with('error', 'Error al iniciar sesión con Facebook');
+            return redirect()->route('clientes.home')->with('error', 'Error al iniciar sesión con Facebook');
         }
     }
 }
