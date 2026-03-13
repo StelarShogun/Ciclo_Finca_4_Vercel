@@ -1,0 +1,55 @@
+{
+  "resources/css/suppliers/supplier-entry.css": {
+    "file": "assets/supplier-entry-hlZ6lTqC.css",
+    "src": "resources/css/suppliers/supplier-entry.css",
+    "isEntry": true,
+    "names": [
+      "supplier-entry.css"
+    ]
+  },
+  "resources/js/admin.js": {
+    "file": "assets/admin-DmM1dnj5.js",
+    "name": "admin",
+    "src": "resources/js/admin.js",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-DBuQU1Tg.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "css": [
+      "assets/app-x4GeKd3j.css"
+    ]
+  },
+  "resources/js/clientes.js": {
+    "file": "assets/clientes-isKiAjtA.js",
+    "name": "clientes",
+    "src": "resources/js/clientes.js",
+    "isEntry": true
+  },
+  "resources/js/dashboard.js": {
+    "file": "assets/dashboard-BZxc4aUT.js",
+    "name": "dashboard",
+    "src": "resources/js/dashboard.js",
+    "isEntry": true
+  },
+  "resources/js/inventory.js": {
+    "file": "assets/inventory-DXEhiEwy.js",
+    "name": "inventory",
+    "src": "resources/js/inventory.js",
+    "isEntry": true
+  },
+  "resources/js/suppliers.js": {
+    "file": "assets/suppliers-BCLavlGX.js",
+    "name": "suppliers",
+    "src": "resources/js/suppliers.js",
+    "isEntry": true
+  },
+  "resources/js/usuarios.js": {
+    "file": "assets/usuarios-BPPt1pbu.js",
+    "name": "usuarios",
+    "src": "resources/js/usuarios.js",
+    "isEntry": true
+  }
+}

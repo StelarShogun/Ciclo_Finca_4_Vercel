@@ -44,10 +44,17 @@
                 </nav>
                 
                 <div class="header-actions">
-                    <button class="cart-btn" id="cart-toggle" data-cart-count="{{ $cartCount ?? 0 }}">
+                    @auth
+                    <a href="{{ route('clientes.carrito') }}" class="cart-btn cart-btn-link" id="cart-link" data-cart-count="{{ $cartCount ?? 0 }}" title="Ver carrito">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
+                    </a>
+                    @else
+                    <button class="cart-btn" id="cart-guest" type="button" title="Ver carrito">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count" id="cart-count">0</span>
                     </button>
+                    @endauth
                     @auth
                         <div class="user-menu" id="user-menu">
                             <button type="button" class="user-menu-trigger" id="user-menu-trigger" aria-haspopup="true" aria-expanded="false" title="Mi perfil">
@@ -129,32 +136,6 @@
             </div>
         </div>
     </footer>
-
-    <!-- Carrito Sidebar -->
-    <div class="cart-sidebar" id="cart-sidebar">
-        <div class="cart-sidebar-header">
-            <h3>Carrito de Compras</h3>
-            <button class="cart-close" id="cart-close">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="cart-sidebar-content" id="cart-content">
-            <!-- Contenido del carrito se carga dinámicamente -->
-            <div class="cart-empty">
-                <i class="fas fa-shopping-cart"></i>
-                <p>Tu carrito está vacío</p>
-                <a href="{{ route('clientes.catalogo') }}" class="btn btn-primary">Ver Catálogo</a>
-            </div>
-        </div>
-        <div class="cart-sidebar-footer" id="cart-footer" style="display: none;">
-            <div class="cart-total">
-                <span>Total:</span>
-                <span class="cart-total-amount" id="cart-total">₡0</span>
-            </div>
-            <a href="{{ route('clientes.carrito') }}" class="btn btn-primary btn-block">Ver Carrito</a>
-        </div>
-    </div>
-    <div class="cart-overlay" id="cart-overlay"></div>
 
     <!-- Modal de Login -->
     <div class="modal" id="login-modal">
