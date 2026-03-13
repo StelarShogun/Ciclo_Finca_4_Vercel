@@ -614,6 +614,7 @@ class ComposerStaticInit1454f39e68bbb6f7e777064980793daa
     public static $classMap = array (
         'App\\Console\\Commands\\CheckTables' => __DIR__ . '/../..' . '/app/Console/Commands/CheckTables.php',
         'App\\Console\\Commands\\CleanDatabase' => __DIR__ . '/../..' . '/app/Console/Commands/CleanDatabase.php',
+        'App\\Console\\Commands\\DeleteExpiredSalesCommand' => __DIR__ . '/../..' . '/app/Console/Commands/DeleteExpiredSalesCommand.php',
         'App\\Console\\Commands\\SetupDatabase' => __DIR__ . '/../..' . '/app/Console/Commands/SetupDatabase.php',
         'App\\Exceptions\\Handler' => __DIR__ . '/../..' . '/app/Exceptions/Handler.php',
         'App\\Http\\Controllers\\ClientUserController' => __DIR__ . '/../..' . '/app/Http/Controllers/ClientUserController.php',
@@ -637,6 +638,7 @@ class ComposerStaticInit1454f39e68bbb6f7e777064980793daa
         'App\\Models\\Supplier' => __DIR__ . '/../..' . '/app/Models/Supplier.php',
         'App\\Models\\Usuario' => __DIR__ . '/../..' . '/app/Models/Usuario.php',
         'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',
+        'App\\Rules\\Recaptcha' => __DIR__ . '/../..' . '/app/Rules/Recaptcha.php',
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
         'Barryvdh\\DomPDF\\Facade\\Pdf' => __DIR__ . '/..' . '/barryvdh/laravel-dompdf/src/Facade/Pdf.php',
         'Barryvdh\\DomPDF\\PDF' => __DIR__ . '/..' . '/barryvdh/laravel-dompdf/src/PDF.php',
@@ -764,6 +766,7 @@ class ComposerStaticInit1454f39e68bbb6f7e777064980793daa
         'Database\\Seeders\\ClientUserSeeder' => __DIR__ . '/../..' . '/database/seeders/ClientUserSeeder.php',
         'Database\\Seeders\\DatabaseSeeder' => __DIR__ . '/../..' . '/database/seeders/DatabaseSeeder.php',
         'Database\\Seeders\\ProductsSeeder' => __DIR__ . '/../..' . '/database/seeders/ProductsSeeder.php',
+        'Database\\Seeders\\SalesSeeder' => __DIR__ . '/../..' . '/database/seeders/SalesSeeder.php',
         'Database\\Seeders\\SupplierSeeder' => __DIR__ . '/../..' . '/database/seeders/SupplierSeeder.php',
         'Database\\Seeders\\UserSeeder' => __DIR__ . '/../..' . '/database/seeders/UserSeeder.php',
         'DateError' => __DIR__ . '/..' . '/symfony/polyfill-php83/Resources/stubs/DateError.php',

@@ -8,6 +8,7 @@ $baseDir = dirname($vendorDir);
 return array(
     'App\\Console\\Commands\\CheckTables' => $baseDir . '/app/Console/Commands/CheckTables.php',
     'App\\Console\\Commands\\CleanDatabase' => $baseDir . '/app/Console/Commands/CleanDatabase.php',
+    'App\\Console\\Commands\\DeleteExpiredSalesCommand' => $baseDir . '/app/Console/Commands/DeleteExpiredSalesCommand.php',
     'App\\Console\\Commands\\SetupDatabase' => $baseDir . '/app/Console/Commands/SetupDatabase.php',
     'App\\Exceptions\\Handler' => $baseDir . '/app/Exceptions/Handler.php',
     'App\\Http\\Controllers\\ClientUserController' => $baseDir . '/app/Http/Controllers/ClientUserController.php',
@@ -31,6 +32,7 @@ return array(
     'App\\Models\\Supplier' => $baseDir . '/app/Models/Supplier.php',
     'App\\Models\\Usuario' => $baseDir . '/app/Models/Usuario.php',
     'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',
+    'App\\Rules\\Recaptcha' => $baseDir . '/app/Rules/Recaptcha.php',
     'Attribute' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
     'Barryvdh\\DomPDF\\Facade\\Pdf' => $vendorDir . '/barryvdh/laravel-dompdf/src/Facade/Pdf.php',
     'Barryvdh\\DomPDF\\PDF' => $vendorDir . '/barryvdh/laravel-dompdf/src/PDF.php',
@@ -158,6 +160,7 @@ return array(
     'Database\\Seeders\\ClientUserSeeder' => $baseDir . '/database/seeders/ClientUserSeeder.php',
     'Database\\Seeders\\DatabaseSeeder' => $baseDir . '/database/seeders/DatabaseSeeder.php',
     'Database\\Seeders\\ProductsSeeder' => $baseDir . '/database/seeders/ProductsSeeder.php',
+    'Database\\Seeders\\SalesSeeder' => $baseDir . '/database/seeders/SalesSeeder.php',
     'Database\\Seeders\\SupplierSeeder' => $baseDir . '/database/seeders/SupplierSeeder.php',
     'Database\\Seeders\\UserSeeder' => $baseDir . '/database/seeders/UserSeeder.php',
     'DateError' => $vendorDir . '/symfony/polyfill-php83/Resources/stubs/DateError.php',

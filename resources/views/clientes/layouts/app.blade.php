@@ -43,14 +43,9 @@
                     </a>
                 </nav>
                 
-<<<<<<< HEAD
-                <div class="header-actions" style="display: flex; align-items: center; gap: 24px;">
-                    <button class="cart-btn" id="cart-toggle" data-cart-count="{{ $cartCount ?? 0 }}">
-=======
                 <div class="header-actions">
                     @auth
                     <a href="{{ route('clientes.carrito') }}" class="cart-btn cart-btn-link" id="cart-link" data-cart-count="{{ $cartCount ?? 0 }}" title="Ver carrito">
->>>>>>> origin/Dev
                         <i class="fas fa-shopping-cart"></i>
                         <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
                     </a>
@@ -59,7 +54,6 @@
                         <i class="fas fa-shopping-cart"></i>
                         <span class="cart-count" id="cart-count">0</span>
                     </button>
-<<<<<<< HEAD
                     @if(request()->routeIs('login.show'))
                         <a href="/" class="btn btn-outline-secondary btn-sm" style="display:flex;align-items:center;gap:6px;">
                             <i class="fas fa-arrow-left"></i>
@@ -70,33 +64,6 @@
                             <div style="display: flex; flex-direction: column; align-items: center;">
                                 <i class="fas fa-user-circle" style="font-size: 2rem; color: #218838;"></i>
                                 <span style="font-size: 0.95rem; color: #218838; margin-top: 2px;">{{ session('client_name') }}</span>
-=======
-                    @endauth
-                    @auth
-                        <div class="user-menu" id="user-menu">
-                            <button type="button" class="user-menu-trigger" id="user-menu-trigger" aria-haspopup="true" aria-expanded="false" title="Mi perfil">
-                                <i class="fas fa-user-circle"></i>
-                            </button>
-                            <div class="user-dropdown" id="user-dropdown" aria-label="Menú de usuario">
-                                <div class="user-dropdown-header">
-                                    <div class="user-dropdown-name">{{ Auth::user()->nombre }} {{ Auth::user()->apellido }}</div>
-                                </div>
-                                <div class="user-dropdown-actions">
-                                    @if(Auth::user()->rol === 'admin')
-                                        <a class="user-dropdown-item" href="{{ route('dashboard') }}">
-                                            <i class="fas fa-chart-line"></i>
-                                            <span>Entrar a Dashboard</span>
-                                        </a>
-                                    @endif
-                                    <form action="{{ route('logout') }}" method="POST" class="logout-form">
-                                        @csrf
-                                        <button type="submit" class="user-dropdown-item user-dropdown-logout" title="Cerrar Sesión">
-                                            <i class="fas fa-sign-out-alt"></i>
-                                            <span>Cerrar Sesión</span>
-                                        </button>
-                                    </form>
-                                </div>
->>>>>>> origin/Dev
                             </div>
                             <form action="{{ route('logout') }}" method="POST" class="logout-form" style="margin: 0;">
                                 @csrf
@@ -111,6 +78,7 @@
                             <i class="fas fa-sign-in-alt"></i>
                             <span>Iniciar Sesión</span>
                         </a>
+                    @endif
                     @endif
                 </div>
             </div>
@@ -162,33 +130,6 @@
         </div>
     </footer>
 
-<<<<<<< HEAD
-    <!-- Carrito Sidebar -->
-    <div class="cart-sidebar" id="cart-sidebar">
-        <div class="cart-sidebar-header">
-            <h3>Carrito de Compras</h3>
-            <button class="cart-close" id="cart-close">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="cart-sidebar-content" id="cart-content">
-            <!-- Contenido del carrito se carga dinámicamente -->
-            <div class="cart-empty">
-                <i class="fas fa-shopping-cart"></i>
-                <p>Tu carrito está vacío</p>
-                <a href="{{ route('clientes.catalogo') }}" class="btn btn-primary">Ver Catálogo</a>
-            </div>
-        </div>
-        <div class="cart-sidebar-footer" id="cart-footer" style="display: none;">
-            <div class="cart-total">
-                <span>Total:</span>
-                <span class="cart-total-amount" id="cart-total">₡0</span>
-            </div>
-            <a href="{{ route('clientes.carrito') }}" class="btn btn-primary btn-block">Ver Carrito</a>
-        </div>
-    </div>
-    <div class="cart-overlay" id="cart-overlay"></div>
-=======
     <!-- Modal de Login -->
     <div class="modal" id="login-modal">
         <div class="modal-content modal-md">
@@ -247,7 +188,6 @@
     </div>
     
     <div class="modal-overlay" id="login-modal-overlay"></div>
->>>>>>> origin/Dev
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
