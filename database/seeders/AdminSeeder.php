@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Usuario;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
@@ -13,42 +13,50 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        // Crear usuarios de ejemplo
-        $usuarios = [
+        // Crear admins de ejemplo
+        $admins = [
             [
-                'nombre' => 'Darwin',
-                'apellido' => 'User',
-                'email' => 'darwin@gmail.com',
+                'name' => 'Darwin',
+                'first_surname' => 'Nuñez',
+                'second_surname' => 'Chavarría',
+                'gmail' => 'darwin990@gmail.com',
                 'password' => Hash::make('Darwin1234$'),
-                'rol' => 'admin',
+                'last_access' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'nombre' => 'Aaron',
-                'apellido' => 'User',
-                'email' => 'aaron@gmail.com',
+                'name' => 'Aaron',
+                'first_surname' => 'User',
+                'second_surname' => null,
+                'gmail' => 'aaron@gmail.com',
                 'password' => Hash::make('Aaron1234$'),
-                'rol' => 'admin',
+                'last_access' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'nombre' => 'Administrador',
-                'apellido' => 'Sistema',
-                'email' => 'admin@cicloperez.com',
+                'name' => 'Administrador',
+                'first_surname' => 'Sistema',
+                'second_surname' => null,
+                'gmail' => 'admin@cicloperez.com',
                 'password' => Hash::make('Admin2024!@#'),
-                'rol' => 'admin',
+                'last_access' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ];
 
-        foreach ($usuarios as $data) {
-            $existing = Usuario::where('email', $data['email'])->first();
+        foreach ($admins as $data) {
+            $existing = DB::table('admin_table')->where('gmail', $data['gmail'])->first();
             if ($existing) {
-                $this->command->warn("El usuario {$data['email']} ya existe en la base de datos.");
+                $this->command->warn("El admin {$data['gmail']} ya existe en la base de datos.");
                 continue;
             }
-            Usuario::create($data);
-            $this->command->info("✅ Usuario creado: {$data['email']}");
+            DB::table('admin_table')->insert($data);
+            $this->command->info("✅ Admin creado: {$data['gmail']}");
             $this->command->line("🔑 Contraseña: {$data['password']}");
         }
         $this->command->warn('⚠️  IMPORTANTE: Cambia la contraseña después del primer inicio de sesión.');
     }
 }
-

@@ -14,16 +14,16 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-DBuQU1Tg.js",
+    "file": "assets/app-BhyFaCU9.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "css": [
-      "assets/app-x4GeKd3j.css"
+      "assets/app-DJQICmDg.css"
     ]
   },
   "resources/js/clientes.js": {
-    "file": "assets/clientes-isKiAjtA.js",
+    "file": "assets/clientes--IMoMy4l.js",
     "name": "clientes",
     "src": "resources/js/clientes.js",
     "isEntry": true
