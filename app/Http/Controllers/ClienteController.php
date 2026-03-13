@@ -215,28 +215,19 @@ class ClienteController extends Controller
                 $total += $subtotal;
                 
                 $cartItems[] = [
-                    'producto_id' => $producto->product_id,
-                    'nombre' => $producto->name,
-                    'precio' => $item['price'],
-                    'imagen' => $producto->image ?? 'default.png',
-                    'cantidad' => $item['quantity'],
-                    'stock_disponible' => $producto->stock_current,
+                    'product_id' => $producto->product_id,
+                    'name' => $producto->name,
+                    'price' => $item['price'],
+                    'image' => $producto->image ?? 'default.png',
+                    'quantity' => $item['quantity'],
+                    'stock_available' => $producto->stock_current,
                     'subtotal' => $subtotal
                 ];
             }
         }
 
-        // Actualizar carrito en sesión (eliminar productos que ya no están activos)
-        Session::put('carrito', array_map(function($item) {
-            return [
-                'product_id' => $item['producto_id'],
-                'name' => $item['nombre'],
-                'price' => $item['precio'],
-                'image' => $item['imagen'],
-                'quantity' => $item['cantidad'],
-                'stock_available' => $item['stock_disponible']
-            ];
-        }, $cartItems));
+        // Sincronizar sesión (elimina productos inactivos)
+        Session::put('carrito', $cartItems);
 
         $cartCount = $this->getCartCount();
 

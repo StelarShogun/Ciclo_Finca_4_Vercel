@@ -21,31 +21,31 @@
             <div class="cart-layout">
                 <div class="cart-items">
                     @foreach($cartItems as $item)
-                        <div class="cart-item" data-product-id="{{ $item['producto_id'] }}">
+                        <div class="cart-item" data-product-id="{{ $item['product_id'] }}">
                             <div class="cart-item-image">
-                                <img src="{{ asset('assets/images/products/' . $item['imagen']) }}"
-                                     alt="{{ $item['nombre'] }}"
+                                <img src="{{ asset('assets/images/products/' . $item['image']) }}"
+                                     alt="{{ $item['name'] }}"
                                      onerror="this.src='{{ asset('favicon.svg') }}'">
                             </div>
                             <div class="item-info">
-                                <h3 class="item-name">{{ $item['nombre'] }}</h3>
-                                <p class="item-price">₡{{ number_format($item['precio'], 0, ',', '.') }} c/u</p>
-                                <p class="item-stock">Stock disponible: {{ $item['stock_disponible'] }}</p>
+                                <h3 class="item-name">{{ $item['name'] }}</h3>
+                                <p class="item-price">₡{{ number_format($item['price'], 0, ',', '.') }} c/u</p>
+                                <p class="item-stock">Stock disponible: {{ $item['stock_available'] }}</p>
                             </div>
                             <div class="item-controls">
                                 <label class="item-controls-label">Cantidad:</label>
                                 <div class="quantity-controls">
-                                    <button type="button" class="quantity-btn" data-action="decrease" data-product-id="{{ $item['producto_id'] }}" aria-label="Disminuir">
+                                    <button type="button" class="quantity-btn" data-action="decrease" data-product-id="{{ $item['product_id'] }}" aria-label="Disminuir">
                                         <i class="fas fa-minus"></i>
                                     </button>
                                     <input type="number"
                                            class="quantity-input"
-                                           value="{{ $item['cantidad'] }}"
+                                           value="{{ $item['quantity'] }}"
                                            min="1"
-                                           max="{{ $item['stock_disponible'] }}"
-                                           data-product-id="{{ $item['producto_id'] }}"
+                                           max="{{ $item['stock_available'] }}"
+                                           data-product-id="{{ $item['product_id'] }}"
                                            aria-label="Cantidad">
-                                    <button type="button" class="quantity-btn" data-action="increase" data-product-id="{{ $item['producto_id'] }}" aria-label="Aumentar">
+                                    <button type="button" class="quantity-btn" data-action="increase" data-product-id="{{ $item['product_id'] }}" aria-label="Aumentar">
                                         <i class="fas fa-plus"></i>
                                     </button>
                                 </div>
@@ -57,8 +57,8 @@
                                 </div>
                                 <div class="cart-item-actions">
                                     <button type="button" class="btn btn-danger btn-sm cart-remove-item"
-                                            data-product-id="{{ $item['producto_id'] }}"
-                                            data-product-name="{{ $item['nombre'] }}"
+                                            data-product-id="{{ $item['product_id'] }}"
+                                            data-product-name="{{ $item['name'] }}"
                                             title="Eliminar del carrito">
                                         <i class="fas fa-trash"></i>
                                     </button>
