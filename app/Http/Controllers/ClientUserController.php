@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Client;
+use App\Rules\Recaptcha;
 
 class ClientUserController extends Controller
 {
@@ -22,6 +23,7 @@ class ClientUserController extends Controller
         $request->validate([
             'gmail' => 'required|email',
             'password' => 'required',
+            'g-recaptcha-response' => ['required', new Recaptcha()],
         ]);
 
         $credentials = [

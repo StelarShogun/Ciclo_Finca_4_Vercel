@@ -28,6 +28,9 @@
                 </div>
             </div>
             <div class="form-group mb-3">
+                <div class="g-recaptcha" data-sitekey="{{ config('recaptcha.site_key') }}"></div>
+            </div>
+            <div class="form-group mb-3">
                 <label class="checkbox-label">
                     <input type="checkbox" name="remember" id="remember">
                     <span>Recordarme</span>
@@ -60,6 +63,7 @@
 @endpush
 
 @push('scripts')
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script>
  document.getElementById('toggle-password').addEventListener('click', function() {
     const input = document.getElementById('login-password');
