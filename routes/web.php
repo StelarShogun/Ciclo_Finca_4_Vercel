@@ -46,6 +46,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/cart/update', [ClienteController::class, 'updateCart'])->name('clientes.carrito.actualizar');
     Route::delete('/cart/remove/{id}', [ClienteController::class, 'removeFromCart'])->name('clientes.carrito.eliminar');
     Route::post('/cart/checkout', [ClienteController::class, 'checkout'])->name('clientes.carrito.checkout');
+    Route::delete('/cart/clear', [ClienteController::class, 'clearCart'])->name('carrito.clear');
 });
 
 // Authentication Routes

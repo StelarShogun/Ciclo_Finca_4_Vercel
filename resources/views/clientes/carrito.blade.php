@@ -11,10 +11,18 @@
                     <i class="fas fa-shopping-cart"></i>
                     Carrito de Compras
                 </h1>
-                <a href="{{ route('clientes.catalogo') }}" class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-arrow-left"></i>
-                    Continuar Comprando
-                </a>
+                <div class="cart-header-actions">
+                    <a href="{{ route('clientes.catalogo') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i>
+                        Continuar Comprando
+                    </a>
+                    @if(count($cartItems) > 0)
+                        <button type="button" class="btn btn-outline-danger btn-sm" id="btn-clear-cart">
+                            <i class="fas fa-trash-alt"></i>
+                            Vaciar Carrito
+                        </button>
+                    @endif
+                </div>
             </div>
 
         @if(count($cartItems) > 0)
