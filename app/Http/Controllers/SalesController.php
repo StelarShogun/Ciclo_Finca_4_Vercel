@@ -22,6 +22,8 @@ class SalesController extends Controller
 
         $query = Sale::with(['customer', 'saleItems.product', 'seller']);
 
+        $query->notExpired();
+
         if ($status) {
             $query->where('status', $status);
         }
@@ -100,6 +102,9 @@ class SalesController extends Controller
                     'discount' => $sale->discount,
                     'total' => $sale->total,
                     'notes' => $sale->notes,
+                    'days_remaining_until_expiration' => $sale->days_remaining_until_expiration,
+                    'expires_at' => $sale->expires_at->toISOString(),
+                    'is_expiry_warning' => $sale->is_expiry_warning,
                     'customer' => $sale->customer ? [
                         'usuario_id' => $sale->customer->usuario_id,
                         'nombre' => $sale->customer->nombre,
