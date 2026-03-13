@@ -1,0 +1,12 @@
+# <type>: <short description in imperative>
+# Optional line with more detail. Max 72 characters per line.
+#
+# User story: CF4-XX
+#
+# Changes:
+# - 
+# - 
+#
+# ---
+# Types: feat | fix | refactor | docs | style | test | chore
+# Example: feat: category and price filters in catalog

@@ -40,11 +40,14 @@ Route::get('/', [ClienteController::class, 'home'])->name('clientes.home');
 Route::get('/catalog', [ClienteController::class, 'catalogo'])->name('clientes.catalogo');
 Route::get('/product/{id}', [ClienteController::class, 'producto'])->name('clientes.producto');
 
-// Rutas del carrito
-Route::post('/cart/add', [ClienteController::class, 'addToCart'])->name('clientes.carrito.agregar');
-Route::get('/cart', [ClienteController::class, 'cart'])->name('clientes.carrito');
-Route::put('/cart/update', [ClienteController::class, 'updateCart'])->name('clientes.carrito.actualizar');
-Route::delete('/cart/remove/{id}', [ClienteController::class, 'removeFromCart'])->name('clientes.carrito.eliminar');
+// Rutas del carrito (requieren autenticación)
+Route::middleware(['auth'])->group(function () {
+    Route::post('/cart/add', [ClienteController::class, 'addToCart'])->name('clientes.carrito.agregar');
+    Route::get('/cart', [ClienteController::class, 'cart'])->name('clientes.carrito');
+    Route::put('/cart/update', [ClienteController::class, 'updateCart'])->name('clientes.carrito.actualizar');
+    Route::delete('/cart/remove/{id}', [ClienteController::class, 'removeFromCart'])->name('clientes.carrito.eliminar');
+    Route::post('/cart/checkout', [ClienteController::class, 'checkout'])->name('clientes.carrito.checkout');
+});
 
 // Authentication Routes
 Route::get('/login', [ClientUserController::class, 'showLoginForm'])->name('login.show');

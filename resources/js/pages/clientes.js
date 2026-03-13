@@ -3,79 +3,19 @@
  * Maneja el carrito, modales y funcionalidades interactivas
  */
 
-// ===== CARRITO SIDEBAR =====
-const cartToggle = document.getElementById('cart-toggle');
-const cartSidebar = document.getElementById('cart-sidebar');
-const cartOverlay = document.getElementById('cart-overlay');
-const cartClose = document.getElementById('cart-close');
+// ===== CARRITO: vista de página /cart =====
+const cartLink = document.getElementById('cart-link');
+const cartGuest = document.getElementById('cart-guest');
 
-if (cartToggle) {
-    cartToggle.addEventListener('click', function() {
-        cartSidebar.classList.add('active');
-        cartOverlay.classList.add('active');
-        loadCartContent();
-    });
-}
-
-if (cartClose) {
-    cartClose.addEventListener('click', function() {
-        closeCartSidebar();
-    });
-}
-
-if (cartOverlay) {
-    cartOverlay.addEventListener('click', function() {
-        closeCartSidebar();
-    });
-}
-
-function closeCartSidebar() {
-    cartSidebar.classList.remove('active');
-    cartOverlay.classList.remove('active');
-}
-
-// Cargar contenido del carrito en el sidebar
-function loadCartContent() {
-    const cartUrl = '/cart';
-    
-    fetch(cartUrl)
-        .then(response => response.text())
-        .then(html => {
-            // Extraer solo el contenido del carrito del HTML
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const cartItems = doc.querySelector('.cart-items');
-            const cartFooter = doc.querySelector('.cart-summary');
-            
-            const cartContent = document.getElementById('cart-content');
-            const cartFooterElement = document.getElementById('cart-footer');
-            
-            if (cartItems && cartItems.children.length > 0) {
-                cartContent.innerHTML = '';
-                cartItems.querySelectorAll('.cart-item').forEach(item => {
-                    cartContent.appendChild(item.cloneNode(true));
-                });
-                cartFooterElement.style.display = 'block';
-                
-                // Actualizar total
-                const totalElement = doc.querySelector('.summary-total span:last-child');
-                if (totalElement) {
-                    document.getElementById('cart-total').textContent = totalElement.textContent;
-                }
-            } else {
-                cartContent.innerHTML = `
-                    <div class="cart-empty">
-                        <i class="fas fa-shopping-cart"></i>
-                        <p>Your cart is empty</p>
-                        <a href="/catalog" class="btn btn-primary">View Catalog</a>
-                    </div>
-                `;
-                cartFooterElement.style.display = 'none';
-            }
-        })
-        .catch(error => {
-            console.error('Error loading cart:', error);
+if (cartGuest) {
+    cartGuest.addEventListener('click', function() {
+        Swal.fire({
+            icon: 'info',
+            title: 'Inicia sesión',
+            text: 'Debes iniciar sesión para ver tu carrito.',
+            confirmButtonText: 'Entendido'
         });
+    });
 }
 
 // ===== AGREGAR AL CARRITO =====
@@ -96,16 +36,13 @@ function addToCart(productId, quantity = 1) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Actualizar contador del carrito
             updateCartCount(data.cart_count);
             
-            // Cerrar modal si existe
             const addToCartModal = document.getElementById('add-to-cart-modal');
             if (addToCartModal) {
                 addToCartModal.classList.remove('active');
             }
             
-            // Mostrar notificación
             Swal.fire({
                 icon: 'success',
                 title: '¡Agregado!',
@@ -115,11 +52,6 @@ function addToCart(productId, quantity = 1) {
                 toast: true,
                 position: 'top-end'
             });
-            
-            // Recargar contenido del carrito si está abierto
-            if (cartSidebar && cartSidebar.classList.contains('active')) {
-                loadCartContent();
-            }
         } else {
             Swal.fire({
                 icon: 'error',
@@ -138,23 +70,21 @@ function addToCart(productId, quantity = 1) {
     });
 }
 
-// Actualizar contador del carrito
+// Actualizar contador del carrito en el navbar
 function updateCartCount(count) {
     const cartCountElement = document.getElementById('cart-count');
-    const cartToggleBtn = document.getElementById('cart-toggle');
-    
+    const cartLinkEl = document.getElementById('cart-link');
+
     if (cartCountElement) {
         cartCountElement.textContent = count;
         cartCountElement.style.display = count > 0 ? 'flex' : 'none';
     }
-    
-    if (cartToggleBtn) {
-        cartToggleBtn.setAttribute('data-cart-count', count);
+    if (cartLinkEl) {
+        cartLinkEl.setAttribute('data-cart-count', count);
     }
 }
 
 // ===== MODALES =====
-// Cerrar modales al hacer clic fuera
 document.addEventListener('click', function(event) {
     const modals = document.querySelectorAll('.modal.active');
     modals.forEach(modal => {
@@ -164,124 +94,251 @@ document.addEventListener('click', function(event) {
     });
 });
 
-// Cerrar modales con ESC
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         document.querySelectorAll('.modal.active').forEach(modal => {
             modal.classList.remove('active');
         });
-        closeCartSidebar();
     }
 });
 
 // ===== FILTROS DEL CATÁLOGO =====
 const filterForm = document.getElementById('filter-form');
 if (filterForm) {
-    // Auto-submit en algunos campos
     const autoSubmitFields = filterForm.querySelectorAll('#categoria_id, #ordenar, #direccion');
     autoSubmitFields.forEach(field => {
         field.addEventListener('change', function() {
-            // Opcional: auto-submit o mantener botón manual
         });
     });
 }
 
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar contador del carrito desde el atributo data
-    const cartToggleBtn = document.getElementById('cart-toggle');
-    if (cartToggleBtn) {
-        const initialCount = parseInt(cartToggleBtn.getAttribute('data-cart-count') || 0);
+    const cartLinkEl = document.getElementById('cart-link');
+    const cartGuestEl = document.getElementById('cart-guest');
+    const el = cartLinkEl || cartGuestEl;
+    if (el) {
+        const initialCount = parseInt(el.getAttribute('data-cart-count') || 0, 10);
         updateCartCount(initialCount);
     }
     
-    // Agregar event listeners a botones de agregar al carrito que se carguen dinámicamente
+    // Delegated listener para agregar al carrito
     document.addEventListener('click', function(event) {
         if (event.target.closest('.add-to-cart-btn')) {
             const btn = event.target.closest('.add-to-cart-btn');
             const productId = btn.dataset.productId;
-            const quantity = 1; // Cantidad por defecto
+            const quantity = 1;
             
-            // Si hay modal, abrirlo, sino agregar directamente
             const addToCartModal = document.getElementById('add-to-cart-modal');
             if (!addToCartModal || !addToCartModal.classList.contains('active')) {
-                // Si no hay modal activo, agregar directamente con cantidad 1
                 addToCart(productId, quantity);
             }
         }
     });
-    
-    // Manejar botones de eliminar del carrito en el sidebar
-    document.addEventListener('click', function(event) {
-        if (event.target.closest('.remove-from-cart-btn')) {
-            const btn = event.target.closest('.remove-from-cart-btn');
-            const productId = btn.dataset.productId;
-            const productName = btn.dataset.productName;
-            
-            Swal.fire({
-                title: '¿Eliminar producto?',
-                text: `¿Deseas eliminar "${productName}" del carrito?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    removeFromCart(productId);
-                }
-            });
-        }
-    });
-});
 
-// Función para eliminar del carrito (usada en sidebar)
-function removeFromCart(productId) {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-    
-    fetch(`/cart/remove/${productId}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            updateCartCount(data.cart_count);
-            loadCartContent();
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'Eliminado',
-                text: 'Producto eliminado del carrito',
-                timer: 1500,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
-            });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'No se pudo eliminar el producto'
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
+    // ===== ELIMINACIÓN DINÁMICA DEL CARRITO =====
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.cart-remove-item');
+        if (!btn) return;
+
+        const cartItem = btn.closest('.cart-item');
+        const itemId = btn.dataset.productId;
+        const itemName = btn.dataset.productName || 'este producto';
+
+        if (!cartItem || !itemId) return;
+
         Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Ocurrió un error al eliminar el producto'
+            title: '¿Eliminar producto?',
+            text: '¿Deseas eliminar "' + itemName + '" del carrito?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+
+            fetch('/cart/remove/' + itemId, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (!data.success) {
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo eliminar' });
+                    return;
+                }
+
+                cartItem.remove();
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Producto eliminado del carrito',
+                    showConfirmButton: false,
+                    timer: 2500,
+                    timerProgressBar: true
+                });
+
+                const totalFormatted = (data.cart_total != null)
+                    ? ('₡' + Number(data.cart_total).toLocaleString('es-CR'))
+                    : '₡0';
+                const subtotalEl = document.getElementById('cart-subtotal');
+                const totalEl = document.getElementById('cart-total-amount');
+                if (subtotalEl) subtotalEl.textContent = totalFormatted;
+                if (totalEl) totalEl.textContent = totalFormatted;
+
+                updateCartCount(data.cart_count ?? 0);
+
+                if (document.querySelectorAll('.cart-item').length === 0) {
+                    showCartEmptyState();
+                }
+            })
+            .catch(function(err) {
+                console.error('Error:', err);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar el producto' });
+            });
         });
     });
+
+    // ===== CONTROLES DE CANTIDAD Y CHECKOUT (página /cart) =====
+    function updateCartQuantity(productId, quantity) {
+        fetch('/cart/update', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ producto_id: productId, cantidad: quantity })
+        })
+        .then(function(r) { return r.json().catch(function() { return {}; }); })
+        .then(function(data) {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                Swal.fire('Error', data.message || 'No se pudo actualizar el carrito', 'error');
+            }
+        })
+        .catch(function() {
+            Swal.fire('Error', 'Ocurrió un error al actualizar el carrito', 'error');
+        });
+    }
+
+    document.querySelectorAll('.quantity-input').forEach(function(input) {
+        input.addEventListener('change', function() {
+            const productId = this.dataset.productId;
+            let quantity = parseInt(this.value, 10);
+            const max = parseInt(this.max, 10);
+            if (quantity < 1) { this.value = 1; updateCartQuantity(productId, 1); }
+            else if (quantity > max) {
+                this.value = max;
+                Swal.fire('Aviso', 'La cantidad no puede exceder el stock disponible', 'warning');
+                updateCartQuantity(productId, max);
+            } else {
+                updateCartQuantity(productId, quantity);
+            }
+        });
+    });
+
+    document.querySelectorAll('.quantity-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const productId = this.dataset.productId;
+            const input = document.querySelector('.quantity-input[data-product-id="' + productId + '"]');
+            if (!input) return;
+            let quantity = parseInt(input.value, 10);
+            const max = parseInt(input.max, 10);
+            if (action === 'increase' && quantity < max) quantity++;
+            else if (action === 'decrease' && quantity > 1) quantity--;
+            input.value = quantity;
+            updateCartQuantity(productId, quantity);
+        });
+    });
+
+    const proceedBtn = document.getElementById('proceed-checkout');
+    if (proceedBtn) {
+        proceedBtn.addEventListener('click', function() {
+            Swal.fire({
+                title: '¿Confirmar compra?',
+                text: 'Se enviará tu pedido para retiro en tienda.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, confirmar',
+                cancelButtonText: 'Cancelar'
+            }).then(function(result) {
+                if (!result.isConfirmed) return;
+
+                proceedBtn.disabled = true;
+                proceedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+                fetch('/cart/checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (!data.success) {
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo procesar el pedido' });
+                        proceedBtn.disabled = false;
+                        proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
+                        return;
+                    }
+
+                    updateCartCount(0);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Pedido enviado con éxito!',
+                        html: 'Su pedido fue enviado con éxito.<br><br>Tiene un lapso de <b>3 días</b> para retirarlo en nuestro local.<br><br>El pago se realiza de forma presencial mediante <b>SINPE, efectivo o tarjeta</b>.',
+                        confirmButtonText: 'Entendido'
+                    }).then(function() {
+                        window.location.reload();
+                    });
+                })
+                .catch(function(err) {
+                    console.error('Error:', err);
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al procesar el pedido' });
+                    proceedBtn.disabled = false;
+                    proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
+                });
+            });
+        });
+    }
+});
+
+function showCartEmptyState() {
+    const card = document.querySelector('.cart-page-card');
+    if (!card) return;
+    const catalogUrl = (card.querySelector('.cart-header a[href]')?.getAttribute('href')) || '/catalog';
+    card.innerHTML =
+        '<div class="cart-header">' +
+            '<h1 class="cart-title"><i class="fas fa-shopping-cart"></i> Carrito de Compras</h1>' +
+            '<a href="' + catalogUrl + '" class="btn btn-outline-secondary btn-sm">' +
+                '<i class="fas fa-arrow-left"></i> Continuar Comprando</a>' +
+        '</div>' +
+        '<div class="cart-empty"><div class="empty-state">' +
+            '<i class="fas fa-shopping-cart"></i>' +
+            '<h2>Tu carrito está vacío</h2>' +
+            '<p>Agrega productos desde nuestro catálogo</p>' +
+            '<a href="' + catalogUrl + '" class="btn btn-primary btn-lg">' +
+                '<i class="fas fa-th"></i> Ver Catálogo</a>' +
+        '</div></div>';
 }
 
 // Exportar funciones para uso global
 window.addToCart = addToCart;
 window.updateCartCount = updateCartCount;
-window.removeFromCart = removeFromCart;
 
 // ===== USER MENU (PROFILE DROPDOWN) =====
 const userMenu = document.getElementById('user-menu');
@@ -349,7 +406,6 @@ function closeLoginModalFunc() {
     loginModalOverlay.classList.remove('active');
 }
 
-// Manejar submit del formulario de login
 if (publicLoginForm) {
     publicLoginForm.addEventListener('submit', function(e) {
         e.preventDefault();

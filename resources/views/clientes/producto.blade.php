@@ -63,6 +63,7 @@
                                 </button>
                             </div>
                         </div>
+                        @auth
                         <button class="btn btn-primary btn-lg add-to-cart-btn" 
                                 data-product-id="{{ $producto->product_id }}"
                                 data-product-name="{{ $producto->name }}"
@@ -71,6 +72,12 @@
                             <i class="fas fa-cart-plus"></i>
                             Agregar al Carrito
                         </button>
+                        @else
+                        <button class="btn btn-primary btn-lg guest-add-btn" type="button">
+                            <i class="fas fa-cart-plus"></i>
+                            Agregar al Carrito
+                        </button>
+                        @endauth
                     </div>
                 @endif
             </div>
