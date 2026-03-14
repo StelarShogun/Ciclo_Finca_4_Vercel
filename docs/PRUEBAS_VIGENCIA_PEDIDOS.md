@@ -60,3 +60,28 @@ Para comprobarlo:
 
 1. Abre la lista de ventas y anota los “días restantes” de un pedido.
 2. Recarga la página más tarde (o al día siguiente): el valor debería haber bajado (o ser 0 y mostrarse como “Expirado”) según la nueva fecha.
+
+---
+
+## 4. Tests automáticos (CF4-20)
+
+Los casos de prueba están en `tests/Feature/SalesOrderExpiryTest.php`. Cada método cubre un caso:
+
+| Test | Caso de prueba |
+|------|----------------|
+| test_list_and_detail_show_exact_creation_date_time | CP1: Fecha y hora exacta en lista y detalle |
+| test_system_calculates_days_remaining_until_expiration | CP2: Cálculo automático de días restantes |
+| test_days_remaining_recalculated_on_each_request | CP3: Conteo actualizado en cada petición |
+| test_alert_shown_when_two_days_or_less_remaining | CP4: Alerta visual cuando ≤2 días |
+| test_expired_orders_are_deleted_by_command | CP5: Eliminación automática al superar el límite |
+| test_newly_created_order_shows_full_days_remaining | CP6: Pedido nuevo muestra tiempo completo |
+| test_order_near_limit_shows_reduced_days_remaining | CP7: Pedido cercano a límite muestra días reducidos |
+| test_deleted_order_not_shown_in_active_list | CP8: Pedido eliminado no aparece en la lista |
+
+**Requisitos:** MySQL (la tabla `sales` existe tras las migraciones de refactor). Con SQLite o sin driver de BD los tests se marcan como *skipped*.
+
+**Ejecutar con MySQL:**
+
+1. Crea `.env.testing` con `DB_CONNECTION=mysql` y `DB_DATABASE` (por ejemplo una BD solo para tests).
+2. Ejecuta migraciones en esa BD: `php artisan migrate --env=testing`
+3. Ejecuta: `php artisan test tests/Feature/SalesOrderExpiryTest.php`
