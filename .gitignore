@@ -1,18 +1,24 @@
+# Variables de entorno
 .env
+.env.backup
+.env.production
+
+# Dependencias
 /node_modules
+/vendor
+
+# Build de assets (Vite)
 /public/build
 /public/hot
 
-# Laravel
-/vendor
-storage/*.key
-storage/logs/*
-storage/framework/cache/*
-storage/framework/sessions/*
-storage/framework/views/*
-config/database.php
+# Storage de Laravel (generados en runtime)
+/storage/*.key
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
 
-# Tests y caché PHP
+# Caché PHP y tests
 .phpunit.result.cache
 .phpunit.cache
 
@@ -28,9 +34,11 @@ Thumbs.db
 *.swo
 *~
 
-# Logs y temporales
+# Logs
 *.log
-.env.backup
-.env.production
-storage/logs/laravel.log
+
+# Enlace simbólico generado por artisan
 public/storage
+
+# Configuración local de base de datos
+config/database.php
