@@ -49,22 +49,32 @@
                         </div>
                         
                         <!-- Rango de Precio -->
-                        <div class="filter-group">
+                        <div class="filter-group" id="price-range-group">
                             <label>Rango de Precio</label>
+                            <div class="filter-price-error {{ (!empty($errorRangoPrecio) || $errors->has('precio_rango')) ? 'filter-price-error-visible' : '' }}" id="price-range-error" role="alert">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span id="price-range-error-text">{{ $errors->first('precio_rango', 'El precio mínimo no puede ser mayor que el precio máximo. Ajuste el rango e intente de nuevo.') }}</span>
+                            </div>
                             <div class="price-range">
                                 <input type="number" 
                                        id="precio_min" 
                                        name="precio_min" 
-                                       class="form-control" 
+                                       class="form-control {{ ($errorRangoPrecio ?? false) || $errors->has('precio_rango') ? 'is-invalid' : '' }}" 
                                        placeholder="Mínimo"
-                                       value="{{ request('precio_min') }}">
+                                       min="0"
+                                       step="0.01"
+                                       value="{{ request('precio_min') }}"
+                                       aria-describedby="price-range-error">
                                 <span class="price-separator">-</span>
                                 <input type="number" 
                                        id="precio_max" 
                                        name="precio_max" 
-                                       class="form-control" 
+                                       class="form-control {{ ($errorRangoPrecio ?? false) || $errors->has('precio_rango') ? 'is-invalid' : '' }}" 
                                        placeholder="Máximo"
-                                       value="{{ request('precio_max') }}">
+                                       min="0"
+                                       step="0.01"
+                                       value="{{ request('precio_max') }}"
+                                       aria-describedby="price-range-error">
                             </div>
                         </div>
                         
@@ -103,23 +113,38 @@
 
             <!-- Contenido Principal -->
             <main class="catalog-content">
+                <!-- Aviso cuando el rango de precios es inválido (mín > máx) -->
+                @if(!empty($errorRangoPrecio))
+                    <div class="alert alert-warning catalog-filter-alert" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>El precio mínimo no puede ser mayor que el precio máximo. No se aplicó el filtro de precios. Ajusta el rango en el panel izquierdo; tus demás filtros se mantienen aplicados.</span>
+                    </div>
+                @endif
+
                 <!-- Resultados -->
                 <div class="catalog-results">
                     <div class="results-header">
                         <p class="results-count">
-                            Mostrando {{ $productos->firstItem() ?? 0 }}-{{ $productos->lastItem() ?? 0 }} de {{ $productos->total() }} productos
+                            @if($productos->total() > 0)
+                                Mostrando {{ $productos->firstItem() }}-{{ $productos->lastItem() }} de {{ $productos->total() }} productos
+                            @else
+                                0 productos encontrados
+                                @if(request()->hasAny(['buscar', 'categoria_id', 'precio_min', 'precio_max']))
+                                    <span class="results-count-note">(tus filtros se mantienen aplicados)</span>
+                                @endif
+                            @endif
                         </p>
                     </div>
                     
                     @if($productos->count() > 0)
                         <div class="products-grid">
                             @foreach($productos as $producto)
-                                <div class="product-card">
+                                <div class="product-card product-card--catalog">
                                     <div class="product-image">
-                                        <a href="{{ route('clientes.producto', $producto->product_id) }}">
+                                        <a href="{{ route('clientes.producto', $producto->product_id) }}" class="product-image-link" aria-label="Ver detalle de {{ $producto->name }}">
                                             <img src="{{ asset('assets/images/products/' . ($producto->image ?? 'default.png')) }}" 
                                                  alt="{{ $producto->name }}"
-                                                 onerror="this.src='{{ asset('favicon.svg') }}'">
+                                                 onerror="this.onerror=null; this.src='{{ asset('assets/images/products/default.png') }}';">
                                         </a>
                                         @if($producto->stock_current <= 10)
                                             <span class="product-badge stock-low">Stock Bajo</span>
@@ -135,10 +160,16 @@
                                         @if($producto->description)
                                             <p class="product-description">{{ Str::limit($producto->description, 100) }}</p>
                                         @endif
-                                        <div class="product-footer">
-                                            <div class="product-price">₡{{ number_format($producto->sale_price, 0, ',', '.') }}</div>
+                                        <div class="product-price-row">
+                                            <span class="product-price">₡{{ number_format($producto->sale_price, 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="product-actions">
+                                            <a href="{{ route('clientes.producto', $producto->product_id) }}" class="btn btn-view-details">
+                                                <i class="fas fa-arrow-right"></i>
+                                                Ver detalles
+                                            </a>
                                             @auth
-                                            <button class="btn btn-primary btn-sm add-to-cart-btn" 
+                                            <button type="button" class="btn btn-primary btn-add-cart add-to-cart-btn" 
                                                     data-product-id="{{ $producto->product_id }}"
                                                     data-product-name="{{ $producto->name }}"
                                                     data-product-price="{{ $producto->sale_price }}"
@@ -147,7 +178,7 @@
                                                 Agregar
                                             </button>
                                             @else
-                                            <button class="btn btn-primary btn-sm guest-add-btn" type="button">
+                                            <button type="button" class="btn btn-primary btn-add-cart guest-add-btn">
                                                 <i class="fas fa-cart-plus"></i>
                                                 Agregar
                                             </button>
@@ -158,18 +189,31 @@
                             @endforeach
                         </div>
                         
-                        <!-- Paginación -->
+                        <!-- Paginación (mismo estilo que dashboard admin) -->
                         <div class="pagination-wrapper">
-                            {{ $productos->links() }}
+                            <x-pagination :paginator="$productos" label="del catálogo" />
                         </div>
                     @else
                         <div class="empty-state">
-                            <i class="fas fa-search"></i>
-                            <h3>No se encontraron productos</h3>
-                            <p>Intenta ajustar tus filtros de búsqueda</p>
-                            <a href="{{ route('clientes.catalogo') }}" class="btn btn-primary">
-                                Ver Todos los Productos
-                            </a>
+                            @if(!empty($tieneFiltroPrecio))
+                                <i class="fas fa-coins"></i>
+                                <h3>No hay productos en el rango de precios seleccionado</h3>
+                                <p>Tus filtros se mantienen aplicados. Puedes ajustar el rango de precios (o el resto de filtros) en el panel izquierdo y volver a buscar, o ver todos los productos sin filtros.</p>
+                            @else
+                                <i class="fas fa-search"></i>
+                                <h3>No se encontraron productos</h3>
+                                <p>Ningún producto coincide con los criterios de búsqueda. Tus filtros se mantienen aplicados; modifica el panel izquierdo o quita los filtros para ver el catálogo completo.</p>
+                            @endif
+                            <div class="empty-state-actions">
+                                <a href="#filter-form" class="btn btn-outline-primary scroll-to-filters">
+                                    <i class="fas fa-sliders-h"></i>
+                                    Modificar filtros
+                                </a>
+                                <a href="{{ route('clientes.catalogo') }}" class="btn btn-primary">
+                                    <i class="fas fa-th"></i>
+                                    Ver todos los productos
+                                </a>
+                            </div>
                         </div>
                     @endif
                 </div>
@@ -255,6 +299,92 @@
     document.getElementById('close-add-to-cart-modal').addEventListener('click', function() {
         document.getElementById('add-to-cart-modal').classList.remove('active');
     });
+
+    // Validación rango de precio: impedir aplicar filtro si mínimo > máximo
+    var filterForm = document.getElementById('filter-form');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            var minInput = document.getElementById('precio_min');
+            var maxInput = document.getElementById('precio_max');
+            var minVal = parseFloat(minInput.value);
+            var maxVal = parseFloat(maxInput.value);
+            if (minInput.value !== '' && maxInput.value !== '' && !isNaN(minVal) && !isNaN(maxVal) && minVal > maxVal) {
+                e.preventDefault();
+                document.getElementById('price-range-error').classList.add('filter-price-error-visible');
+                document.getElementById('price-range-error-text').textContent = 'El precio mínimo no puede ser mayor que el precio máximo. Ajuste el rango e intente de nuevo.';
+                minInput.classList.add('is-invalid');
+                maxInput.classList.add('is-invalid');
+                minInput.focus();
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Rango de precio inválido',
+                        text: 'El precio mínimo no puede ser mayor que el precio máximo. Ajuste el rango e intente de nuevo.'
+                    });
+                }
+                return false;
+            }
+            document.getElementById('price-range-error').classList.remove('filter-price-error-visible');
+            minInput.classList.remove('is-invalid');
+            maxInput.classList.remove('is-invalid');
+        });
+    }
+    // Quitar estado de error al cambiar los valores
+    document.getElementById('precio_min').addEventListener('input', function() {
+        var maxInput = document.getElementById('precio_max');
+        if (parseFloat(this.value) <= parseFloat(maxInput.value) || this.value === '' || maxInput.value === '') {
+            this.classList.remove('is-invalid');
+            maxInput.classList.remove('is-invalid');
+            document.getElementById('price-range-error').classList.remove('filter-price-error-visible');
+        }
+    });
+    document.getElementById('precio_max').addEventListener('input', function() {
+        var minInput = document.getElementById('precio_min');
+        if (parseFloat(minInput.value) <= parseFloat(this.value) || minInput.value === '' || this.value === '') {
+            minInput.classList.remove('is-invalid');
+            this.classList.remove('is-invalid');
+            document.getElementById('price-range-error').classList.remove('filter-price-error-visible');
+        }
+    });
+
+    // Scroll suave al panel de filtros cuando no hay resultados
+    document.querySelectorAll('.scroll-to-filters').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            var el = document.getElementById('filter-form');
+            if (el) {
+                e.preventDefault();
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
+    // Paginación: deshabilitar clic en Prev/Next cuando no hay página, y "Ir a página"
+    (function() {
+        var wrapper = document.querySelector('.pagination-wrapper .pagination');
+        if (!wrapper) return;
+        var goInput = wrapper.querySelector('#goToPageInput');
+        var goBtn = wrapper.querySelector('#goToPageBtn');
+        wrapper.querySelectorAll('.button[aria-label]').forEach(function(a) {
+            if (a.getAttribute('aria-disabled') === 'true') {
+                a.addEventListener('click', function(e) { e.preventDefault(); });
+            }
+        });
+        function goToPage() {
+            var totalSpan = wrapper.querySelector('.button.button-primary');
+            if (!totalSpan) return;
+            var parts = totalSpan.textContent.trim().split('/');
+            var lastPage = Math.max(1, parseInt((parts[1] || '1').trim(), 10));
+            var target = parseInt((goInput && goInput.value) ? goInput.value.trim() : '1', 10);
+            if (isNaN(target)) target = 1;
+            if (target < 1) target = 1;
+            if (target > lastPage) target = lastPage;
+            var url = new URL(window.location.href);
+            url.searchParams.set('page', String(target));
+            window.location.assign(url.toString());
+        }
+        if (goBtn) goBtn.addEventListener('click', goToPage);
+        if (goInput) goInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); goToPage(); } });
+    })();
 </script>
 @endpush
 
