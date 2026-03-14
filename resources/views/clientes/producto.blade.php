@@ -63,7 +63,7 @@
                                 </button>
                             </div>
                         </div>
-                        @auth
+                        @if(Auth::guard('clients')->check())
                         <button class="btn btn-primary btn-lg add-to-cart-btn" 
                                 data-product-id="{{ $producto->product_id }}"
                                 data-product-name="{{ $producto->name }}"
@@ -77,7 +77,7 @@
                             <i class="fas fa-cart-plus"></i>
                             Agregar al Carrito
                         </button>
-                        @endauth
+                        @endif
                     </div>
                 @endif
             </div>

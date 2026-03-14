@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -153,43 +153,25 @@ class ClienteController extends Controller
             ], 400);
         }
 
-        // Obtener carrito actual
-        $cart = Session::get('carrito', []);
+        $clientId = Auth::guard('clients')->id();
+        $item = CartItem::where('client_id', $clientId)->where('product_id', $request->product_id)->first();
 
-        // Verificar si el producto ya está en el carrito
-        $productoIndex = null;
-        foreach ($cart as $index => $item) {
-            if (($item['product_id'] ?? $item['producto_id'] ?? null) == $request->product_id) {
-                $productoIndex = $index;
-                break;
-            }
-        }
-
-        if ($productoIndex !== null) {
-            // Actualizar cantidad
-            $nuevaCantidad = ($cart[$productoIndex]['quantity'] ?? $cart[$productoIndex]['cantidad'] ?? 0) + $request->quantity;
-            
+        if ($item) {
+            $nuevaCantidad = $item->quantity + $request->quantity;
             if ($nuevaCantidad > $producto->stock_current) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Stock insuficiente. Disponible: ' . $producto->stock_current
                 ], 400);
             }
-
-            $cart[$productoIndex]['quantity'] = $nuevaCantidad;
+            $item->update(['quantity' => $nuevaCantidad]);
         } else {
-            // Agregar nuevo producto
-            $cart[] = [
+            CartItem::create([
+                'client_id' => $clientId,
                 'product_id' => $producto->product_id,
-                'name' => $producto->name,
-                'price' => $producto->sale_price,
-                'image' => $producto->image ?? 'default.png',
                 'quantity' => $request->quantity,
-                'stock_available' => $producto->stock_current
-            ];
+            ]);
         }
-
-        Session::put('carrito', $cart);
 
         return response()->json([
             'success' => true,
@@ -200,34 +182,34 @@ class ClienteController extends Controller
     }
 
     /**
-     * Muestra el carrito
+     * Muestra el carrito (solo Client logueado; middleware auth:clients)
      */
     public function cart()
     {
-        $cart = Session::get('carrito', []);
+        $clientId = Auth::guard('clients')->id();
+        $items = CartItem::where('client_id', $clientId)->with('product')->get();
+
         $cartItems = [];
         $total = 0;
 
-        foreach ($cart as $item) {
-            $producto = Product::find($item['product_id']);
+        foreach ($items as $item) {
+            $producto = $item->product;
             if ($producto && $producto->status === 'active') {
-                $subtotal = $item['price'] * $item['quantity'];
+                $price = $producto->sale_price;
+                $subtotal = $price * $item->quantity;
                 $total += $subtotal;
-                
+
                 $cartItems[] = [
                     'product_id' => $producto->product_id,
                     'name' => $producto->name,
-                    'price' => $item['price'],
+                    'price' => $price,
                     'image' => $producto->image ?? 'default.png',
-                    'quantity' => $item['quantity'],
+                    'quantity' => $item->quantity,
                     'stock_available' => $producto->stock_current,
                     'subtotal' => $subtotal
                 ];
             }
         }
-
-        // Sincronizar sesión (elimina productos inactivos)
-        Session::put('carrito', $cartItems);
 
         $cartCount = $this->getCartCount();
 
@@ -268,16 +250,10 @@ class ClienteController extends Controller
             ], 400);
         }
 
-        $cart = Session::get('carrito', []);
-
-        foreach ($cart as $index => $item) {
-            if ($item['product_id'] == $request->product_id) {
-                $cart[$index]['quantity'] = $request->quantity;
-                break;
-            }
-        }
-
-        Session::put('carrito', $cart);
+        $clientId = Auth::guard('clients')->id();
+        CartItem::where('client_id', $clientId)
+            ->where('product_id', $request->product_id)
+            ->update(['quantity' => $request->quantity]);
 
         return response()->json([
             'success' => true,
@@ -292,12 +268,8 @@ class ClienteController extends Controller
      */
     public function removeFromCart($id)
     {
-        $cart = Session::get('carrito', []);
-        $cart = array_filter($cart, function($item) use ($id) {
-            return $item['product_id'] != $id;
-        });
-
-        Session::put('carrito', array_values($cart));
+        $clientId = Auth::guard('clients')->id();
+        CartItem::where('client_id', $clientId)->where('product_id', $id)->delete();
 
         return response()->json([
             'success' => true,
@@ -308,13 +280,14 @@ class ClienteController extends Controller
     }
 
     /**
-     * Procesa el checkout: crea la venta, vacía el carrito
+     * Procesa el checkout: crea la venta desde cart_items, vacía el carrito del Client
      */
     public function checkout(Request $request)
     {
-        $cart = Session::get('carrito', []);
+        $clientId = Auth::guard('clients')->id();
+        $items = CartItem::where('client_id', $clientId)->with('product')->get();
 
-        if (empty($cart)) {
+        if ($items->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'message' => 'El carrito está vacío'
@@ -326,18 +299,18 @@ class ClienteController extends Controller
             $subtotal = 0;
             $validatedItems = [];
 
-            foreach ($cart as $item) {
-                $product = Product::find($item['product_id']);
+            foreach ($items as $cartItem) {
+                $product = $cartItem->product;
 
                 if (!$product || $product->status !== 'active') {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
-                        'message' => 'El producto "' . ($item['name'] ?? '') . '" ya no está disponible'
+                        'message' => 'El producto "' . ($product->name ?? '') . '" ya no está disponible'
                     ], 400);
                 }
 
-                if ($product->stock_current < $item['quantity']) {
+                if ($product->stock_current < $cartItem->quantity) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
@@ -345,21 +318,23 @@ class ClienteController extends Controller
                     ], 400);
                 }
 
-                $itemTotal = $item['price'] * $item['quantity'];
+                $price = $product->sale_price;
+                $itemTotal = $price * $cartItem->quantity;
                 $subtotal += $itemTotal;
 
                 $validatedItems[] = [
                     'product' => $product,
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
+                    'quantity' => $cartItem->quantity,
+                    'price' => $price,
                     'total' => $itemTotal
                 ];
             }
 
             $sale = Sale::create([
                 'invoice_number' => (new Sale())->generateInvoiceNumber(),
-                'customer_id' => Auth::id(),
-                'seller_id' => Auth::id(),
+                'customer_id' => null,
+                'client_id' => $clientId,
+                'seller_id' => null,
                 'sale_date' => now(),
                 'payment_method' => 'cash',
                 'status' => 'pending',
@@ -383,7 +358,7 @@ class ClienteController extends Controller
                 $item['product']->decrement('stock_current', $item['quantity']);
             }
 
-            Session::forget('carrito');
+            CartItem::where('client_id', $clientId)->delete();
 
             DB::commit();
 
@@ -403,26 +378,31 @@ class ClienteController extends Controller
     }
 
     /**
-     * Obtiene el conteo de items en el carrito
+     * Obtiene el conteo de ítems en el carrito (solo para Client logueado)
      */
     private function getCartCount()
     {
-        $cart = Session::get('carrito', []);
-        return count($cart);
+        if (!Auth::guard('clients')->check()) {
+            return 0;
+        }
+        return (int) CartItem::where('client_id', Auth::guard('clients')->id())->sum('quantity');
     }
 
     /**
-     * Obtiene el total del carrito
+     * Obtiene el total del carrito (solo para Client logueado)
      */
     private function getCartTotal()
     {
-        $cart = Session::get('carrito', []);
-        $total = 0;
-
-        foreach ($cart as $item) {
-            $total += $item['price'] * $item['quantity'];
+        if (!Auth::guard('clients')->check()) {
+            return 0;
         }
-
+        $items = CartItem::where('client_id', Auth::guard('clients')->id())->with('product')->get();
+        $total = 0;
+        foreach ($items as $item) {
+            if ($item->product) {
+                $total += $item->product->sale_price * $item->quantity;
+            }
+        }
         return $total;
     }
 

@@ -44,7 +44,7 @@
                 </nav>
                 
                 <div class="header-actions">
-                    @auth
+                    @if(Auth::guard('clients')->check())
                     <a href="{{ route('clientes.carrito') }}" class="cart-btn cart-btn-link" id="cart-link" data-cart-count="{{ $cartCount ?? 0 }}" title="Ver carrito">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>

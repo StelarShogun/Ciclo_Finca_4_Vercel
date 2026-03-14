@@ -50,7 +50,7 @@
                             @endif
                             <div class="product-footer">
                                 <div class="product-price">₡{{ number_format($producto->sale_price, 0, ',', '.') }}</div>
-                                @auth
+                                @if(Auth::guard('clients')->check())
                                 <button class="btn btn-primary btn-sm add-to-cart-btn" 
                                         data-product-id="{{ $producto->product_id }}"
                                         data-product-name="{{ $producto->name }}"
@@ -64,7 +64,7 @@
                                     <i class="fas fa-cart-plus"></i>
                                     Agregar
                                 </button>
-                                @endauth
+                                @endif
                             </div>
                         </div>
                     </div>
