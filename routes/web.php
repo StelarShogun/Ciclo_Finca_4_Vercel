@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\ClientUserController;
+use App\Http\Controllers\AdminUserController;
 
 Route::get('/run-migrations', function () {
     try {
@@ -115,5 +116,14 @@ Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.exp
 // Dashboard API Routes
 Route::get('/dashboard/data', [DashboardController::class, 'getDashboardData'])->name('dashboard.data');
 Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
+}); // Cierre del grupo de rutas protegidas
 
+// Rutas de autenticación para administradores
+Route::get('/admin/login', [AdminUserController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [AdminUserController::class, 'login'])->name('admin.login.submit');
+Route::post('/admin/logout', [AdminUserController::class, 'logout'])->name('admin.logout');
+
+// Rutas del dashboard de administrador (protegidas)
+Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 }); // Cierre del grupo middleware auth + admin.only
