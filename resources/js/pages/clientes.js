@@ -21,8 +21,6 @@ if (cartGuest) {
 // ===== AGREGAR AL CARRITO =====
 function addToCart(productId, quantity = 1) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-    console.log('Agregando al carrito:', { productId, quantity });
     
     fetch('/cart/add', {
         method: 'POST',
@@ -113,88 +111,6 @@ if (filterForm) {
         });
     });
 }
-
-// ===== VACIAR CARRITO (MEJORADO) =====
-// ===== VACIAR CARRITO =====
-document.addEventListener('click', function(e) {
-    const clearBtn = e.target.closest('#btn-clear-cart');
-    if (!clearBtn || clearBtn.disabled) return;  // ← guard contra doble disparo
-
-    e.preventDefault();
-    e.stopPropagation();  // ← evita bubbling hacia otros listeners
-
-    Swal.fire({
-        title: '¿Vaciar carrito?',
-        text: '¿Deseas eliminar todos los productos del carrito?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, vaciar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (!result.isConfirmed) return;
-
-        // Deshabilitar inmediatamente para evitar doble ejecución
-        clearBtn.disabled = true;
-        const originalHtml = clearBtn.innerHTML;
-        clearBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Vaciando...';
-
-        fetch('/cart/clear', {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(async (response) => {
-            const text = await response.text();
-            let data;
-            try { data = JSON.parse(text); } catch(e) { throw new Error('Respuesta no es JSON: ' + text.substring(0, 200)); }
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || 'HTTP ' + response.status);
-            }
-            return data;
-        })
-        .then((data) => {
-
-            // Limpiar items del DOM
-            document.querySelectorAll('.cart-item').forEach(item => item.remove());
-
-            // Actualizar totales
-            const subtotalEl = document.getElementById('cart-subtotal');
-            const totalEl    = document.getElementById('cart-total-amount');
-            if (subtotalEl) subtotalEl.textContent = '₡0';
-            if (totalEl)    totalEl.textContent    = '₡0';
-
-            // Actualizar contador navbar
-            updateCartCount(0);
-
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: 'Carrito vaciado correctamente',
-                showConfirmButton: false,
-                timer: 2500,
-                timerProgressBar: true,
-                didOpen: () => console.log('[clear-cart] Toast didOpen OK'),
-                didClose: () => {
-                    showCartEmptyState();
-                }
-            });
-        })
-        .catch((error) => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.message || 'Ocurrió un error al vaciar el carrito'
-            });
-            clearBtn.disabled = false;
-            clearBtn.innerHTML = originalHtml;
-        });
-    });
-});
 
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', function() {
@@ -460,46 +376,31 @@ document.addEventListener('click', function (event) {
     closeUserDropdown();
 });
 
-// ===== LOGIN MODAL =====
-const loginModalTrigger = document.getElementById('login-modal-trigger');
-const loginModal = document.getElementById('login-modal');
-const loginModalOverlay = document.getElementById('login-modal-overlay');
-const closeLoginModal = document.getElementById('close-login-modal');
+// ===== LOGIN  =====
 const publicLoginForm = document.getElementById('public-login-form');
+const loginModalTrigger = document.getElementById('login-modal-trigger');
 
 if (loginModalTrigger) {
     loginModalTrigger.addEventListener('click', function() {
-        loginModal.classList.add('active');
-        loginModalOverlay.classList.add('active');
+        window.location.href = '/login'; 
     });
 }
 
-// Botón "Agregar" para invitados
-document.addEventListener('click', function(e) {
-    const guestBtn = e.target.closest('.guest-add-btn');
-    if (guestBtn) {
-        e.preventDefault();
-        Swal.fire({
-            icon: 'info',
-            title: 'Inicia sesión',
-            text: 'Debes iniciar sesión para agregar productos al carrito.',
-            confirmButtonText: 'Entendido'
+// Cerrar modales con ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeUserDropdown();
+        if (loginModal && loginModal.classList.contains('active')) {
+            closeLoginModalFunc();
+        }
+        document.querySelectorAll('.modal.active').forEach(modal => {
+            modal.classList.remove('active');
         });
+        closeCartSidebar();
     }
 });
 
-if (closeLoginModal) {
-    closeLoginModal.addEventListener('click', function() {
-        closeLoginModalFunc();
-    });
-}
-
-if (loginModalOverlay) {
-    loginModalOverlay.addEventListener('click', function() {
-        closeLoginModalFunc();
-    });
-}
-
+// Función para cerrar el modal de login
 function closeLoginModalFunc() {
     loginModal.classList.remove('active');
     loginModalOverlay.classList.remove('active');
@@ -508,25 +409,47 @@ function closeLoginModalFunc() {
 if (publicLoginForm) {
     publicLoginForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
+        // Token CSRF desde el propio formulario (@csrf), más fiable que meta en todos los entornos (Windows/Linux)
+        const tokenInput = this.querySelector('input[name="_token"]');
+        const csrfToken = tokenInput ? tokenInput.value : (document.querySelector('meta[name="csrf-token"]')?.content || '');
+        if (!csrfToken) {
+            window.location.href = '/login?session_expired=1';
+            return;
+        }
+
         const formData = new FormData(this);
         const submitBtn = document.getElementById('login-submit-btn');
         const loadingSpan = document.getElementById('login-loading');
-        const submitSpan = submitBtn.querySelector('span:not(.btn-loading)');
-        
+        const submitSpan = submitBtn?.querySelector('span:not(.btn-loading)');
+
         submitBtn.disabled = true;
         if (submitSpan) submitSpan.classList.add('hidden');
         if (loadingSpan) loadingSpan.classList.remove('hidden');
-        
+
         fetch('/login', {
             method: 'POST',
             body: formData,
+            credentials: 'same-origin',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
-        .then(data => {
+        .then(async response => {
+            // 419 = CSRF token mismatch (común en Linux si la cookie de sesión no coincide)
+            if (response.status === 419) {
+                window.location.href = '/login?session_expired=1';
+                return;
+            }
+            let data;
+            try {
+                data = await response.json();
+            } catch (err) {
+                // Respuesta HTML (p. ej. página de error) en lugar de JSON
+                window.location.href = '/login?session_expired=1';
+                return;
+            }
             if (data.success) {
                 Swal.fire({
                     icon: 'success',
@@ -543,7 +466,6 @@ if (publicLoginForm) {
                     title: 'Error',
                     text: data.message || 'Error al iniciar sesión'
                 });
-                
                 submitBtn.disabled = false;
                 if (submitSpan) submitSpan.classList.remove('hidden');
                 if (loadingSpan) loadingSpan.classList.add('hidden');
@@ -556,22 +478,9 @@ if (publicLoginForm) {
                 title: 'Error',
                 text: 'Ocurrió un error al iniciar sesión'
             });
-            
             submitBtn.disabled = false;
             if (submitSpan) submitSpan.classList.remove('hidden');
             if (loadingSpan) loadingSpan.classList.add('hidden');
         });
     });
 }
-
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        closeUserDropdown();
-        if (loginModal && loginModal.classList.contains('active')) {
-            closeLoginModalFunc();
-        }
-        document.querySelectorAll('.modal.active').forEach(modal => {
-            modal.classList.remove('active');
-        });
-    }
-});

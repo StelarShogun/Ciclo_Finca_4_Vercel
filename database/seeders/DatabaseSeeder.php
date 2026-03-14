@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             SupplierSeeder::class,
             ProductsSeeder::class,
+            AdminSeeder::class,
+            ClientUserSeeder::class,
         ]);
 
         // Crear un admin en tabla usuarios si no existe
