@@ -5,14 +5,19 @@ export default defineConfig({
   plugins: [
     laravel({
       input: [
-        'resources/js/app.js',
         'resources/js/admin.js',
-        'resources/js/clientes.js',
+        'resources/js/clients.js',
         'resources/js/dashboard.js',
         'resources/js/inventory.js',
         'resources/js/usuarios.js',
+
+        // CSS Y JS DE SUPPLIERS
         'resources/js/suppliers.js',
-        'resources/css/suppliers/supplier-entry.css',
+        'resources/css/suppliers/suppliers.css',
+
+        // CSS Y JS DE CLIENTS
+        'resources/css/clients/clients.css', 
+        'resources/js/clients.js',
       ],
       refresh: true,
     }),

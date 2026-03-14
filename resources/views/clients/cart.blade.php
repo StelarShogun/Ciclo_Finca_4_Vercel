@@ -1,4 +1,4 @@
-@extends('clientes.layouts.app')
+@extends('clients.layouts.app')
 
 @section('title', 'Carrito de Compras - Ciclo Pérez')
 
@@ -12,10 +12,11 @@
                     Carrito de Compras
                 </h1>
                 <div class="cart-header-actions">
-                    <a href="{{ route('clientes.catalogo') }}" class="btn btn-outline-secondary btn-sm">
+                    <a href="{{ route('clients.catalog') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-arrow-left"></i>
                         Continuar Comprando
                     </a>
+                    <!-- Show clear button only if cart has items -->
                     @if(count($cartItems) > 0)
                         <button type="button" class="btn btn-outline-danger btn-sm" id="btn-clear-cart">
                             <i class="fas fa-trash-alt"></i>
@@ -25,12 +26,15 @@
                 </div>
             </div>
 
+        <!-- Main cart content: items list + order summary -->
         @if(count($cartItems) > 0)
             <div class="cart-layout">
                 <div class="cart-items">
                     @foreach($cartItems as $item)
+                        <!-- data-product-id used by JS to update/remove items -->
                         <div class="cart-item" data-product-id="{{ $item['product_id'] }}">
                             <div class="cart-item-image">
+                                <!-- Fallback to favicon if product image is missing -->
                                 <img src="{{ asset('assets/images/products/' . $item['image']) }}"
                                      alt="{{ $item['name'] }}"
                                      onerror="this.src='{{ asset('favicon.svg') }}'">
@@ -42,6 +46,7 @@
                             </div>
                             <div class="item-controls">
                                 <label class="item-controls-label">Cantidad:</label>
+                                <!-- max enforces stock limit on the client side -->
                                 <div class="quantity-controls">
                                     <button type="button" class="quantity-btn" data-action="decrease" data-product-id="{{ $item['product_id'] }}" aria-label="Disminuir">
                                         <i class="fas fa-minus"></i>
@@ -59,6 +64,7 @@
                                 </div>
                             </div>
                             <div class="cart-item-right">
+                                <!-- Subtotal = price x quantity, recalculated by JS on change -->
                                 <div class="item-subtotal">
                                     <span class="subtotal-label">Subtotal:</span>
                                     <span class="subtotal-amount">₡{{ number_format($item['subtotal'], 0, ',', '.') }}</span>
@@ -76,6 +82,7 @@
                     @endforeach
                 </div>
 
+                <!-- Sticky order summary sidebar -->
                 <aside class="cart-summary">
                     <div class="summary-card">
                         <h3 class="summary-title">Resumen del Pedido</h3>
@@ -86,6 +93,7 @@
                             </div>
                             <div class="summary-row">
                                 <span>Impuestos:</span>
+                                <!-- Taxes calculated dynamically via JS -->
                                 <span id="cart-taxes">₡0</span>
                             </div>
                             <div class="summary-row summary-total">
@@ -94,6 +102,7 @@
                             </div>
                         </div>
                         <div class="summary-actions">
+                            <!-- Triggers checkout confirmation via JS (no direct form submit) -->
                             <button class="btn btn-primary btn-block btn-lg" id="proceed-checkout">
                                 <i class="fas fa-check"></i>
                                 Confirmar Compra
@@ -107,12 +116,13 @@
                 </aside>
             </div>
         @else
+            <!-- Empty cart state -->
             <div class="cart-empty">
                 <div class="empty-state">
                     <i class="fas fa-shopping-cart"></i>
                     <h2>Tu carrito está vacío</h2>
                     <p>Agrega productos desde nuestro catálogo</p>
-                    <a href="{{ route('clientes.catalogo') }}" class="btn btn-primary btn-lg">
+                    <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-lg">
                         <i class="fas fa-th"></i>
                         Ver Catálogo
                     </a>

@@ -3,32 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSRF token for secure form submissions -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Ciclo Pérez Admin')</title>
+    <title>@yield('title', 'Ciclo Pérez - Tienda de Bicicletas')</title>
     
-    <!-- Favicons modernos -->
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
-    <meta name="theme-color" content="#2e7d32">
     
-    @vite(['resources/js/app.js'])
-    @stack('styles')
+    @vite(['resources/css/clients/clients.css'])
     
-    <!-- Fuentes e iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
+<body class="cliente-layout">
 
-<body class="admin-layout">
-    @include('partes.aside')
+    @include('clients.parts.header')
 
-    <main class="admin-main">
-        @yield('header')
-        
+    <main class="cliente-main">
+        <!-- Flash messages -->
         @if(session('status'))
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i>
@@ -46,9 +41,9 @@
         @yield('content')
     </main>
 
-    <!-- Scripts -->
+    @include('clients.parts.footer')
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    @vite(['resources/js/admin.js'])
-    @stack('scripts')
+    @vite(['resources/js/clients.js'])
 </body>
 </html>
