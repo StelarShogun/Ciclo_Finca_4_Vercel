@@ -10,6 +10,7 @@ storage/logs/*
 storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
+config/database.php
 
 # Tests y caché PHP
 .phpunit.result.cache
@@ -32,3 +33,4 @@ Thumbs.db
 .env.backup
 .env.production
 storage/logs/laravel.log
+public/storage

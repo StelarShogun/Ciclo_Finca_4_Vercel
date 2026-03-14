@@ -425,4 +425,16 @@ class ClienteController extends Controller
 
         return $total;
     }
+
+    public function clearCart()
+{
+    Session::forget('carrito');
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Carrito vaciado exitosamente',
+        'cart_count' => 0,
+        'cart_total' => 0
+    ]);
+}
 }
