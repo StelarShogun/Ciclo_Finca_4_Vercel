@@ -41,6 +41,11 @@
                         </div>
                     </div>
 
+                    <!-- reCAPTCHA -->
+                    <div class="form-group">
+                        <div class="g-recaptcha" data-sitekey="{{ config('recaptcha.site_key') }}"></div>
+                    </div>
+
                     <!-- Acciones del formulario -->
                     <div class="form-actions">
                         <button type="submit" id="btnLoginSubmit" class="btn btn-primary full-width">
@@ -62,6 +67,7 @@
     @endpush
 
     @push('scripts')
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
         @vite(['resources/js/admin.js'])
     @endpush
 @endsection

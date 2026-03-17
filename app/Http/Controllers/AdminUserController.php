@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Rules\Recaptcha;
 
 class AdminUserController extends Controller
 {
@@ -14,6 +15,12 @@ class AdminUserController extends Controller
 
     public function login(Request $request)
     {
+        $request->validate([
+            'g-recaptcha-response' => ['required', new Recaptcha],
+        ], [
+            'g-recaptcha-response.required' => 'Por favor completa el reCAPTCHA.',
+        ]);
+
         $credentials = $request->only('gmail', 'password');
 
         if (Auth::guard('admin')->attempt($credentials)) {
