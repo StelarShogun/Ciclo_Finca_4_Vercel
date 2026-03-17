@@ -1,3 +1,5 @@
+import Swal from 'sweetalert2';
+
 // admin.js - pequeñas ayudas generales
 document.addEventListener("DOMContentLoaded", ()=>{
   const toggle = document.querySelector(".toggle-sidebar");
@@ -35,6 +37,20 @@ document.addEventListener('keydown', function(event) {
   if (event.key === 'Escape') {
     cerrarModalPerfil();
   }
+});
+
+// Mostrar error de autenticación con SweetAlert2
+document.addEventListener('DOMContentLoaded', function () {
+    const errorEl = document.getElementById('authError');
+    if (errorEl) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Acceso denegado',
+            text: errorEl.dataset.message,
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#e53e3e',
+        });
+    }
 });
 
 // Toggle para ver/ocultar contraseña en formularios de login/registro

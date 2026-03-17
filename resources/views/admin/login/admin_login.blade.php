@@ -41,16 +41,6 @@
                         </div>
                     </div>
 
-                    @if ($errors->any())
-                        <div class="alert alert-danger">
-                            <ul>
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
                     <!-- Acciones del formulario -->
                     <div class="form-actions">
                         <button type="submit" id="btnLoginSubmit" class="btn btn-primary full-width">
@@ -59,6 +49,10 @@
                         </button>
                     </div>
                 </form>
+
+                @if ($errors->any())
+                    <span id="authError" data-message="{{ implode(' ', $errors->all()) }}" style="display:none"></span>
+                @endif
             </div>
         </div>
     </div>

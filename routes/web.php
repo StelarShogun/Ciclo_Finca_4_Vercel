@@ -118,12 +118,12 @@ Route::get('/dashboard/data', [DashboardController::class, 'getDashboardData'])-
 Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
 }); // Cierre del grupo de rutas protegidas
 
-// Rutas de autenticación para administradores
+// Admin authentication routes
 Route::get('/admin/login', [AdminUserController::class, 'showLoginForm'])->name('admin.login');
 Route::post('/admin/login', [AdminUserController::class, 'login'])->name('admin.login.submit');
 Route::post('/admin/logout', [AdminUserController::class, 'logout'])->name('admin.logout');
 
-// Rutas del dashboard de administrador (protegidas)
+// Admin dashboard routes (protected)
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 }); // Cierre del grupo middleware auth + admin.only
