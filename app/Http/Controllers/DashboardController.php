@@ -16,23 +16,9 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        try {
-            // Verificación adicional de seguridad
-            if (!Auth::check()) {
-                return redirect()->route('login.show')
-                    ->with('error', 'Debe iniciar sesión para acceder.');
-            }
-            
-            if (!method_exists(Auth::user(), 'isAdmin') || !Auth::user()->isAdmin()) {
-                Auth::logout();
-                return redirect()->route('login.show')
-                    ->with('error', 'Acceso denegado. Solo administradores pueden acceder.');
-            }
-            
-        } catch (\Exception $authException) {
-            \Log::error('Error de autenticación en DashboardController: ' . $authException->getMessage());
-            return redirect()->route('login.show')
-                ->with('error', 'Error de autenticación.');
+        if (!Auth::guard('admin')->check()) {
+            return redirect()->route('admin.login')
+                ->with('error', 'Debe iniciar sesión como administrador para acceder.');
         }
         
         try {

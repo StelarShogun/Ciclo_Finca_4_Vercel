@@ -82,12 +82,12 @@ Route::get('/csrf-token', function(Request $request) {
 Route::post('/usuarios/store-login', [UsuarioController::class, 'storeLogin'])->name('storeLogin');
 
 // Usuario Routes protegidas (solo administradores)
-Route::middleware(['auth', 'admin.only', 'prevent.direct'])->group(function () {
+Route::middleware(['auth:admin'])->group(function () {
     Route::resource('usuarios', UsuarioController::class);
 });
 
 // Protected Routes (require authentication AND admin role with additional security)
-Route::middleware(['auth', 'admin.only', 'prevent.direct'])->group(function () {
+Route::middleware(['auth:admin'])->group(function () {
     
 // Dashboard Routes
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

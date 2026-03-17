@@ -34,8 +34,11 @@
                     <!-- Contraseña -->
                     <div class="form-group">
                         <label for="loginPassword">Contraseña *</label>
-                        <input type="password" id="loginPassword" name="password" required
-                            placeholder="Ingresa tu contraseña">
+                        <div class="password-container">
+                            <input type="password" id="loginPassword" name="password" required
+                                placeholder="Ingresa tu contraseña">
+                            <i class="fas fa-eye" id="togglePassword"></i>
+                        </div>
                     </div>
 
                     @if ($errors->any())
@@ -59,4 +62,12 @@
             </div>
         </div>
     </div>
+
+    @push('styles')
+        @vite(['resources/css/admin.css'])
+    @endpush
+
+    @push('scripts')
+        @vite(['resources/js/admin.js'])
+    @endpush
 @endsection

@@ -21,7 +21,7 @@ class AdminUserController extends Controller
             $user = Auth::guard('admin')->user();
             $user->last_access = now();
             $user->save();
-            return redirect()->intended('/admin/dashboard');
+            return redirect()->route('dashboard');
         }
 
         return redirect()->back()->withInput($request->only('gmail'))->withErrors([
