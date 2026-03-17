@@ -42,6 +42,19 @@ class ProductController extends Controller
                     $data['image'] = $imageName;
                 }
 
+                if ($request->hasFile('images')) {
+                    $paths = [];
+                    foreach ($request->file('images') as $i => $file) {
+                        $name = time().'_'.$i.'.'.$file->extension();
+                        $file->move(public_path('assets/images/products'), $name);
+                        $paths[] = $name;
+                    }
+                    $data['images'] = $paths;
+                    if (empty($data['image']) && !empty($paths)) {
+                        $data['image'] = $paths[0];
+                    }
+                }
+
                 return Product::create($data);
             });
 
@@ -109,13 +122,28 @@ class ProductController extends Controller
                 $data = $request->validated();
 
                 if ($request->hasFile('image')) {
-                    // Eliminar imagen anterior si existe
                     if ($p->image && file_exists(public_path('assets/images/products/' . $p->image))) {
-                        unlink(public_path('assets/images/products/' . $p->image));
+                        @unlink(public_path('assets/images/products/' . $p->image));
                     }
                     $imageName = time().'.'.$request->image->extension();
                     $request->image->move(public_path('assets/images/products'), $imageName);
                     $data['image'] = $imageName;
+                }
+
+                if ($request->hasFile('images')) {
+                    $oldImages = $p->images ?? [];
+                    foreach (is_array($oldImages) ? $oldImages : [] as $old) {
+                        if ($old && file_exists(public_path('assets/images/products/' . $old))) {
+                            @unlink(public_path('assets/images/products/' . $old));
+                        }
+                    }
+                    $paths = [];
+                    foreach ($request->file('images') as $i => $file) {
+                        $name = time().'_'.$i.'.'.$file->extension();
+                        $file->move(public_path('assets/images/products'), $name);
+                        $paths[] = $name;
+                    }
+                    $data['images'] = $paths;
                 }
 
                 $p->update($data);

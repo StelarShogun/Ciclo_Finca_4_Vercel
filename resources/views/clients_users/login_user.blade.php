@@ -27,9 +27,13 @@
                     </button>
                 </div>
             </div>
+            @if(config('recaptcha.site_key'))
             <div class="form-group mb-3">
                 <div class="g-recaptcha" data-sitekey="{{ config('recaptcha.site_key') }}"></div>
             </div>
+            @else
+            <input type="hidden" name="g-recaptcha-response" value="">
+            @endif
             <div class="form-group mb-3">
                 <label class="checkbox-label">
                     <input type="checkbox" name="remember" id="remember">
@@ -63,7 +67,9 @@
 @endpush
 
 @push('scripts')
+@if(config('recaptcha.site_key'))
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+@endif
 <script>
  document.getElementById('toggle-password').addEventListener('click', function() {
     const input = document.getElementById('login-password');
