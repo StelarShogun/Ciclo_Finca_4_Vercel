@@ -55,6 +55,9 @@ Route::middleware(['auth:clients'])->group(function () {
 Route::get('/login', [ClientUserController::class, 'showLoginForm'])->name('login.show');
 Route::get('/register', [ClientUserController::class, 'showRegisterForm'])->name('clients.register.form');
 Route::post('/register', [ClientUserController::class, 'register'])->name('clients.register');
+Route::get('/verify', [ClientUserController::class, 'showVerifyForm'])->name('clients.verify.form');
+Route::post('/verify', [ClientUserController::class, 'verify'])->name('clients.verify');
+Route::post('/verify/resend', [ClientUserController::class, 'resendCode'])->name('clients.verify.resend');
 Route::post('/login', [ClientUserController::class, 'login'])
     ->middleware('throttle:5,1') // 5 intentos por minuto para prevenir fuerza bruta
     ->name('login');

@@ -19,12 +19,20 @@ class Client extends Authenticatable
         'second_surname',
         'gmail',
         'password',
+        'verification_code',
+        'verification_code_expires_at',
+        'email_verified',
         'remember_token',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    protected $casts = [
+        'verification_code_expires_at' => 'datetime',
+        'email_verified'               => 'boolean',
     ];
 
     public function cartItems(): HasMany
