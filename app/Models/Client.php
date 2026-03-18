@@ -9,7 +9,7 @@ class Client extends Authenticatable
 {
     use Notifiable;
 
-    protected $table = 'client_table';
+    protected $table      = 'client_table';
     protected $primaryKey = 'user_id';
 
     protected $fillable = [
@@ -18,6 +18,8 @@ class Client extends Authenticatable
         'second_surname',
         'gmail',
         'password',
+        'provider',
+        'google_id',
         'remember_token',
     ];
 
@@ -25,4 +27,10 @@ class Client extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    // Normalizes provider: null values are treated as 'local' to prevent incorrect UI rendering.
+    public function getProviderAttribute($value): string
+    {
+        return $value ?? 'local';
+    }
 }

@@ -11,12 +11,26 @@ use App\Rules\Recaptcha;
 
 class ClientUserController extends Controller
 {
+    // ============================================================
+    // PROFILE
+    // ============================================================
 
-    // Display the authenticated client's profile.
+    // Display the authenticated client's profile, normalizing provider if null.
     public function show()
     {
         $client = Auth::guard('clients')->user();
-        return view('clients.profile', compact('client'));
+
+        if (empty($client->provider) || $client->getRawOriginal('provider') === null) {
+            DB::table('client_table')
+                ->where('user_id', $client->user_id)
+                ->update(['provider' => 'local']);
+
+            $client->provider = 'local';
+        }
+
+        $isGoogleOnly = ($client->provider ?? 'local') === 'google';
+
+        return view('clients.profile', compact('client', 'isGoogleOnly'));
     }
 
     // Update the authenticated client's personal data.
@@ -28,7 +42,6 @@ class ClientUserController extends Controller
             'name'           => 'required|string|min:2|max:60',
             'first_surname'  => 'required|string|min:2|max:60',
             'second_surname' => 'nullable|string|max:60',
-            // Unique rule ignoring the client's own record
             'gmail'          => 'required|email|max:100|unique:client_table,gmail,' . $client->user_id . ',user_id',
         ], [
             'name.required'          => 'El nombre es obligatorio.',
@@ -54,7 +67,6 @@ class ClientUserController extends Controller
                 'updated_at'     => now(),
             ]);
 
-        // Reflect the updated name in the active session
         session([
             'client_name'           => $request->name,
             'client_first_surname'  => $request->first_surname,
@@ -71,46 +83,48 @@ class ClientUserController extends Controller
         return redirect()->route('clients.profile')->with('profile_updated', true);
     }
 
-    // Update (or set for the first time) the client's password.
-    // A client is 'Google-only' when they have a google_id but no local password.
+    // Update the client's password; switches Google accounts to local provider.
     public function updatePassword(Request $request)
     {
-        $client = Auth::guard('clients')->user();
+        $client   = Auth::guard('clients')->user();
+        $isGoogle = ($client->provider ?? 'local') === 'google';
 
-        $isGoogleOnly = $client->google_id && empty($client->password);
+        $rules = ['new_password' => 'required|string|min:8|confirmed'];
 
-        // Google-only accounts do not need to verify a current password
-        $rules = [
-            'new_password' => 'required|string|min:8|confirmed',
-        ];
-
-        if (!$isGoogleOnly) {
+        if (!$isGoogle) {
             $rules['current_password'] = 'required|string';
         }
 
         $messages = [
             'current_password.required' => 'La contraseña actual es obligatoria.',
+            'current_password.string'   => 'La contraseña actual no es válida.',
             'new_password.required'     => 'La nueva contraseña es obligatoria.',
-            'new_password.min'          => 'La nueva contraseña debe tener al menos 8 caracteres.',
+            'new_password.min'          => 'La contraseña debe tener al menos 8 caracteres.',
             'new_password.confirmed'    => 'Las contraseñas no coinciden.',
         ];
 
         $request->validate($rules, $messages);
 
-        // Verify the current password only for local accounts
-        if (!$isGoogleOnly) {
+        // Verify current password and prevent reuse for local accounts.
+        if (!$isGoogle) {
             if (!Hash::check($request->current_password, $client->password)) {
+                $error = ['current_password' => ['La contraseña actual no es correcta.']];
+
                 if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'La contraseña actual no es correcta.',
-                        'errors'  => ['current_password' => ['La contraseña actual no es correcta.']],
-                    ], 422);
+                    return response()->json(['success' => false, 'errors' => $error], 422);
                 }
 
-                return back()
-                    ->withErrors(['current_password' => 'La contraseña actual no es correcta.'])
-                    ->withInput();
+                return back()->withErrors($error)->withInput();
+            }
+
+            if (Hash::check($request->new_password, $client->password)) {
+                $error = ['new_password' => ['La nueva contraseña no puede ser igual a la actual.']];
+
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'errors' => $error], 422);
+                }
+
+                return back()->withErrors($error)->withInput();
             }
         }
 
@@ -118,22 +132,25 @@ class ClientUserController extends Controller
             ->where('user_id', $client->user_id)
             ->update([
                 'password'   => Hash::make($request->new_password),
+                'provider'   => 'local',
                 'updated_at' => now(),
             ]);
 
-        $message = $isGoogleOnly
-            ? 'Contraseña definida. Ahora puedes iniciar sesión con correo y contraseña.'
+        // Use specific flash keys so the JS can trigger the correct alert message.
+        $flashKey = $isGoogle ? 'password_defined' : 'password_updated';
+        $message  = $isGoogle
+            ? 'Contraseña definida. Ya puedes iniciar sesión con tu correo y contraseña.'
             : 'Contraseña actualizada correctamente.';
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success' => true,
-                'message' => $message,
+                'success'          => true,
+                'message'          => $message,
+                'provider_changed' => $isGoogle,
             ]);
         }
 
-        $sessionKey = $isGoogleOnly ? 'password_defined' : 'password_updated';
-        return redirect()->route('clients.profile')->with($sessionKey, true);
+        return redirect()->route('clients.profile')->with($flashKey, true);
     }
 
     // ============================================================
@@ -154,7 +171,6 @@ class ClientUserController extends Controller
             'password' => 'required',
         ];
 
-        // Add reCAPTCHA validation only if the site key is configured
         if (config('recaptcha.site_key')) {
             $rules['g-recaptcha-response'] = ['required', new Recaptcha()];
         }
@@ -169,11 +185,11 @@ class ClientUserController extends Controller
             'gmail'    => $request->gmail,
             'password' => $request->password,
         ];
-        $remember = $request->has('remember');
+        $remember = $request->boolean('remember');
 
         if (Auth::guard('clients')->attempt($credentials, $remember)) {
             $client = Auth::guard('clients')->user();
-            // Store client data in the session for use in views
+
             session([
                 'client_id'             => $client->user_id,
                 'client_name'           => $client->name,
@@ -199,16 +215,20 @@ class ClientUserController extends Controller
             ], 401);
         }
 
-        return back()->withErrors(['gmail' => 'Correo o contraseña incorrectos.'])->withInput();
+        return back()
+            ->withErrors(['gmail' => 'Correo o contraseña incorrectos.'])
+            ->withInput();
     }
 
-    // Log the client out and invalidate the session token.
+    // Log the client out and invalidate the session.
     public function logout(Request $request)
     {
         Auth::guard('clients')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login.show')->with('status', 'Sesión cerrada correctamente.');
+        return redirect()
+            ->route('login.show')
+            ->with('status', 'Sesión cerrada correctamente.');
     }
 }
