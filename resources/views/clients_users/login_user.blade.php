@@ -5,21 +5,38 @@
 @section('content')
 <div class="login-page-center">
     <div class="login-form-box">
+        <a href="{{ route('clientes.home') }}" class="login-back-link">
+            <i class="fas fa-arrow-left"></i>
+            <span>Regresar</span>
+        </a>
+
+        <div class="login-auth-logo">
+            <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Finca 4">
+        </div>
+
         @if(request()->get('session_expired'))
             <div class="alert alert-warning mb-3" role="alert">
                 <i class="fas fa-exclamation-triangle"></i>
                 La sesión expiró o el token no es válido. Intenta iniciar sesión de nuevo.
             </div>
         @endif
-        <h2 class="text-center mb-4">Iniciar Sesión</h2>
+        <h2 class="text-center mb-2">Bienvenido de nuevo</h2>
+        <p class="login-subtitle text-center mb-4">Ingresa a tu cuenta para continuar</p>
+
         <form id="public-login-form" method="POST" action="{{ route('login') }}">
             @csrf
             <div class="form-group mb-3">
-                <label for="login-email">Correo Electrónico</label>
+                <label for="login-email" class="login-field-label">
+                    <i class="fas fa-envelope login-field-icon" aria-hidden="true"></i>
+                    Correo Electrónico
+                </label>
                 <input type="email" id="login-email" name="gmail" class="form-control" required placeholder="ejemplo@correo.com">
             </div>
             <div class="form-group mb-3 position-relative">
-                <label for="login-password">Contraseña</label>
+                <label for="login-password" class="login-field-label">
+                    <i class="fas fa-lock login-field-icon" aria-hidden="true"></i>
+                    Contraseña
+                </label>
                 <div style="position:relative;">
                     <input type="password" id="login-password" name="password" class="form-control" required placeholder="Ingresa tu contraseña" style="padding-right:40px;">
                     <button type="button" id="toggle-password" style="position:absolute;top:50%;right:8px;transform:translateY(-50%);background:none;border:none;cursor:pointer;">
@@ -47,12 +64,26 @@
         </div>
         <div class="oauth-buttons text-center mb-3">
             <a href="{{ route('auth.google') }}" class="oauth-btn google-btn">
-                <i class="fab fa-google"></i>
-                <span>Continuar con Google</span>
+                <span class="google-g-icon" aria-hidden="true">G</span>
+                <span class="google-text">
+                    Continuar con
+                    <span class="google-brand" aria-hidden="true">
+                        <span class="brand-letter brand-g">G</span>
+                        <span class="brand-letter brand-o">o</span>
+                        <span class="brand-letter brand-o2">o</span>
+                        <span class="brand-letter brand-g2">g</span>
+                        <span class="brand-letter brand-l">l</span>
+                        <span class="brand-letter brand-e">e</span>
+                    </span>
+                </span>
             </a>
         </div>
         <div class="login-footer text-center">
-            <p>¿No tienes una cuenta? <a href="{{ route('clients.register.form') }}" id="show-register-form">Regístrate aquí</a></p>
+            <p class="login-footer-text">¿No tienes una cuenta?</p>
+            <a href="#" id="show-register-form" class="login-register-btn">
+                <i class="fas fa-user-plus" aria-hidden="true"></i>
+                <span>Crear cuenta</span>
+            </a>
         </div>
     </div>
 </div>

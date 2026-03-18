@@ -2044,17 +2044,65 @@ a.product-detail-back.btn:hover {
     font-weight: 500;
     transition: var(--transition);
     border: 2px solid transparent;
+    width: 100%;
 }
 
 .google-btn {
     background: white;
-    color: #4285f4;
+    color: #1a73e8;
     border-color: #dadce0;
+    border-width: 1px;
 }
+
+.google-btn .google-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+/* Solo el texto "Continuar con" va en color azul.
+   La palabra "Google" debe mantener los colores de marca por letra. */
+.google-btn .google-text {
+    color: #1a73e8;
+    font-weight: 500;
+}
+
+.google-g-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1;
+    /* Icono multi-color aproximado (sin usar FontAwesome para evitar que todo sea azul) */
+    background: conic-gradient(from 180deg, #4285f4, #ea4335, #fbbc05, #34a853, #4285f4);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.google-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    font-weight: 600;
+    margin-left: 2px;
+}
+
+.google-brand .brand-letter {
+    font-weight: 600;
+    font-size: 1em;
+}
+
+.google-brand .brand-g { color: #4285f4; }  /* G */
+.google-brand .brand-o { color: #ea4335; }  /* o (rojo) */
+.google-brand .brand-o2 { color: #fbbc05; } /* o (amarillo) */
+.google-brand .brand-g2 { color: #4285f4; } /* g */
+.google-brand .brand-l { color: #34a853; }  /* l */
+.google-brand .brand-e { color: #ea4335; }  /* e (rojo) */
 
 .google-btn:hover {
     background: #f8f9fa;
-    border-color: #4285f4;
+    border-color: #1a73e8;
     transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
 }
@@ -2087,6 +2135,29 @@ a.product-detail-back.btn:hover {
 
 .login-footer a:hover {
     text-decoration: underline;
+}
+
+/* Estilo botón para "Crear cuenta gratis" en el login */
+.login-footer .login-register-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 14px;
+    border: 1px solid #dadce0;
+    border-radius: 10px;
+    background: #fff;
+    color: #1a73e8;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.login-footer .login-register-btn:hover {
+    background: #f8f9fa;
+    border-color: #1a73e8;
+    text-decoration: none;
 }
 
 .btn-loading {
