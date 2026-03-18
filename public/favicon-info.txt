@@ -1,4 +1,4 @@
-FAVICON - CICLO PÉREZ
+FAVICON - CICLO FINCA 4
 ======================
 
 Este proyecto utiliza un sistema moderno de favicons para garantizar 
@@ -18,7 +18,7 @@ ARCHIVOS INCLUIDOS:
 DISEÑO:
 -------
 - Colores: Verde (#2e7d32 a #1b5e20)
-- Letras: "CP" (Ciclo Pérez)
+- Letras: "CP" (Ciclo Finca 4)
 - Estilo: Moderno con gradiente
 
 IMPLEMENTACIÓN:

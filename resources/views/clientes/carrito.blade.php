@@ -1,6 +1,6 @@
 @extends('clientes.layouts.app')
 
-@section('title', 'Carrito de Compras - Ciclo Pérez')
+@section('title', 'Carrito de Compras - Ciclo Finca 4')
 
 @section('content')
 <div class="cart-container">

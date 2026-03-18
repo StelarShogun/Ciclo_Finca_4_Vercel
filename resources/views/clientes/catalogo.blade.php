@@ -1,6 +1,6 @@
 @extends('clientes.layouts.app')
 
-@section('title', 'Catálogo - Ciclo Pérez')
+@section('title', 'Catálogo - Ciclo Finca 4')
 
 @section('content')
 <div class="catalog-container">
@@ -11,6 +11,49 @@
             <p class="catalog-subtitle">Explora nuestra amplia selección de productos</p>
         </div>
     </div>
+
+    {{-- Zona de categorías (barra horizontal de dos filas) --}}
+    @php
+        $catalogQuery = request()->except(['cat', 'sub', 'page']);
+    @endphp
+    <nav class="catalog-categories-bar" aria-label="Navegación por categorías">
+        <div class="container">
+        <div class="categories-row categories-row--parent">
+            <a href="{{ route('clientes.catalogo', $catalogQuery) }}"
+               class="category-pill {{ !$categoriaPadreActual ? 'category-pill--active' : 'category-pill--muted' }}"
+               {{ !$categoriaPadreActual ? 'aria-current="location"' : '' }}>
+                Todas las categorías
+            </a>
+            @foreach($categorias as $cat)
+                @php $catSlug = \Illuminate\Support\Str::slug($cat->name); @endphp
+                <a href="{{ route('clientes.catalogo', array_merge($catalogQuery, ['cat' => $catSlug])) }}"
+                   class="category-pill {{ $categoriaPadreActual && $categoriaPadreActual->category_id === $cat->category_id ? 'category-pill--active' : '' }} {{ $categoriaPadreActual && $categoriaPadreActual->category_id !== $cat->category_id ? 'category-pill--muted' : '' }}"
+                   {{ $categoriaPadreActual && $categoriaPadreActual->category_id === $cat->category_id ? 'aria-current="location"' : '' }}>
+                    {{ $cat->name }}
+                </a>
+            @endforeach
+        </div>
+        @if($categoriaPadreActual)
+        <div class="categories-row categories-row--sub">
+            <span class="categories-row-context">En {{ $categoriaPadreActual->name }}:</span>
+            @php $parentSlug = \Illuminate\Support\Str::slug($categoriaPadreActual->name); @endphp
+            <a href="{{ route('clientes.catalogo', array_merge($catalogQuery, ['cat' => $parentSlug])) }}"
+               class="subcategory-pill {{ !$subcategoriaActual ? 'subcategory-pill--active' : 'subcategory-pill--muted' }}"
+               {{ !$subcategoriaActual ? 'aria-current="location"' : '' }}>
+                Todas
+            </a>
+            @foreach($categoriaPadreActual->childCategories as $sub)
+                @php $subSlug = \Illuminate\Support\Str::slug($sub->name); @endphp
+                <a href="{{ route('clientes.catalogo', array_merge($catalogQuery, ['cat' => $parentSlug, 'sub' => $subSlug])) }}"
+                   class="subcategory-pill {{ $subcategoriaActual && $subcategoriaActual->category_id === $sub->category_id ? 'subcategory-pill--active' : 'subcategory-pill--muted' }}"
+                   {{ $subcategoriaActual && $subcategoriaActual->category_id === $sub->category_id ? 'aria-current="location"' : '' }}>
+                    {{ $sub->name }}
+                </a>
+            @endforeach
+        </div>
+        @endif
+        </div>
+    </nav>
 
     <div class="container">
         <div class="catalog-layout">
@@ -23,6 +66,12 @@
                     </h3>
                     
                     <form method="GET" action="{{ route('clientes.catalogo') }}" id="filter-form">
+                        @if(request('cat'))
+                            <input type="hidden" name="cat" value="{{ request('cat') }}">
+                        @endif
+                        @if(request('sub'))
+                            <input type="hidden" name="sub" value="{{ request('sub') }}">
+                        @endif
                         <!-- Búsqueda -->
                         <div class="filter-group">
                             <label for="buscar">Buscar</label>
@@ -32,20 +81,6 @@
                                    class="form-control" 
                                    placeholder="Nombre o descripción..."
                                    value="{{ request('buscar') }}">
-                        </div>
-                        
-                        <!-- Categoría -->
-                        <div class="filter-group">
-                            <label for="categoria_id">Categoría</label>
-                            <select id="categoria_id" name="categoria_id" class="form-control">
-                                <option value="">Todas las categorías</option>
-                                @foreach($categorias as $categoria)
-                                    <option value="{{ $categoria->category_id }}" 
-                                            {{ request('categoria_id') == $categoria->category_id ? 'selected' : '' }}>
-                                        {{ $categoria->name }}
-                                    </option>
-                                @endforeach
-                            </select>
                         </div>
                         
                         <!-- Rango de Precio -->
@@ -106,20 +141,40 @@
                 <!-- Resultados -->
                 <div class="catalog-results">
                     <div class="results-header">
+                        <nav class="catalog-breadcrumb" aria-label="Breadcrumb">
+                            <a href="{{ route('clientes.catalogo', request()->except(['cat', 'sub', 'page'])) }}">Catálogo</a>
+                            @if($categoriaPadreActual)
+                                <span class="catalog-breadcrumb-sep">/</span>
+                                @if($subcategoriaActual)
+                                    <a href="{{ route('clientes.catalogo', array_merge(request()->except(['sub', 'page']), ['cat' => \Illuminate\Support\Str::slug($categoriaPadreActual->name)])) }}">{{ $categoriaPadreActual->name }}</a>
+                                    <span class="catalog-breadcrumb-sep">/</span>
+                                    <span class="catalog-breadcrumb-current">{{ $subcategoriaActual->name }}</span>
+                                @else
+                                    <span class="catalog-breadcrumb-current">{{ $categoriaPadreActual->name }}</span>
+                                @endif
+                            @endif
+                        </nav>
                         <p class="results-count">
-                            Mostrando {{ $productos->firstItem() ?? 0 }}-{{ $productos->lastItem() ?? 0 }} de {{ $productos->total() }} productos
+                            @if($productos->total() > 0)
+                                Mostrando {{ $productos->firstItem() }}-{{ $productos->lastItem() }} de {{ $productos->total() }} productos
+                            @else
+                                0 productos encontrados
+                                @if(request()->hasAny(['buscar', 'cat', 'sub', 'precio_min', 'precio_max']))
+                                    <span class="results-count-note">(tus filtros se mantienen aplicados)</span>
+                                @endif
+                            @endif
                         </p>
                     </div>
                     
                     @if($productos->count() > 0)
                         <div class="products-grid">
                             @foreach($productos as $producto)
-                                <div class="product-card">
+                                <div class="product-card product-card--catalog">
                                     <div class="product-image">
-                                        <a href="{{ route('clientes.producto', $producto->product_id) }}">
+                                        <a href="{{ route('clientes.producto', $producto->product_id) }}" class="product-image-link" aria-label="Ver detalle de {{ $producto->name }}">
                                             <img src="{{ asset('assets/images/products/' . ($producto->image ?? 'default.png')) }}" 
                                                  alt="{{ $producto->name }}"
-                                                 onerror="this.src='{{ asset('favicon.svg') }}'">
+                                                 onerror="this.onerror=null; this.src='{{ asset('assets/images/products/default.png') }}';">
                                         </a>
                                         @if($producto->stock_current <= 10)
                                             <span class="product-badge stock-low">Stock Bajo</span>
@@ -135,10 +190,16 @@
                                         @if($producto->description)
                                             <p class="product-description">{{ Str::limit($producto->description, 100) }}</p>
                                         @endif
-                                        <div class="product-footer">
-                                            <div class="product-price">₡{{ number_format($producto->sale_price, 0, ',', '.') }}</div>
-                                            @auth
-                                            <button class="btn btn-primary btn-sm add-to-cart-btn" 
+                                        <div class="product-price-row">
+                                            <span class="product-price">₡{{ number_format($producto->sale_price, 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="product-actions">
+                                            <a href="{{ route('clientes.producto', $producto->product_id) }}" class="btn btn-view-details">
+                                                <i class="fas fa-arrow-right"></i>
+                                                Ver detalles
+                                            </a>
+                                            @if(Auth::guard('clients')->check())
+                                            <button type="button" class="btn btn-primary btn-add-cart add-to-cart-btn" 
                                                     data-product-id="{{ $producto->product_id }}"
                                                     data-product-name="{{ $producto->name }}"
                                                     data-product-price="{{ $producto->sale_price }}"
@@ -147,29 +208,46 @@
                                                 Agregar
                                             </button>
                                             @else
-                                            <button class="btn btn-primary btn-sm guest-add-btn" type="button">
+                                            <button type="button" class="btn btn-primary btn-add-cart guest-add-btn">
                                                 <i class="fas fa-cart-plus"></i>
                                                 Agregar
                                             </button>
-                                            @endauth
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                         
-                        <!-- Paginación -->
+                        <!-- Paginación (mismo estilo que dashboard admin) -->
                         <div class="pagination-wrapper">
-                            {{ $productos->links() }}
+                            <x-pagination :paginator="$productos" label="del catálogo" />
                         </div>
                     @else
                         <div class="empty-state">
-                            <i class="fas fa-search"></i>
-                            <h3>No se encontraron productos</h3>
-                            <p>Intenta ajustar tus filtros de búsqueda</p>
-                            <a href="{{ route('clientes.catalogo') }}" class="btn btn-primary">
-                                Ver Todos los Productos
-                            </a>
+                            @if($categoriaPadreActual || $subcategoriaActual)
+                                <i class="fas fa-folder-open"></i>
+                                <h3>No hay productos disponibles en esta categoría.</h3>
+                                <p>Intenta seleccionar otra categoría del listado o ver todos los productos del catálogo.</p>
+                            @elseif(!empty($tieneFiltroPrecio))
+                                <i class="fas fa-coins"></i>
+                                <h3>No hay productos en el rango de precios seleccionado</h3>
+                                <p>Tus filtros se mantienen aplicados. Puedes ajustar el rango de precios (o el resto de filtros) en el panel izquierdo y volver a buscar, o ver todos los productos sin filtros.</p>
+                            @else
+                                <i class="fas fa-search"></i>
+                                <h3>No se encontraron productos</h3>
+                                <p>Ningún producto coincide con los criterios de búsqueda. Tus filtros se mantienen aplicados; modifica el panel izquierdo o quita los filtros para ver el catálogo completo.</p>
+                            @endif
+                            <div class="empty-state-actions">
+                                <a href="#filter-form" class="btn btn-outline-primary scroll-to-filters">
+                                    <i class="fas fa-sliders-h"></i>
+                                    Modificar filtros
+                                </a>
+                                <a href="{{ route('clientes.catalogo') }}" class="btn btn-primary">
+                                    <i class="fas fa-th"></i>
+                                    Ver todos los productos
+                                </a>
+                            </div>
                         </div>
                     @endif
                 </div>

@@ -1,13 +1,13 @@
 @extends('clientes.layouts.app')
 
-@section('title', 'Inicio - Ciclo Pérez')
+@section('title', 'Inicio - Ciclo Finca 4')
 
 @section('content')
 <!-- Hero Section -->
 <section class="hero-section">
     <div class="hero-container">
         <div class="hero-content">
-            <h1 class="hero-title">Bienvenido a Ciclo Pérez</h1>
+            <h1 class="hero-title">Bienvenido a Ciclo Finca 4</h1>
             <p class="hero-subtitle">Tu tienda especializada en bicicletas, componentes y accesorios para ciclismo</p>
             <div class="hero-actions">
                 <a href="{{ route('clientes.catalogo') }}" class="btn btn-primary btn-lg">
@@ -50,7 +50,7 @@
                             @endif
                             <div class="product-footer">
                                 <div class="product-price">₡{{ number_format($producto->sale_price, 0, ',', '.') }}</div>
-                                @auth
+                                @if(Auth::guard('clients')->check())
                                 <button class="btn btn-primary btn-sm add-to-cart-btn" 
                                         data-product-id="{{ $producto->product_id }}"
                                         data-product-name="{{ $producto->name }}"
@@ -64,7 +64,7 @@
                                     <i class="fas fa-cart-plus"></i>
                                     Agregar
                                 </button>
-                                @endauth
+                                @endif
                             </div>
                         </div>
                     </div>

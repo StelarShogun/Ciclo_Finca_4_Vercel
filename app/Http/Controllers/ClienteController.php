@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ClienteController extends Controller
 {
@@ -55,17 +57,48 @@ class ClienteController extends Controller
             });
         }
 
-        // Filtro por categoría
-        if ($request->filled('categoria_id')) {
-            $query->where('category_id', $request->categoria_id);
+        // Resolver cat/sub (slugs) y filtrar por categoría
+        $categoriaPadreActual = null;
+        $subcategoriaActual = null;
+        $categorias = Category::with('childCategories')->whereNull('parent_category_id')->orderBy('name')->get();
+
+        if ($request->filled('cat')) {
+            $catSlug = $request->get('cat');
+            $categoriaPadreActual = $categorias->first(fn($c) => Str::slug($c->name) === $catSlug);
+
+            if ($categoriaPadreActual) {
+                if ($request->filled('sub')) {
+                    $subSlug = $request->get('sub');
+                    $subcategoriaActual = $categoriaPadreActual->childCategories->first(fn($c) => Str::slug($c->name) === $subSlug);
+                    if ($subcategoriaActual) {
+                        $query->where('category_id', $subcategoriaActual->category_id);
+                    } else {
+                        $categoryIds = $categoriaPadreActual->childCategories->pluck('category_id')->push($categoriaPadreActual->category_id)->toArray();
+                        $query->whereIn('category_id', $categoryIds);
+                    }
+                } else {
+                    $categoryIds = $categoriaPadreActual->childCategories->pluck('category_id')->push($categoriaPadreActual->category_id)->toArray();
+                    $query->whereIn('category_id', $categoryIds);
+                }
+            }
         }
 
-        // Filtro por rango de precio
-        if ($request->filled('precio_min')) {
-            $query->where('sale_price', '>=', $request->precio_min);
-        }
-        if ($request->filled('precio_max')) {
-            $query->where('sale_price', '<=', $request->precio_max);
+        // Filtro por rango de precio (validar que mínimo no sea mayor que máximo)
+        $errorRangoPrecio = false;
+        $tieneFiltroPrecio = $request->filled('precio_min') || $request->filled('precio_max');
+        if ($request->filled('precio_min') && $request->filled('precio_max')) {
+            $min = (float) $request->precio_min;
+            $max = (float) $request->precio_max;
+            if ($min > $max) {
+                $errorRangoPrecio = true;
+                // No aplicar filtro de precio para mostrar resultados con el resto de filtros
+            } else {
+                $query->where('sale_price', '>=', $min)->where('sale_price', '<=', $max);
+            }
+        } elseif ($request->filled('precio_min')) {
+            $query->where('sale_price', '>=', (float) $request->precio_min);
+        } elseif ($request->filled('precio_max')) {
+            $query->where('sale_price', '<=', (float) $request->precio_max);
         }
 
         // Ordenamiento
@@ -84,38 +117,51 @@ class ClienteController extends Controller
         $perPage = $request->get('por_pagina', 12);
         $productos = $query->paginate($perPage)->withQueryString();
 
-        // Obtener categorías para el filtro
-        $categorias = Category::whereNull('parent_category_id')
-            ->orderBy('name')
-            ->get();
-
         // Contar items en carrito
         $cartCount = $this->getCartCount();
 
-        return view('clientes.catalogo', compact('productos', 'categorias', 'cartCount'));
+        return view('clientes.catalogo', compact(
+            'productos',
+            'categorias',
+            'cartCount',
+            'errorRangoPrecio',
+            'tieneFiltroPrecio',
+            'categoriaPadreActual',
+            'subcategoriaActual'
+        ));
     }
 
     /**
-     * Vista detallada de un producto
+     * Vista detallada de un producto (CF4-27).
+     * Muestra imagen, nombre, precio, descripción y disponibilidad/stock.
+     * Si ocurre un error al cargar, muestra mensaje informativo.
      */
     public function producto($id)
     {
-        $producto = Product::with(['category', 'supplier'])
-            ->where('status', 'active')
-            ->findOrFail($id);
+        try {
+            $producto = Product::with(['category', 'supplier'])
+                ->where('status', 'active')
+                ->findOrFail($id);
 
-        // Productos relacionados (misma categoría)
-        $productosRelacionados = Product::with(['category'])
-            ->where('category_id', $producto->category_id)
-            ->where('product_id', '!=', $producto->product_id)
-            ->where('status', 'active')
-            ->where('stock_current', '>', 0)
-            ->limit(4)
-            ->get();
+            // Productos relacionados (misma categoría)
+            $productosRelacionados = Product::with(['category'])
+                ->where('category_id', $producto->category_id)
+                ->where('product_id', '!=', $producto->product_id)
+                ->where('status', 'active')
+                ->where('stock_current', '>', 0)
+                ->limit(4)
+                ->get();
 
-        $cartCount = $this->getCartCount();
+            $cartCount = $this->getCartCount();
 
-        return view('clientes.producto', compact('producto', 'productosRelacionados', 'cartCount'));
+            return view('clientes.producto', compact('producto', 'productosRelacionados', 'cartCount'));
+        } catch (ModelNotFoundException $e) {
+            $cartCount = $this->getCartCount();
+            return response()->view('clientes.producto-error', compact('cartCount'), 404);
+        } catch (\Exception $e) {
+            $cartCount = $this->getCartCount();
+            return response()->view('clientes.producto-error', compact('cartCount'), 500);
+        }
     }
 
     /**
@@ -153,43 +199,25 @@ class ClienteController extends Controller
             ], 400);
         }
 
-        // Obtener carrito actual
-        $cart = Session::get('carrito', []);
+        $clientId = Auth::guard('clients')->id();
+        $item = CartItem::where('client_id', $clientId)->where('product_id', $request->product_id)->first();
 
-        // Verificar si el producto ya está en el carrito
-        $productoIndex = null;
-        foreach ($cart as $index => $item) {
-            if (($item['product_id'] ?? $item['producto_id'] ?? null) == $request->product_id) {
-                $productoIndex = $index;
-                break;
-            }
-        }
-
-        if ($productoIndex !== null) {
-            // Actualizar cantidad
-            $nuevaCantidad = ($cart[$productoIndex]['quantity'] ?? $cart[$productoIndex]['cantidad'] ?? 0) + $request->quantity;
-            
+        if ($item) {
+            $nuevaCantidad = $item->quantity + $request->quantity;
             if ($nuevaCantidad > $producto->stock_current) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Stock insuficiente. Disponible: ' . $producto->stock_current
                 ], 400);
             }
-
-            $cart[$productoIndex]['quantity'] = $nuevaCantidad;
+            $item->update(['quantity' => $nuevaCantidad]);
         } else {
-            // Agregar nuevo producto
-            $cart[] = [
+            CartItem::create([
+                'client_id' => $clientId,
                 'product_id' => $producto->product_id,
-                'name' => $producto->name,
-                'price' => $producto->sale_price,
-                'image' => $producto->image ?? 'default.png',
                 'quantity' => $request->quantity,
-                'stock_available' => $producto->stock_current
-            ];
+            ]);
         }
-
-        Session::put('carrito', $cart);
 
         return response()->json([
             'success' => true,
@@ -200,34 +228,34 @@ class ClienteController extends Controller
     }
 
     /**
-     * Muestra el carrito
+     * Muestra el carrito (solo Client logueado; middleware auth:clients)
      */
     public function cart()
     {
-        $cart = Session::get('carrito', []);
+        $clientId = Auth::guard('clients')->id();
+        $items = CartItem::where('client_id', $clientId)->with('product')->get();
+
         $cartItems = [];
         $total = 0;
 
-        foreach ($cart as $item) {
-            $producto = Product::find($item['product_id']);
+        foreach ($items as $item) {
+            $producto = $item->product;
             if ($producto && $producto->status === 'active') {
-                $subtotal = $item['price'] * $item['quantity'];
+                $price = $producto->sale_price;
+                $subtotal = $price * $item->quantity;
                 $total += $subtotal;
-                
+
                 $cartItems[] = [
                     'product_id' => $producto->product_id,
                     'name' => $producto->name,
-                    'price' => $item['price'],
+                    'price' => $price,
                     'image' => $producto->image ?? 'default.png',
-                    'quantity' => $item['quantity'],
+                    'quantity' => $item->quantity,
                     'stock_available' => $producto->stock_current,
                     'subtotal' => $subtotal
                 ];
             }
         }
-
-        // Sincronizar sesión (elimina productos inactivos)
-        Session::put('carrito', $cartItems);
 
         $cartCount = $this->getCartCount();
 
@@ -268,16 +296,10 @@ class ClienteController extends Controller
             ], 400);
         }
 
-        $cart = Session::get('carrito', []);
-
-        foreach ($cart as $index => $item) {
-            if ($item['product_id'] == $request->product_id) {
-                $cart[$index]['quantity'] = $request->quantity;
-                break;
-            }
-        }
-
-        Session::put('carrito', $cart);
+        $clientId = Auth::guard('clients')->id();
+        CartItem::where('client_id', $clientId)
+            ->where('product_id', $request->product_id)
+            ->update(['quantity' => $request->quantity]);
 
         return response()->json([
             'success' => true,
@@ -292,12 +314,8 @@ class ClienteController extends Controller
      */
     public function removeFromCart($id)
     {
-        $cart = Session::get('carrito', []);
-        $cart = array_filter($cart, function($item) use ($id) {
-            return $item['product_id'] != $id;
-        });
-
-        Session::put('carrito', array_values($cart));
+        $clientId = Auth::guard('clients')->id();
+        CartItem::where('client_id', $clientId)->where('product_id', $id)->delete();
 
         return response()->json([
             'success' => true,
@@ -308,13 +326,14 @@ class ClienteController extends Controller
     }
 
     /**
-     * Procesa el checkout: crea la venta, vacía el carrito
+     * Procesa el checkout: crea la venta desde cart_items, vacía el carrito del Client
      */
     public function checkout(Request $request)
     {
-        $cart = Session::get('carrito', []);
+        $clientId = Auth::guard('clients')->id();
+        $items = CartItem::where('client_id', $clientId)->with('product')->get();
 
-        if (empty($cart)) {
+        if ($items->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'message' => 'El carrito está vacío'
@@ -326,18 +345,18 @@ class ClienteController extends Controller
             $subtotal = 0;
             $validatedItems = [];
 
-            foreach ($cart as $item) {
-                $product = Product::find($item['product_id']);
+            foreach ($items as $cartItem) {
+                $product = $cartItem->product;
 
                 if (!$product || $product->status !== 'active') {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
-                        'message' => 'El producto "' . ($item['name'] ?? '') . '" ya no está disponible'
+                        'message' => 'El producto "' . ($product->name ?? '') . '" ya no está disponible'
                     ], 400);
                 }
 
-                if ($product->stock_current < $item['quantity']) {
+                if ($product->stock_current < $cartItem->quantity) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
@@ -345,21 +364,23 @@ class ClienteController extends Controller
                     ], 400);
                 }
 
-                $itemTotal = $item['price'] * $item['quantity'];
+                $price = $product->sale_price;
+                $itemTotal = $price * $cartItem->quantity;
                 $subtotal += $itemTotal;
 
                 $validatedItems[] = [
                     'product' => $product,
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
+                    'quantity' => $cartItem->quantity,
+                    'price' => $price,
                     'total' => $itemTotal
                 ];
             }
 
             $sale = Sale::create([
                 'invoice_number' => (new Sale())->generateInvoiceNumber(),
-                'customer_id' => Auth::id(),
-                'seller_id' => Auth::id(),
+                'customer_id' => null,
+                'client_id' => $clientId,
+                'seller_id' => null,
                 'sale_date' => now(),
                 'payment_method' => 'cash',
                 'status' => 'pending',
@@ -383,7 +404,7 @@ class ClienteController extends Controller
                 $item['product']->decrement('stock_current', $item['quantity']);
             }
 
-            Session::forget('carrito');
+            CartItem::where('client_id', $clientId)->delete();
 
             DB::commit();
 
@@ -403,38 +424,47 @@ class ClienteController extends Controller
     }
 
     /**
-     * Obtiene el conteo de items en el carrito
+     * Obtiene el conteo de ítems en el carrito (solo para Client logueado)
      */
     private function getCartCount()
     {
-        $cart = Session::get('carrito', []);
-        return count($cart);
+        if (!Auth::guard('clients')->check()) {
+            return 0;
+        }
+        return (int) CartItem::where('client_id', Auth::guard('clients')->id())->sum('quantity');
     }
 
     /**
-     * Obtiene el total del carrito
+     * Obtiene el total del carrito (solo para Client logueado)
      */
     private function getCartTotal()
     {
-        $cart = Session::get('carrito', []);
-        $total = 0;
-
-        foreach ($cart as $item) {
-            $total += $item['price'] * $item['quantity'];
+        if (!Auth::guard('clients')->check()) {
+            return 0;
         }
-
+        $items = CartItem::where('client_id', Auth::guard('clients')->id())->with('product')->get();
+        $total = 0;
+        foreach ($items as $item) {
+            if ($item->product) {
+                $total += $item->product->sale_price * $item->quantity;
+            }
+        }
         return $total;
     }
 
     public function clearCart()
-{
-    Session::forget('carrito');
+    {
+        $clientId = Auth::guard('clients')->id();
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Carrito vaciado exitosamente',
-        'cart_count' => 0,
-        'cart_total' => 0
-    ]);
-}
+        if ($clientId) {
+            CartItem::where('client_id', $clientId)->delete();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Carrito vaciado exitosamente',
+            'cart_count' => 0,
+            'cart_total' => 0
+        ]);
+    }
 }

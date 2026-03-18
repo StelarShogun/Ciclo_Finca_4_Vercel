@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Ciclo Pérez - Tienda de Bicicletas')</title>
+    <title>@yield('title', 'Ciclo Finca 4 - Tienda de Bicicletas')</title>
     
     <!-- Favicons modernos -->
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
@@ -27,8 +27,8 @@
             <div class="header-content">
                 <div class="logo-section">
                     <a href="{{ route('clientes.home') }}" class="logo-link">
-                        <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Pérez" class="logo-img" onerror="this.src='{{ asset('favicon.svg') }}'">
-                        <span class="logo-text">Ciclo Pérez</span>
+                        <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Finca 4" class="logo-img" onerror="this.src='{{ asset('favicon.svg') }}'">
+                        <span class="logo-text">Ciclo Finca 4</span>
                     </a>
                 </div>
                 
@@ -44,26 +44,17 @@
                 </nav>
                 
                 <div class="header-actions">
-                    @auth
-                    <a href="{{ route('clientes.carrito') }}" class="cart-btn cart-btn-link" id="cart-link" data-cart-count="{{ $cartCount ?? 0 }}" title="Ver carrito">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
-                    </a>
-                    @else
-                    <button class="cart-btn" id="cart-guest" type="button" title="Ver carrito">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-count" id="cart-count">0</span>
-                    </button>
-                    @if(request()->routeIs('login.show'))
-                        <a href="/" class="btn btn-outline-secondary btn-sm" style="display:flex;align-items:center;gap:6px;">
-                            <i class="fas fa-arrow-left"></i>
-                            <span>Regresar</span>
+                    @if(Auth::guard('clients')->check())
+                        <a href="{{ route('clientes.carrito') }}" class="cart-btn cart-btn-link" id="cart-link" data-cart-count="{{ $cartCount ?? 0 }}" title="Ver carrito">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
                         </a>
-                    @elseif(session('client_id'))
-                        <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-left: 12px;">
                             <div style="display: flex; flex-direction: column; align-items: center;">
                                 <i class="fas fa-user-circle" style="font-size: 2rem; color: #218838;"></i>
-                                <span style="font-size: 0.95rem; color: #218838; margin-top: 2px;">{{ session('client_name') }}</span>
+                                <span style="font-size: 0.95rem; color: #218838; margin-top: 2px;">
+                                    {{ Auth::guard('clients')->user()->name ?? 'Cliente' }}
+                                </span>
                             </div>
                             <form action="{{ route('logout') }}" method="POST" class="logout-form" style="margin: 0;">
                                 @csrf
@@ -74,11 +65,21 @@
                             </form>
                         </div>
                     @else
-                        <a href="/login" class="btn btn-primary btn-sm">
-                            <i class="fas fa-sign-in-alt"></i>
-                            <span>Iniciar Sesión</span>
-                        </a>
-                    @endif
+                        <button class="cart-btn" id="cart-guest" type="button" title="Ver carrito">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count" id="cart-count">0</span>
+                        </button>
+                        @if(request()->routeIs('login.show'))
+                            <a href="/" class="btn btn-outline-secondary btn-sm" style="display:flex;align-items:center;gap:6px;">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Regresar</span>
+                            </a>
+                        @else
+                            <a href="/login" class="btn btn-primary btn-sm">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>Iniciar Sesión</span>
+                            </a>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -109,7 +110,7 @@
         <div class="footer-container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h4>Ciclo Pérez</h4>
+                    <h4>Ciclo Finca 4</h4>
                     <p>Tu tienda especializada en bicicletas y accesorios para ciclismo.</p>
                 </div>
                 <div class="footer-section">
@@ -125,7 +126,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; {{ date('Y') }} Ciclo Pérez. Todos los derechos reservados.</p>
+                <p>&copy; {{ date('Y') }} Ciclo Finca 4. Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>

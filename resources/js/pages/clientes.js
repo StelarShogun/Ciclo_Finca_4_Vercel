@@ -12,8 +12,15 @@ if (cartGuest) {
         Swal.fire({
             icon: 'info',
             title: 'Inicia sesión',
-            text: 'Debes iniciar sesión para ver tu carrito.',
-            confirmButtonText: 'Entendido'
+            text: 'Debes iniciar sesión para ver tu carrito. ¿Deseas ir al login?',
+            showCancelButton: true,
+            confirmButtonText: 'Ir a login',
+            cancelButtonText: 'Entendido',
+            confirmButtonColor: '#2e7d32'
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                window.location.href = '/login';
+            }
         });
     });
 }
@@ -206,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCartCount(initialCount);
     }
     
-    // Delegated listener para agregar al carrito
+    // Delegated listener para agregar al carrito (usuario logueado)
     document.addEventListener('click', function(event) {
         if (event.target.closest('.add-to-cart-btn')) {
             const btn = event.target.closest('.add-to-cart-btn');
@@ -217,6 +224,26 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!addToCartModal || !addToCartModal.classList.contains('active')) {
                 addToCart(productId, quantity);
             }
+        }
+    });
+
+    // Invitado: al tocar "Agregar" mostrar modal para ir a login
+    document.addEventListener('click', function(event) {
+        if (event.target.closest('.guest-add-btn')) {
+            event.preventDefault();
+            Swal.fire({
+                icon: 'info',
+                title: 'Inicia sesión',
+                text: 'Debes iniciar sesión para agregar productos al carrito. ¿Deseas ir al login?',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, ir a login',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#2e7d32'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    window.location.href = '/login';
+                }
+            });
         }
     });
 

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Gestión de Inventario - Ciclo Pérez Admin</title>
+    <title>Gestión de Inventario - Ciclo Finca 4 Admin</title>
     
     <!-- Favicons modernos -->
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
@@ -276,8 +276,13 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="new-image">Imagen del Producto </label>
+                        <label for="new-image">Imagen del Producto</label>
                         <input type="file" id="new-image" name="image" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-images">Imágenes adicionales (carrusel)</label>
+                        <input type="file" id="new-images" name="images[]" accept="image/*" multiple>
+                        <small class="form-text text-muted">Opcional. Varias imágenes se mostrarán en un carrusel en la ficha del producto.</small>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -354,7 +359,7 @@
             </div>
             <div class="modal-body">
                 <!-- El formulario se completará dinámicamente a través de JavaScript -->
-                <form id="edit-product-form" method="POST">
+                <form id="edit-product-form" method="POST" enctype="multipart/form-data">
                     @csrf
                     <!-- Campo oculto para simular método PUT -->
                     <input type="hidden" name="_method" value="PUT">
@@ -369,9 +374,14 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="edit-image">Imagen del Producto </label>
+                        <label for="edit-image">Imagen del Producto</label>
                         <input type="file" id="edit-image" name="image" accept="image/*">
                         <div id="current-image-preview" style="margin-top: 10px;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-images">Imágenes adicionales (carrusel)</label>
+                        <input type="file" id="edit-images" name="images[]" accept="image/*" multiple>
+                        <small class="form-text text-muted">Opcional. Al subir nuevas, reemplazan las actuales del carrusel.</small>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
