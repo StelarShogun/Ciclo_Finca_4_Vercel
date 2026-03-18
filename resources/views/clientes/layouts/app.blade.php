@@ -22,71 +22,68 @@
 </head>
 <body class="cliente-layout">
     <!-- Header -->
-    <header class="cliente-header">
-        <div class="header-container">
-            <div class="header-content">
-                <div class="logo-section">
-                    <a href="{{ route('clientes.home') }}" class="logo-link">
-                        <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Finca 4" class="logo-img" onerror="this.src='{{ asset('favicon.svg') }}'">
-                        <span class="logo-text">Ciclo Finca 4</span>
-                    </a>
-                </div>
-                
-                <nav class="main-nav">
-                    <a href="{{ route('clientes.home') }}" class="nav-link {{ request()->routeIs('clientes.home') ? 'active' : '' }}">
-                        <i class="fas fa-home"></i>
-                        <span>Inicio</span>
-                    </a>
-                    <a href="{{ route('clientes.catalogo') }}" class="nav-link {{ request()->routeIs('clientes.catalogo') ? 'active' : '' }}">
-                        <i class="fas fa-th"></i>
-                        <span>Catálogo</span>
-                    </a>
-                </nav>
-                
-                <div class="header-actions">
-                    @auth
-                    <a href="{{ route('clientes.carrito') }}" class="cart-btn cart-btn-link" id="cart-link" data-cart-count="{{ $cartCount ?? 0 }}" title="Ver carrito">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
-                    </a>
-                    @else
-                    <button class="cart-btn" id="cart-guest" type="button" title="Ver carrito">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-count" id="cart-count">0</span>
-                    </button>
-                    @if(request()->routeIs('login.show'))
-                        <a href="/" class="btn btn-outline-secondary btn-sm" style="display:flex;align-items:center;gap:6px;">
-                            <i class="fas fa-arrow-left"></i>
-                            <span>Regresar</span>
+    @unless(request()->routeIs('login.show'))
+        <header class="cliente-header">
+            <div class="header-container">
+                <div class="header-content">
+                    <div class="logo-section">
+                        <a href="{{ route('clientes.home') }}" class="logo-link">
+                            <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Finca 4" class="logo-img">
+                            <span class="logo-text">Ciclo Finca 4</span>
                         </a>
-                    @elseif(session('client_id'))
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="display: flex; flex-direction: column; align-items: center;">
-                                <i class="fas fa-user-circle" style="font-size: 2rem; color: #218838;"></i>
-                                <span style="font-size: 0.95rem; color: #218838; margin-top: 2px;">{{ session('client_name') }}</span>
+                    </div>
+
+                    <nav class="main-nav">
+                        <a href="{{ route('clientes.home') }}" class="nav-link {{ request()->routeIs('clientes.home') ? 'active' : '' }}">
+                            <i class="fas fa-home"></i>
+                            <span>Inicio</span>
+                        </a>
+                        <a href="{{ route('clientes.catalogo') }}" class="nav-link {{ request()->routeIs('clientes.catalogo') ? 'active' : '' }}">
+                            <i class="fas fa-th"></i>
+                            <span>Catálogo</span>
+                        </a>
+                    </nav>
+                    
+                    <div class="header-actions">
+                        @auth
+                        <a href="{{ route('clientes.carrito') }}" class="cart-btn cart-btn-link" id="cart-link" data-cart-count="{{ $cartCount ?? 0 }}" title="Ver carrito">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
+                        </a>
+                        @else
+                        <button class="cart-btn" id="cart-guest" type="button" title="Ver carrito">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count" id="cart-count">0</span>
+                        </button>
+                        @if(session('client_id'))
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <i class="fas fa-user-circle" style="font-size: 2rem; color: #218838;"></i>
+                                    <span style="font-size: 0.95rem; color: #218838; margin-top: 2px;">{{ session('client_name') }}</span>
+                                </div>
+                                <form action="{{ route('logout') }}" method="POST" class="logout-form" style="margin: 0;">
+                                    @csrf
+                                    <button type="submit" class="user-dropdown-item user-dropdown-logout" style="color:#dc3545;font-weight:600;background:none;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;gap:4px;" title="Cerrar Sesión">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span>Cerrar Sesión</span>
+                                    </button>
+                                </form>
                             </div>
-                            <form action="{{ route('logout') }}" method="POST" class="logout-form" style="margin: 0;">
-                                @csrf
-                                <button type="submit" class="user-dropdown-item user-dropdown-logout" style="color:#dc3545;font-weight:600;background:none;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;gap:4px;" title="Cerrar Sesión">
-                                    <i class="fas fa-sign-out-alt"></i>
-                                    <span>Cerrar Sesión</span>
-                                </button>
-                            </form>
-                        </div>
-                    @else
-                        <a href="/login" class="btn btn-primary btn-sm">
-                            <i class="fas fa-sign-in-alt"></i>
-                            <span>Iniciar Sesión</span>
-                        </a>
-                    @endif
-                    @endif
+                        @else
+                            <a href="/login" class="btn btn-primary btn-sm">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>Iniciar Sesión</span>
+                            </a>
+                        @endif
+                        @endauth
+                    </div>
                 </div>
             </div>
-        </div>
-    </header>
+        </header>
+    @endunless
 
     <!-- Main Content -->
-    <main class="cliente-main">
+    <main class="cliente-main" @if(request()->routeIs('login.show')) style="padding-top:0;" @endif>
         @if(session('status'))
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i>
@@ -104,31 +101,33 @@
         @yield('content')
     </main>
 
-    <!-- Footer -->
-    <footer class="cliente-footer">
-        <div class="footer-container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h4>Ciclo Finca 4</h4>
-                    <p>Tu tienda especializada en bicicletas y accesorios para ciclismo.</p>
+    @if(!request()->routeIs('login.show'))
+        <!-- Footer -->
+        <footer class="cliente-footer">
+            <div class="footer-container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h4>Ciclo Finca 4</h4>
+                        <p>Tu tienda especializada en bicicletas y accesorios para ciclismo.</p>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Enlaces</h4>
+                        <ul class="footer-links">
+                            <li><a href="{{ route('clientes.home') }}">Inicio</a></li>
+                            <li><a href="{{ route('clientes.catalogo') }}">Catálogo</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Contacto</h4>
+                        <p>Visítanos en nuestra tienda física</p>
+                    </div>
                 </div>
-                <div class="footer-section">
-                    <h4>Enlaces</h4>
-                    <ul class="footer-links">
-                        <li><a href="{{ route('clientes.home') }}">Inicio</a></li>
-                        <li><a href="{{ route('clientes.catalogo') }}">Catálogo</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Contacto</h4>
-                    <p>Visítanos en nuestra tienda física</p>
+                <div class="footer-bottom">
+                    <p>&copy; {{ date('Y') }} Ciclo Finca 4. Todos los derechos reservados.</p>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; {{ date('Y') }} Ciclo Finca 4. Todos los derechos reservados.</p>
-            </div>
-        </div>
-    </footer>
+        </footer>
+    @endif
 
     <!-- Modal de Login -->
     <div class="modal" id="login-modal">
@@ -144,11 +143,17 @@
                 <form id="public-login-form" method="POST" action="{{ route('login') }}">
                     @csrf
                     <div class="form-group">
-                        <label for="login-email">Correo Electrónico</label>
+                        <label for="login-email" class="login-field-label">
+                            <i class="fas fa-envelope login-field-icon" aria-hidden="true"></i>
+                            Correo Electrónico
+                        </label>
                         <input type="email" id="login-email" name="email" class="form-control" required placeholder="ejemplo@correo.com">
                     </div>
                     <div class="form-group">
-                        <label for="login-password">Contraseña</label>
+                        <label for="login-password" class="login-field-label">
+                            <i class="fas fa-lock login-field-icon" aria-hidden="true"></i>
+                            Contraseña
+                        </label>
                         <input type="password" id="login-password" name="password" class="form-control" required placeholder="Ingresa tu contraseña">
                     </div>
                     <div class="form-group">
@@ -171,8 +176,18 @@
                 <!-- Botones OAuth -->
                 <div class="oauth-buttons">
                     <a href="{{ route('auth.google') }}" class="oauth-btn google-btn">
-                        <i class="fab fa-google"></i>
-                        <span>Continuar con Google</span>
+                        <span class="google-g-icon" aria-hidden="true">G</span>
+                        <span class="google-text">
+                            Continuar con
+                            <span class="google-brand" aria-hidden="true">
+                                <span class="brand-letter brand-g">G</span>
+                                <span class="brand-letter brand-o">o</span>
+                                <span class="brand-letter brand-o2">o</span>
+                                <span class="brand-letter brand-g2">g</span>
+                                <span class="brand-letter brand-l">l</span>
+                                <span class="brand-letter brand-e">e</span>
+                            </span>
+                        </span>
                     </a>
                     <a href="{{ route('auth.facebook') }}" class="oauth-btn facebook-btn">
                         <i class="fab fa-facebook"></i>
@@ -181,7 +196,11 @@
                 </div>
                 
                 <div class="login-footer">
-                    <p>¿No tienes una cuenta? <a href="#" id="show-register-form">Regístrate aquí</a></p>
+                    <p class="login-footer-text">¿No tienes una cuenta?</p>
+                    <a href="#" id="show-register-form" class="login-register-btn">
+                        <i class="fas fa-user-plus" aria-hidden="true"></i>
+                        <span>Crear cuenta gratis</span>
+                    </a>
                 </div>
             </div>
         </div>
