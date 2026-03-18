@@ -1,3 +1,5 @@
+import Swal from 'sweetalert2';
+
 // admin.js - pequeñas ayudas generales
 document.addEventListener("DOMContentLoaded", ()=>{
   const toggle = document.querySelector(".toggle-sidebar");
@@ -35,5 +37,35 @@ document.addEventListener('keydown', function(event) {
   if (event.key === 'Escape') {
     cerrarModalPerfil();
   }
+});
+
+// Mostrar error de autenticación con SweetAlert2
+document.addEventListener('DOMContentLoaded', function () {
+    const errorEl = document.getElementById('authError');
+    if (errorEl) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Acceso denegado',
+            text: errorEl.dataset.message,
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#e53e3e',
+        });
+    }
+});
+
+// Toggle para ver/ocultar contraseña en formularios de login/registro
+document.addEventListener('DOMContentLoaded', function () {
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#loginPassword');
+
+    if (togglePassword && password) {
+        togglePassword.addEventListener('click', function (e) {
+            // toggle the type attribute
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            // toggle the eye slash icon
+            this.classList.toggle('fa-eye-slash');
+        });
+    }
 });
 
