@@ -10,7 +10,7 @@ class PurchasesController extends Controller
     public function index(Request $request)
     {
         $baseQuery = Sale::query()
-            ->whereIn('status', ['pending', 'completed'])
+            ->where('status', 'completed')
             ->where(function ($q) {
                 $q->whereIn('order_source', ['web_cart', 'walk_in'])
                   ->orWhereNull('order_source');

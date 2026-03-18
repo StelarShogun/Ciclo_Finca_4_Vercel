@@ -227,8 +227,8 @@
         <div class="sales-container" style="margin-top: 26px;">
             <header class="sales-header">
                 <div>
-                    <h1 style="font-size: 1.35rem; margin: 0;">Compras CF4-4</h1>
-                    <p style="margin: 6px 0 0 0; color: var(--color-muted);">Pendientes y completadas</p>
+                    <h1 style="font-size: 1.35rem; margin: 0;">Historial de Ventas</h1>
+                    <p style="margin: 6px 0 0 0; color: var(--color-muted);">Solo ventas completadas</p>
                 </div>
             </header>
 
@@ -279,7 +279,7 @@
                                 <td colspan="5" class="text-center">
                                     <div style="padding: 40px; color: var(--color-muted);">
                                         <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 15px;"></i>
-                                        <p>No hay compras registradas</p>
+                                        <p>No hay ventas registradas</p>
                                     </div>
                                 </td>
                             </tr>
