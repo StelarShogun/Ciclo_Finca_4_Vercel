@@ -1,6 +1,6 @@
 @extends('clientes.layouts.app')
 
-@section('title', $producto->name . ' - Ciclo Pérez')
+@section('title', $producto->name . ' - Ciclo Finca 4')
 
 @section('content')
 <div class="product-detail-container">
