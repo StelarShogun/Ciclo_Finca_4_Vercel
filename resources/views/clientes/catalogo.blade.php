@@ -114,12 +114,12 @@
                     @if($productos->count() > 0)
                         <div class="products-grid">
                             @foreach($productos as $producto)
-                                <div class="product-card">
+                                <div class="product-card product-card--catalog">
                                     <div class="product-image">
-                                        <a href="{{ route('clientes.producto', $producto->product_id) }}">
+                                        <a href="{{ route('clientes.producto', $producto->product_id) }}" class="product-image-link" aria-label="Ver detalle de {{ $producto->name }}">
                                             <img src="{{ asset('assets/images/products/' . ($producto->image ?? 'default.png')) }}" 
                                                  alt="{{ $producto->name }}"
-                                                 onerror="this.src='{{ asset('favicon.svg') }}'">
+                                                 onerror="this.onerror=null; this.src='{{ asset('assets/images/products/default.png') }}';">
                                         </a>
                                         @if($producto->stock_current <= 10)
                                             <span class="product-badge stock-low">Stock Bajo</span>
@@ -135,10 +135,16 @@
                                         @if($producto->description)
                                             <p class="product-description">{{ Str::limit($producto->description, 100) }}</p>
                                         @endif
-                                        <div class="product-footer">
-                                            <div class="product-price">₡{{ number_format($producto->sale_price, 0, ',', '.') }}</div>
+                                        <div class="product-price-row">
+                                            <span class="product-price">₡{{ number_format($producto->sale_price, 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="product-actions">
+                                            <a href="{{ route('clientes.producto', $producto->product_id) }}" class="btn btn-view-details">
+                                                <i class="fas fa-arrow-right"></i>
+                                                Ver detalles
+                                            </a>
                                             @if(Auth::guard('clients')->check())
-                                            <button class="btn btn-primary btn-sm add-to-cart-btn" 
+                                            <button type="button" class="btn btn-primary btn-add-cart add-to-cart-btn" 
                                                     data-product-id="{{ $producto->product_id }}"
                                                     data-product-name="{{ $producto->name }}"
                                                     data-product-price="{{ $producto->sale_price }}"
@@ -147,7 +153,7 @@
                                                 Agregar
                                             </button>
                                             @else
-                                            <button class="btn btn-primary btn-sm guest-add-btn" type="button">
+                                            <button type="button" class="btn btn-primary btn-add-cart guest-add-btn">
                                                 <i class="fas fa-cart-plus"></i>
                                                 Agregar
                                             </button>
@@ -158,9 +164,9 @@
                             @endforeach
                         </div>
                         
-                        <!-- Paginación -->
+                        <!-- Paginación (mismo estilo que dashboard admin) -->
                         <div class="pagination-wrapper">
-                            {{ $productos->links() }}
+                            <x-pagination :paginator="$productos" label="del catálogo" />
                         </div>
                     @else
                         <div class="empty-state">

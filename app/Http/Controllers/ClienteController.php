@@ -428,14 +428,18 @@ class ClienteController extends Controller
     }
 
     public function clearCart()
-{
-    Session::forget('carrito');
+    {
+        $clientId = Auth::guard('clients')->id();
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Carrito vaciado exitosamente',
-        'cart_count' => 0,
-        'cart_total' => 0
-    ]);
-}
+        if ($clientId) {
+            CartItem::where('client_id', $clientId)->delete();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Carrito vaciado exitosamente',
+            'cart_count' => 0,
+            'cart_total' => 0
+        ]);
+    }
 }
