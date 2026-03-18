@@ -10,6 +10,7 @@ use App\Http\Controllers\ClienteController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\ClientUserController;
 
 Route::get('/run-migrations', function () {
     try {
@@ -39,23 +40,27 @@ Route::get('/', [ClienteController::class, 'home'])->name('clientes.home');
 Route::get('/catalog', [ClienteController::class, 'catalogo'])->name('clientes.catalogo');
 Route::get('/product/{id}', [ClienteController::class, 'producto'])->name('clientes.producto');
 
-// Rutas del carrito
-Route::post('/cart/add', [ClienteController::class, 'addToCart'])->name('clientes.carrito.agregar');
-Route::get('/cart', [ClienteController::class, 'cart'])->name('clientes.carrito');
-Route::put('/cart/update', [ClienteController::class, 'updateCart'])->name('clientes.carrito.actualizar');
-Route::delete('/cart/remove/{id}', [ClienteController::class, 'removeFromCart'])->name('clientes.carrito.eliminar');
+// Rutas del carrito (requieren autenticación)
+Route::middleware(['auth'])->group(function () {
+    Route::post('/cart/add', [ClienteController::class, 'addToCart'])->name('clientes.carrito.agregar');
+    Route::get('/cart', [ClienteController::class, 'cart'])->name('clientes.carrito');
+    Route::put('/cart/update', [ClienteController::class, 'updateCart'])->name('clientes.carrito.actualizar');
+    Route::delete('/cart/remove/{id}', [ClienteController::class, 'removeFromCart'])->name('clientes.carrito.eliminar');
+    Route::post('/cart/checkout', [ClienteController::class, 'checkout'])->name('clientes.carrito.checkout');
+    Route::delete('/cart/clear', [ClienteController::class, 'clearCart'])->name('carrito.clear');
+});
 
 // Authentication Routes
-Route::get('/login', [UsuarioController::class, 'showLogin'])->name('login.show');
-Route::post('/login', [UsuarioController::class, 'login'])
+Route::get('/login', [ClientUserController::class, 'showLoginForm'])->name('login.show');
+Route::post('/login', [ClientUserController::class, 'login'])
     ->middleware('throttle:5,1') // 5 intentos por minuto para prevenir fuerza bruta
     ->name('login');
 Route::post('/logout', function(Request $request) {
-    // Logout más seguro
+    // Cerrar sesión en ambos guards (web = admin, clients = cliente) para evitar estado inconsistente
+    Auth::guard('clients')->logout();
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
-    
     return redirect()->route('clientes.home')->with('status', 'Sesión cerrada correctamente.');
 })->name('logout');
 

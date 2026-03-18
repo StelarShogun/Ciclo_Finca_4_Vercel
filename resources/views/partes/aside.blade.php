@@ -21,7 +21,7 @@
                     <i class="fas fa-truck"></i>
                     <span class="sidebar-label">Proveedores</span>
                 </a>
-            </li>
+            </li>  
             <li class="{{ request()->routeIs('sales.*') ? 'active' : '' }}">
                 <a href="{{ route('sales.index') }}">
                     <i class="fas fa-cash-register"></i>

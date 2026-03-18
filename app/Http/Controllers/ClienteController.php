@@ -4,8 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Sale;
+use App\Models\SaleItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ClienteController extends Controller
 {
@@ -56,12 +61,22 @@ class ClienteController extends Controller
             $query->where('category_id', $request->categoria_id);
         }
 
-        // Filtro por rango de precio
-        if ($request->filled('precio_min')) {
-            $query->where('sale_price', '>=', $request->precio_min);
-        }
-        if ($request->filled('precio_max')) {
-            $query->where('sale_price', '<=', $request->precio_max);
+        // Filtro por rango de precio (validar que mínimo no sea mayor que máximo)
+        $errorRangoPrecio = false;
+        $tieneFiltroPrecio = $request->filled('precio_min') || $request->filled('precio_max');
+        if ($request->filled('precio_min') && $request->filled('precio_max')) {
+            $min = (float) $request->precio_min;
+            $max = (float) $request->precio_max;
+            if ($min > $max) {
+                $errorRangoPrecio = true;
+                // No aplicar filtro de precio para mostrar resultados con el resto de filtros
+            } else {
+                $query->where('sale_price', '>=', $min)->where('sale_price', '<=', $max);
+            }
+        } elseif ($request->filled('precio_min')) {
+            $query->where('sale_price', '>=', (float) $request->precio_min);
+        } elseif ($request->filled('precio_max')) {
+            $query->where('sale_price', '<=', (float) $request->precio_max);
         }
 
         // Ordenamiento
@@ -88,30 +103,40 @@ class ClienteController extends Controller
         // Contar items en carrito
         $cartCount = $this->getCartCount();
 
-        return view('clientes.catalogo', compact('productos', 'categorias', 'cartCount'));
+        return view('clientes.catalogo', compact('productos', 'categorias', 'cartCount', 'errorRangoPrecio', 'tieneFiltroPrecio'));
     }
 
     /**
-     * Vista detallada de un producto
+     * Vista detallada de un producto (CF4-27).
+     * Muestra imagen, nombre, precio, descripción y disponibilidad/stock.
+     * Si ocurre un error al cargar, muestra mensaje informativo.
      */
     public function producto($id)
     {
-        $producto = Product::with(['category', 'supplier'])
-            ->where('status', 'active')
-            ->findOrFail($id);
+        try {
+            $producto = Product::with(['category', 'supplier'])
+                ->where('status', 'active')
+                ->findOrFail($id);
 
-        // Productos relacionados (misma categoría)
-        $productosRelacionados = Product::with(['category'])
-            ->where('category_id', $producto->category_id)
-            ->where('product_id', '!=', $producto->product_id)
-            ->where('status', 'active')
-            ->where('stock_current', '>', 0)
-            ->limit(4)
-            ->get();
+            // Productos relacionados (misma categoría)
+            $productosRelacionados = Product::with(['category'])
+                ->where('category_id', $producto->category_id)
+                ->where('product_id', '!=', $producto->product_id)
+                ->where('status', 'active')
+                ->where('stock_current', '>', 0)
+                ->limit(4)
+                ->get();
 
-        $cartCount = $this->getCartCount();
+            $cartCount = $this->getCartCount();
 
-        return view('clientes.producto', compact('producto', 'productosRelacionados', 'cartCount'));
+            return view('clientes.producto', compact('producto', 'productosRelacionados', 'cartCount'));
+        } catch (ModelNotFoundException $e) {
+            $cartCount = $this->getCartCount();
+            return response()->view('clientes.producto-error', compact('cartCount'), 404);
+        } catch (\Exception $e) {
+            $cartCount = $this->getCartCount();
+            return response()->view('clientes.producto-error', compact('cartCount'), 500);
+        }
     }
 
     /**
@@ -211,28 +236,19 @@ class ClienteController extends Controller
                 $total += $subtotal;
                 
                 $cartItems[] = [
-                    'producto_id' => $producto->product_id,
-                    'nombre' => $producto->name,
-                    'precio' => $item['price'],
-                    'imagen' => $producto->image ?? 'default.png',
-                    'cantidad' => $item['quantity'],
-                    'stock_disponible' => $producto->stock_current,
+                    'product_id' => $producto->product_id,
+                    'name' => $producto->name,
+                    'price' => $item['price'],
+                    'image' => $producto->image ?? 'default.png',
+                    'quantity' => $item['quantity'],
+                    'stock_available' => $producto->stock_current,
                     'subtotal' => $subtotal
                 ];
             }
         }
 
-        // Actualizar carrito en sesión (eliminar productos que ya no están activos)
-        Session::put('carrito', array_map(function($item) {
-            return [
-                'product_id' => $item['product_id'],
-                'name' => $item['name'],
-                'price' => $item['price'],
-                'image' => $item['image'],
-                'quantity' => $item['quantity'],
-                'stock_available' => $item['stock_available']
-            ];
-        }, $cartItems));
+        // Sincronizar sesión (elimina productos inactivos)
+        Session::put('carrito', $cartItems);
 
         $cartCount = $this->getCartCount();
 
@@ -304,16 +320,107 @@ class ClienteController extends Controller
 
         Session::put('carrito', array_values($cart));
 
-        if (request()->wantsJson() || request()->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto eliminado del carrito',
+            'cart_count' => $this->getCartCount(),
+            'cart_total' => $this->getCartTotal()
+        ]);
+    }
+
+    /**
+     * Procesa el checkout: crea la venta, vacía el carrito
+     */
+    public function checkout(Request $request)
+    {
+        $cart = Session::get('carrito', []);
+
+        if (empty($cart)) {
             return response()->json([
-                'success' => true,
-                'message' => 'Producto eliminado del carrito',
-                'cart_count' => $this->getCartCount(),
-                'cart_total' => $this->getCartTotal()
-            ]);
+                'success' => false,
+                'message' => 'El carrito está vacío'
+            ], 400);
         }
 
-        return redirect()->route('clientes.carrito')->with('status', 'Producto eliminado del carrito');
+        DB::beginTransaction();
+        try {
+            $subtotal = 0;
+            $validatedItems = [];
+
+            foreach ($cart as $item) {
+                $product = Product::find($item['product_id']);
+
+                if (!$product || $product->status !== 'active') {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El producto "' . ($item['name'] ?? '') . '" ya no está disponible'
+                    ], 400);
+                }
+
+                if ($product->stock_current < $item['quantity']) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Stock insuficiente para "' . $product->name . '". Disponible: ' . $product->stock_current
+                    ], 400);
+                }
+
+                $itemTotal = $item['price'] * $item['quantity'];
+                $subtotal += $itemTotal;
+
+                $validatedItems[] = [
+                    'product' => $product,
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total' => $itemTotal
+                ];
+            }
+
+            $sale = Sale::create([
+                'invoice_number' => (new Sale())->generateInvoiceNumber(),
+                'customer_id' => Auth::id(),
+                'seller_id' => Auth::id(),
+                'sale_date' => now(),
+                'payment_method' => 'cash',
+                'status' => 'pending',
+                'subtotal' => $subtotal,
+                'iva' => 0,
+                'discount' => 0,
+                'total' => $subtotal,
+                'notes' => 'Pedido realizado desde la tienda en línea'
+            ]);
+
+            foreach ($validatedItems as $item) {
+                SaleItem::create([
+                    'sale_id' => $sale->sale_id,
+                    'product_id' => $item['product']->product_id,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['price'],
+                    'unit_discount' => 0,
+                    'total' => $item['total']
+                ]);
+
+                $item['product']->decrement('stock_current', $item['quantity']);
+            }
+
+            Session::forget('carrito');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pedido creado exitosamente',
+                'sale_id' => $sale->sale_id,
+                'invoice_number' => $sale->invoice_number
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar el pedido: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -339,4 +446,16 @@ class ClienteController extends Controller
 
         return $total;
     }
+
+    public function clearCart()
+{
+    Session::forget('carrito');
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Carrito vaciado exitosamente',
+        'cart_count' => 0,
+        'cart_total' => 0
+    ]);
+}
 }

@@ -9,6 +9,29 @@
     @vite(['resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .expiry-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 0.875rem; font-weight: 500; }
+        .expiry-ok { background: #e8f5e9; color: #2e7d32; }
+        .expiry-warning { background: #fff3e0; color: #e65100; }
+        .expiry-expired { background: #ffebee; color: #c62828; }
+        /* Mini label (tooltip) al pasar el ratón sobre el icono de peligro */
+        .expiry-warning-trigger { position: relative; cursor: help; display: inline-flex; align-items: center; }
+        .expiry-warning-trigger .expiry-tooltip-label {
+            visibility: hidden; opacity: 0;
+            position: absolute; z-index: 100;
+            bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-6px);
+            background: #bf360c; color: #fff;
+            font-size: 0.75rem; font-weight: 500; white-space: normal; max-width: 220px;
+            padding: 8px 10px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            pointer-events: none; transition: opacity 0.2s, visibility 0.2s;
+        }
+        .expiry-warning-trigger .expiry-tooltip-label::after {
+            content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+            border: 6px solid transparent; border-top-color: #bf360c;
+        }
+        .expiry-warning-trigger:hover .expiry-tooltip-label,
+        .expiry-warning-trigger:focus-within .expiry-tooltip-label { visibility: visible; opacity: 1; }
+    </style>
 </head>
 <body class="admin-layout">
     @include('partes.aside')
@@ -112,6 +135,7 @@
                             <th>Cliente</th>
                             <th>Fecha</th>
                             <th>Estado</th>
+                            <th>Días restantes</th>
                             <th>Método de Pago</th>
                             <th>Total</th>
                             <th>Acciones</th>
@@ -128,6 +152,27 @@
                             <td>{{ $sale->customer->nombre ?? 'N/A' }} {{ $sale->customer->apellido ?? '' }}</td>
                             <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
                             <td><span class="status-badge {{ $sale->status }}">{{ $statusLabels[$sale->status] ?? $sale->status }}</span></td>
+                            <td>
+                                @php
+                                    $days = $sale->days_remaining_until_expiration;
+                                    $warn = $sale->is_expiry_warning;
+                                @endphp
+                                @if($days <= 0)
+                                    <span class="expiry-badge expiry-expired" title="Pedido fuera de vigencia (será eliminado)">
+                                        <i class="fas fa-clock"></i> Expirado
+                                    </span>
+                                @elseif($warn)
+                                    <span class="expiry-badge expiry-warning">
+                                        <span class="expiry-warning-trigger" tabindex="0" role="button" aria-label="Ver aviso de vigencia">
+                                            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                                            <span class="expiry-tooltip-label">¡Atención! Este pedido será eliminado automáticamente en {{ $days }} día(s). Realice las acciones necesarias antes de la fecha límite.</span>
+                                        </span>
+                                        {{ $days }} día(s)
+                                    </span>
+                                @else
+                                    <span class="expiry-badge expiry-ok">{{ $days }} día(s)</span>
+                                @endif
+                            </td>
                             <td>{{ $paymentLabels[$sale->payment_method] ?? $sale->payment_method }}</td>
                             <td><strong>₡{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
                             <td>
@@ -146,7 +191,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center">
+                            <td colspan="8" class="text-center">
                                 <div style="padding: 40px; color: var(--color-muted);">
                                     <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 15px;"></i>
                                     <p>No hay ventas registradas</p>
@@ -409,10 +454,11 @@
                                 <h4><i class="fas fa-info-circle"></i> Información General</h4>
                                 <div class="detail-grid">
                                     <div class="detail-item"><label>Factura:</label><span><strong>${sale.invoice_number || '#' + sale.sale_id}</strong></span></div>
-                                    <div class="detail-item"><label>Fecha:</label><span>${fecha}</span></div>
+                                    <div class="detail-item"><label>Fecha creación:</label><span>${fecha}</span></div>
                                     <div class="detail-item"><label>Cliente:</label><span>${customerName}</span></div>
                                     <div class="detail-item"><label>Estado:</label><span class="status-badge ${sale.status}">${statusText}</span></div>
                                     <div class="detail-item"><label>Método de Pago:</label><span>${paymentText}</span></div>
+                                    <div class="detail-item"><label>Días restantes:</label><span>${typeof sale.days_remaining_until_expiration !== 'undefined' ? sale.days_remaining_until_expiration : '—'} día(s) ${sale.is_expiry_warning ? `<span class="expiry-badge expiry-warning"><span class="expiry-warning-trigger" tabindex="0" role="button" aria-label="Ver aviso"><i class="fas fa-exclamation-triangle"></i><span class="expiry-tooltip-label">¡Atención! Este pedido será eliminado automáticamente en ${sale.days_remaining_until_expiration} día(s). Realice las acciones necesarias antes de la fecha límite.</span></span> Próximo a expirar</span>` : ''} ${(typeof sale.days_remaining_until_expiration !== 'undefined' && sale.days_remaining_until_expiration <= 0) ? '<span class="expiry-badge expiry-expired">Expirado</span>' : ''}</span></div>
                                     ${sale.payment_reference ? `<div class="detail-item"><label>Referencia:</label><span>${sale.payment_reference}</span></div>` : ''}
                                 </div>
                             </div>
