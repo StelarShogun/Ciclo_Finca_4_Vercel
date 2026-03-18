@@ -73,4 +73,4 @@ Thumbs.db
 # =========================
 # BASE DE DATOS LOCAL (OPCIONAL)
 # =========================
-# config/database.php
+config/database.php
