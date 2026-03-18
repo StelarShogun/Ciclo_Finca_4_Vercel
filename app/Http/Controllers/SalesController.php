@@ -156,9 +156,10 @@ class SalesController extends Controller
     {
         // Accept both English (items, customer_id) and legacy (productos, cliente_id) form field names
         $items = $request->items ?? $request->productos ?? [];
-        $customerId = $request->customer_id ?? $request->cliente_id;
-        $buyerName = $request->buyer_name ?? null;
-        $buyerEmail = $request->buyer_email ?? null;
+        // Convertimos strings vacíos ("") a null para que la validación `nullable|exists` funcione bien.
+        $customerId = $request->customer_id ?: $request->cliente_id;
+        $buyerName = $request->buyer_name ?: null;
+        $buyerEmail = $request->buyer_email ?: null;
         $paymentMethod = $request->payment_method ?? $this->mapPaymentMethodToEnglish($request->metodo_pago);
         $paymentReference = $request->payment_reference ?? $request->referencia_pago;
         $discount = $request->discount ?? $request->descuento;
