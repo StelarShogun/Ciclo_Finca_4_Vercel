@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Ciclo Pérez - Tienda de Bicicletas')</title>
+    <title>@yield('title', 'Ciclo Finca 4 - Tienda de Bicicletas')</title>
     
     <!-- Favicons modernos -->
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
@@ -27,8 +27,8 @@
             <div class="header-content">
                 <div class="logo-section">
                     <a href="{{ route('clientes.home') }}" class="logo-link">
-                        <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Pérez" class="logo-img" onerror="this.src='{{ asset('favicon.svg') }}'">
-                        <span class="logo-text">Ciclo Pérez</span>
+                        <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Finca 4" class="logo-img" onerror="this.src='{{ asset('favicon.svg') }}'">
+                        <span class="logo-text">Ciclo Finca 4</span>
                     </a>
                 </div>
                 
@@ -110,7 +110,7 @@
         <div class="footer-container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h4>Ciclo Pérez</h4>
+                    <h4>Ciclo Finca 4</h4>
                     <p>Tu tienda especializada en bicicletas y accesorios para ciclismo.</p>
                 </div>
                 <div class="footer-section">
@@ -126,7 +126,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; {{ date('Y') }} Ciclo Pérez. Todos los derechos reservados.</p>
+                <p>&copy; {{ date('Y') }} Ciclo Finca 4. Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>

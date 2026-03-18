@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -56,9 +57,30 @@ class ClienteController extends Controller
             });
         }
 
-        // Filtro por categoría
-        if ($request->filled('categoria_id')) {
-            $query->where('category_id', $request->categoria_id);
+        // Resolver cat/sub (slugs) y filtrar por categoría
+        $categoriaPadreActual = null;
+        $subcategoriaActual = null;
+        $categorias = Category::with('childCategories')->whereNull('parent_category_id')->orderBy('name')->get();
+
+        if ($request->filled('cat')) {
+            $catSlug = $request->get('cat');
+            $categoriaPadreActual = $categorias->first(fn($c) => Str::slug($c->name) === $catSlug);
+
+            if ($categoriaPadreActual) {
+                if ($request->filled('sub')) {
+                    $subSlug = $request->get('sub');
+                    $subcategoriaActual = $categoriaPadreActual->childCategories->first(fn($c) => Str::slug($c->name) === $subSlug);
+                    if ($subcategoriaActual) {
+                        $query->where('category_id', $subcategoriaActual->category_id);
+                    } else {
+                        $categoryIds = $categoriaPadreActual->childCategories->pluck('category_id')->push($categoriaPadreActual->category_id)->toArray();
+                        $query->whereIn('category_id', $categoryIds);
+                    }
+                } else {
+                    $categoryIds = $categoriaPadreActual->childCategories->pluck('category_id')->push($categoriaPadreActual->category_id)->toArray();
+                    $query->whereIn('category_id', $categoryIds);
+                }
+            }
         }
 
         // Filtro por rango de precio (validar que mínimo no sea mayor que máximo)
@@ -95,15 +117,18 @@ class ClienteController extends Controller
         $perPage = $request->get('por_pagina', 12);
         $productos = $query->paginate($perPage)->withQueryString();
 
-        // Obtener categorías para el filtro
-        $categorias = Category::whereNull('parent_category_id')
-            ->orderBy('name')
-            ->get();
-
         // Contar items en carrito
         $cartCount = $this->getCartCount();
 
-        return view('clientes.catalogo', compact('productos', 'categorias', 'cartCount', 'errorRangoPrecio', 'tieneFiltroPrecio'));
+        return view('clientes.catalogo', compact(
+            'productos',
+            'categorias',
+            'cartCount',
+            'errorRangoPrecio',
+            'tieneFiltroPrecio',
+            'categoriaPadreActual',
+            'subcategoriaActual'
+        ));
     }
 
     /**

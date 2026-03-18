@@ -1,6 +1,6 @@
 @extends('clientes.layouts.app')
 
-@section('title', 'Error - Detalle del producto - Ciclo Pérez')
+@section('title', 'Error - Detalle del producto - Ciclo Finca 4')
 
 @section('content')
 <div class="product-detail-container">
