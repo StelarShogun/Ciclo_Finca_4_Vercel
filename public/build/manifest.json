@@ -1,18 +1,10 @@
 {
-  "resources/css/clients/clients.css": {
-    "file": "assets/clients-BIREYbWi.css",
-    "src": "resources/css/clients/clients.css",
+  "resources/css/suppliers/supplier-entry.css": {
+    "file": "assets/supplier-entry-hlZ6lTqC.css",
+    "src": "resources/css/suppliers/supplier-entry.css",
     "isEntry": true,
     "names": [
-      "clients.css"
-    ]
-  },
-  "resources/css/suppliers/suppliers.css": {
-    "file": "assets/suppliers-hlZ6lTqC.css",
-    "src": "resources/css/suppliers/suppliers.css",
-    "isEntry": true,
-    "names": [
-      "suppliers.css"
+      "supplier-entry.css"
     ]
   },
   "resources/js/admin.js": {
@@ -21,10 +13,19 @@
     "src": "resources/js/admin.js",
     "isEntry": true
   },
-  "resources/js/clients.js": {
-    "file": "assets/clients-DHm-m-Wj.js",
-    "name": "clients",
-    "src": "resources/js/clients.js",
+  "resources/js/app.js": {
+    "file": "assets/app-CYFG8-5U.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "css": [
+      "assets/app-BeDKlln9.css"
+    ]
+  },
+  "resources/js/clientes.js": {
+    "file": "assets/clientes-BCN5Q-v-.js",
+    "name": "clientes",
+    "src": "resources/js/clientes.js",
     "isEntry": true
   },
   "resources/js/dashboard.js": {

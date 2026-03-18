@@ -20,11 +20,14 @@ class ClientUserController extends Controller
     // Process login
     public function login(Request $request)
     {
-        $request->validate([
+        $rules = [
             'gmail' => 'required|email',
             'password' => 'required',
-            'g-recaptcha-response' => ['required', new Recaptcha()],
-        ]);
+        ];
+        if (config('recaptcha.site_key')) {
+            $rules['g-recaptcha-response'] = ['required', new Recaptcha()];
+        }
+        $request->validate($rules);
 
         $credentials = [
             'gmail' => $request->gmail,
