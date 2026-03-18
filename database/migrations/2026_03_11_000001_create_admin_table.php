@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('admin_table', function (Blueprint $table) {
+        Schema::create('admins', function (Blueprint $table) {
             $table->id('user_id');
             $table->string('name');
             $table->string('first_surname');

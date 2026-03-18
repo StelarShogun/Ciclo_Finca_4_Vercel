@@ -17,25 +17,20 @@ class AdminOnly
      */
     public function handle(Request $request, Closure $next)
     {
-        // Verificar si el usuario está autenticado
-        if (!Auth::check()) {
+        // Usar el guard 'admin' para verificar si un administrador está autenticado
+        if (!Auth::guard('admin')->check()) {
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'No autenticado'], 401);
             }
+            // Guardar la URL a la que se intentaba acceder
             $request->session()->put('url.intended', $request->fullUrl());
-            return redirect()->route('login.show')->with('error', 'Debes iniciar sesión para acceder.');
+            
+            // Redirigir a la ruta de login de admin
+            return redirect()->route('admin.login')->with('error', 'Acceso denegado. Debes iniciar sesión como administrador.');
         }
 
-        // Verificar si el usuario es administrador
-        if (Auth::user()->rol !== 'admin') {
-            Auth::logout();
-            if ($request->expectsJson()) {
-                return response()->json(['error' => 'Acceso denegado. Solo administradores pueden acceder.'], 403);
-            }
-            $request->session()->put('url.intended', $request->fullUrl());
-            return redirect()->route('login.show')->with('error', 'Acceso denegado. Solo administradores pueden acceder al sistema.');
-        }
-
+        // Si el guard 'admin' pasa, el usuario es un administrador.
+        // La comprobación de rol ya no es necesaria aquí.
         return $next($request);
     }
 }
