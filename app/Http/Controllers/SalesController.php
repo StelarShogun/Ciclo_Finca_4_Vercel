@@ -20,7 +20,7 @@ class SalesController extends Controller
         $paymentMethod = $request->get('payment_method');
         $search = $request->get('search');
 
-        $query = Sale::with(['customer', 'saleItems.product', 'seller']);
+        $query = Sale::with(['customer', 'client', 'saleItems.product', 'seller']);
 
         $query->notExpired();
 
@@ -59,6 +59,11 @@ class SalesController extends Controller
                   ->orWhereHas('customer', function ($subQ) use ($search) {
                       $subQ->where('nombre', 'like', "%{$search}%")
                            ->orWhere('email', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('client', function ($subQ) use ($search) {
+                      $subQ->where('name', 'like', "%{$search}%")
+                           ->orWhere('first_surname', 'like', "%{$search}%")
+                           ->orWhere('gmail', 'like', "%{$search}%");
                   });
             });
         }
@@ -86,7 +91,7 @@ class SalesController extends Controller
     public function show($id)
     {
         try {
-            $sale = Sale::with(['customer', 'saleItems.product', 'seller'])->findOrFail($id);
+            $sale = Sale::with(['customer', 'client', 'saleItems.product', 'seller'])->findOrFail($id);
 
             return response()->json([
                 'success' => true,
@@ -110,6 +115,13 @@ class SalesController extends Controller
                         'nombre' => $sale->customer->nombre,
                         'apellido' => $sale->customer->apellido,
                         'email' => $sale->customer->email
+                    ] : null,
+                    'client' => $sale->client ? [
+                        'user_id' => $sale->client->user_id,
+                        'name' => $sale->client->name,
+                        'first_surname' => $sale->client->first_surname,
+                        'second_surname' => $sale->client->second_surname,
+                        'gmail' => $sale->client->gmail
                     ] : null,
                     'sale_items' => $sale->saleItems->map(function ($item) {
                         return [

@@ -149,7 +149,15 @@
                         @forelse($sales as $sale)
                         <tr>
                             <td><strong>{{ $sale->invoice_number ?? '#' . $sale->sale_id }}</strong></td>
-                            <td>{{ $sale->customer->nombre ?? 'N/A' }} {{ $sale->customer->apellido ?? '' }}</td>
+                            <td>
+                                @if($sale->client_id && $sale->client)
+                                    {{ $sale->client->name }} {{ $sale->client->first_surname }} {{ $sale->client->second_surname ? $sale->client->second_surname : '' }} <span class="text-muted">({{ $sale->client->gmail }})</span>
+                                @elseif($sale->customer_id && $sale->customer)
+                                    {{ $sale->customer->nombre ?? 'N/A' }} {{ $sale->customer->apellido ?? '' }}
+                                @else
+                                    —
+                                @endif
+                            </td>
                             <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
                             <td><span class="status-badge {{ $sale->status }}">{{ $statusLabels[$sale->status] ?? $sale->status }}</span></td>
                             <td>
@@ -443,7 +451,12 @@
                         return `<tr><td>${prod.name || 'N/A'}</td><td class="text-center">${qty}</td><td class="text-right">₡${up.toLocaleString('es-CR', {minimumFractionDigits: 2})}</td><td class="text-right"><strong>₡${tot.toLocaleString('es-CR', {minimumFractionDigits: 2})}</strong></td></tr>`;
                     }).join('');
 
-                    const customerName = sale.customer ? (sale.customer.nombre || '') + ' ' + (sale.customer.apellido || '') : 'N/A';
+                    let customerName = 'N/A';
+                    if (sale.client) {
+                        customerName = (sale.client.name || '') + ' ' + (sale.client.first_surname || '') + (sale.client.second_surname ? ' ' + sale.client.second_surname : '') + (sale.client.gmail ? ' (' + sale.client.gmail + ')' : '');
+                    } else if (sale.customer) {
+                        customerName = (sale.customer.nombre || '') + ' ' + (sale.customer.apellido || '');
+                    }
                     const statusLabels = { pending: 'Pendiente', completed: 'Completada', cancelled: 'Cancelada', refunded: 'Reembolsada' };
                     const paymentLabels = { cash: 'Efectivo', sinpe: 'SINPE Móvil', transfer: 'Transferencia' };
                     const statusText = statusLabels[sale.status] || sale.status;

@@ -84,32 +84,22 @@
                         </div>
                         
                         <!-- Rango de Precio -->
-                        <div class="filter-group" id="price-range-group">
+                        <div class="filter-group">
                             <label>Rango de Precio</label>
-                            <div class="filter-price-error {{ (!empty($errorRangoPrecio) || $errors->has('precio_rango')) ? 'filter-price-error-visible' : '' }}" id="price-range-error" role="alert">
-                                <i class="fas fa-exclamation-circle"></i>
-                                <span id="price-range-error-text">{{ $errors->first('precio_rango', 'El precio mínimo no puede ser mayor que el precio máximo. Ajuste el rango e intente de nuevo.') }}</span>
-                            </div>
                             <div class="price-range">
                                 <input type="number" 
                                        id="precio_min" 
                                        name="precio_min" 
-                                       class="form-control {{ ($errorRangoPrecio ?? false) || $errors->has('precio_rango') ? 'is-invalid' : '' }}" 
+                                       class="form-control" 
                                        placeholder="Mínimo"
-                                       min="0"
-                                       step="0.01"
-                                       value="{{ request('precio_min') }}"
-                                       aria-describedby="price-range-error">
+                                       value="{{ request('precio_min') }}">
                                 <span class="price-separator">-</span>
                                 <input type="number" 
                                        id="precio_max" 
                                        name="precio_max" 
-                                       class="form-control {{ ($errorRangoPrecio ?? false) || $errors->has('precio_rango') ? 'is-invalid' : '' }}" 
+                                       class="form-control" 
                                        placeholder="Máximo"
-                                       min="0"
-                                       step="0.01"
-                                       value="{{ request('precio_max') }}"
-                                       aria-describedby="price-range-error">
+                                       value="{{ request('precio_max') }}">
                             </div>
                         </div>
                         
@@ -148,14 +138,6 @@
 
             <!-- Contenido Principal -->
             <main class="catalog-content">
-                <!-- Aviso cuando el rango de precios es inválido (mín > máx) -->
-                @if(!empty($errorRangoPrecio))
-                    <div class="alert alert-warning catalog-filter-alert" role="alert">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span>El precio mínimo no puede ser mayor que el precio máximo. No se aplicó el filtro de precios. Ajusta el rango en el panel izquierdo; tus demás filtros se mantienen aplicados.</span>
-                    </div>
-                @endif
-
                 <!-- Resultados -->
                 <div class="catalog-results">
                     <div class="results-header">
@@ -216,7 +198,7 @@
                                                 <i class="fas fa-arrow-right"></i>
                                                 Ver detalles
                                             </a>
-                                            @auth
+                                            @if(Auth::guard('clients')->check())
                                             <button type="button" class="btn btn-primary btn-add-cart add-to-cart-btn" 
                                                     data-product-id="{{ $producto->product_id }}"
                                                     data-product-name="{{ $producto->name }}"
@@ -230,7 +212,7 @@
                                                 <i class="fas fa-cart-plus"></i>
                                                 Agregar
                                             </button>
-                                            @endauth
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -351,92 +333,6 @@
     document.getElementById('close-add-to-cart-modal').addEventListener('click', function() {
         document.getElementById('add-to-cart-modal').classList.remove('active');
     });
-
-    // Validación rango de precio: impedir aplicar filtro si mínimo > máximo
-    var filterForm = document.getElementById('filter-form');
-    if (filterForm) {
-        filterForm.addEventListener('submit', function(e) {
-            var minInput = document.getElementById('precio_min');
-            var maxInput = document.getElementById('precio_max');
-            var minVal = parseFloat(minInput.value);
-            var maxVal = parseFloat(maxInput.value);
-            if (minInput.value !== '' && maxInput.value !== '' && !isNaN(minVal) && !isNaN(maxVal) && minVal > maxVal) {
-                e.preventDefault();
-                document.getElementById('price-range-error').classList.add('filter-price-error-visible');
-                document.getElementById('price-range-error-text').textContent = 'El precio mínimo no puede ser mayor que el precio máximo. Ajuste el rango e intente de nuevo.';
-                minInput.classList.add('is-invalid');
-                maxInput.classList.add('is-invalid');
-                minInput.focus();
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Rango de precio inválido',
-                        text: 'El precio mínimo no puede ser mayor que el precio máximo. Ajuste el rango e intente de nuevo.'
-                    });
-                }
-                return false;
-            }
-            document.getElementById('price-range-error').classList.remove('filter-price-error-visible');
-            minInput.classList.remove('is-invalid');
-            maxInput.classList.remove('is-invalid');
-        });
-    }
-    // Quitar estado de error al cambiar los valores
-    document.getElementById('precio_min').addEventListener('input', function() {
-        var maxInput = document.getElementById('precio_max');
-        if (parseFloat(this.value) <= parseFloat(maxInput.value) || this.value === '' || maxInput.value === '') {
-            this.classList.remove('is-invalid');
-            maxInput.classList.remove('is-invalid');
-            document.getElementById('price-range-error').classList.remove('filter-price-error-visible');
-        }
-    });
-    document.getElementById('precio_max').addEventListener('input', function() {
-        var minInput = document.getElementById('precio_min');
-        if (parseFloat(minInput.value) <= parseFloat(this.value) || minInput.value === '' || this.value === '') {
-            minInput.classList.remove('is-invalid');
-            this.classList.remove('is-invalid');
-            document.getElementById('price-range-error').classList.remove('filter-price-error-visible');
-        }
-    });
-
-    // Scroll suave al panel de filtros cuando no hay resultados
-    document.querySelectorAll('.scroll-to-filters').forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            var el = document.getElementById('filter-form');
-            if (el) {
-                e.preventDefault();
-                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        });
-    });
-
-    // Paginación: deshabilitar clic en Prev/Next cuando no hay página, y "Ir a página"
-    (function() {
-        var wrapper = document.querySelector('.pagination-wrapper .pagination');
-        if (!wrapper) return;
-        var goInput = wrapper.querySelector('#goToPageInput');
-        var goBtn = wrapper.querySelector('#goToPageBtn');
-        wrapper.querySelectorAll('.button[aria-label]').forEach(function(a) {
-            if (a.getAttribute('aria-disabled') === 'true') {
-                a.addEventListener('click', function(e) { e.preventDefault(); });
-            }
-        });
-        function goToPage() {
-            var totalSpan = wrapper.querySelector('.button.button-primary');
-            if (!totalSpan) return;
-            var parts = totalSpan.textContent.trim().split('/');
-            var lastPage = Math.max(1, parseInt((parts[1] || '1').trim(), 10));
-            var target = parseInt((goInput && goInput.value) ? goInput.value.trim() : '1', 10);
-            if (isNaN(target)) target = 1;
-            if (target < 1) target = 1;
-            if (target > lastPage) target = lastPage;
-            var url = new URL(window.location.href);
-            url.searchParams.set('page', String(target));
-            window.location.assign(url.toString());
-        }
-        if (goBtn) goBtn.addEventListener('click', goToPage);
-        if (goInput) goInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); goToPage(); } });
-    })();
 </script>
 @endpush
 

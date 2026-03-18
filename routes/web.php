@@ -41,8 +41,8 @@ Route::get('/', [ClienteController::class, 'home'])->name('clientes.home');
 Route::get('/catalog', [ClienteController::class, 'catalogo'])->name('clientes.catalogo');
 Route::get('/product/{id}', [ClienteController::class, 'producto'])->name('clientes.producto');
 
-// Rutas del carrito (requieren autenticación)
-Route::middleware(['auth'])->group(function () {
+// Rutas del carrito (solo usuarios Client logueados en /login)
+Route::middleware(['auth:clients'])->group(function () {
     Route::post('/cart/add', [ClienteController::class, 'addToCart'])->name('clientes.carrito.agregar');
     Route::get('/cart', [ClienteController::class, 'cart'])->name('clientes.carrito');
     Route::put('/cart/update', [ClienteController::class, 'updateCart'])->name('clientes.carrito.actualizar');
@@ -53,6 +53,11 @@ Route::middleware(['auth'])->group(function () {
 
 // Authentication Routes
 Route::get('/login', [ClientUserController::class, 'showLoginForm'])->name('login.show');
+Route::get('/register', [ClientUserController::class, 'showRegisterForm'])->name('clients.register.form');
+Route::post('/register', [ClientUserController::class, 'register'])->name('clients.register');
+Route::get('/verify', [ClientUserController::class, 'showVerifyForm'])->name('clients.verify.form');
+Route::post('/verify', [ClientUserController::class, 'verify'])->name('clients.verify');
+Route::post('/verify/resend', [ClientUserController::class, 'resendCode'])->name('clients.verify.resend');
 Route::post('/login', [ClientUserController::class, 'login'])
     ->middleware('throttle:5,1') // 5 intentos por minuto para prevenir fuerza bruta
     ->name('login');
