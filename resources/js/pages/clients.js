@@ -8,7 +8,7 @@
 // GLOBAL UTILITIES
 // ============================================================
 
-/** Returns the CSRF token from the meta tag or a visible form input. */
+/** Returns the CSRF token from the meta tag or a hidden form input. */
 function getCsrfToken() {
     const meta = document.querySelector('meta[name="csrf-token"]');
     if (meta) return meta.content;
@@ -26,6 +26,7 @@ function updateCartCount(count) {
 
     if (cartCountEl) {
         cartCountEl.textContent   = count;
+        // Hide the badge when the cart is empty
         cartCountEl.style.display = count > 0 ? 'flex' : 'none';
     }
     if (cartLinkEl) {
@@ -71,7 +72,7 @@ function addToCart(productId, quantity) {
         }
     })
     .catch(function (err) {
-        console.error('Error al agregar al carrito:', err);
+        console.error('Error adding to cart:', err);
         Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al agregar el producto al carrito' });
     });
 }
@@ -80,7 +81,7 @@ function addToCart(productId, quantity) {
 // ADD-TO-CART MODAL (catalog & home)
 // ============================================================
 
-/** Tracks the product currently being added via the modal. */
+/** Product currently being added via the quantity modal. */
 var currentProductId = null;
 
 /** Populates and opens the quantity modal from a product card button. */
@@ -218,7 +219,7 @@ function closeLoginModal() {
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    // — Initial cart count —
+    // — Initialise cart counter from the data attribute —
     var cartLinkEl  = document.getElementById('cart-link');
     var cartGuestEl = document.getElementById('cart-guest');
     var cartRef     = cartLinkEl || cartGuestEl;
@@ -227,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function () {
         updateCartCount(initialCount);
     }
 
-    // — Guest cart: show login prompt —
+    // — Guest cart: prompt to log in —
     if (cartGuestEl) {
         cartGuestEl.addEventListener('click', function () {
             Swal.fire({
@@ -272,13 +273,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var loginModalOverlay = document.getElementById('login-modal-overlay');
     if (loginModalOverlay) loginModalOverlay.addEventListener('click', closeLoginModal);
 
-    // — Login form submission —
+    // — Login form submission via AJAX —
     var publicLoginForm = document.getElementById('public-login-form');
     if (publicLoginForm) {
         publicLoginForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
             var csrfToken = getCsrfToken();
+            // Redirect to login if the CSRF token has expired
             if (!csrfToken) {
                 window.location.href = '/login?session_expired=1';
                 return;
@@ -289,6 +291,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var loadingSpan = document.getElementById('login-loading');
             var submitSpan  = submitBtn ? submitBtn.querySelector('span:not(.btn-loading)') : null;
 
+            // Show spinner while waiting for the response
             if (submitBtn)   submitBtn.disabled = true;
             if (submitSpan)  submitSpan.classList.add('hidden');
             if (loadingSpan) loadingSpan.classList.remove('hidden');
@@ -303,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
             .then(function (response) {
-                // 419 = CSRF expired
+                // 419 means expired session/CSRF token
                 if (response.status === 419) {
                     window.location.href = '/login?session_expired=1';
                     return Promise.reject('csrf');
@@ -333,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(function (err) {
                 if (err === 'csrf' || err === 'parse') return;
-                console.error('Error en login:', err);
+                console.error('Login error:', err);
                 Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al iniciar sesión' });
                 if (submitBtn)   submitBtn.disabled = false;
                 if (submitSpan)  submitSpan.classList.remove('hidden');
@@ -355,7 +358,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Guest button: prompt to log in
+        // Guest: prompt to log in
         if (e.target.closest('.guest-add-btn')) {
             Swal.fire({
                 icon: 'info',
@@ -435,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     showConfirmButton: false, timer: 2500, timerProgressBar: true
                 });
 
-                // Update totals without reloading
+                // Update the displayed total without reloading
                 var totalFormatted = (data.cart_total != null)
                     ? ('₡' + Number(data.cart_total).toLocaleString('es-CR'))
                     : '₡0';
@@ -446,13 +449,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 updateCartCount(data.cart_count || 0);
 
-                // Switch to empty state if no items remain
+                // If no items remain, show the empty state
                 if (document.querySelectorAll('.cart-item').length === 0) {
                     showCartEmptyState();
                 }
             })
             .catch(function (err) {
-                console.error('Error al eliminar del carrito:', err);
+                console.error('Error removing cart item:', err);
                 Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar el producto' });
             });
         });
@@ -552,7 +555,7 @@ document.addEventListener('DOMContentLoaded', function () {
             else                     { productQty = value; }
         });
 
-        // Detail page add-to-cart uses local productQty instead of the modal
+        // Add to cart using the quantity from the detail page selector
         var detailAddBtn = document.querySelector('.product-detail-actions .add-to-cart-btn');
         if (detailAddBtn) {
             detailAddBtn.addEventListener('click', function () {
@@ -606,7 +609,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 })
                 .catch(function (err) {
-                    console.error('Error en checkout:', err);
+                    console.error('Checkout error:', err);
                     Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al procesar el pedido' });
                     proceedBtn.disabled  = false;
                     proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
@@ -632,3 +635,411 @@ document.addEventListener('DOMContentLoaded', function () {
 // ============================================================
 window.addToCart       = addToCart;
 window.updateCartCount = updateCartCount;
+
+// ============================================================
+// USER MENU DROPDOWN (header)
+// ============================================================
+
+/** Opens or closes the user menu, syncing the class, aria-hidden and aria-expanded. */
+function setUserMenuOpen(open) {
+    var wrap    = document.getElementById('user-menu');
+    var panel   = document.getElementById('user-dropdown');
+    var trigger = document.getElementById('user-menu-trigger');
+    if (!wrap) return;
+    wrap.classList.toggle('open', open);
+    if (panel)   panel.setAttribute('aria-hidden', String(!open));
+    if (trigger) trigger.setAttribute('aria-expanded', String(open));
+}
+
+// ============================================================
+// MY PROFILE PAGE (profile.blade.php)
+// ============================================================
+
+var profileOriginalValues = {};
+var profileEditableFields = ['name', 'first_surname', 'second_surname', 'gmail'];
+
+/** Saves current field values so the cancel action can restore them. */
+function profileSaveOriginals() {
+    profileEditableFields.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) profileOriginalValues[id] = el.value;
+    });
+}
+
+/** Enables form fields and switches the header button to save mode. */
+function enableEdit() {
+    profileEditableFields.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.removeAttribute('readonly');
+    });
+
+    var btn = document.getElementById('btnEditarPerfil');
+    if (btn) {
+        btn.innerHTML  = '<i class="fas fa-save"></i> Guardar Cambios';
+        btn.className  = 'btn btn-sm btn-primary';
+        btn.setAttribute('onclick', 'submitProfile()');
+    }
+
+    var actions = document.getElementById('accionesEdicion');
+    if (actions) actions.classList.remove('hidden');
+
+    // Focus the first editable field
+    var nameField = document.getElementById('name');
+    if (nameField) nameField.focus();
+}
+
+/** Restores original values and switches back to read-only mode. */
+function cancelEdit() {
+    profileEditableFields.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.setAttribute('readonly', true);
+            el.value = profileOriginalValues[id];
+        }
+    });
+
+    var btn = document.getElementById('btnEditarPerfil');
+    if (btn) {
+        btn.innerHTML = '<i class="fas fa-pencil-alt"></i> Editar Perfil';
+        btn.className = 'btn btn-sm btn-outline-primary';
+        btn.setAttribute('onclick', 'enableEdit()');
+    }
+
+    var actions = document.getElementById('accionesEdicion');
+    if (actions) actions.classList.add('hidden');
+}
+
+/** Shows a confirmation dialog then submits the profile form via AJAX. */
+function submitProfile() {
+    var form = document.getElementById('formPerfil');
+    if (!form) return;
+
+    Swal.fire({
+        title: '¿Guardar cambios?',
+        text: 'Se actualizarán tus datos personales.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-save"></i> Sí, guardar',
+        cancelButtonText:  '<i class="fas fa-times"></i> Cancelar',
+        reverseButtons: true
+    }).then(function (result) {
+        if (!result.isConfirmed) return;
+        sendProfile(form);
+    });
+}
+
+/** Performs the profile fetch request (called after confirmation). */
+function sendProfile(form) {
+
+    fetch(form.action, {
+        method:  'POST',
+        headers: {
+            'X-CSRF-TOKEN':     getCsrfToken(),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept':           'application/json'
+        },
+        body: new FormData(form)
+    })
+    .then(function (r) {
+        // 422: server-side validation errors
+        if (r.status === 422) {
+            return r.json().then(function (data) {
+                var errors   = data.errors || {};
+                var firstMsg = Object.values(errors)[0];
+                showProfileAlert(
+                    Array.isArray(firstMsg) ? firstMsg[0] : (firstMsg || 'Error de validación.'),
+                    'danger'
+                );
+                return Promise.reject('validation');
+            });
+        }
+        return r.json();
+    })
+    .then(function (res) {
+        if (res.success) {
+            // Persist the new values and lock fields back to read-only
+            profileEditableFields.forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) {
+                    profileOriginalValues[id] = el.value;
+                    el.setAttribute('readonly', true);
+                }
+            });
+
+            // Update the hero section: full name, avatar initials and email
+            var name  = (document.getElementById('name')          || {}).value || '';
+            var fs    = (document.getElementById('first_surname') || {}).value || '';
+            var ss    = (document.getElementById('second_surname')|| {}).value || '';
+            var gmail = (document.getElementById('gmail')         || {}).value || '';
+
+            var heroName   = document.getElementById('heroName');
+            var initials   = document.getElementById('avatarInitials');
+            var heroEmail  = document.querySelector('.profile-email');
+
+            if (heroName)  heroName.textContent  = [name, fs, ss].filter(Boolean).join(' ');
+            if (initials)  initials.textContent  = (name.charAt(0) + fs.charAt(0)).toUpperCase();
+            if (heroEmail) heroEmail.textContent = gmail;
+
+            // Update the header/navbar without reloading
+            var headerInitials  = document.querySelector('.user-avatar-bubble');
+            var headerShortName = document.querySelector('.user-trigger-name');
+            var headerFullName  = document.querySelector('.user-dropdown-fullname');
+            var headerEmail     = document.querySelector('.user-dropdown-email');
+
+            if (headerInitials)  headerInitials.textContent  = (name.charAt(0) + fs.charAt(0)).toUpperCase();
+            if (headerShortName) headerShortName.textContent = name;
+            if (headerFullName)  headerFullName.textContent  = [name, fs].filter(Boolean).join(' ');
+            if (headerEmail)     headerEmail.textContent     = gmail;
+
+            // Reset the edit button to its default state
+            var btn = document.getElementById('btnEditarPerfil');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-pencil-alt"></i> Editar Perfil';
+                btn.className = 'btn btn-sm btn-outline-primary';
+                btn.setAttribute('onclick', 'enableEdit()');
+            }
+            var actions = document.getElementById('accionesEdicion');
+            if (actions) actions.classList.add('hidden');
+
+            showProfileAlert(res.message || 'Cambios guardados correctamente', 'success');
+        } else {
+            showProfileAlert(res.message || 'Error al guardar los cambios.', 'danger');
+        }
+    })
+    .catch(function (err) {
+        if (err === 'validation') return;
+        showProfileAlert('Error de conexión. Intenta de nuevo.', 'danger');
+    });
+} // end sendProfile
+
+/** Toggles password field visibility. */
+function togglePassword(inputId, btn) {
+    var input = document.getElementById(inputId);
+    var icon  = btn ? btn.querySelector('i') : null;
+    if (!input) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        if (icon) icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+/** Updates the password-strength bar based on length, uppercase, digits and symbols. */
+function updateStrength(val) {
+    var wrapper = document.getElementById('passStrength');
+    var fill    = document.getElementById('strengthFill');
+    var label   = document.getElementById('strengthLabel');
+
+    if (!wrapper) return;
+
+    if (!val) { wrapper.classList.add('hidden'); return; }
+    wrapper.classList.remove('hidden');
+
+    var score = 0;
+    if (val.length >= 8)           score++;
+    if (/[A-Z]/.test(val))         score++;
+    if (/[0-9]/.test(val))         score++;
+    if (/[^A-Za-z0-9]/.test(val))  score++;
+
+    var levels = [
+        { w: '25%',  c: '#d32f2f', t: 'Débil'   },
+        { w: '50%',  c: '#f57c00', t: 'Regular'  },
+        { w: '75%',  c: '#fbc02d', t: 'Buena'    },
+        { w: '100%', c: '#2e7d32', t: 'Fuerte'   }
+    ];
+    var lvl = levels[Math.max(score - 1, 0)];
+    if (fill)  { fill.style.width = lvl.w; fill.style.background = lvl.c; }
+    if (label) { label.textContent = lvl.t; label.style.color = lvl.c; }
+}
+
+/** Shows the password-definition form for Google-only accounts. */
+function showPasswordForm() {
+    var form = document.getElementById('formPassword');
+    var cta  = document.getElementById('googlePassCta');
+    if (form) form.classList.remove('hidden');
+    if (cta)  cta.classList.add('hidden');
+}
+
+/** Hides the password-definition form and re-shows the CTA. */
+function hidePasswordForm() {
+    var form = document.getElementById('formPassword');
+    var cta  = document.getElementById('googlePassCta');
+    if (form) form.classList.add('hidden');
+    if (cta)  cta.classList.remove('hidden');
+}
+
+/** Shows a dismissible alert on the profile page; auto-closes after 5 seconds. */
+function showProfileAlert(msg, tipo) {
+    var alertEl = document.getElementById('profileAlert');
+    var textEl  = document.getElementById('profileAlertText');
+    var iconEl  = document.getElementById('profileAlertIcon');
+    if (!alertEl) return;
+
+    textEl.textContent = msg;
+    alertEl.className  = 'alert ' + (tipo === 'danger' ? 'alert-danger' : 'alert-success');
+    iconEl.className   = tipo === 'danger' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
+
+    alertEl.classList.remove('hidden');
+    alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    clearTimeout(alertEl.profileTimeout);
+    alertEl.profileTimeout = setTimeout(closeProfileAlert, 5000);
+}
+
+/** Dismisses the profile alert. */
+function closeProfileAlert() {
+    var alertEl = document.getElementById('profileAlert');
+    if (alertEl) alertEl.classList.add('hidden');
+}
+
+// ============================================================
+// PROFILE & USER-MENU INITIALIZATION
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    // — User menu: replace the node to avoid duplicate listeners —
+    var userMenuTrigger = document.getElementById('user-menu-trigger');
+    if (userMenuTrigger) {
+        userMenuTrigger.replaceWith(userMenuTrigger.cloneNode(true));
+        userMenuTrigger = document.getElementById('user-menu-trigger');
+
+        userMenuTrigger.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var isOpen = document.getElementById('user-menu') &&
+                         document.getElementById('user-menu').classList.contains('open');
+            setUserMenuOpen(!isOpen);
+        });
+    }
+
+    // — Close user menu on outside click —
+    document.addEventListener('click', function (e) {
+        var wrap = document.getElementById('user-menu');
+        if (wrap && !wrap.contains(e.target)) {
+            setUserMenuOpen(false);
+        }
+    });
+
+    // — Profile: save originals and initialise the password-strength meter —
+    if (document.getElementById('formPerfil')) {
+        profileSaveOriginals();
+
+        var passInput = document.getElementById('new_password');
+        if (passInput) {
+            passInput.addEventListener('input', function () {
+                updateStrength(this.value);
+            });
+        }
+
+        // Show flash messages passed from Blade via window.__profileFlash
+        var flash = window.__profileFlash || {};
+        if (flash.profile_updated)  showProfileAlert('Cambios guardados correctamente.', 'success');
+        if (flash.password_updated) showProfileAlert('Contraseña actualizada correctamente.', 'success');
+        if (flash.password_defined) showProfileAlert('Contraseña definida. Ahora puedes iniciar sesión con correo y contraseña.', 'success');
+    }
+
+    // — Password form: confirm before submitting —
+    var formPassword = document.getElementById('formPassword');
+    if (formPassword) {
+        formPassword.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            var isGoogleOnly = !!document.getElementById('googlePassCta');
+            var confirmMsg   = isGoogleOnly
+                ? 'Se definirá una contraseña para tu cuenta. Podrás iniciar sesión con correo y contraseña.'
+                : 'Se actualizará la contraseña de tu cuenta.';
+            var confirmBtn   = isGoogleOnly
+                ? '<i class="fas fa-key"></i> Sí, definir'
+                : '<i class="fas fa-save"></i> Sí, actualizar';
+
+            Swal.fire({
+                title:             '¿Confirmar cambio de contraseña?',
+                text:              confirmMsg,
+                icon:              'warning',
+                showCancelButton:  true,
+                confirmButtonText: confirmBtn,
+                cancelButtonText:  '<i class="fas fa-times"></i> Cancelar',
+                reverseButtons:    true
+            }).then(function (result) {
+                if (!result.isConfirmed) return;
+                sendPassword(formPassword);
+            });
+        });
+    }
+
+}); // end DOMContentLoaded (profile & user-menu)
+
+/** Performs the password fetch request (called after confirmation). */
+function sendPassword(form) {
+    var submitBtn    = form.querySelector('button[type="submit"]');
+    var isGoogleOnly = !!document.getElementById('googlePassCta');
+
+    // Disable the button to prevent duplicate submissions
+    if (submitBtn) {
+        submitBtn.disabled  = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    }
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN':     getCsrfToken(),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept':           'application/json'
+        },
+        body: new FormData(form)
+    })
+    .then(function (r) {
+        // 422: wrong current password, confirmation mismatch, etc.
+        if (r.status === 422) {
+            return r.json().then(function (data) {
+                var errors   = data.errors || {};
+                var firstMsg = Object.values(errors)[0];
+                showProfileAlert(
+                    Array.isArray(firstMsg) ? firstMsg[0] : (firstMsg || 'Error de validación.'),
+                    'danger'
+                );
+                return Promise.reject('validation');
+            });
+        }
+        return r.json();
+    })
+    .then(function (res) {
+        if (res.success) {
+            form.reset();
+            updateStrength(''); // reset the strength meter
+
+            // If it was a Google-only account, hide the form and re-show the CTA
+            var cta = document.getElementById('googlePassCta');
+            if (cta) hidePasswordForm();
+
+            showProfileAlert(res.message || 'Contraseña actualizada correctamente.', 'success');
+        } else {
+            showProfileAlert(res.message || 'Error al actualizar la contraseña.', 'danger');
+        }
+    })
+    .catch(function (err) {
+        if (err === 'validation') return;
+        showProfileAlert('Error de conexión. Intenta de nuevo.', 'danger');
+    })
+    .finally(function () {
+        // Always restore the button regardless of the outcome
+        if (submitBtn) {
+            submitBtn.disabled  = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> ' +
+                (isGoogleOnly ? 'Guardar Contraseña' : 'Actualizar Contraseña');
+        }
+    });
+}
+
+// — Global exports —
+window.enableEdit        = enableEdit;
+window.cancelEdit        = cancelEdit;
+window.submitProfile     = submitProfile;
+window.togglePassword    = togglePassword;
+window.showPasswordForm  = showPasswordForm;
+window.hidePasswordForm  = hidePasswordForm;
+window.showProfileAlert  = showProfileAlert;
+window.closeProfileAlert = closeProfileAlert;

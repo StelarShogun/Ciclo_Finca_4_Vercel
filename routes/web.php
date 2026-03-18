@@ -129,3 +129,23 @@ Route::middleware(['auth', 'admin.only', 'prevent.direct'])->group(function () {
     Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
 
 });
+
+// ============================================================
+// CLIENT PROFILE (authenticated clients)
+// ============================================================
+ 
+Route::middleware(['auth:clients'])->group(function () {
+ 
+    // Show profile page
+    Route::get('/profile', [ClientUserController::class, 'show'])
+        ->name('clients.profile');
+ 
+    // Update basic profile data (name, surnames, email)
+    Route::put('/profile', [ClientUserController::class, 'update'])
+        ->name('clients.profile.update');
+ 
+    // Update or define password
+    Route::put('/profile/password', [ClientUserController::class, 'updatePassword'])
+        ->name('clients.profile.password');
+ 
+});

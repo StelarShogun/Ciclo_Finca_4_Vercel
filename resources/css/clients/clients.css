@@ -2,13 +2,13 @@
    1. VARIABLES 
    =================================================================== */
 :root {
-  /* Colores principales */
+  /* Primary colors */
   --color-primary:       #2e7d32;
   --color-primary-dark:  #1b5e20;
   --color-primary-light: #4caf50;
   --color-accent:        #ff6f00;
 
-  /* Estados */
+  /* State colors */
   --color-success:     #2e7d32;
   --color-success-bg:  #e8f5e9;
   --color-danger:      #d32f2f;
@@ -18,35 +18,35 @@
   --color-info:        #1976d2;
   --color-info-bg:     #e3f2fd;
 
-  /* Neutros */
+  /* Neutral colors */
   --color-secondary:     #455a64;
   --color-secondary-bg:  #eceff1;
   --color-light:         #f8f9fa;
   --color-dark:          #212529;
   --color-muted:         #6c757d;
 
-  /* Texto */
+  /* Text colors */
   --text-primary:   #333;
   --text-secondary: #666;
 
-  /* Fondos */
+  /* Backgrounds */
   --background-main:  #f5f5f5;
   --background-white: #ffffff;
   --background-light: #f8f9fa;
 
-  /* Bordes */
+  /* Borders */
   --border-color:         #e0e0e0;
   --border-radius:        8px;
   --border-radius-small:  4px;
   --border-radius-large:  12px;
 
-  /* Sombras */
+  /* Shadows */
   --shadow-sm:     0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-md:     0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.1);
   --shadow-lg:     0 10px 15px rgba(0, 0, 0, 0.1);
 
-  /* Transición */
+  /* Transition */
   --transition: all 0.3s ease;
 }
 
@@ -67,7 +67,7 @@ body {
 }
 
 /* ===================================================================
-   3. UTILIDADES
+   3. UTILITIES
    =================================================================== */
 .hidden   { display: none !important; }
 .d-flex   { display: flex; }
@@ -76,7 +76,7 @@ body {
 .w-100    { width: 100%; }
 
 /* ===================================================================
-   4. LAYOUT PRINCIPAL DEL CLIENTE
+   4. CLIENT MAIN LAYOUT
    =================================================================== */
 .cliente-layout {
   min-height: 100vh;
@@ -118,7 +118,7 @@ body {
   gap: 30px;
 }
 
-/* Logo */
+/* Logo and home link */
 .logo-section {
   display: flex;
   align-items: center;
@@ -137,7 +137,7 @@ body {
 .logo-img  { height: 40px; width: auto; }
 .logo-text { font-size: 1.5rem; }
 
-/* Navegación principal */
+/* Main navigation */
 .main-nav {
   display: flex;
   gap: 10px;
@@ -160,14 +160,14 @@ body {
 .nav-link:hover  { background: var(--background-light); color: var(--color-primary); }
 .nav-link.active { background: var(--color-primary); color: white; }
 
-/* Acciones del header */
+/* Right side of the header: cart and user menu */
 .header-actions {
   display: flex;
   align-items: center;
   gap: 15px;
 }
 
-/* Botón carrito */
+/* Cart button (authenticated and guest) */
 .cart-btn {
   position: relative;
   background: var(--color-primary);
@@ -206,7 +206,7 @@ body {
   right: -5px;
 }
 
-/* Menú de usuario autenticado */
+/* User dropdown menu item */
 .user-dropdown-item {
   display: flex;
   align-items: center;
@@ -273,7 +273,7 @@ body {
 }
 
 /* ===================================================================
-   7. CONTENEDOR GENÉRICO
+   7. GENERIC CONTAINER
    =================================================================== */
 .container {
   max-width: 1200px;
@@ -282,7 +282,7 @@ body {
 }
 
 /* ===================================================================
-   8. BOTONES
+   8. BUTTONS
    =================================================================== */
 .btn {
   display: inline-flex;
@@ -307,7 +307,7 @@ body {
 .btn:focus   { box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.3); }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
 
-/* Variantes */
+/* Color variants */
 .btn-primary {
   background: var(--color-primary);
   color: white;
@@ -344,7 +344,7 @@ body {
   box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
 }
 
-/* Variantes outline */
+/* Outline variants */
 .btn-outline-secondary {
   background: transparent;
   color: var(--color-secondary);
@@ -367,12 +367,12 @@ body {
   transform: translateY(-2px);
 }
 
-/* Tamaños */
+/* Sizes */
 .btn-sm  { padding: 8px 12px;  font-size: 0.85rem; gap: 6px; }
 .btn-lg  { padding: 16px 28px; font-size: 1.1rem;  gap: 10px; }
 .btn-block { width: 100%; justify-content: center; }
 
-/* Estado carga */
+/* Loading state */
 .btn.loading {
   color: transparent;
   pointer-events: none;
@@ -392,7 +392,7 @@ body {
   animation: spin 1s linear infinite;
 }
 
-/* Soporte para btn-loading span (app.blade.php) */
+/* Inline spinner inside the button during loading */
 .btn-loading          { display: none; }
 .btn-loading.hidden   { display: none; }
 .btn[disabled] .btn-loading { display: inline; }
@@ -404,7 +404,7 @@ body {
 }
 
 /* ===================================================================
-   9. FORMULARIOS
+   9. FORMS
    =================================================================== */
 .form-group {
   display: flex;
@@ -453,7 +453,7 @@ body {
 }
 
 /* ===================================================================
-   10. ALERTAS
+   10. ALERTS
    =================================================================== */
 .alert {
   display: flex;
@@ -662,7 +662,7 @@ body {
 .hero-image    { display: flex; justify-content: center; align-items: center; font-size: 10rem; opacity: 0.3; }
 
 /* ===================================================================
-   14. SECCIONES GENERALES (home.blade.php)
+   14. GENERAL SECTIONS (home.blade.php)
    =================================================================== */
 .section-header   { text-align: center; margin-bottom: 40px; }
 .section-title    { font-size: 2.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
@@ -679,7 +679,7 @@ body {
 }
 
 /* ===================================================================
-   15. GRID DE PRODUCTOS
+   15. PRODUCT GRID
    =================================================================== */
 .products-grid {
   display: grid;
@@ -762,14 +762,14 @@ body {
   color: var(--color-primary);
 }
 
-/* Botones "Agregar al carrito" en tarjetas */
+/* Prevent cart buttons from shrinking on small cards */
 .add-to-cart-btn,
 .guest-add-btn {
   flex-shrink: 0;
 }
 
 /* ===================================================================
-   16. CATEGORÍAS (home.blade.php)
+   16. CATEGORIES (home.blade.php)
    =================================================================== */
 .categories-grid {
   display: grid;
@@ -843,7 +843,7 @@ body {
 .empty-state p    { font-size: 1rem; margin: 0; }
 
 /* ===================================================================
-   18. CATÁLOGO (catalog.blade.php)
+   18. CATALOG (catalog.blade.php)
    =================================================================== */
 .catalog-container { padding: 0; }
 
@@ -932,7 +932,7 @@ body {
 .pagination-wrapper { margin-top: 30px; }
 
 /* ===================================================================
-   19. VISTA DE PRODUCTO (product.blade.php)
+   19. PRODUCT DETAIL (product.blade.php)
    =================================================================== */
 .product-detail-container { padding: 40px 0; }
 
@@ -1053,7 +1053,7 @@ body {
 }
 
 /* ===================================================================
-   20. CARRITO (cart.blade.php)
+   20. CART (cart.blade.php)
    =================================================================== */
 .cart-container {
   padding: 40px 0;
@@ -1103,7 +1103,7 @@ body {
   gap: 20px;
 }
 
-/* Ítem del carrito */
+/* Cart item */
 .cart-item {
   background: var(--background-white);
   border: 1px solid var(--border-color);
@@ -1128,7 +1128,7 @@ body {
 
 .cart-item-image img { width: 100%; height: 100%; object-fit: cover; }
 
-/* item-info: clase usada en cart.blade.php */
+/* Cart item text column */
 .item-info {
   flex: 1;
   min-width: 0;
@@ -1141,7 +1141,7 @@ body {
 .item-price { color: var(--text-secondary); font-size: 0.9rem; }
 .item-stock { color: var(--text-secondary); font-size: 0.8rem; }
 
-/* item-controls: clase usada en cart.blade.php */
+/* Cart item quantity controls */
 .item-controls {
   display: flex;
   flex-direction: column;
@@ -1155,7 +1155,7 @@ body {
   color: var(--text-secondary);
 }
 
-/* cart-item-right: clase usada en cart.blade.php */
+/* Item right column: subtotal and remove button */
 .cart-item-right {
   display: flex;
   flex-direction: column;
@@ -1176,7 +1176,7 @@ body {
 
 .cart-item-actions { display: flex; gap: 8px; }
 
-/* Resumen */
+/* Order summary */
 .cart-summary {
   position: sticky;
   top: 90px;
@@ -1237,10 +1237,10 @@ body {
   gap: 5px;
 }
 
-/* Carrito vacío */
+/* Cart empty state */
 .cart-empty { padding: 40px 0; }
 
-/* Preview de producto en modal */
+/* Product preview inside the add-to-cart modal */
 .product-preview {
   display: flex;
   gap: 15px;
@@ -1340,4 +1340,393 @@ body {
   .cart-layout { gap: 20px; }
 
   .footer-content { grid-template-columns: 1fr; }
+}
+
+/* ===================================================================
+   22. MY PROFILE (profile.blade.php)
+   =================================================================== */
+
+.profile-wrapper { padding: 40px 0 60px; }
+
+/* Hero */
+.profile-hero {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    background: var(--background-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--shadow-sm);
+    padding: 28px 32px;
+    margin-bottom: 28px;
+}
+
+.profile-avatar {
+    flex-shrink: 0;
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(46, 125, 50, 0.25);
+}
+
+.profile-hero-info { flex: 1; min-width: 0; }
+
+.profile-hero-info h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-email {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 10px;
+}
+
+.profile-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.profile-badge--google { background: #fce8e6; color: #ea4335; }
+.profile-badge--local  { background: var(--color-success-bg); color: var(--color-success); }
+
+/* Alert close button */
+.profile-alert-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.7;
+    padding: 0;
+    font-size: 0.9rem;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+
+.profile-alert-close:hover { opacity: 1; }
+
+/* Grid */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+/* Cards */
+.profile-card {
+    background: var(--background-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--shadow-sm);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.profile-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.profile-card-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Fields grid */
+.profile-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+}
+
+.profile-field-full { grid-column: 1 / -1; }
+
+/* Appearance of fields in read-only mode */
+.form-control[readonly] {
+    background: var(--background-light);
+    color: var(--text-secondary);
+    cursor: default;
+}
+
+.profile-field-error {
+    font-size: 0.8rem;
+    color: var(--color-danger);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+/* Relative wrapper to position the eye toggle button */
+.profile-input-pass { position: relative; }
+
+.profile-input-pass .form-control { padding-right: 42px; }
+
+.profile-toggle-pass {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    padding: 0;
+    line-height: 1;
+    transition: var(--transition);
+}
+
+.profile-toggle-pass:hover { color: var(--color-primary); }
+
+/* Password strength meter */
+.profile-strength {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.profile-strength-bar {
+    flex: 1;
+    height: 5px;
+    background: var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.profile-strength-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 3px;
+    transition: width 0.3s ease, background 0.3s ease;
+}
+
+.profile-strength-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    min-width: 55px;
+    text-align: right;
+}
+
+/* Form actions */
+.profile-form-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Centered CTA for Google accounts without a local password */
+.profile-google-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+    padding: 8px 0;
+}
+
+.profile-google-cta p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.profile-google-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: #fce8e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: #ea4335;
+}
+
+/* ===================================================================
+   23. HEADER — User menu dropdown
+   =================================================================== */
+
+.user-menu-wrap { position: relative; }
+
+/* Button that opens the dropdown (avatar + name + caret) */
+.user-menu-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px 6px 8px;
+    background: none;
+    border: 1.5px solid var(--border-color);
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: var(--transition);
+    line-height: 1;
+}
+
+.user-menu-trigger:hover,
+.user-menu-wrap.open .user-menu-trigger {
+    border-color: var(--color-primary);
+    background: var(--color-success-bg);
+}
+
+/* Circle with the client's initials */
+.user-avatar-bubble {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.user-trigger-name {
+    max-width: 90px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-trigger-caret {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    transition: transform 0.25s ease;
+}
+
+.user-menu-wrap.open .user-trigger-caret { transform: rotate(180deg); }
+
+/* Dropdown panel: hidden by default, visible when .open is set on the wrapper */
+.user-dropdown-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 210px;
+    background: var(--background-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    z-index: 1100;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.user-menu-wrap.open .user-dropdown-panel {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Internal dropdown sections: header, body and footer */
+.user-dropdown-head {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--background-light);
+}
+
+.user-dropdown-fullname {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-dropdown-email {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-dropdown-body { padding: 4px 0; }
+
+.user-dropdown-foot {
+    padding: 4px 0;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Active state for dropdown items */
+.user-dropdown-item.active {
+    background: var(--color-success-bg);
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* ===================================================================
+   24. OUTLINE-PRIMARY BUTTON (profile / header)
+   =================================================================== */
+
+.btn-outline-primary {
+    background: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+    background: var(--color-primary);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+}
+
+/* ===================================================================
+   RESPONSIVE — profile & header dropdown
+   =================================================================== */
+
+@media (max-width: 768px) {
+    .profile-grid          { grid-template-columns: 1fr; }
+    .profile-fields        { grid-template-columns: 1fr; }
+    .profile-field-full    { grid-column: 1; }
+    .profile-hero          { flex-direction: column; text-align: center; }
+    .profile-hero-info h1  { white-space: normal; }
+    .user-trigger-name     { display: none; }
 }
