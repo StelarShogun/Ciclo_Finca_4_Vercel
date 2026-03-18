@@ -52,7 +52,7 @@
             </a>
         </div>
         <div class="login-footer text-center">
-            <p>¿No tienes una cuenta? <a href="#" id="show-register-form">Regístrate aquí</a></p>
+            <p>¿No tienes una cuenta? <a href="{{ route('clients.register.form') }}" id="show-register-form">Regístrate aquí</a></p>
         </div>
     </div>
 </div>

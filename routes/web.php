@@ -53,6 +53,8 @@ Route::middleware(['auth'])->group(function () {
 
 // Authentication Routes
 Route::get('/login', [ClientUserController::class, 'showLoginForm'])->name('login.show');
+Route::get('/register', [ClientUserController::class, 'showRegisterForm'])->name('clients.register.form');
+Route::post('/register', [ClientUserController::class, 'register'])->name('clients.register');
 Route::post('/login', [ClientUserController::class, 'login'])
     ->middleware('throttle:5,1') // 5 intentos por minuto para prevenir fuerza bruta
     ->name('login');
