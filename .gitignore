@@ -40,6 +40,8 @@ Thumbs.db
 # Enlace simbólico generado por artisan
 public/storage
 
+\storage
+
 # Configuración local de base de datos
 config/database.php
 /storage
