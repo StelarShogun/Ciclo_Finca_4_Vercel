@@ -127,3 +127,32 @@
     border-color: #1a73e8;
     text-decoration: none;
 }
+
+/* Mensajes de error/éxito inline por campo */
+.field-msg {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    margin-top: 5px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+.field-msg.error {
+    display: flex;
+    color: #c0392b;
+    background: #fdf0ef;
+    border: 1px solid #f5c6cb;
+}
+.field-msg.success {
+    display: flex;
+    color: #1e7e34;
+    background: #eafaf1;
+    border: 1px solid #b7e4c7;
+}
+.field-msg i { font-size: 0.85rem; flex-shrink: 0; }
+
+/* Borde rojo/verde en input según estado */
+.input-error { border-color: #e74c3c !important; box-shadow: 0 0 0 2px rgba(231,76,60,.15) !important; }
+.input-ok    { border-color: #27ae60 !important; box-shadow: 0 0 0 2px rgba(39,174,96,.12) !important; }
