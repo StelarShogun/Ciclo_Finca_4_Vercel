@@ -152,8 +152,6 @@
                             <td>
                                 @if($sale->client_id && $sale->client)
                                     {{ $sale->client->name }} {{ $sale->client->first_surname }} {{ $sale->client->second_surname ? $sale->client->second_surname : '' }} <span class="text-muted">({{ $sale->client->gmail }})</span>
-                                @elseif($sale->customer_id && $sale->customer)
-                                    {{ $sale->customer->nombre ?? 'N/A' }} {{ $sale->customer->apellido ?? '' }}
                                 @else
                                     {{ $sale->buyer_name ?: 'Walk-in / Sin datos' }}
                                     @if($sale->buyer_email)
@@ -228,15 +226,6 @@
                     <form id="new-sale-form" method="POST" action="{{ route('sales.store') }}">
                         @csrf
                         <div class="form-row">
-                            <div class="form-group">
-                                <label for="customer_id">Cliente (opcional)</label>
-                                <select id="customer_id" name="customer_id">
-                                    <option value="">Walk-in / Sin datos</option>
-                                    @foreach(\App\Models\Usuario::where('rol', 'cliente')->get() as $c)
-                                    <option value="{{ $c->usuario_id }}">{{ $c->nombre }} {{ $c->apellido }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
                             <div class="form-group">
                                 <label for="buyer_name">Nombre (opcional)</label>
                                 <input type="text" id="buyer_name" name="buyer_name" placeholder="Nombre del comprador (opcional)">
@@ -462,11 +451,15 @@
                         return `<tr><td>${prod.name || 'N/A'}</td><td class="text-center">${qty}</td><td class="text-right">₡${up.toLocaleString('es-CR', {minimumFractionDigits: 2})}</td><td class="text-right"><strong>₡${tot.toLocaleString('es-CR', {minimumFractionDigits: 2})}</strong></td></tr>`;
                     }).join('');
 
-                    let customerName = 'N/A';
+                    let customerName = 'Walk-in / Sin datos';
                     if (sale.client) {
-                        customerName = (sale.client.name || '') + ' ' + (sale.client.first_surname || '') + (sale.client.second_surname ? ' ' + sale.client.second_surname : '') + (sale.client.gmail ? ' (' + sale.client.gmail + ')' : '');
-                    } else if (sale.customer) {
-                        customerName = (sale.customer.nombre || '') + ' ' + (sale.customer.apellido || '');
+                        customerName =
+                            ((sale.client.name || '') + ' ' +
+                            (sale.client.first_surname || '') + ' ' +
+                            (sale.client.second_surname ? sale.client.second_surname : '')).trim();
+                        if (sale.client.gmail) {
+                            customerName += ' (' + sale.client.gmail + ')';
+                        }
                     } else if (sale.buyer) {
                         customerName = sale.buyer.name ? sale.buyer.name : 'Walk-in / Sin datos';
                         if (sale.buyer.email) {

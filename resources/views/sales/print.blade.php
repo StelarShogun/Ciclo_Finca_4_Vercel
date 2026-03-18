@@ -37,13 +37,21 @@
             <div class="info-item"><span>Sale ID:</span><strong>#{{ $sale->sale_id }}</strong></div>
             <div class="info-item"><span>Status:</span><strong>{{ ucfirst($sale->status) }}</strong></div>
             <div class="info-item"><span>Payment Method:</span><strong>{{ ucfirst($sale->payment_method) }}</strong></div>
-            <div class="info-item"><span>Seller:</span><strong>{{ $sale->seller->nombre ?? $sale->seller->name ?? 'Not assigned' }}</strong></div>
+            <div class="info-item"><span>Seller:</span><strong>
+                {{ $sale->sellerAdmin ? trim($sale->sellerAdmin->name . ' ' . $sale->sellerAdmin->first_surname . ' ' . ($sale->sellerAdmin->second_surname ?: '')) : 'Not assigned' }}
+            </strong></div>
         </div>
         <div class="info-section">
             <h3>Customer Information</h3>
-            <div class="info-item"><span>Name:</span><strong>{{ $sale->customer->nombre ?? '' }} {{ $sale->customer->apellido ?? '' }}</strong></div>
-            <div class="info-item"><span>Email:</span><strong>{{ $sale->customer->email ?? 'N/A' }}</strong></div>
-            <div class="info-item"><span>Phone:</span><strong>{{ $sale->customer->telefono ?? $sale->customer->phone ?? 'N/A' }}</strong></div>
+            <div class="info-item"><span>Name:</span><strong>
+                {{ $sale->client
+                    ? trim($sale->client->name . ' ' . $sale->client->first_surname . ' ' . ($sale->client->second_surname ?: ''))
+                    : ($sale->buyer_name ?: 'Walk-in / Sin datos') }}
+            </strong></div>
+            <div class="info-item"><span>Email:</span><strong>
+                {{ $sale->client ? ($sale->client->gmail ?: 'N/A') : ($sale->buyer_email ?: 'N/A') }}
+            </strong></div>
+            <div class="info-item"><span>Phone:</span><strong>N/A</strong></div>
         </div>
     </div>
 
