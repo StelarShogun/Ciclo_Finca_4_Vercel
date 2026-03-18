@@ -48,12 +48,12 @@ class AdminSeeder extends Seeder
         ];
 
         foreach ($admins as $data) {
-            $existing = DB::table('admin_table')->where('gmail', $data['gmail'])->first();
+            $existing = DB::table('admins')->where('gmail', $data['gmail'])->first();
             if ($existing) {
                 $this->command->warn("El admin {$data['gmail']} ya existe en la base de datos.");
                 continue;
             }
-            DB::table('admin_table')->insert($data);
+            DB::table('admins')->insert($data);
             $this->command->info("✅ Admin creado: {$data['gmail']}");
             $this->command->line("🔑 Contraseña: {$data['password']}");
         }
