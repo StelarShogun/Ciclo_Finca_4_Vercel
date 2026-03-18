@@ -25,7 +25,7 @@ class ClientUserController extends Controller
             'gmail' => 'required|email',
             'password' => 'required',
         ];
-        if (config('recaptcha.site_key')) {
+        if (config('services.recaptcha.key')) {
             $rules['g-recaptcha-response'] = ['required', new Recaptcha()];
         }
         $request->validate($rules);

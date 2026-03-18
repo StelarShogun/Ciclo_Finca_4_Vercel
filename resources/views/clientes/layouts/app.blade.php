@@ -75,12 +75,8 @@
                                 <span>Iniciar Sesión</span>
                             </a>
                         @endif
-<<<<<<< HEAD
-                    @endif
-=======
                         @endauth
                     </div>
->>>>>>> Dilan
                 </div>
             </div>
         </header>

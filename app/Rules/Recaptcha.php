@@ -20,7 +20,7 @@ class Recaptcha implements Rule
             return false;
         }
 
-        $recaptcha = new GoogleReCaptcha(config('recaptcha.secret_key'));
+        $recaptcha = new GoogleReCaptcha(config('services.recaptcha.secret'));
         $resp = $recaptcha->verify($value, request()->ip());
 
         return $resp->isSuccess();

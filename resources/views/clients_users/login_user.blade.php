@@ -45,7 +45,7 @@
                 </div>
             </div>
             <div class="form-group mb-3">
-                <div class="g-recaptcha" data-sitekey="{{ config('recaptcha.site_key') }}"></div>
+                <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
             </div>
             <div class="form-group mb-3">
                 <label class="checkbox-label">
@@ -80,7 +80,7 @@
         </div>
         <div class="login-footer text-center">
             <p class="login-footer-text">¿No tienes una cuenta?</p>
-            <a href="#" id="show-register-form" class="login-register-btn">
+            <a href="{{ route('clients.register.form') }}" class="login-register-btn">
                 <i class="fas fa-user-plus" aria-hidden="true"></i>
                 <span>Crear cuenta</span>
             </a>

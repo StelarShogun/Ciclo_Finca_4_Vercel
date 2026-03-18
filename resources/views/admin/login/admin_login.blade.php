@@ -43,7 +43,7 @@
 
                     <!-- reCAPTCHA -->
                     <div class="form-group">
-                        <div class="g-recaptcha" data-sitekey="{{ config('recaptcha.site_key') }}"></div>
+                        <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
                     </div>
 
                     <!-- Acciones del formulario -->
