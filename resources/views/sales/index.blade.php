@@ -31,6 +31,14 @@
         }
         .expiry-warning-trigger:hover .expiry-tooltip-label,
         .expiry-warning-trigger:focus-within .expiry-tooltip-label { visibility: visible; opacity: 1; }
+
+        /* CF4-4 purchases: permitir que "Walk-in / Sin datos" no se trunque */
+        .cf4-purchases-table td {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            word-break: break-word;
+        }
     </style>
 </head>
 <body class="admin-layout">
@@ -213,6 +221,76 @@
             </div>
 
             <x-pagination :paginator="$sales" label="de ventas" />
+        </div>
+
+        <!-- Sección CF4-4 Compras (integrada dentro de /sales) -->
+        <div class="sales-container" style="margin-top: 26px;">
+            <header class="sales-header">
+                <div>
+                    <h1 style="font-size: 1.35rem; margin: 0;">Compras CF4-4</h1>
+                    <p style="margin: 6px 0 0 0; color: var(--color-muted);">Pendientes y completadas</p>
+                </div>
+            </header>
+
+            <div class="sales-table-container" style="padding: 16px;">
+                <table class="sales-table cf4-purchases-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Productos</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($purchases as $sale)
+                            <tr>
+                                <td>
+                                    @if($sale->client_id && $sale->client)
+                                        {{ $sale->client->name }} {{ $sale->client->first_surname }}
+                                        {{ $sale->client->second_surname ? $sale->client->second_surname : '' }}
+                                        <span class="text-muted">({{ $sale->client->gmail }})</span>
+                                    @elseif($sale->buyer_name)
+                                        {{ $sale->buyer_name }}
+                                        @if($sale->buyer_email)
+                                            <span class="text-muted">({{ $sale->buyer_email }})</span>
+                                        @endif
+                                    @else
+                                        {{ 'Walk-in / Sin datos' }}
+                                        @if($sale->buyer_email)
+                                            <span class="text-muted">({{ $sale->buyer_email }})</span>
+                                        @endif
+                                    @endif
+                                </td>
+                                <td>{{ $sale->sale_items_count }} items</td>
+                                <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
+                                <td><strong>₡{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
+                                <td>
+                                    <div class="actions-container">
+                                        <button class="action-btn secondary" type="button" onclick="viewSale('{{ $sale->sale_id }}')" title="Ver detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center">
+                                    <div style="padding: 40px; color: var(--color-muted);">
+                                        <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                                        <p>No hay compras registradas</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 16px;">
+                <x-pagination :paginator="$purchases" label="de compras" />
+            </div>
         </div>
 
         <!-- Modal Nueva Venta -->
@@ -557,6 +635,27 @@
         function printSale(id) { window.open(`/sales/${id}/print`, '_blank'); }
 
         document.addEventListener('DOMContentLoaded', function() {
+            // CF4-4 auto-actualización: polling ligero (recarga si aparece una compra nueva)
+            let latestPurchaseSaleId = @json($latestPurchaseSaleId ?? 0);
+            async function heartbeatCheck() {
+                if (document.visibilityState === 'hidden') return;
+                try {
+                    const res = await fetch("{{ route('purchases.heartbeat') }}" + "?since=" + latestPurchaseSaleId, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    const data = await res.json();
+                    if (data && typeof data.latestSaleId !== 'undefined') {
+                        latestPurchaseSaleId = data.latestSaleId;
+                    }
+                    if (data && data.hasNew) {
+                        window.location.reload();
+                    }
+                } catch (e) {
+                    // Fail silencioso: no rompe la UI
+                }
+            }
+            setInterval(heartbeatCheck, 20000);
+
             const form = document.getElementById('new-sale-form');
             if (form) {
                 form.addEventListener('submit', function(e) {

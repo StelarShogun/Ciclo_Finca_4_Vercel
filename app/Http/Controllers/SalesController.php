@@ -67,6 +67,23 @@ class SalesController extends Controller
 
         $sales = $query->orderBy('sale_date', 'desc')->paginate(15);
 
+        // CF4-4: Compras admin (pendientes + completadas) integradas dentro de /sales
+        $basePurchasesQuery = Sale::query()
+            ->whereIn('status', ['pending', 'completed'])
+            ->where(function ($q) {
+                $q->whereIn('order_source', ['web_cart', 'walk_in'])
+                  ->orWhereNull('order_source');
+            })
+            ->notExpired();
+
+        $purchases = (clone $basePurchasesQuery)
+            ->with(['client'])
+            ->withCount('saleItems')
+            ->orderBy('sale_date', 'desc')
+            ->paginate(15, ['*'], 'purchases_page');
+
+        $latestPurchaseSaleId = (clone $basePurchasesQuery)->max('sale_id') ?? 0;
+
         $dailySales = $this->calculateDailySales();
         $dailySalesTrend = $this->calculateDailySalesTrend();
         $dailyTransactions = $this->calculateDailyTransactions();
@@ -76,6 +93,8 @@ class SalesController extends Controller
 
         return view('sales.index', compact(
             'sales',
+            'purchases',
+            'latestPurchaseSaleId',
             'dailySales',
             'dailySalesTrend',
             'dailyTransactions',
@@ -221,7 +240,7 @@ class SalesController extends Controller
                 'sale_date' => now(),
                 'payment_method' => $request->payment_method,
                 'payment_reference' => $request->payment_reference ?? null,
-                'status' => 'pending',
+                'status' => 'completed',
                 'discount' => $request->discount ?? 0,
                 'notes' => $request->notes,
                 'buyer_name' => $buyerName,
