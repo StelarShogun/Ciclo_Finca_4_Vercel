@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\PurchasesController;
 
 Route::get('/run-migrations', function () {
     try {
@@ -112,6 +113,10 @@ Route::post('/sales/{id}/refund', [SalesController::class, 'refund'])->name('sal
 Route::get('/sales/{id}/print', [SalesController::class, 'print'])->name('sales.print');
 Route::get('/sales/{id}/invoice', [SalesController::class, 'invoice'])->name('sales.invoice');
 Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
+
+// CF4-4 Purchases module (admin-only)
+Route::get('/purchases', [PurchasesController::class, 'index'])->name('purchases.index');
+Route::get('/purchases/heartbeat', [PurchasesController::class, 'heartbeat'])->name('purchases.heartbeat');
 
 // Dashboard API Routes
 Route::get('/dashboard/data', [DashboardController::class, 'getDashboardData'])->name('dashboard.data');
