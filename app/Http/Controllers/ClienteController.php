@@ -10,6 +10,7 @@ use App\Models\SaleItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ClienteController extends Controller
 {
@@ -60,12 +61,22 @@ class ClienteController extends Controller
             $query->where('category_id', $request->categoria_id);
         }
 
-        // Filtro por rango de precio
-        if ($request->filled('precio_min')) {
-            $query->where('sale_price', '>=', $request->precio_min);
-        }
-        if ($request->filled('precio_max')) {
-            $query->where('sale_price', '<=', $request->precio_max);
+        // Filtro por rango de precio (validar que mínimo no sea mayor que máximo)
+        $errorRangoPrecio = false;
+        $tieneFiltroPrecio = $request->filled('precio_min') || $request->filled('precio_max');
+        if ($request->filled('precio_min') && $request->filled('precio_max')) {
+            $min = (float) $request->precio_min;
+            $max = (float) $request->precio_max;
+            if ($min > $max) {
+                $errorRangoPrecio = true;
+                // No aplicar filtro de precio para mostrar resultados con el resto de filtros
+            } else {
+                $query->where('sale_price', '>=', $min)->where('sale_price', '<=', $max);
+            }
+        } elseif ($request->filled('precio_min')) {
+            $query->where('sale_price', '>=', (float) $request->precio_min);
+        } elseif ($request->filled('precio_max')) {
+            $query->where('sale_price', '<=', (float) $request->precio_max);
         }
 
         // Ordenamiento
@@ -92,30 +103,40 @@ class ClienteController extends Controller
         // Contar items en carrito
         $cartCount = $this->getCartCount();
 
-        return view('clientes.catalogo', compact('productos', 'categorias', 'cartCount'));
+        return view('clientes.catalogo', compact('productos', 'categorias', 'cartCount', 'errorRangoPrecio', 'tieneFiltroPrecio'));
     }
 
     /**
-     * Vista detallada de un producto
+     * Vista detallada de un producto (CF4-27).
+     * Muestra imagen, nombre, precio, descripción y disponibilidad/stock.
+     * Si ocurre un error al cargar, muestra mensaje informativo.
      */
     public function producto($id)
     {
-        $producto = Product::with(['category', 'supplier'])
-            ->where('status', 'active')
-            ->findOrFail($id);
+        try {
+            $producto = Product::with(['category', 'supplier'])
+                ->where('status', 'active')
+                ->findOrFail($id);
 
-        // Productos relacionados (misma categoría)
-        $productosRelacionados = Product::with(['category'])
-            ->where('category_id', $producto->category_id)
-            ->where('product_id', '!=', $producto->product_id)
-            ->where('status', 'active')
-            ->where('stock_current', '>', 0)
-            ->limit(4)
-            ->get();
+            // Productos relacionados (misma categoría)
+            $productosRelacionados = Product::with(['category'])
+                ->where('category_id', $producto->category_id)
+                ->where('product_id', '!=', $producto->product_id)
+                ->where('status', 'active')
+                ->where('stock_current', '>', 0)
+                ->limit(4)
+                ->get();
 
-        $cartCount = $this->getCartCount();
+            $cartCount = $this->getCartCount();
 
-        return view('clientes.producto', compact('producto', 'productosRelacionados', 'cartCount'));
+            return view('clientes.producto', compact('producto', 'productosRelacionados', 'cartCount'));
+        } catch (ModelNotFoundException $e) {
+            $cartCount = $this->getCartCount();
+            return response()->view('clientes.producto-error', compact('cartCount'), 404);
+        } catch (\Exception $e) {
+            $cartCount = $this->getCartCount();
+            return response()->view('clientes.producto-error', compact('cartCount'), 500);
+        }
     }
 
     /**

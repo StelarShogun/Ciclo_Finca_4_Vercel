@@ -56,9 +56,9 @@
     </nav>
     <!-- Footer fijo en la parte inferior -->
     <div class="sidebar-footer">
-        @auth
+        @auth('admin')
             <!-- Botón de Cerrar Sesión -->
-            <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
+            <form action="{{ route('admin.logout') }}" method="POST" style="margin: 0;">
                 @csrf
                 <button type="submit" class="logout-btn" title="Cerrar sesión">
                     <i class="fas fa-sign-out-alt"></i>

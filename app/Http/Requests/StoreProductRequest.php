@@ -23,6 +23,8 @@ class StoreProductRequest extends FormRequest
             'stock_minimum' => 'required|integer|min:0',
             'status' => 'required|in:active,inactive,out_of_stock,discontinued',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }
 

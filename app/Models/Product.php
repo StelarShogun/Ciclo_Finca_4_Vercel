@@ -16,7 +16,7 @@ class Product extends Model
     const UPDATED_AT = 'updated_at';
 
     protected $fillable = [
-        'category_id','supplier_id','name','description','image',
+        'category_id','supplier_id','name','description','image','images',
         'sale_price','purchase_price','stock_current','stock_minimum','status'
     ];
 
@@ -25,9 +25,21 @@ class Product extends Model
         'purchase_price' => 'decimal:2',
         'stock_current' => 'integer',
         'stock_minimum' => 'integer',
+        'images' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Devuelve las rutas de imagen a mostrar (imagen principal + adicionales para carrusel).
+     */
+    public function getDisplayImages(): array
+    {
+        $main = $this->image ?? 'default.png';
+        $extra = $this->images ?? [];
+        $all = array_merge([$main], is_array($extra) ? array_values($extra) : []);
+        return array_filter($all) ?: ['default.png'];
+    }
 
     public function category() { return $this->belongsTo(Category::class, 'category_id','category_id'); }
     public function supplier() { return $this->belongsTo(Supplier::class, 'supplier_id','supplier_id'); }

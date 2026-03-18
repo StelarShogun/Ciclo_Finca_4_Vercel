@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\ClientUserController;
+use App\Http\Controllers\AdminUserController;
 
 Route::get('/run-migrations', function () {
     try {
@@ -81,12 +82,12 @@ Route::get('/csrf-token', function(Request $request) {
 Route::post('/usuarios/store-login', [UsuarioController::class, 'storeLogin'])->name('storeLogin');
 
 // Usuario Routes protegidas (solo administradores)
-Route::middleware(['auth', 'admin.only', 'prevent.direct'])->group(function () {
+Route::middleware(['auth:admin'])->group(function () {
     Route::resource('usuarios', UsuarioController::class);
 });
 
 // Protected Routes (require authentication AND admin role with additional security)
-Route::middleware(['auth', 'admin.only', 'prevent.direct'])->group(function () {
+Route::middleware(['auth:admin'])->group(function () {
     
 // Dashboard Routes
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -115,5 +116,14 @@ Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.exp
 // Dashboard API Routes
 Route::get('/dashboard/data', [DashboardController::class, 'getDashboardData'])->name('dashboard.data');
 Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
+}); // Cierre del grupo de rutas protegidas
 
+// Admin authentication routes
+Route::get('/admin/login', [AdminUserController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [AdminUserController::class, 'login'])->name('admin.login.submit');
+Route::post('/admin/logout', [AdminUserController::class, 'logout'])->name('admin.logout');
+
+// Admin dashboard routes (protected)
+Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 }); // Cierre del grupo middleware auth + admin.only

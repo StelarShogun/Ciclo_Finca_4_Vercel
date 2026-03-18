@@ -798,3 +798,22 @@ img, svg, table { max-width: 100%; height: auto; }
 .admin-sidebar .sidebar-nav span { transition: opacity .2s ease; }
 .admin-main { transition: padding-left .2s ease; }
 
+/* Estilos para el campo de contraseña con toggle */
+.password-container {
+    position: relative;
+}
+
+.password-container input {
+    width: 100%;
+    padding-right: 40px; /* Espacio para el ícono */
+}
+
+.password-container .fa-eye {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #888;
+}
+
