@@ -9,13 +9,17 @@
 
         {{-- Errores de validación --}}
         @if ($errors->any())
-            <div class="alert alert-danger mb-3">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error en el registro',
+                    html: '<ul style="text-align:left;margin:0;padding-left:18px;">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#1a73e8'
+                });
+            });
+        </script>
         @endif
 
         {{-- Mensaje de éxito --}}
@@ -39,35 +43,35 @@
                 </div>
             </div>
 
-            {{-- Apellido --}}
-            <div class="form-group mb-3">
-                <label for="first_surname">Apellido <span class="text-danger">*</span></label>
-                <input type="text" id="first_surname" name="first_surname"
-                       class="form-control @error('first_surname') input-error @enderror"
-                       value="{{ old('first_surname') }}"
-                       placeholder="Ej: Pérez"
-                       autocomplete="family-name">
-                <div id="msg-first-surname" class="field-msg @error('first_surname') error @enderror">
-                    @error('first_surname')<i class="fas fa-exclamation-circle"></i><span>{{ $message }}</span>@enderror
+            {{-- Apellido + Segundo Apellido en fila --}}
+            <div style="display:flex; gap:16px; margin-bottom:1rem;">
+                <div class="form-group" style="flex:1; min-width:0; margin-bottom:0;">
+                    <label for="first_surname">Apellido <span class="text-danger">*</span></label>
+                    <input type="text" id="first_surname" name="first_surname"
+                           class="form-control @error('first_surname') input-error @enderror"
+                           value="{{ old('first_surname') }}"
+                           placeholder="Ej: Pérez"
+                           autocomplete="family-name">
+                    <div id="msg-first-surname" class="field-msg @error('first_surname') error @enderror">
+                        @error('first_surname')<i class="fas fa-exclamation-circle"></i><span>{{ $message }}</span>@enderror
+                    </div>
                 </div>
-            </div>
-
-            {{-- Segundo Apellido --}}
-            <div class="form-group mb-3">
-                <label for="second_surname">Segundo Apellido</label>
-                <input type="text" id="second_surname" name="second_surname"
-                       class="form-control @error('second_surname') input-error @enderror"
-                       value="{{ old('second_surname') }}"
-                       placeholder="Ej: García (opcional)"
-                       autocomplete="additional-name">
-                <div id="msg-second-surname" class="field-msg @error('second_surname') error @enderror">
-                    @error('second_surname')<i class="fas fa-exclamation-circle"></i><span>{{ $message }}</span>@enderror
+                <div class="form-group" style="flex:1; min-width:0; margin-bottom:0;">
+                    <label for="second_surname">Segundo Apellido</label>
+                    <input type="text" id="second_surname" name="second_surname"
+                           class="form-control @error('second_surname') input-error @enderror"
+                           value="{{ old('second_surname') }}"
+                           placeholder="Ej: García (opcional)"
+                           autocomplete="additional-name">
+                    <div id="msg-second-surname" class="field-msg @error('second_surname') error @enderror">
+                        @error('second_surname')<i class="fas fa-exclamation-circle"></i><span>{{ $message }}</span>@enderror
+                    </div>
                 </div>
             </div>
 
             {{-- Gmail --}}
             <div class="form-group mb-3">
-                <label for="gmail">Correo Gmail <span class="text-danger">*</span></label>
+                <label for="gmail">Correo Electrónico <span class="text-danger">*</span></label>
                 <input type="email" id="gmail" name="gmail"
                        class="form-control @error('gmail') input-error @enderror"
                        value="{{ old('gmail') }}"

@@ -575,7 +575,17 @@ if (publicLoginForm) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: data.message || 'Error al iniciar sesión'
+                    html: `<p>${data.message || 'Error al iniciar sesión'}</p>
+                           <hr style="margin:12px 0;">
+                           <p style="font-size:0.9rem;color:#555;margin-bottom:0;">¿No tienes cuenta o deseas registrarte?</p>`,
+                    confirmButtonText: 'Cancelar',
+                    showDenyButton: true,
+                    denyButtonText: 'Ir al registro',
+                    denyButtonColor: '#1a73e8'
+                }).then((result) => {
+                    if (result.isDenied) {
+                        window.location.href = '/register';
+                    }
                 });
                 submitBtn.disabled = false;
                 if (submitSpan) submitSpan.classList.remove('hidden');

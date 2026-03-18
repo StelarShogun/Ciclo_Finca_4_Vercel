@@ -22,7 +22,7 @@
 </head>
 <body class="cliente-layout">
     <!-- Header -->
-    @unless(request()->routeIs('login.show'))
+    @unless(request()->routeIs('login.show') || request()->routeIs('clients.register.form'))
         <header class="cliente-header">
             <div class="header-container">
                 <div class="header-content">
@@ -101,7 +101,7 @@
         @yield('content')
     </main>
 
-    @if(!request()->routeIs('login.show'))
+    @if(!request()->routeIs('login.show') && !request()->routeIs('clients.register.form'))
         <!-- Footer -->
         <footer class="cliente-footer">
             <div class="footer-container">
