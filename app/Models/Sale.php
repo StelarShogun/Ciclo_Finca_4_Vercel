@@ -32,12 +32,24 @@ class Sale extends Model
     ];
 
     protected $casts = [
-        'sale_date' => 'datetime',
         'subtotal' => 'decimal:2',
         'iva' => 'decimal:2',
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
     ];
+
+    /**
+     * `sales.sale_date` en BD se guarda en UTC (DATETIME sin zona horaria).
+     * Al leerlo, lo interpretamos como UTC y lo convertimos a la zona horaria de la app.
+     */
+    public function getSaleDateAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+
+        return \Carbon\Carbon::parse($value, 'UTC')->setTimezone(config('app.timezone'));
+    }
 
     public function saleItems(): HasMany
     {

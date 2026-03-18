@@ -104,6 +104,30 @@ class SalesController extends Controller
         ));
     }
 
+    public function historyHeartbeat(Request $request)
+    {
+        $since = (int) $request->query('since', 0);
+
+        $baseQuery = Sale::query()
+            ->where('status', 'completed')
+            ->where(function ($q) {
+                $q->whereIn('order_source', ['web_cart', 'walk_in'])
+                  ->orWhereNull('order_source');
+            })
+            ->notExpired();
+
+        $hasNew = (clone $baseQuery)
+            ->where('sale_id', '>', $since)
+            ->exists();
+
+        $latestSaleId = (clone $baseQuery)->max('sale_id') ?? 0;
+
+        return response()->json([
+            'hasNew' => $hasNew,
+            'latestSaleId' => $latestSaleId,
+        ]);
+    }
+
     public function show($id)
     {
         try {

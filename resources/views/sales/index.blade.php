@@ -642,7 +642,7 @@
             async function heartbeatCheck() {
                 if (document.visibilityState === 'hidden') return;
                 try {
-                    const res = await fetch("{{ route('purchases.heartbeat') }}" + "?since=" + latestPurchaseSaleId, {
+                    const res = await fetch("{{ route('sales.history.heartbeat') }}" + "?since=" + latestPurchaseSaleId, {
                         headers: { 'Accept': 'application/json' }
                     });
                     const data = await res.json();
