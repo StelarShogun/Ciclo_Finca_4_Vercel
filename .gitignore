@@ -40,9 +40,14 @@ Thumbs.db
 # Enlace simbólico generado por artisan
 public/storage
 
+\storage
+
 # Configuración local de base de datos
 config/database.php
 /storage
 storage/framework/cache/data/44/d1/44d142505dd1a3b497197e2f459d2aec779e9ed6
 storage/framework/cache/data/c2/4f/c24f92750673b2169c8cb7bfbc999cfa8457dc7c
 vendor/_laravel_ide/_model_helpers.php
+/vendor
+/vendor/composer
+/storage

@@ -1,6 +1,6 @@
 @extends('clientes.layouts.app')
 
-@section('title', 'Catálogo - Ciclo Pérez')
+@section('title', 'Catálogo - Ciclo Finca 4')
 
 @section('content')
 <div class="catalog-container">
@@ -11,6 +11,49 @@
             <p class="catalog-subtitle">Explora nuestra amplia selección de productos</p>
         </div>
     </div>
+
+    {{-- Zona de categorías (barra horizontal de dos filas) --}}
+    @php
+        $catalogQuery = request()->except(['cat', 'sub', 'page']);
+    @endphp
+    <nav class="catalog-categories-bar" aria-label="Navegación por categorías">
+        <div class="container">
+        <div class="categories-row categories-row--parent">
+            <a href="{{ route('clientes.catalogo', $catalogQuery) }}"
+               class="category-pill {{ !$categoriaPadreActual ? 'category-pill--active' : 'category-pill--muted' }}"
+               {{ !$categoriaPadreActual ? 'aria-current="location"' : '' }}>
+                Todas las categorías
+            </a>
+            @foreach($categorias as $cat)
+                @php $catSlug = \Illuminate\Support\Str::slug($cat->name); @endphp
+                <a href="{{ route('clientes.catalogo', array_merge($catalogQuery, ['cat' => $catSlug])) }}"
+                   class="category-pill {{ $categoriaPadreActual && $categoriaPadreActual->category_id === $cat->category_id ? 'category-pill--active' : '' }} {{ $categoriaPadreActual && $categoriaPadreActual->category_id !== $cat->category_id ? 'category-pill--muted' : '' }}"
+                   {{ $categoriaPadreActual && $categoriaPadreActual->category_id === $cat->category_id ? 'aria-current="location"' : '' }}>
+                    {{ $cat->name }}
+                </a>
+            @endforeach
+        </div>
+        @if($categoriaPadreActual)
+        <div class="categories-row categories-row--sub">
+            <span class="categories-row-context">En {{ $categoriaPadreActual->name }}:</span>
+            @php $parentSlug = \Illuminate\Support\Str::slug($categoriaPadreActual->name); @endphp
+            <a href="{{ route('clientes.catalogo', array_merge($catalogQuery, ['cat' => $parentSlug])) }}"
+               class="subcategory-pill {{ !$subcategoriaActual ? 'subcategory-pill--active' : 'subcategory-pill--muted' }}"
+               {{ !$subcategoriaActual ? 'aria-current="location"' : '' }}>
+                Todas
+            </a>
+            @foreach($categoriaPadreActual->childCategories as $sub)
+                @php $subSlug = \Illuminate\Support\Str::slug($sub->name); @endphp
+                <a href="{{ route('clientes.catalogo', array_merge($catalogQuery, ['cat' => $parentSlug, 'sub' => $subSlug])) }}"
+                   class="subcategory-pill {{ $subcategoriaActual && $subcategoriaActual->category_id === $sub->category_id ? 'subcategory-pill--active' : 'subcategory-pill--muted' }}"
+                   {{ $subcategoriaActual && $subcategoriaActual->category_id === $sub->category_id ? 'aria-current="location"' : '' }}>
+                    {{ $sub->name }}
+                </a>
+            @endforeach
+        </div>
+        @endif
+        </div>
+    </nav>
 
     <div class="container">
         <div class="catalog-layout">
@@ -23,6 +66,12 @@
                     </h3>
                     
                     <form method="GET" action="{{ route('clientes.catalogo') }}" id="filter-form">
+                        @if(request('cat'))
+                            <input type="hidden" name="cat" value="{{ request('cat') }}">
+                        @endif
+                        @if(request('sub'))
+                            <input type="hidden" name="sub" value="{{ request('sub') }}">
+                        @endif
                         <!-- Búsqueda -->
                         <div class="filter-group">
                             <label for="buscar">Buscar</label>
@@ -32,20 +81,6 @@
                                    class="form-control" 
                                    placeholder="Nombre o descripción..."
                                    value="{{ request('buscar') }}">
-                        </div>
-                        
-                        <!-- Categoría -->
-                        <div class="filter-group">
-                            <label for="categoria_id">Categoría</label>
-                            <select id="categoria_id" name="categoria_id" class="form-control">
-                                <option value="">Todas las categorías</option>
-                                @foreach($categorias as $categoria)
-                                    <option value="{{ $categoria->category_id }}" 
-                                            {{ request('categoria_id') == $categoria->category_id ? 'selected' : '' }}>
-                                        {{ $categoria->name }}
-                                    </option>
-                                @endforeach
-                            </select>
                         </div>
                         
                         <!-- Rango de Precio -->
@@ -124,12 +159,25 @@
                 <!-- Resultados -->
                 <div class="catalog-results">
                     <div class="results-header">
+                        <nav class="catalog-breadcrumb" aria-label="Breadcrumb">
+                            <a href="{{ route('clientes.catalogo', request()->except(['cat', 'sub', 'page'])) }}">Catálogo</a>
+                            @if($categoriaPadreActual)
+                                <span class="catalog-breadcrumb-sep">/</span>
+                                @if($subcategoriaActual)
+                                    <a href="{{ route('clientes.catalogo', array_merge(request()->except(['sub', 'page']), ['cat' => \Illuminate\Support\Str::slug($categoriaPadreActual->name)])) }}">{{ $categoriaPadreActual->name }}</a>
+                                    <span class="catalog-breadcrumb-sep">/</span>
+                                    <span class="catalog-breadcrumb-current">{{ $subcategoriaActual->name }}</span>
+                                @else
+                                    <span class="catalog-breadcrumb-current">{{ $categoriaPadreActual->name }}</span>
+                                @endif
+                            @endif
+                        </nav>
                         <p class="results-count">
                             @if($productos->total() > 0)
                                 Mostrando {{ $productos->firstItem() }}-{{ $productos->lastItem() }} de {{ $productos->total() }} productos
                             @else
                                 0 productos encontrados
-                                @if(request()->hasAny(['buscar', 'categoria_id', 'precio_min', 'precio_max']))
+                                @if(request()->hasAny(['buscar', 'cat', 'sub', 'precio_min', 'precio_max']))
                                     <span class="results-count-note">(tus filtros se mantienen aplicados)</span>
                                 @endif
                             @endif
@@ -195,7 +243,11 @@
                         </div>
                     @else
                         <div class="empty-state">
-                            @if(!empty($tieneFiltroPrecio))
+                            @if($categoriaPadreActual || $subcategoriaActual)
+                                <i class="fas fa-folder-open"></i>
+                                <h3>No hay productos disponibles en esta categoría.</h3>
+                                <p>Intenta seleccionar otra categoría del listado o ver todos los productos del catálogo.</p>
+                            @elseif(!empty($tieneFiltroPrecio))
                                 <i class="fas fa-coins"></i>
                                 <h3>No hay productos en el rango de precios seleccionado</h3>
                                 <p>Tus filtros se mantienen aplicados. Puedes ajustar el rango de precios (o el resto de filtros) en el panel izquierdo y volver a buscar, o ver todos los productos sin filtros.</p>

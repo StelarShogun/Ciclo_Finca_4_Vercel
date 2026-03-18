@@ -1,7 +1,7 @@
 {
-    "name": "Ciclo Pérez Admin",
+    "name": "Ciclo Finca 4 Admin",
     "short_name": "CP Admin",
-    "description": "Sistema de gestión integral para Ciclo Pérez",
+    "description": "Sistema de gestión integral para Ciclo Finca 4",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
