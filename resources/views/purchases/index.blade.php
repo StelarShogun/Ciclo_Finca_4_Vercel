@@ -170,9 +170,20 @@
                         </tr>`;
                     }).join('');
 
-                    const buyerName = sale.buyer && (sale.buyer.name || sale.buyer.email)
-                        ? `${sale.buyer.name || 'Walk-in / Sin datos'}${sale.buyer.email ? ' (' + sale.buyer.email + ')' : ''}`
-                        : (sale.customer ? `${sale.customer.nombre || ''} ${sale.customer.apellido || ''}` : 'Walk-in / Sin datos');
+                    let buyerName = 'Walk-in / Sin datos';
+                    if (sale.buyer && (sale.buyer.name || sale.buyer.email)) {
+                        buyerName = `${sale.buyer.name || 'Walk-in / Sin datos'}${sale.buyer.email ? ' (' + sale.buyer.email + ')' : ''}`;
+                    } else if (sale.client) {
+                        buyerName =
+                            ((sale.client.name || '') + ' ' +
+                            (sale.client.first_surname || '') + ' ' +
+                            (sale.client.second_surname ? sale.client.second_surname : '')).trim();
+                        if (sale.client.gmail) {
+                            buyerName += ' (' + sale.client.gmail + ')';
+                        }
+                    } else if (sale.customer) {
+                        buyerName = `${sale.customer.nombre || ''} ${sale.customer.apellido || ''}`.trim();
+                    }
 
                     body.innerHTML = `
                         <div>
