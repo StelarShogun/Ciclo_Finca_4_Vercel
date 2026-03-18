@@ -71,10 +71,9 @@ Route::post('/logout', function(Request $request) {
 })->name('logout');
 
 // OAuth Routes
-Route::get('/auth/google', [UsuarioController::class, 'redirectToGoogle'])->name('auth.google');
-Route::get('/auth/google/callback', [UsuarioController::class, 'handleGoogleCallback'])->name('auth.google.callback');
-Route::get('/auth/facebook', [UsuarioController::class, 'redirectToFacebook'])->name('auth.facebook');
-Route::get('/auth/facebook/callback', [UsuarioController::class, 'handleFacebookCallback'])->name('auth.facebook.callback');
+Route::get('/auth/google', [ClientUserController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [ClientUserController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+
 
 // Ruta para renovar token CSRF
 Route::get('/csrf-token', function(Request $request) {
@@ -82,9 +81,6 @@ Route::get('/csrf-token', function(Request $request) {
         'csrf_token' => csrf_token()
     ]);
 })->name('csrf.token');
-
-// Usuario Routes (públicas para login y registro)
-Route::post('/usuarios/store-login', [UsuarioController::class, 'storeLogin'])->name('storeLogin');
 
 // Usuario Routes protegidas (solo administradores)
 Route::middleware(['auth:admin'])->group(function () {

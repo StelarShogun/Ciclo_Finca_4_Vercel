@@ -22,6 +22,8 @@ class Client extends Authenticatable
         'verification_code',
         'verification_code_expires_at',
         'email_verified',
+        'provider',
+        'provider_id',
         'remember_token',
     ];
 

@@ -189,10 +189,6 @@
                             </span>
                         </span>
                     </a>
-                    <a href="{{ route('auth.facebook') }}" class="oauth-btn facebook-btn">
-                        <i class="fab fa-facebook"></i>
-                        <span>Continuar con Facebook</span>
-                    </a>
                 </div>
                 
                 <div class="login-footer">

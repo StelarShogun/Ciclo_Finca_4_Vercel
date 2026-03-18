@@ -84,7 +84,7 @@
         </div>
         <div class="login-footer text-center">
             <p class="login-footer-text">¿No tienes una cuenta?</p>
-            <a href="#" id="show-register-form" class="login-register-btn">
+            <a href="{{ route('clients.register.form') }}" id="show-register-form" class="login-register-btn">
                 <i class="fas fa-user-plus" aria-hidden="true"></i>
                 <span>Crear cuenta</span>
             </a>

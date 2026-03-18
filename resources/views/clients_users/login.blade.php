@@ -49,79 +49,24 @@
                     </div>
                 </form>
 
-                <!-- Enlace para registro -->
+                <!-- Enlace para registro de clientes -->
                 <div class="auth-switch">
                     <p>¿No tienes una cuenta?</p>
-                    <button type="button" onclick="mostrarRegistro()" class="auth-link">
-                        Regístrate aquí
-                    </button>
+                    <a href="{{ route('clients.register.form') }}" class="auth-link">Regístrate aquí (crear cuenta cliente)</a>
                 </div>
             </div>
         </div>
 
-        <!-- FORMULARIO DE REGISTRO -->
+        <!-- Enlace a registro de clientes -->
         <div id="registroForm" class="auth-form">
             <div class="formulario-header">
-                <h1>Registrar Nuevo Usuario</h1>
-                <p>Completa el formulario para crear una cuenta</p>
+                <h1>Registrar como cliente</h1>
+                <p>Usa la página de registro de clientes para crear tu cuenta.</p>
             </div>
-
             <div class="formulario-card">
-                <!-- Mensaje de feedback -->
-                <div id="mensajeFeedbackRegistro" class="feedback-message hidden">
-                    <i class="fas fa-info-circle"></i>
-                    <span id="mensajeRegistroTexto"></span>
-                </div>
-
-                <form id="formRegistro" class="formulario-body" action="{{ route('storeLogin') }}" method="POST">
-                    @csrf
-
-                    <!-- Fila de nombre y apellido -->
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="registroNombre">Nombre *</label>
-                            <input type="text" id="registroNombre" name="nombre" required placeholder="Ej: Juan">
-                        </div>
-                        <div class="form-group">
-                            <label for="registroApellido">Apellido *</label>
-                            <input type="text" id="registroApellido" name="apellido" required placeholder="Ej: Pérez">
-                        </div>
-                    </div>
-
-                    <!-- Email -->
-                    <div class="form-group">
-                        <label for="registroEmail">Correo Electrónico *</label>
-                        <input type="email" id="registroEmail" name="email" required placeholder="ejemplo@correo.com">
-                    </div>
-
-                    <!-- Contraseñas -->
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="registroPassword">Contraseña *</label>
-                            <input type="password" id="registroPassword" name="password" required minlength="6"
-                                placeholder="Mínimo 6 caracteres">
-                        </div>
-                        <div class="form-group">
-                            <label for="registroPasswordConfirmation">Confirmar Contraseña *</label>
-                            <input type="password" id="registroPasswordConfirmation" name="password_confirmation" required
-                                minlength="6" placeholder="Repite la contraseña">
-                        </div>
-                    </div>
-
-                    <!-- Acciones del formulario -->
-                    <div class="form-actions">
-                        <button type="submit" id="btnRegistroSubmit" class="btn btn-primary"
-                            onclick="registrarUsuario(event, 'login')">
-                            <i class="fas fa-user-plus"></i>
-                            <span id="btnRegistroTexto">Registrar Usuario</span>
-                            <span id="btnRegistroCargando" class="hidden">Registrando...</span>
-                        </button>
-                        <button type="button" onclick="mostrarLogin()" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i>
-                            Volver al Login
-                        </button>
-                    </div>
-                </form>
+                <a href="{{ route('clients.register.form') }}" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Ir a crear cuenta (cliente)
+                </a>
             </div>
         </div>
     </div>

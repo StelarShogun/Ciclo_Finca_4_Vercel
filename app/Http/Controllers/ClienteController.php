@@ -424,32 +424,42 @@ class ClienteController extends Controller
     }
 
     /**
-     * Obtiene el conteo de ítems en el carrito (solo para Client logueado)
+     * Obtiene el conteo de ítems en el carrito (solo para Client logueado).
+     * Devuelve 0 si la tabla cart_items no existe aún.
      */
     private function getCartCount()
     {
         if (!Auth::guard('clients')->check()) {
             return 0;
         }
-        return (int) CartItem::where('client_id', Auth::guard('clients')->id())->sum('quantity');
+        try {
+            return (int) CartItem::where('client_id', Auth::guard('clients')->id())->sum('quantity');
+        } catch (\Throwable $e) {
+            return 0;
+        }
     }
 
     /**
-     * Obtiene el total del carrito (solo para Client logueado)
+     * Obtiene el total del carrito (solo para Client logueado).
+     * Devuelve 0 si la tabla cart_items no existe aún.
      */
     private function getCartTotal()
     {
         if (!Auth::guard('clients')->check()) {
             return 0;
         }
-        $items = CartItem::where('client_id', Auth::guard('clients')->id())->with('product')->get();
-        $total = 0;
-        foreach ($items as $item) {
-            if ($item->product) {
-                $total += $item->product->sale_price * $item->quantity;
+        try {
+            $items = CartItem::where('client_id', Auth::guard('clients')->id())->with('product')->get();
+            $total = 0;
+            foreach ($items as $item) {
+                if ($item->product) {
+                    $total += $item->product->sale_price * $item->quantity;
+                }
             }
+            return $total;
+        } catch (\Throwable $e) {
+            return 0;
         }
-        return $total;
     }
 
     public function clearCart()
