@@ -13,6 +13,12 @@ class ClientUserSeeder extends Seeder
      */
     public function run(): void
     {
+        $existing = DB::table('client_table')->where('gmail', 'darwinn990@gmail.com')->first();
+        if ($existing) {
+            $this->command->warn('El cliente darwinn990@gmail.com ya existe en la base de datos.');
+            return;
+        }
+
         DB::table('client_table')->insert([
             'name' => 'Darwin',
             'first_surname' => 'Nuñez',
@@ -23,5 +29,6 @@ class ClientUserSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        $this->command->info('✅ Cliente creado: darwinn990@gmail.com');
     }
 }

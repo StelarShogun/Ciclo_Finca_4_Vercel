@@ -44,26 +44,17 @@
                 </nav>
                 
                 <div class="header-actions">
-                    @auth
-                    <a href="{{ route('clientes.carrito') }}" class="cart-btn cart-btn-link" id="cart-link" data-cart-count="{{ $cartCount ?? 0 }}" title="Ver carrito">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
-                    </a>
-                    @else
-                    <button class="cart-btn" id="cart-guest" type="button" title="Ver carrito">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-count" id="cart-count">0</span>
-                    </button>
-                    @if(request()->routeIs('login.show'))
-                        <a href="/" class="btn btn-outline-secondary btn-sm" style="display:flex;align-items:center;gap:6px;">
-                            <i class="fas fa-arrow-left"></i>
-                            <span>Regresar</span>
+                    @if(Auth::guard('clients')->check())
+                        <a href="{{ route('clientes.carrito') }}" class="cart-btn cart-btn-link" id="cart-link" data-cart-count="{{ $cartCount ?? 0 }}" title="Ver carrito">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
                         </a>
-                    @elseif(session('client_id'))
-                        <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-left: 12px;">
                             <div style="display: flex; flex-direction: column; align-items: center;">
                                 <i class="fas fa-user-circle" style="font-size: 2rem; color: #218838;"></i>
-                                <span style="font-size: 0.95rem; color: #218838; margin-top: 2px;">{{ session('client_name') }}</span>
+                                <span style="font-size: 0.95rem; color: #218838; margin-top: 2px;">
+                                    {{ Auth::guard('clients')->user()->name ?? 'Cliente' }}
+                                </span>
                             </div>
                             <form action="{{ route('logout') }}" method="POST" class="logout-form" style="margin: 0;">
                                 @csrf
@@ -74,11 +65,21 @@
                             </form>
                         </div>
                     @else
-                        <a href="/login" class="btn btn-primary btn-sm">
-                            <i class="fas fa-sign-in-alt"></i>
-                            <span>Iniciar Sesión</span>
-                        </a>
-                    @endif
+                        <button class="cart-btn" id="cart-guest" type="button" title="Ver carrito">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count" id="cart-count">0</span>
+                        </button>
+                        @if(request()->routeIs('login.show'))
+                            <a href="/" class="btn btn-outline-secondary btn-sm" style="display:flex;align-items:center;gap:6px;">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Regresar</span>
+                            </a>
+                        @else
+                            <a href="/login" class="btn btn-primary btn-sm">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>Iniciar Sesión</span>
+                            </a>
+                        @endif
                     @endif
                 </div>
             </div>

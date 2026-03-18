@@ -14,6 +14,7 @@ class Sale extends Model
     protected $fillable = [
         'invoice_number',
         'customer_id',
+        'client_id',
         'seller_id',
         'subtotal',
         'iva',
@@ -47,6 +48,11 @@ class Sale extends Model
     public function seller(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'seller_id', 'usuario_id');
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class, 'client_id', 'user_id');
     }
 
     public function scopePending($query)
