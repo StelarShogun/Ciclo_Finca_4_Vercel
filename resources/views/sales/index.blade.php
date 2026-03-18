@@ -228,7 +228,9 @@
             <header class="sales-header">
                 <div>
                     <h1 style="font-size: 1.35rem; margin: 0;">Historial de Ventas</h1>
-                    <p style="margin: 6px 0 0 0; color: var(--color-muted);">Solo ventas completadas</p>
+                    <p style="margin: 6px 0 0 0; color: rgba(255, 255, 255, 0.78); font-weight: 500; font-size: 0.95rem;">
+                        Solo ventas completadas
+                    </p>
                 </div>
             </header>
 
