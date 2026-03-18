@@ -155,7 +155,10 @@
                                 @elseif($sale->customer_id && $sale->customer)
                                     {{ $sale->customer->nombre ?? 'N/A' }} {{ $sale->customer->apellido ?? '' }}
                                 @else
-                                    —
+                                    {{ $sale->buyer_name ?: 'Walk-in / Sin datos' }}
+                                    @if($sale->buyer_email)
+                                        <span class="text-muted">({{ $sale->buyer_email }})</span>
+                                    @endif
                                 @endif
                             </td>
                             <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
@@ -226,13 +229,21 @@
                         @csrf
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="customer_id">Cliente *</label>
-                                <select id="customer_id" name="customer_id" required>
-                                    <option value="">Seleccionar cliente</option>
+                                <label for="customer_id">Cliente (opcional)</label>
+                                <select id="customer_id" name="customer_id">
+                                    <option value="">Walk-in / Sin datos</option>
                                     @foreach(\App\Models\Usuario::where('rol', 'cliente')->get() as $c)
                                     <option value="{{ $c->usuario_id }}">{{ $c->nombre }} {{ $c->apellido }}</option>
                                     @endforeach
                                 </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="buyer_name">Nombre (opcional)</label>
+                                <input type="text" id="buyer_name" name="buyer_name" placeholder="Nombre del comprador (opcional)">
+                            </div>
+                            <div class="form-group">
+                                <label for="buyer_email">Email (opcional)</label>
+                                <input type="email" id="buyer_email" name="buyer_email" placeholder="Email del comprador (opcional)">
                             </div>
                             <div class="form-group">
                                 <label for="payment_method">Método de Pago *</label>
@@ -456,6 +467,11 @@
                         customerName = (sale.client.name || '') + ' ' + (sale.client.first_surname || '') + (sale.client.second_surname ? ' ' + sale.client.second_surname : '') + (sale.client.gmail ? ' (' + sale.client.gmail + ')' : '');
                     } else if (sale.customer) {
                         customerName = (sale.customer.nombre || '') + ' ' + (sale.customer.apellido || '');
+                    } else if (sale.buyer) {
+                        customerName = sale.buyer.name ? sale.buyer.name : 'Walk-in / Sin datos';
+                        if (sale.buyer.email) {
+                            customerName += ' (' + sale.buyer.email + ')';
+                        }
                     }
                     const statusLabels = { pending: 'Pendiente', completed: 'Completada', cancelled: 'Cancelada', refunded: 'Reembolsada' };
                     const paymentLabels = { cash: 'Efectivo', sinpe: 'SINPE Móvil', transfer: 'Transferencia' };

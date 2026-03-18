@@ -16,6 +16,7 @@ class Sale extends Model
         'customer_id',
         'client_id',
         'seller_id',
+        'seller_admin_id',
         'subtotal',
         'iva',
         'discount',
@@ -25,6 +26,9 @@ class Sale extends Model
         'status',
         'notes',
         'sale_date',
+        'buyer_name',
+        'buyer_email',
+        'order_source',
     ];
 
     protected $casts = [
@@ -48,6 +52,11 @@ class Sale extends Model
     public function seller(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'seller_id', 'usuario_id');
+    }
+
+    public function sellerAdmin(): BelongsTo
+    {
+        return $this->belongsTo(AdminUser::class, 'seller_admin_id', 'user_id');
     }
 
     public function client(): BelongsTo

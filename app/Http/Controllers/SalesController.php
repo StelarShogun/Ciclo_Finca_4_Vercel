@@ -107,6 +107,11 @@ class SalesController extends Controller
                     'discount' => $sale->discount,
                     'total' => $sale->total,
                     'notes' => $sale->notes,
+                    'order_source' => $sale->order_source,
+                    'buyer' => [
+                        'name' => $sale->buyer_name,
+                        'email' => $sale->buyer_email,
+                    ],
                     'days_remaining_until_expiration' => $sale->days_remaining_until_expiration,
                     'expires_at' => $sale->expires_at->toISOString(),
                     'is_expiry_warning' => $sale->is_expiry_warning,
@@ -152,6 +157,8 @@ class SalesController extends Controller
         // Accept both English (items, customer_id) and legacy (productos, cliente_id) form field names
         $items = $request->items ?? $request->productos ?? [];
         $customerId = $request->customer_id ?? $request->cliente_id;
+        $buyerName = $request->buyer_name ?? null;
+        $buyerEmail = $request->buyer_email ?? null;
         $paymentMethod = $request->payment_method ?? $this->mapPaymentMethodToEnglish($request->metodo_pago);
         $paymentReference = $request->payment_reference ?? $request->referencia_pago;
         $discount = $request->discount ?? $request->descuento;
@@ -175,7 +182,9 @@ class SalesController extends Controller
         $request->merge(['items' => $normalizedItems]);
 
         $request->validate([
-            'customer_id' => 'required|exists:usuarios,usuario_id',
+            'customer_id' => 'nullable|exists:usuarios,usuario_id',
+            'buyer_name' => 'nullable|string|max:120',
+            'buyer_email' => 'nullable|email|max:150',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,product_id',
             'items.*.producto_id' => 'nullable',
@@ -214,13 +223,17 @@ class SalesController extends Controller
             $sale = Sale::create([
                 'invoice_number' => (new Sale())->generateInvoiceNumber(),
                 'customer_id' => $request->customer_id,
-                'seller_id' => auth()->id() ?? 1,
+                'seller_id' => null, // walk-in registrar uses admins via seller_admin_id
+                'seller_admin_id' => Auth::guard('admin')->id(),
                 'sale_date' => now(),
                 'payment_method' => $request->payment_method,
                 'payment_reference' => $request->payment_reference ?? null,
                 'status' => 'pending',
                 'discount' => $request->discount ?? 0,
                 'notes' => $request->notes,
+                'buyer_name' => $buyerName,
+                'buyer_email' => $buyerEmail,
+                'order_source' => 'walk_in',
                 'total' => 0
             ]);
 
