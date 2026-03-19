@@ -7,10 +7,19 @@ use App\Http\Controllers\SalesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\ClientUserController;
+
+
+// ============================================================
+// ADMIN LOGIN ROUTES
+// ============================================================
+Route::get('/admin/login', [AdminUserController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [AdminUserController::class, 'login'])->name('admin.login.submit');
+Route::post('/admin/logout', [AdminUserController::class, 'logout'])->name('admin.logout');
 
 // ============================================================
 // DEV UTILITIES (remove in production)
@@ -62,6 +71,15 @@ Route::post('/login', [ClientUserController::class, 'login'])
     ->middleware('throttle:5,1')
     ->name('login');
 
+// ============================================================
+// ADMIN LOGIN (público para que el usuario admin pueda autenticarse)
+// ============================================================
+Route::get('/admin/login', [AdminUserController::class, 'showLoginForm'])
+    ->name('admin.login');
+
+Route::post('/admin/login', [AdminUserController::class, 'login'])
+    ->name('admin.login.submit');
+
 // Logs out both guards to avoid inconsistent session state
 Route::post('/logout', function (Request $request) {
     Auth::guard('clients')->logout();
@@ -103,10 +121,10 @@ Route::middleware(['auth:admin'])->group(function () {
 });
 
 // ============================================================
-// ADMIN ROUTES (auth + admin.only + prevent.direct)
+// ADMIN ROUTES (admin.only + prevent.direct)
 // ============================================================
 
-Route::middleware(['auth', 'admin.only', 'prevent.direct'])->group(function () {
+    Route::middleware(['auth:admin', 'admin.only', 'prevent.direct'])->group(function () {
 
     // — User management —
     Route::post('/usuarios/store-login', [UsuarioController::class, 'storeLogin'])->name('storeLogin');
@@ -136,6 +154,8 @@ Route::middleware(['auth', 'admin.only', 'prevent.direct'])->group(function () {
     Route::get('/sales/{id}/print', [SalesController::class, 'print'])->name('sales.print');
     Route::get('/sales/{id}/invoice', [SalesController::class, 'invoice'])->name('sales.invoice');
     Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
+    Route::get('/sales/history/heartbeat', [SalesController::class, 'historyHeartbeat'])
+        ->name('sales.history.heartbeat');
 
 });
 

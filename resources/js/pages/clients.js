@@ -133,7 +133,7 @@ function closeModal(id) {
 // CART PAGE (/cart)
 // ============================================================
 
-/** PUTs a quantity change for a single cart item, then reloads. */
+/** PUTs a quantity change for a single cart item, then updates DOM (no reload). */
 function updateCartQuantity(productId, quantity) {
     fetch('/cart/update', {
         method: 'PUT',
@@ -143,12 +143,37 @@ function updateCartQuantity(productId, quantity) {
             'X-Requested-With': 'XMLHttpRequest',
             'Accept': 'application/json'
         },
-        body: JSON.stringify({ producto_id: productId, cantidad: quantity })
+        body: JSON.stringify({ product_id: productId, quantity: quantity })
     })
         .then(function (res) { return res.json().catch(function () { return {}; }); })
         .then(function (data) {
             if (data.success) {
-                window.location.reload();
+                // Update totals without a full page reload.
+                var totalFormatted = (data.cart_total != null)
+                    ? ('₡' + Number(data.cart_total).toLocaleString('es-CR'))
+                    : '₡0';
+
+                var subtotalEl = document.getElementById('cart-subtotal');
+                var totalEl = document.getElementById('cart-total-amount');
+                if (subtotalEl) subtotalEl.textContent = totalFormatted;
+                if (totalEl) totalEl.textContent = totalFormatted;
+
+                updateCartCount(data.cart_count || 0);
+
+                // Update the affected line subtotal, using unit price from the rendered UI.
+                var cartItem = document.querySelector('.cart-item[data-product-id="' + productId + '"]');
+                if (cartItem) {
+                    var unitPriceEl = cartItem.querySelector('.item-price');
+                    var unitPriceText = unitPriceEl ? unitPriceEl.textContent : '';
+                    // Matches "₡1.234 c/u" => returns 1234
+                    var unitPrice = parseInt(unitPriceText.replace(/[^\d]/g, ''), 10) || 0;
+
+                    var newSubtotal = unitPrice * quantity;
+                    var lineSubtotalEl = cartItem.querySelector('.subtotal-amount');
+                    if (lineSubtotalEl) {
+                        lineSubtotalEl.textContent = '₡' + newSubtotal.toLocaleString('es-CR');
+                    }
+                }
             } else {
                 Swal.fire('Error', data.message || 'No se pudo actualizar el carrito', 'error');
             }
@@ -328,7 +353,22 @@ document.addEventListener('DOMContentLoaded', function () {
                             window.location.href = data.redirect || '/';
                         });
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Error al iniciar sesión' });
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            html: (data.message || 'Error al iniciar sesión') +
+                                '<hr style="margin:12px 0">' +
+                                '<p style="font-size:0.9rem;margin:0">¿Tienes una cuenta registrada? ¿O deseas registrarte?</p>',
+                            showCancelButton: true,
+                            confirmButtonText: 'Ir a Registro',
+                            cancelButtonText: 'Cancelar',
+                            confirmButtonColor: '#2d7a2d',
+                            cancelButtonColor: '#6c757d',
+                        }).then(function (result) {
+                            if (result.isConfirmed) {
+                                window.location.href = '/register';
+                            }
+                        });
                         if (submitBtn) submitBtn.disabled = false;
                         if (submitSpan) submitSpan.classList.remove('hidden');
                         if (loadingSpan) loadingSpan.classList.add('hidden');
@@ -358,14 +398,9 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Guest: prompt to log in
+        // Guest: redirect to login (no cart actions for unauthenticated users)
         if (e.target.closest('.guest-add-btn')) {
-            Swal.fire({
-                icon: 'info',
-                title: 'Inicia sesión',
-                text: 'Debes iniciar sesión para agregar productos al carrito.',
-                confirmButtonText: 'Entendido'
-            });
+            window.location.href = '/login';
             return;
         }
 
@@ -598,14 +633,14 @@ document.addEventListener('DOMContentLoaded', function () {
                             proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
                             return;
                         }
+                        // Vaciar la UI del carrito inmediatamente tras confirmar.
                         updateCartCount(0);
+                        showCartEmptyState();
+
                         Swal.fire({
                             icon: 'success',
-                            title: '¡Pedido enviado con éxito!',
-                            html: 'Su pedido fue enviado con éxito.<br><br>Tiene un lapso de <b>3 días</b> para retirarlo en nuestro local.<br><br>El pago se realiza de forma presencial mediante <b>SINPE, efectivo o tarjeta</b>.',
+                            text: 'Su pedido fue enviado con éxito. Tiene un lapso de 3 días para retirarlo en nuestro local. El pago se realiza de forma presencial mediante SINPE, efectivo o tarjeta.',
                             confirmButtonText: 'Entendido'
-                        }).then(function () {
-                            window.location.reload();
                         });
                     })
                     .catch(function (err) {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -23,6 +24,7 @@ class Client extends Authenticatable
         'email_verified',
         'provider',
         'provider_id',
+        'google_id',
         'remember_token',
     ];
 
@@ -35,6 +37,11 @@ class Client extends Authenticatable
         'verification_code_expires_at' => 'datetime',
         'email_verified'               => 'boolean',
     ];
+
+    public function cartItems(): HasMany
+    {
+        return $this->hasMany(CartItem::class, 'client_id', 'user_id');
+    }
 
     // Normalizes provider: null values are treated as 'local' to prevent incorrect UI rendering.
     public function getProviderAttribute($value): string

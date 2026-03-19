@@ -1,4 +1,7 @@
-@extends('clients.layouts.guest')
+@extends('clients.layouts.app')
+
+@section('hideNav')
+@endsection
 
 @section('title', 'Registrar Cliente')
 
@@ -133,6 +136,10 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+    @vite(['resources/css/clients-users.css'])
+@endpush
 
 @push('scripts')
 <script>

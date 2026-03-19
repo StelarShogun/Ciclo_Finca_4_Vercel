@@ -14,12 +14,12 @@ class PreventDirectAccess
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function handle(Request $request, Closure $next)
     {
-        // Si no hay usuario autenticado
-        if (!Auth::check()) {
+        // Solo valida contra el guard admin; este middleware se usa en el grupo de rutas admin.
+        if (!Auth::guard('admin')->check()) {
             // Limpiar cualquier sesión residual
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -31,26 +31,8 @@ class PreventDirectAccess
                 ], 401);
             }
             
-            return redirect()->route('login.show')
-                ->with('error', 'Debes iniciar sesión para acceder al sistema.');
-        }
-
-        // Si el usuario no es administrador
-        if (!Auth::user()->isAdmin()) {
-            // Cerrar sesión inmediatamente
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-            
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'error' => 'Acceso denegado',
-                    'message' => 'Solo administradores pueden acceder'
-                ], 403);
-            }
-            
-            return redirect()->route('login.show')
-                ->with('error', 'Acceso denegado. Solo administradores pueden acceder al sistema.');
+            return redirect()->route('admin.login')
+                ->with('error', 'Acceso denegado. Debes iniciar sesión como administrador.');
         }
 
         $response = $next($request);

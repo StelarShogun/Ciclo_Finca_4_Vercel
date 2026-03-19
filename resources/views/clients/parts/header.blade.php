@@ -7,8 +7,9 @@
                 <a href="{{ route('clients.home') }}" class="logo-link">
                     <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Finca 4"
                          class="logo-img"
-                         onerror="this.src='{{ asset('favicon.svg') }}'">
-                    <span class="logo-text">Ciclo Finca 4</span>
+                         data-fallback-src="{{ asset('favicon.svg') }}"
+                         onerror="this.src=this.dataset.fallbackSrc;">
+                    <span class="logo-text">Ciclo Pérez</span>
                 </a>
             </div>
 

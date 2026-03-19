@@ -19,7 +19,8 @@
                 <!-- Fallback to favicon if product image is missing -->
                 <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}" 
                      alt="{{ $product->name }}"
-                     onerror="this.src='{{ asset('favicon.svg') }}'">
+                     data-fallback-src="{{ asset('favicon.svg') }}"
+                     onerror="this.src=this.dataset.fallbackSrc;">
             </div>
 
             <div class="product-detail-info">
@@ -68,7 +69,7 @@
                             </div>
                         </div>
                         <!-- Authenticated users add to cart; guests are prompted to log in via JS -->
-                        @auth
+                        @auth('clients')
                         <button class="btn btn-primary btn-lg add-to-cart-btn" 
                                 data-product-id="{{ $product->product_id }}"
                                 data-product-name="{{ $product->name }}"
@@ -99,7 +100,8 @@
                                 <a href="{{ route('clients.product', $related->product_id) }}">
                                     <img src="{{ asset('assets/images/products/' . ($related->image ?? 'default.png')) }}" 
                                          alt="{{ $related->name }}"
-                                         onerror="this.src='{{ asset('favicon.svg') }}'">
+                                         data-fallback-src="{{ asset('favicon.svg') }}"
+                                         onerror="this.src=this.dataset.fallbackSrc;">
                                 </a>
                             </div>
                             <div class="product-info">

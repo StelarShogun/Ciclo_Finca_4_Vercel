@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\Usuario;
 use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +19,7 @@ class SalesController extends Controller
         $paymentMethod = $request->get('payment_method');
         $search = $request->get('search');
 
-        $query = Sale::with(['customer', 'client', 'saleItems.product', 'seller']);
+        $query = Sale::with(['client', 'sellerAdmin', 'saleItems.product']);
 
         $query->notExpired();
 
@@ -56,10 +55,8 @@ class SalesController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('sale_id', 'like', "%{$search}%")
                   ->orWhere('invoice_number', 'like', "%{$search}%")
-                  ->orWhereHas('customer', function ($subQ) use ($search) {
-                      $subQ->where('nombre', 'like', "%{$search}%")
-                           ->orWhere('email', 'like', "%{$search}%");
-                  })
+                  ->orWhere('buyer_name', 'like', "%{$search}%")
+                  ->orWhere('buyer_email', 'like', "%{$search}%")
                   ->orWhereHas('client', function ($subQ) use ($search) {
                       $subQ->where('name', 'like', "%{$search}%")
                            ->orWhere('first_surname', 'like', "%{$search}%")
@@ -70,6 +67,23 @@ class SalesController extends Controller
 
         $sales = $query->orderBy('sale_date', 'desc')->paginate(15);
 
+        // CF4-4: Compras admin desde carrito web (pendientes + completadas)
+        $basePurchasesQuery = Sale::query()
+            ->whereIn('status', ['pending', 'completed'])
+            ->where(function ($q) {
+                // Para datos históricos: permitir `order_source` nulo.
+                $q->where('order_source', 'web_cart')
+                  ->orWhereNull('order_source');
+            })
+            ->notExpired();
+
+        $purchases = (clone $basePurchasesQuery)
+            ->with(['client', 'saleItems.product'])
+            ->orderBy('sale_date', 'desc')
+            ->paginate(15, ['*'], 'purchases_page');
+
+        $latestPurchaseSaleId = (clone $basePurchasesQuery)->max('sale_id') ?? 0;
+
         $dailySales = $this->calculateDailySales();
         $dailySalesTrend = $this->calculateDailySalesTrend();
         $dailyTransactions = $this->calculateDailyTransactions();
@@ -79,6 +93,8 @@ class SalesController extends Controller
 
         return view('sales.index', compact(
             'sales',
+            'purchases',
+            'latestPurchaseSaleId',
             'dailySales',
             'dailySalesTrend',
             'dailyTransactions',
@@ -88,10 +104,34 @@ class SalesController extends Controller
         ));
     }
 
+    public function historyHeartbeat(Request $request)
+    {
+        $since = (int) $request->query('since', 0);
+
+        $baseQuery = Sale::query()
+            ->whereIn('status', ['pending', 'completed'])
+            ->where(function ($q) {
+                $q->where('order_source', 'web_cart')
+                  ->orWhereNull('order_source');
+            })
+            ->notExpired();
+
+        $hasNew = (clone $baseQuery)
+            ->where('sale_id', '>', $since)
+            ->exists();
+
+        $latestSaleId = (clone $baseQuery)->max('sale_id') ?? 0;
+
+        return response()->json([
+            'hasNew' => $hasNew,
+            'latestSaleId' => $latestSaleId,
+        ]);
+    }
+
     public function show($id)
     {
         try {
-            $sale = Sale::with(['customer', 'client', 'saleItems.product', 'seller'])->findOrFail($id);
+            $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
 
             return response()->json([
                 'success' => true,
@@ -107,15 +147,14 @@ class SalesController extends Controller
                     'discount' => $sale->discount,
                     'total' => $sale->total,
                     'notes' => $sale->notes,
+                    'order_source' => $sale->order_source,
+                    'buyer' => [
+                        'name' => $sale->buyer_name,
+                        'email' => $sale->buyer_email,
+                    ],
                     'days_remaining_until_expiration' => $sale->days_remaining_until_expiration,
                     'expires_at' => $sale->expires_at->toISOString(),
                     'is_expiry_warning' => $sale->is_expiry_warning,
-                    'customer' => $sale->customer ? [
-                        'usuario_id' => $sale->customer->usuario_id,
-                        'nombre' => $sale->customer->nombre,
-                        'apellido' => $sale->customer->apellido,
-                        'email' => $sale->customer->email
-                    ] : null,
                     'client' => $sale->client ? [
                         'user_id' => $sale->client->user_id,
                         'name' => $sale->client->name,
@@ -149,9 +188,13 @@ class SalesController extends Controller
 
     public function store(Request $request)
     {
-        // Accept both English (items, customer_id) and legacy (productos, cliente_id) form field names
+        // Walk-in: guarda `buyer_name` / `buyer_email` opcionales.
+        // Web cart (si se manda `client_id`): guarda también `client_id` y marca `order_source`.
         $items = $request->items ?? $request->productos ?? [];
-        $customerId = $request->customer_id ?? $request->cliente_id;
+        $buyerName = $request->buyer_name ?: null;
+        $buyerEmail = $request->buyer_email ?: null;
+        $clientId = $request->client_id ?: null;
+
         $paymentMethod = $request->payment_method ?? $this->mapPaymentMethodToEnglish($request->metodo_pago);
         $paymentReference = $request->payment_reference ?? $request->referencia_pago;
         $discount = $request->discount ?? $request->descuento;
@@ -159,7 +202,6 @@ class SalesController extends Controller
 
         $request->merge([
             'items' => $items,
-            'customer_id' => $customerId,
             'payment_method' => $paymentMethod,
             'payment_reference' => $paymentReference,
             'discount' => $discount,
@@ -175,7 +217,9 @@ class SalesController extends Controller
         $request->merge(['items' => $normalizedItems]);
 
         $request->validate([
-            'customer_id' => 'required|exists:usuarios,usuario_id',
+            'buyer_name' => 'nullable|string|max:120',
+            'buyer_email' => 'nullable|email|max:150',
+            'client_id' => 'nullable|exists:client_table,user_id',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,product_id',
             'items.*.producto_id' => 'nullable',
@@ -189,7 +233,6 @@ class SalesController extends Controller
             'iva_percentage' => 'nullable|numeric|min:0|max:13',
             'notes' => 'nullable|string|max:500'
         ], [
-            'customer_id.required' => 'Customer is required.',
             'items.required' => 'At least one item is required.',
             'payment_method.in' => 'Payment method must be cash, sinpe or transfer.',
         ]);
@@ -211,16 +254,22 @@ class SalesController extends Controller
                 }
             }
 
+            $orderSource = $clientId ? 'web_cart' : 'walk_in';
             $sale = Sale::create([
                 'invoice_number' => (new Sale())->generateInvoiceNumber(),
-                'customer_id' => $request->customer_id,
-                'seller_id' => auth()->id() ?? 1,
+                'customer_id' => null, // CF4-4 sales module no depende de `usuarios`
+                'client_id' => $clientId,
+                'seller_id' => null, // walk-in registrar uses admins via seller_admin_id
+                'seller_admin_id' => Auth::guard('admin')->id(),
                 'sale_date' => now(),
                 'payment_method' => $request->payment_method,
                 'payment_reference' => $request->payment_reference ?? null,
-                'status' => 'pending',
+                'status' => 'completed',
                 'discount' => $request->discount ?? 0,
                 'notes' => $request->notes,
+                'buyer_name' => $buyerName,
+                'buyer_email' => $buyerEmail,
+                'order_source' => $orderSource,
                 'total' => 0
             ]);
 
@@ -263,7 +312,7 @@ class SalesController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Sale created successfully.',
-                'sale' => $sale->load(['customer', 'saleItems.product'])
+                'sale' => $sale->load(['client', 'sellerAdmin', 'saleItems.product'])
             ]);
         } catch (\Exception $e) {
             DB::rollback();
@@ -405,29 +454,35 @@ class SalesController extends Controller
 
     public function print($id)
     {
-        $sale = Sale::with(['customer', 'saleItems.product', 'seller'])->findOrFail($id);
+        $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
         return view('sales.print', compact('sale'));
     }
 
     public function invoice($id)
     {
-        $sale = Sale::with(['customer', 'saleItems.product', 'seller'])->findOrFail($id);
+        $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
         return view('sales.invoice', compact('sale'));
     }
 
     public function export(Request $request)
     {
         try {
-            $sales = Sale::with(['customer', 'saleItems.product', 'seller'])
+            $sales = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])
                 ->when($request->start_date, fn ($q) => $q->whereDate('sale_date', '>=', $request->start_date))
                 ->when($request->end_date, fn ($q) => $q->whereDate('sale_date', '<=', $request->end_date))
                 ->when($request->status, fn ($q) => $q->where('status', $request->status))
                 ->when($request->payment_method, fn ($q) => $q->where('payment_method', $request->payment_method))
                 ->when($request->search, function ($q) use ($request) {
-                    return $q->whereHas('customer', function ($sub) use ($request) {
-                        $sub->where('name', 'like', '%' . $request->search . '%')
-                            ->orWhere('email', 'like', '%' . $request->search . '%');
-                    })->orWhere('sale_id', 'like', '%' . $request->search . '%');
+                    $search = $request->search;
+                    return $q->where('sale_id', 'like', '%' . $search . '%')
+                        ->orWhere('invoice_number', 'like', '%' . $search . '%')
+                        ->orWhere('buyer_name', 'like', '%' . $search . '%')
+                        ->orWhere('buyer_email', 'like', '%' . $search . '%')
+                        ->orWhereHas('client', function ($sub) use ($search) {
+                            $sub->where('name', 'like', '%' . $search . '%')
+                                ->orWhere('first_surname', 'like', '%' . $search . '%')
+                                ->orWhere('gmail', 'like', '%' . $search . '%');
+                        });
                 })
                 ->orderBy('sale_date', 'desc')
                 ->get();
@@ -447,10 +502,19 @@ class SalesController extends Controller
 
                 foreach ($sales as $sale) {
                     $items = $sale->saleItems->map(fn ($item) => $item->product->name . ' (x' . $item->quantity . ')')->implode(', ');
+
+                    $customerDisplayName = $sale->client
+                        ? trim($sale->client->name . ' ' . $sale->client->first_surname . ' ' . ($sale->client->second_surname ?: ''))
+                        : ($sale->buyer_name ?: 'Walk-in / Sin datos');
+
+                    $customerEmail = $sale->client
+                        ? $sale->client->gmail
+                        : ($sale->buyer_email ?: 'N/A');
+
                     fputcsv($file, [
                         $sale->sale_id,
-                        $sale->customer->nombre ?? 'N/A',
-                        $sale->customer->email ?? 'N/A',
+                        $customerDisplayName,
+                        $customerEmail,
                         $sale->sale_date->format('d/m/Y H:i'),
                         ucfirst($sale->status),
                         ucfirst($sale->payment_method),

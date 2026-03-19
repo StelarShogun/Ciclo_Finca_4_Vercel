@@ -1,4 +1,4 @@
-@extends('clients.layouts.guest')
+@extends('clients.layouts.app')
 
 @section('title', 'Verificar Correo')
 

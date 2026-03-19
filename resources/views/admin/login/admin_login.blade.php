@@ -62,12 +62,13 @@
         </div>
     </div>
 
-    @push('styles')
-        @vite(['resources/css/admin.css'])
-    @endpush
-
-    @push('scripts')
-        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-        @vite(['resources/js/admin.js'])
-    @endpush
 @endsection
+
+@push('styles')
+    @vite(['resources/css/admin.css'])
+@endpush
+
+@push('scripts')
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @vite(['resources/js/admin.js'])
+@endpush

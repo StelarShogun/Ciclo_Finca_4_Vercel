@@ -9,7 +9,9 @@ class AdminUser extends Authenticatable
 {
     use Notifiable;
 
-    protected $table = 'admins';
+    // El proyecto actualmente usa `admin_table` para administradores.
+    // El guard `admin` espera este modelo; por eso apuntamos a la tabla real.
+    protected $table = 'admin_table';
     protected $primaryKey = 'user_id';
 
     protected $fillable = [
