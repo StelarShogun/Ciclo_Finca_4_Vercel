@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\ClientUserController;
-use App\Http\Controllers\AdminUserController;
+
 
 // ============================================================
 // ADMIN LOGIN ROUTES
@@ -120,11 +120,7 @@ Route::middleware(['auth:clients'])->group(function () {
 // ADMIN ROUTES (admin.only + prevent.direct)
 // ============================================================
 
-<<<<<<< Updated upstream
-Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
-=======
-Route::middleware(['auth:admin', 'admin.only', 'prevent.direct'])->group(function () {
->>>>>>> Stashed changes
+    Route::middleware(['auth:admin', 'admin.only', 'prevent.direct'])->group(function () {
 
     // — User management —
     Route::post('/usuarios/store-login', [UsuarioController::class, 'storeLogin'])->name('storeLogin');

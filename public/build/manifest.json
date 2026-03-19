@@ -1,50 +1,37 @@
 {
-<<<<<<< Updated upstream
   "resources/css/admin.css": {
-    "file": "assets/admin-CqtQ8fQN.css",
+    "file": "assets/admin-BkNsmhLw.css",
     "src": "resources/css/admin.css",
-=======
+    "isEntry": true,
+    "name": "admin",
+    "names": [
+      "admin.css"
+    ]
+  },
+  "resources/css/clients-users.css": {
+    "file": "assets/clients-users-wJc5TB6t.css",
+    "src": "resources/css/clients-users.css",
+    "isEntry": true,
+    "name": "clients-users",
+    "names": [
+      "clients-users.css"
+    ]
+  },
   "resources/css/clients/clients.css": {
     "file": "assets/clients-BblmCODA.css",
     "src": "resources/css/clients/clients.css",
->>>>>>> Stashed changes
     "isEntry": true,
     "name": "clients",
     "names": [
       "clients.css"
     ]
   },
-<<<<<<< Updated upstream
-  "resources/css/clients-users.css": {
-    "file": "assets/clients-users-DDglOx2j.css",
-    "src": "resources/css/clients-users.css",
-=======
   "resources/css/suppliers/suppliers.css": {
     "file": "assets/suppliers-lo4bYW83.css",
     "src": "resources/css/suppliers/suppliers.css",
->>>>>>> Stashed changes
     "isEntry": true,
     "name": "suppliers",
     "names": [
-<<<<<<< Updated upstream
-      "clients-users.css"
-    ]
-  },
-  "resources/css/clients/clients.css": {
-    "file": "assets/clients-CSo7ec2e.css",
-    "src": "resources/css/clients/clients.css",
-    "isEntry": true,
-    "names": [
-      "clients.css"
-    ]
-  },
-  "resources/css/suppliers/suppliers.css": {
-    "file": "assets/suppliers-hlZ6lTqC.css",
-    "src": "resources/css/suppliers/suppliers.css",
-    "isEntry": true,
-    "names": [
-=======
->>>>>>> Stashed changes
       "suppliers.css"
     ]
   },
@@ -55,11 +42,7 @@
     "isEntry": true
   },
   "resources/js/clients.js": {
-<<<<<<< Updated upstream
-    "file": "assets/clients-DJQfI2Q6.js",
-=======
-    "file": "assets/clients-BhmZ4jRt.js",
->>>>>>> Stashed changes
+    "file": "assets/clients-ex4-qir7.js",
     "name": "clients",
     "src": "resources/js/clients.js",
     "isEntry": true
