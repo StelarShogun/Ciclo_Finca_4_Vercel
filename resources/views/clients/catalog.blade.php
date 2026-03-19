@@ -116,7 +116,8 @@
                                             <!-- Fallback to favicon if product image is missing -->
                                             <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}" 
                                                  alt="{{ $product->name }}"
-                                                 onerror="this.src='{{ asset('favicon.svg') }}'">
+                                                 data-fallback-src="{{ asset('favicon.svg') }}"
+                                                 onerror="this.src=this.dataset.fallbackSrc;">
                                         </a>
                                         <!-- Badge shown when stock is critically low -->
                                         @if($product->stock_current <= 10)
@@ -136,7 +137,7 @@
                                         <div class="product-footer">
                                             <div class="product-price">₡{{ number_format($product->sale_price, 0, ',', '.') }}</div>
                                             <!-- Authenticated users add to cart; guests are prompted to log in via JS -->
-                                            @auth
+                                            @auth('clients')
                                             <button class="btn btn-primary btn-sm add-to-cart-btn" 
                                                     data-product-id="{{ $product->product_id }}"
                                                     data-product-name="{{ $product->name }}"

@@ -14,11 +14,11 @@ class PreventDirectAccess
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function handle(Request $request, Closure $next)
     {
-        // Si el usuario no está autenticado como admin (no está en la tabla admins)
+        // Solo valida contra el guard admin; este middleware se usa en el grupo de rutas admin.
         if (!Auth::guard('admin')->check()) {
             // Limpiar cualquier sesión residual
             $request->session()->invalidate();
@@ -32,7 +32,7 @@ class PreventDirectAccess
             }
             
             return redirect()->route('admin.login')
-                ->with('error', 'Debes iniciar sesión para acceder al sistema.');
+                ->with('error', 'Acceso denegado. Debes iniciar sesión como administrador.');
         }
 
         $response = $next($request);

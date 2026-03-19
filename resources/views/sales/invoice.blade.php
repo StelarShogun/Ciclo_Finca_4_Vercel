@@ -49,9 +49,11 @@
                                 info@cicloperez.com
                             </td>
                             <td>
-                                {{ $sale->customer->nombre ?? '' }} {{ $sale->customer->apellido ?? '' }}<br>
-                                {{ $sale->customer->telefono ?? $sale->customer->phone ?? '' }}<br>
-                                {{ $sale->customer->email ?? '' }}
+                                {{ $sale->client
+                                    ? trim($sale->client->name . ' ' . $sale->client->first_surname . ' ' . ($sale->client->second_surname ?: ''))
+                                    : ($sale->buyer_name ?: 'Walk-in / Sin datos') }}<br>
+                                {{ $sale->client ? ($sale->client->gmail ?: '') : ($sale->buyer_email ?: '') }}<br>
+                                N/A
                             </td>
                         </tr>
                     </table>

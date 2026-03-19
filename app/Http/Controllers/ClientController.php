@@ -260,6 +260,15 @@ class ClientController extends Controller
     {
         $cart = Session::get('cart', []);
 
+        if (empty($cart)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El carrito está vacío',
+                'cart_count' => 0,
+                'cart_total' => 0,
+            ], 400);
+        }
+
         // Remove item by product ID and re-index the array
         $cart = array_filter($cart, fn($item) => $item['product_id'] != $id);
 
@@ -321,13 +330,17 @@ class ClientController extends Controller
             }
 
             // Create the sale record
+            $client = Auth::guard('clients')->user();
             $sale = Sale::create([
                 'invoice_number' => (new Sale())->generateInvoiceNumber(),
-                'customer_id'    => Auth::id(),
-                'seller_id'      => Auth::id(),
+                // Pedidos del carrito web se registran por `client_id` (ver migración CF4).
+                'client_id'      => $client?->user_id,
+                'customer_id'    => null,
+                'seller_id'      => null,
                 'sale_date'      => now(),
                 'payment_method' => 'cash',
                 'status'         => 'pending',
+                'order_source'   => 'web_cart',
                 'subtotal'       => $subtotal,
                 'iva'            => 0,
                 'discount'       => 0,

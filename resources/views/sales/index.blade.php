@@ -30,6 +30,14 @@
         }
         .expiry-warning-trigger:hover .expiry-tooltip-label,
         .expiry-warning-trigger:focus-within .expiry-tooltip-label { visibility: visible; opacity: 1; }
+
+        /* CF4-4 purchases: permitir que "Walk-in / Sin datos" no se trunque */
+        .cf4-purchases-table td {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            word-break: break-word;
+        }
     </style>
 </head>
 <body class="admin-layout">
@@ -151,10 +159,11 @@
                             <td>
                                 @if($sale->client_id && $sale->client)
                                     {{ $sale->client->name }} {{ $sale->client->first_surname }} {{ $sale->client->second_surname ? $sale->client->second_surname : '' }} <span class="text-muted">({{ $sale->client->gmail }})</span>
-                                @elseif($sale->customer_id && $sale->customer)
-                                    {{ $sale->customer->nombre ?? 'N/A' }} {{ $sale->customer->apellido ?? '' }}
                                 @else
-                                    —
+                                    {{ $sale->buyer_name ?: 'Walk-in / Sin datos' }}
+                                    @if($sale->buyer_email)
+                                        <span class="text-muted">({{ $sale->buyer_email }})</span>
+                                    @endif
                                 @endif
                             </td>
                             <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
@@ -213,7 +222,101 @@
             <x-pagination :paginator="$sales" label="de ventas" />
         </div>
 
+        <!-- Sección CF4-4 Compras (integrada dentro de /sales) -->
+        <div class="sales-container" style="margin-top: 26px;">
+            <header class="sales-header">
+                <div>
+                    <h1 style="font-size: 1.35rem; margin: 0;">Historial de Compras</h1>
+                    <p style="margin: 6px 0 0 0; color: rgba(255, 255, 255, 0.78); font-weight: 500; font-size: 0.95rem;">
+                        Compras desde carrito web (pendientes y completadas)
+                    </p>
+                </div>
+            </header>
+
+            <div class="sales-table-container" style="padding: 16px;">
+                <table class="sales-table cf4-purchases-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Productos</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($purchases as $sale)
+                            <tr>
+                                <td>
+                                    @if($sale->client_id && $sale->client)
+                                        {{ $sale->client->name }} {{ $sale->client->first_surname }}
+                                        {{ $sale->client->second_surname ? $sale->client->second_surname : '' }}
+                                        <span class="text-muted">({{ $sale->client->gmail }})</span>
+                                    @elseif($sale->buyer_name)
+                                        {{ $sale->buyer_name }}
+                                        @if($sale->buyer_email)
+                                            <span class="text-muted">({{ $sale->buyer_email }})</span>
+                                        @endif
+                                    @else
+                                        {{ 'Walk-in / Sin datos' }}
+                                        @if($sale->buyer_email)
+                                            <span class="text-muted">({{ $sale->buyer_email }})</span>
+                                        @endif
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($sale->saleItems && $sale->saleItems->count() > 0)
+                                        <div style="display:flex;flex-direction:column;gap:6px;white-space:normal;">
+                                            @foreach($sale->saleItems as $item)
+                                                <div>
+                                                    {{ $item->quantity }} x {{ $item->product->name ?? 'Producto' }}
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-muted">Sin productos</span>
+                                    @endif
+                                </td>
+                                <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
+                                <td>
+                                    @php
+                                        $stateLabel = $sale->status === 'pending'
+                                            ? 'Pendiente de retiro'
+                                            : ($sale->status === 'completed' ? 'Completado' : ucfirst($sale->status));
+                                    @endphp
+                                    <span class="status-badge {{ $sale->status }}">{{ $stateLabel }}</span>
+                                </td>
+                                <td><strong>₡{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
+                                <td>
+                                    <div class="actions-container">
+                                        <button class="action-btn secondary" type="button" onclick="viewSale('{{ $sale->sale_id }}')" title="Ver detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    <div style="padding: 40px; color: var(--color-muted);">
+                                        <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                                        <p>No hay compras registradas</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 16px;">
+                <x-pagination :paginator="$purchases" label="de compras" />
+            </div>
+        </div>
+
         <!-- Modal Nueva Venta -->
+        <div id="cf4-latest-purchase-sale-id" data-value="{{ $latestPurchaseSaleId ?? 0 }}" style="display:none;"></div>
         <div id="new-sale-modal" class="modal-overlay">
             <div class="modal-content modal-auto-size">
                 <div class="modal-header">
@@ -225,13 +328,12 @@
                         @csrf
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="customer_id">Cliente *</label>
-                                <select id="customer_id" name="customer_id" required>
-                                    <option value="">Seleccionar cliente</option>
-                                    @foreach(\App\Models\Usuario::where('rol', 'cliente')->get() as $c)
-                                    <option value="{{ $c->usuario_id }}">{{ $c->nombre }} {{ $c->apellido }}</option>
-                                    @endforeach
-                                </select>
+                                <label for="buyer_name">Nombre (opcional)</label>
+                                <input type="text" id="buyer_name" name="buyer_name" placeholder="Nombre del comprador (opcional)">
+                            </div>
+                            <div class="form-group">
+                                <label for="buyer_email">Email (opcional)</label>
+                                <input type="email" id="buyer_email" name="buyer_email" placeholder="Email del comprador (opcional)">
                             </div>
                             <div class="form-group">
                                 <label for="payment_method">Método de Pago *</label>
@@ -450,11 +552,20 @@
                         return `<tr><td>${prod.name || 'N/A'}</td><td class="text-center">${qty}</td><td class="text-right">₡${up.toLocaleString('es-CR', {minimumFractionDigits: 2})}</td><td class="text-right"><strong>₡${tot.toLocaleString('es-CR', {minimumFractionDigits: 2})}</strong></td></tr>`;
                     }).join('');
 
-                    let customerName = 'N/A';
+                    let customerName = 'Walk-in / Sin datos';
                     if (sale.client) {
-                        customerName = (sale.client.name || '') + ' ' + (sale.client.first_surname || '') + (sale.client.second_surname ? ' ' + sale.client.second_surname : '') + (sale.client.gmail ? ' (' + sale.client.gmail + ')' : '');
-                    } else if (sale.customer) {
-                        customerName = (sale.customer.nombre || '') + ' ' + (sale.customer.apellido || '');
+                        customerName =
+                            ((sale.client.name || '') + ' ' +
+                            (sale.client.first_surname || '') + ' ' +
+                            (sale.client.second_surname ? sale.client.second_surname : '')).trim();
+                        if (sale.client.gmail) {
+                            customerName += ' (' + sale.client.gmail + ')';
+                        }
+                    } else if (sale.buyer) {
+                        customerName = sale.buyer.name ? sale.buyer.name : 'Walk-in / Sin datos';
+                        if (sale.buyer.email) {
+                            customerName += ' (' + sale.buyer.email + ')';
+                        }
                     }
                     const statusLabels = { pending: 'Pendiente', completed: 'Completada', cancelled: 'Cancelada', refunded: 'Reembolsada' };
                     const paymentLabels = { cash: 'Efectivo', sinpe: 'SINPE Móvil', transfer: 'Transferencia' };
@@ -547,6 +658,31 @@
         function printSale(id) { window.open(`/sales/${id}/print`, '_blank'); }
 
         document.addEventListener('DOMContentLoaded', function() {
+            // CF4-4 auto-actualización: polling ligero (recarga si aparece una compra nueva)
+            let latestPurchaseSaleId = 0;
+            const latestEl = document.getElementById('cf4-latest-purchase-sale-id');
+            if (latestEl && latestEl.dataset && latestEl.dataset.value) {
+                latestPurchaseSaleId = parseInt(latestEl.dataset.value, 10) || 0;
+            }
+            async function heartbeatCheck() {
+                if (document.visibilityState === 'hidden') return;
+                try {
+                    const res = await fetch("{{ route('sales.history.heartbeat') }}" + "?since=" + latestPurchaseSaleId, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    const data = await res.json();
+                    if (data && typeof data.latestSaleId !== 'undefined') {
+                        latestPurchaseSaleId = data.latestSaleId;
+                    }
+                    if (data && data.hasNew) {
+                        window.location.reload();
+                    }
+                } catch (e) {
+                    // Fail silencioso: no rompe la UI
+                }
+            }
+            setInterval(heartbeatCheck, 20000);
+
             const form = document.getElementById('new-sale-form');
             if (form) {
                 form.addEventListener('submit', function(e) {

@@ -34,7 +34,7 @@ class UsuarioController extends Controller
 
         $usuarios = $query->paginate(10);
 
-        return view('usuarios.index', compact('usuarios'));
+        return view('clients_users.index', compact('usuarios'));
     }
 
     public function create()

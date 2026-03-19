@@ -16,6 +16,7 @@ class Sale extends Model
         'customer_id',
         'client_id',
         'seller_id',
+        'seller_admin_id',
         'subtotal',
         'iva',
         'discount',
@@ -25,15 +26,30 @@ class Sale extends Model
         'status',
         'notes',
         'sale_date',
+        'buyer_name',
+        'buyer_email',
+        'order_source',
     ];
 
     protected $casts = [
-        'sale_date' => 'datetime',
         'subtotal' => 'decimal:2',
         'iva' => 'decimal:2',
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
     ];
+
+    /**
+     * `sales.sale_date` en BD se guarda en UTC (DATETIME sin zona horaria).
+     * Al leerlo, lo interpretamos como UTC y lo convertimos a la zona horaria de la app.
+     */
+    public function getSaleDateAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+
+        return \Carbon\Carbon::parse($value, 'UTC')->setTimezone(config('app.timezone'));
+    }
 
     public function saleItems(): HasMany
     {
@@ -48,6 +64,11 @@ class Sale extends Model
     public function seller(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'seller_id', 'usuario_id');
+    }
+
+    public function sellerAdmin(): BelongsTo
+    {
+        return $this->belongsTo(AdminUser::class, 'seller_admin_id', 'user_id');
     }
 
     public function client(): BelongsTo
