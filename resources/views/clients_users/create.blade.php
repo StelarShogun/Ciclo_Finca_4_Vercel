@@ -1,4 +1,4 @@
-@extends('clientes.layouts.app')
+@extends('clients.layouts.guest')
 
 @section('title', 'Registrar Cliente')
 
@@ -136,10 +136,6 @@
     </div>
 </div>
 @endsection
-
-@push('styles')
-<link rel="stylesheet" href="{{ asset('css/clients-users.css') }}">
-@endpush
 
 @push('scripts')
 <script>

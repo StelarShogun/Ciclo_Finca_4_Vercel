@@ -82,8 +82,6 @@ Route::get('/csrf-token', function (Request $request) {
 
 Route::get('/auth/google', [ClientUserController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [ClientUserController::class, 'handleGoogleCallback'])->name('auth.google.callback');
-Route::get('/auth/facebook', [UsuarioController::class, 'redirectToFacebook'])->name('auth.facebook');
-Route::get('/auth/facebook/callback', [UsuarioController::class, 'handleFacebookCallback'])->name('auth.facebook.callback');
 
 // ============================================================
 // CART (authenticated clients)

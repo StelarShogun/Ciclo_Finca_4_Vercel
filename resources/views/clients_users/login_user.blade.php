@@ -1,4 +1,4 @@
-@extends('clients.layouts.app')
+@extends('clients.layouts.guest')
 
 @section('title', 'Iniciar Sesión')
 
@@ -20,8 +20,8 @@
                 La sesión expiró o el token no es válido. Intenta iniciar sesión de nuevo.
             </div>
         @endif
-        <h2 class="text-center mb-2">Bienvenido de nuevo</h2>
-        <p class="login-subtitle text-center mb-4">Ingresa a tu cuenta para continuar</p>
+        <h2 class="text-center">Bienvenido de nuevo</h2>
+        <p class="login-subtitle">Ingresa a tu cuenta para continuar</p>
 
         <form id="public-login-form" method="POST" action="{{ route('login') }}">
             @csrf
@@ -46,6 +46,10 @@
             </div>
             @if(config('recaptcha.site_key'))
             <div class="form-group mb-3">
+                <label class="login-field-label recaptcha-label">
+                    <i class="fas fa-shield-alt login-field-icon" aria-hidden="true"></i>
+                    Verificación de seguridad
+                </label>
                 <div class="g-recaptcha" data-sitekey="{{ config('recaptcha.site_key') }}"></div>
             </div>
             @else
@@ -92,10 +96,6 @@
     </div>
 </div>
 @endsection
-
-@push('styles')
-<link rel="stylesheet" href="{{ asset('css/clients-users.css') }}">
-@endpush
 
 @push('scripts')
 @if(config('recaptcha.site_key'))

@@ -1,6 +1,6 @@
 @extends('clients.layouts.app')
 
-@section('title', 'Catálogo - Ciclo Pérez')
+@section('title', 'Catálogo - Ciclo Finca 4')
 
 @section('content')
 <div class="catalog-container">
@@ -13,7 +13,7 @@
 
     <div class="container">
         <div class="catalog-layout">
-            <!-- Sidebar with filters -->
+            <!-- Sidebar: solo filtros (sin categoría; categorías en barra horizontal) -->
             <aside class="catalog-sidebar">
                 <div class="filters-card">
                     <h3 class="filters-title">
@@ -21,8 +21,17 @@
                         Filtros
                     </h3>
                     
-                    <!-- Filters submitted as GET to keep results shareable via URL -->
+                    <!-- Filters submitted as GET to keep results shareable via URL; category comes from horizontal bar -->
                     <form method="GET" action="{{ route('clients.catalog') }}" id="filter-form">
+                        @if(request('category_id'))
+                            <input type="hidden" name="category_id" value="{{ request('category_id') }}">
+                        @endif
+                        @if($errors->has('price_range'))
+                            <div class="alert alert-danger filter-error" role="alert">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {{ $errors->first('price_range') }}
+                            </div>
+                        @endif
                         <div class="filter-group">
                             <label for="search">Buscar</label>
                             <input type="text" 
@@ -34,20 +43,6 @@
                         </div>
                         
                         <div class="filter-group">
-                            <label for="category_id">Categoría</label>
-                            <select id="category_id" name="category_id" class="form-control">
-                                <option value="">Todas las categorías</option>
-                                <!-- Preserve selected category across page reloads -->
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->category_id }}" 
-                                            {{ request('category_id') == $category->category_id ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                        <div class="filter-group">
                             <label>Rango de Precio</label>
                             <div class="price-range">
                                 <input type="number" 
@@ -55,14 +50,14 @@
                                        name="min_price" 
                                        class="form-control" 
                                        placeholder="Mínimo"
-                                       value="{{ request('min_price') }}">
+                                       value="{{ old('min_price', request('min_price')) }}">
                                 <span class="price-separator">-</span>
                                 <input type="number" 
                                        id="max_price" 
                                        name="max_price" 
                                        class="form-control" 
                                        placeholder="Máximo"
-                                       value="{{ request('max_price') }}">
+                                       value="{{ old('max_price', request('max_price')) }}">
                             </div>
                         </div>
                         
@@ -84,7 +79,7 @@
                         </div>
                         
                         <div class="filter-actions">
-                            <button type="submit" class="btn btn-primary btn-block">
+                            <button type="submit" class="btn btn-primary btn-block" id="filter-submit-btn" title="El precio mínimo debe ser menor o igual al máximo">
                                 <i class="fas fa-search"></i>
                                 Aplicar Filtros
                             </button>
@@ -99,9 +94,46 @@
             </aside>
 
             <main class="catalog-content">
+                <!-- Barra horizontal de categorías (pills) -->
+                @php $catalogParams = request()->except('category_id', 'page'); @endphp
+                <div class="catalog-cats-horizontal">
+                    <a href="{{ route('clients.catalog', $catalogParams) }}"
+                       class="cat-pill {{ !request('category_id') ? 'active' : '' }}">
+                        Todas las categorías
+                    </a>
+                    @foreach($categories as $cat)
+                        <a href="{{ route('clients.catalog', array_merge($catalogParams, ['category_id' => $cat->category_id])) }}"
+                           class="cat-pill {{ (request('category_id') == $cat->category_id || optional($selectedCategory)->parent_category_id == $cat->category_id) ? 'active' : '' }}">
+                            {{ $cat->name }}
+                        </a>
+                    @endforeach
+                </div>
+                {{-- Subcategorías: se muestran debajo de la barra de categorías cuando hay una categoría padre (o se eligió una subcategoría) --}}
+                @if($parentCategoryForSubcats)
+                    <div class="catalog-subcats-row">
+                        <span class="catalog-subcats-label">En {{ $parentCategoryForSubcats->name }}:</span>
+                        <div class="catalog-subcats-pills">
+                            <a href="{{ route('clients.catalog', array_merge($catalogParams, ['category_id' => $parentCategoryForSubcats->category_id])) }}"
+                               class="cat-pill cat-pill-sub {{ request('category_id') == $parentCategoryForSubcats->category_id ? 'active' : '' }}">
+                                Todas
+                            </a>
+                            @foreach($subcategories as $sub)
+                                <a href="{{ route('clients.catalog', array_merge($catalogParams, ['category_id' => $sub->category_id])) }}"
+                                   class="cat-pill cat-pill-sub {{ request('category_id') == $sub->category_id ? 'active' : '' }}">
+                                    {{ $sub->name }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 <div class="catalog-results">
                     <div class="results-header">
-                        <!-- firstItem/lastItem return null when no results, fallback to 0 -->
+                        @if($selectedCategory)
+                            <p class="catalog-breadcrumb">Catálogo / {{ $selectedCategory->name }}</p>
+                        @else
+                            <p class="catalog-breadcrumb">Catálogo</p>
+                        @endif
                         <p class="results-count">
                             Mostrando {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }} de {{ $products->total() }} productos
                         </p>
@@ -134,23 +166,31 @@
                                             <p class="product-description">{{ Str::limit($product->description, 100) }}</p>
                                         @endif
                                         <div class="product-footer">
-                                            <div class="product-price">₡{{ number_format($product->sale_price, 0, ',', '.') }}</div>
-                                            <!-- Authenticated users add to cart; guests are prompted to log in via JS -->
-                                            @auth
-                                            <button class="btn btn-primary btn-sm add-to-cart-btn" 
-                                                    data-product-id="{{ $product->product_id }}"
-                                                    data-product-name="{{ $product->name }}"
-                                                    data-product-price="{{ $product->sale_price }}"
-                                                    data-product-stock="{{ $product->stock_current }}">
-                                                <i class="fas fa-cart-plus"></i>
-                                                Agregar
-                                            </button>
-                                            @else
-                                            <button class="btn btn-primary btn-sm guest-add-btn" type="button">
-                                                <i class="fas fa-cart-plus"></i>
-                                                Agregar
-                                            </button>
-                                            @endauth
+                                            <div class="product-price-bar">
+                                                <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
+                                            </div>
+                                            <div class="product-actions">
+                                                <a href="{{ route('clients.product', $product->product_id) }}" class="btn-product btn-ver-detalles">
+                                                    <i class="fas fa-arrow-right"></i>
+                                                    Ver detalles
+                                                </a>
+                                                <!-- Authenticated users add to cart; guests are prompted to log in via JS -->
+                                                @auth
+                                                <button class="btn-product btn-agregar add-to-cart-btn" 
+                                                        data-product-id="{{ $product->product_id }}"
+                                                        data-product-name="{{ $product->name }}"
+                                                        data-product-price="{{ $product->sale_price }}"
+                                                        data-product-stock="{{ $product->stock_current }}">
+                                                    <i class="fas fa-cart-plus"></i>
+                                                    Agregar
+                                                </button>
+                                                @else
+                                                <button class="btn-product btn-agregar guest-add-btn" type="button">
+                                                    <i class="fas fa-cart-plus"></i>
+                                                    Agregar
+                                                </button>
+                                                @endauth
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -158,7 +198,7 @@
                         </div>
                         
                         <div class="pagination-wrapper">
-                            {{ $products->links() }}
+                            <x-pagination :paginator="$products" label="productos" />
                         </div>
                     @else
                         <!-- No results state -->
@@ -207,4 +247,37 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+(function() {
+    var form = document.getElementById('filter-form');
+    if (!form) return;
+    var minInput = document.getElementById('min_price');
+    var maxInput = document.getElementById('max_price');
+    var submitBtn = document.getElementById('filter-submit-btn');
+
+    function checkPriceRange() {
+        if (!minInput || !maxInput || !submitBtn) return;
+        var min = parseFloat(minInput.value);
+        var max = parseFloat(maxInput.value);
+        var minFilled = minInput.value.trim() !== '';
+        var maxFilled = maxInput.value.trim() !== '';
+        var invalid = minFilled && maxFilled && !isNaN(min) && !isNaN(max) && min > max;
+        submitBtn.disabled = invalid;
+        if (invalid) {
+            submitBtn.setAttribute('title', 'El precio mínimo debe ser menor o igual al precio máximo.');
+        } else {
+            submitBtn.removeAttribute('title');
+        }
+    }
+
+    if (minInput) minInput.addEventListener('input', checkPriceRange);
+    if (minInput) minInput.addEventListener('change', checkPriceRange);
+    if (maxInput) maxInput.addEventListener('input', checkPriceRange);
+    if (maxInput) maxInput.addEventListener('change', checkPriceRange);
+    checkPriceRange();
+})();
+</script>
+@endpush
 @endsection
