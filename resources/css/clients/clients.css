@@ -611,29 +611,61 @@ body.guest-layout {
 }
 
 .oauth-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
+  display: flex; 
+  flex-direction: column; 
+  gap: 12px; 
+  margin-bottom: 20px; 
 }
 
 .oauth-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   padding: 12px 20px;
-  border-radius: var(--border-radius);
+  width: 100%;
+  border-radius: 8px;
   text-decoration: none;
   font-weight: 500;
   font-size: 0.95rem;
-  transition: var(--transition);
-  border: 2px solid var(--border-color);
-  color: var(--text-primary);
-  background: var(--background-white);
+  transition: all 0.2s ease;
+  border: 1px solid #dadce0;
+  background: #fff;
+  color: #3c4043;
 }
 
-.google-btn:hover   { border-color: #db4437; color: #db4437; background: #fff3f2; }
+.google-btn .google-text { color: #3c4043; font-weight: 500; }
+
+/* G del icono: colores Google (azul, rojo, amarillo, verde) */
+.google-g-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
+  font-family: "Product Sans", Arial, sans-serif;
+  background: conic-gradient(from -45deg, #4285f4, #ea4335, #fbbc05, #34a853, #4285f4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.google-brand { display: inline-flex; align-items: center; font-weight: 600; margin-left: 2px; }
+.google-brand .brand-letter { font-weight: 600; font-size: 1em; }
+.google-brand .brand-g   { color: #4285f4; }
+.google-brand .brand-o   { color: #ea4335; }
+.google-brand .brand-o2  { color: #fbbc05; }
+.google-brand .brand-g2  { color: #4285f4; }
+.google-brand .brand-l   { color: #34a853; }
+.google-brand .brand-e   { color: #ea4335; }
+
+.google-btn:hover {
+  background: #f8f9fa;
+  border-color: #dadce0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
 .facebook-btn:hover { border-color: #1877f2; color: #1877f2; background: #f0f5ff; }
 
 .login-footer      { text-align: center; margin-top: 15px; font-size: 0.9rem; color: var(--text-secondary); }

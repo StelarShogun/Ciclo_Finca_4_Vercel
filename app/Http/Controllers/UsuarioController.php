@@ -308,7 +308,7 @@ class UsuarioController extends Controller
         if ($isAdmin) {
             $redirectTo = $intended ?: route('dashboard');
         } else {
-            $redirectTo = route('clientes.home');
+            $redirectTo = route('clients.home');
         }
 
         // Si el frontend manda redirect_to, úsalo solo si corresponde al rol y es una URL interna
@@ -320,7 +320,7 @@ class UsuarioController extends Controller
                     $redirectTo = $requestedRedirect;
                 } else {
                     // Usuarios no-admin no deben ser enviados a rutas admin
-                    $redirectTo = $requestedRedirect === '/dashboard' ? route('clientes.home') : $requestedRedirect;
+                    $redirectTo = $requestedRedirect === '/dashboard' ? route('clients.home') : $requestedRedirect;
                 }
             }
         }

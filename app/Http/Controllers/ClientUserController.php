@@ -477,7 +477,7 @@ class ClientUserController extends Controller
                 'client_second_surname' => $client->second_surname,
             ]);
 
-            return redirect()->route('clientes.home')->with('status', 'Inicio de sesión exitoso con Google');
+            return redirect()->route('clients.home')->with('status', 'Inicio de sesión exitoso con Google');
         } catch (\Throwable $e) {
             $detail = $e->getMessage() ?: get_class($e) . ' en ' . $e->getFile() . ':' . $e->getLine();
             Log::error('Error en Google OAuth: ' . $detail, [
@@ -489,7 +489,7 @@ class ClientUserController extends Controller
             $message = config('app.debug')
                 ? 'Error al iniciar sesión con Google: ' . $detail
                 : 'Error al iniciar sesión con Google. Revisa storage/logs/laravel.log';
-            return redirect()->route('clientes.home')->with('error', $message);
+            return redirect()->route('clients.home')->with('error', $message);
         }
     }
 }

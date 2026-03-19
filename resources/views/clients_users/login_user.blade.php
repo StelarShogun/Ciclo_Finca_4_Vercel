@@ -1,11 +1,11 @@
-@extends('clientes.layouts.app')
+@extends('clients.layouts.guest')
 
 @section('title', 'Iniciar Sesión')
 
 @section('content')
 <div class="login-page-center">
     <div class="login-form-box">
-        <a href="{{ route('clientes.home') }}" class="login-back-link">
+        <a href="{{ route('clients.home') }}" class="login-back-link">
             <i class="fas fa-arrow-left"></i>
             <span>Regresar</span>
         </a>
@@ -20,8 +20,8 @@
                 La sesión expiró o el token no es válido. Intenta iniciar sesión de nuevo.
             </div>
         @endif
-        <h2 class="text-center mb-2">Bienvenido de nuevo</h2>
-        <p class="login-subtitle text-center mb-4">Ingresa a tu cuenta para continuar</p>
+        <h2>Bienvenido de nuevo</h2>
+        <p class="login-subtitle">Ingresa a tu cuenta para continuar</p>
 
         <form id="public-login-form" method="POST" action="{{ route('login') }}">
             @csrf
@@ -44,9 +44,17 @@
                     </button>
                 </div>
             </div>
-            <div class="form-group mb-3">
-                <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
-            </div>
+            @if(config('services.recaptcha.site_key') || config('services.recaptcha.key'))
+                <div class="form-group mb-3">
+                    <label class="login-field-label recaptcha-label">
+                        <i class="fas fa-shield-alt login-field-icon" aria-hidden="true"></i>
+                        Completa la verificación a continuación
+                    </label>
+                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') ?: config('services.recaptcha.key') }}"></div>
+                </div>
+            @else
+                <input type="hidden" name="g-recaptcha-response" value="">
+            @endif
             <div class="form-group mb-3">
                 <label class="checkbox-label">
                     <input type="checkbox" name="remember" id="remember">
@@ -89,12 +97,10 @@
 </div>
 @endsection
 
-@push('styles')
-<link rel="stylesheet" href="{{ asset('css/clients-users.css') }}">
-@endpush
-
 @push('scripts')
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+@if(config('services.recaptcha.site_key') || config('services.recaptcha.key'))
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+@endif
 <script>
  document.getElementById('toggle-password').addEventListener('click', function() {
     const input = document.getElementById('login-password');

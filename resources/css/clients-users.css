@@ -23,7 +23,9 @@
     margin-bottom: 0;
 }
 .login-form-box h2 {
-    margin-bottom: 24px;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 8px;
     font-size: 2rem;
     font-weight: 600;
     white-space: nowrap;
@@ -64,7 +66,9 @@
     width: 100%;
     color: #5f6368;
     font-size: 0.95rem;
-    margin-top: -10px;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
 }
 
 .login-field-label {
