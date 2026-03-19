@@ -64,9 +64,9 @@
 
 .login-subtitle {
     width: 100%;
+    text-align: center;
     color: #5f6368;
     font-size: 0.95rem;
-    text-align: center;
     margin-top: 0;
     margin-bottom: 1.5rem;
 }

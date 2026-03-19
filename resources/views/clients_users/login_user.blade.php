@@ -20,8 +20,8 @@
                 La sesión expiró o el token no es válido. Intenta iniciar sesión de nuevo.
             </div>
         @endif
-        <h2>Bienvenido de nuevo</h2>
-        <p class="login-subtitle">Ingresa a tu cuenta para continuar</p>
+        <h2 class="text-center">Bienvenido de nuevo</h2>
+        <p class="login-subtitle text-center">Ingresa a tu cuenta para continuar</p>
 
         <form id="public-login-form" method="POST" action="{{ route('login') }}">
             @csrf
