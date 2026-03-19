@@ -1,11 +1,11 @@
-@extends('clientes.layouts.app')
+@extends('clients.layouts.app')
 
 @section('title', 'Iniciar Sesión')
 
 @section('content')
 <div class="login-page-center">
     <div class="login-form-box">
-        <a href="{{ route('clientes.home') }}" class="login-back-link">
+        <a href="{{ route('clients.home') }}" class="login-back-link">
             <i class="fas fa-arrow-left"></i>
             <span>Regresar</span>
         </a>
