@@ -1,4 +1,4 @@
-@extends('clientes.layouts.app')
+@extends('clients.layouts.app')
 
 @section('title', 'Registrar Cliente')
 
@@ -135,7 +135,7 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/clients-users.css') }}">
+    @vite(['resources/css/clients-users.css'])
 @endpush
 
 @push('scripts')

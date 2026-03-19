@@ -16,6 +16,7 @@ export default defineConfig({
 
         // CSS Y JS DE CLIENTS
         'resources/css/clients/clients.css', 
+        'resources/css/clients-users.css',
         'resources/js/clients.js',
       ],
       refresh: true,
