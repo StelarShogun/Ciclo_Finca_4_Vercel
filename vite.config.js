@@ -6,6 +6,7 @@ export default defineConfig({
     laravel({
       input: [
         'resources/js/admin.js',
+        'resources/css/admin.css',
         'resources/js/dashboard.js',
         'resources/js/inventory.js',
         'resources/js/usuarios.js',
@@ -16,6 +17,7 @@ export default defineConfig({
 
         // CSS Y JS DE CLIENTS
         'resources/css/clients/clients.css', 
+        'resources/css/clients-users.css',
         'resources/js/clients.js',
       ],
       refresh: true,

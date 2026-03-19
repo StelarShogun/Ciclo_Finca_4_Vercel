@@ -1,18 +1,34 @@
 {
   "resources/css/admin.css": {
-    "file": "assets/admin-DXNPct1J.css",
+    "file": "assets/admin-CqtQ8fQN.css",
     "src": "resources/css/admin.css",
     "isEntry": true,
     "names": [
       "admin.css"
     ]
   },
-  "resources/css/suppliers/supplier-entry.css": {
-    "file": "assets/supplier-entry-hlZ6lTqC.css",
-    "src": "resources/css/suppliers/supplier-entry.css",
+  "resources/css/clients-users.css": {
+    "file": "assets/clients-users-DDglOx2j.css",
+    "src": "resources/css/clients-users.css",
     "isEntry": true,
     "names": [
-      "supplier-entry.css"
+      "clients-users.css"
+    ]
+  },
+  "resources/css/clients/clients.css": {
+    "file": "assets/clients-CSo7ec2e.css",
+    "src": "resources/css/clients/clients.css",
+    "isEntry": true,
+    "names": [
+      "clients.css"
+    ]
+  },
+  "resources/css/suppliers/suppliers.css": {
+    "file": "assets/suppliers-hlZ6lTqC.css",
+    "src": "resources/css/suppliers/suppliers.css",
+    "isEntry": true,
+    "names": [
+      "suppliers.css"
     ]
   },
   "resources/js/admin.js": {
@@ -21,19 +37,10 @@
     "src": "resources/js/admin.js",
     "isEntry": true
   },
-  "resources/js/app.js": {
-    "file": "assets/app-BAWQ12FT.js",
-    "name": "app",
-    "src": "resources/js/app.js",
-    "isEntry": true,
-    "css": [
-      "assets/app-BX06aM20.css"
-    ]
-  },
-  "resources/js/clientes.js": {
-    "file": "assets/clientes-CIldwaDh.js",
-    "name": "clientes",
-    "src": "resources/js/clientes.js",
+  "resources/js/clients.js": {
+    "file": "assets/clients-DJQfI2Q6.js",
+    "name": "clients",
+    "src": "resources/js/clients.js",
     "isEntry": true
   },
   "resources/js/dashboard.js": {

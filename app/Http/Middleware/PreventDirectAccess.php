@@ -18,8 +18,8 @@ class PreventDirectAccess
      */
     public function handle(Request $request, Closure $next)
     {
-        // Si no hay usuario autenticado
-        if (!Auth::check()) {
+        // Si el usuario no está autenticado como admin (no está en la tabla admins)
+        if (!Auth::guard('admin')->check()) {
             // Limpiar cualquier sesión residual
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -31,26 +31,8 @@ class PreventDirectAccess
                 ], 401);
             }
             
-            return redirect()->route('login.show')
+            return redirect()->route('admin.login')
                 ->with('error', 'Debes iniciar sesión para acceder al sistema.');
-        }
-
-        // Si el usuario no es administrador
-        if (!Auth::user()->isAdmin()) {
-            // Cerrar sesión inmediatamente
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-            
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'error' => 'Acceso denegado',
-                    'message' => 'Solo administradores pueden acceder'
-                ], 403);
-            }
-            
-            return redirect()->route('login.show')
-                ->with('error', 'Acceso denegado. Solo administradores pueden acceder al sistema.');
         }
 
         $response = $next($request);

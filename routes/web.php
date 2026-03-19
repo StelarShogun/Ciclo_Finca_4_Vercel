@@ -11,6 +11,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\ClientUserController;
+use App\Http\Controllers\AdminUserController;
+
+// ============================================================
+// ADMIN LOGIN ROUTES
+// ============================================================
+Route::get('/admin/login', [AdminUserController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [AdminUserController::class, 'login'])->name('admin.login.submit');
+Route::post('/admin/logout', [AdminUserController::class, 'logout'])->name('admin.logout');
 
 // ============================================================
 // DEV UTILITIES (remove in production)
@@ -51,6 +59,11 @@ Route::get('/product/{id}', [ClientController::class, 'product'])->name('clients
 // ============================================================
 
 Route::get('/login', [ClientUserController::class, 'showLoginForm'])->name('login.show');
+Route::get('/register', [ClientUserController::class, 'showRegisterForm'])->name('clients.register.form');
+Route::post('/register', [ClientUserController::class, 'register'])->name('clients.register');
+Route::get('/verify', [ClientUserController::class, 'showVerifyForm'])->name('clients.verify.form');
+Route::post('/verify', [ClientUserController::class, 'verify'])->name('clients.verify');
+Route::post('/verify/resend', [ClientUserController::class, 'resendCode'])->name('clients.verify.resend');
 
 // Throttle prevents brute-force attacks (5 attempts per minute)
 Route::post('/login', [ClientUserController::class, 'login'])
@@ -94,10 +107,10 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // ============================================================
-// ADMIN ROUTES (auth + admin.only + prevent.direct)
+// ADMIN ROUTES (admin.only + prevent.direct)
 // ============================================================
 
-Route::middleware(['auth', 'admin.only', 'prevent.direct'])->group(function () {
+Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
 
     // — User management —
     Route::post('/usuarios/store-login', [UsuarioController::class, 'storeLogin'])->name('storeLogin');
