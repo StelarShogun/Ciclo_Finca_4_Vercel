@@ -1,4 +1,4 @@
-@extends('clientes.layouts.app')
+@extends('clients.layouts.app')
 
 @section('title', 'Iniciar Sesión')
 
