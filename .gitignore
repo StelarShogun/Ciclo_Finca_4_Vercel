@@ -1,48 +1,78 @@
-# Variables de entorno
+# =========================
+# VARIABLES DE ENTORNO
+# =========================
 .env
-.env.backup
-.env.production
+.env.*
+!.env.example
 
-# Dependencias
-/node_modules
-/vendor
+# =========================
+# DEPENDENCIAS
+# =========================
+/vendor/
+/node_modules/
 
-# Build de assets (Vite)
+# =========================
+# BUILD / ASSETS (VITE)
+# =========================
 /public/build
 /public/hot
 
-# Storage de Laravel (generados en runtime)
+# =========================
+# STORAGE (ARCHIVOS GENERADOS)
+# =========================
 /storage/*.key
 /storage/logs/*
 /storage/framework/cache/*
 /storage/framework/sessions/*
 /storage/framework/views/*
 
-# Caché PHP y tests
+# =========================
+# CACHE Y TESTS
+# =========================
 .phpunit.result.cache
 .phpunit.cache
 
-# IDE y editores
+# =========================
+# IDE / EDITORES
+# =========================
 .idea/
 .vscode/
-.cursor/
+*.code-workspace
 
-# Sistema operativo
+# =========================
+# SISTEMA OPERATIVO
+# =========================
 .DS_Store
 Thumbs.db
+
+# =========================
+# ARCHIVOS TEMPORALES
+# =========================
+*.log
+*.tmp
 *.swp
 *.swo
 *~
 
-# Logs
-*.log
+# =========================
+# SYMLINK DE LARAVEL
+# =========================
+/public/storage
 
-# Enlace simbólico generado por artisan
-public/storage
+# =========================
+# ARCHIVOS GENERADOS OPCIONALES
+# =========================
+# (Descomenta si no quieres subirlos)
+# public/build/manifest.json
 
-\storage
+# =========================
+# HERRAMIENTAS LARAVEL IDE
+# =========================
+/vendor/_laravel_ide/
 
-# Configuración local de base de datos
+# =========================
+# BASE DE DATOS LOCAL (OPCIONAL)
+# =========================
 config/database.php
 /storage
 storage/framework/cache/data/44/d1/44d142505dd1a3b497197e2f459d2aec779e9ed6
@@ -54,3 +84,5 @@ vendor/_laravel_ide/_model_helpers.php
 storage/framework/cache/data/15/36/15366428b9c84adca5876bab69b2a350ab6f22d1
 storage/framework/cache/data/30/d6/30d6a98df4829934e6222eefd4a61cec7d249d24
 storage/framework/cache/data/44/d1/44d142505dd1a3b497197e2f459d2aec779e9ed6
+/public/build
+vendor/composer/autoload_classmap.php
