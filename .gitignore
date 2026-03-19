@@ -74,3 +74,5 @@ Thumbs.db
 # BASE DE DATOS LOCAL (OPCIONAL)
 # =========================
 config/database.php
+public/build/assets/admin-DmM1dnj5.js
+public/build/manifest.json
