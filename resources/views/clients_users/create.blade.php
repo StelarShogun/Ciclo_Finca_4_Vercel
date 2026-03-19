@@ -1,5 +1,8 @@
 @extends('clients.layouts.app')
 
+@section('hideNav')
+@endsection
+
 @section('title', 'Registrar Cliente')
 
 @section('content')

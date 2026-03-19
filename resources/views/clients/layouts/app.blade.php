@@ -21,7 +21,9 @@
 </head>
 <body class="cliente-layout">
 
-    @include('clients.parts.header')
+    @unless(View::hasSection('hideNav'))
+        @include('clients.parts.header')
+    @endunless
 
     <main class="cliente-main">
         <!-- Flash messages -->
@@ -42,7 +44,9 @@
         @yield('content')
     </main>
 
-    @include('clients.parts.footer')
+    @unless(View::hasSection('hideNav'))
+        @include('clients.parts.footer')
+    @endunless
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @vite(['resources/js/clients.js'])

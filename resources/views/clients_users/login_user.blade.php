@@ -1,5 +1,8 @@
 @extends('clients.layouts.app')
 
+@section('hideNav')
+@endsection
+
 @section('title', 'Iniciar Sesión')
 
 @section('content')

@@ -366,7 +366,7 @@ class ClientUserController extends Controller
             'client_second_surname' => $client->second_surname,
         ]);
 
-        return redirect()->route('clientes.catalogo')->with('success', '¡Cuenta verificada y creada exitosamente!');
+            return redirect()->route('clients.catalog')->with('success', '¡Cuenta verificada y creada exitosamente!');
     }
 
     // Resend verification code
