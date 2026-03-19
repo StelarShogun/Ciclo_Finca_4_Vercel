@@ -75,3 +75,4 @@ Thumbs.db
 # =========================
 config/database.php
 /public/build
+vendor/composer/autoload_classmap.php
