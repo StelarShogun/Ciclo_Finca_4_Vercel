@@ -6,6 +6,7 @@ export default defineConfig({
     laravel({
       input: [
         'resources/js/admin.js',
+        'resources/css/admin.css',
         'resources/js/dashboard.js',
         'resources/js/inventory.js',
         'resources/js/usuarios.js',

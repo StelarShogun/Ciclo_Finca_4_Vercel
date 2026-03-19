@@ -1,3 +1,8 @@
+@import './variables.css';
+@import './main.css';
+@import './formularios.css';
+@import './login.css';
+
 /* Layout principal */
 .admin-layout {
   display: flex;

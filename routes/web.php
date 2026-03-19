@@ -11,6 +11,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\ClientUserController;
+use App\Http\Controllers\AdminUserController;
+
+// ============================================================
+// ADMIN LOGIN ROUTES
+// ============================================================
+Route::get('/admin/login', [AdminUserController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [AdminUserController::class, 'login'])->name('admin.login.submit');
+Route::post('/admin/logout', [AdminUserController::class, 'logout'])->name('admin.logout');
 
 // ============================================================
 // DEV UTILITIES (remove in production)
@@ -99,10 +107,10 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // ============================================================
-// ADMIN ROUTES (auth + admin.only + prevent.direct)
+// ADMIN ROUTES (admin.only + prevent.direct)
 // ============================================================
 
-Route::middleware(['auth', 'admin.only', 'prevent.direct'])->group(function () {
+Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
 
     // — User management —
     Route::post('/usuarios/store-login', [UsuarioController::class, 'storeLogin'])->name('storeLogin');
