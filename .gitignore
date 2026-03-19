@@ -53,6 +53,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+*.pem
 
 # =========================
 # SYMLINK DE LARAVEL
