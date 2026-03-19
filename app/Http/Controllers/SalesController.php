@@ -67,18 +67,18 @@ class SalesController extends Controller
 
         $sales = $query->orderBy('sale_date', 'desc')->paginate(15);
 
-        // CF4-4: Compras admin (pendientes + completadas) integradas dentro de /sales
+        // CF4-4: Compras admin desde carrito web (pendientes + completadas)
         $basePurchasesQuery = Sale::query()
-            ->where('status', 'completed')
+            ->whereIn('status', ['pending', 'completed'])
             ->where(function ($q) {
-                $q->whereIn('order_source', ['web_cart', 'walk_in'])
+                // Para datos históricos: permitir `order_source` nulo.
+                $q->where('order_source', 'web_cart')
                   ->orWhereNull('order_source');
             })
             ->notExpired();
 
         $purchases = (clone $basePurchasesQuery)
-            ->with(['client'])
-            ->withCount('saleItems')
+            ->with(['client', 'saleItems.product'])
             ->orderBy('sale_date', 'desc')
             ->paginate(15, ['*'], 'purchases_page');
 
@@ -109,9 +109,9 @@ class SalesController extends Controller
         $since = (int) $request->query('since', 0);
 
         $baseQuery = Sale::query()
-            ->where('status', 'completed')
+            ->whereIn('status', ['pending', 'completed'])
             ->where(function ($q) {
-                $q->whereIn('order_source', ['web_cart', 'walk_in'])
+                $q->where('order_source', 'web_cart')
                   ->orWhereNull('order_source');
             })
             ->notExpired();

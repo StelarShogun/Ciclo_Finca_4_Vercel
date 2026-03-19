@@ -7,6 +7,7 @@ use App\Http\Controllers\SalesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -70,6 +71,15 @@ Route::post('/login', [ClientUserController::class, 'login'])
     ->middleware('throttle:5,1')
     ->name('login');
 
+// ============================================================
+// ADMIN LOGIN (público para que el usuario admin pueda autenticarse)
+// ============================================================
+Route::get('/admin/login', [AdminUserController::class, 'showLoginForm'])
+    ->name('admin.login');
+
+Route::post('/admin/login', [AdminUserController::class, 'login'])
+    ->name('admin.login.submit');
+
 // Logs out both guards to avoid inconsistent session state
 Route::post('/logout', function (Request $request) {
     Auth::guard('clients')->logout();
@@ -97,7 +107,7 @@ Route::get('/auth/facebook/callback', [UsuarioController::class, 'handleFacebook
 // CART (authenticated clients)
 // ============================================================
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth:clients'])->group(function () {
     Route::get('/cart', [ClientController::class, 'cart'])->name('clients.cart');
     Route::post('/cart/add', [ClientController::class, 'addToCart'])->name('clients.cart.add');
     Route::put('/cart/update', [ClientController::class, 'updateCart'])->name('clients.cart.update');
@@ -110,7 +120,11 @@ Route::middleware(['auth'])->group(function () {
 // ADMIN ROUTES (admin.only + prevent.direct)
 // ============================================================
 
+<<<<<<< Updated upstream
 Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
+=======
+Route::middleware(['auth:admin', 'admin.only', 'prevent.direct'])->group(function () {
+>>>>>>> Stashed changes
 
     // — User management —
     Route::post('/usuarios/store-login', [UsuarioController::class, 'storeLogin'])->name('storeLogin');
@@ -140,6 +154,8 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/sales/{id}/print', [SalesController::class, 'print'])->name('sales.print');
     Route::get('/sales/{id}/invoice', [SalesController::class, 'invoice'])->name('sales.invoice');
     Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
+    Route::get('/sales/history/heartbeat', [SalesController::class, 'historyHeartbeat'])
+        ->name('sales.history.heartbeat');
 
 });
 

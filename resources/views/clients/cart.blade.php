@@ -37,7 +37,8 @@
                                 <!-- Fallback to favicon if product image is missing -->
                                 <img src="{{ asset('assets/images/products/' . $item['image']) }}"
                                      alt="{{ $item['name'] }}"
-                                     onerror="this.src='{{ asset('favicon.svg') }}'">
+                                     data-fallback-src="{{ asset('favicon.svg') }}"
+                                     onerror="this.src=this.dataset.fallbackSrc;">
                             </div>
                             <div class="item-info">
                                 <h3 class="item-name">{{ $item['name'] }}</h3>

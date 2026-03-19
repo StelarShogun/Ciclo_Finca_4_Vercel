@@ -226,9 +226,9 @@
         <div class="sales-container" style="margin-top: 26px;">
             <header class="sales-header">
                 <div>
-                    <h1 style="font-size: 1.35rem; margin: 0;">Historial de Ventas</h1>
+                    <h1 style="font-size: 1.35rem; margin: 0;">Historial de Compras</h1>
                     <p style="margin: 6px 0 0 0; color: rgba(255, 255, 255, 0.78); font-weight: 500; font-size: 0.95rem;">
-                        Solo ventas completadas
+                        Compras desde carrito web (pendientes y completadas)
                     </p>
                 </div>
             </header>
@@ -240,6 +240,7 @@
                             <th>Cliente</th>
                             <th>Productos</th>
                             <th>Fecha</th>
+                            <th>Estado</th>
                             <th>Total</th>
                             <th>Acciones</th>
                         </tr>
@@ -264,8 +265,28 @@
                                         @endif
                                     @endif
                                 </td>
-                                <td>{{ $sale->sale_items_count }} items</td>
+                                <td>
+                                    @if($sale->saleItems && $sale->saleItems->count() > 0)
+                                        <div style="display:flex;flex-direction:column;gap:6px;white-space:normal;">
+                                            @foreach($sale->saleItems as $item)
+                                                <div>
+                                                    {{ $item->quantity }} x {{ $item->product->name ?? 'Producto' }}
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-muted">Sin productos</span>
+                                    @endif
+                                </td>
                                 <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
+                                <td>
+                                    @php
+                                        $stateLabel = $sale->status === 'pending'
+                                            ? 'Pendiente de retiro'
+                                            : ($sale->status === 'completed' ? 'Completado' : ucfirst($sale->status));
+                                    @endphp
+                                    <span class="status-badge {{ $sale->status }}">{{ $stateLabel }}</span>
+                                </td>
                                 <td><strong>₡{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
                                 <td>
                                     <div class="actions-container">
@@ -277,10 +298,10 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center">
+                                <td colspan="6" class="text-center">
                                     <div style="padding: 40px; color: var(--color-muted);">
                                         <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 15px;"></i>
-                                        <p>No hay ventas registradas</p>
+                                        <p>No hay compras registradas</p>
                                     </div>
                                 </td>
                             </tr>
@@ -295,6 +316,7 @@
         </div>
 
         <!-- Modal Nueva Venta -->
+        <div id="cf4-latest-purchase-sale-id" data-value="{{ $latestPurchaseSaleId ?? 0 }}" style="display:none;"></div>
         <div id="new-sale-modal" class="modal-overlay">
             <div class="modal-content modal-auto-size">
                 <div class="modal-header">
@@ -637,7 +659,11 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             // CF4-4 auto-actualización: polling ligero (recarga si aparece una compra nueva)
-            let latestPurchaseSaleId = @json($latestPurchaseSaleId ?? 0);
+            let latestPurchaseSaleId = 0;
+            const latestEl = document.getElementById('cf4-latest-purchase-sale-id');
+            if (latestEl && latestEl.dataset && latestEl.dataset.value) {
+                latestPurchaseSaleId = parseInt(latestEl.dataset.value, 10) || 0;
+            }
             async function heartbeatCheck() {
                 if (document.visibilityState === 'hidden') return;
                 try {

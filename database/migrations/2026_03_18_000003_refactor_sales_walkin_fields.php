@@ -17,13 +17,31 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('sales', function (Blueprint $table) {
-            $table->string('buyer_name', 120)->nullable()->after('notes');
-            $table->string('buyer_email', 150)->nullable()->after('buyer_name');
+            if (!Schema::hasColumn('sales', 'buyer_name')) {
+                $table->string('buyer_name', 120)->nullable()->after('notes');
+            }
+            if (!Schema::hasColumn('sales', 'buyer_email')) {
+                $table->string('buyer_email', 150)->nullable()->after('buyer_name');
+            }
 
-            $table->string('order_source', 20)->nullable()->after('status');
+            if (!Schema::hasColumn('sales', 'order_source')) {
+                $table->string('order_source', 20)->nullable()->after('status');
+            }
 
-            $table->unsignedBigInteger('seller_admin_id')->nullable()->after('seller_id');
-            $table->foreign('seller_admin_id')->references('user_id')->on('admins')->nullOnDelete();
+            if (!Schema::hasColumn('sales', 'seller_admin_id')) {
+                $table->unsignedBigInteger('seller_admin_id')->nullable()->after('seller_id');
+            }
+
+            // FK solo si existe la tabla referenciada.
+            if (Schema::hasTable('admins')) {
+                try {
+                    $table->foreign('seller_admin_id')
+                        ->references('user_id')->on('admins')
+                        ->nullOnDelete();
+                } catch (\Throwable $e) {
+                    // Si el FK ya existe (o difiere), no rompemos.
+                }
+            }
         });
 
         // Backfill order_source:
@@ -36,9 +54,20 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('sales', function (Blueprint $table) {
-            // Drop FK if exists
-            $table->dropForeign(['seller_admin_id']);
-            $table->dropColumn(['buyer_name', 'buyer_email', 'order_source', 'seller_admin_id']);
+            if (Schema::hasColumn('sales', 'seller_admin_id')) {
+                try {
+                    $table->dropForeign(['seller_admin_id']);
+                } catch (\Throwable $e) {
+                    // ignore
+                }
+            }
+
+            $columns = ['buyer_name', 'buyer_email', 'order_source', 'seller_admin_id'];
+            foreach ($columns as $col) {
+                if (Schema::hasColumn('sales', $col)) {
+                    $table->dropColumn($col);
+                }
+            }
         });
     }
 };

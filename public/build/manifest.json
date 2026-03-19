@@ -1,17 +1,32 @@
 {
+<<<<<<< Updated upstream
   "resources/css/admin.css": {
     "file": "assets/admin-CqtQ8fQN.css",
     "src": "resources/css/admin.css",
+=======
+  "resources/css/clients/clients.css": {
+    "file": "assets/clients-BblmCODA.css",
+    "src": "resources/css/clients/clients.css",
+>>>>>>> Stashed changes
     "isEntry": true,
+    "name": "clients",
     "names": [
-      "admin.css"
+      "clients.css"
     ]
   },
+<<<<<<< Updated upstream
   "resources/css/clients-users.css": {
     "file": "assets/clients-users-DDglOx2j.css",
     "src": "resources/css/clients-users.css",
+=======
+  "resources/css/suppliers/suppliers.css": {
+    "file": "assets/suppliers-lo4bYW83.css",
+    "src": "resources/css/suppliers/suppliers.css",
+>>>>>>> Stashed changes
     "isEntry": true,
+    "name": "suppliers",
     "names": [
+<<<<<<< Updated upstream
       "clients-users.css"
     ]
   },
@@ -28,17 +43,23 @@
     "src": "resources/css/suppliers/suppliers.css",
     "isEntry": true,
     "names": [
+=======
+>>>>>>> Stashed changes
       "suppliers.css"
     ]
   },
   "resources/js/admin.js": {
-    "file": "assets/admin-DA9iBBH1.js",
+    "file": "assets/admin-mTcLBLNi.js",
     "name": "admin",
     "src": "resources/js/admin.js",
     "isEntry": true
   },
   "resources/js/clients.js": {
+<<<<<<< Updated upstream
     "file": "assets/clients-DJQfI2Q6.js",
+=======
+    "file": "assets/clients-BhmZ4jRt.js",
+>>>>>>> Stashed changes
     "name": "clients",
     "src": "resources/js/clients.js",
     "isEntry": true
