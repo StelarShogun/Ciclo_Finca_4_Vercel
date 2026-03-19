@@ -17,6 +17,9 @@ return new class extends Migration {
             $table->string('second_surname')->nullable();
             $table->string('gmail')->unique();
             $table->string('password');
+            $table->string('verification_code', 6)->nullable();
+            $table->timestamp('verification_code_expires_at')->nullable();
+            $table->boolean('email_verified')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });

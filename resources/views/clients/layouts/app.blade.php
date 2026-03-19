@@ -14,13 +14,16 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     
     @vite(['resources/css/clients/clients.css'])
+    @stack('styles')
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="cliente-layout">
 
-    @include('clients.parts.header')
+    @unless(View::hasSection('hideNav'))
+        @include('clients.parts.header')
+    @endunless
 
     <main class="cliente-main">
         <!-- Flash messages -->
@@ -41,7 +44,9 @@
         @yield('content')
     </main>
 
-    @include('clients.parts.footer')
+    @unless(View::hasSection('hideNav'))
+        @include('clients.parts.footer')
+    @endunless
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @vite(['resources/js/clients.js'])

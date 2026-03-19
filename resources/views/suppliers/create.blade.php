@@ -98,5 +98,5 @@
 @endsection
 
 @push('styles')
-    @vite(['resources/css/suppliers/supplier-entry.css'])
+    @vite(['resources/css/suppliers/suppliers.css'])
 @endpush

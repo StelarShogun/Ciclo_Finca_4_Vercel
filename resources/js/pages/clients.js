@@ -328,7 +328,22 @@ document.addEventListener('DOMContentLoaded', function () {
                             window.location.href = data.redirect || '/';
                         });
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Error al iniciar sesión' });
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            html: (data.message || 'Error al iniciar sesión') +
+                                '<hr style="margin:12px 0">' +
+                                '<p style="font-size:0.9rem;margin:0">¿Tienes una cuenta registrada? ¿O deseas registrarte?</p>',
+                            showCancelButton: true,
+                            confirmButtonText: 'Ir a Registro',
+                            cancelButtonText: 'Cancelar',
+                            confirmButtonColor: '#2d7a2d',
+                            cancelButtonColor: '#6c757d',
+                        }).then(function (result) {
+                            if (result.isConfirmed) {
+                                window.location.href = '/register';
+                            }
+                        });
                         if (submitBtn) submitBtn.disabled = false;
                         if (submitSpan) submitSpan.classList.remove('hidden');
                         if (loadingSpan) loadingSpan.classList.add('hidden');
