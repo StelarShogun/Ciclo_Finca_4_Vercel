@@ -13,6 +13,7 @@ export default defineConfig({
         'resources/css/admin.css',
         'resources/js/dashboard.js',
         'resources/js/inventory.js',
+        'resources/css/inventory.css',
         'resources/js/usuarios.js',
 
         // CSS Y JS DE SALES

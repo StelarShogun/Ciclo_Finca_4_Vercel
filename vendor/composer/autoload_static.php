@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit1454f39e68bbb6f7e777064980793daa
+class ComposerStaticInit603b9738ab247b69ded14d4f98dca3f4
 {
     public static $files = array (
         '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
@@ -617,6 +617,7 @@ class ComposerStaticInit1454f39e68bbb6f7e777064980793daa
         'App\\Console\\Commands\\DeleteExpiredSalesCommand' => __DIR__ . '/../..' . '/app/Console/Commands/DeleteExpiredSalesCommand.php',
         'App\\Console\\Commands\\SetupDatabase' => __DIR__ . '/../..' . '/app/Console/Commands/SetupDatabase.php',
         'App\\Exceptions\\Handler' => __DIR__ . '/../..' . '/app/Exceptions/Handler.php',
+        'App\\Http\\Controllers\\AdminClientController' => __DIR__ . '/../..' . '/app/Http/Controllers/AdminClientController.php',
         'App\\Http\\Controllers\\AdminUserController' => __DIR__ . '/../..' . '/app/Http/Controllers/AdminUserController.php',
         'App\\Http\\Controllers\\ClientController' => __DIR__ . '/../..' . '/app/Http/Controllers/ClientController.php',
         'App\\Http\\Controllers\\ClientUserController' => __DIR__ . '/../..' . '/app/Http/Controllers/ClientUserController.php',
@@ -7499,6 +7500,8 @@ class ComposerStaticInit1454f39e68bbb6f7e777064980793daa
         'Termwind\\ValueObjects\\Node' => __DIR__ . '/..' . '/nunomaduro/termwind/src/ValueObjects/Node.php',
         'Termwind\\ValueObjects\\Style' => __DIR__ . '/..' . '/nunomaduro/termwind/src/ValueObjects/Style.php',
         'Termwind\\ValueObjects\\Styles' => __DIR__ . '/..' . '/nunomaduro/termwind/src/ValueObjects/Styles.php',
+        'Tests\\Feature\\CF4AdminPurchasesTest' => __DIR__ . '/../..' . '/tests/Feature/CF4AdminPurchasesTest.php',
+        'Tests\\Feature\\CF4ClientCartTest' => __DIR__ . '/../..' . '/tests/Feature/CF4ClientCartTest.php',
         'Tests\\Feature\\ExampleTest' => __DIR__ . '/../..' . '/tests/Feature/ExampleTest.php',
         'Tests\\Feature\\SalesOrderExpiryTest' => __DIR__ . '/../..' . '/tests/Feature/SalesOrderExpiryTest.php',
         'Tests\\TestCase' => __DIR__ . '/../..' . '/tests/TestCase.php',
@@ -7887,9 +7890,9 @@ class ComposerStaticInit1454f39e68bbb6f7e777064980793daa
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit1454f39e68bbb6f7e777064980793daa::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit1454f39e68bbb6f7e777064980793daa::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit1454f39e68bbb6f7e777064980793daa::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit603b9738ab247b69ded14d4f98dca3f4::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit603b9738ab247b69ded14d4f98dca3f4::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit603b9738ab247b69ded14d4f98dca3f4::$classMap;
 
         }, null, ClassLoader::class);
     }
