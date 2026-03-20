@@ -1,6 +1,6 @@
 /**
  * clients.js
- * JavaScript for the Ciclo Pérez client interface.
+ * JavaScript for the Ciclo Finca 4 client interface.
  * Handles cart, modals, and interactive features.
  */
 
@@ -662,6 +662,43 @@ document.addEventListener('DOMContentLoaded', function () {
             modal.classList.remove('active');
         });
     });
+
+    // — Catalog pagination: same structure as admin (Prev, page indicator, Next, Ir) —
+    (function initCatalogPagination() {
+        var wrapper = document.querySelector('.pagination-wrapper .pagination');
+        if (!wrapper) return;
+
+        var goInput = wrapper.querySelector('#goToPageInput');
+        var goBtn = wrapper.querySelector('#goToPageBtn');
+
+        wrapper.querySelectorAll('.button[aria-label]').forEach(function (a) {
+            if (a.getAttribute('aria-disabled') === 'true') {
+                a.addEventListener('click', function (e) { e.preventDefault(); });
+                a.classList.add('is-disabled');
+            }
+        });
+
+        function goToPage() {
+            var totalSpan = wrapper.querySelector('.button.button-primary');
+            if (!totalSpan) return;
+            var parts = totalSpan.textContent.trim().split('/');
+            var lastPage = Math.max(1, parseInt((parts[1] || '1').trim(), 10));
+            var target = parseInt((goInput && goInput.value) ? goInput.value.trim() : '1', 10);
+            if (isNaN(target)) target = 1;
+            if (target < 1) target = 1;
+            if (target > lastPage) target = lastPage;
+            var url = new URL(window.location.href);
+            url.searchParams.set('page', String(target));
+            window.location.assign(url.toString());
+        }
+
+        if (goBtn) goBtn.addEventListener('click', goToPage);
+        if (goInput) {
+            goInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); goToPage(); }
+            });
+        }
+    })();
 
 }); // end DOMContentLoaded
 

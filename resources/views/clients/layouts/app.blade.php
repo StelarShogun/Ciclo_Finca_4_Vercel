@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- CSRF token for secure form submissions -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Ciclo Pérez - Tienda de Bicicletas')</title>
+    <title>@yield('title', 'Ciclo Finca 4 - Tienda de Bicicletas')</title>
     
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
@@ -13,6 +13,9 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     @vite(['resources/css/clients/clients.css'])
     @stack('styles')
     

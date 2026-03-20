@@ -2,7 +2,7 @@
     <div class="footer-container">
         <div class="footer-content">
             <div class="footer-section">
-                <h4>Ciclo Pérez</h4>
+                <h4>Ciclo Finca 4</h4>
                 <p>Tu tienda especializada en bicicletas y accesorios para ciclismo.</p>
             </div>
             <div class="footer-section">
@@ -18,7 +18,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; {{ date('Y') }} Ciclo Pérez. Todos los derechos reservados.</p>
+            <p>&copy; {{ date('Y') }} Ciclo Finca 4. Todos los derechos reservados.</p>
         </div>
     </div>
 </footer>

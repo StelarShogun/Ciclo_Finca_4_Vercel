@@ -82,8 +82,3 @@ vendor/_laravel_ide/_model_helpers.php
 /vendor
 /vendor/composer
 /storage
-storage/framework/cache/data/15/36/15366428b9c84adca5876bab69b2a350ab6f22d1
-storage/framework/cache/data/30/d6/30d6a98df4829934e6222eefd4a61cec7d249d24
-storage/framework/cache/data/44/d1/44d142505dd1a3b497197e2f459d2aec779e9ed6
-/public/build
-vendor/composer/autoload_classmap.php

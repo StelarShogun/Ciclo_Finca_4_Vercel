@@ -7,8 +7,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use App\Models\Client;
 use App\Rules\Recaptcha;
+use Laravel\Socialite\Facades\Socialite;
 
 class ClientUserController extends Controller
 {
@@ -171,7 +175,8 @@ class ClientUserController extends Controller
             'gmail'    => 'required|email',
             'password' => 'required',
         ];
-        if (config('services.recaptcha.key')) {
+
+        if (config('recaptcha.site_key')) {
             $rules['g-recaptcha-response'] = ['required', new Recaptcha()];
         }
 
@@ -190,8 +195,8 @@ class ClientUserController extends Controller
         if (Auth::guard('clients')->attempt($credentials, $remember)) {
             $client = Auth::guard('clients')->user();
 
-            // Bloquear acceso si el correo no ha sido verificado
-            if (!$client->email_verified) {
+            // Bloquear acceso si el correo no ha sido verificado (solo cuando la columna existe y es false)
+            if ($client->email_verified === false) {
                 Auth::guard('clients')->logout();
                 session([
                     'pending_client_id' => $client->user_id,
@@ -366,7 +371,7 @@ class ClientUserController extends Controller
             'client_second_surname' => $client->second_surname,
         ]);
 
-            return redirect()->route('clients.catalog')->with('success', '¡Cuenta verificada y creada exitosamente!');
+        return redirect()->route('clients.catalog')->with('success', '¡Cuenta verificada y creada exitosamente!');
     }
 
     // Resend verification code
@@ -409,7 +414,7 @@ class ClientUserController extends Controller
             ->with('success', 'Se ha enviado un nuevo código a tu correo.');
     }
 
-    // Logout
+    // Log the client out and invalidate the session.
     public function logout(Request $request)
     {
         Auth::guard('clients')->logout();
@@ -419,5 +424,72 @@ class ClientUserController extends Controller
         return redirect()
             ->route('login.show')
             ->with('status', 'Sesión cerrada correctamente.');
+    }
+
+    /**
+     * Redirigir a Google para autenticación OAuth
+     */
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    /**
+     * Callback de Google OAuth. Guarda en client_table solo por gmail (sin provider/provider_id).
+     */
+    public function handleGoogleCallback(Request $request)
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+            $email = strtolower($googleUser->email);
+
+            $client = Client::where('gmail', $email)->first();
+
+            if ($client) {
+                // Actualizar email_verified solo si la columna existe
+                if (Schema::hasColumn((new Client())->getTable(), 'email_verified')) {
+                    $client->update(['email_verified' => true]);
+                }
+            } else {
+                $partes = array_filter(explode(' ', trim($googleUser->name ?? ''), 3));
+                $nombre = $partes[0] ?? $googleUser->name ?? 'Usuario';
+                $apellido1 = $partes[1] ?? '-';
+                $apellido2 = $partes[2] ?? null;
+                $data = [
+                    'name'          => $nombre,
+                    'first_surname' => $apellido1,
+                    'second_surname' => $apellido2,
+                    'gmail'         => $email,
+                    'password'      => Hash::make(Str::random(32)),
+                ];
+                if (Schema::hasColumn((new Client())->getTable(), 'email_verified')) {
+                    $data['email_verified'] = true;
+                }
+                $client = Client::create($data);
+            }
+
+            Auth::guard('clients')->login($client);
+            $request->session()->regenerate();
+            session([
+                'client_id'            => $client->user_id,
+                'client_name'          => $client->name,
+                'client_first_surname'  => $client->first_surname,
+                'client_second_surname' => $client->second_surname,
+            ]);
+
+            return redirect()->route('clients.home')->with('status', 'Inicio de sesión exitoso con Google');
+        } catch (\Throwable $e) {
+            $detail = $e->getMessage() ?: get_class($e) . ' en ' . $e->getFile() . ':' . $e->getLine();
+            Log::error('Error en Google OAuth: ' . $detail, [
+                'exception' => get_class($e),
+                'file'      => $e->getFile(),
+                'line'      => $e->getLine(),
+                'trace'     => $e->getTraceAsString(),
+            ]);
+            $message = config('app.debug')
+                ? 'Error al iniciar sesión con Google: ' . $detail
+                : 'Error al iniciar sesión con Google. Revisa storage/logs/laravel.log';
+            return redirect()->route('clients.home')->with('error', $message);
+        }
     }
 }

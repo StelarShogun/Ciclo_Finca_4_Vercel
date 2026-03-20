@@ -86,10 +86,6 @@
 </div>
 @endsection
 
-@push('styles')
-    @vite(['resources/css/clients-users.css'])
-@endpush
-
 @push('scripts')
 <script>
     // Solo permitir dígitos en el campo de código

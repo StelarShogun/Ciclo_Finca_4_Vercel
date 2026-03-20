@@ -47,17 +47,45 @@ class ClientController extends Controller
             });
         }
 
-        // Filter by category
+        // Filter by category (parent = parent + all its children; child = that category only)
+        $selectedCategory = null;
+        $subcategories = collect();
+        $parentCategoryForSubcats = null; // categoría padre para mostrar "En X: Todas, sub1, sub2"
         if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
+            $selectedCategory = Category::find($request->category_id);
+            if ($selectedCategory) {
+                if (is_null($selectedCategory->parent_category_id)) {
+                    $childIds = Category::where('parent_category_id', $selectedCategory->category_id)->pluck('category_id');
+                    $query->where(function ($q) use ($selectedCategory, $childIds) {
+                        $q->where('category_id', $selectedCategory->category_id)
+                          ->orWhereIn('category_id', $childIds);
+                    });
+                    $subcategories = Category::where('parent_category_id', $selectedCategory->category_id)->orderBy('name')->get();
+                    $parentCategoryForSubcats = $selectedCategory;
+                } else {
+                    $query->where('category_id', $selectedCategory->category_id);
+                    $parentCategoryForSubcats = $selectedCategory->parentCategory;
+                    if ($parentCategoryForSubcats) {
+                        $subcategories = Category::where('parent_category_id', $parentCategoryForSubcats->category_id)->orderBy('name')->get();
+                    }
+                }
+            }
         }
 
-        // Price range filter
-        if ($request->filled('min_price')) {
-            $query->where('sale_price', '>=', $request->min_price);
+        // Price range filter: validate min <= max; otherwise redirect with error
+        $minPrice = $request->filled('min_price') ? $request->input('min_price') : null;
+        $maxPrice = $request->filled('max_price') ? $request->input('max_price') : null;
+        if (is_numeric($minPrice) && is_numeric($maxPrice) && (float) $minPrice > (float) $maxPrice) {
+            return redirect()->route('clients.catalog', $request->except('min_price', 'max_price', 'page'))
+                ->withInput()
+                ->withErrors(['price_range' => 'El precio mínimo debe ser menor o igual al precio máximo.']);
         }
-        if ($request->filled('max_price')) {
-            $query->where('sale_price', '<=', $request->max_price);
+        if (is_numeric($minPrice) && is_numeric($maxPrice) && (float) $minPrice <= (float) $maxPrice) {
+            $query->where('sale_price', '>=', $minPrice)->where('sale_price', '<=', $maxPrice);
+        } elseif (is_numeric($minPrice)) {
+            $query->where('sale_price', '>=', $minPrice);
+        } elseif (is_numeric($maxPrice)) {
+            $query->where('sale_price', '<=', $maxPrice);
         }
 
         $sort  = $request->get('sort', 'created_at');
@@ -80,7 +108,7 @@ class ClientController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        return view('clients.catalog', compact('products', 'categories', 'cartCount'));
+        return view('clients.catalog', compact('products', 'categories', 'cartCount', 'selectedCategory', 'subcategories', 'parentCategoryForSubcats'));
     }
 
     public function product($id)

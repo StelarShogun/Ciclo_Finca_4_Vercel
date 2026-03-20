@@ -23,6 +23,7 @@ class Client extends Authenticatable
         'verification_code_expires_at',
         'email_verified',
         'provider',
+        'provider_id',
         'google_id',
         'remember_token',
     ];

@@ -95,18 +95,17 @@ Route::get('/csrf-token', function (Request $request) {
 })->name('csrf.token');
 
 // ============================================================
-// OAUTH (Google & Facebook)
+// OAUTH (Google for clients; Facebook via UsuarioController if needed)
 // ============================================================
 
-Route::get('/auth/google', [UsuarioController::class, 'redirectToGoogle'])->name('auth.google');
-Route::get('/auth/google/callback', [UsuarioController::class, 'handleGoogleCallback'])->name('auth.google.callback');
-Route::get('/auth/facebook', [UsuarioController::class, 'redirectToFacebook'])->name('auth.facebook');
-Route::get('/auth/facebook/callback', [UsuarioController::class, 'handleFacebookCallback'])->name('auth.facebook.callback');
+Route::get('/auth/google', [ClientUserController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [ClientUserController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
 // ============================================================
 // CART (authenticated clients)
 // ============================================================
 
+// Cart (clientes autenticados)
 Route::middleware(['auth:clients'])->group(function () {
     Route::get('/cart', [ClientController::class, 'cart'])->name('clients.cart');
     Route::post('/cart/add', [ClientController::class, 'addToCart'])->name('clients.cart.add');
@@ -114,6 +113,11 @@ Route::middleware(['auth:clients'])->group(function () {
     Route::delete('/cart/remove/{id}', [ClientController::class, 'removeFromCart'])->name('clients.cart.remove');
     Route::delete('/cart/clear', [ClientController::class, 'clearCart'])->name('clients.cart.clear');
     Route::post('/cart/checkout', [ClientController::class, 'checkout'])->name('clients.cart.checkout');
+});
+
+// Usuario Routes protegidas (solo administradores)
+Route::middleware(['auth:admin'])->group(function () {
+    Route::resource('usuarios', UsuarioController::class);
 });
 
 // ============================================================

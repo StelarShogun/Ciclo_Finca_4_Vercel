@@ -424,9 +424,29 @@
   object-fit: cover;
 }
 
-/* Área de imagen en catálogo */
+/* Área de imagen en catálogo: proporción fija para que no se vea rara */
 .product-card--catalog .product-image {
+  height: auto;
+  aspect-ratio: 1;
+  min-height: 0;
   background: linear-gradient(135deg, #f5f8f5 0%, #ebf0eb 100%);
+}
+
+.product-card--catalog .product-image img {
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Botones "Ver detalles" y "Agregar" en una sola fila en el catálogo */
+.product-card--catalog .product-actions {
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+.product-card--catalog .product-actions .btn-view-details,
+.product-card--catalog .product-actions .btn-add-cart {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 /* ===== CATEGORIES GRID ===== */
@@ -487,6 +507,13 @@
 /* ===== CATALOG PAGE ===== */
 .catalog-container {
   padding: 40px 0;
+}
+
+/* Contenedor más ancho para dar más espacio al grid de productos y a la sidebar */
+.catalog-container .container {
+  max-width: 1400px;
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
 .catalog-header {
@@ -625,8 +652,8 @@
 
 .catalog-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 30px;
+  grid-template-columns: 260px 1fr;
+  gap: 28px;
 }
 
 .catalog-sidebar {
@@ -723,6 +750,11 @@
 
 .catalog-content {
   min-height: 500px;
+}
+
+/* 3 productos por fila en el catálogo */
+.catalog-layout .products-grid {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .catalog-results {
@@ -2240,6 +2272,10 @@ a.product-detail-back.btn:hover {
   .catalog-layout {
     grid-template-columns: 1fr;
   }
+
+  .catalog-layout .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
   
   .catalog-sidebar {
     position: static;
@@ -2328,7 +2364,8 @@ a.product-detail-back.btn:hover {
 }
 
 @media (max-width: 480px) {
-  .products-grid {
+  .products-grid,
+  .catalog-layout .products-grid {
     grid-template-columns: 1fr;
   }
   
