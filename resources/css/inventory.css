@@ -1,3 +1,6 @@
+/* Modales: display:none hasta .active (sin esto, todos los formularios se ven a la vez) */
+@import './components/modals.css';
+
 /* ===== CSS DE INVENTARIO ===== */
 /* Variables movidas a variables.css - NO duplicar aquí */
 
@@ -287,10 +290,6 @@
     background: var(--color-danger-bg);
     color: var(--color-danger);
 }
-
-/* ===== MODALES ===== */
-/* Estilos base de modales movidos a components/modals.css */
-/* Solo se mantienen estilos específicos de modales de inventario si son necesarios */
 
 /* ===== FORMULARIOS ===== */
 .form-group {
