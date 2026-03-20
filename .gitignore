@@ -82,3 +82,6 @@ vendor/_laravel_ide/_model_helpers.php
 /vendor
 /vendor/composer
 /storage
+vendor/composer/autoload_static.php
+vendor/composer/autoload_real.php
+vendor/composer/autoload_classmap.php
