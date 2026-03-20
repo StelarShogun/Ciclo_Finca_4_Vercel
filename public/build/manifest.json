@@ -9,7 +9,7 @@
     ]
   },
   "resources/css/clients-users.css": {
-    "file": "assets/clients-users-wJc5TB6t.css",
+    "file": "assets/clients-users-BX6aQl81.css",
     "src": "resources/css/clients-users.css",
     "isEntry": true,
     "name": "clients-users",
@@ -18,7 +18,7 @@
     ]
   },
   "resources/css/clients/clients.css": {
-    "file": "assets/clients-BblmCODA.css",
+    "file": "assets/clients-BjVoxlDM.css",
     "src": "resources/css/clients/clients.css",
     "isEntry": true,
     "name": "clients",
@@ -42,7 +42,7 @@
     "isEntry": true
   },
   "resources/js/clients.js": {
-    "file": "assets/clients-ex4-qir7.js",
+    "file": "assets/clients-ChCYwHP_.js",
     "name": "clients",
     "src": "resources/js/clients.js",
     "isEntry": true

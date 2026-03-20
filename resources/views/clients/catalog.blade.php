@@ -175,9 +175,8 @@
                                                     <i class="fas fa-arrow-right"></i>
                                                     Ver detalles
                                                 </a>
-                                                <!-- Authenticated users add to cart; guests are prompted to log in via JS -->
-                                                @auth
-                                                <button class="btn-product btn-agregar add-to-cart-btn" 
+                                                @auth('clients')
+                                                <button class="btn-product btn-agregar add-to-cart-btn"
                                                         data-product-id="{{ $product->product_id }}"
                                                         data-product-name="{{ $product->name }}"
                                                         data-product-price="{{ $product->sale_price }}"
@@ -192,23 +191,6 @@
                                                 </button>
                                                 @endauth
                                             </div>
-                                            <div class="product-price">₡{{ number_format($product->sale_price, 0, ',', '.') }}</div>
-                                            <!-- Authenticated users add to cart; guests are prompted to log in via JS -->
-                                            @auth('clients')
-                                            <button class="btn btn-primary btn-sm add-to-cart-btn" 
-                                                    data-product-id="{{ $product->product_id }}"
-                                                    data-product-name="{{ $product->name }}"
-                                                    data-product-price="{{ $product->sale_price }}"
-                                                    data-product-stock="{{ $product->stock_current }}">
-                                                <i class="fas fa-cart-plus"></i>
-                                                Agregar
-                                            </button>
-                                            @else
-                                            <button class="btn btn-primary btn-sm guest-add-btn" type="button">
-                                                <i class="fas fa-cart-plus"></i>
-                                                Agregar
-                                            </button>
-                                            @endauth
                                         </div>
                                     </div>
                                 </div>

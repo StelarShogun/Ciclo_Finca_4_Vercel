@@ -1,9 +1,12 @@
 import { defineConfig } from 'vite'
 import laravel from 'laravel-vite-plugin'
 
+const vitePort = Number(process.env.VITE_PORT) || 5173
+
 export default defineConfig({
   plugins: [
     laravel({
+      detectTls: false,
       input: [
         'resources/js/admin.js',
         'resources/css/admin.css',
@@ -23,4 +26,9 @@ export default defineConfig({
       refresh: true,
     }),
   ],
+  server: {
+    host: 'localhost',
+    port: vitePort,
+    strictPort: false,
+  },
 })
