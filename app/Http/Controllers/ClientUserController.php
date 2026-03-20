@@ -195,6 +195,16 @@ class ClientUserController extends Controller
         if (Auth::guard('clients')->attempt($credentials, $remember)) {
             $client = Auth::guard('clients')->user();
 
+            // Bloquear acceso si el usuario está baneado
+            if ($client->active === false) {
+                Auth::guard('clients')->logout();
+                $msg = 'En este momento se encuentra baneado, contactar con el administrador para más información.';
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 403);
+                }
+                return back()->withErrors(['gmail' => $msg])->withInput();
+            }
+
             // Bloquear acceso si el correo no ha sido verificado (solo cuando la columna existe y es false)
             if ($client->email_verified === false) {
                 Auth::guard('clients')->logout();
@@ -446,6 +456,12 @@ class ClientUserController extends Controller
             $client = Client::where('gmail', $email)->first();
 
             if ($client) {
+                // Bloquear acceso si el usuario está baneado
+                if ($client->active === false) {
+                    $msg = 'En este momento se encuentra baneado, contactar con el administrador para más información.';
+                    return redirect()->route('clients.home')->with('error', $msg);
+                }
+
                 // Actualizar email_verified solo si la columna existe
                 if (Schema::hasColumn((new Client())->getTable(), 'email_verified')) {
                     $client->update(['email_verified' => true]);
