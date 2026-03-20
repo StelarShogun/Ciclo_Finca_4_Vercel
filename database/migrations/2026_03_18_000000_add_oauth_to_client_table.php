@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('client_table', function (Blueprint $table) {
-            $table->string('provider')->nullable()->after('email_verified');
+            $table->string('provider')->default('local')->after('email_verified');
             $table->string('provider_id')->nullable()->after('provider');
         });
     }

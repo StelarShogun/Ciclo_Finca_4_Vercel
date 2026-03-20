@@ -15,6 +15,10 @@ export default defineConfig({
         'resources/js/inventory.js',
         'resources/js/usuarios.js',
 
+        // CSS Y JS DE SALES
+        'resources/js/sales.js',
+        'resources/css/sales/sales.css',
+
         // CSS Y JS DE SUPPLIERS
         'resources/js/suppliers.js',
         'resources/css/suppliers/suppliers.css',

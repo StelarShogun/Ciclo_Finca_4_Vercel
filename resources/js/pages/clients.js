@@ -1,9 +1,3 @@
-/**
- * clients.js
- * JavaScript for the Ciclo Finca 4 client interface.
- * Handles cart, modals, and interactive features.
- */
-
 // ============================================================
 // GLOBAL UTILITIES
 // ============================================================
