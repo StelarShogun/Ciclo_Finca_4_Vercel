@@ -19,6 +19,9 @@ export default defineConfig({
         'resources/js/suppliers.js',
         'resources/css/suppliers/suppliers.css',
 
+        // CSS DE SALES
+        'resources/css/sales.css',
+
         // CSS Y JS DE CLIENTS
         'resources/css/clients/clients.css',
         'resources/css/clients-users.css',
