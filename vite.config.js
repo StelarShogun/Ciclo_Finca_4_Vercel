@@ -9,6 +9,7 @@ export default defineConfig({
       detectTls: false,
       input: [
         'resources/js/admin.js',
+        'resources/js/pages/admin.js',
         'resources/css/admin.css',
         'resources/js/dashboard.js',
         'resources/js/inventory.js',

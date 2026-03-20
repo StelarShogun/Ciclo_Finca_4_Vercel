@@ -11,6 +11,7 @@ use App\Http\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\ClientUserController;
 
 
@@ -156,6 +157,11 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
     Route::get('/sales/history/heartbeat', [SalesController::class, 'historyHeartbeat'])
         ->name('sales.history.heartbeat');
+
+    // — Clients (admin view) —
+    Route::get('/clientes', [AdminClientController::class, 'index'])->name('admin.clients.index');
+    Route::patch('/clientes/{id}/ban', [AdminClientController::class, 'ban'])->name('admin.clients.ban');
+    Route::patch('/clientes/{id}/unban', [AdminClientController::class, 'unban'])->name('admin.clients.unban');
 
 });
 
