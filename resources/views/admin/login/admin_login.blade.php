@@ -1,8 +1,18 @@
-@extends('usuarios')
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Iniciar Sesión - Ciclo Finca 4</title>
 
-@section('Titulo pagina', 'Iniciar Sesión')
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    @vite(['resources/css/admin.css'])
+</head>
+<body>
 
-@section('contenido')
     <div class="auth-container">
         <!-- FORMULARIO DE LOGIN -->
         <div id="loginForm" class="auth-form active">
@@ -62,13 +72,9 @@
         </div>
     </div>
 
-@endsection
-
-@push('styles')
-    @vite(['resources/css/admin.css'])
-@endpush
-
-@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    @vite(['resources/js/admin.js'])
-@endpush
+    @vite(['resources/js/pages/admin.js'])
+
+</body>
+</html>

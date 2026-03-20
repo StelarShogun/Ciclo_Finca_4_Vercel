@@ -28,8 +28,8 @@
                     <span class="sidebar-label">Ventas</span>
                 </a>
             </li>
-            <li>
-                <a href="{{ url('/usuarios') }}">
+            <li class="{{ request()->routeIs('admin.clients.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.clients.index') }}">
                     <i class="fas fa-users"></i>
                     <span class="sidebar-label">Usuarios</span>
                 </a>

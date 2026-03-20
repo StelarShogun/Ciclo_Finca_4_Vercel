@@ -823,3 +823,130 @@ img, svg, table { max-width: 100%; height: auto; }
     color: #888;
 }
 
+/* ============================================================
+   CLIENTS TABLE
+   ============================================================ */
+
+.clients-container {
+    padding: 1.5rem 2rem;
+}
+
+.clients-table-wrapper {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    overflow-x: auto;
+}
+
+.clients-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+}
+
+.clients-table thead tr {
+    background: #f0f4ff;
+}
+
+.clients-table th {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+.clients-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    color: #4b5563;
+    vertical-align: middle;
+}
+
+.clients-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.clients-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.status-active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-banned {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Ban / Activate buttons */
+.btn-ban,
+.btn-unban {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.9rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-ban {
+    background: #ef4444;
+    color: #fff;
+}
+
+.btn-ban:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.btn-unban {
+    background: #10b981;
+    color: #fff;
+}
+
+.btn-unban:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+/* Empty row */
+.clients-empty {
+    text-align: center;
+    padding: 2rem;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* Header badge */
+.clients-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #e0e7ff;
+    color: #3730a3;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+

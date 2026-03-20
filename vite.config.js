@@ -9,6 +9,7 @@ export default defineConfig({
       detectTls: false,
       input: [
         'resources/js/admin.js',
+        'resources/js/pages/admin.js',
         'resources/css/admin.css',
         'resources/js/dashboard.js',
         'resources/js/inventory.js',
@@ -17,6 +18,9 @@ export default defineConfig({
         // CSS Y JS DE SUPPLIERS
         'resources/js/suppliers.js',
         'resources/css/suppliers/suppliers.css',
+
+        // CSS DE SALES
+        'resources/css/sales.css',
 
         // CSS Y JS DE CLIENTS
         'resources/css/clients/clients.css',

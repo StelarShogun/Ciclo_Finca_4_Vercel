@@ -22,6 +22,7 @@ class Client extends Authenticatable
         'verification_code',
         'verification_code_expires_at',
         'email_verified',
+        'active',
         'provider',
         'provider_id',
         'google_id',
@@ -36,6 +37,7 @@ class Client extends Authenticatable
     protected $casts = [
         'verification_code_expires_at' => 'datetime',
         'email_verified'               => 'boolean',
+        'active'                       => 'boolean',
     ];
 
     public function cartItems(): HasMany
