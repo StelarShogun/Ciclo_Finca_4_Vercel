@@ -9,7 +9,7 @@
                          class="logo-img"
                          data-fallback-src="{{ asset('favicon.svg') }}"
                          onerror="this.src=this.dataset.fallbackSrc;">
-                    <span class="logo-text">Ciclo Pérez</span>
+                    <span class="logo-text">Ciclo Finca 4</span>
                 </a>
             </div>
 
