@@ -1,4 +1,4 @@
-@extends('clients.layouts.app')
+@extends('client.layouts.app')
 
 @section('hideNav')
 @endsection
@@ -22,6 +22,9 @@
                 <i class="fas fa-exclamation-triangle"></i>
                 La sesión expiró o el token no es válido. Intenta iniciar sesión de nuevo.
             </div>
+        @endif
+        @if(session('status'))
+            <div class="alert alert-success mb-3" role="alert">{{ session('status') }}</div>
         @endif
         <h2 class="text-center mb-2">Bienvenido de nuevo</h2>
         <p class="login-subtitle text-center mb-4">Ingresa a tu cuenta para continuar</p>
@@ -98,7 +101,7 @@
 @endsection
 
 @push('styles')
-    @vite(['resources/css/clients-users.css'])
+    @vite(['resources/css/client/clients-users.css'])
 @endpush
 
 @push('scripts')

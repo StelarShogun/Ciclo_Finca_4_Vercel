@@ -67,6 +67,15 @@ Route::get('/verify', [ClientUserController::class, 'showVerifyForm'])->name('cl
 Route::post('/verify', [ClientUserController::class, 'verify'])->name('clients.verify');
 Route::post('/verify/resend', [ClientUserController::class, 'resendCode'])->name('clients.verify.resend');
 
+Route::get('/recuperar-contrasena', [ClientUserController::class, 'showRecoveryForm'])->name('clients.recovery.form');
+Route::post('/recuperar-contrasena', [ClientUserController::class, 'sendRecoveryLink'])
+    ->middleware('throttle:5,1')
+    ->name('clients.recovery.send');
+Route::get('/recuperar-contrasena/{token}', [ClientUserController::class, 'showResetForm'])->name('clients.recovery.reset');
+Route::post('/recuperar-contrasena/restablecer', [ClientUserController::class, 'resetPassword'])
+    ->middleware('throttle:10,1')
+    ->name('clients.recovery.update');
+
 // Throttle prevents brute-force attacks (5 attempts per minute)
 Route::post('/login', [ClientUserController::class, 'login'])
     ->middleware('throttle:5,1')

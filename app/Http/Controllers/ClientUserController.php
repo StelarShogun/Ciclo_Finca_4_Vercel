@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 use App\Models\Client;
 use App\Rules\Recaptcha;
 use Laravel\Socialite\Facades\Socialite;
@@ -158,6 +159,130 @@ public function show()
     public function showLoginForm()
     {
         return view('client.login');
+    }
+
+    // Solicitud de enlace para restablecer contraseña (clientes).
+    public function showRecoveryForm()
+    {
+        return view('client.password_recovery');
+    }
+
+    // Envía el correo con el enlace de recuperación (si el Gmail existe).
+    public function sendRecoveryLink(Request $request)
+    {
+        $rules = [
+            'gmail' => ['required', 'email', 'regex:/^[^@]+@gmail\.com$/i'],
+        ];
+        if (config('recaptcha.site_key')) {
+            $rules['g-recaptcha-response'] = ['required', new Recaptcha()];
+        }
+
+        $request->validate($rules, [
+            'gmail.required' => 'El correo Gmail es obligatorio.',
+            'gmail.email'    => 'Debe ingresar un correo electrónico válido.',
+            'gmail.regex'    => 'Solo se aceptan correos de Gmail (@gmail.com).',
+        ]);
+
+        $gmail  = strtolower($request->gmail);
+        $client = Client::where('gmail', $gmail)->first();
+
+        if ($client && $client->active !== false) {
+            $plain = Str::random(64);
+            DB::table('client_password_reset_tokens')->where('email', $gmail)->delete();
+            DB::table('client_password_reset_tokens')->insert([
+                'email'      => $gmail,
+                'token'      => Hash::make($plain),
+                'created_at' => now(),
+            ]);
+
+            $url = url(route('clients.recovery.reset', [
+                'token' => $plain,
+                'gmail' => $gmail,
+            ], false));
+
+            try {
+                Mail::raw(
+                    "Hola {$client->name},\n\nPara restablecer tu contraseña, abre este enlace (válido 60 minutos):\n\n{$url}\n\nSi no solicitaste el cambio, ignora este correo.",
+                    function ($message) use ($gmail) {
+                        $message->to($gmail)->subject('Recuperar contraseña - Ciclo Finca');
+                    }
+                );
+            } catch (\Exception $e) {
+                Log::warning('Recovery mail failed: ' . $e->getMessage());
+            }
+        }
+
+        return back()->with('recovery_sent', true);
+    }
+
+    // Formulario nueva contraseña (desde el enlace del correo).
+    public function showResetForm(Request $request, string $token)
+    {
+        $gmail = strtolower((string) $request->query('gmail', ''));
+        if ($gmail === '' || ! $this->clientRecoveryTokenValid($gmail, $token)) {
+            return redirect()->route('clients.recovery.form')
+                ->withErrors(['gmail' => 'El enlace no es válido o ha expirado. Solicita uno nuevo.']);
+        }
+
+        return view('client.password_reset', compact('token', 'gmail'));
+    }
+
+    // Guarda la nueva contraseña y elimina el token.
+    public function resetPassword(Request $request)
+    {
+        $request->validate(
+            [
+                'token'                 => ['required', 'string'],
+                'gmail'                 => ['required', 'email', 'regex:/^[^@]+@gmail\.com$/i'],
+                'password'              => ['required', 'string', 'min:8', 'confirmed'],
+            ],
+            [
+                'gmail.required'     => 'El correo Gmail es obligatorio.',
+                'gmail.email'        => 'Debe ingresar un correo electrónico válido.',
+                'gmail.regex'        => 'Solo se aceptan correos de Gmail (@gmail.com).',
+                'password.required'  => 'La contraseña es obligatoria.',
+                'password.min'       => 'La contraseña debe tener al menos 8 caracteres.',
+                'password.confirmed' => 'Las contraseñas no coinciden.',
+            ]
+        );
+
+        $gmail = strtolower($request->gmail);
+        if (! $this->clientRecoveryTokenValid($gmail, $request->token)) {
+            return redirect()->route('clients.recovery.form')
+                ->withErrors(['gmail' => 'El enlace no es válido o ha expirado. Solicita uno nuevo.']);
+        }
+
+        $update = [
+            'password'   => Hash::make($request->password),
+            'updated_at' => now(),
+        ];
+        if (Schema::hasColumn((new Client())->getTable(), 'provider')) {
+            $update['provider'] = 'local';
+        }
+
+        DB::table('client_table')->where('gmail', $gmail)->update($update);
+        DB::table('client_password_reset_tokens')->where('email', $gmail)->delete();
+
+        return redirect()->route('login.show')
+            ->with('status', 'Contraseña actualizada. Ya puedes iniciar sesión.');
+    }
+
+    private function clientRecoveryTokenValid(string $gmail, string $token): bool
+    {
+        if (! Schema::hasTable('client_password_reset_tokens')) {
+            return false;
+        }
+
+        $row = DB::table('client_password_reset_tokens')->where('email', $gmail)->first();
+        if (! $row) {
+            return false;
+        }
+
+        if (! Hash::check($token, $row->token)) {
+            return false;
+        }
+
+        return Carbon::parse($row->created_at)->addMinutes(60)->isFuture();
     }
 
     // Process a login attempt.
