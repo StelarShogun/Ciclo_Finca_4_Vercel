@@ -21,22 +21,14 @@ class ClientUserController extends Controller
     // ============================================================
 
     // Display the authenticated client's profile, normalizing provider if null.
-    public function show()
-    {
-        $client = Auth::guard('clients')->user();
+public function show()
+{
+    $client = Auth::guard('clients')->user();
 
-        if (empty($client->provider) || $client->getRawOriginal('provider') === null) {
-            DB::table('client_table')
-                ->where('user_id', $client->user_id)
-                ->update(['provider' => 'local']);
+    $isGoogleOnly = $client->provider === 'google';
 
-            $client->provider = 'local';
-        }
-
-        $isGoogleOnly = ($client->provider ?? 'local') === 'google';
-
-        return view('clients.profile', compact('client', 'isGoogleOnly'));
-    }
+    return view('client.profile', compact('client', 'isGoogleOnly'));
+}
 
     // Update the authenticated client's personal data.
     public function update(Request $request)
@@ -336,7 +328,7 @@ class ClientUserController extends Controller
                 "Hola {$client->name},\n\nTu código de verificación es: {$code}\n\nExpira en 10 minutos.\n\nSi no creaste esta cuenta, ignora este correo.",
                 function ($message) use ($client) {
                     $message->to($client->gmail)
-                            ->subject('Código de verificación - Ciclo Finca');
+                        ->subject('Código de verificación - Ciclo Finca');
                 }
             );
         } catch (\Exception $e) {
@@ -354,7 +346,7 @@ class ClientUserController extends Controller
         if (!session('pending_client_id')) {
             return redirect()->route('clients.register.form');
         }
-        return view('clients.verify_gmail_code');
+        return view('client.verify_gmail_code');
     }
 
     // Process verification code
@@ -437,7 +429,7 @@ class ClientUserController extends Controller
                 "Hola {$client->name},\n\nTu nuevo código de verificación es: {$code}\n\nExpira en 10 minutos.",
                 function ($message) use ($client) {
                     $message->to($client->gmail)
-                            ->subject('Nuevo código de verificación - Ciclo Finca');
+                        ->subject('Nuevo código de verificación - Ciclo Finca');
                 }
             );
         } catch (\Exception $e) {

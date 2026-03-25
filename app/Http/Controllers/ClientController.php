@@ -233,7 +233,7 @@ class ClientController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        return view('clients.cart', compact('cartItems', 'total', 'cartCount'));
+        return view('client.cart', compact('cartItems', 'total', 'cartCount'));
     }
 
     public function updateCart(Request $request)
