@@ -1,0 +1,639 @@
+/* ===================================================================
+   LOGIN / REGISTER FORMS
+   =================================================================== */
+
+/* ── Página centrada ── */
+.login-page-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    width: 100%;
+    padding: 24px 16px;
+    background: #f5f5f5;
+    box-sizing: border-box;
+}
+
+/* ── Caja principal del formulario ── */
+.login-form-box {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    padding: 36px 32px 32px;
+    max-width: 460px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+
+.login-form-box form {
+    width: 100%;
+}
+
+/* ── Volver atrás ── */
+.login-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    align-self: flex-start;
+    margin-bottom: 16px;
+    color: #5f6368;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.login-back-link:hover {
+    color: #2e7d32;
+    text-decoration: none;
+}
+
+/* ── Logo ── */
+.login-auth-logo {
+    margin-bottom: 14px;
+}
+
+.login-auth-logo img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #2e7d32;
+    padding: 3px;
+    background: #fff;
+    display: block;
+}
+
+/* ── Título y subtítulo ── */
+.login-form-box h2 {
+    width: 100%;
+    text-align: center;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #212529;
+    margin: 0 0 6px;
+}
+
+.login-subtitle {
+    width: 100%;
+    text-align: center;
+    color: #5f6368;
+    font-size: 0.93rem;
+    margin: 0 0 24px;
+}
+
+/* ── Alert de sesión expirada ── */
+.login-form-box .alert {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+/* ── Grupos de campo ── */
+.login-form-box .form-group {
+    width: 100%;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.login-field-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #3c4043;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.login-field-icon {
+    width: 16px;
+    text-align: center;
+    color: #5f6368;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+/* ── Input base ── */
+.login-form-box .form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #dadce0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: #212529;
+    background: #fff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+}
+
+.login-form-box .form-control:focus {
+    outline: none;
+    border-color: #2e7d32;
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.12);
+}
+
+.login-form-box .form-control::placeholder {
+    color: #adb5bd;
+}
+
+/* ── Wrapper del input de contraseña con ojo ── */
+.login-pass-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.login-pass-wrap .form-control {
+    padding-right: 44px;
+}
+
+.login-pass-toggle {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #5f6368;
+    font-size: 0.95rem;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.login-pass-toggle:hover { color: #2e7d32; }
+
+/* ── reCAPTCHA ── */
+.login-form-box .g-recaptcha {
+    margin-top: 4px;
+}
+
+/* ── Checkbox recordarme ── */
+.checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #3c4043;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #2e7d32;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* ── Botón principal de submit ── */
+.login-form-box .btn {
+    width: 100%;
+    margin-top: 4px;
+}
+
+.btn-login-submit {
+    width: 100%;
+    padding: 13px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+/* ── Divider "o" ── */
+.login-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin: 20px 0;
+    color: #9aa0a6;
+    font-size: 0.85rem;
+}
+
+.login-divider::before,
+.login-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e8eaed;
+}
+
+/* ── OAuth / botón Google ── */
+.oauth-buttons {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.oauth-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 11px 16px;
+    border: 1.5px solid #dadce0;
+    border-radius: 10px;
+    background: #fff;
+    color: #3c4043;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.oauth-btn:hover {
+    background: #f8f9fa;
+    border-color: #bdc1c6;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+    text-decoration: none;
+    color: #3c4043;
+}
+
+.google-g-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #4285f4;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1px #dadce0;
+}
+
+.google-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.95rem;
+}
+
+/* Letras de colores del logo "Google" */
+.google-brand       { font-weight: 700; }
+.brand-letter       { font-weight: 700; }
+.brand-g, .brand-g2 { color: #4285f4; }
+.brand-o            { color: #ea4335; }
+.brand-o2           { color: #fbbc05; }
+.brand-l            { color: #34a853; }
+.brand-e            { color: #ea4335; }
+
+/* ── Footer: crear cuenta ── */
+.login-footer {
+    width: 100%;
+    text-align: center;
+}
+
+.login-footer-text {
+    color: #5f6368;
+    font-size: 0.9rem;
+    margin: 0 0 10px;
+}
+
+.login-register-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #dadce0;
+    border-radius: 10px;
+    background: #fff;
+    color: #2e7d32;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.login-register-btn:hover {
+    background: #f1f8f1;
+    border-color: #2e7d32;
+    text-decoration: none;
+}
+
+/* ── Mensajes de error/éxito inline por campo ── */
+.field-msg {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    margin-top: 4px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.field-msg.error {
+    display: flex;
+    color: #c0392b;
+    background: #fdf0ef;
+    border: 1px solid #f5c6cb;
+}
+
+.field-msg.success {
+    display: flex;
+    color: #1e7e34;
+    background: #eafaf1;
+    border: 1px solid #b7e4c7;
+}
+
+.field-msg i { font-size: 0.85rem; flex-shrink: 0; }
+
+/* ── Borde rojo/verde en input según estado ── */
+.input-error { border-color: #e74c3c !important; box-shadow: 0 0 0 2px rgba(231, 76, 60, .15) !important; }
+.input-ok    { border-color: #27ae60 !important; box-shadow: 0 0 0 2px rgba(39, 174, 96, .12) !important; }
+
+/* ===================================================================
+   MY PROFILE (profile.blade.php)
+   =================================================================== */
+
+/* ── Wrapper ── */
+.profile-wrapper { padding: 40px 0 60px; }
+
+/* ── Hero ── */
+.profile-hero {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 28px 32px;
+    margin-bottom: 28px;
+}
+
+.profile-avatar {
+    flex-shrink: 0;
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2e7d32, #4caf50);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(46, 125, 50, 0.25);
+}
+
+.profile-hero-info { flex: 1; min-width: 0; }
+
+.profile-hero-info h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-email {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0 0 10px;
+}
+
+/* ── Badges ── */
+.profile-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.profile-badge--google { background: #fce8e6; color: #ea4335; }
+.profile-badge--local  { background: #e8f5e9; color: #2e7d32; }
+
+/* ── Alert close button ── */
+.profile-alert-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.7;
+    padding: 0;
+    font-size: 0.9rem;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.profile-alert-close:hover { opacity: 1; }
+
+/* ── Grid ── */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+/* ── Cards ── */
+.profile-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.profile-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.profile-card-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── Fields grid ── */
+.profile-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+}
+
+.profile-field-full { grid-column: 1 / -1; }
+
+/* Campos en modo solo lectura */
+.form-control[readonly] {
+    background: #f8f9fa;
+    color: #666;
+    cursor: default;
+}
+
+.profile-field-error {
+    font-size: 0.8rem;
+    color: #d32f2f;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+/* ── Password input with eye toggle ── */
+.profile-input-pass { position: relative; }
+
+.profile-input-pass .form-control { padding-right: 42px; }
+
+.profile-toggle-pass {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    font-size: 0.9rem;
+    padding: 0;
+    line-height: 1;
+    transition: all 0.3s ease;
+}
+
+.profile-toggle-pass:hover { color: #2e7d32; }
+
+/* ── Password strength meter ── */
+.profile-strength {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.profile-strength-bar {
+    flex: 1;
+    height: 5px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.profile-strength-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 3px;
+    transition: width 0.3s ease, background 0.3s ease;
+}
+
+.profile-strength-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    min-width: 55px;
+    text-align: right;
+}
+
+/* ── Form actions ── */
+.profile-form-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* ── Google CTA (cuentas sin contraseña local) ── */
+.profile-google-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+    padding: 8px 0;
+}
+
+.profile-google-cta p {
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.profile-google-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: #fce8e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: #ea4335;
+}
+
+/* ── Botón outline-primary (cabecera de card) ── */
+.btn-outline-primary {
+    background: transparent;
+    color: #2e7d32;
+    border: 2px solid #2e7d32;
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+    background: #2e7d32;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+}
+
+/* ===================================================================
+   RESPONSIVE
+   =================================================================== */
+
+@media (max-width: 768px) {
+    .profile-grid          { grid-template-columns: 1fr; }
+    .profile-fields        { grid-template-columns: 1fr; }
+    .profile-field-full    { grid-column: 1; }
+    .profile-hero          { flex-direction: column; text-align: center; }
+    .profile-hero-info h1  { white-space: normal; }
+}
+
+@media (max-width: 520px) {
+    .login-form-box {
+        padding: 28px 20px 24px;
+        border-radius: 12px;
+    }
+
+    .login-form-box h2 {
+        font-size: 1.5rem;
+    }
+
+    .oauth-btn {
+        font-size: 0.88rem;
+        padding: 10px 12px;
+    }
+}

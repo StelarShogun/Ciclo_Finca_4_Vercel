@@ -1,6 +1,10 @@
-@extends('clients.layouts.app')
+@extends('client.layouts.app')
 
 @section('title', 'Mi Perfil')
+
+@push('styles')
+    @vite(['resources/css/client/clients-page.css'])
+@endpush
 
 @section('content')
 
@@ -257,3 +261,7 @@
         </div>{{-- /profile-wrapper --}}
     </div>{{-- /container --}}
 @endsection
+
+@push('scripts')
+    @vite(['resources/js/client/clients-users.js'])
+@endpush

@@ -1,6 +1,10 @@
-@extends('clients.layouts.app')
+@extends('client.layouts.app')
 
 @section('title', $product->name . ' - Ciclo Finca 4')
+
+@push('styles')
+    @vite(['resources/css/client/clients-page.css'])
+@endpush
 
 @section('content')
 <div class="product-detail-container">
@@ -126,3 +130,7 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    @vite(['resources/js/client/clients-page.js'])
+@endpush

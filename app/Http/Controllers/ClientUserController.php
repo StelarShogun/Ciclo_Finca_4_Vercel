@@ -165,7 +165,7 @@ class ClientUserController extends Controller
     // Show the login form.
     public function showLoginForm()
     {
-        return view('clients_users.login_user');
+        return view('client.login');
     }
 
     // Process a login attempt.
@@ -256,7 +256,7 @@ class ClientUserController extends Controller
     // Show register form
     public function showRegisterForm()
     {
-        return view('clients_users.create');
+        return view('client.register');
     }
 
     // Process registration
@@ -334,7 +334,7 @@ class ClientUserController extends Controller
         if (!session('pending_client_id')) {
             return redirect()->route('clients.register.form');
         }
-        return view('clients_users.verify_gmail_code');
+        return view('clients.verify_gmail_code');
     }
 
     // Process verification code
