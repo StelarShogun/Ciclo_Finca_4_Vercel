@@ -32,7 +32,7 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    @vite(['resources/js/sales.js'])
+    @vite(['resources/js/admin/sales.js'])
     @stack('scripts')
 </body>
 

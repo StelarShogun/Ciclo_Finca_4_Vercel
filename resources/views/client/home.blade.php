@@ -1,6 +1,10 @@
-@extends('clients.layouts.app')
+@extends('client.layouts.app')
 
 @section('title', 'Inicio - Ciclo Finca 4')
+
+@push('styles')
+    @vite(['resources/css/client/clients-page.css'])
+@endpush
 
 @section('content')
 <!-- Hero Section -->
@@ -153,3 +157,7 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    @vite(['resources/js/client/clients-page.js'])
+@endpush
