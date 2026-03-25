@@ -424,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var closeAddBtn = document.getElementById('close-add-to-cart-modal');
     if (closeAddBtn) closeAddBtn.addEventListener('click', function () { closeModal('add-to-cart-modal'); });
 
-    // — Remove single cart item —
+    // — Remove single cart item (delegated) —
     document.addEventListener('click', function (e) {
         var btn = e.target.closest('.cart-remove-item');
         if (!btn) return;
@@ -490,42 +490,52 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // — Clear entire cart —
-    var clearCartBtn = document.getElementById('btn-clear-cart');
-    if (clearCartBtn) {
-        clearCartBtn.addEventListener('click', function () {
-            Swal.fire({
-                title: '¿Vaciar carrito?',
-                text: 'Se eliminarán todos los productos del carrito.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, vaciar',
-                cancelButtonText: 'Cancelar'
-            }).then(function (result) {
-                if (!result.isConfirmed) return;
-                fetch('/cart/clear', {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': getCsrfToken(),
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
+    // ─────────────────────────────────────────────────────────
+    // — Vaciar carrito (delegado) —
+    // Se usa delegación en lugar de un listener directo sobre
+    // #btn-clear-cart para que funcione aunque el botón sea
+    // regenerado dinámicamente o el click caiga sobre el <i> hijo.
+    // ─────────────────────────────────────────────────────────
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('#btn-clear-cart')) return;
+
+        Swal.fire({
+            title: '¿Vaciar carrito?',
+            text: 'Se eliminarán todos los productos del carrito.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, vaciar',
+            cancelButtonText: 'Cancelar'
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+
+            fetch('/cart/clear', {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        updateCartCount(0);
+                        showCartEmptyState();
+                        Swal.fire({
+                            toast: true, position: 'top-end', icon: 'success',
+                            title: 'Carrito vaciado correctamente',
+                            showConfirmButton: false, timer: 2500, timerProgressBar: true
+                        });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo vaciar el carrito' });
                     }
                 })
-                    .then(function (res) { return res.json(); })
-                    .then(function (data) {
-                        if (data.success) {
-                            updateCartCount(0);
-                            showCartEmptyState();
-                        } else {
-                            Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo vaciar el carrito' });
-                        }
-                    })
-                    .catch(function () {
-                        Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al vaciar el carrito' });
-                    });
-            });
+                .catch(function () {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al vaciar el carrito' });
+                });
         });
-    }
+    });
 
     // — Quantity input: clamp to [1, stock] on change —
     document.querySelectorAll('.quantity-input').forEach(function (input) {
@@ -657,7 +667,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // — Catalog pagination: same structure as admin (Prev, page indicator, Next, Ir) —
     // — Catalog price-range filter validation —
     (function initCatalogPriceFilter() {
         var form      = document.getElementById('filter-form');

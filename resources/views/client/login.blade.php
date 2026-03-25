@@ -27,10 +27,24 @@
                 La sesión expiró o el token no es válido. Intenta iniciar sesión de nuevo.
             </div>
         @endif
+
+        @if (session('status'))
+            <div class="alert alert-success mb-3" role="alert">
+                <i class="fas fa-check-circle"></i>
+                {{ session('status') }}
+            </div>
+        @endif
+
         <h2>Bienvenido de nuevo</h2>
         <p class="login-subtitle">Ingresa a tu cuenta para continuar</p>
 
-        <form id="public-login-form" method="POST" action="{{ route('login') }}">
+        {{-- URL de registro disponible para el JS via data attribute --}}
+        <form
+            id="public-login-form"
+            method="POST"
+            action="{{ route('login') }}"
+            data-register-url="{{ route('clients.register.form') }}"
+        >
             @csrf
             <div class="form-group">
                 <label for="login-email" class="login-field-label">
@@ -65,9 +79,11 @@
                 <span>Iniciar Sesión</span>
             </button>
         </form>
+
         <div class="login-divider">
             <span>o</span>
         </div>
+
         <div class="oauth-buttons">
             <a href="{{ route('auth.google') }}" class="oauth-btn google-btn">
                 <span class="google-g-icon" aria-hidden="true">G</span>
@@ -84,6 +100,7 @@
                 </span>
             </a>
         </div>
+
         <div class="login-footer">
             <p class="login-footer-text">¿No tienes una cuenta?</p>
             <a href="{{ route('clients.register.form') }}" class="login-register-btn">
@@ -96,5 +113,6 @@
 @endsection
 
 @push('scripts')
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     @vite(['resources/js/client/clients-users.js'])
 @endpush

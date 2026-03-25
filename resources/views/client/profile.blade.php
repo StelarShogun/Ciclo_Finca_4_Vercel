@@ -3,7 +3,8 @@
 @section('title', 'Mi Perfil')
 
 @push('styles')
-    @vite(['resources/css/client/clients-page.css'])
+    @vite(['resources/css/client/clients-users.css'])
+
 @endpush
 
 @section('content')
