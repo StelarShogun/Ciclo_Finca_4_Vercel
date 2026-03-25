@@ -7,7 +7,7 @@ Todo el entorno (Laravel, MySQL, phpMyAdmin) se levanta con Docker Compose tal c
 ## Requisitos
 
 - Docker Desktop (o Docker + Docker Compose) instalado y en ejecución.
-- Puertos libres: **8080** (app), **8081** (phpMyAdmin), **3306** (MySQL).
+- Puertos libres en el host: **8080** (app), **8083** (phpMyAdmin), **3307** (MySQL del contenedor; el 3306 del host suele estar ocupado).
 
 ## Pasos para que funcione
 
@@ -33,7 +33,7 @@ No cambies `DB_HOST` en el `.env`: dentro del contenedor el compose inyecta `DB_
 docker compose up --build -d
 ```
 
-Esto levanta: **app** (Laravel en el puerto 8080), **db** (MySQL en 3306), **phpmyadmin** (puerto 8081).
+Esto levanta: **app_ciclo** (Laravel en **8080**), **db_ciclo** (MySQL en el host **3307**), **phpmyadmin_ciclo** (**8083**).
 
 ### 2. Instalar dependencias de PHP dentro del contenedor
 
@@ -60,7 +60,7 @@ docker compose exec app_ciclo php artisan migrate --seed
 | Servicio     | URL |
 |-------------|-----|
 | Aplicación  | http://localhost:8080 |
-| phpMyAdmin  | http://localhost:8081 |
+| phpMyAdmin  | http://localhost:8083 |
 
 - **phpMyAdmin:** usuario `DB_USERNAME` y contraseña `DB_PASSWORD` de tu `.env`, o usuario `root` con contraseña `root` (según el `docker-compose.yml`).
 

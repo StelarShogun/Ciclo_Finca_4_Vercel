@@ -28,7 +28,9 @@ composer install --no-interaction
 echo ">>> Iniciando Vite..."
 npm run dev &
 
-# Laravel cache (opcional en dev, pero lo dejo)do
+# Evita usar config cache generada en otro entorno (rutas /var/www/html o DB distinta)
+rm -f bootstrap/cache/config.php 2>/dev/null || true
+
 php artisan config:clear
 php artisan view:clear
 

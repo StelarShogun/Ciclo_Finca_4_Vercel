@@ -1,3 +1,6 @@
+# Mismo nombre de proyecto que antes = reutiliza el volumen dbdata_ciclo con tus datos
+name: ciclo_finca_4_app
+
 services:
   app_ciclo:
     build: .
@@ -12,6 +15,7 @@ services:
       - DB_DATABASE=${DB_DATABASE}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
+      - VITE_PORT=5173
     depends_on:
       - db_ciclo
 
@@ -19,13 +23,19 @@ services:
     image: mysql:8.0
     container_name: mysql_db_ciclo
     restart: always
+    # Permite DB_HOST=db en .env (alias al mismo contenedor que db_ciclo)
+    networks:
+      default:
+        aliases:
+          - db
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: root
+    # Puerto 3307 en el host: el 3306 suele estar ocupado por MySQL local u otros contenedores
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - dbdata_ciclo:/var/lib/mysql
 

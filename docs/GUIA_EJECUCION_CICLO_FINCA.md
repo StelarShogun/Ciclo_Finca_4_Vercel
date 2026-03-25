@@ -6,7 +6,7 @@ Sigue estos pasos **en orden** en PowerShell. Los contenedores que tenías para 
 
 ## Paso 1: Detener y eliminar contenedores viejos (opcional)
 
-Si antes creaste contenedores a mano para proyecto principal unificado, deténlos y bórralos para liberar puertos 8080, 8081 y 3306:
+Si antes creaste contenedores a mano para proyecto principal unificado, deténlos y bórralos para liberar puertos 8080, 8083 y 3307 (según el `docker-compose` actual):
 
 ```powershell
 docker stop ciclo-mysql ciclo-phpmyadmin 2>$null
@@ -81,7 +81,7 @@ docker compose exec app_ciclo php artisan migrate --seed
 ## Paso 8: Probar la aplicación
 
 - **Aplicación Laravel:** http://localhost:8080  
-- **phpMyAdmin:** http://localhost:8081  
+- **phpMyAdmin:** http://localhost:8083  
   - Usuario: el que pusiste en `DB_USERNAME` (ej. `laravel`)  
   - Contraseña: la que pusiste en `DB_PASSWORD`  
   - O usuario `root` con contraseña `root` (según el docker-compose de este proyecto)
@@ -110,13 +110,13 @@ docker compose exec app_ciclo php artisan key:generate
 docker compose exec app_ciclo php artisan migrate --seed
 ```
 
-Luego abre http://localhost:8080 y http://localhost:8081.
+Luego abre http://localhost:8080 y http://localhost:8083.
 
 ---
 
 ## Si algo falla
 
-- **Puerto en uso:** otro programa usa 8080, 8081 o 3306. Cierra esa aplicación o cambia los puertos en `docker-compose.yml`.
+- **Puerto en uso:** otro programa usa 8080, 8083, 3307 o 5173. Cierra esa aplicación o cambia los puertos en `docker-compose.yml`.
 - **Error 500 en la app:** ejecuta  
   `docker compose exec app_ciclo chmod -R 775 storage bootstrap/cache`  
   y  
