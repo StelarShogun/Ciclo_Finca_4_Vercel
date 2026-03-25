@@ -208,6 +208,26 @@ class ClientUserController extends Controller
             // Bloquear acceso si el correo no ha sido verificado (solo cuando la columna existe y es false)
             if ($client->email_verified === false) {
                 Auth::guard('clients')->logout();
+
+                // Generar y enviar código de verificación automáticamente
+                $code    = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $expires = now()->addMinutes(10);
+                $client->update([
+                    'verification_code'            => $code,
+                    'verification_code_expires_at' => $expires,
+                ]);
+                try {
+                    Mail::raw(
+                        "Hola {$client->name},\n\nTu código de verificación es: {$code}\n\nExpira en 10 minutos.",
+                        function ($message) use ($client) {
+                            $message->to($client->gmail)
+                                    ->subject('Código de verificación - Ciclo Finca');
+                        }
+                    );
+                } catch (\Exception $e) {
+                    // El correo falló pero igual redirigimos; el usuario puede reenviar
+                }
+
                 session([
                     'pending_client_id' => $client->user_id,
                     'pending_gmail'     => $client->gmail,

@@ -362,17 +362,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             cancelButtonColor: '#6c757d'
                         }).then(function (result) {
                             if (!result.isConfirmed) return;
-                            // Send/resend the verification code then navigate
-                            fetch('/verify/resend', {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': getCsrfToken(),
-                                    'X-Requested-With': 'XMLHttpRequest',
-                                    'Accept': 'application/json'
-                                }
-                            }).finally(function () {
-                                window.location.href = data.redirect;
-                            });
+                            // El servidor ya envió el código al detectar el correo no verificado
+                            window.location.href = data.redirect;
                         });
                     } else {
                         Swal.fire({
