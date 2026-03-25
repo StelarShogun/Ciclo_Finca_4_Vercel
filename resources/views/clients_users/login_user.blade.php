@@ -46,6 +46,11 @@
                         <i class="fas fa-eye" id="eye-icon"></i>
                     </button>
                 </div>
+                <div class="text-right mt-1" style="text-align:right;">
+                    <a href="{{ route('clients.recovery.form') }}" class="login-field-label" style="font-size:0.85rem;color:#2d7a2d;">
+                        ¿Olvidó su contraseña?
+                    </a>
+                </div>
             </div>
             <div class="form-group mb-3">
                 <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
@@ -98,19 +103,4 @@
 
 @push('scripts')
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-<script>
- document.getElementById('toggle-password').addEventListener('click', function() {
-    const input = document.getElementById('login-password');
-    const icon = document.getElementById('eye-icon');
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-    } else {
-        input.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-    }
-});
-</script>
 @endpush

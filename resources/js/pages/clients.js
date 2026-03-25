@@ -346,6 +346,34 @@ document.addEventListener('DOMContentLoaded', function () {
                         }).then(function () {
                             window.location.href = data.redirect || '/';
                         });
+                    } else if (data.redirect) {
+                        // Unverified email: offer to send code and redirect to verify
+                        if (submitBtn) submitBtn.disabled = false;
+                        if (submitSpan) submitSpan.classList.remove('hidden');
+                        if (loadingSpan) loadingSpan.classList.add('hidden');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Correo no verificado',
+                            text: data.message || 'Debes verificar tu correo antes de iniciar sesión.',
+                            showCancelButton: true,
+                            confirmButtonText: 'Verificar Correo',
+                            cancelButtonText: 'Cancelar',
+                            confirmButtonColor: '#2d7a2d',
+                            cancelButtonColor: '#6c757d'
+                        }).then(function (result) {
+                            if (!result.isConfirmed) return;
+                            // Send/resend the verification code then navigate
+                            fetch('/verify/resend', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': getCsrfToken(),
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Accept': 'application/json'
+                                }
+                            }).finally(function () {
+                                window.location.href = data.redirect;
+                            });
+                        });
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -1152,3 +1180,396 @@ window.showPasswordForm = showPasswordForm;
 window.hidePasswordForm = hidePasswordForm;
 window.showProfileAlert = showProfileAlert;
 window.closeProfileAlert = closeProfileAlert;
+
+// ============================================================
+// REGISTER FORM utilities (create.blade.php)
+// ============================================================
+
+/** Toggles password visibility; called via inline onclick in the register form. */
+function togglePass(inputId, iconId) {
+    var input = document.getElementById(inputId);
+    var icon  = document.getElementById(iconId);
+    if (!input) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        if (icon) icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+/** Shows a field-level validation message below an input. */
+function showMsg(msgId, type, text) {
+    var el = document.getElementById(msgId);
+    if (!el) return;
+    el.className = 'field-msg ' + type;
+    el.innerHTML = (type === 'error')
+        ? '<i class="fas fa-exclamation-circle"></i><span>' + text + '</span>'
+        : '<i class="fas fa-check-circle"></i><span>' + text + '</span>';
+}
+
+/** Clears a field-level message. */
+function clearMsg(msgId) {
+    var el = document.getElementById(msgId);
+    if (el) { el.className = 'field-msg'; el.innerHTML = ''; }
+}
+
+/** Adds or removes input-error / input-ok classes from an input element. */
+function setInputState(input, state) {
+    input.classList.remove('input-error', 'input-ok');
+    if (state) input.classList.add(state);
+}
+
+// ============================================================
+// LOGIN PAGE + REGISTER FORM initialization
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    // — Login page: toggle password visibility —
+    var togglePwdBtn = document.getElementById('toggle-password');
+    if (togglePwdBtn) {
+        togglePwdBtn.addEventListener('click', function () {
+            var input = document.getElementById('login-password');
+            var icon  = document.getElementById('eye-icon');
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+            } else {
+                input.type = 'password';
+                if (icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+            }
+        });
+    }
+
+    // — Register form: only initialise when the form exists —
+    if (!document.getElementById('formRegistroCliente')) return;
+
+    var invalidChars = /[^A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]/;
+
+    [
+        { id: 'name',           msgId: 'msg-name',           label: 'El nombre',           required: true  },
+        { id: 'first_surname',  msgId: 'msg-first-surname',  label: 'El apellido',          required: true  },
+        { id: 'second_surname', msgId: 'msg-second-surname', label: 'El segundo apellido',  required: false },
+    ].forEach(function (field) {
+        var input = document.getElementById(field.id);
+        if (!input) return;
+
+        input.addEventListener('input', function () {
+            if (invalidChars.test(this.value)) {
+                this.value = this.value.replace(/[^A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]/g, '');
+                showMsg(field.msgId, 'error', 'Solo se permiten letras y espacios, sin números ni símbolos.');
+                setInputState(this, 'input-error');
+                return;
+            }
+            var val = this.value.trim();
+            if (val === '' && field.required) {
+                showMsg(field.msgId, 'error', field.label + ' es obligatorio.');
+                setInputState(this, 'input-error');
+            } else if (val !== '' && val.length < 2) {
+                showMsg(field.msgId, 'error', field.label + ' debe tener al menos 2 caracteres.');
+                setInputState(this, 'input-error');
+            } else if (val !== '') {
+                showMsg(field.msgId, 'success', 'Campo válido.');
+                setInputState(this, 'input-ok');
+            } else {
+                clearMsg(field.msgId);
+                setInputState(this, null);
+            }
+        });
+
+        input.addEventListener('blur', function () {
+            if (field.required && this.value.trim() === '') {
+                showMsg(field.msgId, 'error', field.label + ' es obligatorio.');
+                setInputState(this, 'input-error');
+            }
+        });
+    });
+
+    var gmailRegInput = document.getElementById('gmail');
+    if (gmailRegInput) {
+        gmailRegInput.addEventListener('input', function () {
+            var val = this.value.trim().toLowerCase();
+            if (val === '') { clearMsg('msg-gmail'); setInputState(this, null); return; }
+            if (!val.endsWith('@gmail.com')) {
+                showMsg('msg-gmail', 'error', 'Solo se aceptan correos @gmail.com.');
+                setInputState(this, 'input-error');
+            } else {
+                showMsg('msg-gmail', 'success', 'Correo válido.');
+                setInputState(this, 'input-ok');
+            }
+        });
+        gmailRegInput.addEventListener('blur', function () {
+            if (this.value.trim() === '') {
+                showMsg('msg-gmail', 'error', 'El correo Gmail es obligatorio.');
+                setInputState(this, 'input-error');
+            }
+        });
+    }
+
+    function checkPassMatch() {
+        var passwordEl = document.getElementById('password');
+        var pcInput    = document.getElementById('password_confirmation');
+        if (!passwordEl || !pcInput) return;
+        var p  = passwordEl.value;
+        var pc = pcInput.value;
+        if (pc.length === 0) { clearMsg('msg-pass-confirm'); setInputState(pcInput, null); return; }
+        if (p !== pc) {
+            showMsg('msg-pass-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(pcInput, 'input-error');
+        } else {
+            showMsg('msg-pass-confirm', 'success', 'Las contraseñas coinciden.');
+            setInputState(pcInput, 'input-ok');
+        }
+    }
+
+    var passwordInput = document.getElementById('password');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function () {
+            var v = this.value;
+            if (v.length === 0)    { clearMsg('msg-pass'); setInputState(this, null); }
+            else if (v.length < 8) { showMsg('msg-pass', 'error', 'Mínimo 8 caracteres (' + v.length + '/8).'); setInputState(this, 'input-error'); }
+            else                   { showMsg('msg-pass', 'success', 'Longitud correcta.'); setInputState(this, 'input-ok'); }
+            checkPassMatch();
+        });
+    }
+
+    var passConfirmInput = document.getElementById('password_confirmation');
+    if (passConfirmInput) passConfirmInput.addEventListener('input', checkPassMatch);
+
+    document.getElementById('formRegistroCliente').addEventListener('submit', function (e) {
+        var valid = true;
+
+        if (document.getElementById('name').value.trim() === '') {
+            showMsg('msg-name', 'error', 'El nombre es obligatorio.');
+            setInputState(document.getElementById('name'), 'input-error');
+            valid = false;
+        }
+        if (document.getElementById('first_surname').value.trim() === '') {
+            showMsg('msg-first-surname', 'error', 'El apellido es obligatorio.');
+            setInputState(document.getElementById('first_surname'), 'input-error');
+            valid = false;
+        }
+
+        var gv = document.getElementById('gmail').value.trim().toLowerCase();
+        if (gv === '') {
+            showMsg('msg-gmail', 'error', 'El correo Gmail es obligatorio.');
+            setInputState(document.getElementById('gmail'), 'input-error');
+            valid = false;
+        } else if (!gv.endsWith('@gmail.com')) {
+            showMsg('msg-gmail', 'error', 'Solo se aceptan correos @gmail.com.');
+            setInputState(document.getElementById('gmail'), 'input-error');
+            valid = false;
+        }
+
+        var pv  = document.getElementById('password').value;
+        var pcv = document.getElementById('password_confirmation').value;
+        if (pv.length === 0) {
+            showMsg('msg-pass', 'error', 'La contraseña es obligatoria.');
+            setInputState(document.getElementById('password'), 'input-error');
+            valid = false;
+        } else if (pv.length < 8) {
+            showMsg('msg-pass', 'error', 'Mínimo 8 caracteres.');
+            setInputState(document.getElementById('password'), 'input-error');
+            valid = false;
+        }
+        if (pcv.length === 0) {
+            showMsg('msg-pass-confirm', 'error', 'Debes confirmar la contraseña.');
+            setInputState(document.getElementById('password_confirmation'), 'input-error');
+            valid = false;
+        } else if (pv !== pcv) {
+            showMsg('msg-pass-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(document.getElementById('password_confirmation'), 'input-error');
+            valid = false;
+        }
+
+        if (!valid) { e.preventDefault(); return; }
+
+        document.getElementById('btnRegistrarTexto').style.display = 'none';
+        document.getElementById('btnRegistrarCargando').style.display = 'inline';
+        document.getElementById('btnRegistrar').disabled = true;
+    });
+
+}); // end DOMContentLoaded (login & register)
+
+// ============================================================
+// RECOVERY FORM initialization (recovery.blade.php)
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    if (!document.getElementById('formRecovery')) return;
+
+    // — Eye toggle for new password —
+    var toggleRecPass = document.getElementById('toggle-recovery-password');
+    if (toggleRecPass) {
+        toggleRecPass.addEventListener('click', function () {
+            var input = document.getElementById('recovery-password');
+            var icon  = document.getElementById('eye-recovery-password');
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+            } else {
+                input.type = 'password';
+                if (icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+            }
+        });
+    }
+
+    // — Eye toggle for confirm password —
+    var toggleRecConfirm = document.getElementById('toggle-recovery-confirm');
+    if (toggleRecConfirm) {
+        toggleRecConfirm.addEventListener('click', function () {
+            var input = document.getElementById('recovery-password-confirm');
+            var icon  = document.getElementById('eye-recovery-confirm');
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+            } else {
+                input.type = 'password';
+                if (icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+            }
+        });
+    }
+
+    // — Real-time email validation —
+    var recEmailInput = document.getElementById('recovery-email');
+    if (recEmailInput) {
+        recEmailInput.addEventListener('input', function () {
+            var val = this.value.trim().toLowerCase();
+            if (val === '') { clearMsg('msg-recovery-email'); setInputState(this, null); return; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+                showMsg('msg-recovery-email', 'error', 'Ingresa un correo electrónico válido.');
+                setInputState(this, 'input-error');
+            } else {
+                showMsg('msg-recovery-email', 'success', 'Correo válido.');
+                setInputState(this, 'input-ok');
+            }
+        });
+    }
+
+    // — Real-time password strength —
+    var recPassInput = document.getElementById('recovery-password');
+    if (recPassInput) {
+        recPassInput.addEventListener('input', function () {
+            var v = this.value;
+            if (v.length === 0)    { clearMsg('msg-recovery-password'); setInputState(this, null); }
+            else if (v.length < 8) { showMsg('msg-recovery-password', 'error', 'Mínimo 8 caracteres (' + v.length + '/8).'); setInputState(this, 'input-error'); }
+            else                   { showMsg('msg-recovery-password', 'success', 'Longitud correcta.'); setInputState(this, 'input-ok'); }
+            checkRecoveryMatch();
+        });
+    }
+
+    // — Real-time confirm match —
+    function checkRecoveryMatch() {
+        var pass    = document.getElementById('recovery-password');
+        var confirm = document.getElementById('recovery-password-confirm');
+        if (!pass || !confirm) return;
+        if (confirm.value.length === 0) { clearMsg('msg-recovery-confirm'); setInputState(confirm, null); return; }
+        if (pass.value !== confirm.value) {
+            showMsg('msg-recovery-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(confirm, 'input-error');
+        } else {
+            showMsg('msg-recovery-confirm', 'success', 'Las contraseñas coinciden.');
+            setInputState(confirm, 'input-ok');
+        }
+    }
+
+    var recConfirmInput = document.getElementById('recovery-password-confirm');
+    if (recConfirmInput) recConfirmInput.addEventListener('input', checkRecoveryMatch);
+
+    // — AJAX form submission —
+    document.getElementById('formRecovery').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        var emailVal = recEmailInput ? recEmailInput.value.trim() : '';
+        var passVal  = recPassInput  ? recPassInput.value         : '';
+        var confVal  = recConfirmInput ? recConfirmInput.value    : '';
+        var valid    = true;
+
+        if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal.toLowerCase())) {
+            showMsg('msg-recovery-email', 'error', 'Ingresa un correo electrónico válido.');
+            setInputState(recEmailInput, 'input-error');
+            valid = false;
+        }
+        if (passVal.length < 8) {
+            showMsg('msg-recovery-password', 'error', passVal.length === 0 ? 'La contraseña es obligatoria.' : 'Mínimo 8 caracteres.');
+            setInputState(recPassInput, 'input-error');
+            valid = false;
+        }
+        if (confVal.length === 0) {
+            showMsg('msg-recovery-confirm', 'error', 'Debes confirmar la contraseña.');
+            setInputState(recConfirmInput, 'input-error');
+            valid = false;
+        } else if (passVal !== confVal) {
+            showMsg('msg-recovery-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(recConfirmInput, 'input-error');
+            valid = false;
+        }
+        if (!valid) return;
+
+        var btn        = document.getElementById('btnRecovery');
+        var btnTexto   = document.getElementById('btnRecoveryTexto');
+        var btnCargando = document.getElementById('btnRecoveryCargando');
+        if (btn) btn.disabled = true;
+        if (btnTexto) btnTexto.style.display = 'none';
+        if (btnCargando) btnCargando.style.display = 'inline';
+
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: new FormData(this)
+        })
+            .then(function (r) {
+                if (r.status === 422) {
+                    return r.json().then(function (data) {
+                        var errors = data.errors || {};
+                        var firstMsg = Object.values(errors)[0];
+                        Swal.fire('Error', Array.isArray(firstMsg) ? firstMsg[0] : (firstMsg || 'Error de validación.'), 'error');
+                        return Promise.reject('validation');
+                    });
+                }
+                return r.json();
+            })
+            .then(function (res) {
+                if (res.success && res.needs_verification) {
+                    // Redirect to code-entry form
+                    window.location.href = res.redirect;
+                    return;
+                }
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Listo!',
+                    text: res.message || 'Contraseña actualizada correctamente.',
+                    confirmButtonText: 'Ir al inicio de sesión'
+                }).then(function () {
+                    window.location.href = '/login';
+                });
+            })
+            .catch(function (err) {
+                if (err === 'validation') return;
+                Swal.fire('Error', 'Ocurrió un error. Intenta de nuevo.', 'error');
+            })
+            .finally(function () {
+                if (btn) btn.disabled = false;
+                if (btnTexto) btnTexto.style.display = '';
+                if (btnCargando) btnCargando.style.display = 'none';
+            });
+    });
+
+}); // end DOMContentLoaded (recovery)
+
+// — Global exports (register form inline onclick) —
+window.togglePass = togglePass;
+window.showMsg = showMsg;
+window.clearMsg = clearMsg;
+window.setInputState = setInputState;
+
