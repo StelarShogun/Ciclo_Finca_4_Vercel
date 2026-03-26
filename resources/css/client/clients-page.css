@@ -143,7 +143,7 @@ body.guest-layout {
   font-size: 1.25rem;
 }
 
-.logo-img  { height: 40px; width: auto; }
+.logo-img  { height: 40px; width: auto; display: block; }
 .logo-text { font-size: 1.5rem; }
 
 /* Main navigation */
