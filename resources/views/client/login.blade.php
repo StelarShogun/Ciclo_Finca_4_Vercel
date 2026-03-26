@@ -21,6 +21,7 @@
             <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Finca 4">
         </div>
 
+        {{-- Show warning if session expired or token is invalid --}}
         @if(request()->get('session_expired'))
             <div class="alert alert-warning mb-3" role="alert">
                 <i class="fas fa-exclamation-triangle"></i>
@@ -28,6 +29,7 @@
             </div>
         @endif
 
+        {{-- Show success message (e.g. after password reset) --}}
         @if (session('status'))
             <div class="alert alert-success mb-3" role="alert">
                 <i class="fas fa-check-circle"></i>
@@ -38,7 +40,7 @@
         <h2>Bienvenido de nuevo</h2>
         <p class="login-subtitle">Ingresa a tu cuenta para continuar</p>
 
-        {{-- URL de registro disponible para el JS via data attribute --}}
+        {{-- Register URL exposed via data attribute for JS access --}}
         <form
             id="public-login-form"
             method="POST"
@@ -58,6 +60,7 @@
                     <i class="fas fa-lock login-field-icon" aria-hidden="true"></i>
                     Contraseña
                 </label>
+                {{-- Toggle button controls password visibility via JS --}}
                 <div class="login-pass-wrap">
                     <input type="password" id="login-password" name="password" class="form-control" required placeholder="Ingresa tu contraseña">
                     <button type="button" id="toggle-password" class="login-pass-toggle">
@@ -70,9 +73,12 @@
                     </a>
                 </div>
             </div>
+
+            {{-- reCAPTCHA v2 widget --}}
             <div class="form-group">
                 <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
             </div>
+
             <div class="form-group">
                 <label class="checkbox-label">
                     <input type="checkbox" name="remember" id="remember">
@@ -89,11 +95,13 @@
             <span>o</span>
         </div>
 
+        {{-- OAuth: Google login --}}
         <div class="oauth-buttons">
             <a href="{{ route('auth.google') }}" class="oauth-btn google-btn">
                 <span class="google-g-icon" aria-hidden="true">G</span>
                 <span class="google-text">
                     Continuar con
+                    {{-- Multicolor Google brand letters --}}
                     <span class="google-brand" aria-hidden="true">
                         <span class="brand-letter brand-g">G</span>
                         <span class="brand-letter brand-o">o</span>
@@ -118,6 +126,7 @@
 @endsection
 
 @push('scripts')
+    {{-- reCAPTCHA script loaded async to avoid blocking render --}}
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     @vite(['resources/js/client/clients-users.js'])
 @endpush

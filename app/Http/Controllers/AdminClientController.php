@@ -10,7 +10,7 @@ class AdminClientController extends Controller
     public function index()
     {
         $clients = Client::orderBy('name')->get();
-        return view('table_clients', compact('clients'));
+        return view('admin.users.table_clients', compact('clients'));
     }
 
     public function ban(int $id)

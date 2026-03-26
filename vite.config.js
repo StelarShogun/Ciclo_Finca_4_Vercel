@@ -3,33 +3,55 @@ import laravel from 'laravel-vite-plugin'
 
 const vitePort = Number(process.env.VITE_PORT) || 5173
 
+// =======================
+// ADMIN ASSETS
+// =======================
+const adminAssets = [
+  // JS
+  'resources/js/admin/dashboard/dashboard.js',
+  'resources/js/admin/inventory/inventory.js',
+  'resources/js/admin/sales/sales.js',
+  'resources/js/admin/suppliers/suppliers.js',
+  'resources/js/admin/login/login.js',
+  'resources/js/admin/users/clients.js',
+
+  // CSS
+  'resources/css/admin/products/inventory.css',
+  'resources/css/admin/products/products-pdf.css',
+  'resources/css/admin/sales/sales.css',
+  'resources/css/admin/suppliers/suppliers.css',
+  'resources/css/admin/dashboard/dashboard.css',
+  'resources/css/admin/dashboard/dashboard-pdf.css',
+  'resources/css/admin/users/clients.css',
+  'resources/css/admin/login/login.css',
+]
+
+// =======================
+// CLIENT ASSETS
+// =======================
+const clientAssets = [
+  // JS
+  'resources/js/client/clients-page.js',
+  'resources/js/client/clients-users.js',
+
+  // CSS
+  'resources/css/client/clients-page.css',
+  'resources/css/client/clients-users.css',
+]
+
 export default defineConfig({
   plugins: [
     laravel({
       detectTls: false,
       input: [
-        'resources/js/admin/admin.js',
-        'resources/css/admin.css',
-        'resources/js/admin/dashboard.js',
-        'resources/js/admin/inventory.js',
-
-        'resources/js/admin/sales.js',
-        'resources/css/sales/sales.css',
-
-        'resources/js/admin/suppliers.js',
-        'resources/css/suppliers/suppliers.css',
-
-        // Clients
-        'resources/css/client/clients-page.css',
-        'resources/css/client/clients-users.css',
-        'resources/js/client/clients-page.js',
-        'resources/js/client/clients-users.js',
+        ...adminAssets,
+        ...clientAssets,
       ],
       refresh: true,
     }),
   ],
   server: {
-    host: '0.0.0.0', // Clave para docker, permite conexiones desde fuera del contenedor
+    host: '0.0.0.0', // Para Docker
     port: vitePort,
     strictPort: true,
     hmr: {

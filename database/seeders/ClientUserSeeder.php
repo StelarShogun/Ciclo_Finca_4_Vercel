@@ -8,9 +8,7 @@ use Illuminate\Support\Facades\Hash;
 
 class ClientUserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+    // Run the database seeds.
     public function run(): void
     {
         $existing = DB::table('client_table')->where('gmail', 'darwinn990@gmail.com')->first();

@@ -8,7 +8,6 @@ use App\Models\Supplier;
 
 class SupplierController extends Controller
 {
-    // List suppliers with optional search filters and pagination
     public function index()
     {
         $query = Supplier::query();
@@ -21,15 +20,16 @@ class SupplierController extends Controller
             $query->where('primary_contact', 'like', '%' . request('contact') . '%');
         }
 
+        // Average is computed before pagination to reflect the full filtered result set
         $averageRating = $query->avg('rating');
         $suppliers = $query->paginate(10);
 
-        return view('suppliers.index', compact('suppliers', 'averageRating'));
+        return view('admin.suppliers.index', compact('suppliers', 'averageRating'));
     }
 
     public function create()
     {
-        return view('suppliers.create');
+        return view('admin.suppliers.create');
     }
 
     public function store(Request $request)
@@ -38,7 +38,6 @@ class SupplierController extends Controller
             'name'            => 'required|string|max:100|min:2',
             'primary_contact' => 'required|string|max:100|min:2|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\'\s]+$/',
             'phone'           => 'required|string|min:8|max:20',
-            // Unique email check scoped to the suppliers table
             'email'           => 'required|email|max:100|min:10|unique:suppliers,email',
             'address'         => 'required|string|min:5|max:255',
             'delivery_time'   => 'required|integer|min:1|max:365',
@@ -115,7 +114,7 @@ class SupplierController extends Controller
                 'phone'           => $supplier->phone,
                 'address'         => $supplier->address,
                 'delivery_time'   => $supplier->delivery_time,
-                'rating'          => $supplier->rating ?? '0', // default to 0 if unrated
+                'rating'          => $supplier->rating ?? '0',
                 'status'          => 'Activo',
                 'created_at'      => $supplier->created_at,
             ]
@@ -128,7 +127,7 @@ class SupplierController extends Controller
         if (!$supplier) {
             return redirect()->back()->with('error', 'Proveedor no encontrado.');
         }
-        return view('suppliers.edit', compact('supplier'));
+        return view('admin.suppliers.edit', compact('supplier'));
     }
 
     public function update(Request $request, string $id)
@@ -142,7 +141,7 @@ class SupplierController extends Controller
             'name'            => 'required|string|max:100|min:2',
             'primary_contact' => 'required|string|max:100|min:2|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\'\s]+$/',
             'phone'           => 'required|string|min:8|max:20',
-            // Exclude current supplier from unique check using its primary key
+            // Exclude the current record from the unique check to allow saving without changing the email
             'email'           => 'required|email|max:100|min:10|unique:suppliers,email,' . $supplier->supplier_id . ',supplier_id',
             'address'         => 'required|string|min:5|max:255',
             'delivery_time'   => 'required|integer|min:1|max:365',
