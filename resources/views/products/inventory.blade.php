@@ -645,7 +645,7 @@
         </div>
     </div>
 
-    @vite(['resources/js/inventory.js'])
+    @vite(['resources/js/admin/inventory.js'])
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // Modal de exportar

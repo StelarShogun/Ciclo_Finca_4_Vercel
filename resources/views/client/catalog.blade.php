@@ -17,15 +17,14 @@
 
     <div class="container">
         <div class="catalog-layout">
-            <!-- Sidebar: solo filtros (sin categoría; categorías en barra horizontal) -->
             <aside class="catalog-sidebar">
                 <div class="filters-card">
                     <h3 class="filters-title">
                         <i class="fas fa-filter"></i>
                         Filtros
                     </h3>
-                    
-                    <!-- Filters submitted as GET to keep results shareable via URL; category comes from horizontal bar -->
+
+                    {{-- GET form keeps active filters in the URL; category_id comes from the horizontal bar --}}
                     <form method="GET" action="{{ route('clients.catalog') }}" id="filter-form">
                         @if(request('category_id'))
                             <input type="hidden" name="category_id" value="{{ request('category_id') }}">
@@ -38,33 +37,33 @@
                         @endif
                         <div class="filter-group">
                             <label for="search">Buscar</label>
-                            <input type="text" 
-                                   id="search" 
-                                   name="search" 
-                                   class="form-control" 
+                            <input type="text"
+                                   id="search"
+                                   name="search"
+                                   class="form-control"
                                    placeholder="Nombre o descripción..."
                                    value="{{ request('search') }}">
                         </div>
-                        
+
                         <div class="filter-group">
                             <label>Rango de Precio</label>
                             <div class="price-range">
-                                <input type="number" 
-                                       id="min_price" 
-                                       name="min_price" 
-                                       class="form-control" 
+                                <input type="number"
+                                       id="min_price"
+                                       name="min_price"
+                                       class="form-control"
                                        placeholder="Mínimo"
                                        value="{{ old('min_price', request('min_price')) }}">
                                 <span class="price-separator">-</span>
-                                <input type="number" 
-                                       id="max_price" 
-                                       name="max_price" 
-                                       class="form-control" 
+                                <input type="number"
+                                       id="max_price"
+                                       name="max_price"
+                                       class="form-control"
                                        placeholder="Máximo"
                                        value="{{ old('max_price', request('max_price')) }}">
                             </div>
                         </div>
-                        
+
                         <div class="filter-group">
                             <label for="sort">Ordenar por</label>
                             <select id="sort" name="sort" class="form-control">
@@ -73,7 +72,7 @@
                                 <option value="name"       {{ request('sort') == 'name'       ? 'selected' : '' }}>Nombre</option>
                             </select>
                         </div>
-                        
+
                         <div class="filter-group">
                             <label for="direction">Dirección</label>
                             <select id="direction" name="direction" class="form-control">
@@ -81,13 +80,13 @@
                                 <option value="asc"  {{ request('direction') == 'asc'  ? 'selected' : '' }}>Ascendente</option>
                             </select>
                         </div>
-                        
+
                         <div class="filter-actions">
-                            <button type="submit" class="btn btn-primary btn-block" id="filter-submit-btn" title="El precio mínimo debe ser menor o igual al máximo">
+                            <button type="submit" class="btn btn-primary btn-block" id="filter-submit-btn">
                                 <i class="fas fa-search"></i>
                                 Aplicar Filtros
                             </button>
-                            <!-- Clear resets all filters by going to base catalog URL -->
+                            {{-- Navigating to the base URL effectively clears all filters --}}
                             <a href="{{ route('clients.catalog') }}" class="btn btn-secondary btn-block">
                                 <i class="fas fa-redo"></i>
                                 Limpiar
@@ -98,7 +97,6 @@
             </aside>
 
             <main class="catalog-content">
-                <!-- Barra horizontal de categorías (pills) -->
                 @php $catalogParams = request()->except('category_id', 'page'); @endphp
                 <div class="catalog-cats-horizontal">
                     <a href="{{ route('clients.catalog', $catalogParams) }}"
@@ -112,7 +110,8 @@
                         </a>
                     @endforeach
                 </div>
-                {{-- Subcategorías: se muestran debajo de la barra de categorías cuando hay una categoría padre (o se eligió una subcategoría) --}}
+
+                {{-- Subcategory row appears when a parent or child category is active --}}
                 @if($parentCategoryForSubcats)
                     <div class="catalog-subcats-row">
                         <span class="catalog-subcats-label">En {{ $parentCategoryForSubcats->name }}:</span>
@@ -142,20 +141,19 @@
                             Mostrando {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }} de {{ $products->total() }} productos
                         </p>
                     </div>
-                    
+
                     @if($products->count() > 0)
                         <div class="products-grid">
                             @foreach($products as $product)
                                 <div class="product-card">
                                     <div class="product-image">
                                         <a href="{{ route('clients.product', $product->product_id) }}">
-                                            <!-- Fallback to favicon if product image is missing -->
-                                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}" 
+                                            {{-- Fallback to favicon if product image is missing --}}
+                                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
                                                  alt="{{ $product->name }}"
                                                  data-fallback-src="{{ asset('favicon.svg') }}"
                                                  onerror="this.src=this.dataset.fallbackSrc;">
                                         </a>
-                                        <!-- Badge shown when stock is critically low -->
                                         @if($product->stock_current <= 10)
                                             <span class="product-badge stock-low">Stock Bajo</span>
                                         @endif
@@ -180,19 +178,20 @@
                                                     Ver detalles
                                                 </a>
                                                 @auth('clients')
-                                                <button class="btn-product btn-agregar add-to-cart-btn"
-                                                        data-product-id="{{ $product->product_id }}"
-                                                        data-product-name="{{ $product->name }}"
-                                                        data-product-price="{{ $product->sale_price }}"
-                                                        data-product-stock="{{ $product->stock_current }}">
-                                                    <i class="fas fa-cart-plus"></i>
-                                                    Agregar
-                                                </button>
+                                                    <button class="btn-product btn-agregar add-to-cart-btn"
+                                                            data-product-id="{{ $product->product_id }}"
+                                                            data-product-name="{{ $product->name }}"
+                                                            data-product-price="{{ $product->sale_price }}"
+                                                            data-product-stock="{{ $product->stock_current }}">
+                                                        <i class="fas fa-cart-plus"></i>
+                                                        Agregar
+                                                    </button>
                                                 @else
-                                                <button class="btn-product btn-agregar guest-add-btn" type="button">
-                                                    <i class="fas fa-cart-plus"></i>
-                                                    Agregar
-                                                </button>
+                                                    {{-- Guest button triggers a login prompt via JS --}}
+                                                    <button class="btn-product btn-agregar guest-add-btn" type="button">
+                                                        <i class="fas fa-cart-plus"></i>
+                                                        Agregar
+                                                    </button>
                                                 @endauth
                                             </div>
                                         </div>
@@ -200,12 +199,11 @@
                                 </div>
                             @endforeach
                         </div>
-                        
+
                         <div class="pagination-wrapper">
                             <x-pagination :paginator="$products" label="productos" />
                         </div>
                     @else
-                        <!-- No results state -->
                         <div class="empty-state">
                             <i class="fas fa-search"></i>
                             <h3>No se encontraron productos</h3>
@@ -221,7 +219,7 @@
     </div>
 </div>
 
-<!-- Modal to select quantity before adding a product to cart -->
+{{-- Quantity selector modal, populated by JS when the user clicks "Agregar" --}}
 <div class="modal" id="add-to-cart-modal">
     <div class="modal-content modal-sm">
         <div class="modal-header">
@@ -231,7 +229,6 @@
             </button>
         </div>
         <div class="modal-body">
-            <!-- Populated dynamically by JS when a product is selected -->
             <div class="product-preview" id="product-preview">
                 <img id="preview-image" src="" alt="">
                 <div class="preview-info">

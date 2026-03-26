@@ -7,7 +7,6 @@
 @endpush
 
 @section('content')
-<!-- Hero Section -->
 <section class="hero-section">
     <div class="hero-container">
         <div class="hero-content">
@@ -26,25 +25,23 @@
     </div>
 </section>
 
-<!-- Featured Products -->
 <section class="featured-section">
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Productos Destacados</h2>
             <p class="section-subtitle">Descubre nuestros productos más populares</p>
         </div>
-        
+
         @if($featuredProducts->count() > 0)
             <div class="products-grid">
                 @foreach($featuredProducts as $product)
                     <div class="product-card">
                         <div class="product-image">
-                            <!-- Fallback to favicon if product image is missing -->
-                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}" 
+                            {{-- Fallback to favicon if product image is missing --}}
+                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
                                  alt="{{ $product->name }}"
                                  data-fallback-src="{{ asset('favicon.svg') }}"
                                  onerror="this.src=this.dataset.fallbackSrc;">
-                            <!-- Badge shown when stock is critically low -->
                             @if($product->stock_current <= 10)
                                 <span class="product-badge stock-low">Stock Bajo</span>
                             @endif
@@ -57,28 +54,28 @@
                             @endif
                             <div class="product-footer">
                                 <div class="product-price">₡{{ number_format($product->sale_price, 0, ',', '.') }}</div>
-                                <!-- Authenticated users add to cart; guests are prompted to log in via JS -->
+                                {{-- Guest button triggers a login prompt via JS --}}
                                 @auth('clients')
-                                <button class="btn btn-primary btn-sm add-to-cart-btn" 
-                                        data-product-id="{{ $product->product_id }}"
-                                        data-product-name="{{ $product->name }}"
-                                        data-product-price="{{ $product->sale_price }}"
-                                        data-product-stock="{{ $product->stock_current }}">
-                                    <i class="fas fa-cart-plus"></i>
-                                    Agregar
-                                </button>
+                                    <button class="btn btn-primary btn-sm add-to-cart-btn"
+                                            data-product-id="{{ $product->product_id }}"
+                                            data-product-name="{{ $product->name }}"
+                                            data-product-price="{{ $product->sale_price }}"
+                                            data-product-stock="{{ $product->stock_current }}">
+                                        <i class="fas fa-cart-plus"></i>
+                                        Agregar
+                                    </button>
                                 @else
-                                <button class="btn btn-primary btn-sm guest-add-btn" type="button">
-                                    <i class="fas fa-cart-plus"></i>
-                                    Agregar
-                                </button>
+                                    <button class="btn btn-primary btn-sm guest-add-btn" type="button">
+                                        <i class="fas fa-cart-plus"></i>
+                                        Agregar
+                                    </button>
                                 @endauth
                             </div>
                         </div>
                     </div>
                 @endforeach
             </div>
-            
+
             <div class="section-footer">
                 <a href="{{ route('clients.catalog') }}" class="btn btn-secondary">
                     Ver Todos los Productos
@@ -86,7 +83,6 @@
                 </a>
             </div>
         @else
-            <!-- No featured products available -->
             <div class="empty-state">
                 <i class="fas fa-box-open"></i>
                 <p>No hay productos destacados disponibles en este momento</p>
@@ -95,7 +91,6 @@
     </div>
 </section>
 
-<!-- Categories Section (hidden if no categories exist) -->
 @if($categories->count() > 0)
 <section class="categories-section">
     <div class="container">
@@ -103,8 +98,7 @@
             <h2 class="section-title">Explora por Categoría</h2>
             <p class="section-subtitle">Encuentra lo que buscas fácilmente</p>
         </div>
-        
-        <!-- Each card links to catalog pre-filtered by category -->
+
         <div class="categories-grid">
             @foreach($categories as $category)
                 <a href="{{ route('clients.catalog', ['category_id' => $category->category_id]) }}" class="category-card">
@@ -126,8 +120,7 @@
 </section>
 @endif
 
-<!-- Modal: select quantity before adding a product to cart -->
-<!-- Product details are populated dynamically by JS -->
+{{-- Quantity selector modal, populated by JS when the user clicks "Agregar" --}}
 <div class="modal" id="add-to-cart-modal">
     <div class="modal-content modal-sm">
         <div class="modal-header">

@@ -74,7 +74,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    @vite(['resources/js/pages/admin.js'])
+    @vite(['resources/js/admin/admin.js'])
 
 </body>
 </html>

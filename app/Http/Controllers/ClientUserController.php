@@ -20,17 +20,14 @@ class ClientUserController extends Controller
     // PROFILE
     // ============================================================
 
-    // Display the authenticated client's profile, normalizing provider if null.
-public function show()
-{
-    $client = Auth::guard('clients')->user();
+    public function show()
+    {
+        $client = Auth::guard('clients')->user();
+        $isGoogleOnly = $client->provider === 'google';
 
-    $isGoogleOnly = $client->provider === 'google';
+        return view('client.profile', compact('client', 'isGoogleOnly'));
+    }
 
-    return view('client.profile', compact('client', 'isGoogleOnly'));
-}
-
-    // Update the authenticated client's personal data.
     public function update(Request $request)
     {
         $client = Auth::guard('clients')->user();
@@ -64,6 +61,7 @@ public function show()
                 'updated_at'     => now(),
             ]);
 
+        // Sync session with updated profile data
         session([
             'client_name'           => $request->name,
             'client_first_surname'  => $request->first_surname,
@@ -80,14 +78,13 @@ public function show()
         return redirect()->route('clients.profile')->with('profile_updated', true);
     }
 
-    // Update the client's password; switches Google accounts to local provider.
     public function updatePassword(Request $request)
     {
         $client   = Auth::guard('clients')->user();
         $isGoogle = ($client->provider ?? 'local') === 'google';
 
+        // Current password is only required for local accounts
         $rules = ['new_password' => 'required|string|min:8|confirmed'];
-
         if (!$isGoogle) {
             $rules['current_password'] = 'required|string';
         }
@@ -102,7 +99,6 @@ public function show()
 
         $request->validate($rules, $messages);
 
-        // Verify current password and prevent reuse for local accounts.
         if (!$isGoogle) {
             if (!Hash::check($request->current_password, $client->password)) {
                 $error = ['current_password' => ['La contraseña actual no es correcta.']];
@@ -110,21 +106,21 @@ public function show()
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json(['success' => false, 'errors' => $error], 422);
                 }
-
                 return back()->withErrors($error)->withInput();
             }
 
+            // Prevent reusing the same password
             if (Hash::check($request->new_password, $client->password)) {
                 $error = ['new_password' => ['La nueva contraseña no puede ser igual a la actual.']];
 
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json(['success' => false, 'errors' => $error], 422);
                 }
-
                 return back()->withErrors($error)->withInput();
             }
         }
 
+        // Google accounts are converted to local after setting a password
         DB::table('client_table')
             ->where('user_id', $client->user_id)
             ->update([
@@ -133,7 +129,6 @@ public function show()
                 'updated_at' => now(),
             ]);
 
-        // Use specific flash keys so the JS can trigger the correct alert message.
         $flashKey = $isGoogle ? 'password_defined' : 'password_updated';
         $message  = $isGoogle
             ? 'Contraseña definida. Ya puedes iniciar sesión con tu correo y contraseña.'
@@ -154,13 +149,11 @@ public function show()
     // AUTHENTICATION
     // ============================================================
 
-    // Show the login form.
     public function showLoginForm()
     {
         return view('client.login');
     }
 
-    // Process a login attempt.
     public function login(Request $request)
     {
         $rules = [
@@ -168,6 +161,7 @@ public function show()
             'password' => 'required',
         ];
 
+        // reCAPTCHA validation is conditional on key presence
         if (config('recaptcha.site_key')) {
             $rules['g-recaptcha-response'] = ['required', new Recaptcha()];
         }
@@ -187,23 +181,24 @@ public function show()
         if (Auth::guard('clients')->attempt($credentials, $remember)) {
             $client = Auth::guard('clients')->user();
 
-            // Bloquear acceso si el usuario está baneado
             if ($client->active === false) {
                 Auth::guard('clients')->logout();
                 $msg = 'En este momento se encuentra baneado, contactar con el administrador para más información.';
+
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => $msg], 403);
                 }
                 return back()->withErrors(['gmail' => $msg])->withInput();
             }
 
-            // Bloquear acceso si el correo no ha sido verificado (solo cuando la columna existe y es false)
+            // Redirect unverified users to the verification flow
             if ($client->email_verified === false) {
                 Auth::guard('clients')->logout();
                 session([
                     'pending_client_id' => $client->user_id,
                     'pending_gmail'     => $client->gmail,
                 ]);
+
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
                         'success'  => false,
@@ -245,44 +240,43 @@ public function show()
             ->withInput();
     }
 
-    // Show register form
     public function showRegisterForm()
     {
         return view('client.register');
     }
 
-    // Process registration
     public function register(Request $request)
     {
         $request->validate(
             [
-                'name'                  => ['required', 'string', 'max:50', 'min:2', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
-                'first_surname'         => ['required', 'string', 'max:50', 'min:2', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
-                'second_surname'        => ['nullable', 'string', 'max:50', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
-                'gmail'                 => ['required', 'email', 'unique:client_table,gmail', 'regex:/^[^@]+@gmail\.com$/i'],
-                'password'              => ['required', 'string', 'min:8', 'confirmed'],
+                'name'           => ['required', 'string', 'max:50', 'min:2', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
+                'first_surname'  => ['required', 'string', 'max:50', 'min:2', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
+                'second_surname' => ['nullable', 'string', 'max:50', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
+                'gmail'          => ['required', 'email', 'unique:client_table,gmail', 'regex:/^[^@]+@gmail\.com$/i'],
+                'password'       => ['required', 'string', 'min:8', 'confirmed'],
             ],
             [
-                'name.required'             => 'El nombre es obligatorio.',
-                'name.min'                  => 'El nombre debe tener al menos 2 caracteres.',
-                'name.max'                  => 'El nombre no puede superar 50 caracteres.',
-                'name.regex'                => 'El nombre solo puede contener letras y espacios.',
-                'first_surname.required'    => 'El apellido es obligatorio.',
-                'first_surname.min'         => 'El apellido debe tener al menos 2 caracteres.',
-                'first_surname.max'         => 'El apellido no puede superar 50 caracteres.',
-                'first_surname.regex'       => 'El apellido solo puede contener letras y espacios.',
-                'second_surname.max'        => 'El segundo apellido no puede superar 50 caracteres.',
-                'second_surname.regex'      => 'El segundo apellido solo puede contener letras y espacios.',
-                'gmail.required'            => 'El correo Gmail es obligatorio.',
-                'gmail.email'               => 'Debe ingresar un correo electrónico válido.',
-                'gmail.unique'              => 'Este correo ya está registrado.',
-                'gmail.regex'               => 'Solo se aceptan correos de Gmail (@gmail.com).',
-                'password.required'         => 'La contraseña es obligatoria.',
-                'password.min'              => 'La contraseña debe tener al menos 8 caracteres.',
-                'password.confirmed'        => 'Las contraseñas no coinciden.',
+                'name.required'          => 'El nombre es obligatorio.',
+                'name.min'               => 'El nombre debe tener al menos 2 caracteres.',
+                'name.max'               => 'El nombre no puede superar 50 caracteres.',
+                'name.regex'             => 'El nombre solo puede contener letras y espacios.',
+                'first_surname.required' => 'El apellido es obligatorio.',
+                'first_surname.min'      => 'El apellido debe tener al menos 2 caracteres.',
+                'first_surname.max'      => 'El apellido no puede superar 50 caracteres.',
+                'first_surname.regex'    => 'El apellido solo puede contener letras y espacios.',
+                'second_surname.max'     => 'El segundo apellido no puede superar 50 caracteres.',
+                'second_surname.regex'   => 'El segundo apellido solo puede contener letras y espacios.',
+                'gmail.required'         => 'El correo Gmail es obligatorio.',
+                'gmail.email'            => 'Debe ingresar un correo electrónico válido.',
+                'gmail.unique'           => 'Este correo ya está registrado.',
+                'gmail.regex'            => 'Solo se aceptan correos de Gmail (@gmail.com).',
+                'password.required'      => 'La contraseña es obligatoria.',
+                'password.min'           => 'La contraseña debe tener al menos 8 caracteres.',
+                'password.confirmed'     => 'Las contraseñas no coinciden.',
             ]
         );
 
+        // Generate a 6-digit verification code valid for 10 minutes
         $code    = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expires = now()->addMinutes(10);
 
@@ -302,6 +296,7 @@ public function show()
             'pending_gmail'     => $client->gmail,
         ]);
 
+        // Fallback: expose code in flash if mail delivery fails
         $mailWarning = null;
         try {
             Mail::raw(
@@ -320,16 +315,15 @@ public function show()
             ->with('mail_warning', $mailWarning);
     }
 
-    // Show verify form
     public function showVerifyForm()
     {
+        // Guard: user must have started the registration flow
         if (!session('pending_client_id')) {
             return redirect()->route('clients.register.form');
         }
         return view('client.verify_gmail_code');
     }
 
-    // Process verification code
     public function verify(Request $request)
     {
         $request->validate(
@@ -356,6 +350,7 @@ public function show()
             return back()->withErrors(['verification_code' => 'El código ha expirado. Solicita uno nuevo.']);
         }
 
+        // Mark email as verified and clear the one-time code
         $client->update([
             'email_verified'               => true,
             'verification_code'            => null,
@@ -376,7 +371,6 @@ public function show()
         return redirect()->route('clients.catalog')->with('success', '¡Cuenta verificada y creada exitosamente!');
     }
 
-    // Resend verification code
     public function resendCode()
     {
         $clientId = session('pending_client_id');
@@ -389,6 +383,7 @@ public function show()
             return redirect()->route('clients.register.form');
         }
 
+        // Issue a fresh code and extend expiry
         $code    = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expires = now()->addMinutes(10);
 
@@ -416,7 +411,6 @@ public function show()
             ->with('success', 'Se ha enviado un nuevo código a tu correo.');
     }
 
-    // Log the client out and invalidate the session.
     public function logout(Request $request)
     {
         Auth::guard('clients')->logout();
@@ -428,17 +422,11 @@ public function show()
             ->with('status', 'Sesión cerrada correctamente.');
     }
 
-    /**
-     * Redirigir a Google para autenticación OAuth
-     */
     public function redirectToGoogle()
     {
         return Socialite::driver('google')->redirect();
     }
 
-    /**
-     * Callback de Google OAuth. Guarda en client_table solo por gmail (sin provider/provider_id).
-     */
     public function handleGoogleCallback(Request $request)
     {
         try {
@@ -448,36 +436,40 @@ public function show()
             $client = Client::where('gmail', $email)->first();
 
             if ($client) {
-                // Bloquear acceso si el usuario está baneado
                 if ($client->active === false) {
                     $msg = 'En este momento se encuentra baneado, contactar con el administrador para más información.';
                     return redirect()->route('clients.home')->with('error', $msg);
                 }
 
-                // Actualizar email_verified solo si la columna existe
+                // Ensure email is marked verified on subsequent Google logins
                 if (Schema::hasColumn((new Client())->getTable(), 'email_verified')) {
                     $client->update(['email_verified' => true]);
                 }
             } else {
-                $partes = array_filter(explode(' ', trim($googleUser->name ?? ''), 3));
-                $nombre = $partes[0] ?? $googleUser->name ?? 'Usuario';
+                // Split Google display name into name / surnames (best-effort)
+                $partes    = array_filter(explode(' ', trim($googleUser->name ?? ''), 3));
+                $nombre    = $partes[0] ?? $googleUser->name ?? 'Usuario';
                 $apellido1 = $partes[1] ?? '-';
                 $apellido2 = $partes[2] ?? null;
+
                 $data = [
-                    'name'          => $nombre,
-                    'first_surname' => $apellido1,
+                    'name'           => $nombre,
+                    'first_surname'  => $apellido1,
                     'second_surname' => $apellido2,
-                    'gmail'         => $email,
-                    'password'      => Hash::make(Str::random(32)),
+                    'gmail'          => $email,
+                    'password'       => Hash::make(Str::random(32)), // unusable random password
                 ];
+
                 if (Schema::hasColumn((new Client())->getTable(), 'email_verified')) {
                     $data['email_verified'] = true;
                 }
+
                 $client = Client::create($data);
             }
 
             Auth::guard('clients')->login($client);
             $request->session()->regenerate();
+
             session([
                 'client_id'            => $client->user_id,
                 'client_name'          => $client->name,
@@ -486,17 +478,21 @@ public function show()
             ]);
 
             return redirect()->route('clients.home')->with('status', 'Inicio de sesión exitoso con Google');
+
         } catch (\Throwable $e) {
             $detail = $e->getMessage() ?: get_class($e) . ' en ' . $e->getFile() . ':' . $e->getLine();
-            Log::error('Error en Google OAuth: ' . $detail, [
+
+            Log::error('Google OAuth error: ' . $detail, [
                 'exception' => get_class($e),
                 'file'      => $e->getFile(),
                 'line'      => $e->getLine(),
                 'trace'     => $e->getTraceAsString(),
             ]);
+
             $message = config('app.debug')
                 ? 'Error al iniciar sesión con Google: ' . $detail
                 : 'Error al iniciar sesión con Google. Revisa storage/logs/laravel.log';
+
             return redirect()->route('clients.home')->with('error', $message);
         }
     }
