@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\ClientUserController;
+use App\Http\Controllers\CategoryController;
 
 
 // ============================================================
@@ -146,6 +147,10 @@ Route::middleware(['auth:admin'])->group(function () {
 
     // — Suppliers —
     Route::resource('suppliers', SupplierController::class);
+
+    // — Categories (CF4-68 subcategories) —
+    Route::get('/categories/subcategories/create', [CategoryController::class, 'createSubcategory'])->name('categories.subcategories.create');
+    Route::post('/categories/subcategories', [CategoryController::class, 'store'])->name('categories.subcategories.store');
 
     // — Sales —
     Route::resource('sales', SalesController::class);

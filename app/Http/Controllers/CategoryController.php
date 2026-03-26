@@ -8,6 +8,14 @@ use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
+    public function createSubcategory()
+    {
+        // Listado de categorías existentes para seleccionar la categoría padre
+        $categories = Category::orderBy('name')->get(['category_id', 'name']);
+
+        return view('categories.subcategories.create', compact('categories'));
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

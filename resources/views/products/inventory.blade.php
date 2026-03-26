@@ -34,6 +34,10 @@
                         <i class="fas fa-plus"></i>
                         Nuevo Producto
                     </button>
+                    <a class="btn btn-secondary" href="{{ route('categories.subcategories.create') }}">
+                        <i class="fas fa-sitemap"></i>
+                        Crear Subcategoría
+                    </a>
                     <button class="btn btn-secondary" id="export-btn">
                         <i class="fas fa-download"></i>
                         Exportar
