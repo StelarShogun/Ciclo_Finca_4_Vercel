@@ -14,7 +14,6 @@ use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class ProductController extends Controller
 {
-
     public function index(Request $request)
     {
         if ($request->wantsJson() || $request->ajax()) {
@@ -28,11 +27,9 @@ class ProductController extends Controller
         return $this->inventory($request);
     }
 
-
     public function store(StoreProductRequest $request)
     {
         try {
-            // Transacción para crear producto
             $product = DB::transaction(function () use ($request) {
                 $data = $request->validated();
 
@@ -50,6 +47,7 @@ class ProductController extends Controller
                         $paths[] = $name;
                     }
                     $data['images'] = $paths;
+                    // Use the first gallery image as the main thumbnail when none was uploaded
                     if (empty($data['image']) && !empty($paths)) {
                         $data['image'] = $paths[0];
                     }
@@ -122,6 +120,7 @@ class ProductController extends Controller
                 $data = $request->validated();
 
                 if ($request->hasFile('image')) {
+                    // Delete the old image file before storing the new one
                     if ($p->image && file_exists(public_path('assets/images/products/' . $p->image))) {
                         @unlink(public_path('assets/images/products/' . $p->image));
                     }
@@ -131,6 +130,7 @@ class ProductController extends Controller
                 }
 
                 if ($request->hasFile('images')) {
+                    // Remove all existing gallery images before saving the new set
                     $oldImages = $p->images ?? [];
                     foreach (is_array($oldImages) ? $oldImages : [] as $old) {
                         if ($old && file_exists(public_path('assets/images/products/' . $old))) {
@@ -191,6 +191,7 @@ class ProductController extends Controller
         try {
             DB::transaction(function() use ($id) {
                 $p = Product::findOrFail($id);
+                // Soft-delete by marking inactive rather than removing the record
                 $p->update(['status' => 'inactive']);
             });
 
@@ -217,7 +218,7 @@ class ProductController extends Controller
         try {
             DB::transaction(function() use ($id) {
                 $p = Product::findOrFail($id);
-                $p->delete(); // Eliminación definitiva
+                $p->delete();
             });
 
             if (request()->wantsJson() || request()->ajax()) {
@@ -253,7 +254,6 @@ class ProductController extends Controller
     {
         $query = Product::with(['category', 'supplier']);
 
-        // Aplicar filtros
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
@@ -283,21 +283,20 @@ class ProductController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Ordenamiento
         $sort = $request->get('sort', 'product_id');
         $order = $request->get('order', 'desc');
         $query->orderBy($sort, $order);
 
-        // Paginación
         $perPage = $request->get('per_page', 10);
         $paginator = $query->paginate($perPage);
 
-        // Transformar datos para la vista
+        // Normalize raw Eloquent models into a consistent shape expected by the view
         $products = $paginator->getCollection()->map(function($product) {
             return (object)[
                 'product_id' => $product->product_id,
                 'id' => $product->product_id,
                 'name' => $product->name,
+                // SKU is derived from the primary key since the table has no dedicated column
                 'sku' => 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT),
                 'image' => $product->image ?? 'default.png',
                 'category' => (object)['name' => $product->category->name ?? 'Uncategorized'],
@@ -311,10 +310,9 @@ class ProductController extends Controller
             ];
         });
 
-        // Obtener categorías para el filtro
         $categories = Category::orderBy('name')->get(['category_id', 'name']);
 
-        return view('products.inventory', [
+        return view('admin.products.inventory', [
             'products' => $products,
             'paginator' => $paginator,
             'categories' => $categories,
@@ -370,7 +368,6 @@ class ProductController extends Controller
             });
             $filename = 'products_'.date('Ymd_His').'.json';
             return response()->streamDownload(function() use ($payload){
-                // Usar print en lugar de echo para mejor control en closures
                 print($payload->toJson(JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT));
             }, $filename, ['Content-Type' => 'application/json; charset=UTF-8']);
         }
@@ -378,7 +375,6 @@ class ProductController extends Controller
         if ($format === 'pdf') {
             $filename = 'products_'.date('Ymd_His').'.pdf';
             
-            // Preparar datos para la vista PDF
             $products = $data->map(function($p) {
                 return (object)[
                     'id' => $p->product_id,
@@ -404,11 +400,11 @@ class ProductController extends Controller
             return $pdf->download($filename);
         }
     
-        // CSV por defecto
+        // Default to CSV export
         $filename = 'products_'.date('Ymd_His').'.csv';
         return response()->streamDownload(function() use ($data){
             $out = fopen('php://output', 'w');
-            fwrite($out, "\xEF\xBB\xBF"); // BOM UTF-8
+            fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for correct Excel rendering
             fputcsv($out, ['ID','Name','Description','Image','Category','Supplier','Purchase Price','Sale Price','Stock','Minimum','Status','Created']);
             foreach ($data as $p) {
                 fputcsv($out, [
@@ -438,7 +434,6 @@ class ProductController extends Controller
 
         $file = $request->file('import_file');
         
-        // Detectar automáticamente el formato del archivo
         $format = $this->detectFileFormat($file);
         
         if (!$format) {
@@ -461,33 +456,23 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * Detecta automáticamente el formato del archivo basándose en la extensión y el contenido
-     */
     private function detectFileFormat($file)
     {
         $extension = strtolower($file->getClientOriginalExtension());
         $mimeType = $file->getMimeType();
         
-        // Primero intentar detectar por extensión
-        if (in_array($extension, ['xml'])) {
-            return 'xml';
-        } elseif (in_array($extension, ['csv', 'txt'])) {
-            return 'csv';
-        } elseif (in_array($extension, ['json'])) {
-            return 'json';
-        }
+        if (in_array($extension, ['xml'])) return 'xml';
+        if (in_array($extension, ['csv', 'txt'])) return 'csv';
+        if (in_array($extension, ['json'])) return 'json';
         
-        // Si no se detecta por extensión, intentar por contenido
+        // Fall back to content sniffing when the extension is ambiguous
         $content = file_get_contents($file->getPathname());
         $trimmedContent = trim($content);
         
-        // Detectar XML por el inicio del contenido
         if (preg_match('/^<\?xml/i', $trimmedContent) || preg_match('/^<[a-zA-Z]/', $trimmedContent)) {
             return 'xml';
         }
         
-        // Detectar JSON por el inicio del contenido
         if (preg_match('/^[\s]*[\[\{]/', $trimmedContent)) {
             $decoded = json_decode($trimmedContent, true);
             if (json_last_error() === JSON_ERROR_NONE) {
@@ -495,24 +480,23 @@ class ProductController extends Controller
             }
         }
         
-        // Si tiene extensión txt o csv, asumir CSV
         if (in_array($extension, ['txt', 'csv']) || $mimeType === 'text/csv' || $mimeType === 'text/plain') {
             return 'csv';
         }
         
         return null;
     }
+
     private function importXml($file)
     {
         try {
             $xmlContent = file_get_contents($file->getPathname());
             
-            // Validar que el contenido no esté vacío
             if (empty(trim($xmlContent))) {
                 throw new \Exception('El archivo XML está vacío o no se pudo leer correctamente.');
             }
             
-            // Validar que el contenido sea XML válido
+            // Capture libxml errors internally instead of emitting PHP warnings
             libxml_use_internal_errors(true);
             $xml = new \SimpleXMLElement($xmlContent);
             $xmlErrors = libxml_get_errors();
@@ -529,14 +513,12 @@ class ProductController extends Controller
         
             DB::beginTransaction();
         
-            // Verificar que existan productos en el XML
             if (!isset($xml->producto) || count($xml->producto) == 0) {
                 throw new \Exception('No se encontraron productos en el archivo XML.');
             }
         
             foreach ($xml->producto as $productoXml) {
                 try {
-                    // Validar que los campos requeridos existan
                     $requiredFields = ['nombre', 'categoria', 'proveedor', 'precio_compra', 'precio_venta', 'stock_actual', 'stock_minimo'];
                     foreach ($requiredFields as $field) {
                         if (!isset($productoXml->$field)) {
@@ -566,7 +548,7 @@ class ProductController extends Controller
                 }
             }
         
-            // Si se presentaron errores, se revierte toda la importación
+            // Roll back the entire import if any record failed to keep the dataset consistent
             if (!empty($errores)) {
                 DB::rollBack();
             } else {
@@ -584,6 +566,7 @@ class ProductController extends Controller
     private function importCsv($file)
     {
         $csvData = array_map('str_getcsv', file($file->getPathname()));
+        // First row is treated as the header to build associative arrays per product
         $headers = array_shift($csvData);
         $importados = 0;
         $errores = [];
@@ -649,19 +632,16 @@ class ProductController extends Controller
     private function createProductFromData($data)
     {
         try {
-            // Buscar categoría por nombre
             $category = Category::where('name', $data['categoria'])->first();
             if (!$category) {
                 return ['success' => false, 'error' => "Category not found: " . $data['categoria']];
             }
 
-            // Buscar proveedor por nombre
             $supplier = Supplier::where('name', $data['proveedor'])->first();
             if (!$supplier) {
                 return ['success' => false, 'error' => "Supplier not found: " . $data['proveedor']];
             }
 
-            // Crear producto
             Product::create([
                 'category_id' => $category->category_id,
                 'supplier_id' => $supplier->supplier_id,
@@ -671,6 +651,7 @@ class ProductController extends Controller
                 'sale_price' => $data['precio_venta'],
                 'stock_current' => $data['stock_actual'],
                 'stock_minimum' => $data['stock_minimo'],
+                // Translate Spanish status values from imported files to internal English enums
                 'status' => $this->mapLegacyStatus($data['estado'] ?? 'activo'),
             ]);
 
@@ -684,6 +665,7 @@ class ProductController extends Controller
 
     private function mapLegacyStatus(string $status): string
     {
+        // Maps Spanish status labels used in import files to the internal English enum values
         return match (strtolower($status)) {
             'activo' => 'active',
             'inactivo' => 'inactive',
@@ -708,6 +690,7 @@ class ProductController extends Controller
                     $formattedErrors[] = $error;
                 }
             }
+            // Cap the displayed error list at 5 to keep the flash message readable
             $mensaje .= implode('; ', array_slice($formattedErrors, 0, 5));
             if (count($formattedErrors) > 5) {
                 $mensaje .= " y " . (count($formattedErrors) - 5) . " más...";

@@ -1,4 +1,4 @@
-@extends('suppliers')
+@extends('admin.layouts.suppliers')
 
 @section('Titulo pagina', 'Proveedores - Ciclo Finca 4 Admin')
 
@@ -7,7 +7,7 @@
 @endpush
 
 @section('aside')
-    @include('partes.aside')
+    @include('admin.parts.aside')
 @endsection
 
 @section('contenido')

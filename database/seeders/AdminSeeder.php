@@ -8,12 +8,11 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+
+    // Run the database seeds.
     public function run(): void
     {
-        // Crear admins de ejemplo
+        // Create default admin users with secure passwords
         $admins = [
             [
                 'name' => 'Darwin',

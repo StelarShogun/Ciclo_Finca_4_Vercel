@@ -9,12 +9,11 @@ class ProductsSeeder extends Seeder
 {
     public function run(): void
     {
-        // Productos específicos del mundo del ciclismo
         $products = [
-            // BICICLETAS
+            // Bicycles
             [
-                'categoria_id' => 1, // Bicicletas
-                'proveedor_id' => 1, // Trek Costa Rica
+                'categoria_id' => 1,
+                'proveedor_id' => 1,
                 'nombre' => 'Trek Fuel EX 8',
                 'descripcion' => 'Bicicleta de montaña full suspension 29" con transmisión Shimano XT',
                 'precio_compra' => 1200000,
@@ -24,8 +23,8 @@ class ProductsSeeder extends Seeder
                 'estado' => 'activo'
             ],
             [
-                'categoria_id' => 1, // Bicicletas
-                'proveedor_id' => 2, // Specialized
+                'categoria_id' => 1,
+                'proveedor_id' => 2,
                 'nombre' => 'Specialized Tarmac SL7',
                 'descripcion' => 'Bicicleta de ruta de carbono con grupo Shimano 105',
                 'precio_compra' => 1800000,
@@ -35,8 +34,8 @@ class ProductsSeeder extends Seeder
                 'estado' => 'activo'
             ],
             [
-                'categoria_id' => 1, // Bicicletas
-                'proveedor_id' => 5, // Giant
+                'categoria_id' => 1,
+                'proveedor_id' => 5,
                 'nombre' => 'Giant Escape 3',
                 'descripcion' => 'Bicicleta urbana híbrida con frenos de disco',
                 'precio_compra' => 180000,
@@ -45,11 +44,11 @@ class ProductsSeeder extends Seeder
                 'stock_minimo' => 5,
                 'estado' => 'activo'
             ],
-            
-            // COMPONENTES
+
+            // Components
             [
-                'categoria_id' => 2, // Componentes
-                'proveedor_id' => 3, // Shimano
+                'categoria_id' => 2,
+                'proveedor_id' => 3,
                 'nombre' => 'Shimano Deore XT M8100',
                 'descripcion' => 'Grupo de transmisión completo 12 velocidades',
                 'precio_compra' => 180000,
@@ -59,8 +58,8 @@ class ProductsSeeder extends Seeder
                 'estado' => 'activo'
             ],
             [
-                'categoria_id' => 2, // Componentes
-                'proveedor_id' => 4, // SRAM
+                'categoria_id' => 2,
+                'proveedor_id' => 4,
                 'nombre' => 'SRAM GX Eagle',
                 'descripcion' => 'Grupo de transmisión 12 velocidades para MTB',
                 'precio_compra' => 220000,
@@ -70,8 +69,8 @@ class ProductsSeeder extends Seeder
                 'estado' => 'activo'
             ],
             [
-                'categoria_id' => 2, // Componentes
-                'proveedor_id' => 3, // Shimano
+                'categoria_id' => 2,
+                'proveedor_id' => 3,
                 'nombre' => 'Frenos de Disco Shimano BR-MT200',
                 'descripcion' => 'Frenos de disco hidráulicos para MTB',
                 'precio_compra' => 45000,
@@ -80,11 +79,11 @@ class ProductsSeeder extends Seeder
                 'stock_minimo' => 6,
                 'estado' => 'activo'
             ],
-            
-            // ACCESORIOS
+
+            // Accessories
             [
-                'categoria_id' => 3, // Accesorios
-                'proveedor_id' => 7, // Accesorios Ciclismo Pro
+                'categoria_id' => 3,
+                'proveedor_id' => 7,
                 'nombre' => 'Casco Giro Synthe MIPS',
                 'descripcion' => 'Casco de carretera con tecnología MIPS',
                 'precio_compra' => 85000,
@@ -94,8 +93,8 @@ class ProductsSeeder extends Seeder
                 'estado' => 'activo'
             ],
             [
-                'categoria_id' => 3, // Accesorios
-                'proveedor_id' => 7, // Accesorios Ciclismo Pro
+                'categoria_id' => 3,
+                'proveedor_id' => 7,
                 'nombre' => 'Luces LED Cateye Volt 400',
                 'descripcion' => 'Luz delantera LED recargable 400 lumens',
                 'precio_compra' => 25000,
@@ -105,8 +104,8 @@ class ProductsSeeder extends Seeder
                 'estado' => 'activo'
             ],
             [
-                'categoria_id' => 3, // Accesorios
-                'proveedor_id' => 7, // Accesorios Ciclismo Pro
+                'categoria_id' => 3,
+                'proveedor_id' => 7,
                 'nombre' => 'Candado Kryptonite Evolution',
                 'descripcion' => 'Candado en U de acero endurecido',
                 'precio_compra' => 35000,
@@ -115,11 +114,11 @@ class ProductsSeeder extends Seeder
                 'stock_minimo' => 8,
                 'estado' => 'activo'
             ],
-            
-            // ROPA DEPORTIVA
+
+            // Sportswear
             [
-                'categoria_id' => 4, // Ropa Deportiva
-                'proveedor_id' => 8, // Ropa Deportiva Ciclismo
+                'categoria_id' => 4,
+                'proveedor_id' => 8,
                 'nombre' => 'Jersey Castelli Free Aero',
                 'descripcion' => 'Jersey de ciclismo de carretera con bolsillos',
                 'precio_compra' => 45000,
@@ -129,8 +128,8 @@ class ProductsSeeder extends Seeder
                 'estado' => 'activo'
             ],
             [
-                'categoria_id' => 4, // Ropa Deportiva
-                'proveedor_id' => 8, // Ropa Deportiva Ciclismo
+                'categoria_id' => 4,
+                'proveedor_id' => 8,
                 'nombre' => 'Culote Pearl Izumi Quest',
                 'descripcion' => 'Culote con badana para ciclismo de larga distancia',
                 'precio_compra' => 35000,
@@ -139,11 +138,11 @@ class ProductsSeeder extends Seeder
                 'stock_minimo' => 15,
                 'estado' => 'activo'
             ],
-            
-            // HERRAMIENTAS
+
+            // Tools
             [
-                'categoria_id' => 5, // Herramientas
-                'proveedor_id' => 7, // Accesorios Ciclismo Pro
+                'categoria_id' => 5,
+                'proveedor_id' => 7,
                 'nombre' => 'Kit de Herramientas Park Tool',
                 'descripcion' => 'Kit completo de herramientas para mantenimiento',
                 'precio_compra' => 85000,
@@ -153,8 +152,8 @@ class ProductsSeeder extends Seeder
                 'estado' => 'activo'
             ],
             [
-                'categoria_id' => 5, // Herramientas
-                'proveedor_id' => 7, // Accesorios Ciclismo Pro
+                'categoria_id' => 5,
+                'proveedor_id' => 7,
                 'nombre' => 'Bomba de Aire Topeak Joe Blow',
                 'descripcion' => 'Bomba de piso con manómetro digital',
                 'precio_compra' => 25000,
@@ -163,11 +162,11 @@ class ProductsSeeder extends Seeder
                 'stock_minimo' => 5,
                 'estado' => 'activo'
             ],
-            
-            // SEGURIDAD
+
+            // Safety
             [
-                'categoria_id' => 6, // Seguridad
-                'proveedor_id' => 7, // Accesorios Ciclismo Pro
+                'categoria_id' => 6,
+                'proveedor_id' => 7,
                 'nombre' => 'Casco MTB Fox Proframe',
                 'descripcion' => 'Casco de enduro con protección facial',
                 'precio_compra' => 120000,
@@ -177,8 +176,8 @@ class ProductsSeeder extends Seeder
                 'estado' => 'activo'
             ],
             [
-                'categoria_id' => 6, // Seguridad
-                'proveedor_id' => 7, // Accesorios Ciclismo Pro
+                'categoria_id' => 6,
+                'proveedor_id' => 7,
                 'nombre' => 'Reflectores LED traseros',
                 'descripcion' => 'Set de 2 reflectores LED para la parte trasera',
                 'precio_compra' => 8000,
@@ -187,11 +186,11 @@ class ProductsSeeder extends Seeder
                 'stock_minimo' => 20,
                 'estado' => 'activo'
             ],
-            
-            // NUTRICIÓN
+
+            // Nutrition
             [
-                'categoria_id' => 7, // Nutrición
-                'proveedor_id' => 7, // Accesorios Ciclismo Pro
+                'categoria_id' => 7,
+                'proveedor_id' => 7,
                 'nombre' => 'Geles Energéticos GU Energy',
                 'descripcion' => 'Pack de 24 geles energéticos sabor fresa',
                 'precio_compra' => 15000,
@@ -201,8 +200,8 @@ class ProductsSeeder extends Seeder
                 'estado' => 'activo'
             ],
             [
-                'categoria_id' => 7, // Nutrición
-                'proveedor_id' => 7, // Accesorios Ciclismo Pro
+                'categoria_id' => 7,
+                'proveedor_id' => 7,
                 'nombre' => 'Bebida Isotónica Powerade',
                 'descripcion' => 'Polvo para bebida isotónica sabor limón',
                 'precio_compra' => 12000,
@@ -210,20 +209,21 @@ class ProductsSeeder extends Seeder
                 'stock_actual' => 35,
                 'stock_minimo' => 18,
                 'estado' => 'activo'
-            ]
+            ],
         ];
 
+        // Map Spanish keys to English model fields and persist each product
         foreach ($products as $product) {
             Product::create([
-                'category_id' => $product['categoria_id'],
-                'supplier_id' => $product['proveedor_id'],
-                'name' => $product['nombre'],
-                'description' => $product['descripcion'],
+                'category_id'    => $product['categoria_id'],
+                'supplier_id'    => $product['proveedor_id'],
+                'name'           => $product['nombre'],
+                'description'    => $product['descripcion'],
                 'purchase_price' => $product['precio_compra'],
-                'sale_price' => $product['precio_venta'],
-                'stock_current' => $product['stock_actual'],
-                'stock_minimum' => $product['stock_minimo'],
-                'status' => 'active',
+                'sale_price'     => $product['precio_venta'],
+                'stock_current'  => $product['stock_actual'],
+                'stock_minimum'  => $product['stock_minimo'],
+                'status'         => 'active',
             ]);
         }
     }

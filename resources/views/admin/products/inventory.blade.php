@@ -20,7 +20,7 @@
 </head>
 
 <body class="admin-layout">
-    @include('partes.aside')
+    @include('admin.parts.aside')
 
     <main class="admin-main">
         <div class="inventory-container">

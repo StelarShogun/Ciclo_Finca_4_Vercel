@@ -2,7 +2,7 @@
 // GLOBAL UTILITIES
 // ============================================================
 
-// Reads the CSRF token from the meta tag, falling back to a hidden input.
+/** Returns the CSRF token from a meta tag or hidden input fallback. */
 function getCsrfToken() {
     const meta = document.querySelector('meta[name="csrf-token"]');
     if (meta) return meta.content;
@@ -14,6 +14,7 @@ function getCsrfToken() {
 // CART COUNTER (navbar)
 // ============================================================
 
+/** Updates the cart badge count in the navbar; hides it when count is zero. */
 function updateCartCount(count) {
     const cartCountEl = document.getElementById('cart-count');
     const cartLinkEl  = document.getElementById('cart-link');
@@ -31,6 +32,10 @@ function updateCartCount(count) {
 // ADD TO CART
 // ============================================================
 
+/**
+ * Sends an authenticated POST request to add a product to the cart.
+ * On success, refreshes the navbar badge and shows a toast notification.
+ */
 function addToCart(productId, quantity) {
     quantity = quantity || 1;
 
@@ -70,9 +75,13 @@ function addToCart(productId, quantity) {
 // ADD-TO-CART MODAL (catalog & home)
 // ============================================================
 
-// Tracks the product currently staged in the quantity modal.
+/** Holds the product ID currently staged in the quantity-selection modal. */
 var currentProductId = null;
 
+/**
+ * Populates and opens the add-to-cart modal with the target product's
+ * name, price, stock, and thumbnail pulled from the nearest card element.
+ */
 function openAddToCartModal(btn) {
     currentProductId  = btn.dataset.productId;
     var productName   = btn.dataset.productName;
@@ -89,7 +98,7 @@ function openAddToCartModal(btn) {
     if (stockEl) stockEl.textContent = 'Stock disponible: ' + productStock;
     if (qtyEl)   { qtyEl.max = productStock; qtyEl.value = 1; }
 
-    // Pull the product thumbnail from the nearest card in the DOM.
+    // Reuse the product thumbnail from the nearest card in the DOM.
     var productCard  = btn.closest('.product-card');
     var productImage = productCard ? productCard.querySelector('.product-image img') : null;
     var previewImg   = document.getElementById('preview-image');
@@ -102,11 +111,13 @@ function openAddToCartModal(btn) {
 // MODAL HELPERS
 // ============================================================
 
+/** Activates a modal overlay by ID. */
 function openModal(id) {
     var modal = document.getElementById(id);
     if (modal) modal.classList.add('active');
 }
 
+/** Deactivates a modal overlay by ID. */
 function closeModal(id) {
     var modal = document.getElementById(id);
     if (modal) modal.classList.remove('active');
@@ -116,6 +127,11 @@ function closeModal(id) {
 // CART PAGE (/cart)
 // ============================================================
 
+/**
+ * Sends a PUT request to update a cart line's quantity.
+ * On success, recalculates the line subtotal and refreshes the order total
+ * displayed in the summary panel without a full page reload.
+ */
 function updateCartQuantity(productId, quantity) {
     fetch('/cart/update', {
         method: 'PUT',
@@ -141,12 +157,12 @@ function updateCartQuantity(productId, quantity) {
 
                 updateCartCount(data.cart_count || 0);
 
-                // Recalculate the line subtotal from the unit price rendered in the DOM.
+                // Derive the line subtotal from the unit price already in the DOM.
                 var cartItem   = document.querySelector('.cart-item[data-product-id="' + productId + '"]');
                 if (cartItem) {
                     var unitPriceEl   = cartItem.querySelector('.item-price');
                     var unitPriceText = unitPriceEl ? unitPriceEl.textContent : '';
-                    // Strips "₡1.234 c/u" → 1234
+                    // Strip formatting chars from "₡1.234 c/u" to get the raw integer.
                     var unitPrice     = parseInt(unitPriceText.replace(/[^\d]/g, ''), 10) || 0;
                     var lineSubtotalEl = cartItem.querySelector('.subtotal-amount');
                     if (lineSubtotalEl) {
@@ -162,7 +178,10 @@ function updateCartQuantity(productId, quantity) {
         });
 }
 
-// Replaces the cart card with the empty-state UI without a full page reload.
+/**
+ * Replaces the cart card's inner HTML with an empty-state message,
+ * preserving the "continue shopping" link without a full page reload.
+ */
 function showCartEmptyState() {
     var card = document.querySelector('.cart-page-card');
     if (!card) return;
@@ -186,6 +205,7 @@ function showCartEmptyState() {
 // USER MENU (profile dropdown)
 // ============================================================
 
+/** Closes the user profile dropdown and resets ARIA state. */
 function closeUserDropdown() {
     var userDropdown    = document.getElementById('user-dropdown');
     var userMenuTrigger = document.getElementById('user-menu-trigger');
@@ -193,6 +213,7 @@ function closeUserDropdown() {
     if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'false');
 }
 
+/** Toggles the user profile dropdown open or closed. */
 function toggleUserDropdown() {
     var userDropdown    = document.getElementById('user-dropdown');
     var userMenuTrigger = document.getElementById('user-menu-trigger');
@@ -213,7 +234,7 @@ function toggleUserDropdown() {
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    // Seed the cart badge from the data attribute set server-side.
+    // Seed the navbar cart badge from the server-rendered data attribute.
     var cartLinkEl  = document.getElementById('cart-link');
     var cartGuestEl = document.getElementById('cart-guest');
     var cartRef     = cartLinkEl || cartGuestEl;
@@ -221,12 +242,15 @@ document.addEventListener('DOMContentLoaded', function () {
         updateCartCount(parseInt(cartRef.getAttribute('data-cart-count') || '0', 10));
     }
 
+    // Inform unauthenticated users when they attempt to open the cart.
     if (cartGuestEl) {
         cartGuestEl.addEventListener('click', function () {
             Swal.fire({ icon: 'info', title: 'Inicia sesión', text: 'Debes iniciar sesión para ver tu carrito.', confirmButtonText: 'Entendido' });
         });
     }
 
+    // User menu trigger: prevent event bubbling so the outside-click handler
+    // does not immediately close the dropdown that was just opened.
     var userMenuTrigger = document.getElementById('user-menu-trigger');
     if (userMenuTrigger) {
         userMenuTrigger.addEventListener('click', function (e) {
@@ -236,6 +260,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Close the user dropdown when clicking outside the menu container.
     document.addEventListener('click', function (e) {
         var userMenu     = document.getElementById('user-menu');
         var userDropdown = document.getElementById('user-dropdown');
@@ -244,7 +269,8 @@ document.addEventListener('DOMContentLoaded', function () {
         closeUserDropdown();
     });
 
-    // Delegated: open modal when available, otherwise add directly with qty 1.
+    // Delegated click handler: open the quantity modal when the add-to-cart
+    // button is clicked, falling back to a direct add if no modal is present.
     document.addEventListener('click', function (e) {
         var addBtn = e.target.closest('.add-to-cart-btn');
         if (addBtn) {
@@ -253,18 +279,19 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Unauthenticated users are redirected to login.
+        // Redirect guests to login when they attempt to add a product.
         if (e.target.closest('.guest-add-btn')) {
             window.location.href = '/login';
             return;
         }
 
-        // Close modal on backdrop click.
+        // Dismiss any modal by clicking its backdrop.
         if (e.target.classList.contains('modal') && e.target.classList.contains('active')) {
             e.target.classList.remove('active');
         }
     });
 
+    // Confirm button inside the add-to-cart modal.
     var confirmAddBtn = document.getElementById('confirm-add-to-cart');
     if (confirmAddBtn) {
         confirmAddBtn.addEventListener('click', function () {
@@ -284,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var closeAddBtn = document.getElementById('close-add-to-cart-modal');
     if (closeAddBtn) closeAddBtn.addEventListener('click', function () { closeModal('add-to-cart-modal'); });
 
-    // Delegated: confirm before removing a single item.
+    // Delegated: show a confirmation dialog before removing a single cart item.
     document.addEventListener('click', function (e) {
         var btn = e.target.closest('.cart-remove-item');
         if (!btn) return;
@@ -319,6 +346,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         return;
                     }
 
+                    // Remove the row from the DOM and update totals.
                     cartItem.remove();
 
                     Swal.fire({
@@ -337,6 +365,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     updateCartCount(data.cart_count || 0);
 
+                    // Show empty state if no items remain.
                     if (document.querySelectorAll('.cart-item').length === 0) {
                         showCartEmptyState();
                     }
@@ -348,6 +377,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Delegated: confirm before clearing all cart items at once.
     document.addEventListener('click', function (e) {
         if (!e.target.closest('#btn-clear-cart')) return;
 
@@ -389,7 +419,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Clamp quantity to [1, stock] on manual input change.
+    // Clamp manual quantity input to [1, stock] and sync with the server.
     document.querySelectorAll('.quantity-input').forEach(function (input) {
         input.addEventListener('change', function () {
             var productId = this.dataset.productId;
@@ -408,6 +438,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Increment / decrement stepper buttons on the cart page.
     document.querySelectorAll('.quantity-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var action    = this.dataset.action;
@@ -423,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Product detail page: independent quantity stepper.
+    // Product detail page: standalone quantity stepper (not tied to the cart page).
     var productQtyInput = document.getElementById('product-quantity');
     var productQty      = 1;
 
@@ -438,13 +469,15 @@ document.addEventListener('DOMContentLoaded', function () {
             if (productQty < maxQty) { productQty++; productQtyInput.value = productQty; }
         });
 
+        // Keep the local productQty variable in sync with direct text input.
         productQtyInput.addEventListener('change', function () {
             var value = parseInt(this.value, 10);
-            if (value < 1)       { this.value = 1;      productQty = 1; }
+            if (value < 1)           { this.value = 1;      productQty = 1; }
             else if (value > maxQty) { this.value = maxQty; productQty = maxQty; }
-            else                 { productQty = value; }
+            else                     { productQty = value; }
         });
 
+        // Wire the detail-page add-to-cart button to the local quantity variable.
         var detailAddBtn = document.querySelector('.product-detail-actions .add-to-cart-btn');
         if (detailAddBtn) {
             detailAddBtn.addEventListener('click', function () {
@@ -453,6 +486,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Checkout: confirm intent, POST the order, then show the result.
     var proceedBtn = document.getElementById('proceed-checkout');
     if (proceedBtn) {
         proceedBtn.addEventListener('click', function () {
@@ -466,6 +500,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }).then(function (result) {
                 if (!result.isConfirmed) return;
 
+                // Disable the button while the request is in-flight.
                 proceedBtn.disabled = true;
                 proceedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
 
@@ -504,6 +539,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Close dropdowns and modals on Escape key press.
     document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
         closeUserDropdown();
@@ -512,7 +548,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Client-side price range guard: disables submit when min > max.
+    // Catalog price filter: disable the submit button when min > max.
     (function initCatalogPriceFilter() {
         var form      = document.getElementById('filter-form');
         if (!form) return;
@@ -543,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function () {
 }); // end DOMContentLoaded
 
 // ============================================================
-// GLOBAL EXPORTS (for use from inline scripts)
+// GLOBAL EXPORTS (callable from inline scripts)
 // ============================================================
-window.addToCart      = addToCart;
+window.addToCart       = addToCart;
 window.updateCartCount = updateCartCount;

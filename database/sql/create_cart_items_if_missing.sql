@@ -1,5 +1,5 @@
--- Crear tabla cart_items si no existe (carrito por cliente).
--- Ejecutar en la base de datos ciclo_finca_4.
+-- Create the cart_items table if it doesn't exist (one cart per customer).
+-- Run on the ciclo_finca_4 database.
 
 CREATE TABLE IF NOT EXISTS `cart_items` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,

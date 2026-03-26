@@ -1,4 +1,4 @@
-@extends('sales')
+@extends('admin.layouts.sales')
 
 @section('Titulo pagina', 'Ventas - Ciclo Finca 4 Admin')
 
@@ -8,7 +8,7 @@
 
 {{-- The sidebar is provided by the layout via @yield('aside') --}}
 @section('aside')
-    @include('partes.aside')
+    @include('admin.parts.aside')
 @endsection
 
 @section('contenido')

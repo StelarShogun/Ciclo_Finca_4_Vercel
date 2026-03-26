@@ -16,10 +16,6 @@ use Laravel\Socialite\Facades\Socialite;
 
 class ClientUserController extends Controller
 {
-    // ============================================================
-    // PROFILE
-    // ============================================================
-
     public function show()
     {
         $client = Auth::guard('clients')->user();
@@ -36,6 +32,7 @@ class ClientUserController extends Controller
             'name'           => 'required|string|min:2|max:60',
             'first_surname'  => 'required|string|min:2|max:60',
             'second_surname' => 'nullable|string|max:60',
+            // Exclude current user from unique check to allow saving without changing email
             'gmail'          => 'required|email|max:100|unique:client_table,gmail,' . $client->user_id . ',user_id',
         ], [
             'name.required'          => 'El nombre es obligatorio.',
@@ -61,7 +58,7 @@ class ClientUserController extends Controller
                 'updated_at'     => now(),
             ]);
 
-        // Sync session with updated profile data
+        // Keep session data in sync so the UI reflects changes immediately
         session([
             'client_name'           => $request->name,
             'client_first_surname'  => $request->first_surname,
@@ -83,7 +80,7 @@ class ClientUserController extends Controller
         $client   = Auth::guard('clients')->user();
         $isGoogle = ($client->provider ?? 'local') === 'google';
 
-        // Current password is only required for local accounts
+        // Google-linked accounts have no existing password to verify
         $rules = ['new_password' => 'required|string|min:8|confirmed'];
         if (!$isGoogle) {
             $rules['current_password'] = 'required|string';
@@ -109,7 +106,7 @@ class ClientUserController extends Controller
                 return back()->withErrors($error)->withInput();
             }
 
-            // Prevent reusing the same password
+            // Prevent silent no-op updates where the password does not actually change
             if (Hash::check($request->new_password, $client->password)) {
                 $error = ['new_password' => ['La nueva contraseña no puede ser igual a la actual.']];
 
@@ -120,7 +117,7 @@ class ClientUserController extends Controller
             }
         }
 
-        // Google accounts are converted to local after setting a password
+        // Setting a password on a Google account converts it to local authentication
         DB::table('client_table')
             ->where('user_id', $client->user_id)
             ->update([
@@ -145,10 +142,6 @@ class ClientUserController extends Controller
         return redirect()->route('clients.profile')->with($flashKey, true);
     }
 
-    // ============================================================
-    // AUTHENTICATION
-    // ============================================================
-
     public function showLoginForm()
     {
         return view('client.login');
@@ -161,7 +154,7 @@ class ClientUserController extends Controller
             'password' => 'required',
         ];
 
-        // reCAPTCHA validation is conditional on key presence
+        // Only enforce reCAPTCHA when the site key is configured in the environment
         if (config('recaptcha.site_key')) {
             $rules['g-recaptcha-response'] = ['required', new Recaptcha()];
         }
@@ -191,7 +184,7 @@ class ClientUserController extends Controller
                 return back()->withErrors(['gmail' => $msg])->withInput();
             }
 
-            // Redirect unverified users to the verification flow
+            // Force unverified users through the email verification flow before granting access
             if ($client->email_verified === false) {
                 Auth::guard('clients')->logout();
                 session([
@@ -252,6 +245,7 @@ class ClientUserController extends Controller
                 'name'           => ['required', 'string', 'max:50', 'min:2', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
                 'first_surname'  => ['required', 'string', 'max:50', 'min:2', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
                 'second_surname' => ['nullable', 'string', 'max:50', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
+                // Restrict registration to Gmail addresses only
                 'gmail'          => ['required', 'email', 'unique:client_table,gmail', 'regex:/^[^@]+@gmail\.com$/i'],
                 'password'       => ['required', 'string', 'min:8', 'confirmed'],
             ],
@@ -276,7 +270,7 @@ class ClientUserController extends Controller
             ]
         );
 
-        // Generate a 6-digit verification code valid for 10 minutes
+        // Zero-padded to guarantee exactly 6 digits; expires after 10 minutes
         $code    = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expires = now()->addMinutes(10);
 
@@ -296,7 +290,7 @@ class ClientUserController extends Controller
             'pending_gmail'     => $client->gmail,
         ]);
 
-        // Fallback: expose code in flash if mail delivery fails
+        // Expose the code in a flash message as a fallback if mail delivery fails
         $mailWarning = null;
         try {
             Mail::raw(
@@ -317,7 +311,7 @@ class ClientUserController extends Controller
 
     public function showVerifyForm()
     {
-        // Guard: user must have started the registration flow
+        // Redirect users who land here without going through registration first
         if (!session('pending_client_id')) {
             return redirect()->route('clients.register.form');
         }
@@ -350,7 +344,7 @@ class ClientUserController extends Controller
             return back()->withErrors(['verification_code' => 'El código ha expirado. Solicita uno nuevo.']);
         }
 
-        // Mark email as verified and clear the one-time code
+        // Clear the one-time code after successful verification to prevent reuse
         $client->update([
             'email_verified'               => true,
             'verification_code'            => null,
@@ -383,7 +377,7 @@ class ClientUserController extends Controller
             return redirect()->route('clients.register.form');
         }
 
-        // Issue a fresh code and extend expiry
+        // Invalidate the previous code by issuing a new one with a fresh expiry window
         $code    = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expires = now()->addMinutes(10);
 
@@ -441,12 +435,12 @@ class ClientUserController extends Controller
                     return redirect()->route('clients.home')->with('error', $msg);
                 }
 
-                // Ensure email is marked verified on subsequent Google logins
+                // Google-authenticated users are trusted as verified by the provider
                 if (Schema::hasColumn((new Client())->getTable(), 'email_verified')) {
                     $client->update(['email_verified' => true]);
                 }
             } else {
-                // Split Google display name into name / surnames (best-effort)
+                // Best-effort split: Google names may have 1, 2, or 3+ parts
                 $partes    = array_filter(explode(' ', trim($googleUser->name ?? ''), 3));
                 $nombre    = $partes[0] ?? $googleUser->name ?? 'Usuario';
                 $apellido1 = $partes[1] ?? '-';
@@ -457,7 +451,8 @@ class ClientUserController extends Controller
                     'first_surname'  => $apellido1,
                     'second_surname' => $apellido2,
                     'gmail'          => $email,
-                    'password'       => Hash::make(Str::random(32)), // unusable random password
+                    // Unusable random password; account uses OAuth until a local password is set
+                    'password'       => Hash::make(Str::random(32)),
                 ];
 
                 if (Schema::hasColumn((new Client())->getTable(), 'email_verified')) {
@@ -489,6 +484,7 @@ class ClientUserController extends Controller
                 'trace'     => $e->getTraceAsString(),
             ]);
 
+            // Expose full error details only in debug mode to avoid leaking internals
             $message = config('app.debug')
                 ? 'Error al iniciar sesión con Google: ' . $detail
                 : 'Error al iniciar sesión con Google. Revisa storage/logs/laravel.log';
