@@ -138,6 +138,33 @@ function togglePass(inputId, iconId) {
 }
 
 // ============================================================
+// FIELD MESSAGE UTILITIES (register & recovery forms)
+// ============================================================
+
+/** Shows a validation message below an input field. */
+function showMsg(msgId, type, text) {
+    var el = document.getElementById(msgId);
+    if (!el) return;
+    el.className = 'field-msg ' + type;
+    el.innerHTML = (type === 'error')
+        ? '<i class="fas fa-exclamation-circle"></i><span>' + text + '</span>'
+        : '<i class="fas fa-check-circle"></i><span>' + text + '</span>';
+}
+
+/** Clears a field-level message. */
+function clearMsg(msgId) {
+    var el = document.getElementById(msgId);
+    if (el) { el.className = 'field-msg'; el.innerHTML = ''; }
+}
+
+/** Adds or removes input-error / input-ok CSS class from an input. */
+function setInputState(input, state) {
+    if (!input) return;
+    input.classList.remove('input-error', 'input-ok');
+    if (state) input.classList.add(state);
+}
+
+// ============================================================
 // CART PAGE (/cart)
 // ============================================================
 
@@ -368,6 +395,25 @@ document.addEventListener('DOMContentLoaded', function () {
                             showConfirmButton: false
                         }).then(function () {
                             window.location.href = data.redirect || '/';
+                        });
+                    } else if (data.redirect) {
+                        // Correo no verificado: ofrecer ir a verificar
+                        if (submitBtn)   submitBtn.disabled = false;
+                        if (submitSpan)  submitSpan.classList.remove('hidden');
+                        if (loadingSpan) loadingSpan.classList.add('hidden');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Correo no verificado',
+                            text: data.message || 'Debes verificar tu correo antes de iniciar sesión.',
+                            showCancelButton: true,
+                            confirmButtonText: 'Verificar Correo',
+                            cancelButtonText: 'Cancelar',
+                            confirmButtonColor: '#2d7a2d',
+                            cancelButtonColor: '#6c757d'
+                        }).then(function (result) {
+                            if (!result.isConfirmed) return;
+                            // El servidor ya envió el código al detectar el correo no verificado
+                            window.location.href = data.redirect;
                         });
                     } else {
                         Swal.fire({
@@ -760,3 +806,288 @@ document.addEventListener('DOMContentLoaded', function () {
 window.addToCart       = addToCart;
 window.updateCartCount = updateCartCount;
 window.togglePass      = togglePass;
+window.showMsg         = showMsg;
+window.clearMsg        = clearMsg;
+window.setInputState   = setInputState;
+
+// ============================================================
+// REGISTER FORM validation (register.blade.php)
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    if (!document.getElementById('formRegistroCliente')) return;
+
+    var invalidChars = /[^A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]/;
+
+    [
+        { id: 'name',           msgId: 'msg-name',           label: 'El nombre',          required: true  },
+        { id: 'first_surname',  msgId: 'msg-first-surname',  label: 'El apellido',         required: true  },
+        { id: 'second_surname', msgId: 'msg-second-surname', label: 'El segundo apellido', required: false },
+    ].forEach(function (field) {
+        var input = document.getElementById(field.id);
+        if (!input) return;
+
+        input.addEventListener('input', function () {
+            if (invalidChars.test(this.value)) {
+                this.value = this.value.replace(/[^A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]/g, '');
+                showMsg(field.msgId, 'error', 'Solo se permiten letras y espacios, sin números ni símbolos.');
+                setInputState(this, 'input-error');
+                return;
+            }
+            var val = this.value.trim();
+            if (val === '' && field.required) {
+                showMsg(field.msgId, 'error', field.label + ' es obligatorio.');
+                setInputState(this, 'input-error');
+            } else if (val !== '' && val.length < 2) {
+                showMsg(field.msgId, 'error', field.label + ' debe tener al menos 2 caracteres.');
+                setInputState(this, 'input-error');
+            } else if (val !== '') {
+                showMsg(field.msgId, 'success', 'Campo válido.');
+                setInputState(this, 'input-ok');
+            } else {
+                clearMsg(field.msgId);
+                setInputState(this, null);
+            }
+        });
+
+        input.addEventListener('blur', function () {
+            if (field.required && this.value.trim() === '') {
+                showMsg(field.msgId, 'error', field.label + ' es obligatorio.');
+                setInputState(this, 'input-error');
+            }
+        });
+    });
+
+    // — Gmail: only @gmail.com accepted —
+    var gmailInput = document.getElementById('gmail');
+    if (gmailInput) {
+        gmailInput.addEventListener('input', function () {
+            var val = this.value.trim().toLowerCase();
+            if (val === '') { clearMsg('msg-gmail'); setInputState(this, null); return; }
+            if (!val.endsWith('@gmail.com')) {
+                showMsg('msg-gmail', 'error', 'Solo se aceptan correos @gmail.com.');
+                setInputState(this, 'input-error');
+            } else {
+                showMsg('msg-gmail', 'success', 'Correo válido.');
+                setInputState(this, 'input-ok');
+            }
+        });
+        gmailInput.addEventListener('blur', function () {
+            if (this.value.trim() === '') {
+                showMsg('msg-gmail', 'error', 'El correo Gmail es obligatorio.');
+                setInputState(this, 'input-error');
+            }
+        });
+    }
+
+    // — Password length + confirmation match —
+    function checkPassMatch() {
+        var passwordEl = document.getElementById('password');
+        var pcInput    = document.getElementById('password_confirmation');
+        if (!passwordEl || !pcInput) return;
+        var p  = passwordEl.value;
+        var pc = pcInput.value;
+        if (pc.length === 0) { clearMsg('msg-pass-confirm'); setInputState(pcInput, null); return; }
+        if (p !== pc) {
+            showMsg('msg-pass-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(pcInput, 'input-error');
+        } else {
+            showMsg('msg-pass-confirm', 'success', 'Las contraseñas coinciden.');
+            setInputState(pcInput, 'input-ok');
+        }
+    }
+
+    var passwordInput = document.getElementById('password');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function () {
+            var v = this.value;
+            if (v.length === 0)    { clearMsg('msg-pass'); setInputState(this, null); }
+            else if (v.length < 8) { showMsg('msg-pass', 'error', 'Mínimo 8 caracteres (' + v.length + '/8).'); setInputState(this, 'input-error'); }
+            else                   { showMsg('msg-pass', 'success', 'Longitud correcta.'); setInputState(this, 'input-ok'); }
+            checkPassMatch();
+        });
+    }
+
+    var passConfirmInput = document.getElementById('password_confirmation');
+    if (passConfirmInput) passConfirmInput.addEventListener('input', checkPassMatch);
+
+    // — Submit: final validation before sending —
+    document.getElementById('formRegistroCliente').addEventListener('submit', function (e) {
+        var valid = true;
+
+        var nameEl = document.getElementById('name');
+        if (nameEl && nameEl.value.trim() === '') {
+            showMsg('msg-name', 'error', 'El nombre es obligatorio.');
+            setInputState(nameEl, 'input-error');
+            valid = false;
+        }
+        var fsEl = document.getElementById('first_surname');
+        if (fsEl && fsEl.value.trim() === '') {
+            showMsg('msg-first-surname', 'error', 'El apellido es obligatorio.');
+            setInputState(fsEl, 'input-error');
+            valid = false;
+        }
+
+        var gv = gmailInput ? gmailInput.value.trim().toLowerCase() : '';
+        if (gv === '') {
+            showMsg('msg-gmail', 'error', 'El correo Gmail es obligatorio.');
+            setInputState(gmailInput, 'input-error');
+            valid = false;
+        } else if (!gv.endsWith('@gmail.com')) {
+            showMsg('msg-gmail', 'error', 'Solo se aceptan correos @gmail.com.');
+            setInputState(gmailInput, 'input-error');
+            valid = false;
+        }
+
+        var pv  = passwordInput ? passwordInput.value : '';
+        var pcEl = document.getElementById('password_confirmation');
+        var pcv = pcEl ? pcEl.value : '';
+
+        if (pv.length === 0) {
+            showMsg('msg-pass', 'error', 'La contraseña es obligatoria.');
+            setInputState(passwordInput, 'input-error');
+            valid = false;
+        } else if (pv.length < 8) {
+            showMsg('msg-pass', 'error', 'Mínimo 8 caracteres.');
+            setInputState(passwordInput, 'input-error');
+            valid = false;
+        }
+        if (pcv.length === 0) {
+            showMsg('msg-pass-confirm', 'error', 'Debes confirmar la contraseña.');
+            setInputState(pcEl, 'input-error');
+            valid = false;
+        } else if (pv !== pcv) {
+            showMsg('msg-pass-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(pcEl, 'input-error');
+            valid = false;
+        }
+
+        if (!valid) { e.preventDefault(); return; }
+
+        var btnTexto    = document.getElementById('btnRegistrarTexto');
+        var btnCargando = document.getElementById('btnRegistrarCargando');
+        var btn         = document.getElementById('btnRegistrar');
+        if (btnTexto)    btnTexto.style.display    = 'none';
+        if (btnCargando) btnCargando.style.display = 'inline';
+        if (btn)         btn.disabled              = true;
+    });
+
+}); // end DOMContentLoaded (register form)
+
+// ============================================================
+// RECOVERY FORM validation (recovery.blade.php)
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    if (!document.getElementById('formRecovery')) return;
+
+    // — Toggle password visibility —
+    var togglePassBtn    = document.getElementById('toggle-recovery-password');
+    var toggleConfirmBtn = document.getElementById('toggle-recovery-confirm');
+    if (togglePassBtn)    togglePassBtn.addEventListener('click',    function () { togglePass('recovery-password',         'eye-recovery-password'); });
+    if (toggleConfirmBtn) toggleConfirmBtn.addEventListener('click', function () { togglePass('recovery-password-confirm', 'eye-recovery-confirm'); });
+
+    // — Gmail format validation —
+    var recEmailInput = document.getElementById('recovery-email');
+    if (recEmailInput) {
+        recEmailInput.addEventListener('input', function () {
+            var val = this.value.trim().toLowerCase();
+            if (val === '') { clearMsg('msg-recovery-email'); setInputState(this, null); return; }
+            if (!val.endsWith('@gmail.com')) {
+                showMsg('msg-recovery-email', 'error', 'Solo se aceptan correos @gmail.com.');
+                setInputState(this, 'input-error');
+            } else {
+                showMsg('msg-recovery-email', 'success', 'Correo válido.');
+                setInputState(this, 'input-ok');
+            }
+        });
+        recEmailInput.addEventListener('blur', function () {
+            if (this.value.trim() === '') {
+                showMsg('msg-recovery-email', 'error', 'El correo Gmail es obligatorio.');
+                setInputState(this, 'input-error');
+            }
+        });
+    }
+
+    // — Password length indicator —
+    var recPassInput = document.getElementById('recovery-password');
+    if (recPassInput) {
+        recPassInput.addEventListener('input', function () {
+            var v = this.value;
+            if (v.length === 0)    { clearMsg('msg-recovery-password'); setInputState(this, null); }
+            else if (v.length < 8) { showMsg('msg-recovery-password', 'error', 'Mínimo 8 caracteres (' + v.length + '/8).'); setInputState(this, 'input-error'); }
+            else                   { showMsg('msg-recovery-password', 'success', 'Longitud correcta.'); setInputState(this, 'input-ok'); }
+            checkRecoveryMatch();
+        });
+    }
+
+    // — Password confirmation match —
+    function checkRecoveryMatch() {
+        var passEl    = document.getElementById('recovery-password');
+        var confirmEl = document.getElementById('recovery-password-confirm');
+        if (!passEl || !confirmEl) return;
+        var p  = passEl.value;
+        var pc = confirmEl.value;
+        if (pc.length === 0) { clearMsg('msg-recovery-confirm'); setInputState(confirmEl, null); return; }
+        if (p !== pc) {
+            showMsg('msg-recovery-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(confirmEl, 'input-error');
+        } else {
+            showMsg('msg-recovery-confirm', 'success', 'Las contraseñas coinciden.');
+            setInputState(confirmEl, 'input-ok');
+        }
+    }
+
+    var recConfirmInput = document.getElementById('recovery-password-confirm');
+    if (recConfirmInput) recConfirmInput.addEventListener('input', checkRecoveryMatch);
+
+    // — Submit: final validation —
+    document.getElementById('formRecovery').addEventListener('submit', function (e) {
+        var valid = true;
+
+        var emailVal = recEmailInput ? recEmailInput.value.trim().toLowerCase() : '';
+        if (!emailVal) {
+            showMsg('msg-recovery-email', 'error', 'El correo Gmail es obligatorio.');
+            setInputState(recEmailInput, 'input-error');
+            valid = false;
+        } else if (!emailVal.endsWith('@gmail.com')) {
+            showMsg('msg-recovery-email', 'error', 'Solo se aceptan correos @gmail.com.');
+            setInputState(recEmailInput, 'input-error');
+            valid = false;
+        }
+
+        var passVal = recPassInput ? recPassInput.value : '';
+        if (passVal.length === 0) {
+            showMsg('msg-recovery-password', 'error', 'La contraseña es obligatoria.');
+            setInputState(recPassInput, 'input-error');
+            valid = false;
+        } else if (passVal.length < 8) {
+            showMsg('msg-recovery-password', 'error', 'Mínimo 8 caracteres.');
+            setInputState(recPassInput, 'input-error');
+            valid = false;
+        }
+
+        var confVal = recConfirmInput ? recConfirmInput.value : '';
+        if (confVal.length === 0) {
+            showMsg('msg-recovery-confirm', 'error', 'Debes confirmar la contraseña.');
+            setInputState(recConfirmInput, 'input-error');
+            valid = false;
+        } else if (passVal !== confVal) {
+            showMsg('msg-recovery-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(recConfirmInput, 'input-error');
+            valid = false;
+        }
+
+        if (!valid) { e.preventDefault(); return; }
+
+        var btn         = document.getElementById('btnRecovery');
+        var btnTexto    = document.getElementById('btnRecoveryTexto');
+        var btnCargando = document.getElementById('btnRecoveryCargando');
+        if (btn)         btn.disabled              = true;
+        if (btnTexto)    btnTexto.style.display    = 'none';
+        if (btnCargando) btnCargando.style.display = 'inline';
+    });
+
+}); // end DOMContentLoaded (recovery form)

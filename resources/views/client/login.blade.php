@@ -64,6 +64,11 @@
                         <i class="fas fa-eye" id="eye-icon"></i>
                     </button>
                 </div>
+                <div class="text-right mt-1" style="text-align:right;">
+                    <a href="{{ route('clients.recovery.form') }}" class="login-field-label" style="font-size:0.85rem;color:#2d7a2d;">
+                        ¿Olvidó su contraseña?
+                    </a>
+                </div>
             </div>
             <div class="form-group">
                 <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>

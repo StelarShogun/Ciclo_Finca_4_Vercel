@@ -346,6 +346,25 @@ document.addEventListener('DOMContentLoaded', function () {
                         }).then(function () {
                             window.location.href = data.redirect || '/';
                         });
+                    } else if (data.redirect) {
+                        // Unverified email: offer to send code and redirect to verify
+                        if (submitBtn) submitBtn.disabled = false;
+                        if (submitSpan) submitSpan.classList.remove('hidden');
+                        if (loadingSpan) loadingSpan.classList.add('hidden');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Correo no verificado',
+                            text: data.message || 'Debes verificar tu correo antes de iniciar sesión.',
+                            showCancelButton: true,
+                            confirmButtonText: 'Verificar Correo',
+                            cancelButtonText: 'Cancelar',
+                            confirmButtonColor: '#2d7a2d',
+                            cancelButtonColor: '#6c757d'
+                        }).then(function (result) {
+                            if (!result.isConfirmed) return;
+                            // El servidor ya envió el código al detectar el correo no verificado
+                            window.location.href = data.redirect;
+                        });
                     } else {
                         Swal.fire({
                             icon: 'error',
