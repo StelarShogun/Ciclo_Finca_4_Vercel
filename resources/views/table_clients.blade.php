@@ -21,7 +21,7 @@
         <header class="page-header">
             <div>
                 <h1>Gestión de Usuarios</h1>
-                <p>Administra los clientes registrados en la plataforma</p>
+                <p>Administra los clientes registrados en la plataformass</p>
             </div>
             <div class="page-header-actions">
                 <span class="clients-count-badge">
@@ -92,7 +92,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    @vite(['resources/js/pages/admin.js'])
+    @vite(['resources/js/admin/admin.js'])
 
 </body>
 </html>
