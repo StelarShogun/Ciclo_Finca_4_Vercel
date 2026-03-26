@@ -126,6 +126,136 @@
 </section>
 @endif
 
+<!-- Marketing: Encargos y retiro en tienda -->
+<section class="benefits-section" aria-label="Beneficios del servicio">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Encargos listos para retirar</h2>
+            <p class="section-subtitle">Elige en el catálogo y te ayudamos a dejar tu compra lista para retirar en tienda.</p>
+        </div>
+
+        <div class="benefits-grid" role="list" aria-label="Beneficios principales">
+            <div class="benefit-card" role="listitem">
+                <i class="fas fa-tools" aria-hidden="true"></i>
+                <h3 class="benefit-title">Taller propio</h3>
+                <p class="benefit-desc">Revisión, ajuste y preparación en tienda para que salgas rodando con confianza.</p>
+            </div>
+
+            <div class="benefit-card" role="listitem">
+                <i class="fas fa-user-tie" aria-hidden="true"></i>
+                <h3 class="benefit-title">Asesoría personalizada</h3>
+                <p class="benefit-desc">Te orientamos para elegir la opción correcta según tu ruta, MTB o gravel.</p>
+            </div>
+
+            <div class="benefit-card" role="listitem">
+                <i class="fas fa-warehouse" aria-hidden="true"></i>
+                <h3 class="benefit-title">Inventario y disponibilidad</h3>
+                <p class="benefit-desc">Confirmamos disponibilidad y te decimos cuándo está listo para retirar.</p>
+            </div>
+
+            <div class="benefit-card" role="listitem">
+                <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                <h3 class="benefit-title">Soporte post-retirada</h3>
+                <p class="benefit-desc">Acompañamos después de tu retiro con recomendaciones de uso y cuidados.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Marketing: Cómo funciona -->
+<section class="how-it-works-section" aria-label="Cómo funciona el encargo">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Cómo funciona</h2>
+            <p class="section-subtitle">Tres pasos simples para dejar tu encargo listo para retirar en tienda.</p>
+        </div>
+
+        <div class="steps-grid" role="list" aria-label="Pasos del encargo">
+            <div class="step-card" role="listitem">
+                <div class="step-number">1</div>
+                <h3 class="step-title">Explora el catálogo</h3>
+                <p class="step-desc">Busca bicicletas, componentes y accesorios según tu estilo de ciclismo.</p>
+                <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-lg step-cta">Ver catálogo</a>
+            </div>
+
+            <div class="step-card" role="listitem">
+                <div class="step-number">2</div>
+                <h3 class="step-title">Deja tu solicitud</h3>
+                <p class="step-desc">Agrega los productos al carrito y finaliza tu solicitud para que podamos confirmarte disponibilidad.</p>
+                @auth('clients')
+                    <a href="{{ route('clients.cart') }}" class="btn btn-secondary btn-lg step-cta">Ir al carrito</a>
+                @else
+                    <a href="{{ route('login.show') }}" class="btn btn-secondary btn-lg step-cta">Inicia sesión</a>
+                @endauth
+            </div>
+
+            <div class="step-card" role="listitem">
+                <div class="step-number">3</div>
+                <h3 class="step-title">Retira en tienda</h3>
+                <p class="step-desc">Te confirmamos cuando esté listo para retirar y coordinamos tu visita.</p>
+                <div class="step-note">
+                    <i class="fas fa-clock" aria-hidden="true"></i>
+                    <span>Retiro en tienda.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Marketing: Testimonios (estáticos por ahora) -->
+<section class="testimonials-section" aria-label="Testimonios de clientes">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Clientes que confían en nosotros</h2>
+            <p class="section-subtitle">Tu bici y tus componentes, con asesoría y preparación en tienda.</p>
+        </div>
+
+        <div class="testimonials-grid" role="list" aria-label="Lista de testimonios">
+            <div class="testimonial-card" role="listitem">
+                <div class="testimonial-stars" aria-hidden="true">
+                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                </div>
+                <p class="testimonial-quote">“Me orientaron con la talla y ajustes. Retiré listo y pude salir ese mismo día.”</p>
+                <p class="testimonial-author">Cliente verificado</p>
+            </div>
+
+            <div class="testimonial-card" role="listitem">
+                <div class="testimonial-stars" aria-hidden="true">
+                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                </div>
+                <p class="testimonial-quote">“Excelente atención en tienda. Respondieron mis dudas y dejaron todo preparado.”</p>
+                <p class="testimonial-author">Cliente verificado</p>
+            </div>
+
+            <div class="testimonial-card" role="listitem">
+                <div class="testimonial-stars" aria-hidden="true">
+                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                </div>
+                <p class="testimonial-quote">“Encargo claro y puntual para retirar. Gran asesoría en componentes.”</p>
+                <p class="testimonial-author">Cliente verificado</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA final -->
+<section class="final-cta-section" aria-label="Llamado a la acción final">
+    <div class="container">
+        <div class="final-cta-card">
+            <div>
+                <h2 class="final-cta-title">¿Listo para tu próximo rodaje?</h2>
+                <p class="final-cta-subtitle">Explora el catálogo y deja tu solicitud para que lo preparemos en tienda.</p>
+            </div>
+            <div class="final-cta-actions">
+                <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-th" aria-hidden="true"></i>
+                    Ver Catálogo
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- Modal: select quantity before adding a product to cart -->
 <!-- Product details are populated dynamically by JS -->
 <div class="modal" id="add-to-cart-modal">

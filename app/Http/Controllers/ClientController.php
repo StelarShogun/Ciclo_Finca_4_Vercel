@@ -18,6 +18,7 @@ class ClientController extends Controller
         // Featured products: active, in stock, latest first
         $featuredProducts = Product::with(['category'])
             ->where('status', 'active')
+            ->where('is_featured', true)
             ->where('stock_current', '>', 0)
             ->orderBy('created_at', 'desc')
             ->limit(8)
