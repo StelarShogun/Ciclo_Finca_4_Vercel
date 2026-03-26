@@ -13,7 +13,7 @@
 @section('contenido')
     <div class="sales-container">
 
-        {{-- Header --}}
+        {{-- ==================== HEADER ==================== --}}
         <header class="sales-header">
             <div>
                 <h1>Gestión de Proveedores</h1>
@@ -26,8 +26,10 @@
             </div>
         </header>
 
-        {{-- KPIs --}}
+        {{-- ==================== KPI CARDS ==================== --}}
         <div class="kpi-grid">
+
+            {{-- Total registered suppliers --}}
             <div class="kpi-card">
                 <div class="kpi-header">
                     <h3 class="kpi-title">Total Proveedores</h3>
@@ -35,6 +37,8 @@
                 </div>
                 <p class="kpi-value" id="totalProveedores">{{ $suppliers->total() }}</p>
             </div>
+
+            {{-- Average supplier rating --}}
             <div class="kpi-card">
                 <div class="kpi-header">
                     <h3 class="kpi-title">Promedio Evaluación</h3>
@@ -42,36 +46,42 @@
                 </div>
                 <p class="kpi-value" id="promedioEvaluacion">{{ number_format($averageRating, 2) }}</p>
             </div>
+
         </div>
 
-        {{-- Filters --}}
+        {{-- ==================== FILTERS ==================== --}}
         <div class="filters-section">
             <h2 class="filters-title">Filtros de Búsqueda</h2>
             <div class="filters-grid">
+
                 <div class="filter-group">
                     <label for="buscarNombre">Nombre del Proveedor</label>
                     <input type="text" id="buscarNombre" placeholder="Buscar por nombre..."
                         value="{{ request('name') }}">
                 </div>
+
                 <div class="filter-group">
                     <label for="buscarContacto">Contacto Principal</label>
                     <input type="text" id="buscarContacto" placeholder="Buscar por contacto..."
                         value="{{ request('contact') }}">
                 </div>
+
                 <div class="filter-group filter-buttons">
                     <button type="button" class="btn btn-primary filter-btn" id="btnBuscar">
                         <i class="fas fa-search"></i> Buscar
                     </button>
+                    {{-- Clear filters button: only shown when filters are active --}}
                     @if(request('name') || request('contact'))
                         <button type="button" class="btn btn-secondary filter-btn" id="limpiarFiltros">
                             <i class="fas fa-times"></i> Limpiar
                         </button>
                     @endif
                 </div>
+
             </div>
         </div>
 
-        {{-- Suppliers table --}}
+        {{-- ==================== SUPPLIERS TABLE ==================== --}}
         <div class="sales-table-container">
             <table class="sales-table">
                 <thead>
@@ -87,6 +97,7 @@
                 <tbody id="tablaProveedores">
                     @forelse($suppliers as $supplier)
                         <tr>
+                            {{-- Avatar uses first letter of supplier name --}}
                             <td>
                                 <div class="provider-info">
                                     <div class="provider-avatar">
@@ -101,6 +112,8 @@
                             <td>{{ $supplier->phone }}</td>
                             <td>{{ $supplier->email }}</td>
                             <td>{{ $supplier->address }}</td>
+
+                            {{-- Row actions: view, edit, delete --}}
                             <td>
                                 <div class="actions-container">
                                     <button onclick="viewSupplierDetail('{{ $supplier->supplier_id }}')"
@@ -136,10 +149,12 @@
             </table>
         </div>
 
+        {{-- Pagination component --}}
         <x-pagination :paginator="$suppliers" label="de proveedores" />
+
     </div>
 
-    {{-- Modal: Detalles del Proveedor --}}
+    {{-- ==================== MODAL: SUPPLIER DETAIL ==================== --}}
     <div id="modalDetalleProveedor" class="modal-overlay">
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
@@ -150,6 +165,7 @@
                 <div class="sale-details">
                     <div class="detail-section">
                         <h4><i class="fas fa-building"></i> Información General</h4>
+                        {{-- Fields populated dynamically via viewSupplierDetail() --}}
                         <div class="detail-grid">
                             <div class="detail-item">
                                 <label>Nombre</label>
@@ -191,7 +207,7 @@
         </div>
     </div>
 
-    {{-- Modal: Nuevo Proveedor --}}
+    {{-- ==================== MODAL: NEW SUPPLIER ==================== --}}
     <div id="new-supplier-modal" class="modal-overlay">
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
@@ -244,7 +260,7 @@
                             <div class="error-message" id="error-new-rating"></div>
                         </div>
                     </div>
-                    <div style="display:flex;gap:15px;justify-content:flex-end;margin-top:20px;">
+                    <div style="display:flex; gap:15px; justify-content:flex-end; margin-top:20px;">
                         <button type="button" class="btn btn-secondary" id="cancel-new-supplier">
                             <i class="fas fa-times"></i> Cancelar
                         </button>
@@ -257,7 +273,7 @@
         </div>
     </div>
 
-    {{-- Modal: Editar Proveedor --}}
+    {{-- ==================== MODAL: EDIT SUPPLIER ==================== --}}
     <div id="edit-supplier-modal" class="modal-overlay">
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
@@ -268,6 +284,7 @@
                 <form id="edit-supplier-form">
                     @csrf
                     @method('PUT')
+                    {{-- Hidden field carries the supplier ID for the PUT request --}}
                     <input type="hidden" id="edit-supplier-id" name="supplier_id">
                     <div class="form-row">
                         <div class="form-group">
@@ -312,7 +329,7 @@
                             <div class="error-message" id="error-edit-rating"></div>
                         </div>
                     </div>
-                    <div style="display:flex;gap:15px;justify-content:flex-end;margin-top:20px;">
+                    <div style="display:flex; gap:15px; justify-content:flex-end; margin-top:20px;">
                         <button type="button" class="btn btn-secondary" id="cancel-edit-supplier">
                             <i class="fas fa-times"></i> Cancelar
                         </button>
@@ -324,4 +341,5 @@
             </div>
         </div>
     </div>
+
 @endsection

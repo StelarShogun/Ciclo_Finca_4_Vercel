@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Ciclo Finca 4 - Tienda de Bicicletas')</title>
 
+    {{-- Favicons for multiple resolutions and platforms --}}
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
@@ -23,13 +24,14 @@
 </head>
 <body class="cliente-layout">
 
-    {{-- Header is suppressed when the child view defines 'hideNav' --}}
+    {{-- Header and footer are suppressed when the child view defines 'hideNav' --}}
     @unless(View::hasSection('hideNav'))
         @include('client.parts.header')
     @endunless
 
     <main class="cliente-main">
 
+        {{-- Session flash messages --}}
         @if(session('status'))
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i>
@@ -53,5 +55,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @stack('scripts')
+
 </body>
 </html>

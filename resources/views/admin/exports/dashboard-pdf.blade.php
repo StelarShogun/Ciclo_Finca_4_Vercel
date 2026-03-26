@@ -7,13 +7,15 @@
     @vite(['resources/css/admin/dashboard/dashboard-pdf.css'])
 </head>
 <body>
+
+    {{-- Report header --}}
     <div class="header">
         <h1>Reporte del Dashboard</h1>
         <p>Sistema de Gestión Ciclo Finca 4</p>
         <p>Generado el {{ now()->format('d/m/Y') }} a las {{ now()->format('H:i:s') }}</p>
     </div>
 
-    <!-- KPIs Principales -->
+    {{-- KPI summary cards --}}
     <div class="section">
         <h2>Resumen Ejecutivo</h2>
         <div class="kpis-grid">
@@ -36,7 +38,7 @@
         </div>
     </div>
 
-    <!-- Productos con Stock Bajo -->
+    {{-- Low stock products table (only rendered if data exists) --}}
     @if(isset($lowStockProductsList) && $lowStockProductsList->count() > 0)
     <div class="section">
         <h2>Productos con Stock Bajo</h2>
@@ -57,9 +59,7 @@
                     <td>{{ $product->stock_current }}</td>
                     <td>{{ $product->stock_minimum }}</td>
                     <td>{{ $product->category->name ?? 'N/A' }}</td>
-                    <td>
-                        <span class="status-badge status-warning">Stock Bajo</span>
-                    </td>
+                    <td><span class="status-badge status-warning">Stock Bajo</span></td>
                 </tr>
                 @endforeach
             </tbody>
@@ -67,7 +67,7 @@
     </div>
     @endif
 
-    <!-- Ventas Recientes -->
+    {{-- Recent sales table (only rendered if data exists) --}}
     @if(isset($recentSales) && $recentSales->count() > 0)
     <div class="section">
         <h2>Ventas Recientes</h2>
@@ -84,11 +84,14 @@
             <tbody>
                 @foreach($recentSales as $sale)
                 <tr>
+                    {{-- Prefer invoice number, fallback to sale ID --}}
                     <td>{{ $sale->invoice_number ?? '#' . $sale->sale_id }}</td>
+                    {{-- Concatenate customer name safely, fallback to N/A --}}
                     <td>{{ $sale->customer ? trim(($sale->customer->nombre ?? '') . ' ' . ($sale->customer->apellido ?? '')) : 'N/A' }}</td>
                     <td>₡{{ number_format($sale->total, 0, ',', '.') }}</td>
                     <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
                     <td>
+                        {{-- Dynamic status badge based on sale status --}}
                         <span class="status-badge status-{{ $sale->status === 'completed' ? 'success' : ($sale->status === 'pending' ? 'warning' : 'danger') }}">
                             {{ ucfirst($sale->status) }}
                         </span>
@@ -100,7 +103,7 @@
     </div>
     @endif
 
-    <!-- Productos por Categoría -->
+    {{-- Product distribution by category (only rendered if data exists) --}}
     @if(isset($productsByCategory) && $productsByCategory->count() > 0)
     <div class="section">
         <h2>Distribución por Categorías</h2>
@@ -113,9 +116,7 @@
                 </tr>
             </thead>
             <tbody>
-                @php
-                    $totalProducts = $productsByCategory->sum('total');
-                @endphp
+                @php $totalProducts = $productsByCategory->sum('total'); @endphp
                 @foreach($productsByCategory as $category)
                 <tr>
                     <td>{{ $category->categoria }}</td>
@@ -128,9 +129,11 @@
     </div>
     @endif
 
+    {{-- Report footer --}}
     <div class="footer">
         <p>Este reporte fue generado automáticamente por el Sistema de Gestión Ciclo Finca 4</p>
         <p>Para más información, consulte el dashboard en línea</p>
     </div>
+
 </body>
 </html>

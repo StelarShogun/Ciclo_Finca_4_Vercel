@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Usuarios - Ciclo Finca 4 Admin</title>
 
+    {{-- Styles & Fonts --}}
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     @vite(['resources/css/admin/users/clients.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -15,9 +16,12 @@
 
 <body class="admin-layout">
 
+    {{-- Sidebar navigation --}}
     @include('admin.parts.aside')
 
     <main class="admin-main">
+
+        {{-- Page header with total user count --}}
         <div class="page-header">
             <div>
                 <h1>Gestión de Usuarios</h1>
@@ -31,6 +35,7 @@
             </div>
         </div>
 
+        {{-- ==================== USERS TABLE ==================== --}}
         <div class="clients-container">
             <div class="clients-table-wrapper">
                 <table class="clients-table">
@@ -53,11 +58,15 @@
                                 <td>{{ $client->first_surname }}</td>
                                 <td>{{ $client->second_surname ?? '—' }}</td>
                                 <td>{{ $client->gmail }}</td>
+
+                                {{-- Active / banned status badge --}}
                                 <td>
                                     <span class="status-badge {{ $client->active ? 'status-active' : 'status-banned' }}">
                                         {{ $client->active ? 'Activo' : 'Baneado' }}
                                     </span>
                                 </td>
+
+                                {{-- Toggle ban/unban; data attributes consumed by clients.js --}}
                                 <td>
                                     @if ($client->active)
                                         <button class="btn btn-danger btn-sm"
@@ -87,9 +96,13 @@
                 </table>
             </div>
         </div>
+
     </main>
 
+    {{-- SweetAlert2 for ban/unban confirmation dialogs --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    {{-- User management scripts --}}
     @vite(['resources/js/admin/users/clients.js'])
 
 </body>
