@@ -10,8 +10,10 @@ export default defineConfig({
       input: [
         'resources/js/admin/admin.js',
         'resources/css/admin.css',
+        'resources/css/admin-pages.css',
         'resources/js/admin/dashboard.js',
         'resources/js/admin/inventory.js',
+        'resources/css/inventory.css',
 
         'resources/js/admin/sales.js',
         'resources/css/sales/sales.css',

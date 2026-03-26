@@ -293,7 +293,7 @@
                             <label for="new-category">Categoría *</label>
                             <select id="new-category" name="category_id" required>
                                 <option value="">Seleccionar categoría</option>
-                                @foreach(\App\Models\Category::all() as $category)
+                                @foreach($categories as $category)
                                 <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
@@ -392,7 +392,7 @@
                             <label for="edit-category">Categoría *</label>
                             <select id="edit-category" name="category_id" required>
                                 <option value="">Seleccionar categoría</option>
-                                @foreach(\App\Models\Category::all() as $category)
+                                @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
@@ -649,7 +649,7 @@
         </div>
     </div>
 
-    @vite(['resources/js/inventory.js'])
+    @vite(['resources/js/admin/inventory.js'])
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // Modal de exportar

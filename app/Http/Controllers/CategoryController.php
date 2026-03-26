@@ -10,8 +10,13 @@ class CategoryController extends Controller
 {
     public function createSubcategory()
     {
-        // Listado de categorías existentes para seleccionar la categoría padre
-        $categories = Category::orderBy('name')->get(['category_id', 'name']);
+        // Avoid duplicated names in the parent selector (seeders may have inserted repeated roots).
+        $categories = Category::query()
+            ->selectRaw('MIN(category_id) as category_id, name')
+            ->whereNull('parent_category_id')
+            ->groupBy('name')
+            ->orderBy('name')
+            ->get();
 
         return view('categories.subcategories.create', compact('categories'));
     }

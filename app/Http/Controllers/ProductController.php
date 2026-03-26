@@ -311,8 +311,12 @@ class ProductController extends Controller
             ];
         });
 
-        // Obtener categorías para el filtro
-        $categories = Category::orderBy('name')->get(['category_id', 'name']);
+        // Evitar nombres duplicados en filtros/selectores (seeders pueden repetir categorías raíz).
+        $categories = Category::query()
+            ->selectRaw('MIN(category_id) as category_id, name')
+            ->groupBy('name')
+            ->orderBy('name')
+            ->get();
 
         return view('products.inventory', [
             'products' => $products,

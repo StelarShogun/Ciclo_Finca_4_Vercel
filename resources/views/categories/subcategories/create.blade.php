@@ -65,7 +65,7 @@
                             <i class="fas fa-plus"></i> Guardar subcategoría
                         </button>
 
-                        <a href="{{ url('/dashboard') }}" class="btn btn-secondary">
+                        <a href="{{ route('inventory') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Volver
                         </a>
                     </div>
