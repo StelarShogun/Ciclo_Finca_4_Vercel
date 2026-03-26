@@ -8,7 +8,7 @@
     <title>Usuarios - Ciclo Finca 4 Admin</title>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    @vite(['resources/css/admin.css'])
+    @vite(['resources/css/admin/users/clients.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -18,10 +18,10 @@
     @include('admin.parts.aside')
 
     <main class="admin-main">
-        <header class="page-header">
+        <div class="page-header">
             <div>
                 <h1>Gestión de Usuarios</h1>
-                <p>Administra los clientes registrados en la plataformass</p>
+                <p class="text-muted">Administra los clientes registrados en la plataforma</p>
             </div>
             <div class="page-header-actions">
                 <span class="clients-count-badge">
@@ -29,7 +29,7 @@
                     {{ $clients->count() }} usuario(s)
                 </span>
             </div>
-        </header>
+        </div>
 
         <div class="clients-container">
             <div class="clients-table-wrapper">
@@ -60,8 +60,7 @@
                                 </td>
                                 <td>
                                     @if ($client->active)
-                                        <button
-                                            class="btn-ban"
+                                        <button class="btn btn-danger btn-sm"
                                             data-id="{{ $client->user_id }}"
                                             data-name="{{ $client->name }} {{ $client->first_surname }}"
                                             data-email="{{ $client->gmail }}"
@@ -69,8 +68,7 @@
                                             <i class="fas fa-ban"></i> Banear
                                         </button>
                                     @else
-                                        <button
-                                            class="btn-unban"
+                                        <button class="btn btn-success btn-sm"
                                             data-id="{{ $client->user_id }}"
                                             data-name="{{ $client->name }} {{ $client->first_surname }}"
                                             data-email="{{ $client->gmail }}"
@@ -92,7 +90,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    @vite(['resources/js/admin/admin.js'])
+    @vite(['resources/js/admin/users/clients.js'])
 
 </body>
 </html>

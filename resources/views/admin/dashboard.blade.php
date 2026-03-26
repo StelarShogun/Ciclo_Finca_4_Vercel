@@ -14,7 +14,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     
-    @vite(['resources/css/admin.css'])
+    @vite(['resources/css/admin/dashboard/dashboard.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -285,7 +285,7 @@
         </div>
     </main>
 
-    @vite(['resources/js/admin/dashboard.js'])
+    @vite(['resources/js/admin/dashboard/dashboard.js'])
 </body>
 
 </html>

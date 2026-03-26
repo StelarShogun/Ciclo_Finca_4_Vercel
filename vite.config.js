@@ -8,17 +8,22 @@ const vitePort = Number(process.env.VITE_PORT) || 5173
 // =======================
 const adminAssets = [
   // JS
-  'resources/js/admin/admin.js',
-  'resources/js/admin/dashboard.js',
-  'resources/js/admin/inventory.js',
-  'resources/js/admin/sales.js',
-  'resources/js/admin/suppliers.js',
+  'resources/js/admin/dashboard/dashboard.js',
+  'resources/js/admin/inventory/inventory.js',
+  'resources/js/admin/sales/sales.js',
+  'resources/js/admin/suppliers/suppliers.js',
+  'resources/js/admin/login/login.js',
+  'resources/js/admin/users/clients.js',
 
   // CSS
-  'resources/css/admin.css',
-  'resources/css/inventory.css',
-  'resources/css/sales/sales.css',
-  'resources/css/suppliers/suppliers.css',
+  'resources/css/admin/products/inventory.css',
+  'resources/css/admin/products/products-pdf.css',
+  'resources/css/admin/sales/sales.css',
+  'resources/css/admin/suppliers/suppliers.css',
+  'resources/css/admin/dashboard/dashboard.css',
+  'resources/css/admin/dashboard/dashboard-pdf.css',
+  'resources/css/admin/users/clients.css',
+  'resources/css/admin/login/login.css',
 ]
 
 // =======================

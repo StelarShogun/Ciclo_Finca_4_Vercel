@@ -11,6 +11,21 @@ function getCSRFToken() {
     return metaToken || inputToken || '';
 }
 
+ // Modal de exportar
+        document.getElementById('export-btn').addEventListener('click', function() {
+            document.getElementById('export-modal').classList.add('active');
+        });
+
+        document.getElementById('close-export-modal').addEventListener('click', function() {
+            document.getElementById('export-modal').classList.remove('active');
+        });
+
+
+        // Cerrar modales al hacer clic en el backdrop
+        document.querySelector('#export-modal .modal-backdrop').addEventListener('click', function() {
+            document.getElementById('export-modal').classList.remove('active');
+        });
+
 // Función para renovar el CSRF token automáticamente
 async function renewCSRFToken() {
     try {

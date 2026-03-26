@@ -9,7 +9,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    @vite(['resources/css/admin.css'])
+    @vite(['resources/css/admin/login/login.css'])
 </head>
 <body>
 
@@ -74,7 +74,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    @vite(['resources/js/admin/admin.js'])
+    @vite(['resources/js/admin/login/login.js'])
 
 </body>
 </html>

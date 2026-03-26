@@ -1,4 +1,4 @@
-@extends('sales')
+@extends('admin.layouts.sales')
 
 @section('Titulo pagina', 'Ventas - Ciclo Finca 4 Admin')
 
