@@ -4,6 +4,7 @@ services:
     container_name: laravel_app_ciclo
     ports:
       - "8080:80"
+      - "5173:5173" 
     volumes:
       - .:/var/www/html
     environment:

@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    @vite(['resources/css/clients/clients.css'])
+    
     @stack('styles')
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -25,7 +25,7 @@
 <body class="cliente-layout">
 
     @unless(View::hasSection('hideNav'))
-        @include('clients.parts.header')
+        @include('client.parts.header')
     @endunless
 
     <main class="cliente-main">
@@ -48,11 +48,10 @@
     </main>
 
     @unless(View::hasSection('hideNav'))
-        @include('clients.parts.footer')
+        @include('client.parts.footer')
     @endunless
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    @vite(['resources/js/clients.js'])
     @stack('scripts')
 </body>
 </html>

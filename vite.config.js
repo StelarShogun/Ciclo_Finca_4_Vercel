@@ -8,36 +8,32 @@ export default defineConfig({
     laravel({
       detectTls: false,
       input: [
-        'resources/js/admin.js',
-        'resources/js/pages/admin.js',
+        'resources/js/admin/admin.js',
         'resources/css/admin.css',
-        'resources/js/dashboard.js',
-        'resources/js/inventory.js',
-        'resources/css/inventory.css',
-        'resources/js/usuarios.js',
+        'resources/js/admin/dashboard.js',
+        'resources/js/admin/inventory.js',
 
-        // CSS Y JS DE SALES
-        'resources/js/sales.js',
+        'resources/js/admin/sales.js',
         'resources/css/sales/sales.css',
 
-        // CSS Y JS DE SUPPLIERS
-        'resources/js/suppliers.js',
+        'resources/js/admin/suppliers.js',
         'resources/css/suppliers/suppliers.css',
 
-        // CSS DE SALES
-        'resources/css/sales.css',
-
-        // CSS Y JS DE CLIENTS
-        'resources/css/clients/clients.css',
-        'resources/css/clients-users.css',
-        'resources/js/clients.js',
+        // Clients
+        'resources/css/client/clients-page.css',
+        'resources/css/client/clients-users.css',
+        'resources/js/client/clients-page.js',
+        'resources/js/client/clients-users.js',
       ],
       refresh: true,
     }),
   ],
   server: {
-    host: 'localhost',
+    host: '0.0.0.0', // Clave para docker, permite conexiones desde fuera del contenedor
     port: vitePort,
-    strictPort: false,
+    strictPort: true,
+    hmr: {
+      host: 'localhost', // Navegador accede desde tu máquina
+    },
   },
 })

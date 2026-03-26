@@ -424,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var closeAddBtn = document.getElementById('close-add-to-cart-modal');
     if (closeAddBtn) closeAddBtn.addEventListener('click', function () { closeModal('add-to-cart-modal'); });
 
-    // — Remove single cart item —
+    // — Remove single cart item (delegated) —
     document.addEventListener('click', function (e) {
         var btn = e.target.closest('.cart-remove-item');
         if (!btn) return;
@@ -490,42 +490,52 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // — Clear entire cart —
-    var clearCartBtn = document.getElementById('btn-clear-cart');
-    if (clearCartBtn) {
-        clearCartBtn.addEventListener('click', function () {
-            Swal.fire({
-                title: '¿Vaciar carrito?',
-                text: 'Se eliminarán todos los productos del carrito.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, vaciar',
-                cancelButtonText: 'Cancelar'
-            }).then(function (result) {
-                if (!result.isConfirmed) return;
-                fetch('/cart/clear', {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': getCsrfToken(),
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
+    // ─────────────────────────────────────────────────────────
+    // — Vaciar carrito (delegado) —
+    // Se usa delegación en lugar de un listener directo sobre
+    // #btn-clear-cart para que funcione aunque el botón sea
+    // regenerado dinámicamente o el click caiga sobre el <i> hijo.
+    // ─────────────────────────────────────────────────────────
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('#btn-clear-cart')) return;
+
+        Swal.fire({
+            title: '¿Vaciar carrito?',
+            text: 'Se eliminarán todos los productos del carrito.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, vaciar',
+            cancelButtonText: 'Cancelar'
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+
+            fetch('/cart/clear', {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        updateCartCount(0);
+                        showCartEmptyState();
+                        Swal.fire({
+                            toast: true, position: 'top-end', icon: 'success',
+                            title: 'Carrito vaciado correctamente',
+                            showConfirmButton: false, timer: 2500, timerProgressBar: true
+                        });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo vaciar el carrito' });
                     }
                 })
-                    .then(function (res) { return res.json(); })
-                    .then(function (data) {
-                        if (data.success) {
-                            updateCartCount(0);
-                            showCartEmptyState();
-                        } else {
-                            Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo vaciar el carrito' });
-                        }
-                    })
-                    .catch(function () {
-                        Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al vaciar el carrito' });
-                    });
-            });
+                .catch(function () {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al vaciar el carrito' });
+                });
         });
-    }
+    });
 
     // — Quantity input: clamp to [1, stock] on change —
     document.querySelectorAll('.quantity-input').forEach(function (input) {
@@ -657,7 +667,36 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // — Catalog pagination: same structure as admin (Prev, page indicator, Next, Ir) —
+    // — Catalog price-range filter validation —
+    (function initCatalogPriceFilter() {
+        var form      = document.getElementById('filter-form');
+        if (!form) return;
+        var minInput  = document.getElementById('min_price');
+        var maxInput  = document.getElementById('max_price');
+        var submitBtn = document.getElementById('filter-submit-btn');
+
+        function checkPriceRange() {
+            if (!minInput || !maxInput || !submitBtn) return;
+            var min       = parseFloat(minInput.value);
+            var max       = parseFloat(maxInput.value);
+            var minFilled = minInput.value.trim() !== '';
+            var maxFilled = maxInput.value.trim() !== '';
+            var invalid   = minFilled && maxFilled && !isNaN(min) && !isNaN(max) && min > max;
+            submitBtn.disabled = invalid;
+            if (invalid) {
+                submitBtn.setAttribute('title', 'El precio mínimo debe ser menor o igual al precio máximo.');
+            } else {
+                submitBtn.removeAttribute('title');
+            }
+        }
+
+        if (minInput) minInput.addEventListener('input',  checkPriceRange);
+        if (minInput) minInput.addEventListener('change', checkPriceRange);
+        if (maxInput) maxInput.addEventListener('input',  checkPriceRange);
+        if (maxInput) maxInput.addEventListener('change', checkPriceRange);
+        checkPriceRange();
+    })();
+
     (function initCatalogPagination() {
         var wrapper = document.querySelector('.pagination-wrapper .pagination');
         if (!wrapper) return;
@@ -716,439 +755,3 @@ function setUserMenuOpen(open) {
     if (panel) panel.setAttribute('aria-hidden', String(!open));
     if (trigger) trigger.setAttribute('aria-expanded', String(open));
 }
-
-// ============================================================
-// MY PROFILE PAGE (profile.blade.php)
-// ============================================================
-
-var profileOriginalValues = {};
-var profileEditableFields = ['name', 'first_surname', 'second_surname', 'gmail'];
-
-/** Saves current field values so the cancel action can restore them. */
-function profileSaveOriginals() {
-    profileEditableFields.forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) profileOriginalValues[id] = el.value;
-    });
-}
-
-/** Enables form fields and switches the header button to save mode. */
-function enableEdit() {
-    profileEditableFields.forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) el.removeAttribute('readonly');
-    });
-
-    var btn = document.getElementById('btnEditarPerfil');
-    if (btn) {
-        btn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
-        btn.className = 'btn btn-sm btn-primary';
-        btn.setAttribute('onclick', 'submitProfile()');
-    }
-
-    var actions = document.getElementById('accionesEdicion');
-    if (actions) actions.classList.remove('hidden');
-
-    // Focus the first editable field
-    var nameField = document.getElementById('name');
-    if (nameField) nameField.focus();
-}
-
-/** Restores original values and switches back to read-only mode. */
-function cancelEdit() {
-    profileEditableFields.forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) {
-            el.setAttribute('readonly', true);
-            el.value = profileOriginalValues[id];
-        }
-    });
-
-    var btn = document.getElementById('btnEditarPerfil');
-    if (btn) {
-        btn.innerHTML = '<i class="fas fa-pencil-alt"></i> Editar Perfil';
-        btn.className = 'btn btn-sm btn-outline-primary';
-        btn.setAttribute('onclick', 'enableEdit()');
-    }
-
-    var actions = document.getElementById('accionesEdicion');
-    if (actions) actions.classList.add('hidden');
-}
-
-/** Shows a confirmation dialog then submits the profile form via AJAX. */
-function submitProfile() {
-    var form = document.getElementById('formPerfil');
-    if (!form) return;
-
-    Swal.fire({
-        title: '¿Guardar cambios?',
-        text: 'Se actualizarán tus datos personales.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: '<i class="fas fa-save"></i> Sí, guardar',
-        cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
-        reverseButtons: true
-    }).then(function (result) {
-        if (!result.isConfirmed) return;
-        sendProfile(form);
-    });
-}
-
-/** Performs the profile fetch request (called after confirmation). */
-function sendProfile(form) {
-
-    fetch(form.action, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': getCsrfToken(),
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        },
-        body: new FormData(form)
-    })
-        .then(function (r) {
-            // 422: server-side validation errors
-            if (r.status === 422) {
-                return r.json().then(function (data) {
-                    var errors = data.errors || {};
-                    var firstMsg = Object.values(errors)[0];
-                    showProfileAlert(
-                        Array.isArray(firstMsg) ? firstMsg[0] : (firstMsg || 'Error de validación.'),
-                        'danger'
-                    );
-                    return Promise.reject('validation');
-                });
-            }
-            return r.json();
-        })
-        .then(function (res) {
-            if (res.success) {
-                // Persist the new values and lock fields back to read-only
-                profileEditableFields.forEach(function (id) {
-                    var el = document.getElementById(id);
-                    if (el) {
-                        profileOriginalValues[id] = el.value;
-                        el.setAttribute('readonly', true);
-                    }
-                });
-
-                // Update the hero section: full name, avatar initials and email
-                var name = (document.getElementById('name') || {}).value || '';
-                var fs = (document.getElementById('first_surname') || {}).value || '';
-                var ss = (document.getElementById('second_surname') || {}).value || '';
-                var gmail = (document.getElementById('gmail') || {}).value || '';
-
-                var heroName = document.getElementById('heroName');
-                var initials = document.getElementById('avatarInitials');
-                var heroEmail = document.querySelector('.profile-email');
-
-                if (heroName) heroName.textContent = [name, fs, ss].filter(Boolean).join(' ');
-                if (initials) initials.textContent = (name.charAt(0) + fs.charAt(0)).toUpperCase();
-                if (heroEmail) heroEmail.textContent = gmail;
-
-                // Update the header/navbar without reloading
-                var headerInitials = document.querySelector('.user-avatar-bubble');
-                var headerShortName = document.querySelector('.user-trigger-name');
-                var headerFullName = document.querySelector('.user-dropdown-fullname');
-                var headerEmail = document.querySelector('.user-dropdown-email');
-
-                if (headerInitials) headerInitials.textContent = (name.charAt(0) + fs.charAt(0)).toUpperCase();
-                if (headerShortName) headerShortName.textContent = name;
-                if (headerFullName) headerFullName.textContent = [name, fs].filter(Boolean).join(' ');
-                if (headerEmail) headerEmail.textContent = gmail;
-
-                // Reset the edit button to its default state
-                var btn = document.getElementById('btnEditarPerfil');
-                if (btn) {
-                    btn.innerHTML = '<i class="fas fa-pencil-alt"></i> Editar Perfil';
-                    btn.className = 'btn btn-sm btn-outline-primary';
-                    btn.setAttribute('onclick', 'enableEdit()');
-                }
-                var actions = document.getElementById('accionesEdicion');
-                if (actions) actions.classList.add('hidden');
-
-                showProfileAlert(res.message || 'Cambios guardados correctamente', 'success');
-            } else {
-                showProfileAlert(res.message || 'Error al guardar los cambios.', 'danger');
-            }
-        })
-        .catch(function (err) {
-            if (err === 'validation') return;
-            showProfileAlert('Error de conexión. Intenta de nuevo.', 'danger');
-        });
-} // end sendProfile
-
-/** Toggles password field visibility. */
-function togglePassword(inputId, btn) {
-    var input = document.getElementById(inputId);
-    var icon = btn ? btn.querySelector('i') : null;
-    if (!input) return;
-    if (input.type === 'password') {
-        input.type = 'text';
-        if (icon) icon.classList.replace('fa-eye', 'fa-eye-slash');
-    } else {
-        input.type = 'password';
-        if (icon) icon.classList.replace('fa-eye-slash', 'fa-eye');
-    }
-}
-
-/** Updates the password-strength bar based on length, uppercase, digits and symbols. */
-function updateStrength(val) {
-    var wrapper = document.getElementById('passStrength');
-    var fill = document.getElementById('strengthFill');
-    var label = document.getElementById('strengthLabel');
-
-    if (!wrapper) return;
-
-    if (!val) { wrapper.classList.add('hidden'); return; }
-    wrapper.classList.remove('hidden');
-
-    var score = 0;
-    if (val.length >= 8) score++;
-    if (/[A-Z]/.test(val)) score++;
-    if (/[0-9]/.test(val)) score++;
-    if (/[^A-Za-z0-9]/.test(val)) score++;
-
-    var levels = [
-        { w: '25%', c: '#d32f2f', t: 'Débil' },
-        { w: '50%', c: '#f57c00', t: 'Regular' },
-        { w: '75%', c: '#fbc02d', t: 'Buena' },
-        { w: '100%', c: '#2e7d32', t: 'Fuerte' }
-    ];
-    var lvl = levels[Math.max(score - 1, 0)];
-    if (fill) { fill.style.width = lvl.w; fill.style.background = lvl.c; }
-    if (label) { label.textContent = lvl.t; label.style.color = lvl.c; }
-}
-
-/** Shows the password-definition form for Google-only accounts. */
-function showPasswordForm() {
-    var form = document.getElementById('formPassword');
-    var cta = document.getElementById('googlePassCta');
-    if (form) form.classList.remove('hidden');
-    if (cta) cta.classList.add('hidden');
-}
-
-/** Hides the password-definition form and re-shows the CTA. */
-function hidePasswordForm() {
-    var form = document.getElementById('formPassword');
-    var cta = document.getElementById('googlePassCta');
-    if (form) form.classList.add('hidden');
-    if (cta) cta.classList.remove('hidden');
-}
-
-/** Shows a dismissible alert on the profile page; auto-closes after 5 seconds. */
-function showProfileAlert(msg, tipo) {
-    var alertEl = document.getElementById('profileAlert');
-    var textEl = document.getElementById('profileAlertText');
-    var iconEl = document.getElementById('profileAlertIcon');
-    if (!alertEl) return;
-
-    textEl.textContent = msg;
-    alertEl.className = 'alert ' + (tipo === 'danger' ? 'alert-danger' : 'alert-success');
-    iconEl.className = tipo === 'danger' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
-
-    alertEl.classList.remove('hidden');
-    alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    clearTimeout(alertEl.profileTimeout);
-    alertEl.profileTimeout = setTimeout(closeProfileAlert, 5000);
-}
-
-/** Dismisses the profile alert. */
-function closeProfileAlert() {
-    var alertEl = document.getElementById('profileAlert');
-    if (alertEl) alertEl.classList.add('hidden');
-}
-
-// ============================================================
-// PROFILE & USER-MENU INITIALIZATION
-// ============================================================
-
-document.addEventListener('DOMContentLoaded', function () {
-
-    // — User menu: replace the node to avoid duplicate listeners —
-    var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (userMenuTrigger) {
-        userMenuTrigger.replaceWith(userMenuTrigger.cloneNode(true));
-        userMenuTrigger = document.getElementById('user-menu-trigger');
-
-        userMenuTrigger.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var isOpen = document.getElementById('user-menu') &&
-                document.getElementById('user-menu').classList.contains('open');
-            setUserMenuOpen(!isOpen);
-        });
-    }
-
-    // — Close user menu on outside click —
-    document.addEventListener('click', function (e) {
-        var wrap = document.getElementById('user-menu');
-        if (wrap && !wrap.contains(e.target)) {
-            setUserMenuOpen(false);
-        }
-    });
-
-    // — Profile: save originals and initialise the password-strength meter —
-    if (document.getElementById('formPerfil')) {
-        profileSaveOriginals();
-
-        var passInput = document.getElementById('new_password');
-        if (passInput) {
-            passInput.addEventListener('input', function () {
-                updateStrength(this.value);
-            });
-        }
-
-        // Show flash messages passed from Blade via window.__profileFlash
-        var flash = window.__profileFlash || {};
-        if (flash.profile_updated) showProfileAlert('Cambios guardados correctamente.', 'success');
-        if (flash.password_updated) showProfileAlert('Contraseña actualizada correctamente.', 'success');
-        if (flash.password_defined) showProfileAlert('Contraseña definida. Ahora puedes iniciar sesión con correo y contraseña.', 'success');
-    }
-
-    // — Password form: confirm before submitting —
-    var formPassword = document.getElementById('formPassword');
-    if (formPassword) {
-        formPassword.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            var isGoogleOnly = !!document.getElementById('googlePassCta');
-            var confirmMsg = isGoogleOnly
-                ? 'Se definirá una contraseña para tu cuenta. Podrás iniciar sesión con correo y contraseña.'
-                : 'Se actualizará la contraseña de tu cuenta.';
-            var confirmBtn = isGoogleOnly
-                ? '<i class="fas fa-key"></i> Sí, definir'
-                : '<i class="fas fa-save"></i> Sí, actualizar';
-
-            Swal.fire({
-                title: '¿Confirmar cambio de contraseña?',
-                text: confirmMsg,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: confirmBtn,
-                cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
-                reverseButtons: true
-            }).then(function (result) {
-                if (!result.isConfirmed) return;
-                sendPassword(formPassword);
-            });
-        });
-    }
-
-}); // end DOMContentLoaded (profile & user-menu)
-
-// Performs the password fetch request (called after confirmation). 
-function sendPassword(form) {
-    var submitBtn = form.querySelector('button[type="submit"]');
-    // isGooglePass: true cuando el CTA de Google está presente (provider === 'google')
-    var isGooglePass = !!document.getElementById('googlePassCta');
-    var originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
-
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-    }
-
-    fetch(form.action, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': getCsrfToken(),
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        },
-        body: new FormData(form)
-    })
-        .then(function (r) {
-            if (r.status === 422) {
-                return r.json().then(function (data) {
-                    var errors = data.errors || {};
-                    var firstMsg = Object.values(errors)[0];
-                    showProfileAlert(
-                        Array.isArray(firstMsg) ? firstMsg[0] : (firstMsg || 'Error de validación.'),
-                        'danger'
-                    );
-                    return Promise.reject('validation');
-                });
-            }
-            return r.json();
-        })
-        .then(function (res) {
-            if (!res.success) {
-                showProfileAlert(res.message || 'Error al actualizar la contraseña.', 'danger');
-                return;
-            }
-
-            form.reset();
-            updateStrength('');
-
-            // If the provider changed from Google to local, we need to update the form and UI to reflect that a password is now set
-            if (res.provider_changed) {
-                // Hide the Google-only CTA and remove the cancel button (since now there are real password fields to edit, not just a definition form)
-                var cta = document.getElementById('googlePassCta');
-                var cancelBtn = form.querySelector('.btn-secondary');
-                if (cta) cta.classList.add('hidden');
-                if (cancelBtn) cancelBtn.remove();
-
-                // Update the badge in the hero section to reflect the new provider
-                var heroBadge = document.querySelector('.profile-badge');
-                if (heroBadge) {
-                    heroBadge.className = 'profile-badge profile-badge--local';
-                    heroBadge.innerHTML = '<i class="fas fa-envelope"></i> Cuenta local';
-                }
-
-                // Show the current password field if it doesn't exist (it won't exist en el caso de cuentas Google-only)
-                var fieldsDiv = form.querySelector('.profile-fields');
-                if (fieldsDiv && !document.getElementById('currentPassGroup')) {
-                    var currentGroup = document.createElement('div');
-                    currentGroup.id = 'currentPassGroup';
-                    currentGroup.className = 'form-group profile-field-full';
-                    currentGroup.innerHTML =
-                        '<label for="current_password">Contraseña Actual</label>' +
-                        '<div class="profile-input-pass">' +
-                        '<input type="password" id="current_password" name="current_password"' +
-                        ' class="form-control" placeholder="Tu contraseña actual"' +
-                        ' autocomplete="current-password">' +
-                        '<button type="button" class="profile-toggle-pass"' +
-                        ' onclick="togglePassword(\'current_password\', this)">' +
-                        '<i class="fas fa-eye"></i>' +
-                        '</button>' +
-                        '</div>';
-                    fieldsDiv.insertBefore(currentGroup, fieldsDiv.firstChild);
-                }
-
-                // Update the form title and submit button text/icon
-                var title = document.getElementById('passwordCardTitle');
-                var saveBtn = document.getElementById('btnSavePassword');
-                if (title) title.textContent = 'Cambiar Contraseña';
-                if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> Actualizar Contraseña';
-
-                // The form was originally hidden for Google-only accounts, so show it now that a password is set
-                form.classList.remove('hidden');
-            }
-
-            showProfileAlert(res.message || 'Contraseña actualizada correctamente.', 'success');
-        })
-        .catch(function (err) {
-            if (err === 'validation') return;
-            showProfileAlert('Error de conexión. Intenta de nuevo.', 'danger');
-        })
-        .finally(function () {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                // Restore original button HTML if we didn't switch from Google to local; otherwise update the text/icon to reflect the new state
-                var isNowLocal = !!document.getElementById('currentPassGroup');
-                submitBtn.innerHTML = '<i class="fas fa-save"></i> ' +
-                    (isNowLocal ? 'Actualizar Contraseña' : 'Guardar Contraseña');
-            }
-        });
-}
-
-// — Global exports —
-window.enableEdit = enableEdit;
-window.cancelEdit = cancelEdit;
-window.submitProfile = submitProfile;
-window.togglePassword = togglePassword;
-window.showPasswordForm = showPasswordForm;
-window.hidePasswordForm = hidePasswordForm;
-window.showProfileAlert = showProfileAlert;
-window.closeProfileAlert = closeProfileAlert;

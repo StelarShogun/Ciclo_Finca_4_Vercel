@@ -1,6 +1,10 @@
-@extends('clients.layouts.app')
+@extends('client.layouts.app')
 
 @section('title', 'Catálogo - Ciclo Finca 4')
+
+@push('styles')
+    @vite(['resources/css/client/clients-page.css'])
+@endpush
 
 @section('content')
 <div class="catalog-container">
@@ -247,37 +251,8 @@
         </div>
     </div>
 </div>
+@endsection
 
 @push('scripts')
-<script>
-(function() {
-    var form = document.getElementById('filter-form');
-    if (!form) return;
-    var minInput = document.getElementById('min_price');
-    var maxInput = document.getElementById('max_price');
-    var submitBtn = document.getElementById('filter-submit-btn');
-
-    function checkPriceRange() {
-        if (!minInput || !maxInput || !submitBtn) return;
-        var min = parseFloat(minInput.value);
-        var max = parseFloat(maxInput.value);
-        var minFilled = minInput.value.trim() !== '';
-        var maxFilled = maxInput.value.trim() !== '';
-        var invalid = minFilled && maxFilled && !isNaN(min) && !isNaN(max) && min > max;
-        submitBtn.disabled = invalid;
-        if (invalid) {
-            submitBtn.setAttribute('title', 'El precio mínimo debe ser menor o igual al precio máximo.');
-        } else {
-            submitBtn.removeAttribute('title');
-        }
-    }
-
-    if (minInput) minInput.addEventListener('input', checkPriceRange);
-    if (minInput) minInput.addEventListener('change', checkPriceRange);
-    if (maxInput) maxInput.addEventListener('input', checkPriceRange);
-    if (maxInput) maxInput.addEventListener('change', checkPriceRange);
-    checkPriceRange();
-})();
-</script>
+    @vite(['resources/js/client/clients-page.js'])
 @endpush
-@endsection
