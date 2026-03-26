@@ -64,6 +64,18 @@
     display: flex;
     gap: 15px;
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* Keep dashboard header buttons readable even with long labels */
+.dashboard-header .header-actions .btn {
+    flex-shrink: 0;
+    overflow: visible;
+    white-space: normal;
+    min-height: 44px;
+    line-height: 1.2;
+    justify-content: center;
 }
 
 /* ===== KPIs SECTION ===== */
@@ -510,6 +522,16 @@
     
     .welcome-section h1 {
         font-size: 2rem;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .dashboard-header .header-actions .btn {
+        width: 100%;
+        max-width: 320px;
     }
     
     .kpis-section {

@@ -26,6 +26,6 @@
     </div>
 
     <!-- App Scripts -->
-    @vite(['resources/js/app.js', 'resources/js/pages/admin.js'])
+    @vite(['resources/js/app.js', 'resources/js/admin/admin.js'])
 </body>
 </html>

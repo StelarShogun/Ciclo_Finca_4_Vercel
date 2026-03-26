@@ -35,32 +35,30 @@
 
 /* Botón Primario */
 .btn-primary {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--color-primary);
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
+    border: 2px solid var(--color-primary);
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
 }
 
 /* Botón Secundario */
 .btn-secondary {
-    background: rgba(255, 255, 255, 0.15);
+    background: #455a64;
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(10px);
+    border: 2px solid #455a64;
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.4);
+    background: #37474f;
+    border-color: #37474f;
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 15px rgba(69, 90, 100, 0.3);
 }
 
 /* Botón de Información (Azul) */
@@ -281,23 +279,33 @@
 
 /* Botones en headers con fondo verde */
 .usuarios-header .btn-primary,
-.usuarios-header .btn-secondary,
-.dashboard-header .btn-primary,
-.dashboard-header .btn-secondary {
-    background: rgba(255, 255, 255, 0.2);
+.dashboard-header .btn-primary {
+    background: var(--color-primary);
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
+    border: 2px solid var(--color-primary);
+}
+
+.usuarios-header .btn-secondary,
+.dashboard-header .btn-secondary {
+    background: var(--color-secondary);
+    color: white;
+    border: 2px solid var(--color-secondary);
 }
 
 .usuarios-header .btn-primary:hover,
-.usuarios-header .btn-secondary:hover,
-.dashboard-header .btn-primary:hover,
-.dashboard-header .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.5);
+.dashboard-header .btn-primary:hover {
+    background: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+}
+
+.usuarios-header .btn-secondary:hover,
+.dashboard-header .btn-secondary:hover {
+    background: #37474f;
+    border-color: #37474f;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(69, 90, 100, 0.3);
 }
 
 /* Botones en contextos normales */
@@ -328,21 +336,6 @@
 }
 
 /* ===== EFECTOS ESPECIALES ===== */
-
-.btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-}
-
-.btn:hover::before {
-    left: 100%;
-}
 
 /* ===== RESPONSIVE ===== */
 
