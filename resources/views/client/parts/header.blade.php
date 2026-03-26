@@ -5,8 +5,11 @@
             {{-- Logo --}}
             <div class="logo-section">
                 <a href="{{ route('clients.home') }}" class="logo-link">
-                    <img src="{{ asset('logo-navbar.svg') }}" alt="Ciclo Finca 4" class="logo-img"
+                    <img src="{{ asset('assets/images/brand/logo-mark.svg') }}" alt="" width="80" height="80" class="logo-img logo-img--mark"
                         data-fallback-src="{{ asset('favicon.svg') }}" onerror="this.src=this.dataset.fallbackSrc;">
+                    <span class="logo-wordmark">
+                        <span class="logo-text logo-text--dark">CICLO</span><span class="logo-text logo-text--green"> FINCA</span><span class="logo-text logo-text--dark"> 4</span>
+                    </span>
                 </a>
             </div>
 

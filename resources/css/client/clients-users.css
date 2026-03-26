@@ -346,6 +346,21 @@ body.guest-layout {
 }
 
 .logo-img  { height: 40px; width: auto; }
+.logo-img--mark {
+  height: 56px;
+  width: 56px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.logo-wordmark {
+  font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.2rem, 2.6vw, 1.55rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+.logo-text--dark { color: #212529; }
+.logo-text--green { color: var(--color-primary); }
 .logo-text { font-size: 1.5rem; }
 
 /* Main navigation */

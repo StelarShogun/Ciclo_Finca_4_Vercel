@@ -6,13 +6,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use App\Models\Client;
 use App\Rules\Recaptcha;
-use Laravel\Socialite\Facades\Socialite;
 
 class ClientUserController extends Controller
 {
@@ -433,7 +433,29 @@ public function show()
      */
     public function redirectToGoogle()
     {
-        return Socialite::driver('google')->redirect();
+        $googleConfig = config('services.google');
+
+        if (empty($googleConfig['client_id']) || empty($googleConfig['redirect'])) {
+            return redirect()->route('clients.home')->with(
+                'error',
+                'Falta configurar GOOGLE_CLIENT_ID o GOOGLE_REDIRECT_URI en el entorno.'
+            );
+        }
+
+        $state = Str::random(40);
+        session(['google_oauth_state' => $state]);
+
+        $query = http_build_query([
+            'client_id' => $googleConfig['client_id'],
+            'redirect_uri' => $googleConfig['redirect'],
+            'response_type' => 'code',
+            'scope' => 'openid email profile',
+            'state' => $state,
+            'access_type' => 'online',
+            'prompt' => 'select_account',
+        ]);
+
+        return redirect()->away('https://accounts.google.com/o/oauth2/v2/auth?' . $query);
     }
 
     /**
@@ -442,8 +464,55 @@ public function show()
     public function handleGoogleCallback(Request $request)
     {
         try {
-            $googleUser = Socialite::driver('google')->user();
-            $email = strtolower($googleUser->email);
+            if ($request->filled('error')) {
+                return redirect()->route('clients.home')->with(
+                    'error',
+                    'Google rechazó la autenticación: ' . $request->string('error')
+                );
+            }
+
+            $stateFromSession = (string) session()->pull('google_oauth_state', '');
+            $stateFromRequest = (string) $request->query('state', '');
+
+            if ($stateFromSession === '' || $stateFromRequest === '' || !hash_equals($stateFromSession, $stateFromRequest)) {
+                return redirect()->route('clients.home')->with('error', 'Sesión OAuth inválida. Inténtalo de nuevo.');
+            }
+
+            $authCode = (string) $request->query('code', '');
+            if ($authCode === '') {
+                return redirect()->route('clients.home')->with('error', 'No se recibió el código OAuth de Google.');
+            }
+
+            $googleConfig = config('services.google');
+            $tokenResponse = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+                'code' => $authCode,
+                'client_id' => $googleConfig['client_id'] ?? null,
+                'client_secret' => $googleConfig['client_secret'] ?? null,
+                'redirect_uri' => $googleConfig['redirect'] ?? null,
+                'grant_type' => 'authorization_code',
+            ]);
+
+            if (!$tokenResponse->successful()) {
+                throw new \RuntimeException('No se pudo obtener el access token de Google.');
+            }
+
+            $accessToken = (string) data_get($tokenResponse->json(), 'access_token', '');
+            if ($accessToken === '') {
+                throw new \RuntimeException('Google no devolvió access_token.');
+            }
+
+            $profileResponse = Http::withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
+            if (!$profileResponse->successful()) {
+                throw new \RuntimeException('No se pudo obtener el perfil de Google.');
+            }
+
+            $googleUser = $profileResponse->json();
+            $email = strtolower((string) data_get($googleUser, 'email', ''));
+            $fullName = trim((string) data_get($googleUser, 'name', ''));
+
+            if ($email === '') {
+                throw new \RuntimeException('Google no devolvió un correo electrónico.');
+            }
 
             $client = Client::where('gmail', $email)->first();
 
@@ -459,8 +528,8 @@ public function show()
                     $client->update(['email_verified' => true]);
                 }
             } else {
-                $partes = array_filter(explode(' ', trim($googleUser->name ?? ''), 3));
-                $nombre = $partes[0] ?? $googleUser->name ?? 'Usuario';
+                $partes = array_filter(explode(' ', $fullName, 3));
+                $nombre = $partes[0] ?? ($fullName !== '' ? $fullName : 'Usuario');
                 $apellido1 = $partes[1] ?? '-';
                 $apellido2 = $partes[2] ?? null;
                 $data = [

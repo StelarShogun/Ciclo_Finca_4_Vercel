@@ -7,21 +7,64 @@
 @endpush
 
 @section('content')
-<!-- Hero Section -->
-<section class="hero-section">
+<!-- Hero: imagen full-bleed + overlay; reemplaza public/assets/images/hero/hero-downhill.jpg por tu arte -->
+<section class="hero-section" aria-label="Bienvenida a Ciclo Finca 4">
+    <div class="hero-backdrop" aria-hidden="true">
+        <img src="{{ asset('assets/images/hero/hero-downhill.jpg') }}"
+             alt=""
+             width="1920"
+             height="1080"
+             fetchpriority="high"
+             decoding="async">
+    </div>
+    <div class="hero-overlay" aria-hidden="true"></div>
+
     <div class="hero-container">
         <div class="hero-content">
-            <h1 class="hero-title">Bienvenido a Ciclo Finca 4</h1>
-            <p class="hero-subtitle">Tu tienda especializada en bicicletas, componentes y accesorios para ciclismo</p>
+            <div class="hero-badge">
+                🚴 Ciclos listos para rodar
+            </div>
+
+            <h1 class="hero-title">
+                Tus bicicletas y componentes<br>
+                <strong>de calidad en tienda</strong>
+            </h1>
+
+            <div class="hero-divider"></div>
+
+            <p class="hero-subtitle">
+                Explora nuestro catálogo y deja tu solicitud para retiro en tienda con asesoría personalizada
+            </p>
+
+            <p class="hero-description">
+                Bicicletas, componentes y accesorios listos para que disfrutes del ciclismo con confianza.
+            </p>
+
             <div class="hero-actions">
-                <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-th"></i>
-                    Ver Catálogo
+                <a href="{{ route('clients.catalog') }}" class="btn btn-primary">
+                    <span>Ver Catálogo</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+
+                <a href="#benefits-section" class="btn btn-secondary">
+                    Conoce Nuestro Servicio
                 </a>
             </div>
-        </div>
-        <div class="hero-image">
-            <i class="fas fa-bicycle"></i>
+
+            <div class="hero-benefits">
+                <div class="benefit-item">
+                    <span class="benefit-icon">✓</span>
+                    <span class="benefit-text">Asesoría en tienda</span>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">✓</span>
+                    <span class="benefit-text">Preparación completa</span>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">✓</span>
+                    <span class="benefit-text">Retiro rápido</span>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -95,39 +138,68 @@
     </div>
 </section>
 
-<!-- Categories Section (hidden if no categories exist) -->
+<!-- Categories: carrusel de padres + chips de subcategorías -->
 @if($categories->count() > 0)
-<section class="categories-section">
+@php
+    $categoryIcons = config('category_icons', []);
+@endphp
+<section class="categories-section" aria-labelledby="categories-heading">
     <div class="container">
         <div class="section-header">
-            <h2 class="section-title">Explora por Categoría</h2>
-            <p class="section-subtitle">Encuentra lo que buscas fácilmente</p>
+            <h2 class="section-title" id="categories-heading">Explora por categoría</h2>
+            <p class="section-subtitle">Desliza para ver cada familia de productos y sus subcategorías</p>
         </div>
-        
-        <!-- Each card links to catalog pre-filtered by category -->
-        <div class="categories-grid">
-            @foreach($categories as $category)
-                <a href="{{ route('clients.catalog', ['category_id' => $category->category_id]) }}" class="category-card">
-                    <div class="category-icon">
-                        <i class="fas fa-bicycle"></i>
-                    </div>
-                    <h3 class="category-name">{{ $category->name }}</h3>
-                    @if($category->description)
-                        <p class="category-description">{{ Str::limit($category->description, 60) }}</p>
-                    @endif
-                    <span class="category-link">
-                        Ver productos
-                        <i class="fas fa-arrow-right"></i>
-                    </span>
-                </a>
-            @endforeach
+
+        <div class="categories-carousel-wrap" data-categories-carousel>
+            <button type="button" class="categories-carousel-btn categories-carousel-btn--prev" aria-label="Categoría anterior" data-carousel-prev>
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+            <div class="categories-carousel" role="region" aria-roledescription="carrusel" aria-label="Categorías de productos">
+                <div class="categories-carousel-track" data-carousel-track>
+                    @foreach($categories as $category)
+                        @php
+                            $iconKey = strtolower(trim($category->name));
+                            $faIcon = $categoryIcons[$iconKey] ?? 'bicycle';
+                        @endphp
+                        <article class="category-slide">
+                            <div class="category-slide-card">
+                                <a href="{{ route('clients.catalog', ['category_id' => $category->category_id]) }}" class="category-slide-main">
+                                    <div class="category-icon category-icon--lg" aria-hidden="true">
+                                        <i class="fas fa-{{ $faIcon }}"></i>
+                                    </div>
+                                    <h3 class="category-name">{{ $category->name }}</h3>
+                                    @if($category->description)
+                                        <p class="category-slide-tagline">{{ Str::limit($category->description, 72) }}</p>
+                                    @endif
+                                    <span class="category-slide-cta">
+                                        Ver todo en {{ $category->name }}
+                                        <i class="fas fa-arrow-right"></i>
+                                    </span>
+                                </a>
+                                @if($category->childCategories->isNotEmpty())
+                                    <div class="category-subchips" role="group" aria-label="Subcategorías de {{ $category->name }}">
+                                        @foreach($category->childCategories as $sub)
+                                            <a href="{{ route('clients.catalog', ['category_id' => $sub->category_id]) }}" class="category-subchip">
+                                                {{ $sub->name }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            </div>
+            <button type="button" class="categories-carousel-btn categories-carousel-btn--next" aria-label="Siguiente categoría" data-carousel-next>
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
         </div>
     </div>
 </section>
 @endif
 
 <!-- Marketing: Encargos y retiro en tienda -->
-<section class="benefits-section" aria-label="Beneficios del servicio">
+<section class="benefits-section" id="benefits-section" aria-label="Beneficios del servicio">
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Encargos listos para retirar</h2>

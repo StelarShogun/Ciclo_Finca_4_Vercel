@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80" role="img" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="cf4_ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2e7d32"/>
+      <stop offset="1" stop-color="#1b5e20"/>
+    </linearGradient>
+    <clipPath id="cf4_disc">
+      <circle cx="40" cy="40" r="25"/>
+    </clipPath>
+  </defs>
+
+  <!-- Anillo exterior -->
+  <circle cx="40" cy="40" r="36" fill="none" stroke="url(#cf4_ring)" stroke-width="3.2"/>
+
+  <!-- Cadena (puntos) -->
+  <g fill="#2e7d32" opacity="0.85">
+    <circle cx="40" cy="6" r="2.4"/>
+    <circle cx="58" cy="12" r="2.4"/>
+    <circle cx="68" cy="28" r="2.4"/>
+    <circle cx="64" cy="46" r="2.4"/>
+    <circle cx="50" cy="62" r="2.4"/>
+    <circle cx="30" cy="66" r="2.4"/>
+    <circle cx="14" cy="56" r="2.4"/>
+    <circle cx="8" cy="38" r="2.4"/>
+    <circle cx="12" cy="18" r="2.4"/>
+    <circle cx="26" cy="8" r="2.4"/>
+  </g>
+
+  <!-- Disco interior -->
+  <circle cx="40" cy="40" r="25" fill="#ffffff" stroke="#1b5e20" stroke-width="1.4"/>
+
+  <g clip-path="url(#cf4_disc)">
+    <!-- Cielo -->
+    <rect x="15" y="15" width="50" height="50" fill="#f1f8f4"/>
+    <!-- Montañas (referencia plantilla MTB) -->
+    <path fill="#a5d6a7" d="M15 48 L22 36 L28 42 L36 32 L44 40 L52 30 L65 48 L65 65 L15 65 Z"/>
+    <path fill="#81c784" d="M15 52 L26 42 L34 48 L44 38 L55 48 L65 52 L65 65 L15 65 Z" opacity="0.5"/>
+    <!-- Suelo -->
+    <rect x="15" y="54" width="50" height="12" fill="#eceff1"/>
+
+    <!-- Bicicleta: geometría clara + ruedas con llanta -->
+    <g stroke="#1b5e20" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <circle cx="28" cy="50" r="6.5"/>
+      <circle cx="52" cy="50" r="6.5"/>
+      <circle cx="28" cy="50" r="3.8" stroke="#c8e6c9" stroke-width="0.9" opacity="0.55"/>
+      <circle cx="52" cy="50" r="3.8" stroke="#c8e6c9" stroke-width="0.9" opacity="0.55"/>
+      <path d="M28 50 L36 42 L48 34 L52 50"/>
+      <path d="M36 42 L40 34 L48 34"/>
+      <path d="M40 34 L44 28 L48 34"/>
+      <path d="M44 28 L50 30"/>
+    </g>
+
+    <!-- Ciclista: casco + torso (silueta encima del cuadro) -->
+    <g fill="#1b5e20">
+      <ellipse cx="43" cy="25" rx="4.2" ry="4.8"/>
+      <path d="M40 29 Q37 34 36 38 Q35 41 37 43 L39 45 L41 44 Q43 38 44 33 Q44 30 43 28 Z"/>
+      <path d="M44 32 L48 34 L49 37 L46 38 Z"/>
+    </g>
+  </g>
+</svg>

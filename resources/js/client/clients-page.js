@@ -733,6 +733,44 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     })();
 
+    // — Home: carrusel de categorías (padres + chips de subcategorías) —
+    (function initCategoriesCarousel() {
+        var wrap = document.querySelector('[data-categories-carousel]');
+        if (!wrap) return;
+        var track = wrap.querySelector('[data-carousel-track]');
+        var prev = wrap.querySelector('[data-carousel-prev]');
+        var next = wrap.querySelector('[data-carousel-next]');
+        if (!track || !prev || !next) return;
+
+        function getStep() {
+            var first = track.querySelector('.category-slide');
+            if (!first) return Math.max(120, track.clientWidth * 0.85);
+            var gap = parseInt(getComputedStyle(track).gap, 10);
+            if (isNaN(gap)) gap = 18;
+            return first.getBoundingClientRect().width + gap;
+        }
+
+        function updateButtons() {
+            var maxScroll = track.scrollWidth - track.clientWidth - 2;
+            prev.disabled = track.scrollLeft <= 2;
+            next.disabled = track.scrollLeft >= maxScroll;
+        }
+
+        prev.addEventListener('click', function () {
+            track.scrollBy({ left: -getStep(), behavior: 'smooth' });
+        });
+        next.addEventListener('click', function () {
+            track.scrollBy({ left: getStep(), behavior: 'smooth' });
+        });
+        track.addEventListener('scroll', function () {
+            window.requestAnimationFrame(updateButtons);
+        });
+        window.addEventListener('resize', function () {
+            updateButtons();
+        });
+        updateButtons();
+    })();
+
 }); // end DOMContentLoaded
 
 // ============================================================

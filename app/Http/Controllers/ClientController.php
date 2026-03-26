@@ -25,6 +25,9 @@ class ClientController extends Controller
             ->get();
 
         $categories = Category::whereNull('parent_category_id')
+            ->with(['childCategories' => function ($q) {
+                $q->orderBy('name');
+            }])
             ->orderBy('name')
             ->get();
 
