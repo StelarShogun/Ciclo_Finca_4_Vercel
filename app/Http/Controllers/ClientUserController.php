@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use Illuminate\Support\Carbon;
 use App\Models\Client;
 use App\Rules\Recaptcha;
 use Laravel\Socialite\Facades\Socialite;
@@ -161,130 +160,6 @@ public function show()
         return view('client.login');
     }
 
-    // Solicitud de enlace para restablecer contraseña (clientes).
-    public function showRecoveryForm()
-    {
-        return view('client.password_recovery');
-    }
-
-    // Envía el correo con el enlace de recuperación (si el Gmail existe).
-    public function sendRecoveryLink(Request $request)
-    {
-        $rules = [
-            'gmail' => ['required', 'email', 'regex:/^[^@]+@gmail\.com$/i'],
-        ];
-        if (config('recaptcha.site_key')) {
-            $rules['g-recaptcha-response'] = ['required', new Recaptcha()];
-        }
-
-        $request->validate($rules, [
-            'gmail.required' => 'El correo Gmail es obligatorio.',
-            'gmail.email'    => 'Debe ingresar un correo electrónico válido.',
-            'gmail.regex'    => 'Solo se aceptan correos de Gmail (@gmail.com).',
-        ]);
-
-        $gmail  = strtolower($request->gmail);
-        $client = Client::where('gmail', $gmail)->first();
-
-        if ($client && $client->active !== false) {
-            $plain = Str::random(64);
-            DB::table('client_password_reset_tokens')->where('email', $gmail)->delete();
-            DB::table('client_password_reset_tokens')->insert([
-                'email'      => $gmail,
-                'token'      => Hash::make($plain),
-                'created_at' => now(),
-            ]);
-
-            $url = url(route('clients.recovery.reset', [
-                'token' => $plain,
-                'gmail' => $gmail,
-            ], false));
-
-            try {
-                Mail::raw(
-                    "Hola {$client->name},\n\nPara restablecer tu contraseña, abre este enlace (válido 60 minutos):\n\n{$url}\n\nSi no solicitaste el cambio, ignora este correo.",
-                    function ($message) use ($gmail) {
-                        $message->to($gmail)->subject('Recuperar contraseña - Ciclo Finca');
-                    }
-                );
-            } catch (\Exception $e) {
-                Log::warning('Recovery mail failed: ' . $e->getMessage());
-            }
-        }
-
-        return back()->with('recovery_sent', true);
-    }
-
-    // Formulario nueva contraseña (desde el enlace del correo).
-    public function showResetForm(Request $request, string $token)
-    {
-        $gmail = strtolower((string) $request->query('gmail', ''));
-        if ($gmail === '' || ! $this->clientRecoveryTokenValid($gmail, $token)) {
-            return redirect()->route('clients.recovery.form')
-                ->withErrors(['gmail' => 'El enlace no es válido o ha expirado. Solicita uno nuevo.']);
-        }
-
-        return view('client.password_reset', compact('token', 'gmail'));
-    }
-
-    // Guarda la nueva contraseña y elimina el token.
-    public function resetPassword(Request $request)
-    {
-        $request->validate(
-            [
-                'token'                 => ['required', 'string'],
-                'gmail'                 => ['required', 'email', 'regex:/^[^@]+@gmail\.com$/i'],
-                'password'              => ['required', 'string', 'min:8', 'confirmed'],
-            ],
-            [
-                'gmail.required'     => 'El correo Gmail es obligatorio.',
-                'gmail.email'        => 'Debe ingresar un correo electrónico válido.',
-                'gmail.regex'        => 'Solo se aceptan correos de Gmail (@gmail.com).',
-                'password.required'  => 'La contraseña es obligatoria.',
-                'password.min'       => 'La contraseña debe tener al menos 8 caracteres.',
-                'password.confirmed' => 'Las contraseñas no coinciden.',
-            ]
-        );
-
-        $gmail = strtolower($request->gmail);
-        if (! $this->clientRecoveryTokenValid($gmail, $request->token)) {
-            return redirect()->route('clients.recovery.form')
-                ->withErrors(['gmail' => 'El enlace no es válido o ha expirado. Solicita uno nuevo.']);
-        }
-
-        $update = [
-            'password'   => Hash::make($request->password),
-            'updated_at' => now(),
-        ];
-        if (Schema::hasColumn((new Client())->getTable(), 'provider')) {
-            $update['provider'] = 'local';
-        }
-
-        DB::table('client_table')->where('gmail', $gmail)->update($update);
-        DB::table('client_password_reset_tokens')->where('email', $gmail)->delete();
-
-        return redirect()->route('login.show')
-            ->with('status', 'Contraseña actualizada. Ya puedes iniciar sesión.');
-    }
-
-    private function clientRecoveryTokenValid(string $gmail, string $token): bool
-    {
-        if (! Schema::hasTable('client_password_reset_tokens')) {
-            return false;
-        }
-
-        $row = DB::table('client_password_reset_tokens')->where('email', $gmail)->first();
-        if (! $row) {
-            return false;
-        }
-
-        if (! Hash::check($token, $row->token)) {
-            return false;
-        }
-
-        return Carbon::parse($row->created_at)->addMinutes(60)->isFuture();
-    }
-
     // Process a login attempt.
     public function login(Request $request)
     {
@@ -325,6 +200,26 @@ public function show()
             // Bloquear acceso si el correo no ha sido verificado (solo cuando la columna existe y es false)
             if ($client->email_verified === false) {
                 Auth::guard('clients')->logout();
+
+                // Generar y enviar código de verificación automáticamente
+                $code    = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $expires = now()->addMinutes(10);
+                $client->update([
+                    'verification_code'            => $code,
+                    'verification_code_expires_at' => $expires,
+                ]);
+                try {
+                    Mail::raw(
+                        "Hola {$client->name},\n\nTu código de verificación es: {$code}\n\nExpira en 10 minutos.",
+                        function ($message) use ($client) {
+                            $message->to($client->gmail)
+                                    ->subject('Código de verificación - Ciclo Finca');
+                        }
+                    );
+                } catch (\Exception $e) {
+                    // El correo falló pero igual redirigimos; el usuario puede reenviar
+                }
+
                 session([
                     'pending_client_id' => $client->user_id,
                     'pending_gmail'     => $client->gmail,
@@ -437,7 +332,7 @@ public function show()
                 }
             );
         } catch (\Exception $e) {
-            $mailWarning = 'No se pudo enviar el correo automáticamente. Usa el código: ' . $code;
+            $mailWarning = 'No se pudo enviar el correo automáticamente. Por favor, usa la opción «Reenviar código» para intentarlo de nuevo.';
         }
 
         return redirect()->route('clients.verify.form')
@@ -502,15 +397,21 @@ public function show()
     }
 
     // Resend verification code
-    public function resendCode()
+    public function resendCode(Request $request)
     {
         $clientId = session('pending_client_id');
         if (!$clientId) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Sesión expirada.'], 422);
+            }
             return redirect()->route('clients.register.form');
         }
 
         $client = Client::find($clientId);
         if (!$client) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Cliente no encontrado.'], 422);
+            }
             return redirect()->route('clients.register.form');
         }
 
@@ -532,7 +433,11 @@ public function show()
                 }
             );
         } catch (\Exception $e) {
-            $mailWarning = 'No se pudo enviar el correo. Usa el código: ' . $code;
+            $mailWarning = 'No se pudo enviar el correo. Por favor, intenta reenviar el código nuevamente.';
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Código reenviado correctamente.']);
         }
 
         return redirect()->route('clients.verify.form')
@@ -551,6 +456,156 @@ public function show()
         return redirect()
             ->route('login.show')
             ->with('status', 'Sesión cerrada correctamente.');
+    }
+
+    // Show the password-recovery form.
+    public function showRecoveryForm()
+    {
+        return view('client.recovery');
+    }
+
+    // Recovery step 1: validate form, send verification code, store pending password in session.
+    public function resetPassword(Request $request)
+    {
+        $request->validate(
+            [
+                'gmail'                     => 'required|email',
+                'new_password'              => 'required|string|min:8|confirmed',
+                'new_password_confirmation' => 'required|string',
+            ],
+            [
+                'gmail.required'                     => 'El correo es obligatorio.',
+                'gmail.email'                        => 'Ingresa un correo válido.',
+                'new_password.required'              => 'La nueva contraseña es obligatoria.',
+                'new_password.min'                   => 'La contraseña debe tener al menos 8 caracteres.',
+                'new_password.confirmed'             => 'Las contraseñas no coinciden.',
+                'new_password_confirmation.required' => 'Debes confirmar la nueva contraseña.',
+            ]
+        );
+
+        $client = Client::where('gmail', strtolower($request->gmail))->first();
+
+        // Always respond with the same message to avoid email enumeration.
+        // If the client doesn't exist, redirect to the verify form anyway.
+        if (!$client) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success'            => true,
+                    'needs_verification' => true,
+                    'redirect'           => route('clients.recovery.verify.form'),
+                    'message'            => 'Si el correo existe, se ha enviado un código de verificación.',
+                ]);
+            }
+            return redirect()->route('clients.recovery.verify.form');
+        }
+
+        $code    = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $expires = now()->addMinutes(15);
+
+        // Store pending password hash in session — only written to DB after code is verified.
+        session([
+            'pending_recovery_id'       => $client->user_id,
+            'pending_recovery_gmail'    => $client->gmail,
+            'pending_recovery_password' => Hash::make($request->new_password),
+        ]);
+
+        DB::table('client_table')
+            ->where('user_id', $client->user_id)
+            ->update([
+                'verification_code'            => $code,
+                'verification_code_expires_at' => $expires,
+            ]);
+
+        try {
+            Mail::raw(
+                "Hola {$client->name},\n\nTu código de verificación para recuperar tu contraseña es: {$code}\n\nExpira en 15 minutos.\n\nSi no solicitaste este cambio, ignora este correo.",
+                function ($message) use ($client) {
+                    $message->to($client->gmail)
+                            ->subject('Código de recuperación de contraseña - Ciclo Finca 4');
+                }
+            );
+        } catch (\Exception $e) {
+            Log::error('Recovery mail failed: ' . $e->getMessage());
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success'            => true,
+                'needs_verification' => true,
+                'redirect'           => route('clients.recovery.verify.form'),
+                'message'            => 'Se ha enviado un código de verificación a tu correo.',
+            ]);
+        }
+
+        return redirect()->route('clients.recovery.verify.form')
+            ->with('pending_gmail', $client->gmail);
+    }
+
+    // Recovery step 2: show code-entry form.
+    public function showRecoveryVerifyForm()
+    {
+        if (!session('pending_recovery_id')) {
+            return redirect()->route('clients.recovery.form');
+        }
+        return view('client.verify_gmail_code');
+    }
+
+    // Recovery step 3: verify code and write the new password to DB.
+    public function verifyRecoveryAndReset(Request $request)
+    {
+        $request->validate(
+            ['verification_code' => 'required|digits:6'],
+            [
+                'verification_code.required' => 'El código es obligatorio.',
+                'verification_code.digits'   => 'El código debe tener exactamente 6 dígitos.',
+            ]
+        );
+
+        $clientId = session('pending_recovery_id');
+        if (!$clientId) {
+            $msg = 'Sesión expirada. Vuelve a intentar la recuperación.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg]);
+            }
+            return redirect()->route('clients.recovery.form')->withErrors(['verification_code' => $msg]);
+        }
+
+        $client = Client::find($clientId);
+        if (!$client || $client->verification_code !== $request->verification_code) {
+            $msg = 'Código incorrecto. Inténtalo de nuevo.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg]);
+            }
+            return back()->withErrors(['verification_code' => $msg]);
+        }
+
+        if (now()->isAfter($client->verification_code_expires_at)) {
+            $msg = 'El código ha expirado. Vuelve a solicitar la recuperación.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg]);
+            }
+            return redirect()->route('clients.recovery.form')->withErrors(['verification_code' => $msg]);
+        }
+
+        $hashedPassword = session('pending_recovery_password');
+
+        DB::table('client_table')
+            ->where('user_id', $client->user_id)
+            ->update([
+                'password'                     => $hashedPassword,
+                'provider'                     => 'local',
+                'verification_code'            => null,
+                'verification_code_expires_at' => null,
+                'updated_at'                   => now(),
+            ]);
+
+        session()->forget(['pending_recovery_id', 'pending_recovery_gmail', 'pending_recovery_password']);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Contraseña actualizada correctamente.']);
+        }
+
+        return redirect()->route('login.show')->with('status', 'Contraseña actualizada. Ya puedes iniciar sesión.');
     }
 
     /**

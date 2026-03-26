@@ -3,6 +3,10 @@
 @section('hideNav')
 @endsection
 
+@push('styles')
+    @vite(['resources/css/client/clients-users.css'])
+@endpush
+
 @section('title', 'Iniciar Sesión')
 
 @section('content')
@@ -23,29 +27,40 @@
                 La sesión expiró o el token no es válido. Intenta iniciar sesión de nuevo.
             </div>
         @endif
-        @if(session('status'))
-            <div class="alert alert-success mb-3" role="alert">{{ session('status') }}</div>
-        @endif
-        <h2 class="text-center mb-2">Bienvenido de nuevo</h2>
-        <p class="login-subtitle text-center mb-4">Ingresa a tu cuenta para continuar</p>
 
-        <form id="public-login-form" method="POST" action="{{ route('login') }}">
+        @if (session('status'))
+            <div class="alert alert-success mb-3" role="alert">
+                <i class="fas fa-check-circle"></i>
+                {{ session('status') }}
+            </div>
+        @endif
+
+        <h2>Bienvenido de nuevo</h2>
+        <p class="login-subtitle">Ingresa a tu cuenta para continuar</p>
+
+        {{-- URL de registro disponible para el JS via data attribute --}}
+        <form
+            id="public-login-form"
+            method="POST"
+            action="{{ route('login') }}"
+            data-register-url="{{ route('clients.register.form') }}"
+        >
             @csrf
-            <div class="form-group mb-3">
+            <div class="form-group">
                 <label for="login-email" class="login-field-label">
                     <i class="fas fa-envelope login-field-icon" aria-hidden="true"></i>
                     Correo Electrónico
                 </label>
                 <input type="email" id="login-email" name="gmail" class="form-control" required placeholder="ejemplo@correo.com">
             </div>
-            <div class="form-group mb-3 position-relative">
+            <div class="form-group">
                 <label for="login-password" class="login-field-label">
                     <i class="fas fa-lock login-field-icon" aria-hidden="true"></i>
                     Contraseña
                 </label>
-                <div style="position:relative;">
-                    <input type="password" id="login-password" name="password" class="form-control" required placeholder="Ingresa tu contraseña" style="padding-right:40px;">
-                    <button type="button" id="toggle-password" style="position:absolute;top:50%;right:8px;transform:translateY(-50%);background:none;border:none;cursor:pointer;">
+                <div class="login-pass-wrap">
+                    <input type="password" id="login-password" name="password" class="form-control" required placeholder="Ingresa tu contraseña">
+                    <button type="button" id="toggle-password" class="login-pass-toggle">
                         <i class="fas fa-eye" id="eye-icon"></i>
                     </button>
                 </div>
@@ -55,25 +70,26 @@
                     </a>
                 </div>
             </div>
-            <div class="form-group mb-3">
+            <div class="form-group">
                 <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
             </div>
-            <div class="form-group mb-3">
+            <div class="form-group">
                 <label class="checkbox-label">
                     <input type="checkbox" name="remember" id="remember">
                     <span>Recordarme</span>
                 </label>
             </div>
-            <button type="submit" class="btn btn-primary btn-block btn-lg mt-2" id="login-submit-btn">
+            <button type="submit" class="btn btn-primary btn-login-submit" id="login-submit-btn">
                 <i class="fas fa-sign-in-alt"></i>
                 <span>Iniciar Sesión</span>
-                <span class="btn-loading hidden" id="login-loading">Iniciando...</span>
             </button>
         </form>
-        <div class="login-divider my-4 text-center">
+
+        <div class="login-divider">
             <span>o</span>
         </div>
-        <div class="oauth-buttons text-center mb-3">
+
+        <div class="oauth-buttons">
             <a href="{{ route('auth.google') }}" class="oauth-btn google-btn">
                 <span class="google-g-icon" aria-hidden="true">G</span>
                 <span class="google-text">
@@ -89,7 +105,8 @@
                 </span>
             </a>
         </div>
-        <div class="login-footer text-center">
+
+        <div class="login-footer">
             <p class="login-footer-text">¿No tienes una cuenta?</p>
             <a href="{{ route('clients.register.form') }}" class="login-register-btn">
                 <i class="fas fa-user-plus" aria-hidden="true"></i>
@@ -100,10 +117,7 @@
 </div>
 @endsection
 
-@push('styles')
-    @vite(['resources/css/client/clients-users.css'])
-@endpush
-
 @push('scripts')
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @vite(['resources/js/client/clients-users.js'])
 @endpush

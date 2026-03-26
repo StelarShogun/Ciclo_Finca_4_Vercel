@@ -20,7 +20,6 @@ function updateCartCount(count) {
 
     if (cartCountEl) {
         cartCountEl.textContent = count;
-        // Hide the badge when the cart is empty
         cartCountEl.style.display = count > 0 ? 'flex' : 'none';
     }
     if (cartLinkEl) {
@@ -75,33 +74,30 @@ function addToCart(productId, quantity) {
 // ADD-TO-CART MODAL (catalog & home)
 // ============================================================
 
-/** Product currently being added via the quantity modal. */
 var currentProductId = null;
 
-/** Populates and opens the quantity modal from a product card button. */
 function openAddToCartModal(btn) {
     currentProductId = btn.dataset.productId;
-    var productName = btn.dataset.productName;
+    var productName  = btn.dataset.productName;
     var productPrice = parseFloat(btn.dataset.productPrice);
     var productStock = parseInt(btn.dataset.productStock, 10);
 
-    var nameEl = document.getElementById('preview-name');
+    var nameEl  = document.getElementById('preview-name');
     var priceEl = document.getElementById('preview-price');
     var stockEl = document.getElementById('preview-stock');
-    var qtyEl = document.getElementById('cart-quantity');
+    var qtyEl   = document.getElementById('cart-quantity');
 
-    if (nameEl) nameEl.textContent = productName;
+    if (nameEl)  nameEl.textContent  = productName;
     if (priceEl) priceEl.textContent = '₡' + productPrice.toLocaleString('es-CR');
     if (stockEl) stockEl.textContent = 'Stock disponible: ' + productStock;
     if (qtyEl) {
-        qtyEl.max = productStock;
+        qtyEl.max   = productStock;
         qtyEl.value = 1;
     }
 
-    // Pull the product image from the nearest card
-    var productCard = btn.closest('.product-card');
+    var productCard  = btn.closest('.product-card');
     var productImage = productCard ? productCard.querySelector('.product-image img') : null;
-    var previewImg = document.getElementById('preview-image');
+    var previewImg   = document.getElementById('preview-image');
     if (previewImg && productImage) {
         previewImg.src = productImage.src;
     }
@@ -124,10 +120,54 @@ function closeModal(id) {
 }
 
 // ============================================================
+// TOGGLE PASSWORD VISIBILITY
+// ============================================================
+
+function togglePass(inputId, iconId) {
+    var input = document.getElementById(inputId);
+    var icon  = document.getElementById(iconId);
+    if (!input) return;
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+    } else {
+        input.type = 'password';
+        if (icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+    }
+}
+
+// ============================================================
+// FIELD MESSAGE UTILITIES (register & recovery forms)
+// ============================================================
+
+/** Shows a validation message below an input field. */
+function showMsg(msgId, type, text) {
+    var el = document.getElementById(msgId);
+    if (!el) return;
+    el.className = 'field-msg ' + type;
+    el.innerHTML = (type === 'error')
+        ? '<i class="fas fa-exclamation-circle"></i><span>' + text + '</span>'
+        : '<i class="fas fa-check-circle"></i><span>' + text + '</span>';
+}
+
+/** Clears a field-level message. */
+function clearMsg(msgId) {
+    var el = document.getElementById(msgId);
+    if (el) { el.className = 'field-msg'; el.innerHTML = ''; }
+}
+
+/** Adds or removes input-error / input-ok CSS class from an input. */
+function setInputState(input, state) {
+    if (!input) return;
+    input.classList.remove('input-error', 'input-ok');
+    if (state) input.classList.add(state);
+}
+
+// ============================================================
 // CART PAGE (/cart)
 // ============================================================
 
-/** PUTs a quantity change for a single cart item, then updates DOM (no reload). */
 function updateCartQuantity(productId, quantity) {
     fetch('/cart/update', {
         method: 'PUT',
@@ -142,27 +182,23 @@ function updateCartQuantity(productId, quantity) {
         .then(function (res) { return res.json().catch(function () { return {}; }); })
         .then(function (data) {
             if (data.success) {
-                // Update totals without a full page reload.
                 var totalFormatted = (data.cart_total != null)
                     ? ('₡' + Number(data.cart_total).toLocaleString('es-CR'))
                     : '₡0';
 
                 var subtotalEl = document.getElementById('cart-subtotal');
-                var totalEl = document.getElementById('cart-total-amount');
+                var totalEl    = document.getElementById('cart-total-amount');
                 if (subtotalEl) subtotalEl.textContent = totalFormatted;
-                if (totalEl) totalEl.textContent = totalFormatted;
+                if (totalEl)    totalEl.textContent    = totalFormatted;
 
                 updateCartCount(data.cart_count || 0);
 
-                // Update the affected line subtotal, using unit price from the rendered UI.
                 var cartItem = document.querySelector('.cart-item[data-product-id="' + productId + '"]');
                 if (cartItem) {
-                    var unitPriceEl = cartItem.querySelector('.item-price');
+                    var unitPriceEl   = cartItem.querySelector('.item-price');
                     var unitPriceText = unitPriceEl ? unitPriceEl.textContent : '';
-                    // Matches "₡1.234 c/u" => returns 1234
-                    var unitPrice = parseInt(unitPriceText.replace(/[^\d]/g, ''), 10) || 0;
-
-                    var newSubtotal = unitPrice * quantity;
+                    var unitPrice     = parseInt(unitPriceText.replace(/[^\d]/g, ''), 10) || 0;
+                    var newSubtotal   = unitPrice * quantity;
                     var lineSubtotalEl = cartItem.querySelector('.subtotal-amount');
                     if (lineSubtotalEl) {
                         lineSubtotalEl.textContent = '₡' + newSubtotal.toLocaleString('es-CR');
@@ -177,7 +213,6 @@ function updateCartQuantity(productId, quantity) {
         });
 }
 
-/** Replaces the cart card with an empty-state message (no reload). */
 function showCartEmptyState() {
     var card = document.querySelector('.cart-page-card');
     if (!card) return;
@@ -202,14 +237,14 @@ function showCartEmptyState() {
 // ============================================================
 
 function closeUserDropdown() {
-    var userDropdown = document.getElementById('user-dropdown');
+    var userDropdown   = document.getElementById('user-dropdown');
     var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (userDropdown) userDropdown.classList.remove('active');
+    if (userDropdown)    userDropdown.classList.remove('active');
     if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'false');
 }
 
 function toggleUserDropdown() {
-    var userDropdown = document.getElementById('user-dropdown');
+    var userDropdown    = document.getElementById('user-dropdown');
     var userMenuTrigger = document.getElementById('user-menu-trigger');
     if (!userDropdown) return;
 
@@ -220,6 +255,16 @@ function toggleUserDropdown() {
     } else {
         closeUserDropdown();
     }
+}
+
+function setUserMenuOpen(open) {
+    var wrap    = document.getElementById('user-menu');
+    var panel   = document.getElementById('user-dropdown');
+    var trigger = document.getElementById('user-menu-trigger');
+    if (!wrap) return;
+    wrap.classList.toggle('open', open);
+    if (panel)   panel.setAttribute('aria-hidden', String(!open));
+    if (trigger) trigger.setAttribute('aria-expanded', String(open));
 }
 
 // ============================================================
@@ -238,10 +283,10 @@ function closeLoginModal() {
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    // — Initialise cart counter from the data attribute —
-    var cartLinkEl = document.getElementById('cart-link');
+    // — Initialise cart counter —
+    var cartLinkEl  = document.getElementById('cart-link');
     var cartGuestEl = document.getElementById('cart-guest');
-    var cartRef = cartLinkEl || cartGuestEl;
+    var cartRef     = cartLinkEl || cartGuestEl;
     if (cartRef) {
         var initialCount = parseInt(cartRef.getAttribute('data-cart-count') || '0', 10);
         updateCartCount(initialCount);
@@ -271,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // — Close user dropdown on outside click —
     document.addEventListener('click', function (e) {
-        var userMenu = document.getElementById('user-menu');
+        var userMenu     = document.getElementById('user-menu');
         var userDropdown = document.getElementById('user-dropdown');
         if (!userDropdown || !userDropdown.classList.contains('active')) return;
         if (userMenu && userMenu.contains(e.target)) return;
@@ -292,6 +337,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var loginModalOverlay = document.getElementById('login-modal-overlay');
     if (loginModalOverlay) loginModalOverlay.addEventListener('click', closeLoginModal);
 
+    // — Toggle password (login page) —
+    var togglePasswordBtn = document.getElementById('toggle-password');
+    if (togglePasswordBtn) {
+        togglePasswordBtn.addEventListener('click', function () {
+            togglePass('login-password', 'eye-icon');
+        });
+    }
+
     // — Login form submission via AJAX —
     var publicLoginForm = document.getElementById('public-login-form');
     if (publicLoginForm) {
@@ -299,20 +352,18 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
 
             var csrfToken = getCsrfToken();
-            // Redirect to login if the CSRF token has expired
             if (!csrfToken) {
                 window.location.href = '/login?session_expired=1';
                 return;
             }
 
-            var formData = new FormData(this);
-            var submitBtn = document.getElementById('login-submit-btn');
+            var formData    = new FormData(this);
+            var submitBtn   = document.getElementById('login-submit-btn');
             var loadingSpan = document.getElementById('login-loading');
-            var submitSpan = submitBtn ? submitBtn.querySelector('span:not(.btn-loading)') : null;
+            var submitSpan  = submitBtn ? submitBtn.querySelector('span:not(.btn-loading)') : null;
 
-            // Show spinner while waiting for the response
-            if (submitBtn) submitBtn.disabled = true;
-            if (submitSpan) submitSpan.classList.add('hidden');
+            if (submitBtn)   submitBtn.disabled = true;
+            if (submitSpan)  submitSpan.classList.add('hidden');
             if (loadingSpan) loadingSpan.classList.remove('hidden');
 
             fetch('/login', {
@@ -325,7 +376,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
                 .then(function (response) {
-                    // 419 means expired session/CSRF token
                     if (response.status === 419) {
                         window.location.href = '/login?session_expired=1';
                         return Promise.reject('csrf');
@@ -346,6 +396,25 @@ document.addEventListener('DOMContentLoaded', function () {
                         }).then(function () {
                             window.location.href = data.redirect || '/';
                         });
+                    } else if (data.redirect) {
+                        // Correo no verificado: ofrecer ir a verificar
+                        if (submitBtn)   submitBtn.disabled = false;
+                        if (submitSpan)  submitSpan.classList.remove('hidden');
+                        if (loadingSpan) loadingSpan.classList.add('hidden');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Correo no verificado',
+                            text: data.message || 'Debes verificar tu correo antes de iniciar sesión.',
+                            showCancelButton: true,
+                            confirmButtonText: 'Verificar Correo',
+                            cancelButtonText: 'Cancelar',
+                            confirmButtonColor: '#2d7a2d',
+                            cancelButtonColor: '#6c757d'
+                        }).then(function (result) {
+                            if (!result.isConfirmed) return;
+                            // El servidor ya envió el código al detectar el correo no verificado
+                            window.location.href = data.redirect;
+                        });
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -363,8 +432,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 window.location.href = '/register';
                             }
                         });
-                        if (submitBtn) submitBtn.disabled = false;
-                        if (submitSpan) submitSpan.classList.remove('hidden');
+                        if (submitBtn)   submitBtn.disabled = false;
+                        if (submitSpan)  submitSpan.classList.remove('hidden');
                         if (loadingSpan) loadingSpan.classList.add('hidden');
                     }
                 })
@@ -372,14 +441,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (err === 'csrf' || err === 'parse') return;
                     console.error('Login error:', err);
                     Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al iniciar sesión' });
-                    if (submitBtn) submitBtn.disabled = false;
-                    if (submitSpan) submitSpan.classList.remove('hidden');
+                    if (submitBtn)   submitBtn.disabled = false;
+                    if (submitSpan)  submitSpan.classList.remove('hidden');
                     if (loadingSpan) loadingSpan.classList.add('hidden');
                 });
         });
     }
 
-    // — Add-to-cart (delegated): open modal or add directly if no modal present —
+    // — Add-to-cart (delegated) —
     document.addEventListener('click', function (e) {
         var addBtn = e.target.closest('.add-to-cart-btn');
         if (addBtn) {
@@ -392,13 +461,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Guest: redirect to login (no cart actions for unauthenticated users)
         if (e.target.closest('.guest-add-btn')) {
             window.location.href = '/login';
             return;
         }
 
-        // Close modal on backdrop click
         if (e.target.classList.contains('modal') && e.target.classList.contains('active')) {
             e.target.classList.remove('active');
         }
@@ -408,7 +475,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var confirmAddBtn = document.getElementById('confirm-add-to-cart');
     if (confirmAddBtn) {
         confirmAddBtn.addEventListener('click', function () {
-            var qtyEl = document.getElementById('cart-quantity');
+            var qtyEl    = document.getElementById('cart-quantity');
             var quantity = parseInt(qtyEl ? qtyEl.value : '1', 10);
             if (quantity < 1) {
                 Swal.fire('Error', 'La cantidad debe ser mayor a 0', 'error');
@@ -430,7 +497,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!btn) return;
 
         var cartItem = btn.closest('.cart-item');
-        var itemId = btn.dataset.productId;
+        var itemId   = btn.dataset.productId;
         var itemName = btn.dataset.productName || 'este producto';
         if (!cartItem || !itemId) return;
 
@@ -467,18 +534,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         showConfirmButton: false, timer: 2500, timerProgressBar: true
                     });
 
-                    // Update the displayed total without reloading
                     var totalFormatted = (data.cart_total != null)
                         ? ('₡' + Number(data.cart_total).toLocaleString('es-CR'))
                         : '₡0';
                     var subtotalEl = document.getElementById('cart-subtotal');
-                    var totalEl = document.getElementById('cart-total-amount');
+                    var totalEl    = document.getElementById('cart-total-amount');
                     if (subtotalEl) subtotalEl.textContent = totalFormatted;
-                    if (totalEl) totalEl.textContent = totalFormatted;
+                    if (totalEl)    totalEl.textContent    = totalFormatted;
 
                     updateCartCount(data.cart_count || 0);
 
-                    // If no items remain, show the empty state
                     if (document.querySelectorAll('.cart-item').length === 0) {
                         showCartEmptyState();
                     }
@@ -490,12 +555,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ─────────────────────────────────────────────────────────
     // — Vaciar carrito (delegado) —
-    // Se usa delegación en lugar de un listener directo sobre
-    // #btn-clear-cart para que funcione aunque el botón sea
-    // regenerado dinámicamente o el click caiga sobre el <i> hijo.
-    // ─────────────────────────────────────────────────────────
     document.addEventListener('click', function (e) {
         if (!e.target.closest('#btn-clear-cart')) return;
 
@@ -541,8 +601,8 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.quantity-input').forEach(function (input) {
         input.addEventListener('change', function () {
             var productId = this.dataset.productId;
-            var quantity = parseInt(this.value, 10);
-            var max = parseInt(this.max, 10);
+            var quantity  = parseInt(this.value, 10);
+            var max       = parseInt(this.max, 10);
             if (quantity < 1) {
                 this.value = 1;
                 updateCartQuantity(productId, 1);
@@ -559,12 +619,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // — +/- quantity buttons (cart page) —
     document.querySelectorAll('.quantity-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            var action = this.dataset.action;
+            var action    = this.dataset.action;
             var productId = this.dataset.productId;
-            var input = document.querySelector('.quantity-input[data-product-id="' + productId + '"]');
+            var input     = document.querySelector('.quantity-input[data-product-id="' + productId + '"]');
             if (!input) return;
             var quantity = parseInt(input.value, 10);
-            var max = parseInt(input.max, 10);
+            var max      = parseInt(input.max, 10);
             if (action === 'increase' && quantity < max) quantity++;
             else if (action === 'decrease' && quantity > 1) quantity--;
             input.value = quantity;
@@ -574,27 +634,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // — Quantity controls on product detail page —
     var productQtyInput = document.getElementById('product-quantity');
-    var productQty = 1;
+    var productQty      = 1;
 
     if (productQtyInput) {
         var maxQty = parseInt(productQtyInput.max, 10) || 999;
 
-        document.getElementById('decrease-qty') && document.getElementById('decrease-qty').addEventListener('click', function () {
-            if (productQty > 1) { productQty--; productQtyInput.value = productQty; }
-        });
+        var decreaseBtn = document.getElementById('decrease-qty');
+        var increaseBtn = document.getElementById('increase-qty');
 
-        document.getElementById('increase-qty') && document.getElementById('increase-qty').addEventListener('click', function () {
-            if (productQty < maxQty) { productQty++; productQtyInput.value = productQty; }
-        });
+        if (decreaseBtn) {
+            decreaseBtn.addEventListener('click', function () {
+                if (productQty > 1) { productQty--; productQtyInput.value = productQty; }
+            });
+        }
+
+        if (increaseBtn) {
+            increaseBtn.addEventListener('click', function () {
+                if (productQty < maxQty) { productQty++; productQtyInput.value = productQty; }
+            });
+        }
 
         productQtyInput.addEventListener('change', function () {
             var value = parseInt(this.value, 10);
-            if (value < 1) { this.value = 1; productQty = 1; }
+            if (value < 1)       { this.value = 1;      productQty = 1; }
             else if (value > maxQty) { this.value = maxQty; productQty = maxQty; }
-            else { productQty = value; }
+            else                 { productQty = value; }
         });
 
-        // Add to cart using the quantity from the detail page selector
         var detailAddBtn = document.querySelector('.product-detail-actions .add-to-cart-btn');
         if (detailAddBtn) {
             detailAddBtn.addEventListener('click', function () {
@@ -617,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }).then(function (result) {
                 if (!result.isConfirmed) return;
 
-                proceedBtn.disabled = true;
+                proceedBtn.disabled  = true;
                 proceedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
 
                 fetch('/cart/checkout', {
@@ -633,14 +699,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(function (data) {
                         if (!data.success) {
                             Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo procesar el pedido' });
-                            proceedBtn.disabled = false;
+                            proceedBtn.disabled  = false;
                             proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
                             return;
                         }
-                        // Vaciar la UI del carrito inmediatamente tras confirmar.
                         updateCartCount(0);
                         showCartEmptyState();
-
                         Swal.fire({
                             icon: 'success',
                             text: 'Su pedido fue enviado con éxito. Tiene un lapso de 3 días para retirarlo en nuestro local. El pago se realiza de forma presencial mediante SINPE, efectivo o tarjeta.',
@@ -650,7 +714,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .catch(function (err) {
                         console.error('Checkout error:', err);
                         Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al procesar el pedido' });
-                        proceedBtn.disabled = false;
+                        proceedBtn.disabled  = false;
                         proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
                     });
             });
@@ -697,12 +761,13 @@ document.addEventListener('DOMContentLoaded', function () {
         checkPriceRange();
     })();
 
+    // — Catalog pagination —
     (function initCatalogPagination() {
         var wrapper = document.querySelector('.pagination-wrapper .pagination');
         if (!wrapper) return;
 
         var goInput = wrapper.querySelector('#goToPageInput');
-        var goBtn = wrapper.querySelector('#goToPageBtn');
+        var goBtn   = wrapper.querySelector('#goToPageBtn');
 
         wrapper.querySelectorAll('.button[aria-label]').forEach(function (a) {
             if (a.getAttribute('aria-disabled') === 'true') {
@@ -714,18 +779,18 @@ document.addEventListener('DOMContentLoaded', function () {
         function goToPage() {
             var totalSpan = wrapper.querySelector('.button.button-primary');
             if (!totalSpan) return;
-            var parts = totalSpan.textContent.trim().split('/');
+            var parts    = totalSpan.textContent.trim().split('/');
             var lastPage = Math.max(1, parseInt((parts[1] || '1').trim(), 10));
-            var target = parseInt((goInput && goInput.value) ? goInput.value.trim() : '1', 10);
+            var target   = parseInt((goInput && goInput.value) ? goInput.value.trim() : '1', 10);
             if (isNaN(target)) target = 1;
-            if (target < 1) target = 1;
+            if (target < 1)    target = 1;
             if (target > lastPage) target = lastPage;
             var url = new URL(window.location.href);
             url.searchParams.set('page', String(target));
             window.location.assign(url.toString());
         }
 
-        if (goBtn) goBtn.addEventListener('click', goToPage);
+        if (goBtn)   goBtn.addEventListener('click', goToPage);
         if (goInput) {
             goInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') { e.preventDefault(); goToPage(); }
@@ -736,22 +801,293 @@ document.addEventListener('DOMContentLoaded', function () {
 }); // end DOMContentLoaded
 
 // ============================================================
-// GLOBAL EXPORTS (for use from inline scripts)
+// GLOBAL EXPORTS (for use from inline scripts / Blade onclicks)
 // ============================================================
-window.addToCart = addToCart;
+window.addToCart       = addToCart;
 window.updateCartCount = updateCartCount;
+window.togglePass      = togglePass;
+window.showMsg         = showMsg;
+window.clearMsg        = clearMsg;
+window.setInputState   = setInputState;
 
 // ============================================================
-// USER MENU DROPDOWN (header)
+// REGISTER FORM validation (register.blade.php)
 // ============================================================
 
-/** Opens or closes the user menu, syncing the class, aria-hidden and aria-expanded. */
-function setUserMenuOpen(open) {
-    var wrap = document.getElementById('user-menu');
-    var panel = document.getElementById('user-dropdown');
-    var trigger = document.getElementById('user-menu-trigger');
-    if (!wrap) return;
-    wrap.classList.toggle('open', open);
-    if (panel) panel.setAttribute('aria-hidden', String(!open));
-    if (trigger) trigger.setAttribute('aria-expanded', String(open));
-}
+document.addEventListener('DOMContentLoaded', function () {
+
+    if (!document.getElementById('formRegistroCliente')) return;
+
+    var invalidChars = /[^A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]/;
+
+    [
+        { id: 'name',           msgId: 'msg-name',           label: 'El nombre',          required: true  },
+        { id: 'first_surname',  msgId: 'msg-first-surname',  label: 'El apellido',         required: true  },
+        { id: 'second_surname', msgId: 'msg-second-surname', label: 'El segundo apellido', required: false },
+    ].forEach(function (field) {
+        var input = document.getElementById(field.id);
+        if (!input) return;
+
+        input.addEventListener('input', function () {
+            if (invalidChars.test(this.value)) {
+                this.value = this.value.replace(/[^A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]/g, '');
+                showMsg(field.msgId, 'error', 'Solo se permiten letras y espacios, sin números ni símbolos.');
+                setInputState(this, 'input-error');
+                return;
+            }
+            var val = this.value.trim();
+            if (val === '' && field.required) {
+                showMsg(field.msgId, 'error', field.label + ' es obligatorio.');
+                setInputState(this, 'input-error');
+            } else if (val !== '' && val.length < 2) {
+                showMsg(field.msgId, 'error', field.label + ' debe tener al menos 2 caracteres.');
+                setInputState(this, 'input-error');
+            } else if (val !== '') {
+                showMsg(field.msgId, 'success', 'Campo válido.');
+                setInputState(this, 'input-ok');
+            } else {
+                clearMsg(field.msgId);
+                setInputState(this, null);
+            }
+        });
+
+        input.addEventListener('blur', function () {
+            if (field.required && this.value.trim() === '') {
+                showMsg(field.msgId, 'error', field.label + ' es obligatorio.');
+                setInputState(this, 'input-error');
+            }
+        });
+    });
+
+    // — Gmail: only @gmail.com accepted —
+    var gmailInput = document.getElementById('gmail');
+    if (gmailInput) {
+        gmailInput.addEventListener('input', function () {
+            var val = this.value.trim().toLowerCase();
+            if (val === '') { clearMsg('msg-gmail'); setInputState(this, null); return; }
+            if (!val.endsWith('@gmail.com')) {
+                showMsg('msg-gmail', 'error', 'Solo se aceptan correos @gmail.com.');
+                setInputState(this, 'input-error');
+            } else {
+                showMsg('msg-gmail', 'success', 'Correo válido.');
+                setInputState(this, 'input-ok');
+            }
+        });
+        gmailInput.addEventListener('blur', function () {
+            if (this.value.trim() === '') {
+                showMsg('msg-gmail', 'error', 'El correo Gmail es obligatorio.');
+                setInputState(this, 'input-error');
+            }
+        });
+    }
+
+    // — Password length + confirmation match —
+    function checkPassMatch() {
+        var passwordEl = document.getElementById('password');
+        var pcInput    = document.getElementById('password_confirmation');
+        if (!passwordEl || !pcInput) return;
+        var p  = passwordEl.value;
+        var pc = pcInput.value;
+        if (pc.length === 0) { clearMsg('msg-pass-confirm'); setInputState(pcInput, null); return; }
+        if (p !== pc) {
+            showMsg('msg-pass-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(pcInput, 'input-error');
+        } else {
+            showMsg('msg-pass-confirm', 'success', 'Las contraseñas coinciden.');
+            setInputState(pcInput, 'input-ok');
+        }
+    }
+
+    var passwordInput = document.getElementById('password');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function () {
+            var v = this.value;
+            if (v.length === 0)    { clearMsg('msg-pass'); setInputState(this, null); }
+            else if (v.length < 8) { showMsg('msg-pass', 'error', 'Mínimo 8 caracteres (' + v.length + '/8).'); setInputState(this, 'input-error'); }
+            else                   { showMsg('msg-pass', 'success', 'Longitud correcta.'); setInputState(this, 'input-ok'); }
+            checkPassMatch();
+        });
+    }
+
+    var passConfirmInput = document.getElementById('password_confirmation');
+    if (passConfirmInput) passConfirmInput.addEventListener('input', checkPassMatch);
+
+    // — Submit: final validation before sending —
+    document.getElementById('formRegistroCliente').addEventListener('submit', function (e) {
+        var valid = true;
+
+        var nameEl = document.getElementById('name');
+        if (nameEl && nameEl.value.trim() === '') {
+            showMsg('msg-name', 'error', 'El nombre es obligatorio.');
+            setInputState(nameEl, 'input-error');
+            valid = false;
+        }
+        var fsEl = document.getElementById('first_surname');
+        if (fsEl && fsEl.value.trim() === '') {
+            showMsg('msg-first-surname', 'error', 'El apellido es obligatorio.');
+            setInputState(fsEl, 'input-error');
+            valid = false;
+        }
+
+        var gv = gmailInput ? gmailInput.value.trim().toLowerCase() : '';
+        if (gv === '') {
+            showMsg('msg-gmail', 'error', 'El correo Gmail es obligatorio.');
+            setInputState(gmailInput, 'input-error');
+            valid = false;
+        } else if (!gv.endsWith('@gmail.com')) {
+            showMsg('msg-gmail', 'error', 'Solo se aceptan correos @gmail.com.');
+            setInputState(gmailInput, 'input-error');
+            valid = false;
+        }
+
+        var pv  = passwordInput ? passwordInput.value : '';
+        var pcEl = document.getElementById('password_confirmation');
+        var pcv = pcEl ? pcEl.value : '';
+
+        if (pv.length === 0) {
+            showMsg('msg-pass', 'error', 'La contraseña es obligatoria.');
+            setInputState(passwordInput, 'input-error');
+            valid = false;
+        } else if (pv.length < 8) {
+            showMsg('msg-pass', 'error', 'Mínimo 8 caracteres.');
+            setInputState(passwordInput, 'input-error');
+            valid = false;
+        }
+        if (pcv.length === 0) {
+            showMsg('msg-pass-confirm', 'error', 'Debes confirmar la contraseña.');
+            setInputState(pcEl, 'input-error');
+            valid = false;
+        } else if (pv !== pcv) {
+            showMsg('msg-pass-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(pcEl, 'input-error');
+            valid = false;
+        }
+
+        if (!valid) { e.preventDefault(); return; }
+
+        var btnTexto    = document.getElementById('btnRegistrarTexto');
+        var btnCargando = document.getElementById('btnRegistrarCargando');
+        var btn         = document.getElementById('btnRegistrar');
+        if (btnTexto)    btnTexto.style.display    = 'none';
+        if (btnCargando) btnCargando.style.display = 'inline';
+        if (btn)         btn.disabled              = true;
+    });
+
+}); // end DOMContentLoaded (register form)
+
+// ============================================================
+// RECOVERY FORM validation (recovery.blade.php)
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    if (!document.getElementById('formRecovery')) return;
+
+    // — Toggle password visibility —
+    var togglePassBtn    = document.getElementById('toggle-recovery-password');
+    var toggleConfirmBtn = document.getElementById('toggle-recovery-confirm');
+    if (togglePassBtn)    togglePassBtn.addEventListener('click',    function () { togglePass('recovery-password',         'eye-recovery-password'); });
+    if (toggleConfirmBtn) toggleConfirmBtn.addEventListener('click', function () { togglePass('recovery-password-confirm', 'eye-recovery-confirm'); });
+
+    // — Gmail format validation —
+    var recEmailInput = document.getElementById('recovery-email');
+    if (recEmailInput) {
+        recEmailInput.addEventListener('input', function () {
+            var val = this.value.trim().toLowerCase();
+            if (val === '') { clearMsg('msg-recovery-email'); setInputState(this, null); return; }
+            if (!val.endsWith('@gmail.com')) {
+                showMsg('msg-recovery-email', 'error', 'Solo se aceptan correos @gmail.com.');
+                setInputState(this, 'input-error');
+            } else {
+                showMsg('msg-recovery-email', 'success', 'Correo válido.');
+                setInputState(this, 'input-ok');
+            }
+        });
+        recEmailInput.addEventListener('blur', function () {
+            if (this.value.trim() === '') {
+                showMsg('msg-recovery-email', 'error', 'El correo Gmail es obligatorio.');
+                setInputState(this, 'input-error');
+            }
+        });
+    }
+
+    // — Password length indicator —
+    var recPassInput = document.getElementById('recovery-password');
+    if (recPassInput) {
+        recPassInput.addEventListener('input', function () {
+            var v = this.value;
+            if (v.length === 0)    { clearMsg('msg-recovery-password'); setInputState(this, null); }
+            else if (v.length < 8) { showMsg('msg-recovery-password', 'error', 'Mínimo 8 caracteres (' + v.length + '/8).'); setInputState(this, 'input-error'); }
+            else                   { showMsg('msg-recovery-password', 'success', 'Longitud correcta.'); setInputState(this, 'input-ok'); }
+            checkRecoveryMatch();
+        });
+    }
+
+    // — Password confirmation match —
+    function checkRecoveryMatch() {
+        var passEl    = document.getElementById('recovery-password');
+        var confirmEl = document.getElementById('recovery-password-confirm');
+        if (!passEl || !confirmEl) return;
+        var p  = passEl.value;
+        var pc = confirmEl.value;
+        if (pc.length === 0) { clearMsg('msg-recovery-confirm'); setInputState(confirmEl, null); return; }
+        if (p !== pc) {
+            showMsg('msg-recovery-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(confirmEl, 'input-error');
+        } else {
+            showMsg('msg-recovery-confirm', 'success', 'Las contraseñas coinciden.');
+            setInputState(confirmEl, 'input-ok');
+        }
+    }
+
+    var recConfirmInput = document.getElementById('recovery-password-confirm');
+    if (recConfirmInput) recConfirmInput.addEventListener('input', checkRecoveryMatch);
+
+    // — Submit: final validation —
+    document.getElementById('formRecovery').addEventListener('submit', function (e) {
+        var valid = true;
+
+        var emailVal = recEmailInput ? recEmailInput.value.trim().toLowerCase() : '';
+        if (!emailVal) {
+            showMsg('msg-recovery-email', 'error', 'El correo Gmail es obligatorio.');
+            setInputState(recEmailInput, 'input-error');
+            valid = false;
+        } else if (!emailVal.endsWith('@gmail.com')) {
+            showMsg('msg-recovery-email', 'error', 'Solo se aceptan correos @gmail.com.');
+            setInputState(recEmailInput, 'input-error');
+            valid = false;
+        }
+
+        var passVal = recPassInput ? recPassInput.value : '';
+        if (passVal.length === 0) {
+            showMsg('msg-recovery-password', 'error', 'La contraseña es obligatoria.');
+            setInputState(recPassInput, 'input-error');
+            valid = false;
+        } else if (passVal.length < 8) {
+            showMsg('msg-recovery-password', 'error', 'Mínimo 8 caracteres.');
+            setInputState(recPassInput, 'input-error');
+            valid = false;
+        }
+
+        var confVal = recConfirmInput ? recConfirmInput.value : '';
+        if (confVal.length === 0) {
+            showMsg('msg-recovery-confirm', 'error', 'Debes confirmar la contraseña.');
+            setInputState(recConfirmInput, 'input-error');
+            valid = false;
+        } else if (passVal !== confVal) {
+            showMsg('msg-recovery-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(recConfirmInput, 'input-error');
+            valid = false;
+        }
+
+        if (!valid) { e.preventDefault(); return; }
+
+        var btn         = document.getElementById('btnRecovery');
+        var btnTexto    = document.getElementById('btnRecoveryTexto');
+        var btnCargando = document.getElementById('btnRecoveryCargando');
+        if (btn)         btn.disabled              = true;
+        if (btnTexto)    btnTexto.style.display    = 'none';
+        if (btnCargando) btnCargando.style.display = 'inline';
+    });
+
+}); // end DOMContentLoaded (recovery form)

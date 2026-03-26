@@ -11,17 +11,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Apache config
-RUN a2enmod rewrite && a2enmod env
-
-# Apache no pasa por defecto las env del contenedor a PHP; Laravel las necesita para DB_* del compose
-RUN printf '%s\n' \
-    'PassEnv DB_HOST' \
-    'PassEnv DB_DATABASE' \
-    'PassEnv DB_USERNAME' \
-    'PassEnv DB_PASSWORD' \
-    'PassEnv DB_CONNECTION' \
-    'PassEnv DB_PORT' \
-    > /etc/apache2/conf-enabled/zz-laravel-env.conf
+RUN a2enmod rewrite
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
