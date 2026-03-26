@@ -100,3 +100,7 @@
 @push('styles')
     @vite(['resources/css/client/clients-users.css'])
 @endpush
+
+@push('scripts')
+    @vite(['resources/js/client/clients-users.js'])
+@endpush

@@ -521,7 +521,7 @@ public function show()
                 "Hola {$client->name},\n\nTu código de verificación para recuperar tu contraseña es: {$code}\n\nExpira en 15 minutos.\n\nSi no solicitaste este cambio, ignora este correo.",
                 function ($message) use ($client) {
                     $message->to($client->gmail)
-                            ->subject('Código de recuperación de contraseña - Ciclo Finca');
+                            ->subject('Código de recuperación de contraseña - Ciclo Finca 4');
                 }
             );
         } catch (\Exception $e) {
@@ -547,7 +547,7 @@ public function show()
         if (!session('pending_recovery_id')) {
             return redirect()->route('clients.recovery.form');
         }
-        return view('clients_users.verify_gmail_code');
+        return view('client.verify_gmail_code');
     }
 
     // Recovery step 3: verify code and write the new password to DB.
