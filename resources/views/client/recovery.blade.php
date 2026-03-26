@@ -1,4 +1,4 @@
-@extends('clients.layouts.app')
+@extends('client.layouts.app')
 
 @section('hideNav')
 @endsection
@@ -98,5 +98,5 @@
 @endsection
 
 @push('styles')
-    @vite(['resources/css/clients-users.css'])
+    @vite(['resources/css/client/clients-users.css'])
 @endpush

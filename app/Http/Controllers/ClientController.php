@@ -29,7 +29,7 @@ class ClientController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        return view('clients.home', compact('featuredProducts', 'categories', 'cartCount'));
+        return view('client.home', compact('featuredProducts', 'categories', 'cartCount'));
     }
 
     public function catalog(Request $request)
@@ -108,7 +108,7 @@ class ClientController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        return view('clients.catalog', compact('products', 'categories', 'cartCount', 'selectedCategory', 'subcategories', 'parentCategoryForSubcats'));
+        return view('client.catalog', compact('products', 'categories', 'cartCount', 'selectedCategory', 'subcategories', 'parentCategoryForSubcats'));
     }
 
     public function product($id)
@@ -128,7 +128,7 @@ class ClientController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        return view('clients.product', compact('product', 'relatedProducts', 'cartCount'));
+        return view('client.product', compact('product', 'relatedProducts', 'cartCount'));
     }
 
     public function addToCart(Request $request)
@@ -233,7 +233,7 @@ class ClientController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        return view('clients.cart', compact('cartItems', 'total', 'cartCount'));
+        return view('client.cart', compact('cartItems', 'total', 'cartCount'));
     }
 
     public function updateCart(Request $request)

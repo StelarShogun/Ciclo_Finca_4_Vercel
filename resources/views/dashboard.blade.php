@@ -285,7 +285,7 @@
         </div>
     </main>
 
-    @vite(['resources/js/dashboard.js'])
+    @vite(['resources/js/admin/dashboard.js'])
 </body>
 
 </html>
