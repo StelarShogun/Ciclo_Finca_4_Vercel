@@ -1,88 +1,10 @@
-/* ============================================
-   ESTILOS COMPLETOS PARA GESTIÓN DE USUARIOS
-   Basado en sales.css - Misma apariencia y layout
-   ============================================ */
+@import "../variables-reset.css";
+@import "../utilities.css";
+@import "../sidebar.css";
 
-/* ── Variables (igual que sales.css) ───────────────────────────────────── */
-:root {
-    /* Colores principales */
-    --color-primary:       #2e7d32;
-    --color-primary-dark:  #1b5e20;
-    --color-primary-light: #4caf50;
-    --color-accent:        #ff6f00;
-
-    /* Estados */
-    --color-success:     #2e7d32;
-    --color-success-bg:  #e8f5e9;
-    --color-danger:      #d32f2f;
-    --color-danger-bg:   #ffebee;
-    --color-warning:     #f57c00;
-    --color-warning-bg:  #fff3e0;
-    --color-info:        #1976d2;
-    --color-info-bg:     #e3f2fd;
-
-    /* Neutros */
-    --color-secondary:     #455a64;
-    --color-secondary-bg:  #eceff1;
-    --color-light:         #f8f9fa;
-    --color-dark:          #212529;
-    --color-muted:         #6c757d;
-
-    /* Sidebar */
-    --sidebar-bg:              #ffffff;
-    --sidebar-border:          #e5e7eb;
-    --sidebar-border-strong:   #94a3b8;
-    --sidebar-text:            #0f172a;
-    --sidebar-hover:           #f2f4f7;
-    --sidebar-active:          #60ad5e;
-    --sidebar-active-dark:     #1a7a44;
-    --sidebar-width:           250px;
-    --sidebar-collapsed-width: 80px;
-
-    /* Texto */
-    --text-primary:   #333;
-    --text-secondary: #666;
-
-    /* Fondos */
-    --background-main:  #f5f5f5;
-    --background-white: #ffffff;
-    --background-light: #f8f9fa;
-
-    /* Bordes */
-    --border-color:        #e0e0e0;
-    --border-radius:       8px;
-    --border-radius-small: 4px;
-    --border-radius-large: 12px;
-
-    /* Sombras */
-    --shadow-sm:  0 1px 3px rgba(0,0,0,.10);
-    --shadow-md:  0 4px 6px rgba(0,0,0,.10);
-    --shadow-lg:  0 10px 15px rgba(0,0,0,.10);
-    --shadow-xl:  0 20px 25px rgba(0,0,0,.10);
-
-    /* Transición */
-    --transition: all 0.3s ease;
-}
-
-/* ── Reset base ─────────────────────────────────────────────────────────── */
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-html { font-size: 16px; }
-
-body {
-    font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif;
-    background: var(--background-main);
-    color: var(--text-primary);
-    line-height: 1.6;
-}
-
-a { color: inherit; text-decoration: none; }
-img, svg, table { max-width: 100%; height: auto; }
-
-h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.2; margin-bottom: 0.5rem; }
-p { margin-bottom: 1rem; }
-
-/* ── Admin layout (mismo que sales.css) ─────────────────────────────────── */
+/* ============================================================
+    1. MAIN LAYOUT
+    ============================================================ */
 .admin-layout {
     display: flex;
     min-height: 100vh;
@@ -103,106 +25,9 @@ p { margin-bottom: 1rem; }
     transition: padding-left 0.2s ease;
 }
 
-/* ── Sidebar (mismo que sales.css) ──────────────────────────────────────── */
-.admin-sidebar {
-    width: var(--sidebar-width);
-    background: var(--sidebar-bg);
-    color: var(--sidebar-text);
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    transition: width 0.2s ease, transform 0.2s ease;
-    z-index: 1000;
-    box-shadow: 0.125rem 0 0.625rem rgba(0,0,0,.10);
-    border-right: 0.1875rem solid var(--sidebar-border);
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar-header {
-    padding: 1.5rem;
-    border-bottom: 0.125rem solid var(--sidebar-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.sidebar-header .logo {
-    width: 3.5rem;
-    height: 3.5rem;
-    object-fit: contain;
-    padding: 0.3125rem;
-    background: white;
-    border-radius: 50%;
-}
-
-.sidebar-nav { flex: 1; overflow-y: auto; }
-.sidebar-nav ul { list-style: none; padding: 0; margin: 0; }
-.sidebar-nav li { margin: 0.2rem 0; }
-
-.sidebar-nav li a {
-    display: flex;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    color: var(--sidebar-text);
-    text-decoration: none;
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-    border-left: 0.1875rem solid transparent;
-}
-
-.sidebar-nav li a:hover {
-    background: var(--sidebar-hover);
-    border-left-color: var(--sidebar-active);
-}
-
-.sidebar-nav li.active a {
-    background: var(--sidebar-active);
-    border-left-color: #ffffff;
-    color: #0f172a;
-    box-shadow: 0 0.125rem 0.375rem rgba(0,0,0,.08);
-}
-
-.sidebar-nav li.active a:hover {
-    background: var(--sidebar-active-dark);
-    border-left-color: #ffffff;
-    color: #ffffff;
-}
-
-.sidebar-nav li a i   { width: 1.25rem; margin-right: 1rem; font-size: 1.1rem; }
-.sidebar-nav li a span { font-weight: 500; }
-
-.sidebar-footer {
-    padding: 1rem 1.5rem;
-    border-top: 0.125rem solid var(--sidebar-border);
-    background: var(--sidebar-bg);
-    margin-top: auto;
-}
-
-.logout-btn {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 1rem 1.5rem;
-    background: transparent;
-    border: none;
-    color: var(--color-danger);
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    font-family: inherit;
-    border-left: 0.1875rem solid transparent;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.logout-btn:hover {
-    background: rgba(211,47,47,.10);
-    border-left-color: var(--color-danger);
-}
-
-.logout-btn i { width: 1.25rem; margin-right: 1rem; font-size: 1.1rem; }
-
-/* ── Buttons (mismo que sales.css) ──────────────────────────────────────── */
+/* ============================================================
+    2. BUTTONS
+    ============================================================ */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -222,8 +47,16 @@ p { margin-bottom: 1rem; }
     overflow: hidden;
 }
 
-.btn:focus { box-shadow: 0 0 0 3px rgba(46,125,50,.30); outline: none; }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
+.btn:focus {
+    box-shadow: 0 0 0 3px rgba(46,125,50,.30);
+    outline: none;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
 
 .btn::before {
     content: '';
@@ -249,26 +82,40 @@ p { margin-bottom: 1rem; }
 
 .btn-sm { padding: 6px 12px;  font-size: 0.85rem; }
 
-/* ── Utilidades (mismo que sales.css) ───────────────────────────────────── */
-.text-center { text-align: center; }
-.text-right  { text-align: right;  }
-.text-left   { text-align: left;   }
-.text-muted  { color: var(--color-muted); font-size: 0.9em; }
+/* Specific buttons for ban/unban */
+.btn-ban,
+.btn-unban {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    color: #fff;
+}
 
-.d-none    { display: none;   }
-.d-flex    { display: flex;   }
-.d-block   { display: block;  }
-.d-grid    { display: grid;   }
-.d-inline  { display: inline; }
-.w-100     { width: 100%;     }
-.h-100     { height: 100%;    }
+.btn-ban {
+    background: var(--color-danger);
+}
 
-/* ============================================
-   ESTILOS ESPECÍFICOS PARA LA GESTIÓN DE USUARIOS
-   (Inspirados en el diseño de sales.css)
-   ============================================ */
+.btn-unban {
+    background: var(--color-success);
+}
 
-/* ── Cabecera de la página (similar al sales-header) ───────────────────── */
+.btn-ban:hover,
+.btn-unban:hover {
+    transform: translateY(-2px);
+    filter: brightness(0.92);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================
+    3. PAGE HEADER
+    ============================================================ */
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -314,7 +161,9 @@ p { margin-bottom: 1rem; }
     font-size: 1.2rem;
 }
 
-/* ── Contenedor de la tabla (similar al sales-table-container) ─────────── */
+/* ============================================================
+    4. CLIENTS CONTAINER AND TABLE
+    ============================================================ */
 .clients-container {
     background: var(--background-white);
     border-radius: var(--border-radius-large);
@@ -328,7 +177,6 @@ p { margin-bottom: 1rem; }
     width: 100%;
 }
 
-/* ── Tabla de usuarios (mismo estilo que sales-table) ──────────────────── */
 .clients-table {
     width: 100%;
     border-collapse: collapse;
@@ -354,7 +202,9 @@ p { margin-bottom: 1rem; }
     background: var(--color-light);
 }
 
-/* ── Badges de estado (mismo que status-badge en sales.css) ────────────── */
+/* ============================================================
+    5. STATUS BADGES
+    ============================================================ */
 .status-badge {
     display: inline-flex;
     align-items: center;
@@ -376,40 +226,9 @@ p { margin-bottom: 1rem; }
     color: var(--color-danger);
 }
 
-/* ── Botones de acción (usando clases de btn de sales.css) ─────────────── */
-/* Nota: Ya tenemos .btn-danger y .btn-success, así que no necesitamos .btn-ban/.btn-unban,
-   pero los dejamos por compatibilidad con el JavaScript actual si lo usa */
-.btn-ban,
-.btn-unban {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: var(--border-radius);
-    font-size: 0.85rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-    color: #fff;
-}
-
-.btn-ban {
-    background: var(--color-danger);
-}
-
-.btn-unban {
-    background: var(--color-success);
-}
-
-.btn-ban:hover,
-.btn-unban:hover {
-    transform: translateY(-2px);
-    filter: brightness(0.92);
-    box-shadow: var(--shadow-sm);
-}
-
-/* ── Mensaje cuando no hay registros ────────────────────────────────────── */
+/* ============================================================
+    6. EMPTY STATE
+    ============================================================ */
 .clients-empty {
     text-align: center;
     padding: 3rem !important;
@@ -417,7 +236,9 @@ p { margin-bottom: 1rem; }
     font-style: italic;
 }
 
-/* ── Responsive (mismo que sales.css) ───────────────────────────────────── */
+/* ============================================================
+    7. RESPONSIVE
+    ============================================================ */
 @media (max-width: 1024px) {
     :root { --sidebar-width: 220px; }
     .admin-layout { padding-left: var(--sidebar-width); }

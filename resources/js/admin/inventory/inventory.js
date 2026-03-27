@@ -1,17 +1,15 @@
-/* inventory.js — Paginación siempre visible y toggle de sidebar con persistencia */
-
-// ---------- Utilidades ----------
+// Selector shortcuts
 const qs = (s, r = document) => r.querySelector(s);
 const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-// Función para obtener el CSRF token dinámicamente
+// Retrieve CSRF token from meta tag or hidden input
 function getCSRFToken() {
     const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     const inputToken = document.querySelector('input[name="_token"]')?.value;
     return metaToken || inputToken || '';
 }
 
- // Modal de exportar
+ // Export modal handlers
         document.getElementById('export-btn').addEventListener('click', function() {
             document.getElementById('export-modal').classList.add('active');
         });
@@ -20,13 +18,12 @@ function getCSRFToken() {
             document.getElementById('export-modal').classList.remove('active');
         });
 
-
-        // Cerrar modales al hacer clic en el backdrop
+        // Close modal when clicking on backdrop
         document.querySelector('#export-modal .modal-backdrop').addEventListener('click', function() {
             document.getElementById('export-modal').classList.remove('active');
         });
 
-// Función para renovar el CSRF token automáticamente
+// Request a fresh CSRF token from the server
 async function renewCSRFToken() {
     try {
         const response = await fetch('/csrf-token', {
@@ -51,29 +48,24 @@ async function renewCSRFToken() {
     return null;
 }
 
-// Función para manejar errores CSRF de forma elegante
+// Automatically retry requests when 419 (CSRF mismatch) occurs
 async function handleCSRFError(originalRequest) {
     console.log('Token CSRF expirado, renovando...');
     
-    // Renovar el token
     const newToken = await renewCSRFToken();
     
     if (newToken) {
-        // Actualizar el token en la petición original
         if (originalRequest.headers) {
             originalRequest.headers['X-CSRF-TOKEN'] = newToken;
         }
-        
-        // Reintentar la petición original
         return fetch(originalRequest.url, originalRequest);
     } else {
         throw new Error('No se pudo renovar el token CSRF');
     }
 }
 
-// Función wrapper para fetch que maneja automáticamente errores CSRF
+// Wrapper for fetch that handles CSRF errors transparently
 async function smartFetch(url, options = {}) {
-    // Asegurar que el token CSRF esté presente
     if (!options.headers) {
         options.headers = {};
     }
@@ -84,14 +76,10 @@ async function smartFetch(url, options = {}) {
     try {
         const response = await fetch(url, options);
         
-        // Si es error 419 (CSRF token mismatch), manejar automáticamente
         if (response.status === 419) {
             console.log('Error CSRF detectado, reintentando automáticamente...');
-            
-            // Mostrar notificación sutil de renovación
             showSubtleNotification('Renovando sesión...', 'info');
             
-            // Crear una copia de la petición original para reintentar
             const retryOptions = {
                 ...options,
                 headers: {
@@ -100,12 +88,8 @@ async function smartFetch(url, options = {}) {
                 }
             };
             
-            // Reintentar la petición con el nuevo token
             const retryResponse = await fetch(url, retryOptions);
-            
-            // Mostrar notificación de éxito
             showSubtleNotification('Sesión renovada', 'success');
-            
             return retryResponse;
         }
         
@@ -116,9 +100,8 @@ async function smartFetch(url, options = {}) {
     }
 }
 
-// Función para mostrar notificaciones sutiles
+// Display a temporary toast notification
 function showSubtleNotification(message, type = 'info') {
-    // Crear elemento de notificación
     const notification = document.createElement('div');
     notification.className = `subtle-notification ${type}`;
     notification.innerHTML = `
@@ -126,7 +109,6 @@ function showSubtleNotification(message, type = 'info') {
         <span>${message}</span>
     `;
     
-    // Agregar estilos
     notification.style.cssText = `
         position: fixed;
         top: 20px;
@@ -148,12 +130,10 @@ function showSubtleNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
     
-    // Animar entrada
     setTimeout(() => {
         notification.style.transform = 'translateX(0)';
     }, 100);
     
-    // Auto-remover después de 3 segundos
     setTimeout(() => {
         notification.style.transform = 'translateX(100%)';
         setTimeout(() => {
@@ -164,7 +144,7 @@ function showSubtleNotification(message, type = 'info') {
     }, 3000);
 }
 
-// Función para mostrar estado de carga en botones
+// Show loading state on a button
 function setButtonLoading(button, isLoading, originalText = null) {
     if (isLoading) {
         button.disabled = true;
@@ -178,7 +158,7 @@ function setButtonLoading(button, isLoading, originalText = null) {
     }
 }
 
-// Función para mostrar estado de carga en acciones de tabla
+// Show loading state on an action button (e.g., in a table)
 function setActionButtonLoading(button, isLoading, action = '') {
     if (isLoading) {
         button.disabled = true;
@@ -194,7 +174,7 @@ function setActionButtonLoading(button, isLoading, action = '') {
     }
 }
 
-// Función para mostrar indicador de operación larga
+// Create a full‑screen progress overlay for long operations
 function showLongOperationIndicator(message = 'Procesando...') {
     const indicator = document.createElement('div');
     indicator.className = 'long-operation-indicator';
@@ -206,14 +186,13 @@ function showLongOperationIndicator(message = 'Procesando...') {
     return indicator;
 }
 
-// Función para ocultar indicador de operación larga
 function hideLongOperationIndicator(indicator) {
     if (indicator && indicator.parentNode) {
         indicator.parentNode.removeChild(indicator);
     }
 }
 
-// Función para mostrar barra de progreso
+// Simple progress bar for operations like file upload
 function showProgressBar() {
     const progressBar = document.createElement('div');
     progressBar.className = 'progress-indicator';
@@ -221,14 +200,13 @@ function showProgressBar() {
     return progressBar;
 }
 
-// Función para ocultar barra de progreso
 function hideProgressBar(progressBar) {
     if (progressBar && progressBar.parentNode) {
         progressBar.parentNode.removeChild(progressBar);
     }
 }
 
-// Función para mostrar feedback visual de éxito
+// Temporary success feedback on a button
 function showSuccessFeedback(button, message = '¡Completado!') {
     const originalContent = button.innerHTML;
     button.innerHTML = `<i class="fas fa-check"></i> ${message}`;
@@ -240,7 +218,7 @@ function showSuccessFeedback(button, message = '¡Completado!') {
     }, 2000);
 }
 
-// Función para mostrar feedback visual de error
+// Temporary error feedback on a button
 function showErrorFeedback(button, message = 'Error') {
     const originalContent = button.innerHTML;
     button.innerHTML = `<i class="fas fa-times"></i> ${message}`;
@@ -252,7 +230,7 @@ function showErrorFeedback(button, message = 'Error') {
     }, 2000);
 }
 
-// Función para mostrar estado de carga en modales
+// Disable a modal during async operations
 function setModalLoading(modal, isLoading) {
     if (isLoading) {
         modal.classList.add('loading');
@@ -263,6 +241,7 @@ function setModalLoading(modal, isLoading) {
     }
 }
 
+// Smooth scroll to top
 function smoothScrollTop() {
     try {
         window.scrollTo({
@@ -274,29 +253,23 @@ function smoothScrollTop() {
     }
 }
 
-// Configure SweetAlert2 z-index globally to ensure it's above modals
+// Ensure SweetAlert2 appears above any modals
 if (typeof Swal !== 'undefined') {
-    // Override SweetAlert2 default configuration
     const originalFire = Swal.fire;
     Swal.fire = function(...args) {
         const config = args[0] || {};
         
-        // Ensure z-index is always high
         config.customClass = {
             ...config.customClass,
             popup: 'swal-high-z-index'
         };
         
-        // Set high z-index in didOpen callback
         const originalDidOpen = config.didOpen;
         config.didOpen = function() {
-            // Ensure SweetAlert popup is above modals
             const popup = Swal.getPopup();
             if (popup) {
                 popup.style.zIndex = '10000';
             }
-            
-            // Call original didOpen if it exists
             if (originalDidOpen) {
                 originalDidOpen.call(this);
             }
@@ -306,7 +279,7 @@ if (typeof Swal !== 'undefined') {
     };
 }
 
-// ---------- Sidebar: toggle minimalista (persistencia) ----------
+// Sidebar toggle with state persistence
 (function initSidebarToggle() {
     const btn = qs('#sidebarToggle');
     if (!btn) return;
@@ -314,7 +287,6 @@ if (typeof Swal !== 'undefined') {
     const BODY_COLLAPSED = 'sidebar-collapsed';
     const KEY = 'cp_sidebar_collapsed';
 
-    // Estado inicial desde localStorage
     const saved = localStorage.getItem(KEY);
     if (saved === '1') {
         document.body.classList.add(BODY_COLLAPSED);
@@ -330,19 +302,17 @@ if (typeof Swal !== 'undefined') {
     btn.addEventListener('click', () => {
         const collapsed = !document.body.classList.contains(BODY_COLLAPSED);
         setCollapsed(collapsed);
-        // Accesibilidad: feedback corto
         btn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
     });
 })();
 
-// ---------- View Switcher ----------
+// View switcher for inventory list with persistence
 (function initViewSwitcher() {
     const viewButtons = qsa('.view-btn');
     const tableView = qs('.table-view');
     const gridView = qs('.grid-view');
     const KEY = 'cp_inventory_view';
 
-    // Estado inicial desde localStorage
     const savedView = localStorage.getItem(KEY);
     if (savedView) {
         setView(savedView);
@@ -371,9 +341,9 @@ if (typeof Swal !== 'undefined') {
     }
 })();
 
-// ---------- Modals ----------
+// Modals init and handlers
 (function initModals() {
-    // Modal de nuevo producto
+    // Modal: New product
     const newProductModal = qs('#new-product-modal');
     const openNewProductModalBtn = qs('#open-new-product-modal');
     const closeNewProductModalBtn = qs('#close-new-product-modal');
@@ -415,7 +385,7 @@ if (typeof Swal !== 'undefined') {
                 return response.json();
             })
             .then(data => {
-                if (!data) return; // Si no hay data (por el CSRF), salir
+                if (!data) return;
                 setButtonLoading(saveNewProductBtn, false);
                 if (data.success) {
                     newProductModal.classList.remove('active');
@@ -428,10 +398,9 @@ if (typeof Swal !== 'undefined') {
                         location.reload();
                     });
                 } else if (data.errors) {
-                    // Clear previous errors
+                    // Remove previous error messages
                     qsa('.error-message', newProductForm).forEach(el => el.remove());
 
-                    // Display new errors
                     for (const field in data.errors) {
                         const input = qs(`[name="${field}"]`, newProductForm);
                         if (input) {
@@ -444,7 +413,6 @@ if (typeof Swal !== 'undefined') {
                         }
                     }
                     
-                    // Actualizar CSRF token si viene en la respuesta
                     if (data.csrf_token) {
                         const metaTag = document.querySelector('meta[name="csrf-token"]');
                         if (metaTag) {
@@ -480,7 +448,7 @@ if (typeof Swal !== 'undefined') {
         });
     }
 
-    // Modal de editar producto
+    // Modal: Edit product
     const editModal = qs('#edit-modal');
     const editBtns = qsa('.edit-btn');
     const closeEditModalBtn = qs('#modal-close');
@@ -567,7 +535,7 @@ if (typeof Swal !== 'undefined') {
                 return response.json();
             })
             .then(data => {
-                if (!data) return; // Si no hay data (por el CSRF), salir
+                if (!data) return;
                 setButtonLoading(saveEditBtn, false);
                 if (data.success) {
                     editModal.classList.remove('active');
@@ -580,10 +548,8 @@ if (typeof Swal !== 'undefined') {
                         location.reload();
                     });
                 } else if (data.errors) {
-                    // Clear previous errors
                     qsa('.error-message', editProductForm).forEach(el => el.remove());
 
-                    // Display new errors
                     for (const field in data.errors) {
                         const input = qs(`[name="${field}"]`, editProductForm);
                         if (input) {
@@ -596,7 +562,6 @@ if (typeof Swal !== 'undefined') {
                         }
                     }
                     
-                    // Actualizar CSRF token si viene en la respuesta
                     if (data.csrf_token) {
                         const metaTag = document.querySelector('meta[name="csrf-token"]');
                         if (metaTag) {
@@ -632,7 +597,7 @@ if (typeof Swal !== 'undefined') {
         });
     }
 
-    // Modal de ver detalles del producto
+    // Modal: View product details
     const viewProductModal = qs('#view-product-modal');
     const viewDetailsBtns = qsa('.view-details-btn');
     const closeViewProductModalBtn = qs('#close-view-product-modal');
@@ -738,7 +703,7 @@ if (typeof Swal !== 'undefined') {
         });
     }
 
-    // Modal de importar productos
+    // Modal: Import products
     const importModal = qs('#import-modal');
     const openImportModalBtn = qs('#import-btn');
     const closeImportModalBtn = qs('#close-import-modal');
@@ -764,12 +729,11 @@ if (typeof Swal !== 'undefined') {
         });
     }
 
-    // Función para detectar el formato del archivo
+    // Detect file format by extension
     function detectFileFormat(file) {
         const extension = file.name.split('.').pop().toLowerCase();
         const fileName = file.name.toLowerCase();
         
-        // Detectar por extensión
         if (extension === 'xml' || fileName.endsWith('.xml')) {
             return { format: 'xml', name: 'XML', icon: 'fa-file-code', color: '#f59e0b' };
         } else if (extension === 'csv' || extension === 'txt' || fileName.endsWith('.csv') || fileName.endsWith('.txt')) {
@@ -781,7 +745,6 @@ if (typeof Swal !== 'undefined') {
         return null;
     }
 
-    // Función para formatear el tamaño del archivo
     function formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -790,7 +753,6 @@ if (typeof Swal !== 'undefined') {
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     }
 
-    // Manejar selección de archivo
     const fileInput = qs('#import_file');
     const fileInfo = qs('#file-info');
     const fileName = qs('#file-name');
@@ -804,37 +766,31 @@ if (typeof Swal !== 'undefined') {
     const removeFileBtn = qs('#remove-file');
 
     if (fileInput) {
-        // Click en el label para abrir el selector de archivos
         if (fileUploadLabel) {
             fileUploadLabel.addEventListener('click', () => {
                 fileInput.click();
             });
         }
 
-        // Manejar cambio de archivo
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 const detected = detectFileFormat(file);
                 
                 if (detected) {
-                    // Mostrar información del archivo
                     fileName.textContent = file.name;
                     fileFormat.textContent = detected.name;
                     fileSize.textContent = formatFileSize(file.size);
                     fileIcon.className = `fas ${detected.icon}`;
                     fileIcon.style.color = detected.color;
                     
-                    // Mostrar formato detectado
                     detectedFormatText.textContent = detected.name;
                     formatHelpText.textContent = `El sistema detectó automáticamente que tu archivo es ${detected.name}. No necesitas seleccionar el formato manualmente.`;
                     
-                    // Mostrar elementos
                     fileInfo.classList.remove('hidden');
                     formatDetected.classList.remove('hidden');
                     fileUploadLabel.style.display = 'none';
                     
-                    // Habilitar botón de importar
                     confirmImportBtn.disabled = false;
                 } else {
                     Swal.fire({
@@ -848,7 +804,6 @@ if (typeof Swal !== 'undefined') {
             }
         });
 
-        // Manejar drag and drop
         if (fileUploadLabel) {
             fileUploadLabel.addEventListener('dragover', (e) => {
                 e.preventDefault();
@@ -875,7 +830,6 @@ if (typeof Swal !== 'undefined') {
             });
         }
 
-        // Botón para remover archivo
         if (removeFileBtn) {
             removeFileBtn.addEventListener('click', () => {
                 fileInput.value = '';
@@ -903,7 +857,6 @@ if (typeof Swal !== 'undefined') {
             const detected = detectFileFormat(file);
             const formatName = detected ? detected.name : 'desconocido';
             
-            // Confirmar importación
             Swal.fire({
                 title: '¿Importar productos?',
                 html: `Se importarán los productos desde el archivo <strong>${file.name}</strong> en formato <strong>${formatName}</strong>.`,
@@ -915,17 +868,14 @@ if (typeof Swal !== 'undefined') {
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Mostrar indicador de progreso
                     const progressBar = showProgressBar();
                     const longOperationIndicator = showLongOperationIndicator('Importando productos...');
                     
-                    // Deshabilitar botón y mostrar estado de carga
                     setButtonLoading(confirmImportBtn, true, 'Importando...');
                     
-                    // Enviar formulario
                     importForm.submit();
                     
-                    // Limpiar indicadores después de un tiempo (fallback)
+                    // Fallback: remove indicators after 10 seconds
                     setTimeout(() => {
                         hideProgressBar(progressBar);
                         hideLongOperationIndicator(longOperationIndicator);
@@ -936,7 +886,7 @@ if (typeof Swal !== 'undefined') {
         });
     }
 
-    // Cerrar modales al hacer clic en el backdrop
+    // Close modals when clicking on backdrop
     qsa('.modal-backdrop').forEach(backdrop => {
         backdrop.addEventListener('click', () => {
             backdrop.closest('.edit-modal').classList.remove('active');
@@ -945,7 +895,7 @@ if (typeof Swal !== 'undefined') {
 })();
 
 
-// ---------- Product Deletion with SweetAlert ----------
+// Product deletion with confirmation and feedback
 (function initProductDeletion() {
     const deleteButtons = qsa('[data-action="delete"]');
 
@@ -1021,7 +971,7 @@ if (typeof Swal !== 'undefined') {
 
 
 
-// ---------- Paginación: go-to + deshabilitados + enter ----------
+// Pagination controls with disabled state handling and smooth scrolling
 (function initPagination() {
     const wrapper = qs('.pagination');
     if (!wrapper) return;
@@ -1029,7 +979,7 @@ if (typeof Swal !== 'undefined') {
     const goInput = qs('#goToPageInput', wrapper);
     const goBtn = qs('#goToPageBtn', wrapper);
 
-    // Si enlaces prev/next están "aria-disabled", evita navegación
+    // Prevent navigation on disabled prev/next buttons
     qsa('.pagination .button[aria-label]', wrapper).forEach((a) => {
         const disabled = a.getAttribute('aria-disabled') === 'true';
         if (disabled) {
@@ -1038,23 +988,20 @@ if (typeof Swal !== 'undefined') {
         }
     });
 
-    // Click en Prev/Next por seguridad: si hay data-page, refuerza la navegación
+    // Optional: smooth scroll when clicking page links
     qsa('.pagination .button[aria-label]', wrapper).forEach((a) => {
         a.addEventListener('click', (e) => {
             const dp = a.dataset.page;
             if (!dp || a.getAttribute('aria-disabled') === 'true') return;
-            // Si el href ya viene del paginator, dejamos que actúe;
-            // esto es por si usas eventos SPA ajax en el futuro.
             smoothScrollTop();
         });
     });
 
-    // Validación y "Ir"
+    // Navigate to a specific page
     function goToPage() {
         const totalSpan = qs('.pagination .button.button-primary', wrapper);
         if (!totalSpan) return;
 
-        // totalSpan innerText: "3 / 5" => extrae el total
         const parts = totalSpan.textContent.trim().split('/');
         const lastPage = Math.max(1, parseInt((parts[1] || '1').trim(), 10));
         let target = parseInt((goInput?.value || '1').trim(), 10);
@@ -1063,7 +1010,6 @@ if (typeof Swal !== 'undefined') {
         if (target < 1) target = 1;
         if (target > lastPage) target = lastPage;
 
-        // Construye URL conservando query string (filtros)
         const url = new URL(window.location.href);
         url.searchParams.set('page', String(target));
         smoothScrollTop();
@@ -1084,16 +1030,14 @@ if (typeof Swal !== 'undefined') {
     }
 })();
 
+// Initial loading spinner and filter form behavior
 document.addEventListener('DOMContentLoaded', () => {
     const productSection = document.querySelector('.products-section');
     const loadingSpinner = document.querySelector('.loading-spinner-overlay');
     const filterForm = document.querySelector('.filter-form');
 
     if (productSection && loadingSpinner) {
-        // Show spinner on page load
         loadingSpinner.style.display = 'flex';
-
-        // Hide spinner when content is loaded
         window.addEventListener('load', () => {
             loadingSpinner.style.display = 'none';
         });
