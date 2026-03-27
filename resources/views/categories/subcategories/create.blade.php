@@ -131,7 +131,17 @@
                     return;
                 }
 
-                const subs = tree[String(parentId)] || [];
+                const key = String(parentId);
+                const num = Number(parentId);
+                let subs = tree[key] || tree[parentId] || (Number.isFinite(num) ? tree[num] : []) || [];
+                if (!subs.length) {
+                    for (const k of Object.keys(tree)) {
+                        if (String(k) === key || Number(k) === num) {
+                            subs = tree[k] || [];
+                            break;
+                        }
+                    }
+                }
                 if (!subs.length) {
                     hintBox.innerHTML = '<p>No hay subcategorías registradas para esta categoría padre.</p>';
                     return;

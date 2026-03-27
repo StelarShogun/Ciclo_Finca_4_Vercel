@@ -29,19 +29,7 @@ class CategoryController extends Controller
             })
             ->values();
 
-        $subcategoriesByParent = Category::query()
-            ->whereNotNull('parent_category_id')
-            ->orderBy('name')
-            ->get(['category_id', 'name', 'parent_category_id'])
-            ->groupBy('parent_category_id')
-            ->map(function ($rows) {
-                return $rows->map(function ($row) {
-                    return [
-                        'category_id' => $row->category_id,
-                        'name' => $row->name,
-                    ];
-                })->values();
-            });
+        $subcategoriesByParent = Category::subcategoriesGroupedByCanonicalParent();
 
         return view('categories.subcategories.create', compact('categories', 'categoriesHierarchy', 'subcategoriesByParent'));
     }

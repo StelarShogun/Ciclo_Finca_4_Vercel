@@ -61,7 +61,16 @@ function fillSubcategoryOptions(subSelect, parentId, selectedId = '') {
         });
     } else if (hasParent) {
         const key = String(parentId);
-        subs = tree[key] || tree[parentId] || [];
+        const num = Number(parentId);
+        subs = tree[key] || tree[parentId] || (Number.isFinite(num) ? tree[num] : []) || [];
+        if (!subs.length && typeof tree === 'object' && tree !== null) {
+            for (const k of Object.keys(tree)) {
+                if (String(k) === key || Number(k) === num) {
+                    subs = tree[k] || [];
+                    break;
+                }
+            }
+        }
     }
 
     subs.forEach((sub) => {

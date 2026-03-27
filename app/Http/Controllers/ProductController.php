@@ -264,10 +264,11 @@ class ProductController extends Controller
         if ($request->filled('subcategory_id')) {
             $query->where('category_id', $request->subcategory_id);
         } elseif ($request->filled('parent_category_id')) {
-            $parentId = (int) $request->parent_category_id;
-            $childIds = Category::where('parent_category_id', $parentId)->pluck('category_id');
-            $query->where(function ($q) use ($parentId, $childIds) {
-                $q->where('category_id', $parentId)
+            $canonicalParentId = (int) $request->parent_category_id;
+            $physicalParentIds = Category::physicalRootIdsForCanonicalParent($canonicalParentId);
+            $childIds = Category::whereIn('parent_category_id', $physicalParentIds)->pluck('category_id');
+            $query->where(function ($q) use ($physicalParentIds, $childIds) {
+                $q->whereIn('category_id', $physicalParentIds)
                     ->orWhereIn('category_id', $childIds);
             });
         } elseif ($request->filled('category_id')) {
@@ -328,19 +329,7 @@ class ProductController extends Controller
             ->orderBy('name')
             ->get();
 
-        $subcategoriesByParent = Category::query()
-            ->whereNotNull('parent_category_id')
-            ->orderBy('name')
-            ->get(['category_id', 'name', 'parent_category_id'])
-            ->groupBy('parent_category_id')
-            ->map(function ($rows) {
-                return $rows->map(function ($row) {
-                    return [
-                        'category_id' => $row->category_id,
-                        'name' => $row->name,
-                    ];
-                })->values();
-            });
+        $subcategoriesByParent = Category::subcategoriesGroupedByCanonicalParent();
 
         return view('admin.products.inventory', [
             'products' => $products,
