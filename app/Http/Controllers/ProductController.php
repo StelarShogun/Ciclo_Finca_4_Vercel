@@ -91,7 +91,7 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            $product = Product::with(['category','supplier'])->findOrFail($id);
+            $product = Product::with(['category.parent','supplier'])->findOrFail($id);
             
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
@@ -251,7 +251,7 @@ class ProductController extends Controller
 
     public function inventory(Request $request)
     {
-        $query = Product::with(['category', 'supplier']);
+        $query = Product::with(['category.parent', 'supplier']);
 
         // Aplicar filtros
         if ($request->filled('search')) {

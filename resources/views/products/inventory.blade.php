@@ -170,7 +170,13 @@
                                         <span class="sku">SKU: {{ 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT) }}</span>
                                     </div>
                                 </td>
-                                <td>{{ $product->category->name }}</td>
+                                <td>
+                                    @if($product->category)
+                                        {{ $product->category->parent ? $product->category->parent->name . ' > ' . $product->category->name : $product->category->name }}
+                                    @else
+                                        Sin categoría
+                                    @endif
+                                </td>
                                 <td>
                                     <span class="stock-badge {{ $product->stock_current > 10 ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger') }}">{{ $product->stock_current }}</span>
                                 </td>
@@ -218,7 +224,13 @@
                             <div class="product-card-details">
                                 <div class="product-card-detail">
                                     <span class="product-card-detail-label">Categoría</span>
-                                    <span class="product-card-detail-value">{{ $product->category->name }}</span>
+                                    <span class="product-card-detail-value">
+                                        @if($product->category)
+                                            {{ $product->category->parent ? $product->category->parent->name . ' > ' . $product->category->name : $product->category->name }}
+                                        @else
+                                            Sin categoría
+                                        @endif
+                                    </span>
                                 </div>
                                 <div class="product-card-detail">
                                     <span class="product-card-detail-label">Stock</span>

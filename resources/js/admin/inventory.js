@@ -14,6 +14,13 @@ function jsonValidationMessage(data) {
     return typeof data.message === 'string' ? data.message : '';
 }
 
+function categoryPath(category) {
+    if (!category) return '-';
+    const parentName = category.parent?.name;
+    const currentName = category.name || '';
+    return parentName ? `${parentName} > ${currentName}` : (currentName || '-');
+}
+
 // Función para obtener el CSRF token dinámicamente
 function getCSRFToken() {
     const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -761,7 +768,7 @@ function bindDependentCategorySelectors(config) {
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-boxes icon"></i> Categoría:</label>
-                                <p>${product.category?.name || '-'}</p>
+                                <p>${categoryPath(product.category)}</p>
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-truck icon"></i> Proveedor:</label>
