@@ -20,121 +20,128 @@
                 </div>
             </div>
 
-            {{-- Main navigation --}}
-            <nav class="main-nav">
-                <a href="{{ route('clients.home') }}"
-                    class="nav-link {{ request()->routeIs('clients.home') ? 'active' : '' }}">
-                    <i class="fas fa-home"></i>
-                    <span>Inicio</span>
-                </a>
-                <a href="{{ route('clients.catalog') }}"
-                    class="nav-link {{ request()->routeIs('clients.catalog') ? 'active' : '' }}">
-                    <i class="fas fa-th"></i>
-                    <span>Catálogo</span>
-                </a>
-            </nav>
+            <button class="header-menu-toggle" id="header-menu-toggle" type="button"
+                aria-label="Abrir menú de navegación" aria-controls="header-menu-panel" aria-expanded="false">
+                <i class="fas fa-bars" aria-hidden="true"></i>
+            </button>
 
-            {{-- Header actions: cart and user menu --}}
-            <div class="header-actions">
-
-                @auth('clients')
-                    {{-- Cart button with item counter --}}
-                    <a href="{{ route('clients.cart') }}" class="cart-btn cart-btn-link" id="cart-link"
-                        data-cart-count="{{ $cartCount ?? 0 }}" title="Ver carrito">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
+            <div class="header-menu-panel" id="header-menu-panel">
+                {{-- Main navigation --}}
+                <nav class="main-nav">
+                    <a href="{{ route('clients.home') }}"
+                        class="nav-link {{ request()->routeIs('clients.home') ? 'active' : '' }}">
+                        <i class="fas fa-home"></i>
+                        <span>Inicio</span>
                     </a>
+                    <a href="{{ route('clients.catalog') }}"
+                        class="nav-link {{ request()->routeIs('clients.catalog') ? 'active' : '' }}">
+                        <i class="fas fa-th"></i>
+                        <span>Catálogo</span>
+                    </a>
+                </nav>
 
-                    {{-- Dropdown menu for the authenticated user --}}
-                    <div class="user-menu-wrap" id="user-menu">
-                        <button class="user-menu-trigger" id="user-menu-trigger" type="button" aria-expanded="false"
-                            aria-haspopup="true" title="Mi cuenta">
-                            {{-- Avatar with the client's initials --}}
-                            <div class="user-avatar-bubble">
-                                {{ strtoupper(substr(Auth::guard('clients')->user()->name, 0, 1)) }}{{ strtoupper(substr(Auth::guard('clients')->user()->first_surname, 0, 1)) }}
-                            </div>
-                            <span class="user-trigger-name">
-                                {{ Auth::guard('clients')->user()->name }}
-                            </span>
-                            <i class="fas fa-chevron-down user-trigger-caret"></i>
-                        </button>
+                {{-- Header actions: cart and user menu --}}
+                <div class="header-actions">
 
-                        <div class="user-dropdown-panel" id="user-dropdown" aria-hidden="true" role="menu">
+                    @auth('clients')
+                        {{-- Cart button with item counter --}}
+                        <a href="{{ route('clients.cart') }}" class="cart-btn cart-btn-link" id="cart-link"
+                            data-cart-count="{{ $cartCount ?? 0 }}" title="Ver carrito">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
+                        </a>
 
-                            {{-- Dropdown header: full name and email --}}
-                            <div class="user-dropdown-head">
-                                <p class="user-dropdown-fullname">
+                        {{-- Dropdown menu for the authenticated user --}}
+                        <div class="user-menu-wrap" id="user-menu">
+                            <button class="user-menu-trigger" id="user-menu-trigger" type="button" aria-expanded="false"
+                                aria-haspopup="true" title="Mi cuenta">
+                                {{-- Avatar with the client's initials --}}
+                                <div class="user-avatar-bubble">
+                                    {{ strtoupper(substr(Auth::guard('clients')->user()->name, 0, 1)) }}{{ strtoupper(substr(Auth::guard('clients')->user()->first_surname, 0, 1)) }}
+                                </div>
+                                <span class="user-trigger-name">
                                     {{ Auth::guard('clients')->user()->name }}
-                                    {{ Auth::guard('clients')->user()->first_surname }}
-                                </p>
-                                <p class="user-dropdown-email">
-                                    {{ Auth::guard('clients')->user()->gmail }}
-                                </p>
-                            </div>
+                                </span>
+                                <i class="fas fa-chevron-down user-trigger-caret"></i>
+                            </button>
 
-                            {{-- Profile link --}}
-                            <div class="user-dropdown-body">
-                                <a href="{{ route('clients.profile') }}"
-                                    class="user-dropdown-item {{ request()->routeIs('clients.profile') ? 'active' : '' }}"
-                                    role="menuitem">
-                                    <i class="fas fa-user-circle"></i>
-                                    Mi Perfil
-                                </a>
-                            </div>
+                            <div class="user-dropdown-panel" id="user-dropdown" aria-hidden="true" role="menu">
 
-                            {{-- Dropdown footer: logout --}}
-                            <div class="user-dropdown-foot">
-                                <form action="{{ route('logout') }}" method="POST" class="logout-form">
-                                    @csrf
-                                    <button type="submit" class="user-dropdown-item user-dropdown-logout" role="menuitem">
-                                        <i class="fas fa-sign-out-alt"></i>
-                                        Cerrar Sesión
-                                    </button>
-                                </form>
+                                {{-- Dropdown header: full name and email --}}
+                                <div class="user-dropdown-head">
+                                    <p class="user-dropdown-fullname">
+                                        {{ Auth::guard('clients')->user()->name }}
+                                        {{ Auth::guard('clients')->user()->first_surname }}
+                                    </p>
+                                    <p class="user-dropdown-email">
+                                        {{ Auth::guard('clients')->user()->gmail }}
+                                    </p>
+                                </div>
+
+                                {{-- Profile link --}}
+                                <div class="user-dropdown-body">
+                                    <a href="{{ route('clients.profile') }}"
+                                        class="user-dropdown-item {{ request()->routeIs('clients.profile') ? 'active' : '' }}"
+                                        role="menuitem">
+                                        <i class="fas fa-user-circle"></i>
+                                        Mi Perfil
+                                    </a>
+                                </div>
+
+                                {{-- Dropdown footer: logout --}}
+                                <div class="user-dropdown-foot">
+                                    <form action="{{ route('logout') }}" method="POST" class="logout-form">
+                                        @csrf
+                                        <button type="submit" class="user-dropdown-item user-dropdown-logout" role="menuitem">
+                                            <i class="fas fa-sign-out-alt"></i>
+                                            Cerrar Sesión
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                @else
-                    {{-- Cart button for unauthenticated guests --}}
-                    <button class="cart-btn" id="cart-guest" type="button" data-cart-count="0" title="Ver carrito">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-count" id="cart-count">0</span>
-                    </button>
-
-                    @if (request()->routeIs('login.show'))
-                        {{-- Back button shown only on the login page --}}
-                        <a href="{{ route('clients.home') }}" class="btn btn-outline-secondary btn-sm"
-                            style="display:flex;align-items:center;gap:6px;">
-                            <i class="fas fa-arrow-left"></i>
-                            <span>Regresar</span>
-                        </a>
-                    @elseif(session('client_id'))
-                        {{-- Fallback: session-based user with no active Auth guard --}}
-                        <a href="{{ route('clients.profile') }}" class="user-dropdown-item" title="Mi Perfil"
-                            style="display:flex;flex-direction:column;align-items:center;
-                                  text-decoration:none;color:var(--color-primary);">
-                            <i class="fas fa-user-circle" style="font-size:2rem;"></i>
-                            <span style="font-size:.9rem;margin-top:2px;">
-                                {{ session('client_name') }}
-                            </span>
-                        </a>
-                        <form action="{{ route('logout') }}" method="POST" class="logout-form" style="margin:0;">
-                            @csrf
-                            <button type="submit" class="user-dropdown-item user-dropdown-logout" title="Cerrar Sesión">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>Cerrar Sesión</span>
-                            </button>
-                        </form>
                     @else
-                        {{-- Login button for unauthenticated guests --}}
-                        <a href="{{ route('login.show') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-sign-in-alt"></i>
-                            <span>Iniciar Sesión</span>
-                        </a>
-                    @endif
-                @endauth
+                        {{-- Cart button for unauthenticated guests --}}
+                        <button class="cart-btn" id="cart-guest" type="button" data-cart-count="0" title="Ver carrito">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count" id="cart-count">0</span>
+                        </button>
 
-            </div>{{-- /header-actions --}}
+                        @if (request()->routeIs('login.show'))
+                            {{-- Back button shown only on the login page --}}
+                            <a href="{{ route('clients.home') }}" class="btn btn-outline-secondary btn-sm"
+                                style="display:flex;align-items:center;gap:6px;">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Regresar</span>
+                            </a>
+                        @elseif(session('client_id'))
+                            {{-- Fallback: session-based user with no active Auth guard --}}
+                            <a href="{{ route('clients.profile') }}" class="user-dropdown-item" title="Mi Perfil"
+                                style="display:flex;flex-direction:column;align-items:center;
+                                      text-decoration:none;color:var(--color-primary);">
+                                <i class="fas fa-user-circle" style="font-size:2rem;"></i>
+                                <span style="font-size:.9rem;margin-top:2px;">
+                                    {{ session('client_name') }}
+                                </span>
+                            </a>
+                            <form action="{{ route('logout') }}" method="POST" class="logout-form" style="margin:0;">
+                                @csrf
+                                <button type="submit" class="user-dropdown-item user-dropdown-logout" title="Cerrar Sesión">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Cerrar Sesión</span>
+                                </button>
+                            </form>
+                        @else
+                            {{-- Login button for unauthenticated guests --}}
+                            <a href="{{ route('login.show') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>Iniciar Sesión</span>
+                            </a>
+                        @endif
+                    @endauth
+
+                </div>{{-- /header-actions --}}
+            </div>{{-- /header-menu-panel --}}
         </div>
     </div>
 </header>

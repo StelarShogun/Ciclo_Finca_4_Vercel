@@ -219,6 +219,22 @@ function toggleUserDropdown() {
     setUserMenuOpen(!wrap.classList.contains('open'));
 }
 
+function setHeaderMenuOpen(open) {
+    var header = document.querySelector('.cliente-header');
+    var toggle = document.getElementById('header-menu-toggle');
+    var icon = toggle ? toggle.querySelector('i') : null;
+    if (!header) return;
+    header.classList.toggle('menu-open', open);
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Cerrar menú de navegación' : 'Abrir menú de navegación');
+    }
+    if (icon) {
+        icon.classList.toggle('fa-bars', !open);
+        icon.classList.toggle('fa-times', open);
+    }
+}
+
 function setUserMenuOpen(open) {
     var wrap    = document.getElementById('user-menu');
     var panel   = document.getElementById('user-dropdown');
@@ -282,6 +298,40 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!userMenu || !userMenu.classList.contains('open')) return;
         if (userMenu.contains(e.target)) return;
         closeUserDropdown();
+    });
+
+    // — Mobile header menu toggle —
+    var headerMenuToggle = document.getElementById('header-menu-toggle');
+    if (headerMenuToggle) {
+        headerMenuToggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var header = document.querySelector('.cliente-header');
+            if (!header) return;
+            setHeaderMenuOpen(!header.classList.contains('menu-open'));
+        });
+    }
+
+    // — Close mobile menu when selecting a nav link —
+    document.querySelectorAll('.header-menu-panel .nav-link').forEach(function (link) {
+        link.addEventListener('click', function () {
+            setHeaderMenuOpen(false);
+        });
+    });
+
+    // — Close mobile header menu on outside click —
+    document.addEventListener('click', function (e) {
+        var header = document.querySelector('.cliente-header');
+        if (!header || !header.classList.contains('menu-open')) return;
+        if (header.contains(e.target)) return;
+        setHeaderMenuOpen(false);
+    });
+
+    // — Keep desktop navbar always expanded —
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 768) {
+            setHeaderMenuOpen(false);
+        }
     });
 
     // — Login modal —
@@ -666,6 +716,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // — ESC closes all modals and dropdowns —
     document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
+        setHeaderMenuOpen(false);
         closeUserDropdown();
         closeLoginModal();
         document.querySelectorAll('.modal.active').forEach(function (modal) {

@@ -129,6 +129,43 @@ body.guest-layout {
   gap: 30px;
 }
 
+.header-menu-toggle {
+  display: none;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--background-white);
+  color: var(--text-primary);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.header-menu-toggle i {
+  transition: transform 0.28s ease, opacity 0.2s ease;
+}
+
+.cliente-header.menu-open .header-menu-toggle i {
+  transform: rotate(90deg);
+}
+
+.header-menu-toggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-success-bg);
+}
+
+.header-menu-panel {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  min-width: 0;
+}
+
 /* Logo and home link */
 .logo-section {
   display: flex;
@@ -2682,19 +2719,64 @@ body.guest-layout {
 
 @media (max-width: 768px) {
   .header-content {
-    flex-wrap: wrap;
-    height: auto;
-    padding: 15px 0;
+    height: 82px;
+    padding: 10px 0;
+    gap: 10px;
+  }
+
+  .header-menu-toggle {
+    display: inline-flex;
+  }
+
+  .header-menu-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px 20px 16px;
+    background: var(--background-white);
+    border-top: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    transform: translateY(-8px);
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.24s ease, transform 0.24s ease, visibility 0.24s ease;
+  }
+
+  .cliente-header.menu-open .header-menu-panel {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+    pointer-events: auto;
   }
 
   .main-nav {
-    order: 3;
     width: 100%;
     justify-content: flex-start;
-    margin-top: 10px;
+    margin-top: 0;
+    flex-direction: column;
+    gap: 6px;
   }
 
-  .cliente-main { padding-top: 120px; }
+  .nav-link {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .cliente-main { padding-top: 102px; }
 
   .products-grid    { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
   .categories-grid  { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
