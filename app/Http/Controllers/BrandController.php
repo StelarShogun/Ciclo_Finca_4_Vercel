@@ -121,13 +121,20 @@ class BrandController extends Controller
 
     public function destroy(Brand $brand)
     {
-        $productCount = $brand->products()->count();
+        try {
+            $productCount = $brand->products()->count();
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al verificar los productos asociados: ' . $e->getMessage(),
+            ], 500);
+        }
 
         if ($productCount > 0) {
             return response()->json([
                 'success' => false,
                 'blocked' => true,
-                'message' => "No se puede eliminar \"${brand->name}\" porque está asociada a {$productCount} " . ($productCount === 1 ? 'producto' : 'productos') . '.',
+                'message' => "No se puede eliminar \"{$brand->name}\" porque está asociada a {$productCount} " . ($productCount === 1 ? 'producto' : 'productos') . '.',
             ], 422);
         }
 

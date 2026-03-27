@@ -101,24 +101,38 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (!isConfirmed) return;
 
-            const res  = await fetch(`/brands/${btn.dataset.id}`, {
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-            });
-            const data = await res.json();
+            let data;
+            try {
+                const res = await fetch(`/brands/${btn.dataset.id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                });
+                data = await res.json();
+            } catch (err) {
+                toast('error', 'Error de conexión al intentar eliminar la marca.');
+                return;
+            }
 
             if (data.success) {
                 await toast('success', data.message);
                 location.reload();
             } else if (data.blocked) {
                 Swal.fire({
-                    icon: 'error',
+                    icon: 'warning',
                     title: 'No se puede eliminar',
-                    text: data.message,
+                    html: `<p style="margin:0 0 0.5rem">${data.message}</p>
+                           <p style="margin:0;font-size:0.875rem;color:#6b7280">Para eliminarla primero debes desvincularla de todos los productos asociados.</p>`,
+                    confirmButtonText: 'Entendido',
                     confirmButtonColor: '#2e7d32',
                 });
             } else {
-                toast('error', 'No se pudo eliminar la marca.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No se pudo eliminar',
+                    text: data.message || 'Ocurrió un error inesperado.',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#2e7d32',
+                });
             }
         });
     });
