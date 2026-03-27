@@ -1,0 +1,76 @@
+/* ===================================================================
+   VARIABLES
+   =================================================================== */
+:root {
+  /* Primary colors */
+  --color-primary:       #2e7d32;
+  --color-primary-dark:  #1b5e20;
+  --color-primary-light: #4caf50;
+  --color-accent:        #ff6f00;
+
+  /* State colors */
+  --color-success:     #2e7d32;
+  --color-success-bg:  #e8f5e9;
+  --color-danger:      #d32f2f;
+  --color-danger-bg:   #ffebee;
+  --color-warning:     #f57c00;
+  --color-warning-bg:  #fff3e0;
+  --color-info:        #1976d2;
+  --color-info-bg:     #e3f2fd;
+
+  /* Neutral colors */
+  --color-secondary:     #455a64;
+  --color-secondary-bg:  #eceff1;
+  --color-light:         #f8f9fa;
+  --color-dark:          #212529;
+  --color-muted:         #6c757d;
+
+  /* Text colors */
+  --text-primary:   #333;
+  --text-secondary: #666;
+
+  /* Backgrounds */
+  --background-main:  #f5f5f5;
+  --background-white: #ffffff;
+  --background-light: #f8f9fa;
+
+  /* Borders */
+  --border-color:         #e0e0e0;
+  --border-radius:        8px;
+  --border-radius-small:  4px;
+  --border-radius-large:  12px;
+
+  /* Shadows */
+  --shadow-sm:     0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md:     0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg:     0 10px 15px rgba(0, 0, 0, 0.1);
+
+  /* Transition */
+  --transition: all 0.3s ease;
+}
+
+/* ===================================================================
+   RESET & BASE
+   =================================================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--background-main);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+/* Layout without navbar/footer (login, register, verification) */
+body.guest-layout {
+  min-height: 100vh;
+  background: var(--background-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

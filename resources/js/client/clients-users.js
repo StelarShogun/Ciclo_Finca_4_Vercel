@@ -822,6 +822,150 @@ function sendPassword(form) {
 })();
 
 // ----------------------------------------------------------------
+// PAGE: RECUPERACIÓN DE CONTRASEÑA
+// ----------------------------------------------------------------
+(function initRecovery() {
+    const formRecovery = document.getElementById('formRecovery');
+    if (!formRecovery) return;
+
+    // Toggle visibility de las contraseñas
+    const togglePassBtn    = document.getElementById('toggle-recovery-password');
+    const toggleConfirmBtn = document.getElementById('toggle-recovery-confirm');
+    if (togglePassBtn) {
+        togglePassBtn.addEventListener('click', function () {
+            togglePass('recovery-password', 'eye-recovery-password');
+        });
+    }
+    if (toggleConfirmBtn) {
+        toggleConfirmBtn.addEventListener('click', function () {
+            togglePass('recovery-password-confirm', 'eye-recovery-confirm');
+        });
+    }
+
+    // Validación del correo (solo @gmail.com)
+    const recEmailInput = document.getElementById('recovery-email');
+    if (recEmailInput) {
+        recEmailInput.addEventListener('input', function () {
+            const val = this.value.trim().toLowerCase();
+            if (val === '') {
+                clearMsg('msg-recovery-email');
+                setInputState(this, null);
+                return;
+            }
+            if (!val.endsWith('@gmail.com')) {
+                showMsg('msg-recovery-email', 'error', 'Solo se aceptan correos @gmail.com.');
+                setInputState(this, 'input-error');
+            } else {
+                showMsg('msg-recovery-email', 'success', 'Correo válido.');
+                setInputState(this, 'input-ok');
+            }
+        });
+        recEmailInput.addEventListener('blur', function () {
+            if (this.value.trim() === '') {
+                showMsg('msg-recovery-email', 'error', 'El correo Gmail es obligatorio.');
+                setInputState(this, 'input-error');
+            }
+        });
+    }
+
+    // Indicador de longitud de la contraseña
+    const recPassInput = document.getElementById('recovery-password');
+    if (recPassInput) {
+        recPassInput.addEventListener('input', function () {
+            const v = this.value;
+            if (v.length === 0) {
+                clearMsg('msg-recovery-password');
+                setInputState(this, null);
+            } else if (v.length < 8) {
+                showMsg('msg-recovery-password', 'error', `Mínimo 8 caracteres (${v.length}/8).`);
+                setInputState(this, 'input-error');
+            } else {
+                showMsg('msg-recovery-password', 'success', 'Longitud correcta.');
+                setInputState(this, 'input-ok');
+            }
+            checkRecoveryMatch();
+        });
+    }
+
+    // Función que compara las dos contraseñas
+    function checkRecoveryMatch() {
+        const passEl    = document.getElementById('recovery-password');
+        const confirmEl = document.getElementById('recovery-password-confirm');
+        if (!passEl || !confirmEl) return;
+        const p  = passEl.value;
+        const pc = confirmEl.value;
+        if (pc.length === 0) {
+            clearMsg('msg-recovery-confirm');
+            setInputState(confirmEl, null);
+            return;
+        }
+        if (p !== pc) {
+            showMsg('msg-recovery-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(confirmEl, 'input-error');
+        } else {
+            showMsg('msg-recovery-confirm', 'success', 'Las contraseñas coinciden.');
+            setInputState(confirmEl, 'input-ok');
+        }
+    }
+
+    const recConfirmInput = document.getElementById('recovery-password-confirm');
+    if (recConfirmInput) {
+        recConfirmInput.addEventListener('input', checkRecoveryMatch);
+    }
+
+    // Validación final al enviar el formulario
+    formRecovery.addEventListener('submit', function (e) {
+        let valid = true;
+
+        const emailVal = recEmailInput ? recEmailInput.value.trim().toLowerCase() : '';
+        if (!emailVal) {
+            showMsg('msg-recovery-email', 'error', 'El correo Gmail es obligatorio.');
+            if (recEmailInput) setInputState(recEmailInput, 'input-error');
+            valid = false;
+        } else if (!emailVal.endsWith('@gmail.com')) {
+            showMsg('msg-recovery-email', 'error', 'Solo se aceptan correos @gmail.com.');
+            if (recEmailInput) setInputState(recEmailInput, 'input-error');
+            valid = false;
+        }
+
+        const passVal = recPassInput ? recPassInput.value : '';
+        if (passVal.length === 0) {
+            showMsg('msg-recovery-password', 'error', 'La contraseña es obligatoria.');
+            if (recPassInput) setInputState(recPassInput, 'input-error');
+            valid = false;
+        } else if (passVal.length < 8) {
+            showMsg('msg-recovery-password', 'error', 'Mínimo 8 caracteres.');
+            if (recPassInput) setInputState(recPassInput, 'input-error');
+            valid = false;
+        }
+
+        const confVal = recConfirmInput ? recConfirmInput.value : '';
+        if (confVal.length === 0) {
+            showMsg('msg-recovery-confirm', 'error', 'Debes confirmar la contraseña.');
+            if (recConfirmInput) setInputState(recConfirmInput, 'input-error');
+            valid = false;
+        } else if (passVal !== confVal) {
+            showMsg('msg-recovery-confirm', 'error', 'Las contraseñas no coinciden.');
+            if (recConfirmInput) setInputState(recConfirmInput, 'input-error');
+            valid = false;
+        }
+
+        if (!valid) {
+            e.preventDefault();
+            return;
+        }
+
+        // Muestra el indicador de carga
+        const btn         = document.getElementById('btnRecovery');
+        const btnTexto    = document.getElementById('btnRecoveryTexto');
+        const btnCargando = document.getElementById('btnRecoveryCargando');
+        if (btn)         btn.disabled = true;
+        if (btnTexto)    btnTexto.style.display = 'none';
+        if (btnCargando) btnCargando.style.display = 'inline';
+    });
+})();
+
+// ----------------------------------------------------------------
 // GENERAL INITIALIZATION (DOMContentLoaded)
 // ----------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', function () {

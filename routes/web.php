@@ -110,6 +110,11 @@ Route::get('/verify', [ClientUserController::class, 'showVerifyForm'])->name('cl
 Route::post('/verify', [ClientUserController::class, 'verify'])->name('clients.verify');
 Route::post('/verify/resend', [ClientUserController::class, 'resendCode'])->name('clients.verify.resend');
 
+Route::get('/recovery', [ClientUserController::class, 'showRecoveryForm'])->name('clients.recovery.form');
+Route::post('/recovery', [ClientUserController::class, 'resetPassword'])->name('clients.recovery');
+Route::get('/recovery/verify', [ClientUserController::class, 'showRecoveryVerifyForm'])->name('clients.recovery.verify.form');
+Route::post('/recovery/verify', [ClientUserController::class, 'verifyRecoveryAndReset'])->name('clients.recovery.verify');
+
 // Logs out both guards to prevent inconsistent session state
 Route::post('/logout', function (Request $request) {
     Auth::guard('clients')->logout();
