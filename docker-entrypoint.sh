@@ -19,16 +19,7 @@ if ! grep -q "APP_KEY=" .env || grep -q "APP_KEY=$" .env; then
     echo ">>> APP_KEY generada"
 fi
 
-# Instalar dependencias (Node + Composer)
-echo ">>> Instalando dependencias..."
-npm install
-composer install --no-interaction
-
-# 🔥 INICIAR VITE (IMPORTANTE)
-echo ">>> Iniciando Vite..."
-npm run dev &
-
-# Laravel cache (opcional en dev, pero lo dejo)do
+# Laravel cache
 php artisan config:clear
 php artisan view:clear
 
