@@ -1,6 +1,6 @@
-// ============================================================
+// ----------------------------------------------------------------
 // GLOBAL UTILITIES
-// ============================================================
+// ----------------------------------------------------------------
 
 /** Returns the CSRF token from the meta tag or a hidden form input. */
 function getCsrfToken() {
@@ -10,17 +10,17 @@ function getCsrfToken() {
     return input ? input.value : '';
 }
 
-// ============================================================
+// ----------------------------------------------------------------
 // CART COUNTER (navbar)
-// ============================================================
+// ----------------------------------------------------------------
 
+/** Update navbar cart badge count. */
 function updateCartCount(count) {
     const cartCountEl = document.getElementById('cart-count');
-    const cartLinkEl = document.getElementById('cart-link');
+    const cartLinkEl  = document.getElementById('cart-link');
 
     if (cartCountEl) {
         cartCountEl.textContent = count;
-        // Hide the badge when the cart is empty
         cartCountEl.style.display = count > 0 ? 'flex' : 'none';
     }
     if (cartLinkEl) {
@@ -28,10 +28,11 @@ function updateCartCount(count) {
     }
 }
 
-// ============================================================
+// ----------------------------------------------------------------
 // ADD TO CART
-// ============================================================
+// ----------------------------------------------------------------
 
+/** Add product to cart via AJAX. */
 function addToCart(productId, quantity) {
     quantity = quantity || 1;
 
@@ -71,9 +72,9 @@ function addToCart(productId, quantity) {
         });
 }
 
-// ============================================================
+// ----------------------------------------------------------------
 // ADD-TO-CART MODAL (catalog & home)
-// ============================================================
+// ----------------------------------------------------------------
 
 /** Product currently being added via the quantity modal. */
 var currentProductId = null;
@@ -81,27 +82,27 @@ var currentProductId = null;
 /** Populates and opens the quantity modal from a product card button. */
 function openAddToCartModal(btn) {
     currentProductId = btn.dataset.productId;
-    var productName = btn.dataset.productName;
+    var productName  = btn.dataset.productName;
     var productPrice = parseFloat(btn.dataset.productPrice);
     var productStock = parseInt(btn.dataset.productStock, 10);
 
-    var nameEl = document.getElementById('preview-name');
+    var nameEl  = document.getElementById('preview-name');
     var priceEl = document.getElementById('preview-price');
     var stockEl = document.getElementById('preview-stock');
-    var qtyEl = document.getElementById('cart-quantity');
+    var qtyEl   = document.getElementById('cart-quantity');
 
-    if (nameEl) nameEl.textContent = productName;
+    if (nameEl)  nameEl.textContent  = productName;
     if (priceEl) priceEl.textContent = '₡' + productPrice.toLocaleString('es-CR');
     if (stockEl) stockEl.textContent = 'Stock disponible: ' + productStock;
     if (qtyEl) {
-        qtyEl.max = productStock;
+        qtyEl.max   = productStock;
         qtyEl.value = 1;
     }
 
-    // Pull the product image from the nearest card
-    var productCard = btn.closest('.product-card');
+    // Pull the product image from the nearest card.
+    var productCard  = btn.closest('.product-card');
     var productImage = productCard ? productCard.querySelector('.product-image img') : null;
-    var previewImg = document.getElementById('preview-image');
+    var previewImg   = document.getElementById('preview-image');
     if (previewImg && productImage) {
         previewImg.src = productImage.src;
     }
@@ -109,23 +110,25 @@ function openAddToCartModal(btn) {
     openModal('add-to-cart-modal');
 }
 
-// ============================================================
+// ----------------------------------------------------------------
 // MODAL HELPERS
-// ============================================================
+// ----------------------------------------------------------------
 
+/** Show modal overlay. */
 function openModal(id) {
     var modal = document.getElementById(id);
     if (modal) modal.classList.add('active');
 }
 
+/** Hide modal overlay. */
 function closeModal(id) {
     var modal = document.getElementById(id);
     if (modal) modal.classList.remove('active');
 }
 
-// ============================================================
+// ----------------------------------------------------------------
 // CART PAGE (/cart)
-// ============================================================
+// ----------------------------------------------------------------
 
 /** PUTs a quantity change for a single cart item, then updates DOM (no reload). */
 function updateCartQuantity(productId, quantity) {
@@ -142,27 +145,25 @@ function updateCartQuantity(productId, quantity) {
         .then(function (res) { return res.json().catch(function () { return {}; }); })
         .then(function (data) {
             if (data.success) {
-                // Update totals without a full page reload.
                 var totalFormatted = (data.cart_total != null)
                     ? ('₡' + Number(data.cart_total).toLocaleString('es-CR'))
                     : '₡0';
 
                 var subtotalEl = document.getElementById('cart-subtotal');
-                var totalEl = document.getElementById('cart-total-amount');
+                var totalEl    = document.getElementById('cart-total-amount');
                 if (subtotalEl) subtotalEl.textContent = totalFormatted;
-                if (totalEl) totalEl.textContent = totalFormatted;
+                if (totalEl)    totalEl.textContent    = totalFormatted;
 
                 updateCartCount(data.cart_count || 0);
 
-                // Update the affected line subtotal, using unit price from the rendered UI.
+                // Update the affected line subtotal using unit price from the rendered UI.
                 var cartItem = document.querySelector('.cart-item[data-product-id="' + productId + '"]');
                 if (cartItem) {
-                    var unitPriceEl = cartItem.querySelector('.item-price');
+                    var unitPriceEl   = cartItem.querySelector('.item-price');
                     var unitPriceText = unitPriceEl ? unitPriceEl.textContent : '';
                     // Matches "₡1.234 c/u" => returns 1234
-                    var unitPrice = parseInt(unitPriceText.replace(/[^\d]/g, ''), 10) || 0;
-
-                    var newSubtotal = unitPrice * quantity;
+                    var unitPrice     = parseInt(unitPriceText.replace(/[^\d]/g, ''), 10) || 0;
+                    var newSubtotal   = unitPrice * quantity;
                     var lineSubtotalEl = cartItem.querySelector('.subtotal-amount');
                     if (lineSubtotalEl) {
                         lineSubtotalEl.textContent = '₡' + newSubtotal.toLocaleString('es-CR');
@@ -197,33 +198,56 @@ function showCartEmptyState() {
         '</div></div>';
 }
 
-// ============================================================
-// LOGIN MODAL
-// (Menú de usuario: clients-users.js, incluido desde el header)
-// ============================================================
+// ----------------------------------------------------------------
+// USER MENU (profile dropdown)
+// ----------------------------------------------------------------
 
+/** Close user dropdown. */
+function closeUserDropdown() {
+    var userDropdown    = document.getElementById('user-dropdown');
+    var userMenuTrigger = document.getElementById('user-menu-trigger');
+    if (userDropdown)    userDropdown.classList.remove('active');
+    if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'false');
+}
+
+/** Toggle user dropdown. */
+function toggleUserDropdown() {
+    var userDropdown    = document.getElementById('user-dropdown');
+    var userMenuTrigger = document.getElementById('user-menu-trigger');
+    if (!userDropdown) return;
+
+    var willOpen = !userDropdown.classList.contains('active');
+    if (willOpen) {
+        userDropdown.classList.add('active');
+        if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'true');
+    } else {
+        closeUserDropdown();
+    }
+}
+
+/** Close login modal. */
 function closeLoginModal() {
     closeModal('login-modal');
     var overlay = document.getElementById('login-modal-overlay');
     if (overlay) overlay.classList.remove('active');
 }
 
-// ============================================================
-// INITIALIZATION
-// ============================================================
+// ----------------------------------------------------------------
+// INITIALIZATION (DOMContentLoaded)
+// ----------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    // — Initialise cart counter from the data attribute —
-    var cartLinkEl = document.getElementById('cart-link');
+    // Seed cart badge from server-rendered data.
+    var cartLinkEl  = document.getElementById('cart-link');
     var cartGuestEl = document.getElementById('cart-guest');
-    var cartRef = cartLinkEl || cartGuestEl;
+    var cartRef     = cartLinkEl || cartGuestEl;
     if (cartRef) {
         var initialCount = parseInt(cartRef.getAttribute('data-cart-count') || '0', 10);
         updateCartCount(initialCount);
     }
 
-    // — Guest cart: prompt to log in —
+    // Show login prompt for guest cart click.
     if (cartGuestEl) {
         cartGuestEl.addEventListener('click', function () {
             Swal.fire({
@@ -235,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // — Login modal —
+    // Login modal trigger: redirect to /login page.
     var loginModalTrigger = document.getElementById('login-modal-trigger');
     if (loginModalTrigger) {
         loginModalTrigger.addEventListener('click', function () {
@@ -249,28 +273,28 @@ document.addEventListener('DOMContentLoaded', function () {
     var loginModalOverlay = document.getElementById('login-modal-overlay');
     if (loginModalOverlay) loginModalOverlay.addEventListener('click', closeLoginModal);
 
-    // — Login form submission via AJAX —
+    // Login form submission via AJAX.
     var publicLoginForm = document.getElementById('public-login-form');
     if (publicLoginForm) {
         publicLoginForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
             var csrfToken = getCsrfToken();
-            // Redirect to login if the CSRF token has expired
+            // Redirect to login if the CSRF token has expired.
             if (!csrfToken) {
                 window.location.href = '/login?session_expired=1';
                 return;
             }
 
-            var formData = new FormData(this);
-            var submitBtn = document.getElementById('login-submit-btn');
+            var formData   = new FormData(this);
+            var submitBtn  = document.getElementById('login-submit-btn');
             var loadingSpan = document.getElementById('login-loading');
             var submitSpan = submitBtn ? submitBtn.querySelector('span:not(.btn-loading)') : null;
 
-            // Show spinner while waiting for the response
-            if (submitBtn) submitBtn.disabled = true;
-            if (submitSpan) submitSpan.classList.add('hidden');
-            if (loadingSpan) loadingSpan.classList.remove('hidden');
+            // Show spinner while waiting for the response.
+            if (submitBtn)    submitBtn.disabled = true;
+            if (submitSpan)   submitSpan.classList.add('hidden');
+            if (loadingSpan)  loadingSpan.classList.remove('hidden');
 
             fetch('/login', {
                 method: 'POST',
@@ -282,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
                 .then(function (response) {
-                    // 419 means expired session/CSRF token
+                    // 419 means expired session/CSRF token.
                     if (response.status === 419) {
                         window.location.href = '/login?session_expired=1';
                         return Promise.reject('csrf');
@@ -304,9 +328,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             window.location.href = data.redirect || '/';
                         });
                     } else if (data.redirect) {
-                        // Unverified email: offer to send code and redirect to verify
-                        if (submitBtn) submitBtn.disabled = false;
-                        if (submitSpan) submitSpan.classList.remove('hidden');
+                        // Unverified email: offer to send code and redirect to verify.
+                        if (submitBtn)   submitBtn.disabled = false;
+                        if (submitSpan)  submitSpan.classList.remove('hidden');
                         if (loadingSpan) loadingSpan.classList.add('hidden');
                         Swal.fire({
                             icon: 'warning',
@@ -319,7 +343,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             cancelButtonColor: '#6c757d'
                         }).then(function (result) {
                             if (!result.isConfirmed) return;
-                            // El servidor ya envió el código al detectar el correo no verificado
                             window.location.href = data.redirect;
                         });
                     } else {
@@ -339,8 +362,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 window.location.href = '/register';
                             }
                         });
-                        if (submitBtn) submitBtn.disabled = false;
-                        if (submitSpan) submitSpan.classList.remove('hidden');
+                        if (submitBtn)   submitBtn.disabled = false;
+                        if (submitSpan)  submitSpan.classList.remove('hidden');
                         if (loadingSpan) loadingSpan.classList.add('hidden');
                     }
                 })
@@ -348,14 +371,32 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (err === 'csrf' || err === 'parse') return;
                     console.error('Login error:', err);
                     Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al iniciar sesión' });
-                    if (submitBtn) submitBtn.disabled = false;
-                    if (submitSpan) submitSpan.classList.remove('hidden');
+                    if (submitBtn)   submitBtn.disabled = false;
+                    if (submitSpan)  submitSpan.classList.remove('hidden');
                     if (loadingSpan) loadingSpan.classList.add('hidden');
                 });
         });
     }
 
-    // — Add-to-cart (delegated): open modal or add directly if no modal present —
+    // User menu trigger with stopPropagation.
+    var userMenuTrigger = document.getElementById('user-menu-trigger');
+    if (userMenuTrigger) {
+        userMenuTrigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            toggleUserDropdown();
+        });
+    }
+
+    // Close dropdown when clicking outside.
+    document.addEventListener('click', function (e) {
+        var userMenu     = document.getElementById('user-menu');
+        var userDropdown = document.getElementById('user-dropdown');
+        if (!userDropdown || !userDropdown.classList.contains('active')) return;
+        if (userMenu && userMenu.contains(e.target)) return;
+        closeUserDropdown();
+    });
+
+    // Delegated: open quantity modal or add directly for add-to-cart buttons.
     document.addEventListener('click', function (e) {
         var addBtn = e.target.closest('.add-to-cart-btn');
         if (addBtn) {
@@ -368,23 +409,23 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Guest: redirect to login (no cart actions for unauthenticated users)
+        // Guest: redirect to login (no cart actions for unauthenticated users).
         if (e.target.closest('.guest-add-btn')) {
             window.location.href = '/login';
             return;
         }
 
-        // Close modal on backdrop click
+        // Close modal on backdrop click.
         if (e.target.classList.contains('modal') && e.target.classList.contains('active')) {
             e.target.classList.remove('active');
         }
     });
 
-    // — Confirm add-to-cart from modal —
+    // Confirm add-to-cart from modal.
     var confirmAddBtn = document.getElementById('confirm-add-to-cart');
     if (confirmAddBtn) {
         confirmAddBtn.addEventListener('click', function () {
-            var qtyEl = document.getElementById('cart-quantity');
+            var qtyEl    = document.getElementById('cart-quantity');
             var quantity = parseInt(qtyEl ? qtyEl.value : '1', 10);
             if (quantity < 1) {
                 Swal.fire('Error', 'La cantidad debe ser mayor a 0', 'error');
@@ -400,13 +441,13 @@ document.addEventListener('DOMContentLoaded', function () {
     var closeAddBtn = document.getElementById('close-add-to-cart-modal');
     if (closeAddBtn) closeAddBtn.addEventListener('click', function () { closeModal('add-to-cart-modal'); });
 
-    // — Remove single cart item (delegated) —
+    // Delegated: remove single cart item with confirmation.
     document.addEventListener('click', function (e) {
         var btn = e.target.closest('.cart-remove-item');
         if (!btn) return;
 
         var cartItem = btn.closest('.cart-item');
-        var itemId = btn.dataset.productId;
+        var itemId   = btn.dataset.productId;
         var itemName = btn.dataset.productName || 'este producto';
         if (!cartItem || !itemId) return;
 
@@ -443,18 +484,18 @@ document.addEventListener('DOMContentLoaded', function () {
                         showConfirmButton: false, timer: 2500, timerProgressBar: true
                     });
 
-                    // Update the displayed total without reloading
+                    // Update the displayed total without reloading.
                     var totalFormatted = (data.cart_total != null)
                         ? ('₡' + Number(data.cart_total).toLocaleString('es-CR'))
                         : '₡0';
                     var subtotalEl = document.getElementById('cart-subtotal');
-                    var totalEl = document.getElementById('cart-total-amount');
+                    var totalEl    = document.getElementById('cart-total-amount');
                     if (subtotalEl) subtotalEl.textContent = totalFormatted;
-                    if (totalEl) totalEl.textContent = totalFormatted;
+                    if (totalEl)    totalEl.textContent    = totalFormatted;
 
                     updateCartCount(data.cart_count || 0);
 
-                    // If no items remain, show the empty state
+                    // If no items remain, show the empty state.
                     if (document.querySelectorAll('.cart-item').length === 0) {
                         showCartEmptyState();
                     }
@@ -466,12 +507,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ─────────────────────────────────────────────────────────
-    // — Vaciar carrito (delegado) —
-    // Se usa delegación en lugar de un listener directo sobre
-    // #btn-clear-cart para que funcione aunque el botón sea
-    // regenerado dinámicamente o el click caiga sobre el <i> hijo.
-    // ─────────────────────────────────────────────────────────
+    // Delegated: clear all cart items with confirmation.
+    // Se usa delegación en lugar de un listener directo sobre #btn-clear-cart
+    // para que funcione aunque el botón sea regenerado dinámicamente
+    // o el click caiga sobre el <i> hijo.
     document.addEventListener('click', function (e) {
         if (!e.target.closest('#btn-clear-cart')) return;
 
@@ -513,12 +552,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // — Quantity input: clamp to [1, stock] on change —
+    // Clamp manual quantity input to [1, stock] and sync with server.
     document.querySelectorAll('.quantity-input').forEach(function (input) {
         input.addEventListener('change', function () {
             var productId = this.dataset.productId;
-            var quantity = parseInt(this.value, 10);
-            var max = parseInt(this.max, 10);
+            var quantity  = parseInt(this.value, 10);
+            var max       = parseInt(this.max, 10);
             if (quantity < 1) {
                 this.value = 1;
                 updateCartQuantity(productId, 1);
@@ -532,15 +571,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // — +/- quantity buttons (cart page) —
+    // +/- stepper buttons for cart page.
     document.querySelectorAll('.quantity-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            var action = this.dataset.action;
+            var action    = this.dataset.action;
             var productId = this.dataset.productId;
-            var input = document.querySelector('.quantity-input[data-product-id="' + productId + '"]');
+            var input     = document.querySelector('.quantity-input[data-product-id="' + productId + '"]');
             if (!input) return;
             var quantity = parseInt(input.value, 10);
-            var max = parseInt(input.max, 10);
+            var max      = parseInt(input.max, 10);
             if (action === 'increase' && quantity < max) quantity++;
             else if (action === 'decrease' && quantity > 1) quantity--;
             input.value = quantity;
@@ -548,9 +587,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // — Quantity controls on product detail page —
+    // Quantity controls on product detail page.
     var productQtyInput = document.getElementById('product-quantity');
-    var productQty = 1;
+    var productQty      = 1;
 
     if (productQtyInput) {
         var maxQty = parseInt(productQtyInput.max, 10) || 999;
@@ -565,12 +604,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         productQtyInput.addEventListener('change', function () {
             var value = parseInt(this.value, 10);
-            if (value < 1) { this.value = 1; productQty = 1; }
+            if (value < 1)       { this.value = 1;      productQty = 1; }
             else if (value > maxQty) { this.value = maxQty; productQty = maxQty; }
-            else { productQty = value; }
+            else                 { productQty = value; }
         });
 
-        // Add to cart using the quantity from the detail page selector
+        // Add to cart using the quantity from the detail page selector.
         var detailAddBtn = document.querySelector('.product-detail-actions .add-to-cart-btn');
         if (detailAddBtn) {
             detailAddBtn.addEventListener('click', function () {
@@ -579,7 +618,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // — Checkout confirmation —
+    // Checkout: confirm and submit order.
     var proceedBtn = document.getElementById('proceed-checkout');
     if (proceedBtn) {
         proceedBtn.addEventListener('click', function () {
@@ -593,7 +632,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }).then(function (result) {
                 if (!result.isConfirmed) return;
 
-                proceedBtn.disabled = true;
+                proceedBtn.disabled  = true;
                 proceedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
 
                 fetch('/cart/checkout', {
@@ -609,7 +648,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(function (data) {
                         if (!data.success) {
                             Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo procesar el pedido' });
-                            proceedBtn.disabled = false;
+                            proceedBtn.disabled  = false;
                             proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
                             return;
                         }
@@ -626,23 +665,24 @@ document.addEventListener('DOMContentLoaded', function () {
                     .catch(function (err) {
                         console.error('Checkout error:', err);
                         Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al procesar el pedido' });
-                        proceedBtn.disabled = false;
+                        proceedBtn.disabled  = false;
                         proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
                     });
             });
         });
     }
 
-    // — ESC closes all modals (dropdown de usuario: clients-users.js) —
+    // ESC closes all modals and dropdowns.
     document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
         closeLoginModal();
+        closeUserDropdown();
         document.querySelectorAll('.modal.active').forEach(function (modal) {
             modal.classList.remove('active');
         });
     });
 
-    // — Catalog price-range filter validation —
+    // Catalog price-range filter validation.
     (function initCatalogPriceFilter() {
         var form      = document.getElementById('filter-form');
         if (!form) return;
@@ -677,7 +717,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!wrapper) return;
 
         var goInput = wrapper.querySelector('#goToPageInput');
-        var goBtn = wrapper.querySelector('#goToPageBtn');
+        var goBtn   = wrapper.querySelector('#goToPageBtn');
 
         wrapper.querySelectorAll('.button[aria-label]').forEach(function (a) {
             if (a.getAttribute('aria-disabled') === 'true') {
@@ -689,18 +729,18 @@ document.addEventListener('DOMContentLoaded', function () {
         function goToPage() {
             var totalSpan = wrapper.querySelector('.button.button-primary');
             if (!totalSpan) return;
-            var parts = totalSpan.textContent.trim().split('/');
+            var parts    = totalSpan.textContent.trim().split('/');
             var lastPage = Math.max(1, parseInt((parts[1] || '1').trim(), 10));
-            var target = parseInt((goInput && goInput.value) ? goInput.value.trim() : '1', 10);
+            var target   = parseInt((goInput && goInput.value) ? goInput.value.trim() : '1', 10);
             if (isNaN(target)) target = 1;
-            if (target < 1) target = 1;
+            if (target < 1)    target = 1;
             if (target > lastPage) target = lastPage;
             var url = new URL(window.location.href);
             url.searchParams.set('page', String(target));
             window.location.assign(url.toString());
         }
 
-        if (goBtn) goBtn.addEventListener('click', goToPage);
+        if (goBtn)   goBtn.addEventListener('click', goToPage);
         if (goInput) {
             goInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') { e.preventDefault(); goToPage(); }
@@ -708,13 +748,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     })();
 
-    // — Home: carrusel de categorías (padres + chips de subcategorías) —
+    // Home: carrusel de categorías (padres + chips de subcategorías).
     (function initCategoriesCarousel() {
-        var wrap = document.querySelector('[data-categories-carousel]');
+        var wrap  = document.querySelector('[data-categories-carousel]');
         if (!wrap) return;
         var track = wrap.querySelector('[data-carousel-track]');
-        var prev = wrap.querySelector('[data-carousel-prev]');
-        var next = wrap.querySelector('[data-carousel-next]');
+        var prev  = wrap.querySelector('[data-carousel-prev]');
+        var next  = wrap.querySelector('[data-carousel-next]');
         if (!track || !prev || !next) return;
 
         function getStep() {
@@ -731,22 +771,14 @@ document.addEventListener('DOMContentLoaded', function () {
             next.disabled = track.scrollLeft >= maxScroll;
         }
 
-        prev.addEventListener('click', function () {
-            track.scrollBy({ left: -getStep(), behavior: 'smooth' });
-        });
-        next.addEventListener('click', function () {
-            track.scrollBy({ left: getStep(), behavior: 'smooth' });
-        });
-        track.addEventListener('scroll', function () {
-            window.requestAnimationFrame(updateButtons);
-        });
-        window.addEventListener('resize', function () {
-            updateButtons();
-        });
+        prev.addEventListener('click', function () { track.scrollBy({ left: -getStep(), behavior: 'smooth' }); });
+        next.addEventListener('click', function () { track.scrollBy({ left:  getStep(), behavior: 'smooth' }); });
+        track.addEventListener('scroll',  function () { window.requestAnimationFrame(updateButtons); });
+        window.addEventListener('resize', function () { updateButtons(); });
         updateButtons();
     })();
 
-    // — Home: reveal progresivo de secciones al hacer scroll —
+    // Home: reveal progresivo de secciones al hacer scroll.
     (function initHomeRevealSections() {
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -755,14 +787,10 @@ document.addEventListener('DOMContentLoaded', function () {
         );
         if (!sections.length) return;
 
-        sections.forEach(function (section) {
-            section.classList.add('home-reveal');
-        });
+        sections.forEach(function (section) { section.classList.add('home-reveal'); });
 
         if (!('IntersectionObserver' in window)) {
-            sections.forEach(function (section) {
-                section.classList.add('is-visible');
-            });
+            sections.forEach(function (section) { section.classList.add('is-visible'); });
             return;
         }
 
@@ -777,15 +805,14 @@ document.addEventListener('DOMContentLoaded', function () {
             threshold: 0.14
         });
 
-        sections.forEach(function (section) {
-            observer.observe(section);
-        });
+        sections.forEach(function (section) { observer.observe(section); });
     })();
 
 }); // end DOMContentLoaded
 
-// ============================================================
+// ----------------------------------------------------------------
 // GLOBAL EXPORTS (for use from inline scripts)
-// ============================================================
-window.addToCart = addToCart;
+// ----------------------------------------------------------------
+
+window.addToCart       = addToCart;
 window.updateCartCount = updateCartCount;

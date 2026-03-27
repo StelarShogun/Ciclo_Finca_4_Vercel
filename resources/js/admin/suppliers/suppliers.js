@@ -1,5 +1,3 @@
-// ===== SUPPLIERS.JS - SUPPLIER MANAGEMENT FUNCTIONS =====
-
 // Validates all fields in a supplier form; returns { valid, errors[] }
 function validateForm(form, type) {
     const errors = [];
@@ -23,7 +21,7 @@ function validateForm(form, type) {
     if (!phone.value.trim()) {
         errors.push('El teléfono es obligatorio');
     } else if (!/^[0-9+\s-]{8,}$/.test(phone.value)) {
-        // Allow digits, +, spaces, and hyphens; require at least 8 characters
+        // Validate phone: at least 8 characters, digits, +, spaces, hyphens allowed
         errors.push('El teléfono debe tener al menos 8 dígitos');
     }
 
@@ -399,10 +397,10 @@ function closeEditSupplierModal() {
     document.getElementById('edit-supplier-modal')?.classList.remove('active');
 }
 
-// ===== EVENT LISTENERS =====
+// Event listeners for DOM elements that exist on page load
 document.addEventListener('DOMContentLoaded', function () {
 
-    // --- New supplier modal ---
+    // New supplier modal 
     document.getElementById('open-new-supplier-modal')?.addEventListener('click', openNewSupplierModal);
     document.getElementById('close-new-supplier-modal')?.addEventListener('click', closeNewSupplierModal);
     document.getElementById('cancel-new-supplier')?.addEventListener('click', closeNewSupplierModal);
@@ -449,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // --- Edit supplier modal ---
+    // Edit supplier modal 
     document.getElementById('close-edit-supplier-modal')?.addEventListener('click', closeEditSupplierModal);
     document.getElementById('cancel-edit-supplier')?.addEventListener('click', closeEditSupplierModal);
 
@@ -508,8 +506,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // --- Search filters ---
-
     // Reads filter inputs and reloads the page with updated query params
     function applyFilters() {
         const name    = document.getElementById('buscarNombre')?.value.trim()   || '';
@@ -544,6 +540,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 
+// Expose public functions to global scope for inline event handlers
 window.registerSupplier = registerSupplier;
 window.editSupplier = editSupplier;
 window.viewSupplierDetail = viewSupplierDetail;
