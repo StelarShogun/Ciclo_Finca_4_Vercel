@@ -1,23 +1,25 @@
-/* ── Read routes from <meta> ────────────────────────────────────────────── */
+// Helper to get meta tag content safely
 const meta   = name => document.querySelector(`meta[name="${name}"]`)?.content ?? '';
+// Route definitions used for API calls
 const ROUTES = {
     get store()     { return meta('sales-route-store');     },
     get heartbeat() { return meta('sales-route-heartbeat'); },
 };
 
-/* ── Helpers ────────────────────────────────────────────────────────────── */
+// Retrieve CSRF token from meta tag
 function getCSRFToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
 }
 
-/* ── Modals ─────────────────────────────────────────────────────────────── */
+// Open/close modal for creating a new sale
 function openNewSaleModal()   { document.getElementById('new-sale-modal')?.classList.add('active'); }
 function closeNewSaleModal()  { document.getElementById('new-sale-modal')?.classList.remove('active'); }
 function closeViewSaleModal() { document.getElementById('view-sale-modal')?.classList.remove('active'); }
 
-/* ── Product rows ───────────────────────────────────────────────────────── */
+// Counter for dynamic product rows
 let productIndex = 1;
 
+// Add a new product row to the sale form
 function addProduct() {
     const container   = document.getElementById('productos-container');
     const firstSelect = container?.querySelector('.product-select');
@@ -56,12 +58,14 @@ function addProduct() {
     updateRemoveButtons();
 }
 
+// Remove a product row from the sale form
 function removeProduct(button) {
     button.closest('.product-row').remove();
     updateRemoveButtons();
     calculateTotals();
 }
 
+// Show/hide remove button based on number of rows (minimum one row)
 function updateRemoveButtons() {
     const rows = document.querySelectorAll('.product-row');
     rows.forEach(row => {
@@ -70,7 +74,7 @@ function updateRemoveButtons() {
     });
 }
 
-/* ── Totals calculation ─────────────────────────────────────────────────── */
+// Calculate total for a single product row (price * quantity)
 function calculateProductTotal(row) {
     const precio   = parseFloat(row.querySelector('input[name*="[precio_unitario]"]').value) || 0;
     const cantidad = parseInt(row.querySelector('input[name*="[quantity]"]').value) || 0;
@@ -78,6 +82,7 @@ function calculateProductTotal(row) {
     calculateTotals();
 }
 
+// Recalculate all totals (subtotal, discount, VAT, final total)
 function calculateTotals() {
     let subtotal = 0;
     document.querySelectorAll('input[name*="[total]"]').forEach(i => {
@@ -96,7 +101,7 @@ function calculateTotals() {
     if (el('total'))    el('total').textContent    = '₡' + total.toFixed(2);
 }
 
-/* ── View sale details ──────────────────────────────────────────────────── */
+// Fetch and display full sale details in a modal
 function viewSale(id) {
     const modal = document.getElementById('view-sale-modal');
     const body  = document.getElementById('view-sale-body');
@@ -125,6 +130,7 @@ function viewSale(id) {
         const statusLabels  = { pending: 'Pending', completed: 'Completed', cancelled: 'Cancelled', refunded: 'Refunded' };
         const paymentLabels = { cash: 'Cash', sinpe: 'SINPE Mobile', transfer: 'Transfer' };
 
+        // Build customer name from client or buyer data
         let customerName = 'Walk-in / No data';
         if (sale.client) {
             customerName = [sale.client.name, sale.client.first_surname, sale.client.second_surname]
@@ -135,18 +141,21 @@ function viewSale(id) {
             if (sale.buyer.email) customerName += ` (${sale.buyer.email})`;
         }
 
+        // Generate HTML for products table
         const productsHtml = items.map(item => {
             const prod = item.product || {};
             const up   = parseFloat(item.unit_price || 0);
             const tot  = parseFloat(item.total || 0);
-            return `<tr>
-                <td>${prod.name || 'N/A'}</td>
-                <td class="text-center">${item.quantity}</td>
-                <td class="text-right">₡${up.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</td>
-                <td class="text-right"><strong>₡${tot.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></td>
-            </tr>`;
+            return `
+                <tr>
+                    <td>${prod.name || 'N/A'}</td>
+                    <td class="text-center">${item.quantity}</td>
+                    <td class="text-right">₡${up.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</td>
+                    <td class="text-right"><strong>₡${tot.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></td>
+                </tr>`;
         }).join('');
 
+        // Expiration badge with warning tooltip
         const daysLeft    = sale.days_remaining_until_expiration;
         const expiryBadge = (typeof daysLeft !== 'undefined' && daysLeft <= 0)
             ? '<span class="expiry-badge expiry-expired">Expired</span>'
@@ -206,7 +215,7 @@ function viewSale(id) {
     });
 }
 
-/* ── Sale actions ───────────────────────────────────────────────────────── */
+// Helper to perform a sale state change (complete, cancel, refund)
 function _saleAction(url, successMsg) {
     fetch(url, {
         method: 'POST',
@@ -226,6 +235,7 @@ function _saleAction(url, successMsg) {
     .catch(() => Swal.fire({ title: 'Error', text: 'Connection error', icon: 'error' }));
 }
 
+// Mark sale as completed
 function completeSale(id) {
     Swal.fire({
         title: 'Complete sale?', text: 'This action will mark the sale as completed.',
@@ -235,6 +245,7 @@ function completeSale(id) {
     }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/complete`, 'Sale completed successfully'));
 }
 
+// Cancel sale and restore stock
 function cancelSale(id) {
     Swal.fire({
         title: 'Cancel sale?', text: 'This action will cancel the sale and release the stock.',
@@ -244,6 +255,7 @@ function cancelSale(id) {
     }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/cancel`, 'Sale cancelled successfully'));
 }
 
+// Refund sale
 function refundSale(id) {
     Swal.fire({
         title: 'Refund sale?', text: 'This action will mark the sale as refunded.',
@@ -253,11 +265,12 @@ function refundSale(id) {
     }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/refund`, 'Refund processed successfully'));
 }
 
+// Open printable invoice in a new tab
 function printSale(id) {
     window.open(`/sales/${id}/print`, '_blank');
 }
 
-/* ── Expose public functions on window (required by Vite/ESM) ───────────── */
+//Expose public functions on window (required by Vite/ESM) 
 Object.assign(window, {
     openNewSaleModal,
     closeNewSaleModal,
@@ -271,15 +284,15 @@ Object.assign(window, {
     printSale,
 });
 
-/* ── DOMContentLoaded ───────────────────────────────────────────────────── */
+// DOMContentLoaded 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ── Auto-print (print.blade) ─────────────────────────────────────────
+    // Auto-print (
     if (meta('auto-print') === '1') {
         window.print();
     }
 
-    // ── Heartbeat: reload if new purchases arrive ────────────────────────
+    // Heartbeat: reload if new purchases arrive 
     const latestEl = document.getElementById('cf4-latest-purchase-sale-id');
     if (latestEl) {
         let latestPurchaseSaleId = parseInt(latestEl.dataset.value, 10) || 0;
@@ -301,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(heartbeatCheck, 20000);
     }
 
-    // ── New sale form ────────────────────────────────────────────────────
+    // New sale form submission 
     const form = document.getElementById('new-sale-form');
     if (form) {
         form.addEventListener('submit', function (e) {
@@ -336,8 +349,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ── Event delegation for product rows ────────────────────────────────
+    // Event delegation for dynamic product rows 
     document.addEventListener('change', function (e) {
+        // Product selection: set unit price from data attribute
         if (e.target.classList.contains('product-select')) {
             const opt = e.target.selectedOptions[0];
             if (opt?.dataset?.precio) {
@@ -346,15 +360,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 calculateProductTotal(row);
             }
         }
+        // Quantity change: recalc product total
         if (e.target.name?.includes('[quantity]')) {
             calculateProductTotal(e.target.closest('.product-row'));
         }
+        // Discount or VAT change: recalc totals
         if (['discount', 'iva_percentage'].includes(e.target.id)) {
             calculateTotals();
         }
     });
 
-    // ── Close modals on overlay click ────────────────────────────────────
+    // Close modals when clicking on overlay
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', e => {
             if (e.target === overlay) overlay.classList.remove('active');

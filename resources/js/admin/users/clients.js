@@ -1,14 +1,15 @@
-// Toggle del sidebar
-document.addEventListener("DOMContentLoaded", ()=>{
-  const toggle = document.querySelector(".toggle-sidebar");
-  const aside = document.querySelector(".admin-sidebar");
-  if(toggle && aside){
-    toggle.addEventListener("click", ()=> aside.classList.toggle("collapsed"));
-  }
+// Toggle sidebar collapse on click
+document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.querySelector(".toggle-sidebar");
+    const aside = document.querySelector(".admin-sidebar");
+    if (toggle && aside) {
+        toggle.addEventListener("click", () => aside.classList.toggle("collapsed"));
+    }
 });
 
-// Ban / Unban de usuarios
+// Ban / Unban user actions
 document.addEventListener('DOMContentLoaded', function () {
+    // Use event delegation to handle dynamically added buttons
     document.addEventListener('click', function (e) {
         const banBtn = e.target.closest('[data-action="ban"]');
         const unbanBtn = e.target.closest('[data-action="unban"]');
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const isBan = action === 'ban';
 
+        // Show confirmation dialog with SweetAlert2
         Swal.fire({
             icon: isBan ? 'warning' : 'question',
             title: isBan ? '¿Banear usuario?' : '¿Activar usuario?',
@@ -37,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }).then((result) => {
             if (!result.isConfirmed) return;
 
+            // Send PATCH request to ban or unban endpoint
             const url = isBan ? `/clientes/${id}/ban` : `/clientes/${id}/unban`;
 
             fetch(url, {
@@ -50,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 if (!data.success) throw new Error('Error del servidor');
 
+                // Update UI: status badge and button in the table row
                 const row = document.getElementById(`client-row-${id}`);
                 const badge = row.querySelector('.status-badge');
                 const td = row.querySelector('td:last-child');
@@ -68,6 +72,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </button>`;
                 }
 
+                // Notify success with auto‑close toast
                 Swal.fire({
                     icon: 'success',
                     title: isBan ? 'Usuario baneado' : 'Usuario activado',
