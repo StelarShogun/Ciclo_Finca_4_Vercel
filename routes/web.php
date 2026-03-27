@@ -66,6 +66,10 @@ Route::post('/register', [ClientUserController::class, 'register'])->name('clien
 Route::get('/verify', [ClientUserController::class, 'showVerifyForm'])->name('clients.verify.form');
 Route::post('/verify', [ClientUserController::class, 'verify'])->name('clients.verify');
 Route::post('/verify/resend', [ClientUserController::class, 'resendCode'])->name('clients.verify.resend');
+Route::get('/recovery', [ClientUserController::class, 'showRecoveryForm'])->name('clients.recovery.form');
+Route::post('/recovery', [ClientUserController::class, 'resetPassword'])->name('clients.recovery');
+Route::get('/recovery/verify', [ClientUserController::class, 'showRecoveryVerifyForm'])->name('clients.recovery.verify.form');
+Route::post('/recovery/verify', [ClientUserController::class, 'verifyRecoveryAndReset'])->name('clients.recovery.verify');
 
 // Throttle prevents brute-force attacks (5 attempts per minute)
 Route::post('/login', [ClientUserController::class, 'login'])

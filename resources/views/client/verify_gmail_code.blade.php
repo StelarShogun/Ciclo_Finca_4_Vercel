@@ -9,22 +9,31 @@
     @vite(['resources/css/client/clients-users.css'])
 @endpush
 
-
 @section('content')
+@php
+    $isRecovery = session()->has('pending_recovery_id');
+    $pendingEmail = $isRecovery ? session('pending_recovery_gmail') : session('pending_gmail');
+@endphp
 <div class="login-page-center">
     <div class="login-form-box" style="max-width:420px;width:100%;">
 
         {{-- Ícono --}}
         <div class="text-center mb-3">
-            <i class="fas fa-envelope-open-text" style="font-size:3rem;color:#2d7a2d;"></i>
+            @if($isRecovery)
+                <i class="fas fa-shield-alt" style="font-size:3rem;color:#2d7a2d;"></i>
+            @else
+                <i class="fas fa-envelope-open-text" style="font-size:3rem;color:#2d7a2d;"></i>
+            @endif
         </div>
 
         {{-- Títulos --}}
-        <h2 class="text-center mb-2" style="font-size:1.5rem;font-weight:700;">Verifica que eres tú</h2>
+        <h2 class="text-center mb-2" style="font-size:1.5rem;font-weight:700;">
+            {{ $isRecovery ? 'Verificar identidad' : 'Verifica que eres tú' }}
+        </h2>
         <p class="text-center text-muted mb-4" style="font-size:0.95rem;">
-            Código de verificación ha sido enviado a tu correo
-            @if(session('pending_gmail'))
-                <br><strong>{{ session('pending_gmail') }}</strong>
+            {{ $isRecovery ? 'Ingresa el código para confirmar el cambio de contraseña' : 'Código de verificación ha sido enviado a tu correo' }}
+            @if($pendingEmail)
+                <br><strong>{{ $pendingEmail }}</strong>
             @endif
         </p>
 
@@ -45,7 +54,9 @@
             </div>
         @endif
 
-        <form id="formVerificar" method="POST" action="{{ route('clients.verify') }}" novalidate>
+        <form id="formVerificar" method="POST"
+              action="{{ $isRecovery ? route('clients.recovery.verify') : route('clients.verify') }}"
+              novalidate>
             @csrf
 
             <div class="form-group mb-4">
@@ -66,12 +77,15 @@
             <button type="submit" id="btnVerificar"
                 style="width:100%;padding:12px;background:#2d7a2d;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
                 <i class="fas fa-check-circle"></i>
-                <span id="btnVerificarTexto">Verificar Código</span>
+                <span id="btnVerificarTexto">
+                    {{ $isRecovery ? 'Verificar y Actualizar Contraseña' : 'Verificar Código' }}
+                </span>
                 <span id="btnVerificarCargando" style="display:none;">Verificando...</span>
             </button>
         </form>
 
-        {{-- Reenviar código --}}
+        {{-- Reenviar código (solo para registro) --}}
+        @if(!$isRecovery)
         <div style="text-align:center;margin-top:1.5rem;">
             <p style="color:#5f6368;font-size:0.875rem;margin-bottom:6px;">¿No recibiste el código?</p>
             <form method="POST" action="{{ route('clients.verify.resend') }}">
@@ -81,17 +95,19 @@
                 </button>
             </form>
         </div>
+        @endif
 
         <div style="text-align:center;margin-top:1rem;">
-            <a href="{{ route('clients.register.form') }}" style="font-size:0.875rem;color:#5f6368;text-decoration:none;">
-                <i class="fas fa-arrow-left"></i> Volver al registro
+            <a href="{{ $isRecovery ? route('clients.recovery.form') : route('clients.register.form') }}"
+               style="font-size:0.875rem;color:#5f6368;text-decoration:none;">
+                <i class="fas fa-arrow-left"></i>
+                {{ $isRecovery ? 'Volver a recuperación' : 'Volver al registro' }}
             </a>
         </div>
 
     </div>
 </div>
 @endsection
-
 
 @push('scripts')
     @vite(['resources/js/client/clients-users.js'])
