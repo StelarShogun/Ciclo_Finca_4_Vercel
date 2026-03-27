@@ -2,7 +2,7 @@
 // GLOBAL UTILITIES
 // ============================================================
 
-/** Returns the CSRF token from the meta tag or a hidden form input. */
+/** Returns the CSRF token from a meta tag or hidden input fallback. */
 function getCsrfToken() {
     const meta = document.querySelector('meta[name="csrf-token"]');
     if (meta) return meta.content;
@@ -14,13 +14,13 @@ function getCsrfToken() {
 // CART COUNTER (navbar)
 // ============================================================
 
+/** Updates the cart badge count in the navbar; hides it when count is zero. */
 function updateCartCount(count) {
     const cartCountEl = document.getElementById('cart-count');
-    const cartLinkEl = document.getElementById('cart-link');
+    const cartLinkEl  = document.getElementById('cart-link');
 
     if (cartCountEl) {
         cartCountEl.textContent = count;
-        // Hide the badge when the cart is empty
         cartCountEl.style.display = count > 0 ? 'flex' : 'none';
     }
     if (cartLinkEl) {
@@ -32,6 +32,10 @@ function updateCartCount(count) {
 // ADD TO CART
 // ============================================================
 
+/**
+ * Sends an authenticated POST request to add a product to the cart.
+ * On success, refreshes the navbar badge and shows a toast notification.
+ */
 function addToCart(productId, quantity) {
     quantity = quantity || 1;
 
@@ -58,11 +62,7 @@ function addToCart(productId, quantity) {
                     position: 'top-end'
                 });
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'No se pudo agregar el producto al carrito'
-                });
+                Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo agregar el producto al carrito' });
             }
         })
         .catch(function (err) {
@@ -75,36 +75,34 @@ function addToCart(productId, quantity) {
 // ADD-TO-CART MODAL (catalog & home)
 // ============================================================
 
-/** Product currently being added via the quantity modal. */
+/** Holds the product ID currently staged in the quantity-selection modal. */
 var currentProductId = null;
 
-/** Populates and opens the quantity modal from a product card button. */
+/**
+ * Populates and opens the add-to-cart modal with the target product's
+ * name, price, stock, and thumbnail pulled from the nearest card element.
+ */
 function openAddToCartModal(btn) {
-    currentProductId = btn.dataset.productId;
-    var productName = btn.dataset.productName;
-    var productPrice = parseFloat(btn.dataset.productPrice);
-    var productStock = parseInt(btn.dataset.productStock, 10);
+    currentProductId  = btn.dataset.productId;
+    var productName   = btn.dataset.productName;
+    var productPrice  = parseFloat(btn.dataset.productPrice);
+    var productStock  = parseInt(btn.dataset.productStock, 10);
 
-    var nameEl = document.getElementById('preview-name');
+    var nameEl  = document.getElementById('preview-name');
     var priceEl = document.getElementById('preview-price');
     var stockEl = document.getElementById('preview-stock');
-    var qtyEl = document.getElementById('cart-quantity');
+    var qtyEl   = document.getElementById('cart-quantity');
 
-    if (nameEl) nameEl.textContent = productName;
+    if (nameEl)  nameEl.textContent  = productName;
     if (priceEl) priceEl.textContent = '₡' + productPrice.toLocaleString('es-CR');
     if (stockEl) stockEl.textContent = 'Stock disponible: ' + productStock;
-    if (qtyEl) {
-        qtyEl.max = productStock;
-        qtyEl.value = 1;
-    }
+    if (qtyEl)   { qtyEl.max = productStock; qtyEl.value = 1; }
 
-    // Pull the product image from the nearest card
-    var productCard = btn.closest('.product-card');
+    // Reuse the product thumbnail from the nearest card in the DOM.
+    var productCard  = btn.closest('.product-card');
     var productImage = productCard ? productCard.querySelector('.product-image img') : null;
-    var previewImg = document.getElementById('preview-image');
-    if (previewImg && productImage) {
-        previewImg.src = productImage.src;
-    }
+    var previewImg   = document.getElementById('preview-image');
+    if (previewImg && productImage) previewImg.src = productImage.src;
 
     openModal('add-to-cart-modal');
 }
@@ -113,11 +111,13 @@ function openAddToCartModal(btn) {
 // MODAL HELPERS
 // ============================================================
 
+/** Activates a modal overlay by ID. */
 function openModal(id) {
     var modal = document.getElementById(id);
     if (modal) modal.classList.add('active');
 }
 
+/** Deactivates a modal overlay by ID. */
 function closeModal(id) {
     var modal = document.getElementById(id);
     if (modal) modal.classList.remove('active');
@@ -127,7 +127,11 @@ function closeModal(id) {
 // CART PAGE (/cart)
 // ============================================================
 
-/** PUTs a quantity change for a single cart item, then updates DOM (no reload). */
+/**
+ * Sends a PUT request to update a cart line's quantity.
+ * On success, recalculates the line subtotal and refreshes the order total
+ * displayed in the summary panel without a full page reload.
+ */
 function updateCartQuantity(productId, quantity) {
     fetch('/cart/update', {
         method: 'PUT',
@@ -142,30 +146,27 @@ function updateCartQuantity(productId, quantity) {
         .then(function (res) { return res.json().catch(function () { return {}; }); })
         .then(function (data) {
             if (data.success) {
-                // Update totals without a full page reload.
-                var totalFormatted = (data.cart_total != null)
-                    ? ('₡' + Number(data.cart_total).toLocaleString('es-CR'))
+                var totalFormatted = data.cart_total != null
+                    ? '₡' + Number(data.cart_total).toLocaleString('es-CR')
                     : '₡0';
 
                 var subtotalEl = document.getElementById('cart-subtotal');
-                var totalEl = document.getElementById('cart-total-amount');
+                var totalEl    = document.getElementById('cart-total-amount');
                 if (subtotalEl) subtotalEl.textContent = totalFormatted;
-                if (totalEl) totalEl.textContent = totalFormatted;
+                if (totalEl)    totalEl.textContent    = totalFormatted;
 
                 updateCartCount(data.cart_count || 0);
 
-                // Update the affected line subtotal, using unit price from the rendered UI.
-                var cartItem = document.querySelector('.cart-item[data-product-id="' + productId + '"]');
+                // Derive the line subtotal from the unit price already in the DOM.
+                var cartItem   = document.querySelector('.cart-item[data-product-id="' + productId + '"]');
                 if (cartItem) {
-                    var unitPriceEl = cartItem.querySelector('.item-price');
+                    var unitPriceEl   = cartItem.querySelector('.item-price');
                     var unitPriceText = unitPriceEl ? unitPriceEl.textContent : '';
-                    // Matches "₡1.234 c/u" => returns 1234
-                    var unitPrice = parseInt(unitPriceText.replace(/[^\d]/g, ''), 10) || 0;
-
-                    var newSubtotal = unitPrice * quantity;
+                    // Strip formatting chars from "₡1.234 c/u" to get the raw integer.
+                    var unitPrice     = parseInt(unitPriceText.replace(/[^\d]/g, ''), 10) || 0;
                     var lineSubtotalEl = cartItem.querySelector('.subtotal-amount');
                     if (lineSubtotalEl) {
-                        lineSubtotalEl.textContent = '₡' + newSubtotal.toLocaleString('es-CR');
+                        lineSubtotalEl.textContent = '₡' + (unitPrice * quantity).toLocaleString('es-CR');
                     }
                 }
             } else {
@@ -177,7 +178,10 @@ function updateCartQuantity(productId, quantity) {
         });
 }
 
-/** Replaces the cart card with an empty-state message (no reload). */
+/**
+ * Replaces the cart card's inner HTML with an empty-state message,
+ * preserving the "continue shopping" link without a full page reload.
+ */
 function showCartEmptyState() {
     var card = document.querySelector('.cart-page-card');
     if (!card) return;
@@ -201,15 +205,17 @@ function showCartEmptyState() {
 // USER MENU (profile dropdown)
 // ============================================================
 
+/** Closes the user profile dropdown and resets ARIA state. */
 function closeUserDropdown() {
-    var userDropdown = document.getElementById('user-dropdown');
+    var userDropdown    = document.getElementById('user-dropdown');
     var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (userDropdown) userDropdown.classList.remove('active');
+    if (userDropdown)    userDropdown.classList.remove('active');
     if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'false');
 }
 
+/** Toggles the user profile dropdown open or closed. */
 function toggleUserDropdown() {
-    var userDropdown = document.getElementById('user-dropdown');
+    var userDropdown    = document.getElementById('user-dropdown');
     var userMenuTrigger = document.getElementById('user-menu-trigger');
     if (!userDropdown) return;
 
@@ -223,43 +229,28 @@ function toggleUserDropdown() {
 }
 
 // ============================================================
-// LOGIN MODAL
-// ============================================================
-
-function closeLoginModal() {
-    closeModal('login-modal');
-    var overlay = document.getElementById('login-modal-overlay');
-    if (overlay) overlay.classList.remove('active');
-}
-
-// ============================================================
 // INITIALIZATION
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    // — Initialise cart counter from the data attribute —
-    var cartLinkEl = document.getElementById('cart-link');
+    // Seed the navbar cart badge from the server-rendered data attribute.
+    var cartLinkEl  = document.getElementById('cart-link');
     var cartGuestEl = document.getElementById('cart-guest');
-    var cartRef = cartLinkEl || cartGuestEl;
+    var cartRef     = cartLinkEl || cartGuestEl;
     if (cartRef) {
-        var initialCount = parseInt(cartRef.getAttribute('data-cart-count') || '0', 10);
-        updateCartCount(initialCount);
+        updateCartCount(parseInt(cartRef.getAttribute('data-cart-count') || '0', 10));
     }
 
-    // — Guest cart: prompt to log in —
+    // Inform unauthenticated users when they attempt to open the cart.
     if (cartGuestEl) {
         cartGuestEl.addEventListener('click', function () {
-            Swal.fire({
-                icon: 'info',
-                title: 'Inicia sesión',
-                text: 'Debes iniciar sesión para ver tu carrito.',
-                confirmButtonText: 'Entendido'
-            });
+            Swal.fire({ icon: 'info', title: 'Inicia sesión', text: 'Debes iniciar sesión para ver tu carrito.', confirmButtonText: 'Entendido' });
         });
     }
 
-    // — User menu toggle —
+    // User menu trigger: prevent event bubbling so the outside-click handler
+    // does not immediately close the dropdown that was just opened.
     var userMenuTrigger = document.getElementById('user-menu-trigger');
     if (userMenuTrigger) {
         userMenuTrigger.addEventListener('click', function (e) {
@@ -269,165 +260,42 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // — Close user dropdown on outside click —
+    // Close the user dropdown when clicking outside the menu container.
     document.addEventListener('click', function (e) {
-        var userMenu = document.getElementById('user-menu');
+        var userMenu     = document.getElementById('user-menu');
         var userDropdown = document.getElementById('user-dropdown');
         if (!userDropdown || !userDropdown.classList.contains('active')) return;
         if (userMenu && userMenu.contains(e.target)) return;
         closeUserDropdown();
     });
 
-    // — Login modal —
-    var loginModalTrigger = document.getElementById('login-modal-trigger');
-    if (loginModalTrigger) {
-        loginModalTrigger.addEventListener('click', function () {
-            window.location.href = '/login';
-        });
-    }
-
-    var closeLoginModalBtn = document.getElementById('close-login-modal');
-    if (closeLoginModalBtn) closeLoginModalBtn.addEventListener('click', closeLoginModal);
-
-    var loginModalOverlay = document.getElementById('login-modal-overlay');
-    if (loginModalOverlay) loginModalOverlay.addEventListener('click', closeLoginModal);
-
-    // — Login form submission via AJAX —
-    var publicLoginForm = document.getElementById('public-login-form');
-    if (publicLoginForm) {
-        publicLoginForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            var csrfToken = getCsrfToken();
-            // Redirect to login if the CSRF token has expired
-            if (!csrfToken) {
-                window.location.href = '/login?session_expired=1';
-                return;
-            }
-
-            var formData = new FormData(this);
-            var submitBtn = document.getElementById('login-submit-btn');
-            var loadingSpan = document.getElementById('login-loading');
-            var submitSpan = submitBtn ? submitBtn.querySelector('span:not(.btn-loading)') : null;
-
-            // Show spinner while waiting for the response
-            if (submitBtn) submitBtn.disabled = true;
-            if (submitSpan) submitSpan.classList.add('hidden');
-            if (loadingSpan) loadingSpan.classList.remove('hidden');
-
-            fetch('/login', {
-                method: 'POST',
-                body: formData,
-                credentials: 'same-origin',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-                .then(function (response) {
-                    // 419 means expired session/CSRF token
-                    if (response.status === 419) {
-                        window.location.href = '/login?session_expired=1';
-                        return Promise.reject('csrf');
-                    }
-                    return response.json().catch(function () {
-                        window.location.href = '/login?session_expired=1';
-                        return Promise.reject('parse');
-                    });
-                })
-                .then(function (data) {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Bienvenido!',
-                            text: data.message || 'Inicio de sesión exitoso',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(function () {
-                            window.location.href = data.redirect || '/';
-                        });
-                    } else if (data.redirect) {
-                        // Unverified email: offer to send code and redirect to verify
-                        if (submitBtn) submitBtn.disabled = false;
-                        if (submitSpan) submitSpan.classList.remove('hidden');
-                        if (loadingSpan) loadingSpan.classList.add('hidden');
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Correo no verificado',
-                            text: data.message || 'Debes verificar tu correo antes de iniciar sesión.',
-                            showCancelButton: true,
-                            confirmButtonText: 'Verificar Correo',
-                            cancelButtonText: 'Cancelar',
-                            confirmButtonColor: '#2d7a2d',
-                            cancelButtonColor: '#6c757d'
-                        }).then(function (result) {
-                            if (!result.isConfirmed) return;
-                            // El servidor ya envió el código al detectar el correo no verificado
-                            window.location.href = data.redirect;
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            html: (data.message || 'Error al iniciar sesión') +
-                                '<hr style="margin:12px 0">' +
-                                '<p style="font-size:0.9rem;margin:0">¿Tienes una cuenta registrada? ¿O deseas registrarte?</p>',
-                            showCancelButton: true,
-                            confirmButtonText: 'Ir a Registro',
-                            cancelButtonText: 'Cancelar',
-                            confirmButtonColor: '#2d7a2d',
-                            cancelButtonColor: '#6c757d',
-                        }).then(function (result) {
-                            if (result.isConfirmed) {
-                                window.location.href = '/register';
-                            }
-                        });
-                        if (submitBtn) submitBtn.disabled = false;
-                        if (submitSpan) submitSpan.classList.remove('hidden');
-                        if (loadingSpan) loadingSpan.classList.add('hidden');
-                    }
-                })
-                .catch(function (err) {
-                    if (err === 'csrf' || err === 'parse') return;
-                    console.error('Login error:', err);
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al iniciar sesión' });
-                    if (submitBtn) submitBtn.disabled = false;
-                    if (submitSpan) submitSpan.classList.remove('hidden');
-                    if (loadingSpan) loadingSpan.classList.add('hidden');
-                });
-        });
-    }
-
-    // — Add-to-cart (delegated): open modal or add directly if no modal present —
+    // Delegated click handler: open the quantity modal when the add-to-cart
+    // button is clicked, falling back to a direct add if no modal is present.
     document.addEventListener('click', function (e) {
         var addBtn = e.target.closest('.add-to-cart-btn');
         if (addBtn) {
             var modal = document.getElementById('add-to-cart-modal');
-            if (modal) {
-                openAddToCartModal(addBtn);
-            } else {
-                addToCart(addBtn.dataset.productId, 1);
-            }
+            modal ? openAddToCartModal(addBtn) : addToCart(addBtn.dataset.productId, 1);
             return;
         }
 
-        // Guest: redirect to login (no cart actions for unauthenticated users)
+        // Redirect guests to login when they attempt to add a product.
         if (e.target.closest('.guest-add-btn')) {
             window.location.href = '/login';
             return;
         }
 
-        // Close modal on backdrop click
+        // Dismiss any modal by clicking its backdrop.
         if (e.target.classList.contains('modal') && e.target.classList.contains('active')) {
             e.target.classList.remove('active');
         }
     });
 
-    // — Confirm add-to-cart from modal —
+    // Confirm button inside the add-to-cart modal.
     var confirmAddBtn = document.getElementById('confirm-add-to-cart');
     if (confirmAddBtn) {
         confirmAddBtn.addEventListener('click', function () {
-            var qtyEl = document.getElementById('cart-quantity');
+            var qtyEl    = document.getElementById('cart-quantity');
             var quantity = parseInt(qtyEl ? qtyEl.value : '1', 10);
             if (quantity < 1) {
                 Swal.fire('Error', 'La cantidad debe ser mayor a 0', 'error');
@@ -443,13 +311,13 @@ document.addEventListener('DOMContentLoaded', function () {
     var closeAddBtn = document.getElementById('close-add-to-cart-modal');
     if (closeAddBtn) closeAddBtn.addEventListener('click', function () { closeModal('add-to-cart-modal'); });
 
-    // — Remove single cart item (delegated) —
+    // Delegated: show a confirmation dialog before removing a single cart item.
     document.addEventListener('click', function (e) {
         var btn = e.target.closest('.cart-remove-item');
         if (!btn) return;
 
         var cartItem = btn.closest('.cart-item');
-        var itemId = btn.dataset.productId;
+        var itemId   = btn.dataset.productId;
         var itemName = btn.dataset.productName || 'este producto';
         if (!cartItem || !itemId) return;
 
@@ -478,6 +346,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         return;
                     }
 
+                    // Remove the row from the DOM and update totals.
                     cartItem.remove();
 
                     Swal.fire({
@@ -486,18 +355,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         showConfirmButton: false, timer: 2500, timerProgressBar: true
                     });
 
-                    // Update the displayed total without reloading
-                    var totalFormatted = (data.cart_total != null)
-                        ? ('₡' + Number(data.cart_total).toLocaleString('es-CR'))
+                    var totalFormatted = data.cart_total != null
+                        ? '₡' + Number(data.cart_total).toLocaleString('es-CR')
                         : '₡0';
                     var subtotalEl = document.getElementById('cart-subtotal');
-                    var totalEl = document.getElementById('cart-total-amount');
+                    var totalEl    = document.getElementById('cart-total-amount');
                     if (subtotalEl) subtotalEl.textContent = totalFormatted;
-                    if (totalEl) totalEl.textContent = totalFormatted;
+                    if (totalEl)    totalEl.textContent    = totalFormatted;
 
                     updateCartCount(data.cart_count || 0);
 
-                    // If no items remain, show the empty state
+                    // Show empty state if no items remain.
                     if (document.querySelectorAll('.cart-item').length === 0) {
                         showCartEmptyState();
                     }
@@ -509,12 +377,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ─────────────────────────────────────────────────────────
-    // — Vaciar carrito (delegado) —
-    // Se usa delegación en lugar de un listener directo sobre
-    // #btn-clear-cart para que funcione aunque el botón sea
-    // regenerado dinámicamente o el click caiga sobre el <i> hijo.
-    // ─────────────────────────────────────────────────────────
+    // Delegated: confirm before clearing all cart items at once.
     document.addEventListener('click', function (e) {
         if (!e.target.closest('#btn-clear-cart')) return;
 
@@ -556,12 +419,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // — Quantity input: clamp to [1, stock] on change —
+    // Clamp manual quantity input to [1, stock] and sync with the server.
     document.querySelectorAll('.quantity-input').forEach(function (input) {
         input.addEventListener('change', function () {
             var productId = this.dataset.productId;
-            var quantity = parseInt(this.value, 10);
-            var max = parseInt(this.max, 10);
+            var quantity  = parseInt(this.value, 10);
+            var max       = parseInt(this.max, 10);
             if (quantity < 1) {
                 this.value = 1;
                 updateCartQuantity(productId, 1);
@@ -575,15 +438,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // — +/- quantity buttons (cart page) —
+    // Increment / decrement stepper buttons on the cart page.
     document.querySelectorAll('.quantity-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            var action = this.dataset.action;
+            var action    = this.dataset.action;
             var productId = this.dataset.productId;
-            var input = document.querySelector('.quantity-input[data-product-id="' + productId + '"]');
+            var input     = document.querySelector('.quantity-input[data-product-id="' + productId + '"]');
             if (!input) return;
             var quantity = parseInt(input.value, 10);
-            var max = parseInt(input.max, 10);
+            var max      = parseInt(input.max, 10);
             if (action === 'increase' && quantity < max) quantity++;
             else if (action === 'decrease' && quantity > 1) quantity--;
             input.value = quantity;
@@ -591,9 +454,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // — Quantity controls on product detail page —
+    // Product detail page: standalone quantity stepper (not tied to the cart page).
     var productQtyInput = document.getElementById('product-quantity');
-    var productQty = 1;
+    var productQty      = 1;
 
     if (productQtyInput) {
         var maxQty = parseInt(productQtyInput.max, 10) || 999;
@@ -606,14 +469,15 @@ document.addEventListener('DOMContentLoaded', function () {
             if (productQty < maxQty) { productQty++; productQtyInput.value = productQty; }
         });
 
+        // Keep the local productQty variable in sync with direct text input.
         productQtyInput.addEventListener('change', function () {
             var value = parseInt(this.value, 10);
-            if (value < 1) { this.value = 1; productQty = 1; }
+            if (value < 1)           { this.value = 1;      productQty = 1; }
             else if (value > maxQty) { this.value = maxQty; productQty = maxQty; }
-            else { productQty = value; }
+            else                     { productQty = value; }
         });
 
-        // Add to cart using the quantity from the detail page selector
+        // Wire the detail-page add-to-cart button to the local quantity variable.
         var detailAddBtn = document.querySelector('.product-detail-actions .add-to-cart-btn');
         if (detailAddBtn) {
             detailAddBtn.addEventListener('click', function () {
@@ -622,7 +486,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // — Checkout confirmation —
+    // Checkout: confirm intent, POST the order, then show the result.
     var proceedBtn = document.getElementById('proceed-checkout');
     if (proceedBtn) {
         proceedBtn.addEventListener('click', function () {
@@ -636,6 +500,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }).then(function (result) {
                 if (!result.isConfirmed) return;
 
+                // Disable the button while the request is in-flight.
                 proceedBtn.disabled = true;
                 proceedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
 
@@ -656,10 +521,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
                             return;
                         }
-                        // Vaciar la UI del carrito inmediatamente tras confirmar.
                         updateCartCount(0);
                         showCartEmptyState();
-
                         Swal.fire({
                             icon: 'success',
                             text: 'Su pedido fue enviado con éxito. Tiene un lapso de 3 días para retirarlo en nuestro local. El pago se realiza de forma presencial mediante SINPE, efectivo o tarjeta.',
@@ -676,17 +539,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // — ESC closes all modals and dropdowns —
+    // Close dropdowns and modals on Escape key press.
     document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
         closeUserDropdown();
-        closeLoginModal();
         document.querySelectorAll('.modal.active').forEach(function (modal) {
             modal.classList.remove('active');
         });
     });
 
-    // — Catalog price-range filter validation —
+    // Catalog price filter: disable the submit button when min > max.
     (function initCatalogPriceFilter() {
         var form      = document.getElementById('filter-form');
         if (!form) return;
@@ -709,68 +571,15 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        if (minInput) minInput.addEventListener('input',  checkPriceRange);
-        if (minInput) minInput.addEventListener('change', checkPriceRange);
-        if (maxInput) maxInput.addEventListener('input',  checkPriceRange);
-        if (maxInput) maxInput.addEventListener('change', checkPriceRange);
+        if (minInput) { minInput.addEventListener('input', checkPriceRange); minInput.addEventListener('change', checkPriceRange); }
+        if (maxInput) { maxInput.addEventListener('input', checkPriceRange); maxInput.addEventListener('change', checkPriceRange); }
         checkPriceRange();
-    })();
-
-    (function initCatalogPagination() {
-        var wrapper = document.querySelector('.pagination-wrapper .pagination');
-        if (!wrapper) return;
-
-        var goInput = wrapper.querySelector('#goToPageInput');
-        var goBtn = wrapper.querySelector('#goToPageBtn');
-
-        wrapper.querySelectorAll('.button[aria-label]').forEach(function (a) {
-            if (a.getAttribute('aria-disabled') === 'true') {
-                a.addEventListener('click', function (e) { e.preventDefault(); });
-                a.classList.add('is-disabled');
-            }
-        });
-
-        function goToPage() {
-            var totalSpan = wrapper.querySelector('.button.button-primary');
-            if (!totalSpan) return;
-            var parts = totalSpan.textContent.trim().split('/');
-            var lastPage = Math.max(1, parseInt((parts[1] || '1').trim(), 10));
-            var target = parseInt((goInput && goInput.value) ? goInput.value.trim() : '1', 10);
-            if (isNaN(target)) target = 1;
-            if (target < 1) target = 1;
-            if (target > lastPage) target = lastPage;
-            var url = new URL(window.location.href);
-            url.searchParams.set('page', String(target));
-            window.location.assign(url.toString());
-        }
-
-        if (goBtn) goBtn.addEventListener('click', goToPage);
-        if (goInput) {
-            goInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') { e.preventDefault(); goToPage(); }
-            });
-        }
     })();
 
 }); // end DOMContentLoaded
 
 // ============================================================
-// GLOBAL EXPORTS (for use from inline scripts)
+// GLOBAL EXPORTS (callable from inline scripts)
 // ============================================================
-window.addToCart = addToCart;
+window.addToCart       = addToCart;
 window.updateCartCount = updateCartCount;
-
-// ============================================================
-// USER MENU DROPDOWN (header)
-// ============================================================
-
-/** Opens or closes the user menu, syncing the class, aria-hidden and aria-expanded. */
-function setUserMenuOpen(open) {
-    var wrap = document.getElementById('user-menu');
-    var panel = document.getElementById('user-dropdown');
-    var trigger = document.getElementById('user-menu-trigger');
-    if (!wrap) return;
-    wrap.classList.toggle('open', open);
-    if (panel) panel.setAttribute('aria-hidden', String(!open));
-    if (trigger) trigger.setAttribute('aria-expanded', String(open));
-}

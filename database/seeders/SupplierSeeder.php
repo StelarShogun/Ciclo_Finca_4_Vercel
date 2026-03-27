@@ -7,6 +7,7 @@ use App\Models\Supplier;
 
 class SupplierSeeder extends Seeder
 {
+    // Run the database seeds.
     public function run(): void
     {
         $suppliers = [
