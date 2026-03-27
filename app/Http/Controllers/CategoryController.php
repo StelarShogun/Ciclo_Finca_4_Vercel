@@ -18,16 +18,7 @@ class CategoryController extends Controller
             ->orderBy('name')
             ->get();
 
-        $categoriesHierarchy = Category::query()
-            ->with('parent:category_id,name')
-            ->orderByRaw('CASE WHEN parent_category_id IS NULL THEN 0 ELSE 1 END')
-            ->orderBy('parent_category_id')
-            ->orderBy('name')
-            ->get(['category_id', 'name', 'parent_category_id'])
-            ->unique(function ($row) {
-                return mb_strtolower(trim($row->name)) . '|' . ($row->parent_category_id ?? 'null');
-            })
-            ->values();
+        $categoriesHierarchy = Category::hierarchyRowsForAdminDisplay();
 
         $subcategoriesByParent = Category::subcategoriesGroupedByCanonicalParent();
 

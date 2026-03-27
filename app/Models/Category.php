@@ -76,6 +76,7 @@ class Category extends Model
             ->orderBy('name')
             ->get(['category_id', 'name', 'parent_category_id']);
 
+        // Por padre canónico: una fila por nombre (evita duplicados si hay varias raíces con el mismo nombre y mismas subs repetidas).
         $buckets = [];
         foreach ($raw as $row) {
             $phys = (int) $row->parent_category_id;
@@ -83,13 +84,64 @@ class Category extends Model
             if (! isset($buckets[$canonical])) {
                 $buckets[$canonical] = [];
             }
-            $buckets[$canonical][(int) $row->category_id] = [
-                'category_id' => (int) $row->category_id,
-                'name' => $row->name,
-            ];
+            $nameKey = mb_strtolower(trim((string) ($row->name ?? '')));
+            $cid = (int) $row->category_id;
+            if (! isset($buckets[$canonical][$nameKey]) || $cid < $buckets[$canonical][$nameKey]['category_id']) {
+                $buckets[$canonical][$nameKey] = [
+                    'category_id' => $cid,
+                    'name' => $row->name,
+                ];
+            }
         }
 
-        return collect($buckets)->map(fn (array $items) => collect($items)->values());
+        return collect($buckets)->map(
+            fn (array $items) => collect($items)->sortBy(fn ($i) => mb_strtolower((string) ($i['name'] ?? '')))->values()
+        );
+    }
+
+    /**
+     * Filas para la tabla “Jerarquía” en admin: evita listar dos veces la misma sub
+     * cuando hay varias categorías raíz con el mismo nombre (mismo padre “lógico”).
+     *
+     * @return Collection<int, Category>
+     */
+    public static function hierarchyRowsForAdminDisplay(): Collection
+    {
+        $canonical = static::canonicalRootIdByPhysicalRootId();
+
+        $rows = static::query()
+            ->with('parent:category_id,name')
+            ->orderByRaw('CASE WHEN parent_category_id IS NULL THEN 0 ELSE 1 END')
+            ->orderBy('name')
+            ->orderBy('category_id')
+            ->get(['category_id', 'name', 'parent_category_id']);
+
+        $seen = [];
+        $out = collect();
+
+        foreach ($rows as $row) {
+            if ($row->parent_category_id === null) {
+                $key = 'root|' . mb_strtolower(trim((string) ($row->name ?? '')));
+                if (isset($seen[$key])) {
+                    continue;
+                }
+                $seen[$key] = true;
+                $out->push($row);
+
+                continue;
+            }
+
+            $physParent = (int) $row->parent_category_id;
+            $canonParent = $canonical[$physParent] ?? $physParent;
+            $key = 'sub|' . $canonParent . '|' . mb_strtolower(trim((string) ($row->name ?? '')));
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $out->push($row);
+        }
+
+        return $out->values();
     }
 
     /** Ids de todas las raíces físicas que comparten el mismo padre canónico (MIN por nombre). */
