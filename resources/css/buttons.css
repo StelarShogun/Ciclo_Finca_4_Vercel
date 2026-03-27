@@ -277,6 +277,13 @@
     z-index: 1;
 }
 
+/* Evita que reglas globales de formularios compriman botones del header. */
+.usuarios-header .btn,
+.dashboard-header .btn {
+    flex: 0 0 auto;
+    min-width: max-content;
+}
+
 /* Botones en headers con fondo verde */
 .usuarios-header .btn-primary,
 .dashboard-header .btn-primary {
@@ -339,7 +346,43 @@
 
 /* ===== RESPONSIVE ===== */
 
+@media (max-width: 1024px) {
+    .usuarios-header,
+    .dashboard-header {
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .usuarios-actions,
+    .dashboard-actions {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+}
+
 @media (max-width: 768px) {
+    .usuarios-header,
+    .dashboard-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 20px;
+    }
+
+    .usuarios-actions,
+    .dashboard-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .usuarios-actions .btn,
+    .dashboard-actions .btn {
+        width: 100%;
+        justify-content: center;
+        min-width: 0;
+    }
+
     .btn {
         padding: 10px 16px;
         font-size: 0.9rem;
@@ -354,6 +397,13 @@
         width: 28px;
         height: 28px;
         font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 520px) {
+    .usuarios-actions,
+    .dashboard-actions {
+        grid-template-columns: 1fr;
     }
 }
 

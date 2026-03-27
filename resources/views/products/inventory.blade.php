@@ -69,7 +69,7 @@
                 <form class="filter-form">
                     <div class="filters-grid">
                         <div class="filter-group">
-                            <label for="parent-category-filter">Categoría padre</label>
+                            <label for="parent-category-filter">Categoría</label>
                             <select id="parent-category-filter" name="parent_category_id">
                                 <option value="">Todas las categorías</option>
                                 @foreach($categories as $category)
