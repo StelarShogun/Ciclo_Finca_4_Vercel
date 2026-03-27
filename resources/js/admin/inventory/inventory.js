@@ -433,10 +433,13 @@ if (typeof Swal !== 'undefined') {
 
     if (openNewProductModalBtn) {
         openNewProductModalBtn.addEventListener('click', () => {
-            newProductModal.classList.add('active');
-            if (newParentCategory && !newParentCategory.value) {
+            if (newProductForm) {
+                newProductForm.reset();
+            }
+            if (newSubcategory) {
                 fillSubcategoryOptions(newSubcategory, '');
             }
+            newProductModal.classList.add('active');
             syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
         });
     }
@@ -456,6 +459,23 @@ if (typeof Swal !== 'undefined') {
     if (saveNewProductBtn) {
         saveNewProductBtn.addEventListener('click', () => {
             syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
+
+            if (newProductForm && typeof newProductForm.reportValidity === 'function' && !newProductForm.reportValidity()) {
+                return;
+            }
+
+            if (!newFinalCategory || !String(newFinalCategory.value || '').trim()) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Categoría',
+                        text: 'Selecciona una categoría. La subcategoría es opcional: puedes dejar «Sin subcategoría» para guardar el producto en la categoría padre.',
+                        icon: 'info',
+                        confirmButtonText: 'Entendido',
+                    });
+                }
+                return;
+            }
+
             setButtonLoading(saveNewProductBtn, true);
             const formData = new FormData(newProductForm);
 

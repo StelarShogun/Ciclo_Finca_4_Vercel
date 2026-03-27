@@ -358,10 +358,11 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="new-subcategory">Subcategoría</label>
-                            <select id="new-subcategory">
+                            <label for="new-subcategory">Subcategoría <span class="text-muted">(opcional)</span></label>
+                            <select id="new-subcategory" aria-describedby="new-subcategory-hint">
                                 <option value="">Sin subcategoría</option>
                             </select>
+                            <small id="new-subcategory-hint" class="form-text text-muted">Si no eliges subcategoría, el producto queda en la categoría padre.</small>
                             <input type="hidden" id="new-category" name="category_id" value="">
                         </div>
                         <div class="form-group">
@@ -466,7 +467,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="edit-subcategory">Subcategoría</label>
+                            <label for="edit-subcategory">Subcategoría <span class="text-muted">(opcional)</span></label>
                             <select id="edit-subcategory">
                                 <option value="">Sin subcategoría</option>
                             </select>
