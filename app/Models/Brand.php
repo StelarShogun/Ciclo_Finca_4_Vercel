@@ -11,4 +11,9 @@ class Brand extends Model
     protected $fillable = ['name'];
 
     public $timestamps = false;
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'products_brand', 'brand_id', 'product_id', 'id', 'product_id');
+    }
 }

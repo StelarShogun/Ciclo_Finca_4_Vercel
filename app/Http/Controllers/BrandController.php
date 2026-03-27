@@ -24,10 +24,9 @@ class BrandController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:brands,name',
+            'name' => 'required|string|max:100',
         ], [
             'name.required' => 'El nombre de la marca es obligatorio.',
-            'name.unique'   => 'Esta marca ya está registrada.',
             'name.max'      => 'El nombre no puede tener más de 100 caracteres.',
         ]);
 
@@ -35,6 +34,28 @@ class BrandController extends Controller
             return response()->json([
                 'success' => false,
                 'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // Exact case-sensitive match
+        $exactMatch = Brand::whereRaw('BINARY name = ?', [$request->name])->first();
+        if ($exactMatch) {
+            return response()->json([
+                'success'   => false,
+                'duplicate' => true,
+                'exact'     => true,
+                'existing'  => ['id' => $exactMatch->id, 'name' => $exactMatch->name],
+            ], 422);
+        }
+
+        // Case-insensitive match (different capitalization)
+        $existing = Brand::whereRaw('LOWER(name) = ?', [strtolower($request->name)])->first();
+        if ($existing) {
+            return response()->json([
+                'success'   => false,
+                'duplicate' => true,
+                'exact'     => false,
+                'existing'  => ['id' => $existing->id, 'name' => $existing->name],
             ], 422);
         }
 
@@ -50,10 +71,9 @@ class BrandController extends Controller
     public function update(Request $request, Brand $brand)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:brands,name,' . $brand->id,
+            'name' => 'required|string|max:100',
         ], [
             'name.required' => 'El nombre de la marca es obligatorio.',
-            'name.unique'   => 'Esta marca ya está registrada.',
             'name.max'      => 'El nombre no puede tener más de 100 caracteres.',
         ]);
 
@@ -61,6 +81,32 @@ class BrandController extends Controller
             return response()->json([
                 'success' => false,
                 'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // Exact case-sensitive match (excluding self)
+        $exactMatch = Brand::whereRaw('BINARY name = ?', [$request->name])
+            ->where('id', '!=', $brand->id)
+            ->first();
+        if ($exactMatch) {
+            return response()->json([
+                'success'   => false,
+                'duplicate' => true,
+                'exact'     => true,
+                'existing'  => ['id' => $exactMatch->id, 'name' => $exactMatch->name],
+            ], 422);
+        }
+
+        // Case-insensitive match excluding self (different capitalization)
+        $existing = Brand::whereRaw('LOWER(name) = ?', [strtolower($request->name)])
+            ->where('id', '!=', $brand->id)
+            ->first();
+        if ($existing) {
+            return response()->json([
+                'success'   => false,
+                'duplicate' => true,
+                'exact'     => false,
+                'existing'  => ['id' => $existing->id, 'name' => $existing->name],
             ], 422);
         }
 
@@ -75,6 +121,16 @@ class BrandController extends Controller
 
     public function destroy(Brand $brand)
     {
+        $productCount = $brand->products()->count();
+
+        if ($productCount > 0) {
+            return response()->json([
+                'success' => false,
+                'blocked' => true,
+                'message' => "No se puede eliminar \"${brand->name}\" porque está asociada a {$productCount} " . ($productCount === 1 ? 'producto' : 'productos') . '.',
+            ], 422);
+        }
+
         $brand->delete();
 
         return response()->json([

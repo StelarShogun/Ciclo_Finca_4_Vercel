@@ -2,41 +2,29 @@
 
 @section('Titulo pagina', 'Marcas - Ciclo Finca 4 Admin')
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('assets/css/admin/suppliers/suppliers.css') }}">
-    @vite(['resources/css/admin/suppliers/suppliers.css'])
-@endpush
-
 @section('aside')
     @include('admin.parts.aside')
 @endsection
 
 @section('contenido')
-    <div class="sales-container">
+    <div class="brands-container">
 
         {{-- ==================== HEADER ==================== --}}
-        <header class="sales-header">
+        <header class="brands-header">
             <div>
                 <h1>Gestión de Marcas</h1>
                 <p>Administra las marcas de productos</p>
             </div>
-            <div class="sales-actions">
+            <div class="brands-actions">
+                <span class="brands-count-badge">
+                    <i class="fas fa-tags"></i>
+                    {{ $brands->total() }} marca(s)
+                </span>
                 <button class="btn btn-primary" id="btn-nueva-marca">
                     <i class="fas fa-plus"></i> Nueva Marca
                 </button>
             </div>
         </header>
-
-        {{-- ==================== KPI --}}
-        <div class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <h3 class="kpi-title">Total Marcas</h3>
-                    <div class="kpi-icon info"><i class="fas fa-tags"></i></div>
-                </div>
-                <p class="kpi-value">{{ $brands->total() }}</p>
-            </div>
-        </div>
 
         {{-- ==================== FILTROS --}}
         <div class="filters-section">
@@ -56,19 +44,17 @@
 
         {{-- ==================== TABLA --}}
         <div class="table-section">
-            <table class="suppliers-table">
+            <table class="brands-table">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Nombre</th>
+                        <th>Marca</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($brands as $brand)
                         <tr>
-                            <td>{{ $brand->id }}</td>
-                            <td>{{ $brand->name }}</td>
+                            <td class="brand-name">{{ $brand->name }}</td>
                             <td class="actions-cell">
                                 <button class="btn-icon btn-edit"
                                     data-id="{{ $brand->id }}"
@@ -86,15 +72,17 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" style="text-align:center;">No hay marcas registradas.</td>
+                            <td colspan="2" class="brands-empty">No hay marcas registradas.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
 
+            @if ($brands->hasPages())
             <div class="pagination-wrapper">
                 {{ $brands->appends(request()->query())->links() }}
             </div>
+            @endif
         </div>
 
     </div>
@@ -124,98 +112,4 @@
     </div>
 @endsection
 
-@push('scripts')
-<script>
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-    const modal       = document.getElementById('modal-marca');
-    const formMarca   = document.getElementById('form-marca');
-    const inputId     = document.getElementById('marca-id');
-    const inputNombre = document.getElementById('marca-nombre');
-    const errorNombre = document.getElementById('error-nombre');
-    const modalTitulo = document.getElementById('modal-titulo');
 
-    const openModal = () => { modal.style.display = 'flex'; };
-    const closeModal = () => {
-        modal.style.display = 'none';
-        formMarca.reset();
-        inputId.value = '';
-        errorNombre.textContent = '';
-        modalTitulo.textContent = 'Nueva Marca';
-    };
-
-    document.getElementById('btn-nueva-marca').addEventListener('click', () => {
-        inputId.value = '';
-        openModal();
-    });
-    document.getElementById('btn-cerrar-modal').addEventListener('click', closeModal);
-    document.getElementById('btn-cancelar').addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-
-    // Edit buttons
-    document.querySelectorAll('.btn-edit').forEach(btn => {
-        btn.addEventListener('click', () => {
-            inputId.value     = btn.dataset.id;
-            inputNombre.value = btn.dataset.name;
-            modalTitulo.textContent = 'Editar Marca';
-            openModal();
-        });
-    });
-
-    // Delete buttons
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const confirmed = await Swal.fire({
-                title: '¿Eliminar marca?',
-                text: `"${btn.dataset.name}" será eliminada.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#e74c3c',
-            });
-            if (!confirmed.isConfirmed) return;
-
-            const res = await fetch(`/brands/${btn.dataset.id}`, {
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-            });
-            const data = await res.json();
-            if (data.success) {
-                Swal.fire('Eliminada', data.message, 'success').then(() => location.reload());
-            } else {
-                Swal.fire('Error', 'No se pudo eliminar la marca.', 'error');
-            }
-        });
-    });
-
-    // Form submit (create / update)
-    formMarca.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        errorNombre.textContent = '';
-
-        const id     = inputId.value;
-        const url    = id ? `/brands/${id}` : '/brands';
-        const method = id ? 'PUT' : 'POST';
-
-        const res = await fetch(url, {
-            method,
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({ name: inputNombre.value }),
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-            Swal.fire('Éxito', data.message, 'success').then(() => location.reload());
-        } else if (data.errors) {
-            errorNombre.textContent = data.errors.name?.[0] ?? '';
-        } else {
-            Swal.fire('Error', 'Ocurrió un error inesperado.', 'error');
-        }
-    });
-</script>
-@endpush
