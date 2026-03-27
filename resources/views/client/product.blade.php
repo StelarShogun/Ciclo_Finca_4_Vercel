@@ -61,7 +61,7 @@
                     <div class="product-detail-actions">
                         <div class="quantity-selector">
                             <label>Cantidad:</label>
-                            <!-- max enforces stock limit on the client side -->
+                            <!-- max attribute enforces stock limit client-side -->
                             <div class="quantity-controls">
                                 <button class="quantity-btn" id="decrease-qty">
                                     <i class="fas fa-minus"></i>
@@ -72,21 +72,22 @@
                                 </button>
                             </div>
                         </div>
-                        <!-- Authenticated users add to cart; guests are prompted to log in via JS -->
+
+                        <!-- Authenticated users add to cart; guests are redirected to login via JS -->
                         @auth('clients')
-                        <button class="btn btn-primary btn-lg add-to-cart-btn" 
-                                data-product-id="{{ $product->product_id }}"
-                                data-product-name="{{ $product->name }}"
-                                data-product-price="{{ $product->sale_price }}"
-                                data-product-stock="{{ $product->stock_current }}">
-                            <i class="fas fa-cart-plus"></i>
-                            Agregar al Carrito
-                        </button>
+                            <button class="btn btn-primary btn-lg add-to-cart-btn" 
+                                    data-product-id="{{ $product->product_id }}"
+                                    data-product-name="{{ $product->name }}"
+                                    data-product-price="{{ $product->sale_price }}"
+                                    data-product-stock="{{ $product->stock_current }}">
+                                <i class="fas fa-cart-plus"></i>
+                                Agregar al Carrito
+                            </button>
                         @else
-                        <button class="btn btn-primary btn-lg guest-add-btn" type="button">
-                            <i class="fas fa-cart-plus"></i>
-                            Agregar al Carrito
-                        </button>
+                            <button class="btn btn-primary btn-lg guest-add-btn" type="button">
+                                <i class="fas fa-cart-plus"></i>
+                                Agregar al Carrito
+                            </button>
                         @endauth
                     </div>
                 @endif
@@ -102,6 +103,7 @@
                         <div class="product-card">
                             <div class="product-image">
                                 <a href="{{ route('clients.product', $related->product_id) }}">
+                                    <!-- Fallback to favicon if related product image is missing -->
                                     <img src="{{ asset('assets/images/products/' . ($related->image ?? 'default.png')) }}" 
                                          alt="{{ $related->name }}"
                                          data-fallback-src="{{ asset('favicon.svg') }}"

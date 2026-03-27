@@ -10,7 +10,7 @@ class AdminUserController extends Controller
 {
     public function showLoginForm()
     {
-        return view('admin.login.admin_login');
+        return view('admin.login.login');
     }
 
     public function login(Request $request)
@@ -41,6 +41,6 @@ class AdminUserController extends Controller
         Auth::guard('admin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('admin.login');
+        return redirect()->route('admin.login.login');
     }
 }

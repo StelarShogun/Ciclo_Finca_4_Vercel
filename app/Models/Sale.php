@@ -38,10 +38,7 @@ class Sale extends Model
         'total' => 'decimal:2',
     ];
 
-    /**
-     * `sales.sale_date` en BD se guarda en UTC (DATETIME sin zona horaria).
-     * Al leerlo, lo interpretamos como UTC y lo convertimos a la zona horaria de la app.
-     */
+    // Converts sale_date from UTC to the application timezone for consistent display
     public function getSaleDateAttribute($value)
     {
         if (!$value) {
@@ -54,16 +51,6 @@ class Sale extends Model
     public function saleItems(): HasMany
     {
         return $this->hasMany(SaleItem::class, 'sale_id', 'sale_id');
-    }
-
-    public function customer(): BelongsTo
-    {
-        return $this->belongsTo(Usuario::class, 'customer_id', 'usuario_id');
-    }
-
-    public function seller(): BelongsTo
-    {
-        return $this->belongsTo(Usuario::class, 'seller_id', 'usuario_id');
     }
 
     public function sellerAdmin(): BelongsTo
@@ -91,6 +78,7 @@ class Sale extends Model
         return $query->whereDate('sale_date', $date);
     }
 
+    // Sequential suffix is based on today's count, so numbers reset each day
     public function generateInvoiceNumber(): string
     {
         $prefix = 'INV';
@@ -109,26 +97,17 @@ class Sale extends Model
         return in_array($this->status, ['pending', 'completed']);
     }
 
-      /**
-     * Días de vigencia configurados para eliminación automática.
-     */
-    public static function getOrderExpirationDays(): int 
+    public static function getOrderExpirationDays(): int
     {
         return (int) config('sales.order_expiration_days', 30);
     }
 
-    /**
-     * Fecha límite: después de esta fecha el pedido será eliminado.
-     */
     public function getExpiresAtAttribute(): \Carbon\Carbon
     {
         $days = static::getOrderExpirationDays();
         return $this->sale_date->copy()->addDays($days);
     }
 
-    /**
-     * Días restantes hasta la eliminación automática (0 si ya expiró).
-     */
     public function getDaysRemainingUntilExpirationAttribute(): int
     {
         $expiresAt = $this->expires_at;
@@ -139,25 +118,17 @@ class Sale extends Model
         return (int) $now->diffInDays($expiresAt, false);
     }
 
-    /**
-     * Indica si quedan dos días o menos (para mostrar alerta).
-     */
     public function getIsExpiryWarningAttribute(): bool
     {
         $days = $this->days_remaining_until_expiration;
+        // Triggers when at or below the alert threshold but not yet expired
         return $days <= (int) config('sales.expiry_alert_days', 2) && $days > 0;
     }
 
-    /**
-     * Scope: solo pedidos que aún no han superado el tiempo de vigencia.
-     */
     public function scopeNotExpired($query)
     {
         $days = static::getOrderExpirationDays();
         $limitDate = now()->subDays($days);
         return $query->where('sale_date', '>=', $limitDate);
     }
-
-
-    }
-
+}

@@ -22,33 +22,28 @@ class DashboardController extends Controller
         }
         
         try {
-            // Verificar que las tablas existan y tengan datos
+            // Abort early if required tables are missing to avoid misleading query errors
             if (!\Schema::hasTable('products') || !\Schema::hasTable('categories') || !\Schema::hasTable('suppliers') || !\Schema::hasTable('sales')) {
                 throw new \Exception('Database tables not found');
             }
             
-            // Verificar categorías existentes (solo en modo debug)
             if (config('app.debug')) {
                 $categoriasExistentes = Category::count();
                 \Log::debug("Categorías en DB: {$categoriasExistentes}");
             }
             
-            // Obtener estadísticas principales
             $totalProducts = Product::count();
             $totalSuppliers = Supplier::count();
             $totalCategories = Category::count();
 
-            // Daily sales
             $todaySales = Sale::whereDate('sale_date', Carbon::today())
                 ->where('status', 'completed')
                 ->sum('total');
 
-            // Productos con stock bajo (menos de 10 unidades)
             $lowStockProducts = Product::where('stock_current', '<', 10)
                 ->where('status', 'active')
                 ->count();
 
-            // Lista de productos con stock bajo
             $lowStockProductsList = Product::with(['category', 'supplier'])
                 ->where('stock_current', '<', 10)
                 ->where('status', 'active')
@@ -56,7 +51,7 @@ class DashboardController extends Controller
                 ->limit(5)
                 ->get();
 
-            // Recent sales (last 5)
+            // Replace missing customer relations with a placeholder to avoid null errors in the view
             $recentSales = Sale::with(['customer'])
                 ->orderBy('sale_date', 'desc')
                 ->limit(5)
@@ -68,7 +63,6 @@ class DashboardController extends Controller
                     return $sale;
                 });
 
-            // Sales by day (last 7 days)
             $salesByDay = Sale::select(
                     DB::raw('DATE(sale_date) as date'),
                     DB::raw('COALESCE(SUM(total), 0) as total')
@@ -79,7 +73,6 @@ class DashboardController extends Controller
                 ->orderBy('date')
                 ->get();
 
-            // Productos por categoría - usando relación Eloquent
             $productsByCategory = Category::withCount(['products' => function($query) {
                     $query->where('status', 'active');
                 }])
@@ -92,20 +85,17 @@ class DashboardController extends Controller
                     ];
                 });
 
-            // Calculate trends
             $yesterdaySales = Sale::whereDate('sale_date', Carbon::yesterday())
                 ->where('status', 'completed')
                 ->sum('total');
 
             $salesTrend = $this->calculateTrend($todaySales, $yesterdaySales);
 
-            // Current month sales
             $monthlySales = Sale::whereMonth('sale_date', Carbon::now()->month)
                 ->whereYear('sale_date', Carbon::now()->year)
                 ->where('status', 'completed')
                 ->sum('total');
 
-            // Previous month sales
             $lastMonthSales = Sale::whereMonth('sale_date', Carbon::now()->subMonth()->month)
                 ->whereYear('sale_date', Carbon::now()->subMonth()->year)
                 ->where('status', 'completed')
@@ -113,7 +103,7 @@ class DashboardController extends Controller
 
             $monthlyTrend = $this->calculateTrend($monthlySales, $lastMonthSales);
 
-            // Top selling products
+            // Join through sale_items to rank products by units sold in the last 30 days
             $topProducts = DB::table('sale_items')
                 ->join('products', 'sale_items.product_id', '=', 'products.product_id')
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.sale_id')
@@ -130,13 +120,12 @@ class DashboardController extends Controller
                 ->limit(5)
                 ->get();
 
-            // Proveedores con más productos
             $topSuppliers = Supplier::withCount('products')
                 ->orderBy('products_count', 'desc')
                 ->limit(5)
                 ->get();
 
-            return view('dashboard', compact(
+            return view('admin.dashboard', compact(
                 'totalProducts',
                 'totalSuppliers',
                 'totalCategories',
@@ -154,15 +143,14 @@ class DashboardController extends Controller
             ));
 
         } catch (\Exception $e) {
-            // Log del error para debugging
             \Log::error('Error en DashboardController: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
             
-            // En caso de error, devolver datos por defecto pero logear el error
-            return view('dashboard', [
+            // Return zeroed-out defaults so the view renders gracefully instead of crashing
+            return view('admin.dashboard', [
                 'totalProducts' => 0,
                 'totalSuppliers' => 0,
                 'totalCategories' => 0,
@@ -182,9 +170,6 @@ class DashboardController extends Controller
         }
     }
 
-    /**
-     * Obtener datos del dashboard en formato JSON
-     */
     public function getDashboardData()
     {
         try {
@@ -226,17 +211,14 @@ class DashboardController extends Controller
         }
     }
 
-    /**
-     * Obtener datos para gráficos via AJAX
-     */
     public function getChartData(Request $request)
     {
+        // Default to the last 7 days if no period is specified
         $period = $request->get('period', '7d');
         
         try {
             $startDate = $this->getStartDate($period);
             
-            // Sales by day
             $salesData = Sale::select(
                     DB::raw('DATE(sale_date) as date'),
                     DB::raw('SUM(total) as total')
@@ -273,15 +255,11 @@ class DashboardController extends Controller
         }
     }
 
-    /**
-     * Exportar reporte del dashboard
-     */
     public function exportReport(Request $request)
     {
         $format = $request->get('format', 'pdf');
         
         try {
-            // Obtener datos del dashboard
             $data = $this->getDashboardDataInternal();
             
             if ($format === 'pdf') {
@@ -303,9 +281,7 @@ class DashboardController extends Controller
         }
     }
 
-    /**
-     * Calcular tendencia porcentual
-     */
+    // Returns 100% growth when the previous value is zero to avoid division by zero
     private function calculateTrend($current, $previous)
     {
         if ($previous == 0) {
@@ -315,9 +291,7 @@ class DashboardController extends Controller
         return round((($current - $previous) / $previous) * 100, 1);
     }
 
-    /**
-     * Obtener fecha de inicio según el período
-     */
+    // Subtracts one less day than the period label implies to include today in the range
     private function getStartDate($period)
     {
         switch ($period) {
@@ -332,9 +306,6 @@ class DashboardController extends Controller
         }
     }
 
-    /**
-     * Obtener datos completos del dashboard para uso interno
-     */
     private function getDashboardDataInternal()
     {
         return [
@@ -353,23 +324,15 @@ class DashboardController extends Controller
         ];
     }
 
-    /**
-     * Exportar a PDF
-     */
     private function exportPDF($data)
     {
-        // Implementar exportación a PDF
-        // Por ahora, redirigir a una vista de impresión
+        // TODO: implement proper PDF generation; currently falls back to a print view
         return view('exports.dashboard-pdf', $data);
     }
 
-    /**
-     * Exportar a Excel
-     */
     private function exportExcel($data)
     {
-        // Implementar exportación a Excel
-        // Por ahora, devolver JSON
+        // TODO: implement Excel export via a library such as Laravel Excel
         return response()->json($data);
     }
 }
