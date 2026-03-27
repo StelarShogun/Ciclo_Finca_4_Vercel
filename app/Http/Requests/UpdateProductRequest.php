@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Requests;
 
+use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -8,14 +9,48 @@ class UpdateProductRequest extends FormRequest
 {
     public function authorize(): bool { return true; }
 
-    public function rules(): array
+    /**
+     * ID del producto en la ruta (products/{product}) para ignorar en unique(name).
+     * Si route('product') no está disponible, se usa el segmento de la URL.
+     */
+    protected function resolvedProductIdForUpdate(): ?int
     {
         $productId = $this->route('product');
+
+        if ($productId instanceof Product) {
+            return (int) $productId->getKey();
+        }
+
+        if ($productId !== null && $productId !== '') {
+            return (int) $productId;
+        }
+
+        $segments = $this->segments();
+        $idx = array_search('products', $segments, true);
+        if ($idx !== false && isset($segments[$idx + 1]) && ctype_digit((string) $segments[$idx + 1])) {
+            return (int) $segments[$idx + 1];
+        }
+
+        return null;
+    }
+
+    public function rules(): array
+    {
+        $productId = $this->resolvedProductIdForUpdate();
+        $categoryId = $this->input('category_id');
+
+        $nameRule = Rule::unique('products', 'name');
+        if (filled($categoryId)) {
+            $nameRule->where(fn ($query) => $query->where('category_id', $categoryId));
+        }
+        if ($productId !== null) {
+            $nameRule->ignore($productId, 'product_id');
+        }
 
         return [
             'category_id'  => ['required','exists:categories,category_id'],
             'supplier_id'  => ['required','exists:suppliers,supplier_id'],
-            'name'         => ['required','string','max:200', Rule::unique('products', 'name')->ignore($productId, 'product_id')],
+            'name'         => ['required','string','max:200', $nameRule],
             'description'  => ['nullable','string'],
             'sale_price'   => ['required','numeric','min:0','gt:purchase_price'],
             'purchase_price' => ['required','numeric','min:0'],
@@ -38,7 +73,7 @@ class UpdateProductRequest extends FormRequest
             'min' => 'This field must be at least :min.',
             'integer' => 'This field must be an integer.',
             'in' => 'The selected option is invalid.',
-            'unique' => 'A product with this name already exists.',
+            'unique' => 'Ya existe un producto con este nombre en esta categoría.',
             'gt' => 'This field must be greater than the purchase price.',
             'gte' => 'This field must be greater than or equal to the minimum stock.',
             'image' => 'The file must be a valid image.',

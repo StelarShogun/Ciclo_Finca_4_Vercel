@@ -153,12 +153,12 @@ class ProductController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Product updated successfully',
+                    'message' => 'Producto actualizado con éxito',
                     'data' => $product->load(['category', 'supplier'])
                 ]);
             }
 
-            return redirect()->route('inventory')->with('status','Product updated successfully');
+            return redirect()->route('inventory')->with('status','Producto actualizado con éxito');
         } catch (ValidationException $e) {
             $errors = $e->errors();
             if ($request->wantsJson() || $request->ajax()) {
@@ -261,7 +261,17 @@ class ProductController extends Controller
             });
         }
 
-        if ($request->filled('category_id')) {
+        if ($request->filled('subcategory_id')) {
+            $query->where('category_id', $request->subcategory_id);
+        } elseif ($request->filled('parent_category_id')) {
+            $parentId = (int) $request->parent_category_id;
+            $childIds = Category::where('parent_category_id', $parentId)->pluck('category_id');
+            $query->where(function ($q) use ($parentId, $childIds) {
+                $q->where('category_id', $parentId)
+                    ->orWhereIn('category_id', $childIds);
+            });
+        } elseif ($request->filled('category_id')) {
+            // Backward compatibility with previous single-category filter.
             $query->where('category_id', $request->category_id);
         }
 
@@ -311,17 +321,34 @@ class ProductController extends Controller
             ];
         });
 
-        // Evitar nombres duplicados en filtros/selectores (seeders pueden repetir categorías raíz).
+        // Categorías padre (raíz) deduplicadas para filtros/selectores dependientes.
         $categories = Category::query()
             ->selectRaw('MIN(category_id) as category_id, name')
+            ->whereNull('parent_category_id')
             ->groupBy('name')
             ->orderBy('name')
             ->get();
+
+        // Subcategorías por padre para selects dependientes.
+        $subcategoriesByParent = Category::query()
+            ->whereNotNull('parent_category_id')
+            ->orderBy('name')
+            ->get(['category_id', 'name', 'parent_category_id'])
+            ->groupBy('parent_category_id')
+            ->map(function ($rows) {
+                return $rows->map(function ($row) {
+                    return [
+                        'category_id' => $row->category_id,
+                        'name' => $row->name,
+                    ];
+                })->values();
+            });
 
         return view('products.inventory', [
             'products' => $products,
             'paginator' => $paginator,
             'categories' => $categories,
+            'subcategoriesByParent' => $subcategoriesByParent,
         ]);
     }
 

@@ -2,6 +2,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreProductRequest extends FormRequest
 {
@@ -12,10 +13,17 @@ class StoreProductRequest extends FormRequest
 
     public function rules(): array
     {
+        $categoryId = $this->input('category_id');
+
+        $nameRule = Rule::unique('products', 'name');
+        if (filled($categoryId)) {
+            $nameRule->where(fn ($query) => $query->where('category_id', $categoryId));
+        }
+
         return [
             'category_id' => 'required|exists:categories,category_id',
             'supplier_id' => 'required|exists:suppliers,supplier_id',
-            'name' => 'required|string|max:200|unique:products,name',
+            'name' => ['required', 'string', 'max:200', $nameRule],
             'description' => 'nullable|string',
             'sale_price' => 'required|numeric|min:0|gt:purchase_price',
             'purchase_price' => 'required|numeric|min:0',
@@ -39,7 +47,7 @@ class StoreProductRequest extends FormRequest
             'min' => 'This field must be at least :min.',
             'integer' => 'This field must be an integer.',
             'in' => 'The selected option is invalid.',
-            'unique' => 'A product with this name already exists.',
+            'unique' => 'Ya existe un producto con este nombre en esta categoría.',
             'gt' => 'This field must be greater than the purchase price.',
             'gte' => 'This field must be greater than or equal to the minimum stock.',
             'image' => 'The file must be a valid image.',

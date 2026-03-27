@@ -18,7 +18,32 @@ class CategoryController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('categories.subcategories.create', compact('categories'));
+        $categoriesHierarchy = Category::query()
+            ->with('parent:category_id,name')
+            ->orderByRaw('CASE WHEN parent_category_id IS NULL THEN 0 ELSE 1 END')
+            ->orderBy('parent_category_id')
+            ->orderBy('name')
+            ->get(['category_id', 'name', 'parent_category_id'])
+            ->unique(function ($row) {
+                return mb_strtolower(trim($row->name)) . '|' . ($row->parent_category_id ?? 'null');
+            })
+            ->values();
+
+        $subcategoriesByParent = Category::query()
+            ->whereNotNull('parent_category_id')
+            ->orderBy('name')
+            ->get(['category_id', 'name', 'parent_category_id'])
+            ->groupBy('parent_category_id')
+            ->map(function ($rows) {
+                return $rows->map(function ($row) {
+                    return [
+                        'category_id' => $row->category_id,
+                        'name' => $row->name,
+                    ];
+                })->values();
+            });
+
+        return view('categories.subcategories.create', compact('categories', 'categoriesHierarchy', 'subcategoriesByParent'));
     }
 
     public function store(Request $request)

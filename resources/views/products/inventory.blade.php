@@ -69,14 +69,20 @@
                 <form class="filter-form">
                     <div class="filters-grid">
                         <div class="filter-group">
-                            <label for="category">Categoría</label>
-                            <select id="category" name="category_id">
+                            <label for="parent-category-filter">Categoría padre</label>
+                            <select id="parent-category-filter" name="parent_category_id">
                                 <option value="">Todas las categorías</option>
                                 @foreach($categories as $category)
-                                <option value="{{ $category->category_id }}" @selected(request('category_id')==='{{ $category->category_id }}')>
+                                <option value="{{ $category->category_id }}" @selected((string) request('parent_category_id') === (string) $category->category_id)>
                                         {{ $category->name }}
                                     </option>
                                 @endforeach
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="subcategory-filter">Subcategoría</label>
+                            <select id="subcategory-filter" name="subcategory_id" data-selected="{{ request('subcategory_id') }}">
+                                <option value="">Todas las subcategorías</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -290,13 +296,20 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-category">Categoría *</label>
-                            <select id="new-category" name="category_id" required>
-                                <option value="">Seleccionar categoría</option>
+                            <label for="new-parent-category">Categoría padre *</label>
+                            <select id="new-parent-category" required>
+                                <option value="">Seleccionar categoría padre</option>
                                 @foreach($categories as $category)
-                                <option value="{{ $category->category_id }}">{{ $category->name }}</option>
+                                    <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-subcategory">Subcategoría</label>
+                            <select id="new-subcategory">
+                                <option value="">Sin subcategoría</option>
+                            </select>
+                            <input type="hidden" id="new-category" name="category_id" required>
                         </div>
                         <div class="form-group">
                             <label for="new-provider">Proveedor *</label>
@@ -389,13 +402,20 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="edit-category">Categoría *</label>
-                            <select id="edit-category" name="category_id" required>
-                                <option value="">Seleccionar categoría</option>
+                            <label for="edit-parent-category">Categoría padre *</label>
+                            <select id="edit-parent-category" required>
+                                <option value="">Seleccionar categoría padre</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-subcategory">Subcategoría</label>
+                            <select id="edit-subcategory">
+                                <option value="">Sin subcategoría</option>
+                            </select>
+                            <input type="hidden" id="edit-category" name="category_id" required>
                         </div>
                         <div class="form-group">
                             <label for="edit-provider">Proveedor *</label>
@@ -649,6 +669,9 @@
         </div>
     </div>
 
+    <script>
+        window.inventoryCategoryTree = @json($subcategoriesByParent);
+    </script>
     @vite(['resources/js/admin/inventory.js'])
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>

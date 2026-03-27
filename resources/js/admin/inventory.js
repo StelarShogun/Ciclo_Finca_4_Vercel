@@ -4,6 +4,16 @@
 const qs = (s, r = document) => r.querySelector(s);
 const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
 
+/** Texto legible a partir de la respuesta JSON 422 de Laravel (errors + message). */
+function jsonValidationMessage(data) {
+    if (!data) return '';
+    if (data.errors) {
+        const flat = Object.values(data.errors).flat().filter(Boolean);
+        if (flat.length) return flat.join('\n');
+    }
+    return typeof data.message === 'string' ? data.message : '';
+}
+
 // Función para obtener el CSRF token dinámicamente
 function getCSRFToken() {
     const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -356,6 +366,52 @@ if (typeof Swal !== 'undefined') {
     }
 })();
 
+// ---------- Category/Subcategory dependent selectors ----------
+function getSubcategoriesForParent(parentId) {
+    const tree = window.inventoryCategoryTree || {};
+    return tree[String(parentId)] || tree[parentId] || [];
+}
+
+function fillSubcategoryOptions(selectEl, parentId, selectedSubId = '') {
+    if (!selectEl) return;
+    const subs = parentId ? getSubcategoriesForParent(parentId) : [];
+    selectEl.innerHTML = '<option value="">Sin subcategoría</option>';
+    subs.forEach((sub) => {
+        const opt = document.createElement('option');
+        opt.value = String(sub.category_id);
+        opt.textContent = sub.name;
+        if (String(selectedSubId) === String(sub.category_id)) {
+            opt.selected = true;
+        }
+        selectEl.appendChild(opt);
+    });
+}
+
+function syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput) {
+    if (!parentSelect || !hiddenCategoryInput) return;
+    const parentId = parentSelect.value;
+    const subId = subSelect ? subSelect.value : '';
+    hiddenCategoryInput.value = subId || parentId || '';
+}
+
+function bindDependentCategorySelectors(config) {
+    const { parentSelect, subSelect, hiddenCategoryInput } = config;
+    if (!parentSelect || !subSelect) return;
+
+    const selectedSub = subSelect.dataset.selected || '';
+    fillSubcategoryOptions(subSelect, parentSelect.value, selectedSub);
+    syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput);
+
+    parentSelect.addEventListener('change', () => {
+        fillSubcategoryOptions(subSelect, parentSelect.value);
+        syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput);
+    });
+
+    subSelect.addEventListener('change', () => {
+        syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput);
+    });
+}
+
 // ---------- Modals ----------
 (function initModals() {
     // Modal de nuevo producto
@@ -365,10 +421,17 @@ if (typeof Swal !== 'undefined') {
     const cancelNewProductBtn = qs('#cancel-new-product');
     const saveNewProductBtn = qs('#save-new-product');
     const newProductForm = qs('#new-product-form');
+    const newParentCategory = qs('#new-parent-category');
+    const newSubcategory = qs('#new-subcategory');
+    const newFinalCategory = qs('#new-category');
 
     if (openNewProductModalBtn) {
         openNewProductModalBtn.addEventListener('click', () => {
             newProductModal.classList.add('active');
+            if (newParentCategory && !newParentCategory.value) {
+                fillSubcategoryOptions(newSubcategory, '');
+            }
+            syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
         });
     }
 
@@ -439,7 +502,7 @@ if (typeof Swal !== 'undefined') {
                     
                     Swal.fire({
                         title: 'Error de validación',
-                        text: data.message,
+                        text: jsonValidationMessage(data) || data.message || 'Revisa los campos del formulario.',
                         icon: 'error',
                         confirmButtonText: 'Entendido'
                     });
@@ -472,6 +535,9 @@ if (typeof Swal !== 'undefined') {
     const cancelEditBtn = qs('#cancel-edit');
     const saveEditBtn = qs('#save-edit');
     const editProductForm = qs('#edit-product-form');
+    const editParentCategory = qs('#edit-parent-category');
+    const editSubcategory = qs('#edit-subcategory');
+    const editFinalCategory = qs('#edit-category');
 
     editBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -494,7 +560,29 @@ if (typeof Swal !== 'undefined') {
                     editProductForm.action = `/products/${productId}`;
                     qs('#edit-name').value = product.name || '';
                     qs('#edit-description').value = product.description || '';
-                    qs('#edit-category').value = product.category_id || '';
+                    const currentCategoryId = String(product.category_id || '');
+                    const tree = window.inventoryCategoryTree || {};
+                    let detectedParentId = '';
+                    let detectedSubcategoryId = '';
+
+                    Object.keys(tree).forEach((parentId) => {
+                        if (detectedParentId) return;
+                        const match = (tree[parentId] || []).find((sub) => String(sub.category_id) === currentCategoryId);
+                        if (match) {
+                            detectedParentId = String(parentId);
+                            detectedSubcategoryId = currentCategoryId;
+                        }
+                    });
+
+                    if (!detectedParentId) {
+                        detectedParentId = currentCategoryId;
+                    }
+
+                    if (editParentCategory) {
+                        editParentCategory.value = detectedParentId;
+                        fillSubcategoryOptions(editSubcategory, detectedParentId, detectedSubcategoryId);
+                        syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
+                    }
                     qs('#edit-provider').value = product.supplier_id || '';
                     qs('#edit-price-buy').value = product.purchase_price || '';
                     qs('#edit-price-sell').value = product.sale_price || '';
@@ -528,6 +616,18 @@ if (typeof Swal !== 'undefined') {
             editModal.classList.remove('active');
         });
     }
+
+    bindDependentCategorySelectors({
+        parentSelect: newParentCategory,
+        subSelect: newSubcategory,
+        hiddenCategoryInput: newFinalCategory
+    });
+
+    bindDependentCategorySelectors({
+        parentSelect: editParentCategory,
+        subSelect: editSubcategory,
+        hiddenCategoryInput: editFinalCategory
+    });
 
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener('click', () => {
@@ -591,7 +691,7 @@ if (typeof Swal !== 'undefined') {
                     
                     Swal.fire({
                         title: 'Error de validación',
-                        text: data.message,
+                        text: jsonValidationMessage(data) || data.message || 'Revisa los campos del formulario.',
                         icon: 'error',
                         confirmButtonText: 'Entendido'
                     });
@@ -1085,6 +1185,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (filterForm) {
+        const parentFilter = qs('#parent-category-filter');
+        const subcategoryFilter = qs('#subcategory-filter');
+        if (parentFilter && subcategoryFilter) {
+            const selectedFromData = subcategoryFilter.dataset.selected || '';
+            fillSubcategoryOptions(subcategoryFilter, parentFilter.value, selectedFromData);
+            parentFilter.addEventListener('change', () => {
+                fillSubcategoryOptions(subcategoryFilter, parentFilter.value);
+            });
+        }
+
         filterForm.addEventListener('submit', () => {
             if (loadingSpinner) {
                 loadingSpinner.style.display = 'flex';
