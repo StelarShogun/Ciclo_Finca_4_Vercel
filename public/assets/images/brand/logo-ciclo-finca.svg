@@ -6,12 +6,16 @@
       <stop offset="0%" stop-color="#d0d0d0"/>
       <stop offset="100%" stop-color="#888888"/>
     </radialGradient>
+    <linearGradient id="cf4_skyInner" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8f5e9"/>
+      <stop offset="100%" stop-color="#fafafa"/>
+    </linearGradient>
     <clipPath id="cf4_innerClip">
       <circle cx="40" cy="40" r="23.5"/>
     </clipPath>
   </defs>
 
-  <!-- Emblema: cadena + escena interior (sin fondo propio) -->
+  <!-- Anillo + cadena -->
   <circle cx="40" cy="40" r="33" fill="none" stroke="#c8e6c9" stroke-width="0.75" opacity="0.9"/>
   <g fill="url(#cf4_chainGrad)" stroke="#666" stroke-width="0.4">
     <ellipse cx="40" cy="9" rx="4" ry="2.5" transform="rotate(0,40,40)"/>
@@ -65,32 +69,253 @@
     <circle cx="40" cy="9" r="1.2" transform="rotate(337.5,40,40)"/>
     <circle cx="40" cy="9" r="1.2" transform="rotate(352.5,40,40)"/>
   </g>
+
+  <!-- Interior: cielo, montañas, sendero, ciclista MTB detallado -->
   <g clip-path="url(#cf4_innerClip)">
-    <rect x="16" y="16" width="48" height="48" fill="#f5f5f5"/>
-    <polygon points="20,54 30,35 40,48" fill="#b8c4d4"/>
-    <polygon points="28,38 30,35 32,38" fill="white"/>
-    <polygon points="26,54 38,29 50,54" fill="#c8d4e0"/>
-    <polygon points="35,33 38,29 41,33" fill="white"/>
-    <polygon points="36,54 50,39 62,54" fill="#a8b8c8"/>
-    <rect x="16" y="53" width="48" height="3" fill="#d0d8e4" opacity="0.6"/>
-    <circle cx="34" cy="50" r="5" fill="none" stroke="#222" stroke-width="1.2"/>
-    <circle cx="46" cy="50" r="5" fill="none" stroke="#222" stroke-width="1.2"/>
-    <circle cx="34" cy="50" r="1" fill="#222"/>
-    <circle cx="46" cy="50" r="1" fill="#222"/>
-    <line x1="34" y1="50" x2="40" y2="42" stroke="#222" stroke-width="1.2" stroke-linecap="round"/>
-    <line x1="40" y1="42" x2="46" y2="50" stroke="#222" stroke-width="1.2" stroke-linecap="round"/>
-    <line x1="40" y1="42" x2="37" y2="50" stroke="#222" stroke-width="1.1" stroke-linecap="round"/>
-    <line x1="40" y1="42" x2="41" y2="38" stroke="#222" stroke-width="1.1" stroke-linecap="round"/>
-    <line x1="46" y1="50" x2="44" y2="42" stroke="#222" stroke-width="1.1" stroke-linecap="round"/>
-    <line x1="44" y1="42" x2="47" y2="41" stroke="#222" stroke-width="1.2" stroke-linecap="round"/>
-    <line x1="41" y1="38" x2="44" y2="42" stroke="#222" stroke-width="1.4" stroke-linecap="round"/>
-    <circle cx="42" cy="37" r="2.2" fill="#222"/>
-    <line x1="43" y1="39" x2="46" y2="41" stroke="#222" stroke-width="1.1" stroke-linecap="round"/>
-    <line x1="41" y1="43" x2="38" y2="47" stroke="#222" stroke-width="1.2" stroke-linecap="round"/>
-    <line x1="41" y1="43" x2="44" y2="47" stroke="#222" stroke-width="1.2" stroke-linecap="round"/>
-    <circle cx="40" cy="45" r="2" fill="none" stroke="#333" stroke-width="0.8"/>
+    <!-- Cielo degradado -->
+    <rect x="16" y="16" width="48" height="48" fill="url(#cf4_skyInner)"/>
+
+    <!-- Montañas: capa lejana -->
+    <path fill="#a5d6a7" d="
+      M16 50
+      C20 46, 22 40, 26 38
+      C28 37, 30 42, 33 36
+      C35 33, 38 30, 40 32
+      C43 34, 45 28, 48 30
+      C51 32, 54 26, 57 30
+      C60 34, 62 38, 64 42
+      L64 64 L16 64 Z"/>
+    <!-- Montañas: capa cercana -->
+    <path fill="#81c784" opacity="0.55" d="
+      M16 54
+      C20 50, 24 46, 28 48
+      C32 50, 35 44, 39 42
+      C43 40, 46 44, 50 42
+      C54 40, 58 46, 64 48
+      L64 64 L16 64 Z"/>
+    <!-- Suelo / sendero -->
+    <path fill="#eceff1" d="
+      M16 55 Q28 52, 40 53 Q52 54, 64 55 L64 64 L16 64 Z"/>
+
+    <!-- ======================== -->
+    <!-- BICICLETA MTB (detallada) -->
+    <!-- ======================== -->
+
+    <!-- Rueda trasera: neumático -->
+    <circle cx="27" cy="52" r="6.4" fill="none" stroke="#1b5e20" stroke-width="1.8"/>
+    <!-- Rueda trasera: llanta -->
+    <circle cx="27" cy="52" r="4.8" fill="none" stroke="#1b5e20" stroke-width="0.45"/>
+    <!-- Rueda trasera: buje -->
+    <circle cx="27" cy="52" r="1" fill="#1b5e20"/>
+    <!-- Rueda trasera: radios (8) -->
+    <g stroke="#1b5e20" stroke-width="0.3" opacity="0.6">
+      <line x1="27" y1="46.2" x2="27" y2="57.8"/>
+      <line x1="21.2" y1="52" x2="32.8" y2="52"/>
+      <line x1="22.9" y1="47.9" x2="31.1" y2="56.1"/>
+      <line x1="31.1" y1="47.9" x2="22.9" y2="56.1"/>
+    </g>
+
+    <!-- Rueda delantera: neumático -->
+    <circle cx="53" cy="52" r="6.4" fill="none" stroke="#1b5e20" stroke-width="1.8"/>
+    <!-- Rueda delantera: llanta -->
+    <circle cx="53" cy="52" r="4.8" fill="none" stroke="#1b5e20" stroke-width="0.45"/>
+    <!-- Rueda delantera: buje -->
+    <circle cx="53" cy="52" r="1" fill="#1b5e20"/>
+    <!-- Rueda delantera: radios (8) -->
+    <g stroke="#1b5e20" stroke-width="0.3" opacity="0.6">
+      <line x1="53" y1="46.2" x2="53" y2="57.8"/>
+      <line x1="47.2" y1="52" x2="58.8" y2="52"/>
+      <line x1="48.9" y1="47.9" x2="57.1" y2="56.1"/>
+      <line x1="57.1" y1="47.9" x2="48.9" y2="56.1"/>
+    </g>
+
+    <!-- Cuadro: triángulo principal -->
+    <g stroke="#1b5e20" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <!-- Tubo inferior (down tube): pedalier → dirección -->
+      <path d="M36 52.5 L48 38"/>
+      <!-- Tubo de sillín (seat tube): pedalier → tija -->
+      <path d="M36 52.5 L33.5 42"/>
+      <!-- Tubo superior (top tube): tija → dirección -->
+      <path d="M33.5 42 L48 38"/>
+    </g>
+
+    <!-- Cuadro: triángulo trasero -->
+    <g stroke="#1b5e20" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <!-- Vainas (chainstays): pedalier → eje trasero -->
+      <path d="M36 52.5 L27 52"/>
+      <!-- Tirantes (seatstays): tija sillín → eje trasero -->
+      <path d="M33.5 42 L27 52"/>
+    </g>
+
+    <!-- Horquilla delantera (con curva de suspensión) -->
+    <g stroke="#1b5e20" stroke-linecap="round" fill="none">
+      <path d="M48 38 L49.5 35" stroke-width="1.5"/>
+      <path d="M49 36.5 C50 40, 51 46, 53 52" stroke-width="1.4"/>
+      <!-- Barra de la horquilla (stanchion) -->
+      <path d="M48.5 37 C49.5 41, 50.5 46, 52 52" stroke-width="0.7" opacity="0.45"/>
+    </g>
+
+    <!-- Sillín -->
+    <path d="M31 40.5 C32 39.8, 34.5 39.8, 35.5 40.5" stroke="#1b5e20" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+    <!-- Tija del sillín (seat post) -->
+    <path d="M33.5 42 L33 40.5" stroke="#1b5e20" stroke-width="0.9" stroke-linecap="round"/>
+
+    <!-- Manillar + potencia -->
+    <g stroke="#1b5e20" stroke-linecap="round" fill="none">
+      <!-- Potencia (stem) -->
+      <path d="M49.5 35 L47.5 33" stroke-width="1.2"/>
+      <!-- Manillar (handlebar) curvo -->
+      <path d="M45.5 34 C46.5 32.5, 48 32, 49.5 33.5" stroke-width="1.1"/>
+      <!-- Grip / puño -->
+      <path d="M45 34.5 L44.5 35.5" stroke-width="1.5"/>
+    </g>
+
+    <!-- Plato y biela -->
+    <g stroke="#1b5e20" stroke-linecap="round" fill="none">
+      <!-- Plato (chainring) -->
+      <circle cx="36" cy="52.5" r="2.8" stroke-width="0.5"/>
+      <!-- Eje pedalier -->
+      <circle cx="36" cy="52.5" r="0.7" fill="#1b5e20" stroke="none"/>
+      <!-- Biela derecha (hacia abajo) -->
+      <path d="M36 52.5 L34 56" stroke-width="1"/>
+      <!-- Pedal derecho -->
+      <path d="M33 56 L35 56.5" stroke-width="1.2"/>
+      <!-- Biela izquierda (hacia arriba-atrás) -->
+      <path d="M36 52.5 L38 49.5" stroke-width="0.8" opacity="0.6"/>
+    </g>
+
+    <!-- Cadena (sugerida) -->
+    <path d="M33.2 52.5 Q30 55, 27 52" stroke="#1b5e20" stroke-width="0.35" fill="none" opacity="0.4"/>
+
+    <!-- Freno disco trasero -->
+    <circle cx="27" cy="52" r="2.2" fill="none" stroke="#1b5e20" stroke-width="0.35" opacity="0.35"/>
+    <!-- Freno disco delantero -->
+    <circle cx="53" cy="52" r="2.2" fill="none" stroke="#1b5e20" stroke-width="0.35" opacity="0.35"/>
+
+    <!-- ======================== -->
+    <!-- CICLISTA (silueta rellena detallada) -->
+    <!-- ======================== -->
+
+    <g fill="#1b5e20">
+      <!-- Casco (forma aerodinámica con visera) -->
+      <path d="
+        M41.5 27
+        C40 24.5, 43 23, 45.5 24.5
+        C47 25.5, 47.5 27.5, 47 29
+        C46.5 30, 45.5 30.5, 44.5 31
+        L44.5 31.5
+        C44 32, 43.5 32, 43 31.5
+        C42 30.5, 41 29, 41.5 27 Z"/>
+
+      <!-- Visera del casco -->
+      <path d="M44.5 31 C45.5 30.5, 47 30, 47.5 30.5 C47 31, 46 31.5, 45 31.5 Z"/>
+
+      <!-- Cara / mentón (sombra) -->
+      <path d="
+        M43 31.5
+        C43.5 32.5, 44 33, 43.5 33.5
+        C43 34, 42.5 33.5, 42.5 33
+        C42.5 32.5, 42.5 32, 43 31.5 Z"/>
+
+      <!-- Cuello -->
+      <path d="
+        M42.5 33
+        C42 33.5, 41.5 34, 41 34.5
+        L42 35
+        C42.5 34.5, 43 34, 43.5 33.5 Z"/>
+
+      <!-- Torso (espalda curvada, posición agresiva) -->
+      <path d="
+        M41 34.5
+        C40 35.5, 38.5 37, 37.5 38.5
+        C36.5 40, 36 41, 35.5 42
+        C35 42.5, 34.5 43, 34 43.5
+        L35 44
+        C35.5 43.5, 36.5 42.5, 37.5 41.5
+        C38.5 40, 40 38, 41.5 36
+        C42 35.5, 42.5 35, 42 35 Z"/>
+
+      <!-- Hombro + brazo superior (deltoides → bíceps) -->
+      <path d="
+        M42 35
+        C42.5 35, 43.5 35, 44 35.5
+        C44.5 36, 44.5 36.5, 44.5 37
+        L43.5 37
+        C43.5 36.5, 43 36, 42.5 35.5 Z"/>
+
+      <!-- Antebrazo (bíceps → mano en manillar) -->
+      <path d="
+        M44.5 37
+        C44.8 36.5, 45 36, 45 35.5
+        C45 35, 45.2 34.8, 45.5 35
+        L45.5 35.5
+        C45.2 36, 45 36.5, 44.8 37
+        Z"/>
+
+      <!-- Mano en el puño -->
+      <path d="
+        M44.2 35.2
+        C44.5 34.5, 45 34, 45.5 34.5
+        C46 35, 45.5 35.5, 45 35.8
+        C44.5 36, 44 35.8, 44.2 35.2 Z"/>
+
+      <!-- Cadera / glúteo -->
+      <path d="
+        M34 43.5
+        C33.5 44, 33 44.5, 33 45
+        C33 45.5, 33.5 46, 34 46
+        C34.5 46, 35 45.5, 35 44.5
+        C35 44, 35 43.5, 35 44 Z"/>
+
+      <!-- Muslo derecho (cadera → rodilla, pierna de empuje) -->
+      <path d="
+        M34 46
+        C34.5 47, 35 48.5, 35.5 50
+        C36 51, 35.5 52, 35 52.5
+        L34 52
+        C34 51.5, 34 50.5, 34 49.5
+        C33.5 48, 33.5 47, 34 46 Z"/>
+
+      <!-- Espinilla + pie derecho (en pedal, abajo) -->
+      <path d="
+        M35 52.5
+        C34.5 53.5, 34 54.5, 34 55.5
+        C34 56, 34.5 56.5, 35 56.5
+        C35.5 56.5, 35.5 56, 35 55.5
+        L34.5 54
+        C34.5 53.5, 35 53, 35 52.5 Z"/>
+
+      <!-- Zapato derecho (en el pedal) -->
+      <path d="
+        M33 55.8
+        C33 56.3, 33.5 56.8, 34.5 56.8
+        C35.5 56.8, 36 56.3, 35.5 55.8
+        C35 55.5, 33.5 55.5, 33 55.8 Z"/>
+
+      <!-- Muslo izquierdo (pierna de retorno, más atrás) -->
+      <path d="
+        M34.5 45.5
+        C35.5 47, 36.5 48, 37.5 49
+        C38 49.5, 38.5 50, 38 50.5
+        L37 50
+        C37 49.5, 36.5 49, 36 48.5
+        C35.5 48, 35 47, 34.5 45.5 Z"
+        opacity="0.75"/>
+
+      <!-- Espinilla + pie izquierdo (en pedal, arriba) -->
+      <path d="
+        M38 50.5
+        C38 49.5, 37.8 49, 37.5 49.5
+        L37.5 50.5
+        C37.5 51, 38 51, 38 50.5 Z"
+        opacity="0.75"/>
+    </g>
   </g>
 
-  <!-- Texto de marca (alineado a la estética verde del sitio) -->
-  <text x="86" y="49" font-family="Poppins, system-ui, -apple-system, sans-serif" font-size="21" font-weight="700" letter-spacing="0.02em" fill="#2e7d32">CICLO FINCA 4</text>
+  <!-- Texto: negro / verde / negro -->
+  <text font-family="Poppins, system-ui, -apple-system, sans-serif" font-size="21" font-weight="700" letter-spacing="0.02em">
+    <tspan x="86" y="49" fill="#212529">CICLO</tspan>
+    <tspan fill="#2e7d32"> FINCA</tspan>
+    <tspan fill="#212529"> 4</tspan>
+  </text>
 </svg>

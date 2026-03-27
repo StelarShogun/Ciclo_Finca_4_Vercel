@@ -345,23 +345,60 @@ body.guest-layout {
   font-size: 1.25rem;
 }
 
-.logo-img  { height: 40px; width: auto; }
-.logo-img--mark {
-  height: 56px;
-  width: 56px;
-  flex-shrink: 0;
-  object-fit: contain;
+.logo-img:not(.logo-img--icon-only) {
+  height: 40px;
+  width: auto;
 }
+
+.logo-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.logo-link .logo-img--icon-only {
+  height: 64px;
+  width: 64px;
+  min-height: 64px;
+  min-width: 64px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+
 .logo-wordmark {
   font-family: 'Poppins', system-ui, -apple-system, sans-serif;
   font-weight: 700;
-  font-size: clamp(1.2rem, 2.6vw, 1.55rem);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  font-size: clamp(1.25rem, 3vw, 1.65rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
+
 .logo-text--dark { color: #212529; }
 .logo-text--green { color: var(--color-primary); }
+
+.logo-img--brand {
+  height: 52px;
+  width: auto;
+  max-width: min(240px, 55vw);
+  object-fit: contain;
+}
 .logo-text { font-size: 1.5rem; }
+
+@media (max-width: 768px) {
+  .logo-link .logo-img--icon-only {
+    height: 52px;
+    width: 52px;
+    min-height: 52px;
+    min-width: 52px;
+  }
+
+  .logo-wordmark {
+    font-size: clamp(1.1rem, 4.2vw, 1.35rem);
+  }
+}
 
 /* Main navigation */
 .main-nav {

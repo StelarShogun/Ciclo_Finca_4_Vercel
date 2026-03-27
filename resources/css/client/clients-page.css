@@ -145,28 +145,43 @@ body.guest-layout {
   font-size: 1.25rem;
 }
 
-.logo-img  { height: 40px; width: auto; display: block; }
-
-/* Ícono circular marca (más grande que la versión anterior) */
-.logo-img--mark {
-  height: 56px;
-  width: 56px;
-  flex-shrink: 0;
-  object-fit: contain;
+/* Altura genérica; el ícono navbar usa .logo-img--icon-only (mayor) */
+.logo-img:not(.logo-img--icon-only) {
+  height: 40px;
+  width: auto;
   display: block;
 }
 
-/* Misma familia que el hero (.hero-title → Poppins 700) */
+/* Logo navbar: PNG ícono cuadrado + wordmark (ícono ~altura de mayúsculas del texto) */
+.logo-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.logo-link .logo-img--icon-only {
+  height: 64px;
+  width: 64px;
+  min-height: 64px;
+  min-width: 64px;
+  max-height: none;
+  max-width: none;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+
 .logo-wordmark {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0;
+  align-items: center;
   font-family: 'Poppins', system-ui, -apple-system, sans-serif;
   font-weight: 700;
-  font-size: clamp(1.2rem, 2.6vw, 1.55rem);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  font-size: clamp(1.25rem, 3vw, 1.65rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
 .logo-text--dark {
@@ -177,11 +192,11 @@ body.guest-layout {
   color: var(--color-primary);
 }
 
-/* Compat: logo SVG combinado antiguo */
+/* Logo horizontal completo (SVG antiguo si se usa solo imagen) */
 .logo-img--brand {
-  height: 48px;
+  height: 52px;
   width: auto;
-  max-width: min(220px, 42vw);
+  max-width: min(240px, 55vw);
   object-fit: contain;
 }
 .logo-text { font-size: 1.5rem; }
@@ -2410,16 +2425,18 @@ body.guest-layout {
 
   .logo-img--brand {
     height: 36px;
-    max-width: min(180px, 50vw);
+    max-width: min(200px, 62vw);
   }
 
-  .logo-img--mark {
-    height: 48px;
-    width: 48px;
+  .logo-link .logo-img--icon-only {
+    height: 52px;
+    width: 52px;
+    min-height: 52px;
+    min-width: 52px;
   }
 
   .logo-wordmark {
-    font-size: clamp(1.05rem, 4vw, 1.25rem);
+    font-size: clamp(1.1rem, 4.2vw, 1.35rem);
   }
 
   .product-detail-layout { grid-template-columns: 1fr; }
