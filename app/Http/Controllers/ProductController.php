@@ -299,7 +299,7 @@ class ProductController extends Controller
                 // SKU is derived from the primary key since the table has no dedicated column
                 'sku' => 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT),
                 'image' => $product->image ?? 'default.png',
-                'category' => (object)['name' => $product->category->name ?? 'Uncategorized'],
+                'category' => (object)['name' => $product->category?->name ?? 'Uncategorized'],
                 'stock' => $product->stock_current,
                 'stock_status_class' => $product->stock_current > 10 ? 'success' :
                                       ($product->stock_current > 0 ? 'warning' : 'danger'),
