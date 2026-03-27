@@ -75,7 +75,7 @@
                                 <option value="">Todas las categorías</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}"
-                                        @selected(request('category_id') === '{{ $category->category_id }}')>
+                                        @selected((string) request('parent_category_id') === (string) $category->category_id)>
                                         {{ $category->name }}
                                     </option>
                                 @endforeach
@@ -179,7 +179,17 @@
                                             <span class="sku">SKU: {{ 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT) }}</span>
                                         </div>
                                     </td>
-                                    <td>{{ $product->category->name }}</td>
+                                    <td>
+                                        @if($product->category)
+                                            @if($product->category->parent)
+                                                {{ $product->category->parent->name }} &gt; {{ $product->category->name }}
+                                            @else
+                                                {{ $product->category->name }}
+                                            @endif
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
                                     <td>
                                         {{-- Stock badge: success >10, warning >0, danger =0 --}}
                                         <span class="stock-badge {{ $product->stock_current > 10 ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger') }}">
@@ -235,7 +245,17 @@
                                 <div class="product-card-details">
                                     <div class="product-card-detail">
                                         <span class="product-card-detail-label">Categoría</span>
-                                        <span class="product-card-detail-value">{{ $product->category->name }}</span>
+                                        <span class="product-card-detail-value">
+                                            @if($product->category)
+                                                @if($product->category->parent)
+                                                    {{ $product->category->parent->name }} &gt; {{ $product->category->name }}
+                                                @else
+                                                    {{ $product->category->name }}
+                                                @endif
+                                            @else
+                                                —
+                                            @endif
+                                        </span>
                                     </div>
                                     <div class="product-card-detail">
                                         <span class="product-card-detail-label">Stock</span>
@@ -329,10 +349,10 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-category">Categoría *</label>
-                            <select id="new-category" name="category_id" required>
+                            <label for="new-parent-category">Categoría *</label>
+                            <select id="new-parent-category" required>
                                 <option value="">Seleccionar categoría</option>
-                                @foreach(\App\Models\Category::all() as $category)
+                                @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
@@ -342,7 +362,7 @@
                             <select id="new-subcategory">
                                 <option value="">Sin subcategoría</option>
                             </select>
-                            <input type="hidden" id="new-category" name="category_id" required>
+                            <input type="hidden" id="new-category" name="category_id" value="">
                         </div>
                         <div class="form-group">
                             <label for="new-provider">Proveedor *</label>
@@ -692,6 +712,11 @@
             </div>
         </div>
     </div>
+
+    {{-- Árbol padre → hijos para filtros y modales (inventory.js) --}}
+    <script>
+        window.inventoryCategoryTree = @json($subcategoriesByParent ?? []);
+    </script>
 
     {{-- Scripts: SweetAlert2 loaded before inventory.js --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

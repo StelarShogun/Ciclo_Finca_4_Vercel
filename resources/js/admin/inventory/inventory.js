@@ -9,19 +9,96 @@ function getCSRFToken() {
     return metaToken || inputToken || '';
 }
 
- // Export modal handlers
-        document.getElementById('export-btn').addEventListener('click', function() {
-            document.getElementById('export-modal').classList.add('active');
-        });
+/** Texto 422 desde respuesta Laravel (modal validación). */
+function jsonValidationMessage(data) {
+    if (!data) return '';
+    if (data.errors) {
+        const flat = Object.values(data.errors).flat().filter(Boolean);
+        if (flat.length) return flat.join('\n');
+    }
+    return typeof data.message === 'string' ? data.message : '';
+}
 
-        document.getElementById('close-export-modal').addEventListener('click', function() {
-            document.getElementById('export-modal').classList.remove('active');
-        });
+/** Breadcrumb categoría para modal detalle (requiere category.parent en JSON). */
+function categoryPath(category) {
+    if (!category) return '-';
+    const parentName = category.parent?.name;
+    const currentName = category.name || '';
+    return parentName ? `${parentName} > ${currentName}` : (currentName || '-');
+}
 
-        // Close modal when clicking on backdrop
-        document.querySelector('#export-modal .modal-backdrop').addEventListener('click', function() {
-            document.getElementById('export-modal').classList.remove('active');
+function jsonHeaders() {
+    return {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+    };
+}
+
+/**
+ * Rellena el select de subcategorías según el padre.
+ * En el filtro (#subcategory-filter), si no hay padre, lista todas las subcategorías (para poder filtrar solo por sub).
+ */
+function fillSubcategoryOptions(subSelect, parentId, selectedId = '') {
+    if (!subSelect) return;
+    const tree = window.inventoryCategoryTree || {};
+    const isFilter = subSelect.id === 'subcategory-filter';
+    const emptyLabel = isFilter ? 'Todas las subcategorías' : 'Sin subcategoría';
+
+    subSelect.innerHTML = '';
+    const opt0 = document.createElement('option');
+    opt0.value = '';
+    opt0.textContent = emptyLabel;
+    subSelect.appendChild(opt0);
+
+    let subs = [];
+    const hasParent = parentId !== '' && parentId !== null && parentId !== undefined;
+
+    if (!hasParent && isFilter) {
+        Object.keys(tree).forEach((pid) => {
+            (tree[pid] || []).forEach((sub) => {
+                subs.push(sub);
+            });
         });
+    } else if (hasParent) {
+        const key = String(parentId);
+        subs = tree[key] || tree[parentId] || [];
+    }
+
+    subs.forEach((sub) => {
+        const opt = document.createElement('option');
+        opt.value = String(sub.category_id);
+        opt.textContent = sub.name;
+        if (selectedId !== '' && selectedId !== undefined && String(selectedId) === String(sub.category_id)) {
+            opt.selected = true;
+        }
+        subSelect.appendChild(opt);
+    });
+}
+
+/** category_id enviado al backend: subcategoría si hay, si no la categoría raíz elegida. */
+function syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput) {
+    if (!hiddenCategoryInput) return;
+    const parentId = parentSelect?.value || '';
+    const subId = subSelect?.value || '';
+    if (subId) {
+        hiddenCategoryInput.value = subId;
+    } else if (parentId) {
+        hiddenCategoryInput.value = parentId;
+    } else {
+        hiddenCategoryInput.value = '';
+    }
+}
+
+function bindDependentCategorySelectors({ parentSelect, subSelect, hiddenCategoryInput }) {
+    if (!parentSelect || !subSelect || !hiddenCategoryInput) return;
+    parentSelect.addEventListener('change', () => {
+        fillSubcategoryOptions(subSelect, parentSelect.value);
+        syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput);
+    });
+    subSelect.addEventListener('change', () => {
+        syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput);
+    });
+}
 
 // Request a fresh CSRF token from the server
 async function renewCSRFToken() {
@@ -378,6 +455,7 @@ if (typeof Swal !== 'undefined') {
 
     if (saveNewProductBtn) {
         saveNewProductBtn.addEventListener('click', () => {
+            syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
             setButtonLoading(saveNewProductBtn, true);
             const formData = new FormData(newProductForm);
 
@@ -469,11 +547,9 @@ if (typeof Swal !== 'undefined') {
     editBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const productId = btn.dataset.productId;
-            fetch(`/products/${productId}`,
-            {
-                headers: {
-                    'Accept': 'application/json'
-                }
+            fetch(`/products/${productId}`, {
+                credentials: 'same-origin',
+                headers: jsonHeaders(),
             })
             .then(response => {
                 if (!response.ok) {
@@ -564,6 +640,7 @@ if (typeof Swal !== 'undefined') {
 
     if (saveEditBtn) {
         saveEditBtn.addEventListener('click', () => {
+            syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
             setButtonLoading(saveEditBtn, true);
             const formData = new FormData(editProductForm);
             formData.append('_method', 'PUT');
@@ -654,9 +731,8 @@ if (typeof Swal !== 'undefined') {
             setModalLoading(viewProductModal, true);
             const productId = btn.dataset.productId;
             smartFetch(`/products/${productId}`, {
-                headers: {
-                    'Accept': 'application/json'
-                }
+                credentials: 'same-origin',
+                headers: jsonHeaders(),
             })
             .then(response => {
                 if (!response.ok) {
@@ -1076,6 +1152,18 @@ if (typeof Swal !== 'undefined') {
 
 // Initial loading spinner and filter form behavior
 document.addEventListener('DOMContentLoaded', () => {
+    const exportModal = document.getElementById('export-modal');
+    const exportBtn = document.getElementById('export-btn');
+    if (exportBtn && exportModal) {
+        exportBtn.addEventListener('click', () => exportModal.classList.add('active'));
+        document.getElementById('close-export-modal')?.addEventListener('click', () => {
+            exportModal.classList.remove('active');
+        });
+        exportModal.querySelector('.modal-backdrop')?.addEventListener('click', () => {
+            exportModal.classList.remove('active');
+        });
+    }
+
     const productSection = document.querySelector('.products-section');
     const loadingSpinner = document.querySelector('.loading-spinner-overlay');
     const filterForm = document.querySelector('.filter-form');

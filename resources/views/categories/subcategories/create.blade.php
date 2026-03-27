@@ -7,13 +7,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Crear Subcategoría - Ciclo Finca 4 Admin</title>
 
-    @vite(['resources/css/admin.css', 'resources/css/admin-pages.css', 'resources/css/suppliers/suppliers.css'])
+    @vite(['resources/css/admin/suppliers/suppliers.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body class="admin-layout">
-    @include('partes.aside')
+    @include('admin.parts.aside')
 
     <main class="admin-main">
         <div class="form-container">

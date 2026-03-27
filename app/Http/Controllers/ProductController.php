@@ -59,19 +59,19 @@ class ProductController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Product created successfully',
-                    'data' => $product->load(['category', 'supplier'])
+                    'message' => 'Producto creado con éxito',
+                    'data' => $product->load(['category.parent', 'supplier'])
                 ]);
             }
 
-            return redirect()->route('inventory')->with('status','Product created successfully');
+            return redirect()->route('inventory')->with('status', 'Producto creado con éxito');
         } catch (ValidationException $e) {
             $errors = $e->errors();
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'errors' => $errors,
-                    'message' => 'Please fix the errors in the form',
+                    'message' => 'Revisa los errores en el formulario.',
                 ], 422);
             }
             return redirect()->back()->withErrors($errors)->withInput();
@@ -79,10 +79,10 @@ class ProductController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'The product could not be created. Please try again.',
+                    'message' => 'No se pudo crear el producto. Inténtalo de nuevo.',
                 ], 500);
             }
-            return redirect()->back()->with('error', 'The product could not be created. Please try again.')->withInput();
+            return redirect()->back()->with('error', 'No se pudo crear el producto. Inténtalo de nuevo.')->withInput();
         }
     }
 
@@ -103,12 +103,12 @@ class ProductController extends Controller
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Product not found',
+                    'message' => 'Producto no encontrado',
                     'error' => $e->getMessage()
                 ], 404);
             }
             
-            return redirect()->route('inventory')->with('error', 'Product not found');
+            return redirect()->route('inventory')->with('error', 'Producto no encontrado');
         }
     }
 
@@ -154,7 +154,7 @@ class ProductController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Producto actualizado con éxito',
-                    'data' => $product->load(['category', 'supplier'])
+                    'data' => $product->load(['category.parent', 'supplier'])
                 ]);
             }
 
@@ -165,7 +165,7 @@ class ProductController extends Controller
                 return response()->json([
                     'success' => false,
                     'errors' => $errors,
-                    'message' => 'Please fix the errors in the form',
+                    'message' => 'Revisa los errores en el formulario.',
                 ], 422);
             }
             return redirect()->back()->withErrors($errors)->withInput();
@@ -179,10 +179,10 @@ class ProductController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'The product could not be updated. Please try again.',
+                    'message' => 'No se pudo actualizar el producto. Inténtalo de nuevo.',
                 ], 500);
             }
-            return redirect()->back()->with('error', 'The product could not be updated. Please try again.')->withInput();
+            return redirect()->back()->with('error', 'No se pudo actualizar el producto. Inténtalo de nuevo.')->withInput();
         }
     }
 
@@ -320,7 +320,27 @@ class ProductController extends Controller
             ];
         });
 
-        $categories = Category::orderBy('name')->get(['category_id', 'name']);
+        // Raíces deduplicadas por nombre (filtro "Categoría") + árbol para selects dependientes en JS
+        $categories = Category::query()
+            ->selectRaw('MIN(category_id) as category_id, name')
+            ->whereNull('parent_category_id')
+            ->groupBy('name')
+            ->orderBy('name')
+            ->get();
+
+        $subcategoriesByParent = Category::query()
+            ->whereNotNull('parent_category_id')
+            ->orderBy('name')
+            ->get(['category_id', 'name', 'parent_category_id'])
+            ->groupBy('parent_category_id')
+            ->map(function ($rows) {
+                return $rows->map(function ($row) {
+                    return [
+                        'category_id' => $row->category_id,
+                        'name' => $row->name,
+                    ];
+                })->values();
+            });
 
         return view('admin.products.inventory', [
             'products' => $products,
