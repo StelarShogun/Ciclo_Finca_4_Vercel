@@ -16,6 +16,12 @@
                     <span class="sidebar-label">Inventario</span>
                 </a>
             </li>
+            <li class="{{ request()->routeIs('brands.*') ? 'active' : '' }}">
+                <a href="{{ route('brands.index') }}">
+                    <i class="fas fa-tags"></i>
+                    <span class="sidebar-label">Marcas</span>
+                </a>
+            </li>
             <li class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
                 <a href="{{ route('suppliers.index') }}">
                     <i class="fas fa-truck"></i>

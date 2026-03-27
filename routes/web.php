@@ -10,6 +10,7 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\BrandController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -69,6 +70,9 @@ Route::middleware(['auth:admin', 'admin.only', 'prevent.direct'])->group(functio
 
     // Suppliers
     Route::resource('suppliers', SupplierController::class);
+
+    // Brands
+    Route::resource('brands', BrandController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // Categories — subcategorías (CF4-68)
     Route::get('/categories/subcategories/create', [CategoryController::class, 'createSubcategory'])->name('categories.subcategories.create');
