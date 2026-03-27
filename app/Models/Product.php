@@ -17,7 +17,8 @@ class Product extends Model
 
     protected $fillable = [
         'category_id','supplier_id','name','description','image','images',
-        'sale_price','purchase_price','stock_current','stock_minimum','status'
+        'sale_price','purchase_price','stock_current','stock_minimum','status',
+        'is_featured'
     ];
 
     protected $casts = [
@@ -25,6 +26,7 @@ class Product extends Model
         'purchase_price' => 'decimal:2',
         'stock_current' => 'integer',
         'stock_minimum' => 'integer',
+        'is_featured' => 'boolean',
         'images' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

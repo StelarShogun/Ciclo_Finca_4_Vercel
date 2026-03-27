@@ -24,5 +24,35 @@ class CategorySeeder extends Seeder
         foreach ($categories as $category) {
             Category::create($category);
         }
+
+        $parents = Category::whereNull('parent_category_id')->get()->keyBy('name');
+
+        $subcategories = [
+            'Bicicletas' => ['MTB', 'Ruta / Gravel', 'Urbana / Híbrida'],
+            'Componentes' => ['Transmisión', 'Frenos', 'Ruedas y neumáticos'],
+            'Accesorios' => ['Iluminación', 'Portabultos', 'Hidratación'],
+            'Ropa deportiva' => ['Jerseys', 'Culotes / Shorts', 'Chaquetas'],
+            'Herramientas' => ['Multiherramientas', 'Llaves y extractores'],
+            'Seguridad' => ['Cascos', 'Luces', 'Candados'],
+            'Nutrición' => ['Geles', 'Bebidas', 'Barras'],
+        ];
+
+        foreach ($subcategories as $parentName => $children) {
+            $parent = $parents->get($parentName);
+            if (!$parent) {
+                continue;
+            }
+            foreach ($children as $childName) {
+                Category::firstOrCreate(
+                    [
+                        'name' => $childName,
+                        'parent_category_id' => $parent->category_id,
+                    ],
+                    [
+                        'description' => 'Subcategoría de ' . $parentName,
+                    ]
+                );
+            }
+        }
     }
 }

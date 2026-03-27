@@ -48,7 +48,7 @@ services:
       PMA_USER: ${DB_USERNAME}
       PMA_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "8081:80"
+      - "8082:80"
     depends_on:
       - db_ciclo
 

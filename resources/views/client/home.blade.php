@@ -7,41 +7,115 @@
 @endpush
 
 @section('content')
-<section class="hero-section">
+<!-- Hero: imagen full-bleed + overlay; reemplaza public/assets/images/hero/hero-downhill.jpg por tu arte -->
+<section class="hero-section" aria-label="Bienvenida a Ciclo Finca 4">
+    <div class="hero-backdrop" aria-hidden="true">
+        <img src="{{ asset('assets/images/hero/hero-downhill.jpg') }}"
+             alt=""
+             width="1920"
+             height="1080"
+             fetchpriority="high"
+             decoding="async">
+    </div>
+    <div class="hero-overlay" aria-hidden="true"></div>
+
     <div class="hero-container">
         <div class="hero-content">
-            <h1 class="hero-title">Bienvenido a Ciclo Finca 4</h1>
-            <p class="hero-subtitle">Tu tienda especializada en bicicletas, componentes y accesorios para ciclismo</p>
+            <div class="hero-badge">
+                🚴 Atención ciclista especializada en tienda
+            </div>
+
+            <h1 class="hero-title">
+                Equípate para rodar<br>
+                <strong>con asesoría real en tienda</strong>
+            </h1>
+
+            <div class="hero-divider"></div>
+
+            <p class="hero-subtitle">
+                Bicicletas, componentes y accesorios listos para encargo con retiro rápido.
+            </p>
+
+            <p class="hero-description">
+                Te guiamos en elección, ajuste y preparación para que retires con confianza.
+            </p>
+
             <div class="hero-actions">
-                <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-th"></i>
-                    Ver Catálogo
+                <a href="{{ route('clients.catalog') }}" class="btn btn-primary">
+                    <span>Ver Catálogo</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+
+                <a href="#benefits-section" class="btn btn-secondary">
+                    Cómo funciona el retiro
                 </a>
             </div>
-        </div>
-        <div class="hero-image">
-            <i class="fas fa-bicycle"></i>
+
+            <div class="hero-benefits">
+                <div class="benefit-item">
+                    <span class="benefit-icon">✓</span>
+                    <span class="benefit-text">Asesoría especializada</span>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">✓</span>
+                    <span class="benefit-text">Preparación en taller</span>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">✓</span>
+                    <span class="benefit-text">Retiro puntual</span>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
+<section class="home-trust-strip" aria-label="Indicadores de confianza">
+    <div class="container">
+        <div class="trust-items" role="list">
+            <div class="trust-item" role="listitem">
+                <i class="fas fa-users" aria-hidden="true"></i>
+                <div>
+                    <strong>Atención experta</strong>
+                    <span>acompañamiento personalizado</span>
+                </div>
+            </div>
+            <div class="trust-item" role="listitem">
+                <i class="fas fa-tools" aria-hidden="true"></i>
+                <div>
+                    <strong>Taller propio</strong>
+                    <span>preparación técnica incluida</span>
+                </div>
+            </div>
+            <div class="trust-item" role="listitem">
+                <i class="fas fa-star" aria-hidden="true"></i>
+                <div>
+                    <strong>4.9/5</strong>
+                    <span>satisfacción de servicio</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products -->
 <section class="featured-section">
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Productos Destacados</h2>
-            <p class="section-subtitle">Descubre nuestros productos más populares</p>
+            <p class="section-subtitle">Lo más buscado por nuestros clientes esta semana.</p>
         </div>
-
+        
         @if($featuredProducts->count() > 0)
             <div class="products-grid">
                 @foreach($featuredProducts as $product)
                     <div class="product-card">
                         <div class="product-image">
-                            {{-- Fallback to favicon if product image is missing --}}
-                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
+                            <!-- Fallback to favicon if product image is missing -->
+                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}" 
                                  alt="{{ $product->name }}"
                                  data-fallback-src="{{ asset('favicon.svg') }}"
                                  onerror="this.src=this.dataset.fallbackSrc;">
+                            <!-- Badge shown when stock is critically low -->
                             @if($product->stock_current <= 10)
                                 <span class="product-badge stock-low">Stock Bajo</span>
                             @endif
@@ -49,14 +123,26 @@
                         <div class="product-info">
                             <div class="product-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
                             <h3 class="product-name">{{ $product->name }}</h3>
+                            <p class="product-stock-state">
+                                @if($product->stock_current > 10)
+                                    Disponible para retiro
+                                @else
+                                    Últimas unidades
+                                @endif
+                            </p>
                             @if($product->description)
                                 <p class="product-description">{{ Str::limit($product->description, 80) }}</p>
                             @endif
                             <div class="product-footer">
                                 <div class="product-price">₡{{ number_format($product->sale_price, 0, ',', '.') }}</div>
-                                {{-- Guest button triggers a login prompt via JS --}}
-                                @auth('clients')
-                                    <button class="btn btn-primary btn-sm add-to-cart-btn"
+                                <div class="product-actions">
+                                    <a href="{{ route('clients.product', $product->product_id) }}" class="btn-product btn-ver-detalles">
+                                        <i class="fas fa-eye" aria-hidden="true"></i>
+                                        Ver detalle
+                                    </a>
+                                    <!-- Authenticated users add to cart; guests are prompted to log in via JS -->
+                                    @auth('clients')
+                                    <button class="btn-product btn-agregar add-to-cart-btn"
                                             data-product-id="{{ $product->product_id }}"
                                             data-product-name="{{ $product->name }}"
                                             data-product-price="{{ $product->sale_price }}"
@@ -64,18 +150,19 @@
                                         <i class="fas fa-cart-plus"></i>
                                         Agregar
                                     </button>
-                                @else
-                                    <button class="btn btn-primary btn-sm guest-add-btn" type="button">
+                                    @else
+                                    <button class="btn-product btn-agregar guest-add-btn" type="button">
                                         <i class="fas fa-cart-plus"></i>
                                         Agregar
                                     </button>
-                                @endauth
+                                    @endauth
+                                </div>
                             </div>
                         </div>
                     </div>
                 @endforeach
             </div>
-
+            
             <div class="section-footer">
                 <a href="{{ route('clients.catalog') }}" class="btn btn-secondary">
                     Ver Todos los Productos
@@ -83,6 +170,7 @@
                 </a>
             </div>
         @else
+            <!-- No featured products available -->
             <div class="empty-state">
                 <i class="fas fa-box-open"></i>
                 <p>No hay productos destacados disponibles en este momento</p>
@@ -91,36 +179,219 @@
     </div>
 </section>
 
+<!-- Categories: carrusel de padres + chips de subcategorías -->
 @if($categories->count() > 0)
-<section class="categories-section">
+@php
+    $categoryIcons = config('category_icons', []);
+@endphp
+<section class="categories-section" aria-labelledby="categories-heading">
     <div class="container">
         <div class="section-header">
-            <h2 class="section-title">Explora por Categoría</h2>
-            <p class="section-subtitle">Encuentra lo que buscas fácilmente</p>
+            <h2 class="section-title" id="categories-heading">Explora por categoría</h2>
+            <p class="section-subtitle">Desliza para ver cada familia de productos y sus subcategorías</p>
+        </div>
+        <div class="categories-top-actions">
+            <a href="{{ route('clients.catalog') }}" class="categories-all-link">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                Ver todo el catálogo
+            </a>
+            <span class="categories-swipe-hint">
+                <i class="fas fa-hand-point-right" aria-hidden="true"></i>
+                Desliza para descubrir más
+            </span>
         </div>
 
-        <div class="categories-grid">
-            @foreach($categories as $category)
-                <a href="{{ route('clients.catalog', ['category_id' => $category->category_id]) }}" class="category-card">
-                    <div class="category-icon">
-                        <i class="fas fa-bicycle"></i>
-                    </div>
-                    <h3 class="category-name">{{ $category->name }}</h3>
-                    @if($category->description)
-                        <p class="category-description">{{ Str::limit($category->description, 60) }}</p>
-                    @endif
-                    <span class="category-link">
-                        Ver productos
-                        <i class="fas fa-arrow-right"></i>
-                    </span>
-                </a>
-            @endforeach
+        <div class="categories-carousel-wrap" data-categories-carousel>
+            <button type="button" class="categories-carousel-btn categories-carousel-btn--prev" aria-label="Categoría anterior" data-carousel-prev>
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+            <div class="categories-carousel" role="region" aria-roledescription="carrusel" aria-label="Categorías de productos">
+                <div class="categories-carousel-track" data-carousel-track>
+                    @foreach($categories as $category)
+                        @php
+                            $iconKey = strtolower(trim($category->name));
+                            $faIcon = $categoryIcons[$iconKey] ?? 'bicycle';
+                        @endphp
+                        <article class="category-slide">
+                            <div class="category-slide-card">
+                                <a href="{{ route('clients.catalog', ['category_id' => $category->category_id]) }}" class="category-slide-main">
+                                    <div class="category-icon category-icon--lg" aria-hidden="true">
+                                        <i class="fas fa-{{ $faIcon }}"></i>
+                                    </div>
+                                    <h3 class="category-name">{{ $category->name }}</h3>
+                                    @if($category->description)
+                                        <p class="category-slide-tagline">{{ Str::limit($category->description, 72) }}</p>
+                                    @endif
+                                    <span class="category-slide-cta">
+                                        Ver todo en {{ $category->name }}
+                                        <i class="fas fa-arrow-right"></i>
+                                    </span>
+                                </a>
+                                @if($category->childCategories->isNotEmpty())
+                                    <div class="category-subchips" role="group" aria-label="Subcategorías de {{ $category->name }}">
+                                        @foreach($category->childCategories as $sub)
+                                            <a href="{{ route('clients.catalog', ['category_id' => $sub->category_id]) }}" class="category-subchip">
+                                                {{ $sub->name }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            </div>
+            <button type="button" class="categories-carousel-btn categories-carousel-btn--next" aria-label="Siguiente categoría" data-carousel-next>
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
         </div>
     </div>
 </section>
 @endif
 
-{{-- Quantity selector modal, populated by JS when the user clicks "Agregar" --}}
+<!-- Marketing: Encargos y retiro en tienda -->
+<section class="benefits-section" id="benefits-section" aria-label="Beneficios del servicio">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Encargos listos para retirar</h2>
+            <p class="section-subtitle">Elige en el catálogo y te ayudamos a dejar tu compra lista para retirar en tienda.</p>
+        </div>
+
+        <div class="benefits-grid" role="list" aria-label="Beneficios principales">
+            <div class="benefit-card" role="listitem">
+                <i class="fas fa-tools" aria-hidden="true"></i>
+                <h3 class="benefit-title">Taller propio</h3>
+                <p class="benefit-desc">Revisión, ajuste y preparación en tienda para que salgas rodando con confianza.</p>
+            </div>
+
+            <div class="benefit-card" role="listitem">
+                <i class="fas fa-user-tie" aria-hidden="true"></i>
+                <h3 class="benefit-title">Asesoría personalizada</h3>
+                <p class="benefit-desc">Te orientamos para elegir la opción correcta según tu ruta, MTB o gravel.</p>
+            </div>
+
+            <div class="benefit-card" role="listitem">
+                <i class="fas fa-warehouse" aria-hidden="true"></i>
+                <h3 class="benefit-title">Inventario y disponibilidad</h3>
+                <p class="benefit-desc">Confirmamos disponibilidad y te decimos cuándo está listo para retirar.</p>
+            </div>
+
+            <div class="benefit-card" role="listitem">
+                <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                <h3 class="benefit-title">Soporte post-retirada</h3>
+                <p class="benefit-desc">Acompañamos después de tu retiro con recomendaciones de uso y cuidados.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Marketing: Cómo funciona -->
+<section class="how-it-works-section" aria-label="Cómo funciona el encargo">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Cómo funciona</h2>
+            <p class="section-subtitle">Tres pasos simples para dejar tu encargo listo para retirar en tienda.</p>
+        </div>
+
+        <div class="steps-grid" role="list" aria-label="Pasos del encargo">
+            <div class="step-card" role="listitem">
+                <div class="step-number">1</div>
+                <h3 class="step-title">Explora el catálogo</h3>
+                <p class="step-desc">Busca bicicletas, componentes y accesorios según tu estilo de ciclismo.</p>
+                <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-lg step-cta">Ver catálogo</a>
+            </div>
+
+            <div class="step-card" role="listitem">
+                <div class="step-number">2</div>
+                <h3 class="step-title">Deja tu solicitud</h3>
+                <p class="step-desc">Agrega los productos al carrito y finaliza tu solicitud para que podamos confirmarte disponibilidad.</p>
+                @auth('clients')
+                    <a href="{{ route('clients.cart') }}" class="btn btn-secondary btn-lg step-cta">Ir al carrito</a>
+                @else
+                    <a href="{{ route('login.show') }}" class="btn btn-secondary btn-lg step-cta">Inicia sesión</a>
+                @endauth
+            </div>
+
+            <div class="step-card" role="listitem">
+                <div class="step-number">3</div>
+                <h3 class="step-title">Retira en tienda</h3>
+                <p class="step-desc">Te confirmamos cuando esté listo para retirar y coordinamos tu visita.</p>
+                <div class="step-note">
+                    <i class="fas fa-clock" aria-hidden="true"></i>
+                    <span>Retiro en tienda.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Marketing: Testimonios (estáticos por ahora) -->
+<section class="testimonials-section" aria-label="Testimonios de clientes">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Clientes que confían en nosotros</h2>
+            <p class="section-subtitle">Experiencias reales en atención y preparación de encargos.</p>
+        </div>
+
+        <div class="testimonials-grid" role="list" aria-label="Lista de testimonios">
+            <div class="testimonial-card" role="listitem">
+                <div class="testimonial-stars" aria-hidden="true">
+                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                </div>
+                <p class="testimonial-quote">“Me orientaron con la talla y ajustes. Retiré listo y pude salir ese mismo día.”</p>
+                <p class="testimonial-author">Mauricio R. · MTB recreativo</p>
+            </div>
+
+            <div class="testimonial-card" role="listitem">
+                <div class="testimonial-stars" aria-hidden="true">
+                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                </div>
+                <p class="testimonial-quote">“Excelente atención en tienda. Respondieron mis dudas y dejaron todo preparado.”</p>
+                <p class="testimonial-author">Andrea M. · Ruta urbana</p>
+            </div>
+
+            <div class="testimonial-card" role="listitem">
+                <div class="testimonial-stars" aria-hidden="true">
+                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                </div>
+                <p class="testimonial-quote">“Encargo claro y puntual para retirar. Gran asesoría en componentes.”</p>
+                <p class="testimonial-author">Carlos G. · Gravel fin de semana</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA final -->
+<section class="final-cta-section" aria-label="Llamado a la acción final">
+    <div class="container">
+        <div class="final-cta-card">
+            <div>
+                <h2 class="final-cta-title">¿Listo para tu próximo rodaje?</h2>
+                <p class="final-cta-subtitle">Explora el catálogo y deja tu solicitud para prepararlo en tienda con respaldo técnico.</p>
+            </div>
+            <div class="final-cta-actions">
+                <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-th" aria-hidden="true"></i>
+                    Ver Catálogo
+                </a>
+                @auth('clients')
+                    <a href="{{ route('clients.cart') }}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                        Ir al carrito
+                    </a>
+                @else
+                    <a href="{{ route('clients.register.form') }}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-user-plus" aria-hidden="true"></i>
+                        Crear cuenta
+                    </a>
+                @endauth
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modal: select quantity before adding a product to cart -->
+<!-- Product details are populated dynamically by JS -->
 <div class="modal" id="add-to-cart-modal">
     <div class="modal-content modal-sm">
         <div class="modal-header">
