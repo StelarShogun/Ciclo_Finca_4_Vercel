@@ -210,24 +210,13 @@ function showCartEmptyState() {
 // ============================================================
 
 function closeUserDropdown() {
-    var userDropdown   = document.getElementById('user-dropdown');
-    var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (userDropdown)    userDropdown.classList.remove('active');
-    if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'false');
+    setUserMenuOpen(false);
 }
 
 function toggleUserDropdown() {
-    var userDropdown    = document.getElementById('user-dropdown');
-    var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (!userDropdown) return;
-
-    var willOpen = !userDropdown.classList.contains('active');
-    if (willOpen) {
-        userDropdown.classList.add('active');
-        if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'true');
-    } else {
-        closeUserDropdown();
-    }
+    var wrap = document.getElementById('user-menu');
+    if (!wrap) return;
+    setUserMenuOpen(!wrap.classList.contains('open'));
 }
 
 function setUserMenuOpen(open) {
@@ -289,10 +278,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // — Close user dropdown on outside click —
     document.addEventListener('click', function (e) {
-        var userMenu     = document.getElementById('user-menu');
-        var userDropdown = document.getElementById('user-dropdown');
-        if (!userDropdown || !userDropdown.classList.contains('active')) return;
-        if (userMenu && userMenu.contains(e.target)) return;
+        var userMenu = document.getElementById('user-menu');
+        if (!userMenu || !userMenu.classList.contains('open')) return;
+        if (userMenu.contains(e.target)) return;
         closeUserDropdown();
     });
 

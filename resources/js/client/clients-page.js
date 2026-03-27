@@ -198,32 +198,8 @@ function showCartEmptyState() {
 }
 
 // ============================================================
-// USER MENU (profile dropdown)
-// ============================================================
-
-function closeUserDropdown() {
-    var userDropdown = document.getElementById('user-dropdown');
-    var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (userDropdown) userDropdown.classList.remove('active');
-    if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'false');
-}
-
-function toggleUserDropdown() {
-    var userDropdown = document.getElementById('user-dropdown');
-    var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (!userDropdown) return;
-
-    var willOpen = !userDropdown.classList.contains('active');
-    if (willOpen) {
-        userDropdown.classList.add('active');
-        if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'true');
-    } else {
-        closeUserDropdown();
-    }
-}
-
-// ============================================================
 // LOGIN MODAL
+// (Menú de usuario: clients-users.js, incluido desde el header)
 // ============================================================
 
 function closeLoginModal() {
@@ -258,25 +234,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
-
-    // — User menu toggle —
-    var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (userMenuTrigger) {
-        userMenuTrigger.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleUserDropdown();
-        });
-    }
-
-    // — Close user dropdown on outside click —
-    document.addEventListener('click', function (e) {
-        var userMenu = document.getElementById('user-menu');
-        var userDropdown = document.getElementById('user-dropdown');
-        if (!userDropdown || !userDropdown.classList.contains('active')) return;
-        if (userMenu && userMenu.contains(e.target)) return;
-        closeUserDropdown();
-    });
 
     // — Login modal —
     var loginModalTrigger = document.getElementById('login-modal-trigger');
@@ -657,10 +614,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // — ESC closes all modals and dropdowns —
+    // — ESC closes all modals (dropdown de usuario: clients-users.js) —
     document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
-        closeUserDropdown();
         closeLoginModal();
         document.querySelectorAll('.modal.active').forEach(function (modal) {
             modal.classList.remove('active');
@@ -771,6 +727,42 @@ document.addEventListener('DOMContentLoaded', function () {
         updateButtons();
     })();
 
+    // — Home: reveal progresivo de secciones al hacer scroll —
+    (function initHomeRevealSections() {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        var sections = document.querySelectorAll(
+            '.home-trust-strip, .featured-section, .categories-section, .benefits-section, .how-it-works-section, .testimonials-section, .final-cta-section'
+        );
+        if (!sections.length) return;
+
+        sections.forEach(function (section) {
+            section.classList.add('home-reveal');
+        });
+
+        if (!('IntersectionObserver' in window)) {
+            sections.forEach(function (section) {
+                section.classList.add('is-visible');
+            });
+            return;
+        }
+
+        var observer = new IntersectionObserver(function (entries, obs) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('is-visible');
+                obs.unobserve(entry.target);
+            });
+        }, {
+            rootMargin: '0px 0px -8% 0px',
+            threshold: 0.14
+        });
+
+        sections.forEach(function (section) {
+            observer.observe(section);
+        });
+    })();
+
 }); // end DOMContentLoaded
 
 // ============================================================
@@ -778,18 +770,3 @@ document.addEventListener('DOMContentLoaded', function () {
 // ============================================================
 window.addToCart = addToCart;
 window.updateCartCount = updateCartCount;
-
-// ============================================================
-// USER MENU DROPDOWN (header)
-// ============================================================
-
-/** Opens or closes the user menu, syncing the class, aria-hidden and aria-expanded. */
-function setUserMenuOpen(open) {
-    var wrap = document.getElementById('user-menu');
-    var panel = document.getElementById('user-dropdown');
-    var trigger = document.getElementById('user-menu-trigger');
-    if (!wrap) return;
-    wrap.classList.toggle('open', open);
-    if (panel) panel.setAttribute('aria-hidden', String(!open));
-    if (trigger) trigger.setAttribute('aria-expanded', String(open));
-}

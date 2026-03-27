@@ -22,22 +22,22 @@
     <div class="hero-container">
         <div class="hero-content">
             <div class="hero-badge">
-                🚴 Ciclos listos para rodar
+                🚴 Atención ciclista especializada en tienda
             </div>
 
             <h1 class="hero-title">
-                Tus bicicletas y componentes<br>
-                <strong>de calidad en tienda</strong>
+                Equípate para rodar<br>
+                <strong>con asesoría real en tienda</strong>
             </h1>
 
             <div class="hero-divider"></div>
 
             <p class="hero-subtitle">
-                Explora nuestro catálogo y deja tu solicitud para retiro en tienda con asesoría personalizada
+                Bicicletas, componentes y accesorios listos para encargo con retiro rápido.
             </p>
 
             <p class="hero-description">
-                Bicicletas, componentes y accesorios listos para que disfrutes del ciclismo con confianza.
+                Te guiamos en elección, ajuste y preparación para que retires con confianza.
             </p>
 
             <div class="hero-actions">
@@ -47,22 +47,50 @@
                 </a>
 
                 <a href="#benefits-section" class="btn btn-secondary">
-                    Conoce Nuestro Servicio
+                    Cómo funciona el retiro
                 </a>
             </div>
 
             <div class="hero-benefits">
                 <div class="benefit-item">
                     <span class="benefit-icon">✓</span>
-                    <span class="benefit-text">Asesoría en tienda</span>
+                    <span class="benefit-text">Asesoría especializada</span>
                 </div>
                 <div class="benefit-item">
                     <span class="benefit-icon">✓</span>
-                    <span class="benefit-text">Preparación completa</span>
+                    <span class="benefit-text">Preparación en taller</span>
                 </div>
                 <div class="benefit-item">
                     <span class="benefit-icon">✓</span>
-                    <span class="benefit-text">Retiro rápido</span>
+                    <span class="benefit-text">Retiro puntual</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="home-trust-strip" aria-label="Indicadores de confianza">
+    <div class="container">
+        <div class="trust-items" role="list">
+            <div class="trust-item" role="listitem">
+                <i class="fas fa-users" aria-hidden="true"></i>
+                <div>
+                    <strong>Atención experta</strong>
+                    <span>acompañamiento personalizado</span>
+                </div>
+            </div>
+            <div class="trust-item" role="listitem">
+                <i class="fas fa-tools" aria-hidden="true"></i>
+                <div>
+                    <strong>Taller propio</strong>
+                    <span>preparación técnica incluida</span>
+                </div>
+            </div>
+            <div class="trust-item" role="listitem">
+                <i class="fas fa-star" aria-hidden="true"></i>
+                <div>
+                    <strong>4.9/5</strong>
+                    <span>satisfacción de servicio</span>
                 </div>
             </div>
         </div>
@@ -74,7 +102,7 @@
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Productos Destacados</h2>
-            <p class="section-subtitle">Descubre nuestros productos más populares</p>
+            <p class="section-subtitle">Lo más buscado por nuestros clientes esta semana.</p>
         </div>
         
         @if($featuredProducts->count() > 0)
@@ -95,27 +123,40 @@
                         <div class="product-info">
                             <div class="product-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
                             <h3 class="product-name">{{ $product->name }}</h3>
+                            <p class="product-stock-state">
+                                @if($product->stock_current > 10)
+                                    Disponible para retiro
+                                @else
+                                    Últimas unidades
+                                @endif
+                            </p>
                             @if($product->description)
                                 <p class="product-description">{{ Str::limit($product->description, 80) }}</p>
                             @endif
                             <div class="product-footer">
                                 <div class="product-price">₡{{ number_format($product->sale_price, 0, ',', '.') }}</div>
-                                <!-- Authenticated users add to cart; guests are prompted to log in via JS -->
-                                @auth('clients')
-                                <button class="btn btn-primary btn-sm add-to-cart-btn" 
-                                        data-product-id="{{ $product->product_id }}"
-                                        data-product-name="{{ $product->name }}"
-                                        data-product-price="{{ $product->sale_price }}"
-                                        data-product-stock="{{ $product->stock_current }}">
-                                    <i class="fas fa-cart-plus"></i>
-                                    Agregar
-                                </button>
-                                @else
-                                <button class="btn btn-primary btn-sm guest-add-btn" type="button">
-                                    <i class="fas fa-cart-plus"></i>
-                                    Agregar
-                                </button>
-                                @endauth
+                                <div class="product-actions">
+                                    <a href="{{ route('clients.product', $product->product_id) }}" class="btn-product btn-ver-detalles">
+                                        <i class="fas fa-eye" aria-hidden="true"></i>
+                                        Ver detalle
+                                    </a>
+                                    <!-- Authenticated users add to cart; guests are prompted to log in via JS -->
+                                    @auth('clients')
+                                    <button class="btn-product btn-agregar add-to-cart-btn"
+                                            data-product-id="{{ $product->product_id }}"
+                                            data-product-name="{{ $product->name }}"
+                                            data-product-price="{{ $product->sale_price }}"
+                                            data-product-stock="{{ $product->stock_current }}">
+                                        <i class="fas fa-cart-plus"></i>
+                                        Agregar
+                                    </button>
+                                    @else
+                                    <button class="btn-product btn-agregar guest-add-btn" type="button">
+                                        <i class="fas fa-cart-plus"></i>
+                                        Agregar
+                                    </button>
+                                    @endauth
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -148,6 +189,16 @@
         <div class="section-header">
             <h2 class="section-title" id="categories-heading">Explora por categoría</h2>
             <p class="section-subtitle">Desliza para ver cada familia de productos y sus subcategorías</p>
+        </div>
+        <div class="categories-top-actions">
+            <a href="{{ route('clients.catalog') }}" class="categories-all-link">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                Ver todo el catálogo
+            </a>
+            <span class="categories-swipe-hint">
+                <i class="fas fa-hand-point-right" aria-hidden="true"></i>
+                Desliza para descubrir más
+            </span>
         </div>
 
         <div class="categories-carousel-wrap" data-categories-carousel>
@@ -279,7 +330,7 @@
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Clientes que confían en nosotros</h2>
-            <p class="section-subtitle">Tu bici y tus componentes, con asesoría y preparación en tienda.</p>
+            <p class="section-subtitle">Experiencias reales en atención y preparación de encargos.</p>
         </div>
 
         <div class="testimonials-grid" role="list" aria-label="Lista de testimonios">
@@ -288,7 +339,7 @@
                     <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                 </div>
                 <p class="testimonial-quote">“Me orientaron con la talla y ajustes. Retiré listo y pude salir ese mismo día.”</p>
-                <p class="testimonial-author">Cliente verificado</p>
+                <p class="testimonial-author">Mauricio R. · MTB recreativo</p>
             </div>
 
             <div class="testimonial-card" role="listitem">
@@ -296,7 +347,7 @@
                     <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                 </div>
                 <p class="testimonial-quote">“Excelente atención en tienda. Respondieron mis dudas y dejaron todo preparado.”</p>
-                <p class="testimonial-author">Cliente verificado</p>
+                <p class="testimonial-author">Andrea M. · Ruta urbana</p>
             </div>
 
             <div class="testimonial-card" role="listitem">
@@ -304,7 +355,7 @@
                     <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                 </div>
                 <p class="testimonial-quote">“Encargo claro y puntual para retirar. Gran asesoría en componentes.”</p>
-                <p class="testimonial-author">Cliente verificado</p>
+                <p class="testimonial-author">Carlos G. · Gravel fin de semana</p>
             </div>
         </div>
     </div>
@@ -316,13 +367,24 @@
         <div class="final-cta-card">
             <div>
                 <h2 class="final-cta-title">¿Listo para tu próximo rodaje?</h2>
-                <p class="final-cta-subtitle">Explora el catálogo y deja tu solicitud para que lo preparemos en tienda.</p>
+                <p class="final-cta-subtitle">Explora el catálogo y deja tu solicitud para prepararlo en tienda con respaldo técnico.</p>
             </div>
             <div class="final-cta-actions">
                 <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-lg">
                     <i class="fas fa-th" aria-hidden="true"></i>
                     Ver Catálogo
                 </a>
+                @auth('clients')
+                    <a href="{{ route('clients.cart') }}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                        Ir al carrito
+                    </a>
+                @else
+                    <a href="{{ route('clients.register.form') }}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-user-plus" aria-hidden="true"></i>
+                        Crear cuenta
+                    </a>
+                @endauth
             </div>
         </div>
     </div>
