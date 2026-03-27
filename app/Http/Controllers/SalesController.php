@@ -43,6 +43,7 @@ class SalesController extends Controller
                           ->whereYear('sale_date', Carbon::now()->year);
                     break;
                 case 'custom':
+                    // Custom range is applied by the caller via additional query parameters
                     break;
             }
         }
@@ -67,11 +68,10 @@ class SalesController extends Controller
 
         $sales = $query->orderBy('sale_date', 'desc')->paginate(15);
 
-        // CF4-4: Compras admin desde carrito web (pendientes + completadas)
+        // Include null order_source to remain compatible with records created before the column was added
         $basePurchasesQuery = Sale::query()
             ->whereIn('status', ['pending', 'completed'])
             ->where(function ($q) {
-                // Para datos históricos: permitir `order_source` nulo.
                 $q->where('order_source', 'web_cart')
                   ->orWhereNull('order_source');
             })
@@ -82,6 +82,7 @@ class SalesController extends Controller
             ->orderBy('sale_date', 'desc')
             ->paginate(15, ['*'], 'purchases_page');
 
+        // Used by the heartbeat endpoint to detect new purchases without a full page reload
         $latestPurchaseSaleId = (clone $basePurchasesQuery)->max('sale_id') ?? 0;
 
         $dailySales = $this->calculateDailySales();
@@ -91,7 +92,7 @@ class SalesController extends Controller
         $refunds = $this->calculateRefunds();
         $refundsTrend = $this->calculateRefundsTrend();
 
-        return view('sales.index', compact(
+        return view('admin.sales.index', compact(
             'sales',
             'purchases',
             'latestPurchaseSaleId',
@@ -116,6 +117,7 @@ class SalesController extends Controller
             })
             ->notExpired();
 
+        // Check for any sale newer than the last known ID seen by the client
         $hasNew = (clone $baseQuery)
             ->where('sale_id', '>', $since)
             ->exists();
@@ -172,6 +174,7 @@ class SalesController extends Controller
                             'product' => $item->product ? [
                                 'product_id' => $item->product->product_id,
                                 'name' => $item->product->name,
+                                // SKU is derived from the PK; no dedicated column exists
                                 'sku' => 'BK-' . str_pad($item->product->product_id, 3, '0', STR_PAD_LEFT)
                             ] : null
                         ];
@@ -188,13 +191,13 @@ class SalesController extends Controller
 
     public function store(Request $request)
     {
-        // Walk-in: guarda `buyer_name` / `buyer_email` opcionales.
-        // Web cart (si se manda `client_id`): guarda también `client_id` y marca `order_source`.
+        // Walk-in sales store optional buyer_name/buyer_email; web-cart sales also carry client_id
         $items = $request->items ?? $request->productos ?? [];
         $buyerName = $request->buyer_name ?: null;
         $buyerEmail = $request->buyer_email ?: null;
         $clientId = $request->client_id ?: null;
 
+        // Accept both English and legacy Spanish field names from older API consumers
         $paymentMethod = $request->payment_method ?? $this->mapPaymentMethodToEnglish($request->metodo_pago);
         $paymentReference = $request->payment_reference ?? $request->referencia_pago;
         $discount = $request->discount ?? $request->descuento;
@@ -208,7 +211,7 @@ class SalesController extends Controller
             'notes' => $notes
         ]);
 
-        // Normalize legacy keys before validating
+        // Normalize legacy Spanish item keys before validation runs
         $normalizedItems = collect($request->items)->map(function ($item) {
             $item['product_id'] = $item['product_id'] ?? $item['producto_id'] ?? null;
             $item['quantity'] = $item['quantity'] ?? $item['cantidad'] ?? 1;
@@ -237,10 +240,9 @@ class SalesController extends Controller
             'payment_method.in' => 'Payment method must be cash, sinpe or transfer.',
         ]);
 
-        // Items are already normalized at this point
-
         DB::beginTransaction();
         try {
+            // Validate stock for all items before writing anything to avoid partial commits
             foreach ($request->items as $item) {
                 $product = Product::find($item['product_id']);
                 if (!$product || $item['quantity'] > $product->stock_current) {
@@ -257,9 +259,9 @@ class SalesController extends Controller
             $orderSource = $clientId ? 'web_cart' : 'walk_in';
             $sale = Sale::create([
                 'invoice_number' => (new Sale())->generateInvoiceNumber(),
-                'customer_id' => null, // CF4-4 sales module no depende de `usuarios`
+                'customer_id' => null,
                 'client_id' => $clientId,
-                'seller_id' => null, // walk-in registrar uses admins via seller_admin_id
+                'seller_id' => null,
                 'seller_admin_id' => Auth::guard('admin')->id(),
                 'sale_date' => now(),
                 'payment_method' => $request->payment_method,
@@ -270,7 +272,7 @@ class SalesController extends Controller
                 'buyer_name' => $buyerName,
                 'buyer_email' => $buyerEmail,
                 'order_source' => $orderSource,
-                'total' => 0
+                'total' => 0  // recalculated below after items are inserted
             ]);
 
             $subtotal = 0;
@@ -293,6 +295,7 @@ class SalesController extends Controller
                 $product->decrement('stock_current', $quantity);
             }
 
+            // IVA is capped at 13% to match Costa Rica's maximum tax rate
             $discount = $request->discount ?? 0;
             $subtotalAfterDiscount = $subtotal - $discount;
             $ivaPercent = (float) ($request->input('iva_percentage', 0));
@@ -409,6 +412,7 @@ class SalesController extends Controller
 
             $sale->update(['status' => 'cancelled']);
 
+            // Restore stock for each item when the sale is cancelled
             foreach ($sale->saleItems as $item) {
                 if ($item->product) {
                     $item->product->increment('stock_current', $item->quantity);
@@ -438,6 +442,7 @@ class SalesController extends Controller
             ], 400);
         }
 
+        // Restore inventory for every item included in the refund
         foreach ($sale->saleItems as $item) {
             if ($item->product) {
                 $item->product->increment('stock_actual', $item->quantity);
@@ -495,7 +500,7 @@ class SalesController extends Controller
 
             $callback = function () use ($sales) {
                 $file = fopen('php://output', 'w');
-                fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+                fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM for correct Excel rendering
                 fputcsv($file, [
                     'Sale ID', 'Customer', 'Email', 'Date', 'Status', 'Payment', 'Subtotal', 'IVA', 'Discount', 'Total', 'Items', 'Notes'
                 ], ';');
@@ -503,6 +508,7 @@ class SalesController extends Controller
                 foreach ($sales as $sale) {
                     $items = $sale->saleItems->map(fn ($item) => $item->product->name . ' (x' . $item->quantity . ')')->implode(', ');
 
+                    // Prefer the linked client record; fall back to inline buyer fields for walk-in sales
                     $customerDisplayName = $sale->client
                         ? trim($sale->client->name . ' ' . $sale->client->first_surname . ' ' . ($sale->client->second_surname ?: ''))
                         : ($sale->buyer_name ?: 'Walk-in / Sin datos');
@@ -575,10 +581,10 @@ class SalesController extends Controller
     {
         $today = Sale::whereDate('sale_date', Carbon::today())->where('status', 'refunded')->count();
         $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->where('status', 'refunded')->count();
+        // Returns an absolute delta rather than a percentage since refund counts are typically small
         return $today - $yesterday;
     }
 
-    /** Map legacy Spanish payment method to English for DB/store. */
     private function mapPaymentMethodToEnglish($value)
     {
         if (empty($value)) return $value;

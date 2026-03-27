@@ -1,4 +1,4 @@
-FROM php:8.2-apache
+FROM php:8.5-apache
 
 RUN apt-get update && \
     apt-get install -y unzip git zip libzip-dev libpng-dev curl && \
@@ -33,6 +33,9 @@ COPY . .
 
 # Laravel deps
 RUN composer install --no-interaction
+
+# Build de assets Vite para producción (genera public/build/manifest.json)
+RUN npm run build
 
 # Permisos
 RUN chown -R www-data:www-data storage bootstrap/cache && \

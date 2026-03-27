@@ -8,9 +8,7 @@ use Illuminate\Support\Facades\Hash;
 
 class ClientUserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+    // Run the database seeds.
     public function run(): void
     {
         $existing = DB::table('client_table')->where('gmail', 'darwinn990@gmail.com')->first();
@@ -23,12 +21,12 @@ class ClientUserSeeder extends Seeder
             'name' => 'Darwin',
             'first_surname' => 'Nuñez',
             'second_surname' => 'Chavarría',
-            'gmail' => 'darwinn990@gmail.com',
+            'gmail' => 'darwinne98@gmail.com',
             'password' => Hash::make('Darwin1234$'),
             'remember_token' => bin2hex(random_bytes(10)),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-        $this->command->info('✅ Cliente creado: darwinn990@gmail.com');
+        $this->command->info('✅ Cliente creado: darwinne98@gmail.com');
     }
 }
