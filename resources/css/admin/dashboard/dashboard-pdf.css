@@ -1,41 +1,19 @@
-/* ============================================
-   REPORTE PDF UNIFICADO
-   Basado en variables.css + estilos originales del dashboard-pdf
-   Optimizado para impresión y vista previa en pantalla
-   ============================================ */
+@import "../variables-reset.css";
+@import "../utilities.css";
+@import "../sidebar.css";
 
-/* ===== VARIABLES (coinciden con las de la web) ===== */
-:root {
-    --color-primary: #2e7d32;
-    --color-primary-dark: #1b5e20;
-    --color-success: #2e7d32;
-    --color-warning: #f57c00;
-    --color-danger: #d32f2f;
-    --color-gray-light: #f8f9fa;
-    --color-gray-border: #e0e0e0;
-    --color-text: #333;
-    --color-text-secondary: #666;
-    --font-family: Arial, sans-serif;
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-/* ===== ESTILOS BASE ===== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
+/* ============================================================
+    1. BASE STYLES FOR PDF
+    ============================================================ */
 body {
-    font-family: var(--font-family);
     background: white;
-    color: var(--color-text);
-    line-height: 1.5;
     padding: 20px;
     margin: 0 auto;
 }
 
-/* ===== ENCABEZADO ===== */
+/* ============================================================
+    2. HEADER
+    ============================================================ */
 .header {
     text-align: center;
     margin-bottom: 30px;
@@ -56,7 +34,9 @@ body {
     font-size: 1rem;
 }
 
-/* ===== SECCIONES ===== */
+/* ============================================================
+    3. SECTIONS
+    ============================================================ */
 .section {
     margin-bottom: 30px;
     page-break-inside: avoid;
@@ -70,7 +50,9 @@ body {
     font-size: 1.5rem;
 }
 
-/* ===== KPIs ===== */
+/* ============================================================
+    4. KPIs
+    ============================================================ */
 .kpis-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -102,7 +84,9 @@ body {
     margin: 0;
 }
 
-/* ===== TABLAS ===== */
+/* ============================================================
+    5. TABLES
+    ============================================================ */
 .table {
     width: 100%;
     border-collapse: collapse;
@@ -127,7 +111,9 @@ body {
     background-color: var(--color-gray-light);
 }
 
-/* ===== BADGES DE ESTADO ===== */
+/* ============================================================
+    6. STATUS BADGES
+    ============================================================ */
 .status-badge {
     display: inline-block;
     padding: 4px 8px;
@@ -152,7 +138,9 @@ body {
     color: #721c24;
 }
 
-/* ===== PIE DE PÁGINA ===== */
+/* ============================================================
+    7. FOOTER
+    ============================================================ */
 .footer {
     margin-top: 50px;
     text-align: center;
@@ -162,7 +150,9 @@ body {
     padding-top: 20px;
 }
 
-/* ===== MEDIA QUERIES PARA PANTALLA (VISTA PREVIA) ===== */
+/* ============================================================
+    8. MEDIA QUERIES (SCREEN PREVIEW)
+    ============================================================ */
 @media screen {
     body {
         max-width: 1200px;
@@ -181,7 +171,9 @@ body {
     }
 }
 
-/* ===== REGLAS DE IMPRESIÓN ===== */
+/* ============================================================
+    9. PRINT RULES
+    ============================================================ */
 @media print {
     body {
         margin: 0;
@@ -190,17 +182,14 @@ body {
         font-size: 12pt;
     }
 
-    /* Evitar saltos de página dentro de secciones importantes */
     .section {
         page-break-inside: avoid;
     }
 
-    /* Asegurar que las tablas no se rompan mal */
     .table {
         page-break-inside: avoid;
     }
 
-    /* Ajustar colores para impresión en blanco y negro (opcional) */
     .kpi-card .value,
     .section h2,
     .header h1 {
@@ -220,21 +209,7 @@ body {
         padding: 2px 6px;
     }
 
-    /* Ocultar elementos que no deben imprimirse (si los hubiera) */
     .no-print {
         display: none;
     }
-}
-
-/* ===== UTILIDADES ADICIONALES ===== */
-.text-center {
-    text-align: center;
-}
-
-.mb-2 {
-    margin-bottom: 0.5rem;
-}
-
-.mt-4 {
-    margin-top: 1.5rem;
 }

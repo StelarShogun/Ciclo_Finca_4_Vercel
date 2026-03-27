@@ -59,19 +59,19 @@ class ProductController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Product created successfully',
-                    'data' => $product->load(['category', 'supplier'])
+                    'message' => 'Producto creado con éxito',
+                    'data' => $product->load(['category.parent', 'supplier'])
                 ]);
             }
 
-            return redirect()->route('inventory')->with('status','Product created successfully');
+            return redirect()->route('inventory')->with('status', 'Producto creado con éxito');
         } catch (ValidationException $e) {
             $errors = $e->errors();
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'errors' => $errors,
-                    'message' => 'Please fix the errors in the form',
+                    'message' => 'Revisa los errores en el formulario.',
                 ], 422);
             }
             return redirect()->back()->withErrors($errors)->withInput();
@@ -79,17 +79,17 @@ class ProductController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'The product could not be created. Please try again.',
+                    'message' => 'No se pudo crear el producto. Inténtalo de nuevo.',
                 ], 500);
             }
-            return redirect()->back()->with('error', 'The product could not be created. Please try again.')->withInput();
+            return redirect()->back()->with('error', 'No se pudo crear el producto. Inténtalo de nuevo.')->withInput();
         }
     }
 
     public function show($id)
     {
         try {
-            $product = Product::with(['category','supplier'])->findOrFail($id);
+            $product = Product::with(['category.parent','supplier'])->findOrFail($id);
             
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
@@ -103,12 +103,12 @@ class ProductController extends Controller
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Product not found',
+                    'message' => 'Producto no encontrado',
                     'error' => $e->getMessage()
                 ], 404);
             }
             
-            return redirect()->route('inventory')->with('error', 'Product not found');
+            return redirect()->route('inventory')->with('error', 'Producto no encontrado');
         }
     }
 
@@ -153,19 +153,19 @@ class ProductController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Product updated successfully',
-                    'data' => $product->load(['category', 'supplier'])
+                    'message' => 'Producto actualizado con éxito',
+                    'data' => $product->load(['category.parent', 'supplier'])
                 ]);
             }
 
-            return redirect()->route('inventory')->with('status','Product updated successfully');
+            return redirect()->route('inventory')->with('status','Producto actualizado con éxito');
         } catch (ValidationException $e) {
             $errors = $e->errors();
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'errors' => $errors,
-                    'message' => 'Please fix the errors in the form',
+                    'message' => 'Revisa los errores en el formulario.',
                 ], 422);
             }
             return redirect()->back()->withErrors($errors)->withInput();
@@ -179,10 +179,10 @@ class ProductController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'The product could not be updated. Please try again.',
+                    'message' => 'No se pudo actualizar el producto. Inténtalo de nuevo.',
                 ], 500);
             }
-            return redirect()->back()->with('error', 'The product could not be updated. Please try again.')->withInput();
+            return redirect()->back()->with('error', 'No se pudo actualizar el producto. Inténtalo de nuevo.')->withInput();
         }
     }
 
@@ -252,7 +252,7 @@ class ProductController extends Controller
 
     public function inventory(Request $request)
     {
-        $query = Product::with(['category', 'supplier']);
+        $query = Product::with(['category.parent', 'supplier']);
 
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
@@ -261,7 +261,18 @@ class ProductController extends Controller
             });
         }
 
-        if ($request->filled('category_id')) {
+        if ($request->filled('subcategory_id')) {
+            $query->where('category_id', $request->subcategory_id);
+        } elseif ($request->filled('parent_category_id')) {
+            $canonicalParentId = (int) $request->parent_category_id;
+            $physicalParentIds = Category::physicalRootIdsForCanonicalParent($canonicalParentId);
+            $childIds = Category::whereIn('parent_category_id', $physicalParentIds)->pluck('category_id');
+            $query->where(function ($q) use ($physicalParentIds, $childIds) {
+                $q->whereIn('category_id', $physicalParentIds)
+                    ->orWhereIn('category_id', $childIds);
+            });
+        } elseif ($request->filled('category_id')) {
+            // Backward compatibility with previous single-category filter.
             $query->where('category_id', $request->category_id);
         }
 
@@ -310,12 +321,21 @@ class ProductController extends Controller
             ];
         });
 
-        $categories = Category::orderBy('name')->get(['category_id', 'name']);
+        // Raíces deduplicadas por nombre (filtro "Categoría") + árbol para selects dependientes en JS
+        $categories = Category::query()
+            ->selectRaw('MIN(category_id) as category_id, name')
+            ->whereNull('parent_category_id')
+            ->groupBy('name')
+            ->orderBy('name')
+            ->get();
+
+        $subcategoriesByParent = Category::subcategoriesGroupedByCanonicalParent();
 
         return view('admin.products.inventory', [
             'products' => $products,
             'paginator' => $paginator,
             'categories' => $categories,
+            'subcategoriesByParent' => $subcategoriesByParent,
         ]);
     }
 

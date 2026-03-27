@@ -1,8 +1,4 @@
-/**
- * Dashboard JavaScript
- * Funcionalidades interactivas para el dashboard principal
- */
-
+// Main dashboard controller class
 class Dashboard {
     constructor() {
         this.salesChart = null;
@@ -10,19 +6,18 @@ class Dashboard {
         this.init();
     }
 
+    // Initialize dashboard components
     init() {
         this.updateCurrentTime();
         this.initCharts();
         this.bindEvents();
         this.loadDashboardData();
         
-        // Actualizar tiempo cada minuto
+        // Update time every minute
         setInterval(() => this.updateCurrentTime(), 60000);
     }
 
-    /**
-     * Actualizar la hora actual
-     */
+    // Display current date and time in the header
     updateCurrentTime() {
         const now = new Date();
         const options = {
@@ -40,22 +35,18 @@ class Dashboard {
         }
     }
 
-    /**
-     * Inicializar gráficos
-     */
+    // Initialize both sales and category charts
     initCharts() {
         this.initSalesChart();
         this.initCategoryChart();
     }
 
-    /**
-     * Gráfico de ventas
-     */
+    // Create line chart for sales data
     initSalesChart() {
         const ctx = document.getElementById('sales-chart');
         if (!ctx) return;
 
-        // Cargar datos reales del servidor
+        // Fetch real sales data from server
         this.loadSalesData().then(salesData => {
             this.salesChart = new Chart(ctx, {
                 type: 'line',
@@ -64,9 +55,7 @@ class Dashboard {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            display: false
-                        },
+                        legend: { display: false },
                         tooltip: {
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
                             titleColor: '#ffffff',
@@ -82,44 +71,30 @@ class Dashboard {
                     },
                     scales: {
                         x: {
-                            grid: {
-                                display: false
-                            },
+                            grid: { display: false },
                             ticks: {
                                 color: '#6c757d',
-                                font: {
-                                    size: 12,
-                                    weight: '500'
-                                }
+                                font: { size: 12, weight: '500' }
                             }
                         },
                         y: {
                             beginAtZero: true,
-                            grid: {
-                                color: '#f1f3f4',
-                                drawBorder: false
-                            },
+                            grid: { color: '#f1f3f4', drawBorder: false },
                             ticks: {
                                 color: '#6c757d',
-                                font: {
-                                    size: 12,
-                                    weight: '500'
-                                },
+                                font: { size: 12, weight: '500' },
                                 callback: function(value) {
                                     return '₡' + value.toLocaleString('es-ES');
                                 }
                             }
                         }
                     },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    }
+                    interaction: { intersect: false, mode: 'index' }
                 }
             });
         }).catch(error => {
             console.error('Error al cargar datos de ventas:', error);
-            // Mostrar gráfico vacío en caso de error
+            // Show fallback empty chart on error
             this.salesChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -137,36 +112,21 @@ class Dashboard {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
                         x: {
-                            grid: {
-                                display: false
-                            },
+                            grid: { display: false },
                             ticks: {
                                 color: '#6c757d',
-                                font: {
-                                    size: 12,
-                                    weight: '500'
-                                }
+                                font: { size: 12, weight: '500' }
                             }
                         },
                         y: {
                             beginAtZero: true,
-                            grid: {
-                                color: '#f1f3f4',
-                                drawBorder: false
-                            },
+                            grid: { color: '#f1f3f4', drawBorder: false },
                             ticks: {
                                 color: '#6c757d',
-                                font: {
-                                    size: 12,
-                                    weight: '500'
-                                },
+                                font: { size: 12, weight: '500' },
                                 callback: function(value) {
                                     return '₡' + value.toLocaleString('es-ES');
                                 }
@@ -178,14 +138,12 @@ class Dashboard {
         });
     }
 
-    /**
-     * Gráfico de categorías
-     */
+    // Create doughnut chart for category distribution
     initCategoryChart() {
         const ctx = document.getElementById('category-chart');
         if (!ctx) return;
 
-        // Cargar datos reales del servidor
+        // Fetch real category data from server
         this.loadCategoryData().then(categoryData => {
             this.categoryChart = new Chart(ctx, {
                 type: 'doughnut',
@@ -199,10 +157,7 @@ class Dashboard {
                             labels: {
                                 padding: 20,
                                 usePointStyle: true,
-                                font: {
-                                    size: 12,
-                                    weight: '500'
-                                },
+                                font: { size: 12, weight: '500' },
                                 color: '#6c757d'
                             }
                         },
@@ -226,7 +181,7 @@ class Dashboard {
             });
         }).catch(error => {
             console.error('Error al cargar datos de categorías:', error);
-            // Mostrar gráfico vacío en caso de error
+            // Show fallback empty chart on error
             this.categoryChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -247,10 +202,7 @@ class Dashboard {
                             labels: {
                                 padding: 20,
                                 usePointStyle: true,
-                                font: {
-                                    size: 12,
-                                    weight: '500'
-                                },
+                                font: { size: 12, weight: '500' },
                                 color: '#6c757d'
                             }
                         }
@@ -261,9 +213,7 @@ class Dashboard {
         });
     }
 
-    /**
-     * Cargar datos de ventas desde el servidor
-     */
+    // Fetch sales data from backend API
     async loadSalesData() {
         try {
             const response = await fetch('/dashboard/chart-data', {
@@ -274,14 +224,12 @@ class Dashboard {
                 }
             });
 
-            if (!response.ok) {
-                throw new Error('Error al cargar datos de ventas');
-            }
+            if (!response.ok) throw new Error('Error al cargar datos de ventas');
 
             const data = await response.json();
             
             if (data.success && data.sales) {
-                // Preparar datos para Chart.js
+                // Format data for Chart.js line chart
                 const labels = data.sales.map(sale => {
                     const date = new Date(sale.date);
                     return date.toLocaleDateString('es-ES', { weekday: 'short' });
@@ -314,9 +262,7 @@ class Dashboard {
         }
     }
 
-    /**
-     * Cargar datos de categorías desde el servidor
-     */
+    // Fetch category data from backend API
     async loadCategoryData() {
         try {
             const response = await fetch('/dashboard/chart-data', {
@@ -327,18 +273,16 @@ class Dashboard {
                 }
             });
 
-            if (!response.ok) {
-                throw new Error('Error al cargar datos de categorías');
-            }
+            if (!response.ok) throw new Error('Error al cargar datos de categorías');
 
             const data = await response.json();
             
             if (data.success && data.categories) {
-                // Preparar datos para Chart.js
+                // Format data for Chart.js doughnut chart
                 const labels = data.categories.map(cat => cat.categoria);
                 const values = data.categories.map(cat => cat.total);
                 
-                // Generar colores dinámicamente
+                // Generate dynamic colors for each category
                 const colors = this.generateColors(values.length);
                 
                 return {
@@ -360,60 +304,42 @@ class Dashboard {
         }
     }
 
-    /**
-     * Generar colores para el gráfico
-     */
+    // Generate a palette of colors for chart segments
     generateColors(count) {
         const baseColors = [
-            '#2e7d32', // Verde oscuro
-            '#4caf50', // Verde medio
-            '#81c784', // Verde claro
-            '#a5d6a7', // Verde muy claro
-            '#1976d2', // Azul
-            '#ff9800', // Naranja
-            '#9c27b0', // Púrpura
-            '#f44336', // Rojo
-            '#00bcd4', // Cian
-            '#795548'  // Marrón
+            '#2e7d32', '#4caf50', '#81c784', '#a5d6a7', '#1976d2',
+            '#ff9800', '#9c27b0', '#f44336', '#00bcd4', '#795548'
         ];
         
         const colors = [];
         for (let i = 0; i < count; i++) {
             colors.push(baseColors[i % baseColors.length]);
         }
-        
         return colors;
     }
 
-    /**
-     * Vincular eventos
-     */
+    // Attach DOM event listeners
     bindEvents() {
-        // Botón de actualizar dashboard
         const refreshBtn = document.getElementById('refresh-dashboard');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => this.refreshDashboard());
         }
 
-        // Botón de exportar reporte
         const exportBtn = document.getElementById('export-report');
         if (exportBtn) {
             exportBtn.addEventListener('click', () => this.exportReport());
         }
 
-        // Controles de período de gráfico
+        // Period selection buttons for charts
         const chartBtns = document.querySelectorAll('.chart-btn');
         chartBtns.forEach(btn => {
             btn.addEventListener('click', (e) => this.changeChartPeriod(e.target));
         });
 
-        // Animación de entrada para elementos
         this.animateElements();
     }
 
-    /**
-     * Actualizar dashboard
-     */
+    // Reload dashboard data manually
     async refreshDashboard() {
         const refreshBtn = document.getElementById('refresh-dashboard');
         if (refreshBtn) {
@@ -437,11 +363,8 @@ class Dashboard {
         }
     }
 
-    /**
-     * Exportar reporte
-     */
+    // Export current dashboard as a printable report
     exportReport() {
-        // Crear un reporte simple en PDF usando window.print()
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
             <html>
@@ -475,26 +398,20 @@ class Dashboard {
         printWindow.print();
     }
 
-    /**
-     * Cambiar período del gráfico
-     */
+    // Handle chart period change (daily/weekly/monthly)
     changeChartPeriod(button) {
-        // Remover clase active de todos los botones
+        // Remove active class from all period buttons
         document.querySelectorAll('.chart-btn').forEach(btn => {
             btn.classList.remove('active');
         });
 
-        // Agregar clase active al botón clickeado
         button.classList.add('active');
 
-        // Cambiar período del gráfico con datos reales
         const period = button.dataset.period;
         this.updateSalesChart(period);
     }
 
-    /**
-     * Actualizar gráfico de ventas
-     */
+    // Refresh sales chart with new period data
     async updateSalesChart(period) {
         if (!this.salesChart) return;
 
@@ -507,21 +424,18 @@ class Dashboard {
                 }
             });
 
-            if (!response.ok) {
-                throw new Error('Error al cargar datos de ventas');
-            }
+            if (!response.ok) throw new Error('Error al cargar datos de ventas');
 
             const data = await response.json();
             
             if (data.success && data.sales) {
-                // Preparar datos para Chart.js
+                // Update chart with new data
                 const labels = data.sales.map(sale => {
                     const date = new Date(sale.date);
                     return date.toLocaleDateString('es-ES', { weekday: 'short' });
                 });
                 const values = data.sales.map(sale => parseFloat(sale.total) || 0);
                 
-                // Actualizar el gráfico
                 this.salesChart.data.labels = labels;
                 this.salesChart.data.datasets[0].data = values;
                 this.salesChart.update('active');
@@ -532,12 +446,9 @@ class Dashboard {
         }
     }
 
-    /**
-     * Cargar datos del dashboard
-     */
+    // Fetch main dashboard data (KPIs) from server
     async loadDashboardData() {
         try {
-            // Cargar datos reales del servidor
             const response = await fetch('/dashboard/data', {
                 method: 'GET',
                 headers: {
@@ -546,18 +457,14 @@ class Dashboard {
                 }
             });
 
-            if (!response.ok) {
-                throw new Error('Error al cargar datos del dashboard');
-            }
+            if (!response.ok) throw new Error('Error al cargar datos del dashboard');
 
             const data = await response.json();
             
             console.log('Datos recibidos del servidor:', data);
             
             if (data.success) {
-                // Actualizar KPIs con datos reales
                 this.updateKPIs(data);
-                // Animar los KPIs
                 this.animateKPIs();
             }
         } catch (error) {
@@ -566,29 +473,23 @@ class Dashboard {
         }
     }
 
-    /**
-     * Actualizar KPIs con datos reales
-     */
+    // Update KPI display elements with server data
     updateKPIs(data) {
-        // Actualizar total de productos
         const totalProductsEl = document.getElementById('total-products');
         if (totalProductsEl && data.totalProducts !== undefined) {
             totalProductsEl.textContent = data.totalProducts;
         }
 
-        // Actualizar ventas de hoy
         const todaySalesEl = document.getElementById('today-sales');
         if (todaySalesEl && data.todaySales !== undefined) {
             todaySalesEl.textContent = '₡' + data.todaySales.toLocaleString('es-ES');
         }
 
-        // Actualizar total de proveedores
         const totalSuppliersEl = document.getElementById('total-suppliers');
         if (totalSuppliersEl && data.totalSuppliers !== undefined) {
             totalSuppliersEl.textContent = data.totalSuppliers;
         }
 
-        // Actualizar productos con stock bajo
         const lowStockEl = document.getElementById('low-stock');
         if (lowStockEl && data.lowStockProducts !== undefined) {
             console.log('Actualizando stock bajo:', data.lowStockProducts);
@@ -596,9 +497,7 @@ class Dashboard {
         }
     }
 
-    /**
-     * Animar KPIs
-     */
+    // Animate KPI numbers counting up
     animateKPIs() {
         const kpiValues = document.querySelectorAll('.kpi-value');
         kpiValues.forEach(element => {
@@ -611,9 +510,7 @@ class Dashboard {
         });
     }
 
-    /**
-     * Animar número
-     */
+    // Helper to animate a number increment
     animateNumber(element, start, end, duration) {
         const startTime = performance.now();
         const isCurrency = element.textContent.includes('₡');
@@ -637,9 +534,7 @@ class Dashboard {
         requestAnimationFrame(animate);
     }
 
-    /**
-     * Animar elementos al cargar
-     */
+    // Apply fade-in animation on scroll
     animateElements() {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -659,11 +554,8 @@ class Dashboard {
         });
     }
 
-    /**
-     * Mostrar notificación
-     */
+    // Display temporary toast notification
     showNotification(message, type = 'info') {
-        // Crear elemento de notificación
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
         notification.innerHTML = `
@@ -671,7 +563,6 @@ class Dashboard {
             <span>${message}</span>
         `;
 
-        // Estilos de la notificación
         notification.style.cssText = `
             position: fixed;
             top: 20px;
@@ -689,7 +580,6 @@ class Dashboard {
             animation: slideInRight 0.3s ease;
         `;
 
-        // Agregar estilos de animación
         const style = document.createElement('style');
         style.textContent = `
             @keyframes slideInRight {
@@ -705,7 +595,7 @@ class Dashboard {
 
         document.body.appendChild(notification);
 
-        // Remover notificación después de 3 segundos
+        // Auto-dismiss after 3 seconds
         setTimeout(() => {
             notification.style.animation = 'slideOutRight 0.3s ease';
             setTimeout(() => {
@@ -717,12 +607,12 @@ class Dashboard {
     }
 }
 
-// Inicializar dashboard cuando el DOM esté listo
+// Initialize dashboard when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     new Dashboard();
 });
 
-// Funciones globales para compatibilidad
+// Global helper functions for external calls
 window.refreshDashboard = () => {
     if (window.dashboardInstance) {
         window.dashboardInstance.refreshDashboard();

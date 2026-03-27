@@ -34,6 +34,9 @@ COPY . .
 # Laravel deps
 RUN composer install --no-interaction
 
+# Build de assets Vite para producción (genera public/build/manifest.json)
+RUN npm run build
+
 # Permisos
 RUN chown -R www-data:www-data storage bootstrap/cache && \
     chmod -R 775 storage bootstrap/cache

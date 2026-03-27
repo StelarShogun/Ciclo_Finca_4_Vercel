@@ -1,153 +1,8 @@
-/* ============================================================
-   DASHBOARD REQUIRED CSS
-   Estilos exclusivos para dashboard.blade.php
-   Compilado de variables.css, main.css, admin.css, buttons.css,
-   dashboard.css, inventory.css (alertas)
-   ============================================================ */
+@import "../variables-reset.css";
+@import "../utilities.css";
+@import "../sidebar.css";
 
-/* ===== VARIABLES (variables.css) ===== */
-:root {
-  /* Colores principales */
-  --color-primary: #2e7d32;
-  --color-primary-dark: #1b5e20;
-  --color-primary-light: #4caf50;
-  --color-accent: #ff6f00;
-  
-  /* Colores de estado */
-  --color-success: #2e7d32;
-  --color-success-light: #e8f5e9;
-  --color-success-bg: #e8f5e9;
-  --color-danger: #d32f2f;
-  --color-danger-light: #ffebee;
-  --color-danger-bg: #ffebee;
-  --color-warning: #f57c00;
-  --color-warning-light: #fff3e0;
-  --color-warning-bg: #fff3e0;
-  --color-info: #1976d2;
-  --color-info-light: #e3f2fd;
-  --color-info-bg: #e3f2fd;
-  
-  /* Colores neutros */
-  --color-secondary: #455a64;
-  --color-secondary-light: #eceff1;
-  --color-secondary-bg: #eceff1;
-  --color-light: #f8f9fa;
-  --color-dark: #212529;
-  --color-muted: #6c757d;
-  
-  /* Sidebar */
-  --sidebar-bg: #ffffff;
-  --sidebar-border: #e5e7eb;
-  --sidebar-border-strong: #94a3b8;
-  --sidebar-text: #0f172a;
-  --sidebar-hover: #f2f4f7;
-  --sidebar-active: #60ad5e;
-  --sidebar-active-dark: #1a7a44;
-  --sidebar-width: 250px;
-  --sidebar-collapsed-width: 80px;
-  
-  /* Texto */
-  --text-primary: #333;
-  --text-secondary: #666;
-  
-  /* Fondos */
-  --background-main: #f5f5f5;
-  --background-white: #ffffff;
-  --background-light: #f8f9fa;
-  
-  /* Bordes */
-  --border-color: #e0e0e0;
-  --border-color-strong: #94a3b8;
-  --border-radius: 8px;
-  --border-radius-small: 4px;
-  --border-radius-large: 12px;
-  
-  /* Sombras */
-  --shadow-light: 0 2px 4px rgba(0,0,0,0.05);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-  --shadow-medium: 0 4px 8px rgba(0,0,0,0.1);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-  --shadow-heavy: 0 8px 16px rgba(0,0,0,0.15);
-  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
-  --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
-  
-  /* Transiciones */
-  --transition: all 0.3s ease;
-}
-
-/* ===== RESET Y BASE (main.css) ===== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Poppins', sans-serif;
-  background: var(--background-main);
-  color: var(--text-primary);
-  line-height: 1.6;
-  margin: 0;
-  padding: 0;
-}
-
-/* Utilidades (main.css) */
-.text-center { text-align: center; }
-.text-left { text-align: left; }
-.text-right { text-align: right; }
-
-.mb-1 { margin-bottom: 0.25rem; }
-.mb-2 { margin-bottom: 0.5rem; }
-.mb-3 { margin-bottom: 1rem; }
-.mb-4 { margin-bottom: 1.5rem; }
-.mb-5 { margin-bottom: 3rem; }
-
-.mt-1 { margin-top: 0.25rem; }
-.mt-2 { margin-top: 0.5rem; }
-.mt-3 { margin-top: 1rem; }
-.mt-4 { margin-top: 1.5rem; }
-.mt-5 { margin-top: 3rem; }
-
-.p-1 { padding: 0.25rem; }
-.p-2 { padding: 0.5rem; }
-.p-3 { padding: 1rem; }
-.p-4 { padding: 1.5rem; }
-.p-5 { padding: 3rem; }
-
-.d-flex { display: flex; }
-.d-block { display: block; }
-.d-none { display: none; }
-.d-inline { display: inline; }
-.d-inline-block { display: inline-block; }
-
-.justify-content-center { justify-content: center; }
-.justify-content-between { justify-content: space-between; }
-.justify-content-end { justify-content: flex-end; }
-
-.align-items-center { align-items: center; }
-.align-items-start { align-items: flex-start; }
-.align-items-end { align-items: flex-end; }
-
-.flex-column { flex-direction: column; }
-.flex-row { flex-direction: row; }
-
-.w-100 { width: 100%; }
-.h-100 { height: 100%; }
-
-.position-relative { position: relative; }
-.position-absolute { position: absolute; }
-.position-fixed { position: fixed; }
-
-.overflow-hidden { overflow: hidden; }
-.overflow-auto { overflow: auto; }
-
-.cursor-pointer { cursor: pointer; }
-
-.user-select-none { user-select: none; }
-
-.transition { transition: var(--transition); }
-
-/* ===== LAYOUT PRINCIPAL (admin.css) ===== */
+/* Layout base: el aside es position:fixed; sin este offset el contenido queda debajo del sidebar (solo existía padding en breakpoints ≤1024px). */
 .admin-layout {
   display: flex;
   min-height: 100vh;
@@ -156,136 +11,10 @@ body {
   box-sizing: border-box;
 }
 
-.admin-sidebar {
-  width: var(--sidebar-width);
-  background: var(--sidebar-bg);
-  color: var(--sidebar-text);
-  position: fixed;
-  left: 0;
-  top: 0;
-  height: 100vh;
-  transition: width 0.3s ease;
-  z-index: 1000;
-  box-shadow: 0.125rem 0 0.625rem rgba(0,0,0,0.1);
-  border-right: 0.1875rem solid var(--sidebar-border);
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-header {
-  padding: 1.5rem;
-  border-bottom: 0.125rem solid var(--sidebar-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.sidebar-header .logo {
-  width: 3.5rem;
-  height: 3.5rem;
-  object-fit: contain;
-  padding: 0.3125rem;
-  background-color: white;
-  border-radius: 50%;
-}
-
-.sidebar-nav {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.sidebar-nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar-nav li {
-  margin: 0.2rem 0;
-}
-
-.sidebar-nav li a {
-  display: flex;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  color: var(--sidebar-text);
-  text-decoration: none;
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-  border-left: 0.1875rem solid transparent;
-}
-
-.sidebar-nav li a:hover {
-  background: var(--sidebar-hover);
-  border-left-color: var(--sidebar-active);
-}
-
-.sidebar-nav li.active a {
-  background: var(--sidebar-active);
-  border-left-color: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 0.125rem 0.375rem rgba(0,0,0,0.08);
-}
-
-.sidebar-nav li.active a:hover {
-  background: var(--sidebar-active-dark);
-  border-left-color: #ffffff;
-  color: #ffffff;
-}
-
-.sidebar-nav li a i {
-  width: 1.25rem;
-  margin-right: 1rem;
-  font-size: 1.1rem;
-}
-
-.sidebar-nav li a span {
-  font-weight: 500;
-}
-
-.sidebar-footer {
-  padding: 1rem 1.5rem;
-  border-top: 0.125rem solid var(--sidebar-border);
-  background: var(--sidebar-bg);
-  margin-top: auto;
-}
-
-.logout-btn {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 1rem 1.5rem;
-  background: transparent;
-  border: none;
-  color: var(--color-danger);
-  text-decoration: none;
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-  border-left: 0.1875rem solid transparent;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  font-family: inherit;
-}
-
-.logout-btn:hover {
-  background: rgba(211, 47, 47, 0.1);
-  border-left-color: var(--color-danger);
-  color: var(--color-danger);
-}
-
-.logout-btn i {
-  width: 1.25rem;
-  margin-right: 1rem;
-  font-size: 1.1rem;
-}
-
-.logout-btn .sidebar-label {
-  font-weight: 500;
-}
-
 .admin-main {
   flex: 1;
   margin-left: 0;
-  transition: padding-left 0.3s ease;
+  transition: padding-left 0.2s ease;
   min-height: 100vh;
   padding: 1rem 1.5rem;
   width: 100%;
@@ -294,7 +23,9 @@ body {
   overflow-x: auto;
 }
 
-/* ===== BOTONES (buttons.css) ===== */
+/* ============================================================
+  1. BUTTONS
+  ============================================================ */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -455,7 +186,9 @@ body {
   100% { transform: rotate(360deg); }
 }
 
-/* ===== DASHBOARD (dashboard.css) ===== */
+/* ============================================================
+  2. DASHBOARD
+  ============================================================ */
 .dashboard-container {
   padding: 20px;
   max-width: 1400px;
@@ -885,7 +618,9 @@ body {
   line-height: 1.4;
 }
 
-/* ===== ALERTAS (inventory.css) ===== */
+/* ============================================================
+  3. ALERTS
+  ============================================================ */
 .alert {
   padding: 15px 20px;
   border-radius: 8px;
@@ -919,7 +654,9 @@ body {
   border: 1px solid var(--color-info);
 }
 
-/* ===== RESPONSIVE (admin.css + dashboard.css) ===== */
+/* ============================================================
+  4. RESPONSIVE
+  ============================================================ */
 @media (max-width: 1200px) {
   .charts-section {
     grid-template-columns: 1fr;

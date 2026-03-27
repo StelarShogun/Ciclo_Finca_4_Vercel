@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Requests;
 
+use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -8,14 +9,48 @@ class UpdateProductRequest extends FormRequest
 {
     public function authorize(): bool { return true; }
 
-    public function rules(): array
+    /**
+     * ID del producto en la ruta (products/{product}) para ignorar en unique(name).
+     * Si route('product') no está disponible, se usa el segmento de la URL.
+     */
+    protected function resolvedProductIdForUpdate(): ?int
     {
         $productId = $this->route('product');
+
+        if ($productId instanceof Product) {
+            return (int) $productId->getKey();
+        }
+
+        if ($productId !== null && $productId !== '') {
+            return (int) $productId;
+        }
+
+        $segments = $this->segments();
+        $idx = array_search('products', $segments, true);
+        if ($idx !== false && isset($segments[$idx + 1]) && ctype_digit((string) $segments[$idx + 1])) {
+            return (int) $segments[$idx + 1];
+        }
+
+        return null;
+    }
+
+    public function rules(): array
+    {
+        $productId = $this->resolvedProductIdForUpdate();
+        $categoryId = $this->input('category_id');
+
+        $nameRule = Rule::unique('products', 'name');
+        if (filled($categoryId)) {
+            $nameRule->where(fn ($query) => $query->where('category_id', $categoryId));
+        }
+        if ($productId !== null) {
+            $nameRule->ignore($productId, 'product_id');
+        }
 
         return [
             'category_id'  => ['required','exists:categories,category_id'],
             'supplier_id'  => ['required','exists:suppliers,supplier_id'],
-            'name'         => ['required','string','max:200', Rule::unique('products', 'name')->ignore($productId, 'product_id')],
+            'name'         => ['required','string','max:200', $nameRule],
             'description'  => ['nullable','string'],
             'sale_price'   => ['required','numeric','min:0','gt:purchase_price'],
             'purchase_price' => ['required','numeric','min:0'],
@@ -28,37 +63,48 @@ class UpdateProductRequest extends FormRequest
         ];
     }
 
-    public function messages(): array {
+    public function messages(): array
+    {
         return [
-            'required' => 'This field is required.',
-            'exists' => 'The selected option is invalid.',
-            'string' => 'This field must be a string.',
-            'max' => 'This field may not be greater than :max characters.',
-            'numeric' => 'This field must be a number.',
-            'min' => 'This field must be at least :min.',
-            'integer' => 'This field must be an integer.',
-            'in' => 'The selected option is invalid.',
-            'unique' => 'A product with this name already exists.',
-            'gt' => 'This field must be greater than the purchase price.',
-            'gte' => 'This field must be greater than or equal to the minimum stock.',
-            'image' => 'The file must be a valid image.',
-            'mimes' => 'The image must be a file of type: jpeg, png, jpg, gif, svg.',
-            'max.2048' => 'The image may not be greater than 2MB.',
+            'required' => 'El campo :attribute es obligatorio.',
+            'exists' => 'El valor seleccionado en :attribute no es válido.',
+            'string' => 'El campo :attribute debe ser texto.',
+            'max.string' => 'El campo :attribute no puede superar :max caracteres.',
+            'max.file' => 'El archivo :attribute no puede superar :max kilobytes.',
+            'numeric' => 'El campo :attribute debe ser un número.',
+            'min.numeric' => 'El campo :attribute debe ser al menos :min.',
+            'integer' => 'El campo :attribute debe ser un número entero.',
+            'min.integer' => 'El campo :attribute debe ser al menos :min.',
+            'in' => 'El valor seleccionado en :attribute no es válido.',
+            'unique' => 'Ya existe un producto con este nombre en esta categoría.',
+            'array' => 'El campo :attribute debe ser una lista válida.',
+            'image' => 'El campo :attribute debe ser una imagen válida.',
+            'mimes' => 'El campo :attribute solo admite: jpeg, png, jpg, gif o svg.',
+
+            'sale_price.gt' => 'El precio de venta debe ser mayor que el precio de compra.',
+            'stock_current.gte' => 'El stock actual debe ser mayor o igual al stock mínimo.',
+
+            'images.*.image' => 'Cada imagen adicional debe ser un archivo de imagen válido.',
+            'images.*.mimes' => 'Cada imagen adicional debe ser jpeg, png, jpg, gif o svg.',
+            'images.*.max' => 'Cada imagen adicional no puede superar :max kilobytes.',
         ];
     }
 
-    public function attributes(): array {
+    public function attributes(): array
+    {
         return [
-            'category_id' => 'category',
-            'supplier_id' => 'supplier',
-            'name' => 'product name',
-            'description' => 'description',
-            'sale_price' => 'sale price',
-            'purchase_price' => 'purchase price',
-            'stock_current' => 'current stock',
-            'stock_minimum' => 'minimum stock',
-            'status' => 'status',
-            'image' => 'image',
+            'category_id' => 'categoría',
+            'supplier_id' => 'proveedor',
+            'name' => 'nombre del producto',
+            'description' => 'descripción',
+            'sale_price' => 'precio de venta',
+            'purchase_price' => 'precio de compra',
+            'stock_current' => 'stock actual',
+            'stock_minimum' => 'stock mínimo',
+            'status' => 'estado',
+            'image' => 'imagen del producto',
+            'images' => 'imágenes adicionales',
+            'images.*' => 'imagen adicional',
         ];
     }
 
