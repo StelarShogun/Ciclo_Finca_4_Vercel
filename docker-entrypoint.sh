@@ -2,6 +2,12 @@
 
 cd /var/www/html
 
+# El bind mount .:/var/www/html oculta el vendor de la imagen; si falta dependencias, instalar.
+if [ ! -f vendor/autoload.php ] || [ ! -f vendor/thecodingmachine/safe/lib/special_cases.php ]; then
+    echo ">>> vendor incompleto o ausente — ejecutando composer install…"
+    composer install --no-interaction --no-progress --prefer-dist
+fi
+
 # Crear directorios necesarios
 mkdir -p storage/framework/{sessions,cache,views}
 mkdir -p storage/logs

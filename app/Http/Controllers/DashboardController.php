@@ -2,36 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Supplier;
-use App\Models\Category;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Usuario;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        if (!Auth::guard('admin')->check()) {
+        if (! Auth::guard('admin')->check()) {
             return redirect()->route('admin.login')
                 ->with('error', 'Debe iniciar sesión como administrador para acceder.');
         }
-        
+
         try {
             // Abort early if required tables are missing to avoid misleading query errors
-            if (!\Schema::hasTable('products') || !\Schema::hasTable('categories') || !\Schema::hasTable('suppliers') || !\Schema::hasTable('sales')) {
+            if (! \Schema::hasTable('products') || ! \Schema::hasTable('categories') || ! \Schema::hasTable('suppliers') || ! \Schema::hasTable('sales')) {
                 throw new \Exception('Database tables not found');
             }
-            
+
             if (config('app.debug')) {
                 $categoriasExistentes = Category::count();
                 \Log::debug("Categorías en DB: {$categoriasExistentes}");
             }
-            
+
             $totalProducts = Product::count();
             $totalSuppliers = Supplier::count();
             $totalCategories = Category::count();
@@ -51,37 +50,30 @@ class DashboardController extends Controller
                 ->limit(5)
                 ->get();
 
-            // Replace missing customer relations with a placeholder to avoid null errors in the view
-            $recentSales = Sale::with(['customer'])
+            $recentSales = Sale::with(['client'])
                 ->orderBy('sale_date', 'desc')
                 ->limit(5)
-                ->get()
-                ->map(function($sale) {
-                    if (!$sale->customer) {
-                        $sale->setRelation('customer', (object) ['nombre' => 'Unassigned', 'apellido' => '']);
-                    }
-                    return $sale;
-                });
+                ->get();
 
             $salesByDay = Sale::select(
-                    DB::raw('DATE(sale_date) as date'),
-                    DB::raw('COALESCE(SUM(total), 0) as total')
-                )
+                DB::raw('DATE(sale_date) as date'),
+                DB::raw('COALESCE(SUM(total), 0) as total')
+            )
                 ->where('sale_date', '>=', Carbon::now()->subDays(6))
                 ->where('status', 'completed')
                 ->groupBy('date')
                 ->orderBy('date')
                 ->get();
 
-            $productsByCategory = Category::withCount(['products' => function($query) {
-                    $query->where('status', 'active');
-                }])
+            $productsByCategory = Category::withCount(['products' => function ($query) {
+                $query->where('status', 'active');
+            }])
                 ->orderBy('products_count', 'desc')
                 ->get()
-                ->map(function($categoria) {
+                ->map(function ($categoria) {
                     return [
                         'categoria' => $categoria->name,
-                        'total' => $categoria->products_count
+                        'total' => $categoria->products_count,
                     ];
                 });
 
@@ -143,12 +135,12 @@ class DashboardController extends Controller
             ));
 
         } catch (\Exception $e) {
-            \Log::error('Error en DashboardController: ' . $e->getMessage(), [
+            \Log::error('Error en DashboardController: '.$e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
+
             // Return zeroed-out defaults so the view renders gracefully instead of crashing
             return view('admin.dashboard', [
                 'totalProducts' => 0,
@@ -165,7 +157,7 @@ class DashboardController extends Controller
                 'monthlyTrend' => 0,
                 'topProducts' => collect(),
                 'topSuppliers' => collect(),
-                'error' => 'Error al cargar datos del dashboard'
+                'error' => 'Error al cargar datos del dashboard',
             ]);
         }
     }
@@ -173,10 +165,10 @@ class DashboardController extends Controller
     public function getDashboardData()
     {
         try {
-            if (!\Schema::hasTable('products') || !\Schema::hasTable('categories') || !\Schema::hasTable('suppliers') || !\Schema::hasTable('sales')) {
+            if (! \Schema::hasTable('products') || ! \Schema::hasTable('categories') || ! \Schema::hasTable('suppliers') || ! \Schema::hasTable('sales')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Database tables not found'
+                    'message' => 'Database tables not found',
                 ], 500);
             }
 
@@ -198,15 +190,15 @@ class DashboardController extends Controller
                 'totalSuppliers' => $totalSuppliers,
                 'totalCategories' => $totalCategories,
                 'todaySales' => $todaySales,
-                'lowStockProducts' => $lowStockProducts
+                'lowStockProducts' => $lowStockProducts,
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error en getDashboardData: ' . $e->getMessage());
+            \Log::error('Error en getDashboardData: '.$e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener datos del dashboard'
+                'message' => 'Error al obtener datos del dashboard',
             ], 500);
         }
     }
@@ -215,42 +207,45 @@ class DashboardController extends Controller
     {
         // Default to the last 7 days if no period is specified
         $period = $request->get('period', '7d');
-        
+
         try {
-            $startDate = $this->getStartDate($period);
-            
-            $salesData = Sale::select(
+            $startDate = $this->getStartDate($period)->startOfDay();
+
+            $salesRows = Sale::query()
+                ->select(
                     DB::raw('DATE(sale_date) as date'),
                     DB::raw('SUM(total) as total')
                 )
                 ->where('sale_date', '>=', $startDate)
                 ->where('status', 'completed')
-                ->groupBy('date')
+                ->groupBy(DB::raw('DATE(sale_date)'))
                 ->orderBy('date')
                 ->get();
 
-            $categoryData = Category::withCount(['products' => function($query) {
-                    $query->where('status', 'active');
-                }])
+            $salesData = $this->fillSalesChartSeries($salesRows, $startDate, Carbon::now()->startOfDay());
+
+            $categoryData = Category::withCount(['products' => function ($query) {
+                $query->where('status', 'active');
+            }])
                 ->orderBy('products_count', 'desc')
                 ->get()
-                ->map(function($category) {
+                ->map(function ($category) {
                     return [
                         'categoria' => $category->name,
-                        'total' => $category->products_count
+                        'total' => $category->products_count,
                     ];
                 });
 
             return response()->json([
                 'success' => true,
                 'sales' => $salesData,
-                'categories' => $categoryData
+                'categories' => $categoryData,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener datos: ' . $e->getMessage()
+                'message' => 'Error al obtener datos: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -258,10 +253,10 @@ class DashboardController extends Controller
     public function exportReport(Request $request)
     {
         $format = $request->get('format', 'pdf');
-        
+
         try {
             $data = $this->getDashboardDataInternal();
-            
+
             if ($format === 'pdf') {
                 return $this->exportPDF($data);
             } elseif ($format === 'excel') {
@@ -269,14 +264,14 @@ class DashboardController extends Controller
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Formato no soportado'
+                    'message' => 'Formato no soportado',
                 ], 400);
             }
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al exportar reporte: ' . $e->getMessage()
+                'message' => 'Error al exportar reporte: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -287,7 +282,7 @@ class DashboardController extends Controller
         if ($previous == 0) {
             return $current > 0 ? 100 : 0;
         }
-        
+
         return round((($current - $previous) / $previous) * 100, 1);
     }
 
@@ -306,6 +301,33 @@ class DashboardController extends Controller
         }
     }
 
+    /**
+     * Una entrada por día en el rango con total 0 si no hubo ventas (el gráfico no queda “vacío”).
+     *
+     * @param  \Illuminate\Support\Collection<int, object>  $rows
+     * @return array<int, array{date: string, total: float}>
+     */
+    private function fillSalesChartSeries($rows, Carbon $rangeStart, Carbon $rangeEnd): array
+    {
+        $byDate = [];
+        foreach ($rows as $row) {
+            $d = $row->date;
+            $key = $d instanceof Carbon ? $d->format('Y-m-d') : substr((string) $d, 0, 10);
+            $byDate[$key] = (float) $row->total;
+        }
+
+        $out = [];
+        $cursor = $rangeStart->copy()->startOfDay();
+        $end = $rangeEnd->copy()->startOfDay();
+        while ($cursor->lte($end)) {
+            $key = $cursor->format('Y-m-d');
+            $out[] = ['date' => $key, 'total' => $byDate[$key] ?? 0.0];
+            $cursor->addDay();
+        }
+
+        return $out;
+    }
+
     private function getDashboardDataInternal()
     {
         return [
@@ -320,7 +342,7 @@ class DashboardController extends Controller
             'monthlySales' => Sale::whereMonth('sale_date', Carbon::now()->month)
                 ->whereYear('sale_date', Carbon::now()->year)
                 ->where('status', 'completed')
-                ->sum('total')
+                ->sum('total'),
         ];
     }
 

@@ -2,19 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\Product;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class SalesController extends Controller
 {
     public function index(Request $request)
     {
-        $status = $request->get('status');
+        $statusFilter = $request->query('status');
+        $salesStatusUi = in_array($statusFilter, ['cancelled', 'refunded', 'all'], true)
+            ? $statusFilter
+            : 'completed';
         $dateRange = $request->get('date_range');
         $paymentMethod = $request->get('payment_method');
         $search = $request->get('search');
@@ -23,9 +26,7 @@ class SalesController extends Controller
 
         $query->notExpired();
 
-        if ($status) {
-            $query->where('status', $status);
-        }
+        $this->applyVentasStatusScope($query, $statusFilter);
 
         if ($dateRange) {
             switch ($dateRange) {
@@ -35,12 +36,12 @@ class SalesController extends Controller
                 case 'week':
                     $query->whereBetween('sale_date', [
                         Carbon::now()->startOfWeek(),
-                        Carbon::now()->endOfWeek()
+                        Carbon::now()->endOfWeek(),
                     ]);
                     break;
                 case 'month':
                     $query->whereMonth('sale_date', Carbon::now()->month)
-                          ->whereYear('sale_date', Carbon::now()->year);
+                        ->whereYear('sale_date', Carbon::now()->year);
                     break;
                 case 'custom':
                     // Custom range is applied by the caller via additional query parameters
@@ -55,35 +56,18 @@ class SalesController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('sale_id', 'like', "%{$search}%")
-                  ->orWhere('invoice_number', 'like', "%{$search}%")
-                  ->orWhere('buyer_name', 'like', "%{$search}%")
-                  ->orWhere('buyer_email', 'like', "%{$search}%")
-                  ->orWhereHas('client', function ($subQ) use ($search) {
-                      $subQ->where('name', 'like', "%{$search}%")
-                           ->orWhere('first_surname', 'like', "%{$search}%")
-                           ->orWhere('gmail', 'like', "%{$search}%");
-                  });
+                    ->orWhere('invoice_number', 'like', "%{$search}%")
+                    ->orWhere('buyer_name', 'like', "%{$search}%")
+                    ->orWhere('buyer_email', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($subQ) use ($search) {
+                        $subQ->where('name', 'like', "%{$search}%")
+                            ->orWhere('first_surname', 'like', "%{$search}%")
+                            ->orWhere('gmail', 'like', "%{$search}%");
+                    });
             });
         }
 
-        $sales = $query->orderBy('sale_date', 'desc')->paginate(15);
-
-        // Include null order_source to remain compatible with records created before the column was added
-        $basePurchasesQuery = Sale::query()
-            ->whereIn('status', ['pending', 'completed'])
-            ->where(function ($q) {
-                $q->where('order_source', 'web_cart')
-                  ->orWhereNull('order_source');
-            })
-            ->notExpired();
-
-        $purchases = (clone $basePurchasesQuery)
-            ->with(['client', 'saleItems.product'])
-            ->orderBy('sale_date', 'desc')
-            ->paginate(15, ['*'], 'purchases_page');
-
-        // Used by the heartbeat endpoint to detect new purchases without a full page reload
-        $latestPurchaseSaleId = (clone $basePurchasesQuery)->max('sale_id') ?? 0;
+        $sales = $query->orderBy('sale_date', 'desc')->paginate(15)->withQueryString();
 
         $dailySales = $this->calculateDailySales();
         $dailySalesTrend = $this->calculateDailySalesTrend();
@@ -94,14 +78,13 @@ class SalesController extends Controller
 
         return view('admin.sales.index', compact(
             'sales',
-            'purchases',
-            'latestPurchaseSaleId',
             'dailySales',
             'dailySalesTrend',
             'dailyTransactions',
             'dailyTransactionsTrend',
             'refunds',
-            'refundsTrend'
+            'refundsTrend',
+            'salesStatusUi'
         ));
     }
 
@@ -113,7 +96,7 @@ class SalesController extends Controller
             ->whereIn('status', ['pending', 'completed'])
             ->where(function ($q) {
                 $q->where('order_source', 'web_cart')
-                  ->orWhereNull('order_source');
+                    ->orWhereNull('order_source');
             })
             ->notExpired();
 
@@ -162,7 +145,7 @@ class SalesController extends Controller
                         'name' => $sale->client->name,
                         'first_surname' => $sale->client->first_surname,
                         'second_surname' => $sale->client->second_surname,
-                        'gmail' => $sale->client->gmail
+                        'gmail' => $sale->client->gmail,
                     ] : null,
                     'sale_items' => $sale->saleItems->map(function ($item) {
                         return [
@@ -175,16 +158,16 @@ class SalesController extends Controller
                                 'product_id' => $item->product->product_id,
                                 'name' => $item->product->name,
                                 // SKU is derived from the PK; no dedicated column exists
-                                'sku' => 'BK-' . str_pad($item->product->product_id, 3, '0', STR_PAD_LEFT)
-                            ] : null
+                                'sku' => 'BK-'.str_pad($item->product->product_id, 3, '0', STR_PAD_LEFT),
+                            ] : null,
                         ];
-                    })
-                ]
+                    }),
+                ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading sale: ' . $e->getMessage()
+                'message' => 'Error loading sale: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -208,13 +191,14 @@ class SalesController extends Controller
             'payment_method' => $paymentMethod,
             'payment_reference' => $paymentReference,
             'discount' => $discount,
-            'notes' => $notes
+            'notes' => $notes,
         ]);
 
         // Normalize legacy Spanish item keys before validation runs
         $normalizedItems = collect($request->items)->map(function ($item) {
             $item['product_id'] = $item['product_id'] ?? $item['producto_id'] ?? null;
             $item['quantity'] = $item['quantity'] ?? $item['cantidad'] ?? 1;
+
             return $item;
         })->all();
         $request->merge(['items' => $normalizedItems]);
@@ -234,7 +218,7 @@ class SalesController extends Controller
             'payment_reference' => 'nullable|string|max:255',
             'discount' => 'nullable|numeric|min:0',
             'iva_percentage' => 'nullable|numeric|min:0|max:13',
-            'notes' => 'nullable|string|max:500'
+            'notes' => 'nullable|string|max:500',
         ], [
             'items.required' => 'At least one item is required.',
             'payment_method.in' => 'Payment method must be cash, sinpe or transfer.',
@@ -245,20 +229,21 @@ class SalesController extends Controller
             // Validate stock for all items before writing anything to avoid partial commits
             foreach ($request->items as $item) {
                 $product = Product::find($item['product_id']);
-                if (!$product || $item['quantity'] > $product->stock_current) {
+                if (! $product || $item['quantity'] > $product->stock_current) {
                     DB::rollBack();
-                    $name = $product ? $product->name : 'ID ' . $item['product_id'];
+                    $name = $product ? $product->name : 'ID '.$item['product_id'];
                     $available = $product ? $product->stock_current : 0;
+
                     return response()->json([
                         'success' => false,
-                        'message' => "Insufficient stock for \"{$name}\". Available: {$available}"
+                        'message' => "Insufficient stock for \"{$name}\". Available: {$available}",
                     ], 400);
                 }
             }
 
             $orderSource = $clientId ? 'web_cart' : 'walk_in';
             $sale = Sale::create([
-                'invoice_number' => (new Sale())->generateInvoiceNumber(),
+                'invoice_number' => (new Sale)->generateInvoiceNumber(),
                 'customer_id' => null,
                 'client_id' => $clientId,
                 'seller_id' => null,
@@ -272,7 +257,7 @@ class SalesController extends Controller
                 'buyer_name' => $buyerName,
                 'buyer_email' => $buyerEmail,
                 'order_source' => $orderSource,
-                'total' => 0  // recalculated below after items are inserted
+                'total' => 0,  // recalculated below after items are inserted
             ]);
 
             $subtotal = 0;
@@ -288,7 +273,7 @@ class SalesController extends Controller
                     'product_id' => $item['product_id'],
                     'quantity' => $quantity,
                     'unit_price' => $price,
-                    'total' => $itemTotal
+                    'total' => $itemTotal,
                 ]);
 
                 $subtotal += $itemTotal;
@@ -307,7 +292,7 @@ class SalesController extends Controller
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'iva' => $iva,
-                'total' => $total
+                'total' => $total,
             ]);
 
             DB::commit();
@@ -315,13 +300,14 @@ class SalesController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Sale created successfully.',
-                'sale' => $sale->load(['client', 'sellerAdmin', 'saleItems.product'])
+                'sale' => $sale->load(['client', 'sellerAdmin', 'saleItems.product']),
             ]);
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating sale: ' . $e->getMessage()
+                'message' => 'Error creating sale: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -332,17 +318,17 @@ class SalesController extends Controller
 
         $request->validate([
             'status' => 'required|in:pending,completed,cancelled,refunded',
-            'notes' => 'nullable|string|max:500'
+            'notes' => 'nullable|string|max:500',
         ]);
 
         $sale->update([
             'status' => $request->status,
-            'notes' => $request->notes
+            'notes' => $request->notes,
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Sale updated successfully.'
+            'message' => 'Sale updated successfully.',
         ]);
     }
 
@@ -353,7 +339,7 @@ class SalesController extends Controller
         if ($sale->status !== 'pending') {
             return response()->json([
                 'success' => false,
-                'message' => 'Only pending sales can be cancelled.'
+                'message' => 'Solo los pedidos pendientes pueden cancelarse desde esta acción.',
             ], 400);
         }
 
@@ -361,7 +347,7 @@ class SalesController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Sale cancelled successfully.'
+            'message' => 'Venta cancelada correctamente.',
         ]);
     }
 
@@ -370,23 +356,59 @@ class SalesController extends Controller
         try {
             $sale = Sale::findOrFail($id);
 
-            if ($sale->status !== 'pending') {
+            if ($sale->status === 'completed') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Only pending sales can be completed.'
+                    'message' => 'Este pedido ya está confirmado. No puede confirmarse de nuevo.',
                 ], 400);
             }
 
-            $sale->update(['status' => 'completed']);
+            if ($sale->status === 'cancelled') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este pedido fue rechazado o cancelado. No puede confirmarse.',
+                ], 400);
+            }
+
+            if ($sale->status === 'refunded') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede confirmar un pedido reembolsado.',
+                ], 400);
+            }
+
+            if ($sale->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo los pedidos pendientes pueden confirmarse.',
+                ], 400);
+            }
+
+            $invoiceNumber = $sale->invoice_number;
+            if (empty($invoiceNumber)) {
+                $invoiceNumber = (new Sale)->generateInvoiceNumber();
+            }
+
+            $sale->update([
+                'status' => 'completed',
+                'invoice_number' => $invoiceNumber,
+            ]);
+
+            $sale->refresh();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Sale completed successfully.'
+                'message' => 'Pedido confirmado correctamente. La venta quedó registrada con su factura.',
+                'sale' => [
+                    'sale_id' => $sale->sale_id,
+                    'invoice_number' => $sale->invoice_number,
+                    'status' => $sale->status,
+                ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error completing sale: ' . $e->getMessage()
+                'message' => 'Error al confirmar el pedido: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -394,25 +416,38 @@ class SalesController extends Controller
     public function cancel($id)
     {
         try {
-            $sale = Sale::findOrFail($id);
+            $sale = Sale::with('saleItems.product')->findOrFail($id);
 
             if ($sale->status === 'cancelled') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'This sale is already cancelled.'
+                    'message' => 'Este pedido ya está cancelado o rechazado.',
                 ], 400);
             }
 
             if ($sale->status === 'completed') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cannot cancel a completed sale. Use refund instead.'
+                    'message' => 'No se puede rechazar un pedido ya confirmado. Use reembolso si aplica.',
+                ], 400);
+            }
+
+            if ($sale->status === 'refunded') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este pedido ya fue reembolsado.',
+                ], 400);
+            }
+
+            if ($sale->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo los pedidos pendientes pueden rechazarse o cancelarse.',
                 ], 400);
             }
 
             $sale->update(['status' => 'cancelled']);
 
-            // Restore stock for each item when the sale is cancelled
             foreach ($sale->saleItems as $item) {
                 if ($item->product) {
                     $item->product->increment('stock_current', $item->quantity);
@@ -421,12 +456,12 @@ class SalesController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Sale cancelled successfully.'
+                'message' => 'Pedido rechazado. El stock de los productos fue liberado.',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error cancelling sale: ' . $e->getMessage()
+                'message' => 'Error al rechazar el pedido: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -438,7 +473,7 @@ class SalesController extends Controller
         if ($sale->status !== 'completed') {
             return response()->json([
                 'success' => false,
-                'message' => 'Only completed sales can be refunded.'
+                'message' => 'Only completed sales can be refunded.',
             ], 400);
         }
 
@@ -453,20 +488,22 @@ class SalesController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Refund processed successfully.'
+            'message' => 'Refund processed successfully.',
         ]);
     }
 
     public function print($id)
     {
         $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
-        return view('sales.print', compact('sale'));
+
+        return view('admin.sales.print', compact('sale'));
     }
 
     public function invoice($id)
     {
         $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
-        return view('sales.invoice', compact('sale'));
+
+        return view('admin.sales.invoice', compact('sale'));
     }
 
     public function export(Request $request)
@@ -475,42 +512,43 @@ class SalesController extends Controller
             $sales = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])
                 ->when($request->start_date, fn ($q) => $q->whereDate('sale_date', '>=', $request->start_date))
                 ->when($request->end_date, fn ($q) => $q->whereDate('sale_date', '<=', $request->end_date))
-                ->when($request->status, fn ($q) => $q->where('status', $request->status))
+                ->tap(fn ($q) => $this->applyVentasStatusScope($q, $request->get('status')))
                 ->when($request->payment_method, fn ($q) => $q->where('payment_method', $request->payment_method))
                 ->when($request->search, function ($q) use ($request) {
                     $search = $request->search;
-                    return $q->where('sale_id', 'like', '%' . $search . '%')
-                        ->orWhere('invoice_number', 'like', '%' . $search . '%')
-                        ->orWhere('buyer_name', 'like', '%' . $search . '%')
-                        ->orWhere('buyer_email', 'like', '%' . $search . '%')
+
+                    return $q->where('sale_id', 'like', '%'.$search.'%')
+                        ->orWhere('invoice_number', 'like', '%'.$search.'%')
+                        ->orWhere('buyer_name', 'like', '%'.$search.'%')
+                        ->orWhere('buyer_email', 'like', '%'.$search.'%')
                         ->orWhereHas('client', function ($sub) use ($search) {
-                            $sub->where('name', 'like', '%' . $search . '%')
-                                ->orWhere('first_surname', 'like', '%' . $search . '%')
-                                ->orWhere('gmail', 'like', '%' . $search . '%');
+                            $sub->where('name', 'like', '%'.$search.'%')
+                                ->orWhere('first_surname', 'like', '%'.$search.'%')
+                                ->orWhere('gmail', 'like', '%'.$search.'%');
                         });
                 })
                 ->orderBy('sale_date', 'desc')
                 ->get();
 
-            $filename = 'sales_' . now()->format('Y-m-d_H-i-s') . '.csv';
+            $filename = 'sales_'.now()->format('Y-m-d_H-i-s').'.csv';
             $headers = [
                 'Content-Type' => 'text/csv; charset=UTF-8',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
             ];
 
             $callback = function () use ($sales) {
                 $file = fopen('php://output', 'w');
-                fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM for correct Excel rendering
+                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM for correct Excel rendering
                 fputcsv($file, [
-                    'Sale ID', 'Customer', 'Email', 'Date', 'Status', 'Payment', 'Subtotal', 'IVA', 'Discount', 'Total', 'Items', 'Notes'
+                    'Sale ID', 'Customer', 'Email', 'Date', 'Status', 'Payment', 'Subtotal', 'IVA', 'Discount', 'Total', 'Items', 'Notes',
                 ], ';');
 
                 foreach ($sales as $sale) {
-                    $items = $sale->saleItems->map(fn ($item) => $item->product->name . ' (x' . $item->quantity . ')')->implode(', ');
+                    $items = $sale->saleItems->map(fn ($item) => $item->product->name.' (x'.$item->quantity.')')->implode(', ');
 
                     // Prefer the linked client record; fall back to inline buyer fields for walk-in sales
                     $customerDisplayName = $sale->client
-                        ? trim($sale->client->name . ' ' . $sale->client->first_surname . ' ' . ($sale->client->second_surname ?: ''))
+                        ? trim($sale->client->name.' '.$sale->client->first_surname.' '.($sale->client->second_surname ?: ''))
                         : ($sale->buyer_name ?: 'Walk-in / Sin datos');
 
                     $customerEmail = $sale->client
@@ -524,12 +562,12 @@ class SalesController extends Controller
                         $sale->sale_date->format('d/m/Y H:i'),
                         ucfirst($sale->status),
                         ucfirst($sale->payment_method),
-                        '₡' . number_format((float) $sale->subtotal, 2, ',', '.'),
-                        '₡' . number_format((float) $sale->iva, 2, ',', '.'),
-                        '₡' . number_format((float) $sale->discount, 2, ',', '.'),
-                        '₡' . number_format((float) $sale->total, 2, ',', '.'),
+                        '₡'.number_format((float) $sale->subtotal, 2, ',', '.'),
+                        '₡'.number_format((float) $sale->iva, 2, ',', '.'),
+                        '₡'.number_format((float) $sale->discount, 2, ',', '.'),
+                        '₡'.number_format((float) $sale->total, 2, ',', '.'),
                         $items,
-                        $sale->notes ?? ''
+                        $sale->notes ?? '',
                     ], ';');
                 }
                 fclose($file);
@@ -539,9 +577,32 @@ class SalesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error exporting sales: ' . $e->getMessage()
+                'message' => 'Error exporting sales: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Ventas (módulo admin): solo estados cerrados — pendientes se gestionan en Pedidos.
+     * Por defecto: confirmadas (completed). Valores: completed, cancelled, refunded, all.
+     */
+    private function applyVentasStatusScope($query, ?string $statusParam): void
+    {
+        $closed = ['completed', 'cancelled', 'refunded'];
+
+        if ($statusParam === 'all') {
+            $query->whereIn('status', $closed);
+
+            return;
+        }
+
+        if ($statusParam !== null && $statusParam !== '' && in_array($statusParam, $closed, true)) {
+            $query->where('status', $statusParam);
+
+            return;
+        }
+
+        $query->where('status', 'completed');
     }
 
     private function calculateDailySales()
@@ -555,7 +616,10 @@ class SalesController extends Controller
     {
         $today = Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->sum('total');
         $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->where('status', 'completed')->sum('total');
-        if ($yesterday == 0) return $today > 0 ? 100 : 0;
+        if ($yesterday == 0) {
+            return $today > 0 ? 100 : 0;
+        }
+
         return round((($today - $yesterday) / $yesterday) * 100, 1);
     }
 
@@ -568,7 +632,10 @@ class SalesController extends Controller
     {
         $today = Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->count();
         $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->where('status', 'completed')->count();
-        if ($yesterday == 0) return $today > 0 ? 100 : 0;
+        if ($yesterday == 0) {
+            return $today > 0 ? 100 : 0;
+        }
+
         return round((($today - $yesterday) / $yesterday) * 100, 1);
     }
 
@@ -581,14 +648,18 @@ class SalesController extends Controller
     {
         $today = Sale::whereDate('sale_date', Carbon::today())->where('status', 'refunded')->count();
         $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->where('status', 'refunded')->count();
+
         // Returns an absolute delta rather than a percentage since refund counts are typically small
         return $today - $yesterday;
     }
 
     private function mapPaymentMethodToEnglish($value)
     {
-        if (empty($value)) return $value;
+        if (empty($value)) {
+            return $value;
+        }
         $map = ['efectivo' => 'cash', 'sinpe' => 'sinpe', 'transferencia' => 'transfer'];
+
         return $map[strtolower($value)] ?? $value;
     }
 }

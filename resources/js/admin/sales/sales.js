@@ -110,7 +110,7 @@ function viewSale(id) {
     body.innerHTML = `
         <div class="loading-spinner">
             <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--color-primary);"></i>
-            <p>Loading details...</p>
+            <p>Cargando detalles…</p>
         </div>`;
     modal.classList.add('active');
 
@@ -120,18 +120,17 @@ function viewSale(id) {
     .then(r => r.json())
     .then(data => {
         if (!data.success || !data.sale) {
-            body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Error loading sale details</div>';
+            body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> No se pudieron cargar los detalles</div>';
             return;
         }
 
         const sale          = data.sale;
         const fecha         = new Date(sale.sale_date).toLocaleString('es-CR');
         const items         = sale.sale_items || sale.saleItems || [];
-        const statusLabels  = { pending: 'Pending', completed: 'Completed', cancelled: 'Cancelled', refunded: 'Refunded' };
-        const paymentLabels = { cash: 'Cash', sinpe: 'SINPE Mobile', transfer: 'Transfer' };
+        const statusLabels  = { pending: 'Pendiente', completed: 'Confirmado', cancelled: 'Rechazado', refunded: 'Reembolsado' };
+        const paymentLabels = { cash: 'Efectivo', sinpe: 'SINPE móvil', transfer: 'Transferencia' };
 
-        // Build customer name from client or buyer data
-        let customerName = 'Walk-in / No data';
+        let customerName = 'Mostrador / sin datos';
         if (sale.client) {
             customerName = [sale.client.name, sale.client.first_surname, sale.client.second_surname]
                 .filter(Boolean).join(' ');
@@ -158,40 +157,40 @@ function viewSale(id) {
         // Expiration badge with warning tooltip
         const daysLeft    = sale.days_remaining_until_expiration;
         const expiryBadge = (typeof daysLeft !== 'undefined' && daysLeft <= 0)
-            ? '<span class="expiry-badge expiry-expired">Expired</span>'
+            ? '<span class="expiry-badge expiry-expired">Expirado</span>'
             : (sale.is_expiry_warning
                 ? `<span class="expiry-badge expiry-warning">
                        <span class="expiry-warning-trigger" tabindex="0" role="button">
                            <i class="fas fa-exclamation-triangle"></i>
-                           <span class="expiry-tooltip-label">Attention! This order will be automatically deleted in ${daysLeft} day(s).</span>
+                           <span class="expiry-tooltip-label">¡Atención! Este pedido se eliminará automáticamente en ${daysLeft} día(s).</span>
                        </span>
-                       ${daysLeft} day(s)
+                       ${daysLeft} día(s)
                    </span>`
-                : (typeof daysLeft !== 'undefined' ? `${daysLeft} day(s)` : '—'));
+                : (typeof daysLeft !== 'undefined' ? `${daysLeft} día(s)` : '—'));
 
         body.innerHTML = `
             <div class="sale-details">
                 <div class="detail-section">
-                    <h4><i class="fas fa-info-circle"></i> General Information</h4>
+                    <h4><i class="fas fa-info-circle"></i> Información general</h4>
                     <div class="detail-grid">
-                        <div class="detail-item"><label>Invoice:</label><span><strong>${sale.invoice_number || '#' + sale.sale_id}</strong></span></div>
-                        <div class="detail-item"><label>Created at:</label><span>${fecha}</span></div>
-                        <div class="detail-item"><label>Customer:</label><span>${customerName}</span></div>
-                        <div class="detail-item"><label>Status:</label><span class="status-badge ${sale.status}">${statusLabels[sale.status] || sale.status}</span></div>
-                        <div class="detail-item"><label>Payment Method:</label><span>${paymentLabels[sale.payment_method] || sale.payment_method}</span></div>
-                        <div class="detail-item"><label>Days remaining:</label><span>${expiryBadge}</span></div>
-                        ${sale.payment_reference ? `<div class="detail-item"><label>Reference:</label><span>${sale.payment_reference}</span></div>` : ''}
+                        <div class="detail-item"><label>Factura:</label><span><strong>${sale.invoice_number || '#' + sale.sale_id}</strong></span></div>
+                        <div class="detail-item"><label>Fecha:</label><span>${fecha}</span></div>
+                        <div class="detail-item"><label>Cliente:</label><span>${customerName}</span></div>
+                        <div class="detail-item"><label>Estado:</label><span class="status-badge ${sale.status}">${statusLabels[sale.status] || sale.status}</span></div>
+                        <div class="detail-item"><label>Método de pago:</label><span>${paymentLabels[sale.payment_method] || sale.payment_method}</span></div>
+                        <div class="detail-item"><label>Días restantes:</label><span>${expiryBadge}</span></div>
+                        ${sale.payment_reference ? `<div class="detail-item"><label>Referencia:</label><span>${sale.payment_reference}</span></div>` : ''}
                     </div>
                 </div>
                 ${productsHtml ? `
                 <div class="detail-section">
-                    <h4><i class="fas fa-shopping-cart"></i> Products</h4>
+                    <h4><i class="fas fa-shopping-cart"></i> Productos</h4>
                     <table class="sale-products-table">
                         <thead>
                             <tr>
-                                <th>Product</th>
-                                <th class="text-center">Quantity</th>
-                                <th class="text-right">Unit Price</th>
+                                <th>Producto</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-right">Precio unit.</th>
                                 <th class="text-right">Total</th>
                             </tr>
                         </thead>
@@ -199,19 +198,19 @@ function viewSale(id) {
                     </table>
                 </div>` : ''}
                 <div class="detail-section">
-                    <h4><i class="fas fa-calculator"></i> Totals</h4>
+                    <h4><i class="fas fa-calculator"></i> Totales</h4>
                     <div class="totals-summary">
                         <div class="total-item"><span>Subtotal:</span><span>₡${parseFloat(sale.subtotal || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span></div>
-                        ${(sale.discount || 0) > 0 ? `<div class="total-item"><span>Discount:</span><span>-₡${parseFloat(sale.discount).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span></div>` : ''}
-                        <div class="total-item"><span>VAT:</span><span>₡${parseFloat(sale.iva || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span></div>
+                        ${(sale.discount || 0) > 0 ? `<div class="total-item"><span>Descuento:</span><span>-₡${parseFloat(sale.discount).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span></div>` : ''}
+                        <div class="total-item"><span>IVA:</span><span>₡${parseFloat(sale.iva || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span></div>
                         <div class="total-item total-final"><span><strong>Total:</strong></span><span><strong>₡${parseFloat(sale.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></span></div>
                     </div>
                 </div>
-                ${sale.notes ? `<div class="detail-section"><h4><i class="fas fa-sticky-note"></i> Notes</h4><p class="sale-notes">${sale.notes}</p></div>` : ''}
+                ${sale.notes ? `<div class="detail-section"><h4><i class="fas fa-sticky-note"></i> Notas</h4><p class="sale-notes">${sale.notes}</p></div>` : ''}
             </div>`;
     })
     .catch(() => {
-        body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Connection error while loading details</div>';
+        body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Error de conexión al cargar los detalles</div>';
     });
 }
 
@@ -221,53 +220,78 @@ function _saleAction(url, successMsg) {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': getCSRFToken(), 'Accept': 'application/json' }
     })
-    .then(r => r.json())
-    .then(data => {
+    .then(r => r.json().then(data => ({ data })))
+    .then(({ data }) => {
         if (data.success) {
+            let text = data.message || successMsg;
+            if (data.sale && data.sale.invoice_number) {
+                text += '\n\nFactura: ' + data.sale.invoice_number;
+            }
             Swal.fire({
-                title: 'Success', text: data.message || successMsg,
-                icon: 'success', confirmButtonColor: '#2e7d32'
+                title: 'Listo',
+                text,
+                icon: 'success',
+                confirmButtonColor: '#2e7d32',
+                confirmButtonText: 'Entendido'
             }).then(() => location.reload());
         } else {
-            Swal.fire({ title: 'Error', text: data.message || 'An error occurred', icon: 'error' });
+            Swal.fire({
+                title: 'No se pudo completar',
+                text: data.message || 'Ocurrió un error',
+                icon: 'error',
+                confirmButtonText: 'Cerrar'
+            });
         }
     })
-    .catch(() => Swal.fire({ title: 'Error', text: 'Connection error', icon: 'error' }));
+    .catch(() => Swal.fire({ title: 'Error', text: 'Error de conexión', icon: 'error' }));
 }
 
 // Mark sale as completed
 function completeSale(id) {
     Swal.fire({
-        title: 'Complete sale?', text: 'This action will mark the sale as completed.',
-        icon: 'question', showCancelButton: true,
-        confirmButtonColor: '#2e7d32', cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, complete', cancelButtonText: 'Cancel'
-    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/complete`, 'Sale completed successfully'));
+        title: '¿Confirmar pedido?',
+        text: 'El pedido pasará a confirmado y quedará registrado como venta con su factura.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#2e7d32',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, confirmar',
+        cancelButtonText: 'Cancelar'
+    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/complete`, 'Pedido confirmado correctamente.'));
 }
 
-// Cancel sale and restore stock
 function cancelSale(id) {
     Swal.fire({
-        title: 'Cancel sale?', text: 'This action will cancel the sale and release the stock.',
-        icon: 'warning', showCancelButton: true,
-        confirmButtonColor: '#d33', cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Yes, cancel', cancelButtonText: 'No'
-    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/cancel`, 'Sale cancelled successfully'));
+        title: '¿Rechazar pedido?',
+        text: 'Se cancelará el pedido y se devolverá el stock al inventario.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, rechazar',
+        cancelButtonText: 'No'
+    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/cancel`, 'Pedido rechazado.'));
 }
 
-// Refund sale
 function refundSale(id) {
     Swal.fire({
-        title: 'Refund sale?', text: 'This action will mark the sale as refunded.',
-        icon: 'warning', showCancelButton: true,
-        confirmButtonColor: '#f57c00', cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Yes, refund', cancelButtonText: 'Cancel'
-    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/refund`, 'Refund processed successfully'));
+        title: '¿Reembolsar venta?',
+        text: 'La venta pasará a estado reembolsado.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f57c00',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, reembolsar',
+        cancelButtonText: 'Cancelar'
+    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/refund`, 'Reembolso procesado.'));
 }
 
-// Open printable invoice in a new tab
 function printSale(id) {
     window.open(`/sales/${id}/print`, '_blank');
+}
+
+function openSaleInvoice(id) {
+    window.open(`/sales/${id}/invoice`, '_blank');
 }
 
 //Expose public functions on window (required by Vite/ESM) 
@@ -282,6 +306,7 @@ Object.assign(window, {
     cancelSale,
     refundSale,
     printSale,
+    openSaleInvoice,
 });
 
 // DOMContentLoaded 
@@ -332,19 +357,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.success) {
                     closeNewSaleModal();
                     Swal.fire({
-                        title: 'Success', text: 'Sale created successfully',
-                        icon: 'success', confirmButtonText: 'Got it'
+                        title: 'Venta creada',
+                        text: data.message || 'La venta se registró correctamente.',
+                        icon: 'success',
+                        confirmButtonText: 'Entendido'
                     }).then(() => location.reload());
                 } else {
                     Swal.fire({
-                        title: 'Error', text: data.message || 'Error creating the sale',
-                        icon: 'error', confirmButtonText: 'Got it'
+                        title: 'Error',
+                        text: data.message || 'No se pudo crear la venta',
+                        icon: 'error',
+                        confirmButtonText: 'Cerrar'
                     });
                 }
             })
             .catch(() => Swal.fire({
-                title: 'Error', text: 'Connection error',
-                icon: 'error', confirmButtonText: 'Got it'
+                title: 'Error',
+                text: 'Error de conexión',
+                icon: 'error',
+                confirmButtonText: 'Cerrar'
             }));
         });
     }

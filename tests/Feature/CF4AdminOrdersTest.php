@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
-class CF4AdminPurchasesTest extends TestCase
+class CF4AdminOrdersTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -25,7 +25,7 @@ class CF4AdminPurchasesTest extends TestCase
 
             $driver = Schema::getConnection()->getDriverName();
             if ($driver !== 'mysql') {
-                $this->markTestSkipped('CF4 admin compras requiere MySQL para el esquema en inglés.');
+                $this->markTestSkipped('CF4-21 pedidos admin requiere MySQL para el esquema en inglés.');
             }
 
             foreach (['admins', 'usuarios', 'client_table', 'products', 'sales', 'sale_items'] as $table) {
@@ -46,30 +46,30 @@ class CF4AdminPurchasesTest extends TestCase
         Auth::guard('admin')->login($adminUser);
     }
 
-    public function test_admin_purchases_table_shows_pending_and_completed_web_cart(): void
+    public function test_orders_index_lists_web_cart_orders(): void
     {
         $usuarioAdmin = Usuario::create([
             'nombre' => 'Admin',
-            'apellido' => 'Test',
-            'email' => 'admin-cf4@example.com',
+            'apellido' => 'Orders',
+            'email' => 'admin-orders@example.com',
             'password' => bcrypt('password'),
             'rol' => 'admin',
         ]);
 
         $adminUser = AdminUser::create([
             'name' => 'Admin',
-            'first_surname' => 'Test',
+            'first_surname' => 'Orders',
             'second_surname' => null,
-            'gmail' => 'admin-cf4-guard@example.com',
+            'gmail' => 'admin-orders-guard@example.com',
             'password' => bcrypt('password'),
             'last_access' => now(),
         ]);
 
         $client = Client::create([
             'name' => 'Cliente',
-            'first_surname' => 'CF4',
+            'first_surname' => 'Pedido',
             'second_surname' => null,
-            'gmail' => 'cliente-admin-purchases@example.com',
+            'gmail' => 'cliente-pedidos@example.com',
             'password' => bcrypt('password'),
             'provider' => 'local',
         ]);
@@ -77,19 +77,19 @@ class CF4AdminPurchasesTest extends TestCase
         $product = Product::create([
             'category_id' => null,
             'supplier_id' => null,
-            'name' => 'Producto Admin',
+            'name' => 'Producto Pedido CF4',
             'description' => null,
             'image' => 'default.png',
-            'sale_price' => 25,
-            'purchase_price' => 5,
-            'stock_current' => 20,
+            'sale_price' => 100,
+            'purchase_price' => 20,
+            'stock_current' => 5,
             'stock_minimum' => 1,
             'status' => 'active',
         ]);
 
-        $total = 50; // 25 * 2
-        $salePending = Sale::create([
-            'invoice_number' => 'INV'.now()->format('Ymd').'0010',
+        $inv = 'INV'.now()->format('Ymd').'0999';
+        $sale = Sale::create([
+            'invoice_number' => $inv,
             'customer_id' => null,
             'client_id' => $client->user_id,
             'seller_id' => null,
@@ -97,83 +97,56 @@ class CF4AdminPurchasesTest extends TestCase
             'sale_date' => now(),
             'payment_method' => 'cash',
             'status' => 'pending',
-            'subtotal' => $total,
+            'subtotal' => 100,
             'iva' => 0,
             'discount' => 0,
-            'total' => $total,
-            'notes' => 'CF4 test pending',
+            'total' => 100,
+            'notes' => 'CF4-21 test',
             'order_source' => 'web_cart',
         ]);
 
         SaleItem::create([
-            'sale_id' => $salePending->sale_id,
+            'sale_id' => $sale->sale_id,
             'product_id' => $product->product_id,
-            'quantity' => 2,
-            'unit_price' => 25,
+            'quantity' => 1,
+            'unit_price' => 100,
             'unit_discount' => 0,
-            'total' => $total,
-        ]);
-
-        $saleCompleted = Sale::create([
-            'invoice_number' => 'INV'.now()->format('Ymd').'0011',
-            'customer_id' => null,
-            'client_id' => $client->user_id,
-            'seller_id' => null,
-            'seller_admin_id' => null,
-            'sale_date' => now(),
-            'payment_method' => 'cash',
-            'status' => 'completed',
-            'subtotal' => $total,
-            'iva' => 0,
-            'discount' => 0,
-            'total' => $total,
-            'notes' => 'CF4 test completed',
-            'order_source' => 'web_cart',
-        ]);
-
-        SaleItem::create([
-            'sale_id' => $saleCompleted->sale_id,
-            'product_id' => $product->product_id,
-            'quantity' => 2,
-            'unit_price' => 25,
-            'unit_discount' => 0,
-            'total' => $total,
+            'total' => 100,
         ]);
 
         $this->authenticateAdmin($usuarioAdmin, $adminUser);
 
         $response = $this->get(route('admin.orders.index'));
         $response->assertStatus(200);
-
-        $response->assertSee('Pendiente', false);
-        $response->assertSee('Producto Admin', false);
-        $response->assertSee('Confirmado', false);
+        $response->assertSee('Pedidos en línea', false);
+        $response->assertSee('Producto Pedido CF4', false);
+        $response->assertSee($inv, false);
     }
 
-    public function test_admin_purchases_heartbeat_detects_new_web_cart_sale(): void
+    public function test_complete_pending_returns_invoice_and_second_complete_fails(): void
     {
         $usuarioAdmin = Usuario::create([
             'nombre' => 'Admin',
-            'apellido' => 'Test',
-            'email' => 'admin-cf4-heartbeat@example.com',
+            'apellido' => 'Complete',
+            'email' => 'admin-complete@example.com',
             'password' => bcrypt('password'),
             'rol' => 'admin',
         ]);
 
         $adminUser = AdminUser::create([
             'name' => 'Admin',
-            'first_surname' => 'Test',
+            'first_surname' => 'Complete',
             'second_surname' => null,
-            'gmail' => 'admin-cf4-heartbeat-guard@example.com',
+            'gmail' => 'admin-complete-guard@example.com',
             'password' => bcrypt('password'),
             'last_access' => now(),
         ]);
 
         $client = Client::create([
-            'name' => 'Cliente',
-            'first_surname' => 'CF4',
+            'name' => 'C',
+            'first_surname' => 'F',
             'second_surname' => null,
-            'gmail' => 'cliente-heartbeat@example.com',
+            'gmail' => 'cf@example.com',
             'password' => bcrypt('password'),
             'provider' => 'local',
         ]);
@@ -181,20 +154,18 @@ class CF4AdminPurchasesTest extends TestCase
         $product = Product::create([
             'category_id' => null,
             'supplier_id' => null,
-            'name' => 'Producto HB',
+            'name' => 'P',
             'description' => null,
             'image' => 'default.png',
             'sale_price' => 10,
             'purchase_price' => 2,
-            'stock_current' => 50,
+            'stock_current' => 5,
             'stock_minimum' => 1,
             'status' => 'active',
         ]);
 
-        $total = 10;
-
-        $sale1 = Sale::create([
-            'invoice_number' => 'INV'.now()->format('Ymd').'0100',
+        $sale = Sale::create([
+            'invoice_number' => 'INV'.now()->format('Ymd').'0888',
             'customer_id' => null,
             'client_id' => $client->user_id,
             'seller_id' => null,
@@ -202,32 +173,80 @@ class CF4AdminPurchasesTest extends TestCase
             'sale_date' => now(),
             'payment_method' => 'cash',
             'status' => 'pending',
-            'subtotal' => $total,
+            'subtotal' => 10,
             'iva' => 0,
             'discount' => 0,
-            'total' => $total,
-            'notes' => 'CF4 heartbeat 1',
+            'total' => 10,
+            'notes' => 'x',
             'order_source' => 'web_cart',
         ]);
 
         SaleItem::create([
-            'sale_id' => $sale1->sale_id,
+            'sale_id' => $sale->sale_id,
             'product_id' => $product->product_id,
             'quantity' => 1,
             'unit_price' => 10,
             'unit_discount' => 0,
-            'total' => $total,
+            'total' => 10,
         ]);
 
         $this->authenticateAdmin($usuarioAdmin, $adminUser);
 
-        $heartbeatRes1 = $this->getJson('/sales/history/heartbeat?since='.$sale1->sale_id);
-        $heartbeatRes1->assertStatus(200);
-        $this->assertFalse($heartbeatRes1->json('hasNew'));
+        $complete = $this->postJson(route('sales.complete', $sale->sale_id));
+        $complete->assertStatus(200);
+        $complete->assertJsonPath('success', true);
+        $complete->assertJsonPath('sale.status', 'completed');
+        $this->assertNotEmpty($complete->json('sale.invoice_number'));
 
-        // Crear una nueva compra para que heartbeat detecte cambios.
-        $sale2 = Sale::create([
-            'invoice_number' => 'INV'.now()->format('Ymd').'0101',
+        $again = $this->postJson(route('sales.complete', $sale->sale_id));
+        $again->assertStatus(400);
+        $again->assertJsonPath('success', false);
+        $this->assertStringContainsString('confirmado', $again->json('message'));
+    }
+
+    public function test_complete_generates_invoice_when_missing(): void
+    {
+        $usuarioAdmin = Usuario::create([
+            'nombre' => 'Admin',
+            'apellido' => 'Inv',
+            'email' => 'admin-inv@example.com',
+            'password' => bcrypt('password'),
+            'rol' => 'admin',
+        ]);
+
+        $adminUser = AdminUser::create([
+            'name' => 'Admin',
+            'first_surname' => 'Inv',
+            'second_surname' => null,
+            'gmail' => 'admin-inv-guard@example.com',
+            'password' => bcrypt('password'),
+            'last_access' => now(),
+        ]);
+
+        $client = Client::create([
+            'name' => 'C',
+            'first_surname' => 'I',
+            'second_surname' => null,
+            'gmail' => 'ci@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $product = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Pi',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 5,
+            'purchase_price' => 1,
+            'stock_current' => 3,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        $sale = Sale::create([
+            'invoice_number' => '',
             'customer_id' => null,
             'client_id' => $client->user_id,
             'seller_id' => null,
@@ -235,25 +254,33 @@ class CF4AdminPurchasesTest extends TestCase
             'sale_date' => now(),
             'payment_method' => 'cash',
             'status' => 'pending',
-            'subtotal' => $total,
+            'subtotal' => 5,
             'iva' => 0,
             'discount' => 0,
-            'total' => $total,
-            'notes' => 'CF4 heartbeat 2',
+            'total' => 5,
+            'notes' => 'sin factura',
             'order_source' => 'web_cart',
         ]);
 
         SaleItem::create([
-            'sale_id' => $sale2->sale_id,
+            'sale_id' => $sale->sale_id,
             'product_id' => $product->product_id,
             'quantity' => 1,
-            'unit_price' => 10,
+            'unit_price' => 5,
             'unit_discount' => 0,
-            'total' => $total,
+            'total' => 5,
         ]);
 
-        $heartbeatRes2 = $this->getJson('/sales/history/heartbeat?since='.$sale1->sale_id);
-        $heartbeatRes2->assertStatus(200);
-        $this->assertTrue($heartbeatRes2->json('hasNew'));
+        $this->authenticateAdmin($usuarioAdmin, $adminUser);
+
+        $complete = $this->postJson(route('sales.complete', $sale->sale_id));
+        $complete->assertStatus(200);
+        $inv = $complete->json('sale.invoice_number');
+        $this->assertNotEmpty($inv);
+        $this->assertStringStartsWith('INV', $inv);
+
+        $sale->refresh();
+        $this->assertSame($inv, $sale->invoice_number);
+        $this->assertSame('completed', $sale->status);
     }
 }

@@ -32,6 +32,9 @@
 .phpunit.result.cache
 .phpunit.cache
 
+# Config cache: rutas absolutas; si se genera en Docker rompe artisan/composer en el host
+/bootstrap/cache/config.php
+
 # =========================
 # IDE / EDITORES
 # =========================

@@ -227,7 +227,7 @@
                             <thead>
                                 <tr>
                                     <th>Invoice</th>
-                                    <th>Customer</th>
+                                    <th>Cliente</th>
                                     <th>Total</th>
                                     <th>Date</th>
                                     <th>Status</th>
@@ -237,7 +237,15 @@
                                 @forelse($recentSales ?? [] as $sale)
                                     <tr>
                                         <td>{{ $sale->invoice_number ?? '#' . $sale->sale_id }}</td>
-                                        <td>{{ $sale->customer ? trim($sale->customer->nombre . ' ' . ($sale->customer->apellido ?? '')) : 'N/A' }}</td>
+                                        <td>
+                                            @if($sale->client)
+                                                {{ trim($sale->client->name.' '.$sale->client->first_surname.' '.($sale->client->second_surname ?? '')) }}
+                                            @elseif($sale->buyer_name)
+                                                {{ $sale->buyer_name }}
+                                            @else
+                                                Mostrador / sin datos
+                                            @endif
+                                        </td>
                                         <td>₡{{ number_format($sale->total, 0, ',', '.') }}</td>
                                         <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
                                         <td>

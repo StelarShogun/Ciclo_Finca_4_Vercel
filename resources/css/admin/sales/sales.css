@@ -346,6 +346,13 @@
 }
 .sales-header h1 { margin: 0; font-size: 2rem; font-weight: 600; }
 .sales-header p  { margin: 5px 0 0 0; opacity: .9; font-size: 1.1rem; }
+.sales-header a {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.sales-header a:hover { opacity: 0.92; }
 .sales-actions   { display: flex; gap: 15px; align-items: center; }
 
 /* ============================================================

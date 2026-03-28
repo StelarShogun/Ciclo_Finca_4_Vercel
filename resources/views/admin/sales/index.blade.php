@@ -20,7 +20,10 @@
         <header class="sales-header">
             <div>
                 <h1>Gestión de Ventas</h1>
-                <p>Registre y administre las ventas del sistema</p>
+                <p>
+                    Ventas confirmadas y cierre contable. Los pedidos pendientes del carrito web se confirman o rechazan en
+                    <a href="{{ route('admin.orders.index') }}">Pedidos</a>.
+                </p>
             </div>
             <div class="sales-actions">
                 <button class="btn btn-primary" onclick="openNewSaleModal()">
@@ -82,11 +85,10 @@
                     <div class="filter-group">
                         <label for="status">Estado</label>
                         <select id="status" name="status">
-                            <option value="">Todos los estados</option>
-                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completado</option>
-                            <option value="pending"   {{ request('status') == 'pending'   ? 'selected' : '' }}>Pendiente</option>
-                            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelado</option>
-                            <option value="refunded"  {{ request('status') == 'refunded'  ? 'selected' : '' }}>Reembolsado</option>
+                            <option value="completed" {{ ($salesStatusUi ?? 'completed') === 'completed' ? 'selected' : '' }}>Confirmada (completada)</option>
+                            <option value="cancelled" {{ ($salesStatusUi ?? '') === 'cancelled' ? 'selected' : '' }}>Cancelada / rechazada</option>
+                            <option value="refunded" {{ ($salesStatusUi ?? '') === 'refunded' ? 'selected' : '' }}>Reembolsada</option>
+                            <option value="all" {{ ($salesStatusUi ?? '') === 'all' ? 'selected' : '' }}>Todas las cerradas</option>
                         </select>
                     </div>
 
@@ -215,18 +217,6 @@
                                             title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    @if($sale->status === 'pending')
-                                        <button class="action-btn success"
-                                                onclick="completeSale('{{ $sale->sale_id }}')"
-                                                title="Completar venta">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                        <button class="action-btn danger"
-                                                onclick="cancelSale('{{ $sale->sale_id }}')"
-                                                title="Cancelar venta">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    @endif
                                     @if($sale->status === 'completed')
                                         <button class="action-btn warning"
                                                 onclick="refundSale('{{ $sale->sale_id }}')"
@@ -261,117 +251,8 @@
 
     </div>
 
-    {{-- ==================== PURCHASE HISTORY (web cart orders) ==================== --}}
-    <div class="sales-container" style="margin-top: 26px;">
-
-        <header class="sales-header">
-            <div>
-                <h1 style="font-size: 1.35rem; margin: 0;">Historial de Compras</h1>
-                <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.78); font-weight: 500; font-size: 0.95rem;">
-                    Compras realizadas desde el carrito web (pendientes y completadas)
-                </p>
-            </div>
-        </header>
-
-        <div class="sales-table-container" style="padding: 16px;">
-            <table class="sales-table cf4-purchases-table">
-                <thead>
-                    <tr>
-                        <th>Cliente</th>
-                        <th>Productos</th>
-                        <th>Fecha</th>
-                        <th>Estado</th>
-                        <th>Total</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($purchases as $sale)
-                        <tr>
-                            {{-- Registered client, named walk-in, or anonymous --}}
-                            <td>
-                                @if($sale->client_id && $sale->client)
-                                    {{ $sale->client->name }} {{ $sale->client->first_surname }}
-                                    {{ $sale->client->second_surname ?: '' }}
-                                    <span class="text-muted">({{ $sale->client->gmail }})</span>
-                                @elseif($sale->buyer_name)
-                                    {{ $sale->buyer_name }}
-                                    @if($sale->buyer_email)
-                                        <span class="text-muted">({{ $sale->buyer_email }})</span>
-                                    @endif
-                                @else
-                                    Mostrador / Sin datos
-                                    @if($sale->buyer_email)
-                                        <span class="text-muted">({{ $sale->buyer_email }})</span>
-                                    @endif
-                                @endif
-                            </td>
-
-                            {{-- List each item as quantity x product name --}}
-                            <td>
-                                @if($sale->saleItems && $sale->saleItems->count() > 0)
-                                    <div style="display:flex; flex-direction:column; gap:6px;">
-                                        @foreach($sale->saleItems as $item)
-                                            <div>{{ $item->quantity }} x {{ $item->product->name ?? 'Producto' }}</div>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <span class="text-muted">Sin productos</span>
-                                @endif
-                            </td>
-
-                            <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
-
-                            {{-- Human-readable status label --}}
-                            <td>
-                                @php
-                                    $stateLabel = $sale->status === 'pending'
-                                        ? 'Pendiente de retiro'
-                                        : ($sale->status === 'completed' ? 'Completado' : ucfirst($sale->status));
-                                @endphp
-                                <span class="status-badge {{ $sale->status }}">{{ $stateLabel }}</span>
-                            </td>
-
-                            <td><strong>₡{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
-
-                            <td>
-                                <div class="actions-container">
-                                    <button class="action-btn secondary" type="button"
-                                            onclick="viewSale('{{ $sale->sale_id }}')"
-                                            title="Ver detalles">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center">
-                                <div style="padding: 40px; color: var(--color-muted);">
-                                    <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 15px;"></i>
-                                    <p>No hay compras registradas</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <div style="margin-top: 16px;">
-            <x-pagination :paginator="$purchases" label="compras" />
-        </div>
-
-    </div>
-
     {{-- Route URLs exposed via meta tags; read by sales.js (avoids inline JS) --}}
     <meta name="sales-route-store"     content="{{ route('sales.store') }}">
-    <meta name="sales-route-heartbeat" content="{{ route('sales.history.heartbeat') }}">
-
-    {{-- Latest purchase ID used by the heartbeat polling mechanism --}}
-    <div id="cf4-latest-purchase-sale-id"
-         data-value="{{ $latestPurchaseSaleId ?? 0 }}"
-         style="display:none;"></div>
 
     {{-- ==================== MODAL: NEW SALE ==================== --}}
     <div id="new-sale-modal" class="modal-overlay">

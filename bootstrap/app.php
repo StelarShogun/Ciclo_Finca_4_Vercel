@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\AdminOnly;
+use App\Http\Middleware\PreventDirectAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,13 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
 
-        $middleware->validateCsrfTokens(except: [
+        $middleware->preventRequestForgery(except: [
             'api/*',
         ]);
-        
+
         $middleware->alias([
-            'admin.only' => \App\Http\Middleware\AdminOnly::class,
-            'prevent.direct' => \App\Http\Middleware\PreventDirectAccess::class,
+            'admin.only' => AdminOnly::class,
+            'prevent.direct' => PreventDirectAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
