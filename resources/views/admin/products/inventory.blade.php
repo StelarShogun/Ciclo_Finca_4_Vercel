@@ -377,6 +377,18 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
+                            <label>Marca *</label>
+                            <div class="brand-combobox" id="new-brand-combobox">
+                                <input type="text" id="new-brand-search" class="brand-combobox-input"
+                                       placeholder="Escribe para buscar una marca..." autocomplete="off">
+                                <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                <div class="brand-combobox-dropdown" id="new-brand-dropdown"></div>
+                            </div>
+                            <input type="hidden" id="new-brand" name="brand_id">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
                             <label for="new-price-buy">Precio de Compra (₡) *</label>
                             <input type="number" id="new-price-buy" name="purchase_price"
                                    min="0" step="0.01" placeholder="e.g., 10000" required>
@@ -481,6 +493,18 @@
                                     <option value="{{ $supplier->supplier_id }}">{{ $supplier->name }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Marca *</label>
+                            <div class="brand-combobox" id="edit-brand-combobox">
+                                <input type="text" id="edit-brand-search" class="brand-combobox-input"
+                                       placeholder="Escribe para buscar una marca..." autocomplete="off">
+                                <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                <div class="brand-combobox-dropdown" id="edit-brand-dropdown"></div>
+                            </div>
+                            <input type="hidden" id="edit-brand" name="brand_id">
                         </div>
                     </div>
                     <div class="form-row">
@@ -717,6 +741,7 @@
     {{-- Árbol padre → hijos para filtros y modales (inventory.js) --}}
     <script>
         window.inventoryCategoryTree = @json($subcategoriesByParent ?? []);
+        window.inventoryBrands = @json($brands->map(fn($b) => ['id' => $b->id, 'name' => $b->name]) ?? []);
     </script>
 
     {{-- Scripts: SweetAlert2 loaded before inventory.js --}}

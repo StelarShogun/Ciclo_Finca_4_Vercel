@@ -50,6 +50,7 @@ class UpdateProductRequest extends FormRequest
         return [
             'category_id'  => ['required','exists:categories,category_id'],
             'supplier_id'  => ['required','exists:suppliers,supplier_id'],
+            'brand_id'     => ['required','exists:brands,id'],
             'name'         => ['required','string','max:200', $nameRule],
             'description'  => ['nullable','string'],
             'sale_price'   => ['required','numeric','min:0','gt:purchase_price'],

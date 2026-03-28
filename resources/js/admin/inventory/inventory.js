@@ -109,6 +109,102 @@ function bindDependentCategorySelectors({ parentSelect, subSelect, hiddenCategor
     });
 }
 
+/**
+ * Custom combobox for brand selection.
+ * Renders a filterable dropdown from window.inventoryBrands.
+ */
+function initBrandCombobox(searchInputId, hiddenInputId, dropdownId, wrapperId) {
+    const searchInput = qs('#' + searchInputId);
+    const hiddenInput = qs('#' + hiddenInputId);
+    const dropdown   = qs('#' + dropdownId);
+    const wrapper    = qs('#' + wrapperId);
+    const chevron    = wrapper?.querySelector('.brand-combobox-chevron');
+    if (!searchInput || !hiddenInput || !dropdown || !wrapper) return null;
+
+    let isOpen = false;
+    const brands = window.inventoryBrands || [];
+
+    function renderOptions(query) {
+        const q = (query || '').toLowerCase().trim();
+        const filtered = q ? brands.filter(b => b.name.toLowerCase().includes(q)) : brands;
+        dropdown.innerHTML = '';
+        if (!filtered.length) {
+            const noResult = document.createElement('div');
+            noResult.className = 'brand-combobox-no-result';
+            noResult.textContent = 'Sin resultados';
+            dropdown.appendChild(noResult);
+            return;
+        }
+        filtered.forEach(brand => {
+            const item = document.createElement('div');
+            item.className = 'brand-combobox-option';
+            if (String(brand.id) === String(hiddenInput.value)) item.classList.add('selected');
+            item.textContent = brand.name;
+            item.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                selectBrand(brand.id, brand.name);
+            });
+            dropdown.appendChild(item);
+        });
+    }
+
+    function selectBrand(id, name) {
+        hiddenInput.value = id;
+        searchInput.value = name;
+        wrapper.classList.remove('error');
+        close();
+    }
+
+    function open() {
+        renderOptions(searchInput.value);
+        dropdown.classList.add('open');
+        wrapper.classList.add('open');
+        isOpen = true;
+        if (chevron) chevron.classList.add('rotated');
+    }
+
+    function close() {
+        dropdown.classList.remove('open');
+        wrapper.classList.remove('open');
+        isOpen = false;
+        if (chevron) chevron.classList.remove('rotated');
+    }
+
+    function reset() {
+        hiddenInput.value = '';
+        searchInput.value = '';
+        close();
+    }
+
+    function setValue(id) {
+        const brand = brands.find(b => String(b.id) === String(id));
+        if (brand) selectBrand(brand.id, brand.name);
+        else reset();
+    }
+
+    searchInput.addEventListener('focus', () => open());
+    searchInput.addEventListener('input', () => {
+        hiddenInput.value = '';
+        if (!isOpen) open();
+        else renderOptions(searchInput.value);
+    });
+    searchInput.addEventListener('blur', () => {
+        setTimeout(() => {
+            if (!hiddenInput.value) searchInput.value = '';
+            close();
+        }, 150);
+    });
+    if (chevron) {
+        chevron.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            if (isOpen) close();
+            else { searchInput.focus(); open(); }
+        });
+    }
+
+    return { selectBrand, setValue, open, close, reset };
+}
+
 // Request a fresh CSRF token from the server
 async function renewCSRFToken() {
     try {
@@ -448,6 +544,7 @@ if (typeof Swal !== 'undefined') {
             if (newSubcategory) {
                 fillSubcategoryOptions(newSubcategory, '');
             }
+            newBrandCombobox?.reset();
             newProductModal.classList.add('active');
             syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
         });
@@ -484,6 +581,14 @@ if (typeof Swal !== 'undefined') {
                 }
                 return;
             }
+
+            if (!qs('#new-brand')?.value) {
+                const cb = qs('#new-brand-combobox');
+                if (cb) { cb.classList.add('error'); cb.querySelector('input')?.focus(); }
+                Swal.fire({ title: 'Marca requerida', text: 'Selecciona una marca antes de guardar el producto.', icon: 'warning', confirmButtonText: 'Entendido' });
+                return;
+            }
+            qs('#new-brand-combobox')?.classList.remove('error');
 
             setButtonLoading(saveNewProductBtn, true);
             const formData = new FormData(newProductForm);
@@ -616,6 +721,7 @@ if (typeof Swal !== 'undefined') {
                         syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
                     }
                     qs('#edit-provider').value = product.supplier_id || '';
+                    editBrandCombobox?.setValue(product.brand_id || '');
                     qs('#edit-price-buy').value = product.purchase_price || '';
                     qs('#edit-price-sell').value = product.sale_price || '';
                     qs('#edit-stock').value = product.stock_current || '';
@@ -661,6 +767,8 @@ if (typeof Swal !== 'undefined') {
         hiddenCategoryInput: editFinalCategory
     });
 
+    const newBrandCombobox  = initBrandCombobox('new-brand-search',  'new-brand',  'new-brand-dropdown',  'new-brand-combobox');
+    const editBrandCombobox = initBrandCombobox('edit-brand-search', 'edit-brand', 'edit-brand-dropdown', 'edit-brand-combobox');
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener('click', () => {
             editModal.classList.remove('active');
@@ -670,6 +778,15 @@ if (typeof Swal !== 'undefined') {
     if (saveEditBtn) {
         saveEditBtn.addEventListener('click', () => {
             syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
+
+            if (!qs('#edit-brand')?.value) {
+                const cb = qs('#edit-brand-combobox');
+                if (cb) { cb.classList.add('error'); cb.querySelector('input')?.focus(); }
+                Swal.fire({ title: 'Marca requerida', text: 'Selecciona una marca antes de guardar el producto.', icon: 'warning', confirmButtonText: 'Entendido' });
+                return;
+            }
+            qs('#edit-brand-combobox')?.classList.remove('error');
+
             setButtonLoading(saveEditBtn, true);
             const formData = new FormData(editProductForm);
             formData.append('_method', 'PUT');
