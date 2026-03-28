@@ -23,9 +23,15 @@
 
     <div class="sales-container cf4-orders-module">
 
-        <header class="orders-hero">
-            <h1>Pedidos en línea</h1>
-            <p>Gestione pedidos del carrito web: confirme la venta, rechace el pedido o consulte la factura. Solo los pedidos pendientes pueden confirmarse o rechazarse.</p>
+        <header class="sales-header">
+            <div>
+                <h1>Pedidos en línea</h1>
+                <p>
+                    Gestione pedidos del carrito web: confirme la venta, rechace el pedido o consulte la factura.
+                    Solo los pedidos pendientes pueden confirmarse o rechazarse. Las ventas ya confirmadas están en
+                    <a href="{{ route('sales.index') }}">Ventas</a>.
+                </p>
+            </div>
         </header>
 
         <div class="orders-table-card">

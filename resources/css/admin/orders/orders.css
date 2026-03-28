@@ -1,26 +1,7 @@
 @import "../variables-reset.css";
 @import "../sidebar.css";
 
-/* CF4-21 Pedidos — inspiración tipo 21st.dev: tarjeta, toolbar, tabla con hover */
-.cf4-orders-module .orders-hero {
-  margin-bottom: 1.25rem;
-}
-
-.cf4-orders-module .orders-hero h1 {
-  font-size: 1.65rem;
-  font-weight: 600;
-  margin: 0 0 0.35rem 0;
-  letter-spacing: -0.02em;
-}
-
-.cf4-orders-module .orders-hero p {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 0.95rem;
-  max-width: 42rem;
-  line-height: 1.45;
-}
-
+/* CF4-21 Pedidos — mismo bloque de cabecera que Ventas (.sales-header en sales.css) */
 .cf4-orders-module .orders-table-card {
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
