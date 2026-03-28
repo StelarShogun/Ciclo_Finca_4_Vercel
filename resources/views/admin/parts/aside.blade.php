@@ -40,8 +40,8 @@
                     <span class="sidebar-label">Usuarios</span>
                 </a>
             </li>
-            <li>
-                <a href="{{ url('/orders') }}">
+            <li class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.orders.index') }}">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="sidebar-label">Pedidos</span>
                 </a>

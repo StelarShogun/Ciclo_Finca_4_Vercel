@@ -1,20 +1,20 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\SupplierController;
-use App\Http\Controllers\SalesController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ClientPageController;
-use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminClientController;
-use App\Http\Controllers\ClientUserController;
-use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\BrandController;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ClientPageController;
+use App\Http\Controllers\ClientUserController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SalesController;
+use App\Http\Controllers\SupplierController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
-
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 // ============================================================
 // DEV UTILITIES — Remove before deploying to production
@@ -23,9 +23,10 @@ use Illuminate\Support\Facades\Artisan;
 Route::get('/run-migrations', function () {
     try {
         Artisan::call('migrate', ['--force' => true]);
-        return "✅ Migrations executed successfully: <br><pre>" . Artisan::output() . "</pre>";
-    } catch (\Exception $e) {
-        return "❌ Error running migrations: " . $e->getMessage();
+
+        return '✅ Migrations executed successfully: <br><pre>'.Artisan::output().'</pre>';
+    } catch (Exception $e) {
+        return '❌ Error running migrations: '.$e->getMessage();
     }
 });
 
@@ -36,12 +37,12 @@ Route::get('/run-seeders/{class?}', function ($class = null) {
             $params['--class'] = $class;
         }
         Artisan::call('db:seed', $params);
-        return "✅ Seeder executed:<br><pre>" . Artisan::output() . "</pre>";
-    } catch (\Exception $e) {
-        return "❌ Error: " . $e->getMessage();
+
+        return '✅ Seeder executed:<br><pre>'.Artisan::output().'</pre>';
+    } catch (Exception $e) {
+        return '❌ Error: '.$e->getMessage();
     }
 });
-
 
 // ============================================================
 // ADMIN ROUTES
@@ -88,12 +89,13 @@ Route::middleware(['auth:admin', 'admin.only', 'prevent.direct'])->group(functio
     Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
     Route::get('/sales/history/heartbeat', [SalesController::class, 'historyHeartbeat'])->name('sales.history.heartbeat');
 
+    Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
+
     // Client Management (admin view)
     Route::get('/clientes', [AdminClientController::class, 'index'])->name('admin.clients.index');
     Route::patch('/clientes/{id}/ban', [AdminClientController::class, 'ban'])->name('admin.clients.ban');
     Route::patch('/clientes/{id}/unban', [AdminClientController::class, 'unban'])->name('admin.clients.unban');
 });
-
 
 // ============================================================
 // CLIENT ROUTES
@@ -130,6 +132,7 @@ Route::post('/logout', function (Request $request) {
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
+
     return redirect()->route('clients.home')->with('status', 'Session closed successfully.');
 })->name('logout');
 
