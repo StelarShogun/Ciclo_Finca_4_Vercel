@@ -29,14 +29,14 @@ class CF4AdminPurchasesTest extends TestCase
             }
 
             foreach (['admins', 'usuarios', 'client_table', 'products', 'sales', 'sale_items'] as $table) {
-                if (!Schema::hasTable($table)) {
-                    $this->markTestSkipped('Tabla requerida no existe: ' . $table);
+                if (! Schema::hasTable($table)) {
+                    $this->markTestSkipped('Tabla requerida no existe: '.$table);
                 }
             }
 
             Config::set('sales.order_expiration_days', 30);
         } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: ' . $e->getMessage());
+            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
         }
     }
 
@@ -89,7 +89,7 @@ class CF4AdminPurchasesTest extends TestCase
 
         $total = 50; // 25 * 2
         $salePending = Sale::create([
-            'invoice_number' => 'INV' . now()->format('Ymd') . '0010',
+            'invoice_number' => 'INV'.now()->format('Ymd').'0010',
             'customer_id' => null,
             'client_id' => $client->user_id,
             'seller_id' => null,
@@ -115,7 +115,7 @@ class CF4AdminPurchasesTest extends TestCase
         ]);
 
         $saleCompleted = Sale::create([
-            'invoice_number' => 'INV' . now()->format('Ymd') . '0011',
+            'invoice_number' => 'INV'.now()->format('Ymd').'0011',
             'customer_id' => null,
             'client_id' => $client->user_id,
             'seller_id' => null,
@@ -142,15 +142,12 @@ class CF4AdminPurchasesTest extends TestCase
 
         $this->authenticateAdmin($usuarioAdmin, $adminUser);
 
-        $response = $this->get(route('sales.index'));
+        $response = $this->get(route('admin.orders.index'));
         $response->assertStatus(200);
 
-        // CF4 admin: debe mostrar la etiqueta de estado de retiro.
-        $response->assertSee('Pendiente de retiro', false);
-        // CF4 admin: debe listar productos del pedido.
+        $response->assertSee('Pendiente', false);
         $response->assertSee('Producto Admin', false);
-        // CF4 admin: debe mostrar completadas también.
-        $response->assertSee('Completado', false);
+        $response->assertSee('Confirmado', false);
     }
 
     public function test_admin_purchases_heartbeat_detects_new_web_cart_sale(): void
@@ -197,7 +194,7 @@ class CF4AdminPurchasesTest extends TestCase
         $total = 10;
 
         $sale1 = Sale::create([
-            'invoice_number' => 'INV' . now()->format('Ymd') . '0100',
+            'invoice_number' => 'INV'.now()->format('Ymd').'0100',
             'customer_id' => null,
             'client_id' => $client->user_id,
             'seller_id' => null,
@@ -224,13 +221,13 @@ class CF4AdminPurchasesTest extends TestCase
 
         $this->authenticateAdmin($usuarioAdmin, $adminUser);
 
-        $heartbeatRes1 = $this->getJson('/sales/history/heartbeat?since=' . $sale1->sale_id);
+        $heartbeatRes1 = $this->getJson('/sales/history/heartbeat?since='.$sale1->sale_id);
         $heartbeatRes1->assertStatus(200);
         $this->assertFalse($heartbeatRes1->json('hasNew'));
 
         // Crear una nueva compra para que heartbeat detecte cambios.
         $sale2 = Sale::create([
-            'invoice_number' => 'INV' . now()->format('Ymd') . '0101',
+            'invoice_number' => 'INV'.now()->format('Ymd').'0101',
             'customer_id' => null,
             'client_id' => $client->user_id,
             'seller_id' => null,
@@ -255,9 +252,8 @@ class CF4AdminPurchasesTest extends TestCase
             'total' => $total,
         ]);
 
-        $heartbeatRes2 = $this->getJson('/sales/history/heartbeat?since=' . $sale1->sale_id);
+        $heartbeatRes2 = $this->getJson('/sales/history/heartbeat?since='.$sale1->sale_id);
         $heartbeatRes2->assertStatus(200);
         $this->assertTrue($heartbeatRes2->json('hasNew'));
     }
 }
-

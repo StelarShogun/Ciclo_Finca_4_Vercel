@@ -99,6 +99,17 @@ body.guest-layout {
   padding-top: 80px;
 }
 
+/* Contenido principal: páginas que solo cargan este CSS (perfil, etc.) no tienen clients-page.css */
+.cliente-main > .container {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+  box-sizing: border-box;
+}
+
 /* ===================================================================
    5. BUTTONS (global)
    =================================================================== */
@@ -327,6 +338,45 @@ body.guest-layout {
   justify-content: space-between;
   height: 70px;
   gap: 30px;
+  position: relative;
+}
+
+/* Misma lógica que clients-page.css: sin esto el botón hamburguesa se ve en escritorio */
+.header-menu-toggle {
+  display: none;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--background-white);
+  color: var(--text-primary);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.header-menu-toggle i {
+  transition: transform 0.28s ease, opacity 0.2s ease;
+}
+
+.cliente-header.menu-open .header-menu-toggle i {
+  transform: rotate(90deg);
+}
+
+.header-menu-toggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-success-bg);
+}
+
+.header-menu-panel {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  min-width: 0;
 }
 
 /* Logo and home link */
@@ -1092,8 +1142,14 @@ body.guest-layout {
    11. MY PROFILE (profile.blade.php)
    =================================================================== */
 
-/* ── Wrapper ── */
-.profile-wrapper { padding: 40px 0 60px; }
+/* ── Wrapper: ancho limitado por .container ── */
+.profile-wrapper {
+    padding: 40px 0 60px;
+    max-width: none;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
 
 /* ── Hero ── */
 .profile-hero {
@@ -1106,23 +1162,6 @@ body.guest-layout {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     padding: 28px 32px;
     margin-bottom: 28px;
-}
-
-/* Contenedor del perfil: ancho máximo y centrado para mejor visualización */
-.profile-wrapper {
-    max-width: 1400px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* En pantallas pequeñas, el wrapper ocupa el ancho completo (sin max-width) 
-   para que el contenido se adapte al padding del contenedor */
-@media (max-width: 1024px) {
-    .profile-wrapper {
-        max-width: 100%;
-        margin-left: 0;
-        margin-right: 0;
-    }
 }
 
 .profile-avatar {
@@ -1188,11 +1227,17 @@ body.guest-layout {
 }
 .profile-alert-close:hover { opacity: 1; }
 
-/* ── Grid ── */
+/* ── Grid: móvil una columna; escritorio/tablet ancha dos columnas ── */
 .profile-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 24px;
+}
+
+@media (min-width: 640px) {
+    .profile-grid {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
 /* ── Cards ── */
@@ -1229,11 +1274,17 @@ body.guest-layout {
 /* ── Fields grid ── */
 .profile-fields {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 0 16px;
 }
 
 .profile-field-full { grid-column: 1 / -1; }
+
+@media (min-width: 640px) {
+    .profile-fields {
+        grid-template-columns: 1fr 1fr;
+    }
+}
 
 /* Campos en modo solo lectura */
 .form-control[readonly] {
@@ -1346,31 +1397,91 @@ body.guest-layout {
    =================================================================== */
 
 @media (max-width: 768px) {
-    /* Header responsive (ocultar nombre de usuario en móvil) */
     .user-trigger-name { display: none; }
 
-    /* Ajustes del header general */
     .header-content {
-        flex-wrap: wrap;
-        height: auto;
-        padding: 15px 0;
+        height: 82px;
+        padding: 10px 0;
+        gap: 10px;
+    }
+
+    .header-menu-toggle {
+        display: inline-flex;
+    }
+
+    .header-menu-panel {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1001;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 12px 20px 16px;
+        background: var(--background-white);
+        border-top: 1px solid var(--border-color);
+        box-shadow: var(--shadow-md);
+        opacity: 0;
+        transform: translateY(-8px);
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.24s ease, transform 0.24s ease, visibility 0.24s ease;
+    }
+
+    .cliente-header.menu-open .header-menu-panel {
+        opacity: 1;
+        transform: translateY(0);
+        visibility: visible;
+        pointer-events: auto;
     }
 
     .main-nav {
-        order: 3;
         width: 100%;
         justify-content: flex-start;
-        margin-top: 10px;
+        margin-top: 0;
+        flex-direction: column;
+        gap: 6px;
     }
 
-    .cliente-main { padding-top: 120px; }
+    .nav-link {
+        width: 100%;
+        justify-content: flex-start;
+    }
 
-    /* Perfil */
-    .profile-grid          { grid-template-columns: 1fr; }
-    .profile-fields        { grid-template-columns: 1fr; }
-    .profile-field-full    { grid-column: 1; }
-    .profile-hero          { flex-direction: column; text-align: center; }
-    .profile-hero-info h1  { white-space: normal; }
+    .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .cliente-main { padding-top: 102px; }
+}
+
+/* Perfil: layout “móvil” solo en pantallas estrechas (no compartir umbral con el header 768px) */
+@media (max-width: 639px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-field-full {
+        grid-column: 1;
+    }
+
+    .profile-hero {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .profile-hero-info h1 {
+        white-space: normal;
+    }
 }
 
 @media (max-width: 520px) {

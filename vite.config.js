@@ -20,6 +20,7 @@ const adminAssets = [
   'resources/css/admin/products/inventory.css',
   'resources/css/admin/products/products-pdf.css',
   'resources/css/admin/sales/sales.css',
+  'resources/css/admin/sales/invoice-document.css',
   'resources/css/admin/orders/orders.css',
   'resources/css/admin/suppliers/suppliers.css',
   'resources/css/admin/dashboard/dashboard.css',

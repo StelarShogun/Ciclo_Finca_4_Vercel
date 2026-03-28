@@ -1,88 +1,168 @@
 @extends('admin.layouts.sales')
 
-@section('Titulo pagina', 'Ventas - Ciclo Finca 4 Admin')
+@section('Titulo pagina', 'Factura ' . ($sale->invoice_number ?? $sale->sale_id) . ' — Ciclo Finca 4')
 
 @push('styles')
-    @vite(['resources/css/admin/sales/sales.css'])
+    @vite(['resources/css/admin/sales/invoice-document.css'])
 @endpush
 
-{{-- Standalone invoice view: no sidebar or sales JS needed --}}
 @section('aside')@endsection
 
+@php
+    $invoiceNo = $sale->invoice_number ?: ('#' . $sale->sale_id);
+    $customerName = $sale->client
+        ? trim($sale->client->name . ' ' . $sale->client->first_surname . ' ' . ($sale->client->second_surname ?: ''))
+        : ($sale->buyer_name ?: 'Mostrador / sin datos');
+    $customerEmail = $sale->client ? ($sale->client->gmail ?: null) : ($sale->buyer_email ?: null);
+    $paymentLabel = match ($sale->payment_method) {
+        'cash' => 'Efectivo',
+        'sinpe' => 'SINPE móvil',
+        'transfer' => 'Transferencia bancaria',
+        default => ucfirst((string) $sale->payment_method),
+    };
+    $statusLabel = match ($sale->status) {
+        'pending' => 'Pendiente',
+        'completed' => 'Confirmada',
+        'cancelled' => 'Cancelada',
+        'refunded' => 'Reembolsada',
+        default => ucfirst((string) $sale->status),
+    };
+    $orderSourceLabel = match ($sale->order_source) {
+        'web_cart' => 'Pedido en línea (carrito)',
+        'walk_in' => 'Mostrador',
+        default => $sale->order_source ? ucfirst(str_replace('_', ' ', (string) $sale->order_source)) : '—',
+    };
+    $fmtColones = fn ($n) => '₡' . number_format((float) $n, 0, ',', '.');
+@endphp
+
 @section('contenido')
-    <div class="invoice-box">
-        <table cellpadding="0" cellspacing="0">
+    <div class="invoice-doc">
 
-            {{-- Invoice header: company logo and invoice number / date --}}
-            <tr class="top">
-                <td colspan="2">
-                    <table>
+        <div class="invoice-doc__toolbar no-print">
+            <button type="button" class="btn-print" onclick="window.print()">
+                <i class="fas fa-print"></i> Imprimir
+            </button>
+            <a href="javascript:history.back()" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+
+        <article class="invoice-doc__sheet">
+            <div class="invoice-doc__accent" aria-hidden="true"></div>
+
+            <header class="invoice-doc__head">
+                <div>
+                    <div class="invoice-doc__logo">
+                        <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Finca 4">
+                    </div>
+                    <p class="invoice-doc__brand">Sarapiquí, Costa Rica · info@cicloperez.com</p>
+                </div>
+                <div class="invoice-doc__ref">
+                    <div class="invoice-doc__ref-label">Factura de venta</div>
+                    <div class="invoice-doc__ref-num">{{ $invoiceNo }}</div>
+                    <div class="invoice-doc__ref-meta">
+                        <div><strong>Pedido</strong> #{{ $sale->sale_id }}</div>
+                        <div><strong>Emitida</strong> {{ $sale->sale_date->format('d/m/Y H:i') }}</div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="invoice-doc__parties">
+                <div>
+                    <div class="invoice-doc__party-title">Emisor</div>
+                    <div class="invoice-doc__party-body">
+                        <strong>Ciclo Finca 4</strong>
+                        Sarapiquí, Costa Rica<br>
+                        info@cicloperez.com
+                    </div>
+                </div>
+                <div>
+                    <div class="invoice-doc__party-title">Cliente</div>
+                    <div class="invoice-doc__party-body">
+                        <strong>{{ $customerName }}</strong>
+                        @if($customerEmail)
+                            {{ $customerEmail }}
+                        @else
+                            <span style="color:var(--inv-muted, #64748b);">Sin correo registrado</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <div class="invoice-doc__chips">
+                <span class="invoice-doc__chip"><span>Estado</span> {{ $statusLabel }}</span>
+                <span class="invoice-doc__chip"><span>Pago</span> {{ $paymentLabel }}</span>
+                <span class="invoice-doc__chip"><span>Origen</span> {{ $orderSourceLabel }}</span>
+                @if($sale->payment_reference)
+                    <span class="invoice-doc__chip"><span>Ref. pago</span> {{ $sale->payment_reference }}</span>
+                @endif
+            </div>
+
+            <div class="invoice-doc__lines-wrap">
+                <h2 class="invoice-doc__lines-title">Detalle de productos</h2>
+                <table class="invoice-doc__table">
+                    <thead>
                         <tr>
-                            <td class="title">
-                                <img src="{{ asset('assets/images/logo.png') }}"
-                                     style="width:100%; max-width:300px;" alt="Logo">
-                            </td>
-                            <td>
-                                Factura: {{ $sale->invoice_number ?? '#' . $sale->sale_id }}<br>
-                                Fecha: {{ $sale->sale_date->format('d/m/Y') }}<br>
-                            </td>
+                            <th>#</th>
+                            <th>Descripción</th>
+                            <th class="col-money">Cant.</th>
+                            <th class="col-money">P. unit.</th>
+                            <th class="col-money">Total línea</th>
                         </tr>
-                    </table>
-                </td>
-            </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($sale->saleItems as $i => $item)
+                            <tr>
+                                <td class="col-num">{{ $i + 1 }}</td>
+                                <td class="col-desc">
+                                    <strong>{{ $item->product->name ?? 'Producto' }}</strong>
+                                    @if($item->product && $item->product->product_id)
+                                        <small>Ref. interna #{{ $item->product->product_id }}</small>
+                                    @endif
+                                </td>
+                                <td class="col-money">{{ $item->quantity }}</td>
+                                <td class="col-money">{{ $fmtColones($item->unit_price) }}</td>
+                                <td class="col-money">{{ $fmtColones($item->total) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
 
-            {{-- Sender and recipient contact info --}}
-            <tr class="information">
-                <td colspan="2">
-                    <table>
-                        <tr>
-                            {{-- Business details --}}
-                            <td>
-                                Ciclo Finca 4<br>
-                                Sarapiquí, Costa Rica<br>
-                                info@cicloperez.com
-                            </td>
-                            {{-- Registered client or walk-in buyer --}}
-                            <td>
-                                {{ $sale->client
-                                    ? trim($sale->client->name . ' ' . $sale->client->first_surname . ' ' . ($sale->client->second_surname ?: ''))
-                                    : ($sale->buyer_name ?: 'Mostrador / Sin datos') }}<br>
-                                {{ $sale->client ? ($sale->client->gmail ?: '') : ($sale->buyer_email ?: '') }}<br>
-                                N/A
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
+            <div class="invoice-doc__totals">
+                <div class="invoice-doc__totals-inner">
+                    <div class="invoice-doc__total-row">
+                        <span>Subtotal</span>
+                        <span>{{ $fmtColones($sale->subtotal) }}</span>
+                    </div>
+                    @if((float) $sale->discount > 0)
+                        <div class="invoice-doc__total-row">
+                            <span>Descuento</span>
+                            <span>−{{ $fmtColones($sale->discount) }}</span>
+                        </div>
+                    @endif
+                    <div class="invoice-doc__total-row">
+                        <span>IVA</span>
+                        <span>{{ $fmtColones($sale->iva) }}</span>
+                    </div>
+                    <div class="invoice-doc__total-row invoice-doc__total-row--grand">
+                        <span>Total</span>
+                        <span>{{ $fmtColones($sale->total) }}</span>
+                    </div>
+                </div>
+            </div>
 
-            {{-- Payment method summary --}}
-            <tr class="heading">
-                <td>Método de Pago</td>
-                <td>{{ ucfirst($sale->payment_method) }}</td>
-            </tr>
-            <tr class="details">
-                <td>{{ ucfirst($sale->payment_method) }}</td>
-                <td>{{ number_format($sale->total, 2) }}</td>
-            </tr>
+            @if($sale->notes)
+                <div class="invoice-doc__notes">
+                    <div class="invoice-doc__notes-title">Notas</div>
+                    {{ $sale->notes }}
+                </div>
+            @endif
 
-            {{-- Line items --}}
-            <tr class="heading">
-                <td>Producto</td>
-                <td>Precio</td>
-            </tr>
-            @foreach($sale->saleItems as $item)
-                <tr class="item">
-                    <td>{{ $item->product->name ?? 'N/A' }} (x{{ $item->quantity }})</td>
-                    <td>{{ number_format($item->total, 2) }}</td>
-                </tr>
-            @endforeach
-
-            {{-- Order totals --}}
-            <tr class="total"><td></td><td>Subtotal: {{ number_format($sale->subtotal, 2) }}</td></tr>
-            <tr class="total"><td></td><td>IVA: {{ number_format($sale->iva, 2) }}</td></tr>
-            <tr class="total"><td></td><td>Descuento: {{ number_format($sale->discount, 2) }}</td></tr>
-            <tr class="total"><td></td><td>Total: {{ number_format($sale->total, 2) }}</td></tr>
-
-        </table>
+            <footer class="invoice-doc__footer">
+                Documento generado por el sistema Ciclo Finca 4.
+                Conserve este comprobante para retiro en tienda o para su control interno.
+            </footer>
+        </article>
     </div>
 @endsection

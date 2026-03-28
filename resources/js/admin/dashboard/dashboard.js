@@ -6,6 +6,27 @@ class Dashboard {
         this.init();
     }
 
+    /** Evita desfase de día al parsear "YYYY-MM-DD" como UTC en el navegador */
+    parseChartDate(ymd) {
+        const s = String(ymd).slice(0, 10);
+        const [y, m, d] = s.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    }
+
+    formatSalesChartLabels(sales) {
+        const n = sales.length;
+        return sales.map(sale => {
+            const date = this.parseChartDate(sale.date);
+            if (n <= 7) {
+                return date.toLocaleDateString('es-ES', { weekday: 'short' });
+            }
+            if (n <= 16) {
+                return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+            }
+            return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric' });
+        });
+    }
+
     // Initialize dashboard components
     init() {
         this.updateCurrentTime();
@@ -229,11 +250,7 @@ class Dashboard {
             const data = await response.json();
             
             if (data.success && data.sales) {
-                // Format data for Chart.js line chart
-                const labels = data.sales.map(sale => {
-                    const date = new Date(sale.date);
-                    return date.toLocaleDateString('es-ES', { weekday: 'short' });
-                });
+                const labels = this.formatSalesChartLabels(data.sales);
                 const values = data.sales.map(sale => parseFloat(sale.total) || 0);
                 
                 return {
@@ -429,11 +446,7 @@ class Dashboard {
             const data = await response.json();
             
             if (data.success && data.sales) {
-                // Update chart with new data
-                const labels = data.sales.map(sale => {
-                    const date = new Date(sale.date);
-                    return date.toLocaleDateString('es-ES', { weekday: 'short' });
-                });
+                const labels = this.formatSalesChartLabels(data.sales);
                 const values = data.sales.map(sale => parseFloat(sale.total) || 0);
                 
                 this.salesChart.data.labels = labels;

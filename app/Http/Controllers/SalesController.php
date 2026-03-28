@@ -14,7 +14,10 @@ class SalesController extends Controller
 {
     public function index(Request $request)
     {
-        $status = $request->get('status');
+        $statusFilter = $request->query('status');
+        $salesStatusUi = in_array($statusFilter, ['cancelled', 'refunded', 'all'], true)
+            ? $statusFilter
+            : 'completed';
         $dateRange = $request->get('date_range');
         $paymentMethod = $request->get('payment_method');
         $search = $request->get('search');
@@ -23,9 +26,7 @@ class SalesController extends Controller
 
         $query->notExpired();
 
-        if ($status) {
-            $query->where('status', $status);
-        }
+        $this->applyVentasStatusScope($query, $statusFilter);
 
         if ($dateRange) {
             switch ($dateRange) {
@@ -66,24 +67,7 @@ class SalesController extends Controller
             });
         }
 
-        $sales = $query->orderBy('sale_date', 'desc')->paginate(15);
-
-        // Include null order_source to remain compatible with records created before the column was added
-        $basePurchasesQuery = Sale::query()
-            ->whereIn('status', ['pending', 'completed'])
-            ->where(function ($q) {
-                $q->where('order_source', 'web_cart')
-                    ->orWhereNull('order_source');
-            })
-            ->notExpired();
-
-        $purchases = (clone $basePurchasesQuery)
-            ->with(['client', 'saleItems.product'])
-            ->orderBy('sale_date', 'desc')
-            ->paginate(15, ['*'], 'purchases_page');
-
-        // Used by the heartbeat endpoint to detect new purchases without a full page reload
-        $latestPurchaseSaleId = (clone $basePurchasesQuery)->max('sale_id') ?? 0;
+        $sales = $query->orderBy('sale_date', 'desc')->paginate(15)->withQueryString();
 
         $dailySales = $this->calculateDailySales();
         $dailySalesTrend = $this->calculateDailySalesTrend();
@@ -94,14 +78,13 @@ class SalesController extends Controller
 
         return view('admin.sales.index', compact(
             'sales',
-            'purchases',
-            'latestPurchaseSaleId',
             'dailySales',
             'dailySalesTrend',
             'dailyTransactions',
             'dailyTransactionsTrend',
             'refunds',
-            'refundsTrend'
+            'refundsTrend',
+            'salesStatusUi'
         ));
     }
 
@@ -513,14 +496,14 @@ class SalesController extends Controller
     {
         $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
 
-        return view('sales.print', compact('sale'));
+        return view('admin.sales.print', compact('sale'));
     }
 
     public function invoice($id)
     {
         $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
 
-        return view('sales.invoice', compact('sale'));
+        return view('admin.sales.invoice', compact('sale'));
     }
 
     public function export(Request $request)
@@ -529,7 +512,7 @@ class SalesController extends Controller
             $sales = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])
                 ->when($request->start_date, fn ($q) => $q->whereDate('sale_date', '>=', $request->start_date))
                 ->when($request->end_date, fn ($q) => $q->whereDate('sale_date', '<=', $request->end_date))
-                ->when($request->status, fn ($q) => $q->where('status', $request->status))
+                ->tap(fn ($q) => $this->applyVentasStatusScope($q, $request->get('status')))
                 ->when($request->payment_method, fn ($q) => $q->where('payment_method', $request->payment_method))
                 ->when($request->search, function ($q) use ($request) {
                     $search = $request->search;
@@ -597,6 +580,29 @@ class SalesController extends Controller
                 'message' => 'Error exporting sales: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Ventas (módulo admin): solo estados cerrados — pendientes se gestionan en Pedidos.
+     * Por defecto: confirmadas (completed). Valores: completed, cancelled, refunded, all.
+     */
+    private function applyVentasStatusScope($query, ?string $statusParam): void
+    {
+        $closed = ['completed', 'cancelled', 'refunded'];
+
+        if ($statusParam === 'all') {
+            $query->whereIn('status', $closed);
+
+            return;
+        }
+
+        if ($statusParam !== null && $statusParam !== '' && in_array($statusParam, $closed, true)) {
+            $query->where('status', $statusParam);
+
+            return;
+        }
+
+        $query->where('status', 'completed');
     }
 
     private function calculateDailySales()
