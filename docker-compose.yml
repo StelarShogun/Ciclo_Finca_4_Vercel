@@ -4,6 +4,7 @@ services:
     container_name: laravel_app_ciclo
     ports:
       - "8080:80"
+      - "5173:5173" 
     volumes:
       - .:/var/www/html
     environment:
@@ -24,7 +25,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: root
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - dbdata_ciclo:/var/lib/mysql
 
@@ -37,7 +38,7 @@ services:
       PMA_USER: ${DB_USERNAME}
       PMA_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "8081:80"
+      - "8082:80"
     depends_on:
       - db_ciclo
 

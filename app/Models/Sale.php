@@ -14,7 +14,9 @@ class Sale extends Model
     protected $fillable = [
         'invoice_number',
         'customer_id',
+        'client_id',
         'seller_id',
+        'seller_admin_id',
         'subtotal',
         'iva',
         'discount',
@@ -24,29 +26,41 @@ class Sale extends Model
         'status',
         'notes',
         'sale_date',
+        'buyer_name',
+        'buyer_email',
+        'order_source',
     ];
 
     protected $casts = [
-        'sale_date' => 'datetime',
         'subtotal' => 'decimal:2',
         'iva' => 'decimal:2',
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
     ];
 
+    // Converts sale_date from UTC to the application timezone for consistent display
+    public function getSaleDateAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+
+        return \Carbon\Carbon::parse($value, 'UTC')->setTimezone(config('app.timezone'));
+    }
+
     public function saleItems(): HasMany
     {
         return $this->hasMany(SaleItem::class, 'sale_id', 'sale_id');
     }
 
-    public function customer(): BelongsTo
+    public function sellerAdmin(): BelongsTo
     {
-        return $this->belongsTo(Usuario::class, 'customer_id', 'usuario_id');
+        return $this->belongsTo(AdminUser::class, 'seller_admin_id', 'user_id');
     }
 
-    public function seller(): BelongsTo
+    public function client(): BelongsTo
     {
-        return $this->belongsTo(Usuario::class, 'seller_id', 'usuario_id');
+        return $this->belongsTo(Client::class, 'client_id', 'user_id');
     }
 
     public function scopePending($query)
@@ -64,6 +78,7 @@ class Sale extends Model
         return $query->whereDate('sale_date', $date);
     }
 
+    // Sequential suffix is based on today's count, so numbers reset each day
     public function generateInvoiceNumber(): string
     {
         $prefix = 'INV';
@@ -80,5 +95,40 @@ class Sale extends Model
     public function canBeCancelled(): bool
     {
         return in_array($this->status, ['pending', 'completed']);
+    }
+
+    public static function getOrderExpirationDays(): int
+    {
+        return (int) config('sales.order_expiration_days', 30);
+    }
+
+    public function getExpiresAtAttribute(): \Carbon\Carbon
+    {
+        $days = static::getOrderExpirationDays();
+        return $this->sale_date->copy()->addDays($days);
+    }
+
+    public function getDaysRemainingUntilExpirationAttribute(): int
+    {
+        $expiresAt = $this->expires_at;
+        $now = now();
+        if ($expiresAt <= $now) {
+            return 0;
+        }
+        return (int) $now->diffInDays($expiresAt, false);
+    }
+
+    public function getIsExpiryWarningAttribute(): bool
+    {
+        $days = $this->days_remaining_until_expiration;
+        // Triggers when at or below the alert threshold but not yet expired
+        return $days <= (int) config('sales.expiry_alert_days', 2) && $days > 0;
+    }
+
+    public function scopeNotExpired($query)
+    {
+        $days = static::getOrderExpirationDays();
+        $limitDate = now()->subDays($days);
+        return $query->where('sale_date', '>=', $limitDate);
     }
 }

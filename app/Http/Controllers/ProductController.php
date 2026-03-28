@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Supplier;
 use App\Http\Requests\StoreProductRequest;
@@ -14,7 +15,6 @@ use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class ProductController extends Controller
 {
-
     public function index(Request $request)
     {
         if ($request->wantsJson() || $request->ajax()) {
@@ -28,13 +28,13 @@ class ProductController extends Controller
         return $this->inventory($request);
     }
 
-
     public function store(StoreProductRequest $request)
     {
         try {
-            // Transacción para crear producto
             $product = DB::transaction(function () use ($request) {
                 $data = $request->validated();
+                $brandId = $data['brand_id'];
+                unset($data['brand_id']);
 
                 if ($request->hasFile('image')) {
                     $imageName = time().'.'.$request->image->extension();
@@ -42,25 +42,41 @@ class ProductController extends Controller
                     $data['image'] = $imageName;
                 }
 
-                return Product::create($data);
+                if ($request->hasFile('images')) {
+                    $paths = [];
+                    foreach ($request->file('images') as $i => $file) {
+                        $name = time().'_'.$i.'.'.$file->extension();
+                        $file->move(public_path('assets/images/products'), $name);
+                        $paths[] = $name;
+                    }
+                    $data['images'] = $paths;
+                    // Use the first gallery image as the main thumbnail when none was uploaded
+                    if (empty($data['image']) && !empty($paths)) {
+                        $data['image'] = $paths[0];
+                    }
+                }
+
+                $product = Product::create($data);
+                $product->brands()->attach($brandId);
+                return $product;
             });
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Product created successfully',
-                    'data' => $product->load(['category', 'supplier'])
+                    'message' => 'Producto creado con éxito',
+                    'data' => $product->load(['category.parent', 'supplier'])
                 ]);
             }
 
-            return redirect()->route('inventory')->with('status','Product created successfully');
+            return redirect()->route('inventory')->with('status', 'Producto creado con éxito');
         } catch (ValidationException $e) {
             $errors = $e->errors();
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'errors' => $errors,
-                    'message' => 'Please fix the errors in the form',
+                    'message' => 'Revisa los errores en el formulario.',
                 ], 422);
             }
             return redirect()->back()->withErrors($errors)->withInput();
@@ -68,22 +84,24 @@ class ProductController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'The product could not be created. Please try again.',
+                    'message' => 'No se pudo crear el producto. Inténtalo de nuevo.',
                 ], 500);
             }
-            return redirect()->back()->with('error', 'The product could not be created. Please try again.')->withInput();
+            return redirect()->back()->with('error', 'No se pudo crear el producto. Inténtalo de nuevo.')->withInput();
         }
     }
 
     public function show($id)
     {
         try {
-            $product = Product::with(['category','supplier'])->findOrFail($id);
+            $product = Product::with(['category.parent','supplier','brands'])->findOrFail($id);
             
             if (request()->wantsJson() || request()->ajax()) {
+                $productData = $product->toArray();
+                $productData['brand_id'] = $product->brands->first()?->id;
                 return response()->json([
                     'success' => true,
-                    'data' => $product
+                    'data' => $productData
                 ]);
             }
             
@@ -92,12 +110,12 @@ class ProductController extends Controller
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Product not found',
+                    'message' => 'Producto no encontrado',
                     'error' => $e->getMessage()
                 ], 404);
             }
             
-            return redirect()->route('inventory')->with('error', 'Product not found');
+            return redirect()->route('inventory')->with('error', 'Producto no encontrado');
         }
     }
 
@@ -107,37 +125,57 @@ class ProductController extends Controller
             $product = DB::transaction(function() use ($request, $id) {
                 $p = Product::findOrFail($id);
                 $data = $request->validated();
+                $brandId = $data['brand_id'];
+                unset($data['brand_id']);
 
                 if ($request->hasFile('image')) {
-                    // Eliminar imagen anterior si existe
+                    // Delete the old image file before storing the new one
                     if ($p->image && file_exists(public_path('assets/images/products/' . $p->image))) {
-                        unlink(public_path('assets/images/products/' . $p->image));
+                        @unlink(public_path('assets/images/products/' . $p->image));
                     }
                     $imageName = time().'.'.$request->image->extension();
                     $request->image->move(public_path('assets/images/products'), $imageName);
                     $data['image'] = $imageName;
                 }
 
+                if ($request->hasFile('images')) {
+                    // Remove all existing gallery images before saving the new set
+                    $oldImages = $p->images ?? [];
+                    foreach (is_array($oldImages) ? $oldImages : [] as $old) {
+                        if ($old && file_exists(public_path('assets/images/products/' . $old))) {
+                            @unlink(public_path('assets/images/products/' . $old));
+                        }
+                    }
+                    $paths = [];
+                    foreach ($request->file('images') as $i => $file) {
+                        $name = time().'_'.$i.'.'.$file->extension();
+                        $file->move(public_path('assets/images/products'), $name);
+                        $paths[] = $name;
+                    }
+                    $data['images'] = $paths;
+                }
+
                 $p->update($data);
+                $p->brands()->sync([$brandId]);
                 return $p;
             });
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Product updated successfully',
-                    'data' => $product->load(['category', 'supplier'])
+                    'message' => 'Producto actualizado con éxito',
+                    'data' => $product->load(['category.parent', 'supplier'])
                 ]);
             }
 
-            return redirect()->route('inventory')->with('status','Product updated successfully');
+            return redirect()->route('inventory')->with('status','Producto actualizado con éxito');
         } catch (ValidationException $e) {
             $errors = $e->errors();
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'errors' => $errors,
-                    'message' => 'Please fix the errors in the form',
+                    'message' => 'Revisa los errores en el formulario.',
                 ], 422);
             }
             return redirect()->back()->withErrors($errors)->withInput();
@@ -151,10 +189,10 @@ class ProductController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'The product could not be updated. Please try again.',
+                    'message' => 'No se pudo actualizar el producto. Inténtalo de nuevo.',
                 ], 500);
             }
-            return redirect()->back()->with('error', 'The product could not be updated. Please try again.')->withInput();
+            return redirect()->back()->with('error', 'No se pudo actualizar el producto. Inténtalo de nuevo.')->withInput();
         }
     }
 
@@ -163,6 +201,7 @@ class ProductController extends Controller
         try {
             DB::transaction(function() use ($id) {
                 $p = Product::findOrFail($id);
+                // Soft-delete by marking inactive rather than removing the record
                 $p->update(['status' => 'inactive']);
             });
 
@@ -189,7 +228,7 @@ class ProductController extends Controller
         try {
             DB::transaction(function() use ($id) {
                 $p = Product::findOrFail($id);
-                $p->delete(); // Eliminación definitiva
+                $p->delete();
             });
 
             if (request()->wantsJson() || request()->ajax()) {
@@ -223,9 +262,8 @@ class ProductController extends Controller
 
     public function inventory(Request $request)
     {
-        $query = Product::with(['category', 'supplier']);
+        $query = Product::with(['category.parent', 'supplier']);
 
-        // Aplicar filtros
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
@@ -233,7 +271,18 @@ class ProductController extends Controller
             });
         }
 
-        if ($request->filled('category_id')) {
+        if ($request->filled('subcategory_id')) {
+            $query->where('category_id', $request->subcategory_id);
+        } elseif ($request->filled('parent_category_id')) {
+            $canonicalParentId = (int) $request->parent_category_id;
+            $physicalParentIds = Category::physicalRootIdsForCanonicalParent($canonicalParentId);
+            $childIds = Category::whereIn('parent_category_id', $physicalParentIds)->pluck('category_id');
+            $query->where(function ($q) use ($physicalParentIds, $childIds) {
+                $q->whereIn('category_id', $physicalParentIds)
+                    ->orWhereIn('category_id', $childIds);
+            });
+        } elseif ($request->filled('category_id')) {
+            // Backward compatibility with previous single-category filter.
             $query->where('category_id', $request->category_id);
         }
 
@@ -255,21 +304,20 @@ class ProductController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Ordenamiento
         $sort = $request->get('sort', 'product_id');
         $order = $request->get('order', 'desc');
         $query->orderBy($sort, $order);
 
-        // Paginación
         $perPage = $request->get('per_page', 10);
         $paginator = $query->paginate($perPage);
 
-        // Transformar datos para la vista
+        // Normalize raw Eloquent models into a consistent shape expected by the view
         $products = $paginator->getCollection()->map(function($product) {
             return (object)[
                 'product_id' => $product->product_id,
                 'id' => $product->product_id,
                 'name' => $product->name,
+                // SKU is derived from the primary key since the table has no dedicated column
                 'sku' => 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT),
                 'image' => $product->image ?? 'default.png',
                 'category' => (object)['name' => $product->category->name ?? 'Uncategorized'],
@@ -283,13 +331,22 @@ class ProductController extends Controller
             ];
         });
 
-        // Obtener categorías para el filtro
-        $categories = Category::orderBy('name')->get(['category_id', 'name']);
+        // Raíces deduplicadas por nombre (filtro "Categoría") + árbol para selects dependientes en JS
+        $categories = Category::query()
+            ->selectRaw('MIN(category_id) as category_id, name')
+            ->whereNull('parent_category_id')
+            ->groupBy('name')
+            ->orderBy('name')
+            ->get();
 
-        return view('products.inventory', [
+        $subcategoriesByParent = Category::subcategoriesGroupedByCanonicalParent();
+
+        return view('admin.products.inventory', [
             'products' => $products,
             'paginator' => $paginator,
             'categories' => $categories,
+            'subcategoriesByParent' => $subcategoriesByParent,
+            'brands' => Brand::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -342,7 +399,6 @@ class ProductController extends Controller
             });
             $filename = 'products_'.date('Ymd_His').'.json';
             return response()->streamDownload(function() use ($payload){
-                // Usar print en lugar de echo para mejor control en closures
                 print($payload->toJson(JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT));
             }, $filename, ['Content-Type' => 'application/json; charset=UTF-8']);
         }
@@ -350,7 +406,6 @@ class ProductController extends Controller
         if ($format === 'pdf') {
             $filename = 'products_'.date('Ymd_His').'.pdf';
             
-            // Preparar datos para la vista PDF
             $products = $data->map(function($p) {
                 return (object)[
                     'id' => $p->product_id,
@@ -376,11 +431,11 @@ class ProductController extends Controller
             return $pdf->download($filename);
         }
     
-        // CSV por defecto
+        // Default to CSV export
         $filename = 'products_'.date('Ymd_His').'.csv';
         return response()->streamDownload(function() use ($data){
             $out = fopen('php://output', 'w');
-            fwrite($out, "\xEF\xBB\xBF"); // BOM UTF-8
+            fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for correct Excel rendering
             fputcsv($out, ['ID','Name','Description','Image','Category','Supplier','Purchase Price','Sale Price','Stock','Minimum','Status','Created']);
             foreach ($data as $p) {
                 fputcsv($out, [
@@ -410,7 +465,6 @@ class ProductController extends Controller
 
         $file = $request->file('import_file');
         
-        // Detectar automáticamente el formato del archivo
         $format = $this->detectFileFormat($file);
         
         if (!$format) {
@@ -433,33 +487,23 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * Detecta automáticamente el formato del archivo basándose en la extensión y el contenido
-     */
     private function detectFileFormat($file)
     {
         $extension = strtolower($file->getClientOriginalExtension());
         $mimeType = $file->getMimeType();
         
-        // Primero intentar detectar por extensión
-        if (in_array($extension, ['xml'])) {
-            return 'xml';
-        } elseif (in_array($extension, ['csv', 'txt'])) {
-            return 'csv';
-        } elseif (in_array($extension, ['json'])) {
-            return 'json';
-        }
+        if (in_array($extension, ['xml'])) return 'xml';
+        if (in_array($extension, ['csv', 'txt'])) return 'csv';
+        if (in_array($extension, ['json'])) return 'json';
         
-        // Si no se detecta por extensión, intentar por contenido
+        // Fall back to content sniffing when the extension is ambiguous
         $content = file_get_contents($file->getPathname());
         $trimmedContent = trim($content);
         
-        // Detectar XML por el inicio del contenido
         if (preg_match('/^<\?xml/i', $trimmedContent) || preg_match('/^<[a-zA-Z]/', $trimmedContent)) {
             return 'xml';
         }
         
-        // Detectar JSON por el inicio del contenido
         if (preg_match('/^[\s]*[\[\{]/', $trimmedContent)) {
             $decoded = json_decode($trimmedContent, true);
             if (json_last_error() === JSON_ERROR_NONE) {
@@ -467,24 +511,23 @@ class ProductController extends Controller
             }
         }
         
-        // Si tiene extensión txt o csv, asumir CSV
         if (in_array($extension, ['txt', 'csv']) || $mimeType === 'text/csv' || $mimeType === 'text/plain') {
             return 'csv';
         }
         
         return null;
     }
+
     private function importXml($file)
     {
         try {
             $xmlContent = file_get_contents($file->getPathname());
             
-            // Validar que el contenido no esté vacío
             if (empty(trim($xmlContent))) {
                 throw new \Exception('El archivo XML está vacío o no se pudo leer correctamente.');
             }
             
-            // Validar que el contenido sea XML válido
+            // Capture libxml errors internally instead of emitting PHP warnings
             libxml_use_internal_errors(true);
             $xml = new \SimpleXMLElement($xmlContent);
             $xmlErrors = libxml_get_errors();
@@ -501,14 +544,12 @@ class ProductController extends Controller
         
             DB::beginTransaction();
         
-            // Verificar que existan productos en el XML
             if (!isset($xml->producto) || count($xml->producto) == 0) {
                 throw new \Exception('No se encontraron productos en el archivo XML.');
             }
         
             foreach ($xml->producto as $productoXml) {
                 try {
-                    // Validar que los campos requeridos existan
                     $requiredFields = ['nombre', 'categoria', 'proveedor', 'precio_compra', 'precio_venta', 'stock_actual', 'stock_minimo'];
                     foreach ($requiredFields as $field) {
                         if (!isset($productoXml->$field)) {
@@ -538,7 +579,7 @@ class ProductController extends Controller
                 }
             }
         
-            // Si se presentaron errores, se revierte toda la importación
+            // Roll back the entire import if any record failed to keep the dataset consistent
             if (!empty($errores)) {
                 DB::rollBack();
             } else {
@@ -556,6 +597,7 @@ class ProductController extends Controller
     private function importCsv($file)
     {
         $csvData = array_map('str_getcsv', file($file->getPathname()));
+        // First row is treated as the header to build associative arrays per product
         $headers = array_shift($csvData);
         $importados = 0;
         $errores = [];
@@ -621,19 +663,16 @@ class ProductController extends Controller
     private function createProductFromData($data)
     {
         try {
-            // Buscar categoría por nombre
             $category = Category::where('name', $data['categoria'])->first();
             if (!$category) {
                 return ['success' => false, 'error' => "Category not found: " . $data['categoria']];
             }
 
-            // Buscar proveedor por nombre
             $supplier = Supplier::where('name', $data['proveedor'])->first();
             if (!$supplier) {
                 return ['success' => false, 'error' => "Supplier not found: " . $data['proveedor']];
             }
 
-            // Crear producto
             Product::create([
                 'category_id' => $category->category_id,
                 'supplier_id' => $supplier->supplier_id,
@@ -643,6 +682,7 @@ class ProductController extends Controller
                 'sale_price' => $data['precio_venta'],
                 'stock_current' => $data['stock_actual'],
                 'stock_minimum' => $data['stock_minimo'],
+                // Translate Spanish status values from imported files to internal English enums
                 'status' => $this->mapLegacyStatus($data['estado'] ?? 'activo'),
             ]);
 
@@ -656,6 +696,7 @@ class ProductController extends Controller
 
     private function mapLegacyStatus(string $status): string
     {
+        // Maps Spanish status labels used in import files to the internal English enum values
         return match (strtolower($status)) {
             'activo' => 'active',
             'inactivo' => 'inactive',
@@ -680,6 +721,7 @@ class ProductController extends Controller
                     $formattedErrors[] = $error;
                 }
             }
+            // Cap the displayed error list at 5 to keep the flash message readable
             $mensaje .= implode('; ', array_slice($formattedErrors, 0, 5));
             if (count($formattedErrors) > 5) {
                 $mensaje .= " y " . (count($formattedErrors) - 5) . " más...";

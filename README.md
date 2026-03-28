@@ -1,113 +1,61 @@
-# Ciclo Finca 4 — Sistema de Gestión
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-Aplicación web full-stack para la gestión de una tienda de ciclismo: catálogo público, carrito de compras, ventas, inventario, proveedores y panel de administración.
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
----
+## About Laravel
 
-## a. Descripción del sistema
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-**Ciclo Finca 4** es un sistema de gestión que permite:
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-- **Lado público (clientes):**
-  - Ver inicio y catálogo de productos (bicicletas, componentes, accesorios, indumentaria, herramientas, seguridad, nutrición).
-  - Ver detalle de producto y agregar al carrito.
-  - Gestionar carrito (agregar, actualizar cantidades, eliminar).
-  - Iniciar sesión con correo/contraseña o con Google/Facebook.
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-- **Lado administración (requiere autenticación):**
-  - **Dashboard** con datos resumidos y gráficos, con exportación de reportes.
-  - **Usuarios:** CRUD de usuarios (solo administradores).
-  - **Productos e inventario:** alta, edición, listado, importación/exportación y eliminación.
-  - **Proveedores:** gestión de proveedores.
-  - **Ventas:** registro de ventas, completar, cancelar, reembolsar, imprimir e imprimir factura (PDF) y exportar.
+## Learning Laravel
 
-La aplicación está desplegada como un único proyecto (frontend y backend en la misma URL).
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
----
+You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
 
-## b. Instrucciones básicas de uso
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-### Requisitos
+## Laravel Sponsors
 
-- **PHP** ≥ 8.2  
-- **Composer**  
-- **Node.js** y **npm** (para Vite y recursos frontend)  
-- **MySQL** (o compatible; en producción se usa Aiven)
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-### Instalación local
+### Premium Partners
 
-1. Clonar el repositorio y entrar al directorio del proyecto.
+- **[Vehikl](https://vehikl.com)**
+- **[Tighten Co.](https://tighten.co)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Redberry](https://redberry.international/laravel-development)**
+- **[Active Logic](https://activelogic.com)**
 
-2. Instalar dependencias PHP y generar `.env`:
-   ```bash
-   composer install
-   cp .env.example .env
-   php artisan key:generate
-   ```
+## Contributing
 
-3. Configurar base de datos en `.env`:
-   ```env
-   DB_CONNECTION=mysql
-   DB_HOST=tu_host
-   DB_PORT=3306
-   DB_DATABASE=tu_base
-   DB_USERNAME=tu_usuario
-   DB_PASSWORD=tu_contraseña
-   ```
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-4. Ejecutar migraciones y seeders (opcional):
-   ```bash
-   php artisan migrate
-   php artisan db:seed
-   ```
+## Code of Conduct
 
-5. Instalar dependencias frontend y compilar:
-   ```bash
-   npm install
-   npm run build
-   ```
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
-6. Iniciar el servidor de desarrollo:
-   ```bash
-   php artisan serve
-   ```
-   Opcional (servidor + cola + logs + Vite):
-   ```bash
-   composer dev
-   ```
+## Security Vulnerabilities
 
-La aplicación quedará disponible en `http://localhost:8000` (o el puerto que indique `php artisan serve`).
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
-### Uso rápido
+## License
 
-- **Público:** ir a la raíz `/` para inicio, `/catalog` para catálogo, `/cart` para el carrito, `/login` para iniciar sesión.
-- **Admin:** tras iniciar sesión como administrador, acceder a `/dashboard`, `/inventory`, `/products`, `/suppliers`, `/sales` según permisos.
-
----
-
-## c. Tecnologías utilizadas
-
-| Área            | Tecnología |
-|-----------------|------------|
-| Backend         | PHP 8.2, Laravel 12 |
-| Base de datos   | MySQL (Aiven en producción) |
-| Frontend        | Blade, Tailwind CSS 4, Vite 7 |
-| HTTP / UI       | Axios, SweetAlert2 |
-| PDF             | Laravel DomPDF (facturas e informes) |
-| Autenticación   | Laravel Auth, Laravel Socialite (Google, Facebook) |
-| Herramientas    | Laravel Tinker, PHPUnit, Laravel Pint |
-
----
-
-## d. Enlaces al frontend y backend desplegados
-
-La aplicación se despliega como **una sola URL** (frontend y backend en el mismo servicio):
-
-| Entorno   | URL |
-|-----------|-----|
-| **Aplicación desplegada (frontend + backend)** | [https://ciclo-finca-4-app-4ccw.onrender.com](https://ciclo-finca-4-app-4ccw.onrender.com) |
-
-- **Frontend:** misma URL (interfaz pública y panel de administración).
-- **Backend/API:** misma URL; los endpoints de API y rutas web están bajo ese dominio.
-
----
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

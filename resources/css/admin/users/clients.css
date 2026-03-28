@@ -1,0 +1,286 @@
+@import "../variables-reset.css";
+@import "../utilities.css";
+@import "../sidebar.css";
+
+/* ============================================================
+    1. MAIN LAYOUT
+    ============================================================ */
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    padding-left: var(--sidebar-width);
+    box-sizing: border-box;
+}
+
+.admin-main {
+    flex: 1;
+    margin-left: 0;
+    min-height: 100vh;
+    padding: 1rem 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    overflow-x: auto;
+    transition: padding-left 0.2s ease;
+}
+
+/* ============================================================
+    2. BUTTONS
+    ============================================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.95rem;
+    font-weight: 500;
+    font-family: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:focus {
+    box-shadow: 0 0 0 3px rgba(46,125,50,.30);
+    outline: none;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.20), transparent);
+    transition: left 0.5s;
+}
+.btn:hover::before { left: 100%; }
+
+.btn-primary  { background: var(--color-primary);   color: #fff; border: 2px solid var(--color-primary);   }
+.btn-secondary{ background: var(--color-secondary); color: #fff; border: 2px solid var(--color-secondary); }
+.btn-success  { background: var(--color-success);   color: #fff; border: 2px solid var(--color-success);   }
+.btn-danger   { background: var(--color-danger);    color: #fff; border: 2px solid var(--color-danger);    }
+.btn-warning  { background: var(--color-warning);   color: #fff; border: 2px solid var(--color-warning);   }
+.btn-info     { background: var(--color-info);      color: #fff; border: 2px solid var(--color-info);      }
+
+.btn-primary:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(46,125,50,.30); }
+.btn-secondary:hover:not(:disabled) { background: #37474f; border-color: #37474f; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(69,90,100,.30); }
+.btn-success:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(46,125,50,.30); }
+.btn-danger:hover:not(:disabled)    { background: #b71c1c; border-color: #b71c1c; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(211,47,47,.30); }
+
+.btn-sm { padding: 6px 12px;  font-size: 0.85rem; }
+
+/* Specific buttons for ban/unban */
+.btn-ban,
+.btn-unban {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    color: #fff;
+}
+
+.btn-ban {
+    background: var(--color-danger);
+}
+
+.btn-unban {
+    background: var(--color-success);
+}
+
+.btn-ban:hover,
+.btn-unban:hover {
+    transform: translateY(-2px);
+    filter: brightness(0.92);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================
+    3. PAGE HEADER
+    ============================================================ */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    border-radius: 12px;
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.page-header p {
+    margin: 5px 0 0 0;
+    opacity: .9;
+    font-size: 1.1rem;
+    color: white;
+}
+
+.page-header-actions {
+    background: rgba(255,255,255,0.2);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius-large);
+    backdrop-filter: blur(4px);
+}
+
+.clients-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: white;
+    font-size: 1rem;
+}
+
+.clients-count-badge i {
+    font-size: 1.2rem;
+}
+
+/* ============================================================
+    4. CLIENTS CONTAINER AND TABLE
+    ============================================================ */
+.clients-container {
+    background: var(--background-white);
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+}
+
+.clients-table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.clients-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.clients-table th {
+    background: var(--color-light);
+    padding: 15px 20px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-dark);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.clients-table td {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.clients-table tbody tr:hover {
+    background: var(--color-light);
+}
+
+/* ============================================================
+    5. STATUS BADGES
+    ============================================================ */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.status-active {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.status-badge.status-banned {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+/* ============================================================
+    6. EMPTY STATE
+    ============================================================ */
+.clients-empty {
+    text-align: center;
+    padding: 3rem !important;
+    color: var(--color-muted);
+    font-style: italic;
+}
+
+/* ============================================================
+    7. RESPONSIVE
+    ============================================================ */
+@media (max-width: 1024px) {
+    :root { --sidebar-width: 220px; }
+    .admin-layout { padding-left: var(--sidebar-width); }
+}
+
+@media (max-width: 768px) {
+    :root { --sidebar-width: 200px; }
+    .admin-layout  { padding-left: var(--sidebar-width); }
+    .admin-main    { padding: 0.75rem; }
+
+    .page-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+
+    .clients-table th,
+    .clients-table td {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    .btn-ban,
+    .btn-unban {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .clients-container {
+        border-radius: var(--border-radius);
+    }
+
+    .clients-table th,
+    .clients-table td {
+        padding: 8px;
+    }
+
+    .btn-ban,
+    .btn-unban {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+    }
+}

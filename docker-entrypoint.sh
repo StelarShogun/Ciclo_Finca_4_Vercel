@@ -2,24 +2,31 @@
 
 cd /var/www/html
 
+# Crear directorios necesarios
 mkdir -p storage/framework/{sessions,cache,views}
 mkdir -p storage/logs
 mkdir -p bootstrap/cache
 
+# Crear .env si no existe
 if [ ! -f .env ]; then
     cp .env.example .env
     echo ">>> .env creado desde .env.example"
 fi
 
-if [ -z "$APP_KEY" ]; then
+# Generar APP_KEY si no existe
+if ! grep -q "APP_KEY=" .env || grep -q "APP_KEY=$" .env; then
     php artisan key:generate --force
     echo ">>> APP_KEY generada"
 fi
 
-php artisan config:cache  || echo "WARN: config:cache falló"
-php artisan view:cache    || echo "WARN: view:cache falló"
+# Laravel cache
+php artisan config:clear
+php artisan view:clear
+
+# Storage link
 php artisan storage:link --force 2>/dev/null || true
 
+# Permisos
 chown -R www-data:www-data storage bootstrap/cache
 
 echo ">>> Iniciando Apache..."

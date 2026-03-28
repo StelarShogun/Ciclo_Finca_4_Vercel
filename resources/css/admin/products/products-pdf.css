@@ -1,0 +1,231 @@
+@import "../variables-reset.css";
+@import "../utilities.css";
+@import "../sidebar.css";
+
+/* ============================================================
+    1. PDF-SPECIFIC VARIABLES
+    ============================================================ */
+:root {
+    --color-header-bg: #2c5530;
+    --font-family: 'DejaVu Sans', sans-serif;
+}
+
+/* ============================================================
+    2. BASE STYLES FOR PDF
+    ============================================================ */
+body {
+    font-family: var(--font-family);
+    font-size: 12px;
+    line-height: 1.4;
+    background: white;
+    margin: 0;
+    padding: 20px;
+}
+
+/* ============================================================
+    3. HEADER
+    ============================================================ */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--color-header-bg);
+    padding-bottom: 20px;
+}
+
+.header h1 {
+    color: var(--color-header-bg);
+    font-size: 24px;
+    margin: 0 0 10px 0;
+    font-weight: bold;
+}
+
+.header .subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin: 0;
+}
+
+/* ============================================================
+    4. INFORMATION SECTION
+    ============================================================ */
+.info-section {
+    margin-bottom: 25px;
+    background-color: var(--background-light);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--color-primary);
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.info-label {
+    font-weight: bold;
+    color: var(--color-primary);
+}
+
+.info-value {
+    color: var(--text-secondary);
+}
+
+/* ============================================================
+    5. PRODUCTS TABLE
+    ============================================================ */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 10px;
+}
+
+.table th {
+    background-color: var(--color-header-bg);
+    color: white;
+    padding: 8px 6px;
+    text-align: left;
+    font-weight: bold;
+    border: 1px solid #1a3d1f;
+}
+
+.table td {
+    padding: 6px;
+    border: 1px solid var(--border-color);
+    vertical-align: top;
+}
+
+.table tr:nth-child(even) {
+    background-color: var(--background-light);
+}
+
+.table tr:hover {
+    background-color: #e9ecef;
+}
+
+/* ============================================================
+    6. STOCK AND PRODUCT STATES
+    ============================================================ */
+.status-active {
+    color: var(--color-success);
+    font-weight: bold;
+}
+
+.status-inactive {
+    color: var(--color-danger);
+    font-weight: bold;
+}
+
+.status-discontinued {
+    color: var(--color-muted);
+    font-weight: bold;
+}
+
+.stock-high {
+    color: var(--color-success);
+    font-weight: bold;
+}
+
+.stock-medium {
+    color: var(--color-warning);
+    font-weight: bold;
+}
+
+.stock-low {
+    color: var(--color-danger);
+    font-weight: bold;
+}
+
+.price {
+    text-align: right;
+    font-weight: bold;
+}
+
+/* ============================================================
+    7. FOOTER
+    ============================================================ */
+.footer {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border-color);
+    padding-top: 10px;
+}
+
+/* ============================================================
+    8. SPECIFIC UTILITIES
+    ============================================================ */
+.mt-20 {
+    margin-top: 20px;
+}
+
+.page-break {
+    page-break-before: always;
+}
+
+/* ============================================================
+    9. SCREEN PREVIEW (OPTIONAL)
+    ============================================================ */
+@media screen {
+    body {
+        max-width: 1200px;
+        margin: 20px auto;
+        background: #f5f5f5;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    .info-section,
+    .table {
+        background: white;
+        box-shadow: var(--shadow-light);
+    }
+}
+
+/* ============================================================
+    10. PRINT RULES
+    ============================================================ */
+@media print {
+    body {
+        margin: 0;
+        padding: 10px;
+        font-size: 10pt;
+        background: white;
+    }
+
+    /* Avoid page breaks inside the table */
+    .table {
+        page-break-inside: avoid;
+    }
+
+    /* Ensure headers repeat on each page */
+    .table thead {
+        display: table-header-group;
+    }
+
+    /* Adjust colors for print (black and white) */
+    .status-active,
+    .status-inactive,
+    .status-discontinued,
+    .stock-high,
+    .stock-medium,
+    .stock-low {
+        color: black !important;
+        font-weight: bold;
+    }
+
+    .table th {
+        background-color: #ccc;
+        color: black;
+        border: 1px solid #aaa;
+    }
+
+    .info-section {
+        background-color: #f0f0f0;
+        border-left: 2px solid #666;
+    }
+
+    .footer {
+        margin-top: 20px;
+    }
+}
