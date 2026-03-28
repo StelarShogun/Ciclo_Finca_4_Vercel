@@ -51,6 +51,11 @@ class Product extends Model
         return $this->hasMany(SaleItem::class, 'product_id', 'product_id');
     }
 
+    public function brands()
+    {
+        return $this->belongsToMany(Brand::class, 'products_brand', 'product_id', 'brand_id', 'product_id', 'id');
+    }
+
     // Validation rules to ensure data integrity when saving products, with specific checks for active products and price consistency
     protected static function booted(): void {
         static::saving(function ($p) {

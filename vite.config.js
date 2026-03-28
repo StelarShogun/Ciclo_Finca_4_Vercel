@@ -14,6 +14,7 @@ const adminAssets = [
   'resources/js/admin/suppliers/suppliers.js',
   'resources/js/admin/login/login.js',
   'resources/js/admin/users/clients.js',
+  'resources/js/admin/brand/brand.js',
 
   // CSS
   'resources/css/admin/products/inventory.css',
@@ -23,6 +24,7 @@ const adminAssets = [
   'resources/css/admin/dashboard/dashboard.css',
   'resources/css/admin/dashboard/dashboard-pdf.css',
   'resources/css/admin/users/clients.css',
+  'resources/css/admin/brands/brand.css',
   'resources/css/admin/login/login.css',
 ]
 

@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Supplier;
 use App\Http\Requests\StoreProductRequest;
@@ -32,6 +33,8 @@ class ProductController extends Controller
         try {
             $product = DB::transaction(function () use ($request) {
                 $data = $request->validated();
+                $brandId = $data['brand_id'];
+                unset($data['brand_id']);
 
                 if ($request->hasFile('image')) {
                     $imageName = time().'.'.$request->image->extension();
@@ -53,7 +56,9 @@ class ProductController extends Controller
                     }
                 }
 
-                return Product::create($data);
+                $product = Product::create($data);
+                $product->brands()->attach($brandId);
+                return $product;
             });
 
             if ($request->wantsJson() || $request->ajax()) {
@@ -89,12 +94,14 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            $product = Product::with(['category.parent','supplier'])->findOrFail($id);
+            $product = Product::with(['category.parent','supplier','brands'])->findOrFail($id);
             
             if (request()->wantsJson() || request()->ajax()) {
+                $productData = $product->toArray();
+                $productData['brand_id'] = $product->brands->first()?->id;
                 return response()->json([
                     'success' => true,
-                    'data' => $product
+                    'data' => $productData
                 ]);
             }
             
@@ -118,6 +125,8 @@ class ProductController extends Controller
             $product = DB::transaction(function() use ($request, $id) {
                 $p = Product::findOrFail($id);
                 $data = $request->validated();
+                $brandId = $data['brand_id'];
+                unset($data['brand_id']);
 
                 if ($request->hasFile('image')) {
                     // Delete the old image file before storing the new one
@@ -147,6 +156,7 @@ class ProductController extends Controller
                 }
 
                 $p->update($data);
+                $p->brands()->sync([$brandId]);
                 return $p;
             });
 
@@ -336,6 +346,7 @@ class ProductController extends Controller
             'paginator' => $paginator,
             'categories' => $categories,
             'subcategoriesByParent' => $subcategoriesByParent,
+            'brands' => Brand::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
