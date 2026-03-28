@@ -9,19 +9,105 @@ function getCSRFToken() {
     return metaToken || inputToken || '';
 }
 
- // Export modal handlers
-        document.getElementById('export-btn').addEventListener('click', function() {
-            document.getElementById('export-modal').classList.add('active');
-        });
+/** Texto 422 desde respuesta Laravel (modal validación). */
+function jsonValidationMessage(data) {
+    if (!data) return '';
+    if (data.errors) {
+        const flat = Object.values(data.errors).flat().filter(Boolean);
+        if (flat.length) return flat.join('\n');
+    }
+    return typeof data.message === 'string' ? data.message : '';
+}
 
-        document.getElementById('close-export-modal').addEventListener('click', function() {
-            document.getElementById('export-modal').classList.remove('active');
-        });
+/** Breadcrumb categoría para modal detalle (requiere category.parent en JSON). */
+function categoryPath(category) {
+    if (!category) return '-';
+    const parentName = category.parent?.name;
+    const currentName = category.name || '';
+    return parentName ? `${parentName} > ${currentName}` : (currentName || '-');
+}
 
-        // Close modal when clicking on backdrop
-        document.querySelector('#export-modal .modal-backdrop').addEventListener('click', function() {
-            document.getElementById('export-modal').classList.remove('active');
+function jsonHeaders() {
+    return {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+    };
+}
+
+/**
+ * Rellena el select de subcategorías según el padre.
+ * En el filtro (#subcategory-filter), si no hay padre, lista todas las subcategorías (para poder filtrar solo por sub).
+ */
+function fillSubcategoryOptions(subSelect, parentId, selectedId = '') {
+    if (!subSelect) return;
+    const tree = window.inventoryCategoryTree || {};
+    const isFilter = subSelect.id === 'subcategory-filter';
+    const emptyLabel = isFilter ? 'Todas las subcategorías' : 'Sin subcategoría';
+
+    subSelect.innerHTML = '';
+    const opt0 = document.createElement('option');
+    opt0.value = '';
+    opt0.textContent = emptyLabel;
+    subSelect.appendChild(opt0);
+
+    let subs = [];
+    const hasParent = parentId !== '' && parentId !== null && parentId !== undefined;
+
+    if (!hasParent && isFilter) {
+        Object.keys(tree).forEach((pid) => {
+            (tree[pid] || []).forEach((sub) => {
+                subs.push(sub);
+            });
         });
+    } else if (hasParent) {
+        const key = String(parentId);
+        const num = Number(parentId);
+        subs = tree[key] || tree[parentId] || (Number.isFinite(num) ? tree[num] : []) || [];
+        if (!subs.length && typeof tree === 'object' && tree !== null) {
+            for (const k of Object.keys(tree)) {
+                if (String(k) === key || Number(k) === num) {
+                    subs = tree[k] || [];
+                    break;
+                }
+            }
+        }
+    }
+
+    subs.forEach((sub) => {
+        const opt = document.createElement('option');
+        opt.value = String(sub.category_id);
+        opt.textContent = sub.name;
+        if (selectedId !== '' && selectedId !== undefined && String(selectedId) === String(sub.category_id)) {
+            opt.selected = true;
+        }
+        subSelect.appendChild(opt);
+    });
+}
+
+/** category_id enviado al backend: subcategoría si hay, si no la categoría raíz elegida. */
+function syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput) {
+    if (!hiddenCategoryInput) return;
+    const parentId = parentSelect?.value || '';
+    const subId = subSelect?.value || '';
+    if (subId) {
+        hiddenCategoryInput.value = subId;
+    } else if (parentId) {
+        hiddenCategoryInput.value = parentId;
+    } else {
+        hiddenCategoryInput.value = '';
+    }
+}
+
+function bindDependentCategorySelectors({ parentSelect, subSelect, hiddenCategoryInput }) {
+    if (!parentSelect || !subSelect || !hiddenCategoryInput) return;
+    parentSelect.addEventListener('change', () => {
+        fillSubcategoryOptions(subSelect, parentSelect.value);
+        syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput);
+    });
+    subSelect.addEventListener('change', () => {
+        syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput);
+    });
+}
 
 // Request a fresh CSRF token from the server
 async function renewCSRFToken() {
@@ -350,10 +436,20 @@ if (typeof Swal !== 'undefined') {
     const cancelNewProductBtn = qs('#cancel-new-product');
     const saveNewProductBtn = qs('#save-new-product');
     const newProductForm = qs('#new-product-form');
+    const newParentCategory = qs('#new-parent-category');
+    const newSubcategory = qs('#new-subcategory');
+    const newFinalCategory = qs('#new-category');
 
     if (openNewProductModalBtn) {
         openNewProductModalBtn.addEventListener('click', () => {
+            if (newProductForm) {
+                newProductForm.reset();
+            }
+            if (newSubcategory) {
+                fillSubcategoryOptions(newSubcategory, '');
+            }
             newProductModal.classList.add('active');
+            syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
         });
     }
 
@@ -371,6 +467,24 @@ if (typeof Swal !== 'undefined') {
 
     if (saveNewProductBtn) {
         saveNewProductBtn.addEventListener('click', () => {
+            syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
+
+            if (newProductForm && typeof newProductForm.reportValidity === 'function' && !newProductForm.reportValidity()) {
+                return;
+            }
+
+            if (!newFinalCategory || !String(newFinalCategory.value || '').trim()) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Categoría',
+                        text: 'Selecciona una categoría. La subcategoría es opcional: puedes dejar «Sin subcategoría» para guardar el producto en la categoría padre.',
+                        icon: 'info',
+                        confirmButtonText: 'Entendido',
+                    });
+                }
+                return;
+            }
+
             setButtonLoading(saveNewProductBtn, true);
             const formData = new FormData(newProductForm);
 
@@ -422,7 +536,7 @@ if (typeof Swal !== 'undefined') {
                     
                     Swal.fire({
                         title: 'Error de validación',
-                        text: data.message,
+                        text: jsonValidationMessage(data) || data.message || 'Revisa los campos del formulario.',
                         icon: 'error',
                         confirmButtonText: 'Entendido'
                     });
@@ -455,15 +569,16 @@ if (typeof Swal !== 'undefined') {
     const cancelEditBtn = qs('#cancel-edit');
     const saveEditBtn = qs('#save-edit');
     const editProductForm = qs('#edit-product-form');
+    const editParentCategory = qs('#edit-parent-category');
+    const editSubcategory = qs('#edit-subcategory');
+    const editFinalCategory = qs('#edit-category');
 
     editBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const productId = btn.dataset.productId;
-            fetch(`/products/${productId}`,
-            {
-                headers: {
-                    'Accept': 'application/json'
-                }
+            fetch(`/products/${productId}`, {
+                credentials: 'same-origin',
+                headers: jsonHeaders(),
             })
             .then(response => {
                 if (!response.ok) {
@@ -477,7 +592,29 @@ if (typeof Swal !== 'undefined') {
                     editProductForm.action = `/products/${productId}`;
                     qs('#edit-name').value = product.name || '';
                     qs('#edit-description').value = product.description || '';
-                    qs('#edit-category').value = product.category_id || '';
+                    const currentCategoryId = String(product.category_id || '');
+                    const tree = window.inventoryCategoryTree || {};
+                    let detectedParentId = '';
+                    let detectedSubcategoryId = '';
+
+                    Object.keys(tree).forEach((parentId) => {
+                        if (detectedParentId) return;
+                        const match = (tree[parentId] || []).find((sub) => String(sub.category_id) === currentCategoryId);
+                        if (match) {
+                            detectedParentId = String(parentId);
+                            detectedSubcategoryId = currentCategoryId;
+                        }
+                    });
+
+                    if (!detectedParentId) {
+                        detectedParentId = currentCategoryId;
+                    }
+
+                    if (editParentCategory) {
+                        editParentCategory.value = detectedParentId;
+                        fillSubcategoryOptions(editSubcategory, detectedParentId, detectedSubcategoryId);
+                        syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
+                    }
                     qs('#edit-provider').value = product.supplier_id || '';
                     qs('#edit-price-buy').value = product.purchase_price || '';
                     qs('#edit-price-sell').value = product.sale_price || '';
@@ -512,6 +649,18 @@ if (typeof Swal !== 'undefined') {
         });
     }
 
+    bindDependentCategorySelectors({
+        parentSelect: newParentCategory,
+        subSelect: newSubcategory,
+        hiddenCategoryInput: newFinalCategory
+    });
+
+    bindDependentCategorySelectors({
+        parentSelect: editParentCategory,
+        subSelect: editSubcategory,
+        hiddenCategoryInput: editFinalCategory
+    });
+
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener('click', () => {
             editModal.classList.remove('active');
@@ -520,6 +669,7 @@ if (typeof Swal !== 'undefined') {
 
     if (saveEditBtn) {
         saveEditBtn.addEventListener('click', () => {
+            syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
             setButtonLoading(saveEditBtn, true);
             const formData = new FormData(editProductForm);
             formData.append('_method', 'PUT');
@@ -571,7 +721,7 @@ if (typeof Swal !== 'undefined') {
                     
                     Swal.fire({
                         title: 'Error de validación',
-                        text: data.message,
+                        text: jsonValidationMessage(data) || data.message || 'Revisa los campos del formulario.',
                         icon: 'error',
                         confirmButtonText: 'Entendido'
                     });
@@ -610,9 +760,8 @@ if (typeof Swal !== 'undefined') {
             setModalLoading(viewProductModal, true);
             const productId = btn.dataset.productId;
             smartFetch(`/products/${productId}`, {
-                headers: {
-                    'Accept': 'application/json'
-                }
+                credentials: 'same-origin',
+                headers: jsonHeaders(),
             })
             .then(response => {
                 if (!response.ok) {
@@ -641,7 +790,7 @@ if (typeof Swal !== 'undefined') {
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-boxes icon"></i> Categoría:</label>
-                                <p>${product.category?.name || '-'}</p>
+                                <p>${categoryPath(product.category)}</p>
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-truck icon"></i> Proveedor:</label>
@@ -1032,6 +1181,18 @@ if (typeof Swal !== 'undefined') {
 
 // Initial loading spinner and filter form behavior
 document.addEventListener('DOMContentLoaded', () => {
+    const exportModal = document.getElementById('export-modal');
+    const exportBtn = document.getElementById('export-btn');
+    if (exportBtn && exportModal) {
+        exportBtn.addEventListener('click', () => exportModal.classList.add('active'));
+        document.getElementById('close-export-modal')?.addEventListener('click', () => {
+            exportModal.classList.remove('active');
+        });
+        exportModal.querySelector('.modal-backdrop')?.addEventListener('click', () => {
+            exportModal.classList.remove('active');
+        });
+    }
+
     const productSection = document.querySelector('.products-section');
     const loadingSpinner = document.querySelector('.loading-spinner-overlay');
     const filterForm = document.querySelector('.filter-form');
@@ -1044,6 +1205,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (filterForm) {
+        const parentFilter = qs('#parent-category-filter');
+        const subcategoryFilter = qs('#subcategory-filter');
+        if (parentFilter && subcategoryFilter) {
+            const selectedFromData = subcategoryFilter.dataset.selected || '';
+            fillSubcategoryOptions(subcategoryFilter, parentFilter.value, selectedFromData);
+            parentFilter.addEventListener('change', () => {
+                fillSubcategoryOptions(subcategoryFilter, parentFilter.value);
+            });
+        }
+
         filterForm.addEventListener('submit', () => {
             if (loadingSpinner) {
                 loadingSpinner.style.display = 'flex';

@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Ventas - Ciclo Finca 4 Admin')
 
 @push('styles')
-    @vite(['resources/css/sales/sales.css'])
+    @vite(['resources/css/admin/sales/sales.css'])
 @endpush
 
 {{-- Standalone print view: no sidebar or sales JS needed --}}

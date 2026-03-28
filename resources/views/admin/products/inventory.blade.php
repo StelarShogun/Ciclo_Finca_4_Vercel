@@ -38,6 +38,10 @@
                     <button class="btn btn-primary" id="open-new-product-modal">
                         <i class="fas fa-plus"></i> Nuevo Producto
                     </button>
+                    <a class="btn btn-secondary" href="{{ route('categories.subcategories.create') }}">
+                        <i class="fas fa-sitemap"></i>
+                        Crear Subcategoría
+                    </a>
                     <button class="btn btn-secondary" id="export-btn">
                         <i class="fas fa-download"></i> Exportar
                     </button>
@@ -66,18 +70,24 @@
                     <div class="filters-grid">
 
                         <div class="filter-group">
-                            <label for="category">Categoría</label>
-                            <select id="category" name="category_id">
+                            <label for="parent-category-filter">Categoría</label>
+                            <select id="parent-category-filter" name="parent_category_id">
                                 <option value="">Todas las categorías</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}"
-                                        @selected(request('category_id') === '{{ $category->category_id }}')>
+                                        @selected((string) request('parent_category_id') === (string) $category->category_id)>
                                         {{ $category->name }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
 
+                        <div class="filter-group">
+                            <label for="subcategory-filter">Subcategoría</label>
+                            <select id="subcategory-filter" name="subcategory_id" data-selected="{{ request('subcategory_id') }}">
+                                <option value="">Todas las subcategorías</option>
+                            </select>
+                        </div>
                         <div class="filter-group">
                             <label for="stock">Estado de Stock</label>
                             <select id="stock" name="stock_status">
@@ -169,7 +179,17 @@
                                             <span class="sku">SKU: {{ 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT) }}</span>
                                         </div>
                                     </td>
-                                    <td>{{ $product->category->name }}</td>
+                                    <td>
+                                        @if($product->category)
+                                            @if($product->category->parent)
+                                                {{ $product->category->parent->name }} &gt; {{ $product->category->name }}
+                                            @else
+                                                {{ $product->category->name }}
+                                            @endif
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
                                     <td>
                                         {{-- Stock badge: success >10, warning >0, danger =0 --}}
                                         <span class="stock-badge {{ $product->stock_current > 10 ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger') }}">
@@ -225,7 +245,17 @@
                                 <div class="product-card-details">
                                     <div class="product-card-detail">
                                         <span class="product-card-detail-label">Categoría</span>
-                                        <span class="product-card-detail-value">{{ $product->category->name }}</span>
+                                        <span class="product-card-detail-value">
+                                            @if($product->category)
+                                                @if($product->category->parent)
+                                                    {{ $product->category->parent->name }} &gt; {{ $product->category->name }}
+                                                @else
+                                                    {{ $product->category->name }}
+                                                @endif
+                                            @else
+                                                —
+                                            @endif
+                                        </span>
                                     </div>
                                     <div class="product-card-detail">
                                         <span class="product-card-detail-label">Stock</span>
@@ -319,13 +349,21 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-category">Categoría *</label>
-                            <select id="new-category" name="category_id" required>
+                            <label for="new-parent-category">Categoría *</label>
+                            <select id="new-parent-category" required>
                                 <option value="">Seleccionar categoría</option>
-                                @foreach(\App\Models\Category::all() as $category)
+                                @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-subcategory">Subcategoría <span class="text-muted">(opcional)</span></label>
+                            <select id="new-subcategory" aria-describedby="new-subcategory-hint">
+                                <option value="">Sin subcategoría</option>
+                            </select>
+                            <small id="new-subcategory-hint" class="form-text text-muted">Si no eliges subcategoría, el producto queda en la categoría padre.</small>
+                            <input type="hidden" id="new-category" name="category_id" value="">
                         </div>
                         <div class="form-group">
                             <label for="new-provider">Proveedor *</label>
@@ -420,13 +458,20 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="edit-category">Categoría *</label>
-                            <select id="edit-category" name="category_id" required>
-                                <option value="">Seleccionar categoría</option>
-                                @foreach(\App\Models\Category::all() as $category)
+                            <label for="edit-parent-category">Categoría padre *</label>
+                            <select id="edit-parent-category" required>
+                                <option value="">Seleccionar categoría padre</option>
+                                @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-subcategory">Subcategoría <span class="text-muted">(opcional)</span></label>
+                            <select id="edit-subcategory">
+                                <option value="">Sin subcategoría</option>
+                            </select>
+                            <input type="hidden" id="edit-category" name="category_id" required>
                         </div>
                         <div class="form-group">
                             <label for="edit-provider">Proveedor *</label>
@@ -668,6 +713,11 @@
             </div>
         </div>
     </div>
+
+    {{-- Árbol padre → hijos para filtros y modales (inventory.js) --}}
+    <script>
+        window.inventoryCategoryTree = @json($subcategoriesByParent ?? []);
+    </script>
 
     {{-- Scripts: SweetAlert2 loaded before inventory.js --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
