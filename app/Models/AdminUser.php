@@ -10,6 +10,7 @@ class AdminUser extends Authenticatable
     use Notifiable;
 
     protected $table = 'admins';
+
     protected $primaryKey = 'user_id';
 
     protected $fillable = [

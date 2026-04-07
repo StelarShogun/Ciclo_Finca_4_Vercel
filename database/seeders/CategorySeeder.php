@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Category;
+use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder
 {
@@ -39,7 +39,7 @@ class CategorySeeder extends Seeder
 
         foreach ($subcategories as $parentName => $children) {
             $parent = $parents->get($parentName);
-            if (!$parent) {
+            if (! $parent) {
                 continue;
             }
             foreach ($children as $childName) {
@@ -49,7 +49,7 @@ class CategorySeeder extends Seeder
                         'parent_category_id' => $parent->category_id,
                     ],
                     [
-                        'description' => 'Subcategoría de ' . $parentName,
+                        'description' => 'Subcategoría de '.$parentName,
                     ]
                 );
             }

@@ -10,18 +10,19 @@ class AdminOnly
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::guard('admin')->check()) {
+        if (! Auth::guard('admin')->check()) {
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'No autenticado'], 401);
             }
             $request->session()->put('url.intended', $request->fullUrl());
+
             return redirect()->route('admin.login')->with('error', 'Acceso denegado. Debes iniciar sesión como administrador.');
         }
 
         $timeout = 86400; // 24 hours in seconds
         $lastActivity = session('admin_last_activity');
 
-        if ($lastActivity && !is_int($lastActivity)) {
+        if ($lastActivity && ! is_int($lastActivity)) {
             session()->forget('admin_last_activity');
             $lastActivity = null;
         }

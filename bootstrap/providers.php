@@ -1,6 +1,9 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use Barryvdh\DomPDF\ServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    Barryvdh\DomPDF\ServiceProvider::class,
+    AppServiceProvider::class,
+    ServiceProvider::class,
 ];

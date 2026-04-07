@@ -26,14 +26,15 @@ class Supplier extends Model
     protected $keyType = 'int';
 
     const CREATED_AT = 'created_at';
+
     const UPDATED_AT = 'updated_at';
 
     // Data type casts
     protected $casts = [
         'delivery_time' => 'integer',
-        'rating'        => 'float',
-        'created_at'    => 'datetime',
-        'updated_at'    => 'datetime',
+        'rating' => 'float',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     // Relationship with products

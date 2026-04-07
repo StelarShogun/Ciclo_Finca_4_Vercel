@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -7,13 +8,17 @@ use Illuminate\Support\Collection;
 class Category extends Model
 {
     protected $table = 'categories';
+
     protected $primaryKey = 'category_id';
+
     public $timestamps = true;
+
     const CREATED_AT = 'created_at';
+
     const UPDATED_AT = 'updated_at';
 
-    protected $fillable = ['name','description','parent_category_id'];
-    
+    protected $fillable = ['name', 'description', 'parent_category_id'];
+
     // Relationship with products
     public function products()
     {
@@ -121,7 +126,7 @@ class Category extends Model
 
         foreach ($rows as $row) {
             if ($row->parent_category_id === null) {
-                $key = 'root|' . mb_strtolower(trim((string) ($row->name ?? '')));
+                $key = 'root|'.mb_strtolower(trim((string) ($row->name ?? '')));
                 if (isset($seen[$key])) {
                     continue;
                 }
@@ -133,7 +138,7 @@ class Category extends Model
 
             $physParent = (int) $row->parent_category_id;
             $canonParent = $canonical[$physParent] ?? $physParent;
-            $key = 'sub|' . $canonParent . '|' . mb_strtolower(trim((string) ($row->name ?? '')));
+            $key = 'sub|'.$canonParent.'|'.mb_strtolower(trim((string) ($row->name ?? '')));
             if (isset($seen[$key])) {
                 continue;
             }
@@ -158,5 +163,3 @@ class Category extends Model
         return $ids !== [] ? $ids : [$canonicalParentId];
     }
 }
-
-

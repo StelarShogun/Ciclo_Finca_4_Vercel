@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class ClientPageController extends Controller
 {
@@ -44,15 +44,15 @@ class ClientPageController extends Controller
 
         if ($request->filled('search')) {
             $searchTerm = $request->search;
-            $query->where(function($q) use ($searchTerm) {
-                $q->where('name', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('description', 'like', '%' . $searchTerm . '%');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('description', 'like', '%'.$searchTerm.'%');
             });
         }
 
         // Parent category includes itself and all children; child category filters only itself
-        $selectedCategory       = null;
-        $subcategories          = collect();
+        $selectedCategory = null;
+        $subcategories = collect();
         $parentCategoryForSubcats = null;
 
         if ($request->filled('category_id')) {
@@ -62,9 +62,9 @@ class ClientPageController extends Controller
                     $childIds = Category::where('parent_category_id', $selectedCategory->category_id)->pluck('category_id');
                     $query->where(function ($q) use ($selectedCategory, $childIds) {
                         $q->where('category_id', $selectedCategory->category_id)
-                          ->orWhereIn('category_id', $childIds);
+                            ->orWhereIn('category_id', $childIds);
                     });
-                    $subcategories          = Category::where('parent_category_id', $selectedCategory->category_id)->orderBy('name')->get();
+                    $subcategories = Category::where('parent_category_id', $selectedCategory->category_id)->orderBy('name')->get();
                     $parentCategoryForSubcats = $selectedCategory;
                 } else {
                     $query->where('category_id', $selectedCategory->category_id);
@@ -94,16 +94,16 @@ class ClientPageController extends Controller
             $query->where('sale_price', '<=', $maxPrice);
         }
 
-        $sort  = $request->get('sort', 'created_at');
+        $sort = $request->get('sort', 'created_at');
         $order = $request->get('direction', 'desc');
 
         match ($sort) {
             'price' => $query->orderBy('sale_price', $order),
-            'name'  => $query->orderBy('name', $order),
+            'name' => $query->orderBy('name', $order),
             default => $query->orderBy('created_at', $order),
         };
 
-        $perPage  = $request->get('per_page', 12);
+        $perPage = $request->get('per_page', 12);
         $products = $query->paginate($perPage)->withQueryString();
 
         $categories = Category::whereNull('parent_category_id')
@@ -142,7 +142,7 @@ class ClientPageController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,product_id',
-            'quantity'   => 'required|integer|min:1'
+            'quantity' => 'required|integer|min:1',
         ]);
 
         $product = Product::findOrFail($request->product_id);
@@ -152,10 +152,10 @@ class ClientPageController extends Controller
         }
 
         if ($product->stock_current < $request->quantity) {
-            return response()->json(['success' => false, 'message' => 'Stock insuficiente. Disponible: ' . $product->stock_current], 400);
+            return response()->json(['success' => false, 'message' => 'Stock insuficiente. Disponible: '.$product->stock_current], 400);
         }
 
-        $cart          = Session::get('cart', []);
+        $cart = Session::get('cart', []);
         $existingIndex = null;
 
         foreach ($cart as $index => $item) {
@@ -170,52 +170,52 @@ class ClientPageController extends Controller
             $newQuantity = ($cart[$existingIndex]['quantity'] ?? 0) + $request->quantity;
 
             if ($newQuantity > $product->stock_current) {
-                return response()->json(['success' => false, 'message' => 'Stock insuficiente. Disponible: ' . $product->stock_current], 400);
+                return response()->json(['success' => false, 'message' => 'Stock insuficiente. Disponible: '.$product->stock_current], 400);
             }
 
             $cart[$existingIndex]['quantity'] = $newQuantity;
         } else {
             $cart[] = [
-                'product_id'      => $product->product_id,
-                'name'            => $product->name,
-                'price'           => $product->sale_price,
-                'image'           => $product->image ?? 'default.png',
-                'quantity'        => $request->quantity,
-                'stock_available' => $product->stock_current
+                'product_id' => $product->product_id,
+                'name' => $product->name,
+                'price' => $product->sale_price,
+                'image' => $product->image ?? 'default.png',
+                'quantity' => $request->quantity,
+                'stock_available' => $product->stock_current,
             ];
         }
 
         Session::put('cart', $cart);
 
         return response()->json([
-            'success'    => true,
-            'message'    => 'Producto agregado al carrito',
+            'success' => true,
+            'message' => 'Producto agregado al carrito',
             'cart_count' => $this->getCartCount(),
-            'cart_total' => $this->getCartTotal()
+            'cart_total' => $this->getCartTotal(),
         ]);
     }
 
     public function cart()
     {
-        $cart      = Session::get('cart', []);
+        $cart = Session::get('cart', []);
         $cartItems = [];
-        $total     = 0;
+        $total = 0;
 
         foreach ($cart as $item) {
             $product = Product::find($item['product_id']);
 
             if ($product && $product->status === 'active') {
-                $subtotal  = $item['price'] * $item['quantity'];
-                $total    += $subtotal;
+                $subtotal = $item['price'] * $item['quantity'];
+                $total += $subtotal;
 
                 $cartItems[] = [
-                    'product_id'      => $product->product_id,
-                    'name'            => $product->name,
-                    'price'           => $item['price'],
-                    'image'           => $product->image ?? 'default.png',
-                    'quantity'        => $item['quantity'],
+                    'product_id' => $product->product_id,
+                    'name' => $product->name,
+                    'price' => $item['price'],
+                    'image' => $product->image ?? 'default.png',
+                    'quantity' => $item['quantity'],
                     'stock_available' => $product->stock_current,
-                    'subtotal'        => $subtotal
+                    'subtotal' => $subtotal,
                 ];
             }
             // Inactive products are silently dropped from the session
@@ -232,7 +232,7 @@ class ClientPageController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,product_id',
-            'quantity'   => 'required|integer|min:1'
+            'quantity' => 'required|integer|min:1',
         ]);
 
         $product = Product::findOrFail($request->product_id);
@@ -242,7 +242,7 @@ class ClientPageController extends Controller
         }
 
         if ($product->stock_current < $request->quantity) {
-            return response()->json(['success' => false, 'message' => 'Stock insuficiente. Disponible: ' . $product->stock_current], 400);
+            return response()->json(['success' => false, 'message' => 'Stock insuficiente. Disponible: '.$product->stock_current], 400);
         }
 
         $cart = Session::get('cart', []);
@@ -257,10 +257,10 @@ class ClientPageController extends Controller
         Session::put('cart', $cart);
 
         return response()->json([
-            'success'    => true,
-            'message'    => 'Carrito actualizado',
+            'success' => true,
+            'message' => 'Carrito actualizado',
             'cart_count' => $this->getCartCount(),
-            'cart_total' => $this->getCartTotal()
+            'cart_total' => $this->getCartTotal(),
         ]);
     }
 
@@ -273,15 +273,15 @@ class ClientPageController extends Controller
         }
 
         // Filter out the item and re-index
-        $cart = array_values(array_filter($cart, fn($item) => $item['product_id'] != $id));
+        $cart = array_values(array_filter($cart, fn ($item) => $item['product_id'] != $id));
 
         Session::put('cart', $cart);
 
         return response()->json([
-            'success'    => true,
-            'message'    => 'Producto eliminado del carrito',
+            'success' => true,
+            'message' => 'Producto eliminado del carrito',
             'cart_count' => $this->getCartCount(),
-            'cart_total' => $this->getCartTotal()
+            'cart_total' => $this->getCartTotal(),
         ]);
     }
 
@@ -295,31 +295,33 @@ class ClientPageController extends Controller
 
         DB::beginTransaction();
         try {
-            $subtotal       = 0;
+            $subtotal = 0;
             $validatedItems = [];
 
             // Validate availability and compute totals before any writes
             foreach ($cart as $item) {
                 $product = Product::find($item['product_id']);
 
-                if (!$product || $product->status !== 'active') {
+                if (! $product || $product->status !== 'active') {
                     DB::rollBack();
-                    return response()->json(['success' => false, 'message' => 'El producto "' . ($item['name'] ?? '') . '" ya no está disponible'], 400);
+
+                    return response()->json(['success' => false, 'message' => 'El producto "'.($item['name'] ?? '').'" ya no está disponible'], 400);
                 }
 
                 if ($product->stock_current < $item['quantity']) {
                     DB::rollBack();
-                    return response()->json(['success' => false, 'message' => 'Stock insuficiente para "' . $product->name . '". Disponible: ' . $product->stock_current], 400);
+
+                    return response()->json(['success' => false, 'message' => 'Stock insuficiente para "'.$product->name.'". Disponible: '.$product->stock_current], 400);
                 }
 
-                $itemTotal  = $item['price'] * $item['quantity'];
-                $subtotal  += $itemTotal;
+                $itemTotal = $item['price'] * $item['quantity'];
+                $subtotal += $itemTotal;
 
                 $validatedItems[] = [
-                    'product'  => $product,
+                    'product' => $product,
                     'quantity' => $item['quantity'],
-                    'price'    => $item['price'],
-                    'total'    => $itemTotal
+                    'price' => $item['price'],
+                    'total' => $itemTotal,
                 ];
             }
 
@@ -327,30 +329,30 @@ class ClientPageController extends Controller
 
             // Web cart orders are linked via client_id (see migration CF4)
             $sale = Sale::create([
-                'invoice_number' => (new Sale())->generateInvoiceNumber(),
-                'client_id'      => $client?->user_id,
-                'customer_id'    => null,
-                'seller_id'      => null,
-                'sale_date'      => now(),
+                'invoice_number' => (new Sale)->generateInvoiceNumber(),
+                'client_id' => $client?->user_id,
+                'customer_id' => null,
+                'seller_id' => null,
+                'sale_date' => now(),
                 'payment_method' => 'cash',
-                'status'         => 'pending',
-                'order_source'   => 'web_cart',
-                'subtotal'       => $subtotal,
-                'iva'            => 0,
-                'discount'       => 0,
-                'total'          => $subtotal,
-                'notes'          => 'Order placed from the online store'
+                'status' => 'pending',
+                'order_source' => 'web_cart',
+                'subtotal' => $subtotal,
+                'iva' => 0,
+                'discount' => 0,
+                'total' => $subtotal,
+                'notes' => 'Order placed from the online store',
             ]);
 
             // Persist line items and deduct stock atomically
             foreach ($validatedItems as $item) {
                 SaleItem::create([
-                    'sale_id'       => $sale->sale_id,
-                    'product_id'    => $item['product']->product_id,
-                    'quantity'      => $item['quantity'],
-                    'unit_price'    => $item['price'],
+                    'sale_id' => $sale->sale_id,
+                    'product_id' => $item['product']->product_id,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['price'],
                     'unit_discount' => 0,
-                    'total'         => $item['total']
+                    'total' => $item['total'],
                 ]);
 
                 $item['product']->decrement('stock_current', $item['quantity']);
@@ -360,15 +362,16 @@ class ClientPageController extends Controller
             DB::commit();
 
             return response()->json([
-                'success'        => true,
-                'message'        => 'Pedido creado exitosamente',
-                'sale_id'        => $sale->sale_id,
-                'invoice_number' => $sale->invoice_number
+                'success' => true,
+                'message' => 'Pedido creado exitosamente',
+                'sale_id' => $sale->sale_id,
+                'invoice_number' => $sale->invoice_number,
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Error al procesar el pedido: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Error al procesar el pedido: '.$e->getMessage()], 500);
         }
     }
 
@@ -381,7 +384,7 @@ class ClientPageController extends Controller
     {
         return array_reduce(
             Session::get('cart', []),
-            fn($carry, $item) => $carry + $item['price'] * $item['quantity'],
+            fn ($carry, $item) => $carry + $item['price'] * $item['quantity'],
             0
         );
     }
@@ -391,10 +394,10 @@ class ClientPageController extends Controller
         Session::forget('cart');
 
         return response()->json([
-            'success'    => true,
-            'message'    => 'Carrito vaciado exitosamente',
+            'success' => true,
+            'message' => 'Carrito vaciado exitosamente',
             'cart_count' => 0,
-            'cart_total' => 0
+            'cart_total' => 0,
         ]);
     }
 }

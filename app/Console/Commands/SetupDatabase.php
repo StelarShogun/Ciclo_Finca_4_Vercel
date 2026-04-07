@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Artisan;
 class SetupDatabase extends Command
 {
     protected $signature = 'db:setup';
+
     protected $description = 'Configura la base de datos ejecutando migraciones y seeders';
 
     public function handle()
@@ -32,7 +33,8 @@ class SetupDatabase extends Command
             $this->info('   - maria@example.com (password: password)');
 
         } catch (\Exception $e) {
-            $this->error('❌ Error al configurar la base de datos: ' . $e->getMessage());
+            $this->error('❌ Error al configurar la base de datos: '.$e->getMessage());
+
             return 1;
         }
 

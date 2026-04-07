@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Supplier;
+use Illuminate\Database\Seeder;
 
 class SupplierSeeder extends Seeder
 {
@@ -19,7 +19,7 @@ class SupplierSeeder extends Seeder
                 'address' => 'San José, Costa Rica',
                 'delivery_time' => 14,
                 'rating' => 4.9,
-                'status' => 'active'
+                'status' => 'active',
             ],
             [
                 'name' => 'Specialized Centroamérica',
@@ -29,7 +29,7 @@ class SupplierSeeder extends Seeder
                 'address' => 'Cartago, Costa Rica',
                 'delivery_time' => 21,
                 'rating' => 4.8,
-                'status' => 'active'
+                'status' => 'active',
             ],
             [
                 'name' => 'Shimano Costa Rica',
@@ -39,7 +39,7 @@ class SupplierSeeder extends Seeder
                 'address' => 'Alajuela, Costa Rica',
                 'delivery_time' => 7,
                 'rating' => 4.7,
-                'status' => 'active'
+                'status' => 'active',
             ],
             [
                 'name' => 'SRAM Centroamérica',
@@ -49,7 +49,7 @@ class SupplierSeeder extends Seeder
                 'address' => 'Heredia, Costa Rica',
                 'delivery_time' => 10,
                 'rating' => 4.6,
-                'status' => 'active'
+                'status' => 'active',
             ],
             [
                 'name' => 'Giant Bicycles CR',
@@ -59,7 +59,7 @@ class SupplierSeeder extends Seeder
                 'address' => 'Puntarenas, Costa Rica',
                 'delivery_time' => 18,
                 'rating' => 4.5,
-                'status' => 'active'
+                'status' => 'active',
             ],
             [
                 'name' => 'Cannondale Costa Rica',
@@ -69,7 +69,7 @@ class SupplierSeeder extends Seeder
                 'address' => 'San José, Costa Rica',
                 'delivery_time' => 16,
                 'rating' => 4.8,
-                'status' => 'active'
+                'status' => 'active',
             ],
             [
                 'name' => 'Accesorios Ciclismo Pro',
@@ -79,7 +79,7 @@ class SupplierSeeder extends Seeder
                 'address' => 'Cartago, Costa Rica',
                 'delivery_time' => 5,
                 'rating' => 4.9,
-                'status' => 'active'
+                'status' => 'active',
             ],
             [
                 'name' => 'Ropa Deportiva Ciclismo',
@@ -89,8 +89,8 @@ class SupplierSeeder extends Seeder
                 'address' => 'Alajuela, Costa Rica',
                 'delivery_time' => 8,
                 'rating' => 4.7,
-                'status' => 'active'
-            ]
+                'status' => 'active',
+            ],
         ];
 
         foreach ($suppliers as $supplier) {

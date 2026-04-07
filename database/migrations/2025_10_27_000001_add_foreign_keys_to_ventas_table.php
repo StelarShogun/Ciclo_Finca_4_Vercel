@@ -12,12 +12,12 @@ return new class extends Migration
             // Asegurar que no existan FKs previas con nombres distintos
             // y agregar las claves foráneas correctas
             $table->foreign('cliente_id')
-                  ->references('usuario_id')->on('usuarios')
-                  ->onDelete('cascade');
+                ->references('usuario_id')->on('usuarios')
+                ->onDelete('cascade');
 
             $table->foreign('vendedor_id')
-                  ->references('usuario_id')->on('usuarios')
-                  ->onDelete('cascade');
+                ->references('usuario_id')->on('usuarios')
+                ->onDelete('cascade');
         });
     }
 
@@ -29,5 +29,3 @@ return new class extends Migration
         });
     }
 };
-
-

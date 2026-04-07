@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -15,21 +15,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('sales')) {
+        if (! Schema::hasTable('sales')) {
             return;
         }
 
         Schema::table('sales', function (Blueprint $table) {
-            if (!Schema::hasColumn('sales', 'buyer_name')) {
+            if (! Schema::hasColumn('sales', 'buyer_name')) {
                 $table->string('buyer_name', 120)->nullable()->after('notes');
             }
-            if (!Schema::hasColumn('sales', 'buyer_email')) {
+            if (! Schema::hasColumn('sales', 'buyer_email')) {
                 $table->string('buyer_email', 150)->nullable()->after('buyer_name');
             }
-            if (!Schema::hasColumn('sales', 'order_source')) {
+            if (! Schema::hasColumn('sales', 'order_source')) {
                 $table->string('order_source', 20)->nullable()->after('status');
             }
-            if (!Schema::hasColumn('sales', 'seller_admin_id')) {
+            if (! Schema::hasColumn('sales', 'seller_admin_id')) {
                 $table->unsignedBigInteger('seller_admin_id')->nullable()->after('seller_id');
             }
         });
@@ -48,7 +48,7 @@ return new class extends Migration
                         ->references('user_id')->on('admins')
                         ->nullOnDelete();
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // Si el FK ya existe o hay diferencias de esquema, no rompemos la migración.
             }
         }
@@ -56,7 +56,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (!Schema::hasTable('sales')) {
+        if (! Schema::hasTable('sales')) {
             return;
         }
 
@@ -64,7 +64,7 @@ return new class extends Migration
             if (Schema::hasColumn('sales', 'seller_admin_id')) {
                 try {
                     $table->dropForeign(['seller_admin_id']);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     // ignore
                 }
             }
@@ -83,4 +83,3 @@ return new class extends Migration
         });
     }
 };
-

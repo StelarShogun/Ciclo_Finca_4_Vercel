@@ -14,6 +14,7 @@ class ClientUserSeeder extends Seeder
         $existing = DB::table('client_table')->where('gmail', 'darwinn990@gmail.com')->first();
         if ($existing) {
             $this->command->warn('El cliente darwinn990@gmail.com ya existe en la base de datos.');
+
             return;
         }
 

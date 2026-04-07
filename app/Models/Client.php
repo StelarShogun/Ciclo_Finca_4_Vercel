@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-
 class Client extends Authenticatable
 {
     use Notifiable;
 
-    protected $table      = 'client_table';
+    protected $table = 'client_table';
+
     protected $primaryKey = 'user_id';
 
     protected $fillable = [
@@ -37,8 +37,8 @@ class Client extends Authenticatable
 
     protected $casts = [
         'verification_code_expires_at' => 'datetime',
-        'email_verified'               => 'boolean',
-        'active'                       => 'boolean',
+        'email_verified' => 'boolean',
+        'active' => 'boolean',
     ];
 
     public function cartItems(): HasMany

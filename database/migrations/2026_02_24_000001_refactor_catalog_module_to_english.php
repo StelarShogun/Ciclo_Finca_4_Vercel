@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -20,7 +20,7 @@ return new class extends Migration
             Schema::table('productos', function (Blueprint $table) {
                 $table->dropForeign(['categoria_id']);
             });
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // FK ya no existe
         }
 
@@ -28,7 +28,7 @@ return new class extends Migration
             Schema::table('productos', function (Blueprint $table) {
                 $table->dropForeign(['supplier_id']);
             });
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // FK ya no existe
         }
 
@@ -36,7 +36,7 @@ return new class extends Migration
             Schema::table('categorias', function (Blueprint $table) {
                 $table->dropForeign(['categoria_padre_id']);
             });
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // FK ya no existe
         }
 
@@ -44,7 +44,7 @@ return new class extends Migration
             Schema::table('sale_items', function (Blueprint $table) {
                 $table->dropForeign(['producto_id']);
             });
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // FK ya no existe
         }
 

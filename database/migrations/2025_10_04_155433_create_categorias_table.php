@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('categoria_padre_id')->nullable()->constrained('categorias', 'categoria_id')->onDelete('set null');
             $table->timestamp('fecha_creacion')->useCurrent();
             $table->timestamp('fecha_modificacion')->useCurrent()->useCurrentOnUpdate();
-            
+
             // Índices
             $table->index('nombre');
             $table->index('categoria_padre_id');

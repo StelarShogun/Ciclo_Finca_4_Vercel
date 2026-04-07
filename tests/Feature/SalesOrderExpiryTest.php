@@ -22,6 +22,7 @@ class SalesOrderExpiryTest extends TestCase
     use RefreshDatabase;
 
     protected Usuario $admin;
+
     protected Usuario $customer;
 
     protected function setUp(): void
@@ -29,13 +30,13 @@ class SalesOrderExpiryTest extends TestCase
         try {
             parent::setUp();
         } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests (ej. driver SQLite faltante). Use MySQL: ' . $e->getMessage());
+            $this->markTestSkipped('Base de datos no disponible para tests (ej. driver SQLite faltante). Use MySQL: '.$e->getMessage());
         }
         $driver = Schema::getConnection()->getDriverName();
         if ($driver !== 'mysql') {
             $this->markTestSkipped('Estos tests requieren MySQL (tabla sales existe tras migraciones de refactor).');
         }
-        if (!Schema::hasTable('sales')) {
+        if (! Schema::hasTable('sales')) {
             $this->markTestSkipped('La tabla sales no existe. Ejecuta migraciones con MySQL.');
         }
         Config::set('sales.order_expiration_days', 30);
@@ -60,7 +61,7 @@ class SalesOrderExpiryTest extends TestCase
     public function test_list_and_detail_show_exact_creation_date_time(): void
     {
         $sale = Sale::create([
-            'invoice_number' => 'INV' . now()->format('Ymd') . '0001',
+            'invoice_number' => 'INV'.now()->format('Ymd').'0001',
             'customer_id' => $this->customer->usuario_id,
             'seller_id' => $this->admin->usuario_id,
             'subtotal' => 100,
@@ -88,7 +89,7 @@ class SalesOrderExpiryTest extends TestCase
     public function test_system_calculates_days_remaining_until_expiration(): void
     {
         $sale = Sale::create([
-            'invoice_number' => 'INV' . now()->format('Ymd') . '0002',
+            'invoice_number' => 'INV'.now()->format('Ymd').'0002',
             'customer_id' => $this->customer->usuario_id,
             'seller_id' => $this->admin->usuario_id,
             'subtotal' => 100,
@@ -113,7 +114,7 @@ class SalesOrderExpiryTest extends TestCase
     {
         $saleDate = now()->subDays(25);
         $sale = Sale::create([
-            'invoice_number' => 'INV' . $saleDate->format('Ymd') . '0003',
+            'invoice_number' => 'INV'.$saleDate->format('Ymd').'0003',
             'customer_id' => $this->customer->usuario_id,
             'seller_id' => $this->admin->usuario_id,
             'subtotal' => 100,
@@ -140,7 +141,7 @@ class SalesOrderExpiryTest extends TestCase
     public function test_alert_shown_when_two_days_or_less_remaining(): void
     {
         $sale = Sale::create([
-            'invoice_number' => 'INV' . now()->format('Ymd') . '0004',
+            'invoice_number' => 'INV'.now()->format('Ymd').'0004',
             'customer_id' => $this->customer->usuario_id,
             'seller_id' => $this->admin->usuario_id,
             'subtotal' => 100,
@@ -166,7 +167,7 @@ class SalesOrderExpiryTest extends TestCase
     {
         $oldDate = now()->subDays(31);
         $sale = Sale::create([
-            'invoice_number' => 'INV' . $oldDate->format('Ymd') . '0005',
+            'invoice_number' => 'INV'.$oldDate->format('Ymd').'0005',
             'customer_id' => $this->customer->usuario_id,
             'seller_id' => $this->admin->usuario_id,
             'subtotal' => 100,
@@ -189,7 +190,7 @@ class SalesOrderExpiryTest extends TestCase
     public function test_newly_created_order_shows_full_days_remaining(): void
     {
         $sale = Sale::create([
-            'invoice_number' => 'INV' . now()->format('Ymd') . '0006',
+            'invoice_number' => 'INV'.now()->format('Ymd').'0006',
             'customer_id' => $this->customer->usuario_id,
             'seller_id' => $this->admin->usuario_id,
             'subtotal' => 100,
@@ -212,7 +213,7 @@ class SalesOrderExpiryTest extends TestCase
     public function test_order_near_limit_shows_reduced_days_remaining(): void
     {
         $sale = Sale::create([
-            'invoice_number' => 'INV' . now()->format('Ymd') . '0007',
+            'invoice_number' => 'INV'.now()->format('Ymd').'0007',
             'customer_id' => $this->customer->usuario_id,
             'seller_id' => $this->admin->usuario_id,
             'subtotal' => 100,
@@ -236,7 +237,7 @@ class SalesOrderExpiryTest extends TestCase
     {
         $oldDate = now()->subDays(31);
         $sale = Sale::create([
-            'invoice_number' => 'INV' . $oldDate->format('Ymd') . '0008',
+            'invoice_number' => 'INV'.$oldDate->format('Ymd').'0008',
             'customer_id' => $this->customer->usuario_id,
             'seller_id' => $this->admin->usuario_id,
             'subtotal' => 100,

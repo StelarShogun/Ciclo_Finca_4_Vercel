@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Rules\Recaptcha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Rules\Recaptcha;
 
 class AdminUserController extends Controller
 {
@@ -28,6 +28,7 @@ class AdminUserController extends Controller
             $user = Auth::guard('admin')->user();
             $user->last_access = now();
             $user->save();
+
             return redirect()->route('dashboard');
         }
 
@@ -41,6 +42,7 @@ class AdminUserController extends Controller
         Auth::guard('admin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('admin.login.login');
     }
 }

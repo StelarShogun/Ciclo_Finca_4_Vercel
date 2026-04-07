@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Sale extends Model
 {
     protected $table = 'sales';
+
     protected $primaryKey = 'sale_id';
 
     protected $fillable = [
@@ -41,11 +43,11 @@ class Sale extends Model
     // Converts sale_date from UTC to the application timezone for consistent display
     public function getSaleDateAttribute($value)
     {
-        if (!$value) {
+        if (! $value) {
             return null;
         }
 
-        return \Carbon\Carbon::parse($value, 'UTC')->setTimezone(config('app.timezone'));
+        return Carbon::parse($value, 'UTC')->setTimezone(config('app.timezone'));
     }
 
     public function saleItems(): HasMany
@@ -84,7 +86,8 @@ class Sale extends Model
         $prefix = 'INV';
         $date = now()->format('Ymd');
         $lastNumber = self::whereDate('sale_date', now())->count() + 1;
-        return $prefix . $date . str_pad($lastNumber, 4, '0', STR_PAD_LEFT);
+
+        return $prefix.$date.str_pad($lastNumber, 4, '0', STR_PAD_LEFT);
     }
 
     public function calculateTotal()
@@ -102,9 +105,10 @@ class Sale extends Model
         return (int) config('sales.order_expiration_days', 30);
     }
 
-    public function getExpiresAtAttribute(): \Carbon\Carbon
+    public function getExpiresAtAttribute(): Carbon
     {
         $days = static::getOrderExpirationDays();
+
         return $this->sale_date->copy()->addDays($days);
     }
 
@@ -115,12 +119,14 @@ class Sale extends Model
         if ($expiresAt <= $now) {
             return 0;
         }
+
         return (int) $now->diffInDays($expiresAt, false);
     }
 
     public function getIsExpiryWarningAttribute(): bool
     {
         $days = $this->days_remaining_until_expiration;
+
         // Triggers when at or below the alert threshold but not yet expired
         return $days <= (int) config('sales.expiry_alert_days', 2) && $days > 0;
     }
@@ -129,6 +135,7 @@ class Sale extends Model
     {
         $days = static::getOrderExpirationDays();
         $limitDate = now()->subDays($days);
+
         return $query->where('sale_date', '>=', $limitDate);
     }
 }

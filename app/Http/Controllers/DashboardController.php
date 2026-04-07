@@ -8,6 +8,7 @@ use App\Models\Sale;
 use App\Models\Supplier;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -304,7 +305,7 @@ class DashboardController extends Controller
     /**
      * Una entrada por día en el rango con total 0 si no hubo ventas (el gráfico no queda “vacío”).
      *
-     * @param  \Illuminate\Support\Collection<int, object>  $rows
+     * @param  Collection<int, object>  $rows
      * @return array<int, array{date: string, total: float}>
      */
     private function fillSalesChartSeries($rows, Carbon $rangeStart, Carbon $rangeEnd): array

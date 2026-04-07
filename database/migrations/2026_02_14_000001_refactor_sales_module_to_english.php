@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Refactors the sales module to 100% English:
@@ -20,6 +20,7 @@ return new class extends Migration
 
         if ($driver !== 'mysql') {
             $this->upSqlite($driver);
+
             return;
         }
 
@@ -91,7 +92,7 @@ return new class extends Migration
     protected function upSqlite(string $driver): void
     {
         // If not MySQL, skip to avoid breaking tests; document that production uses MySQL.
-        return;
+
     }
 
     public function down(): void

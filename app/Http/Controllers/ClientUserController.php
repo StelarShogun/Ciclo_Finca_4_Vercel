@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 use App\Models\Client;
 use App\Rules\Recaptcha;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class ClientUserController extends Controller
 {
@@ -21,14 +21,14 @@ class ClientUserController extends Controller
     // ============================================================
 
     // Display the authenticated client's profile, normalizing provider if null.
-public function show()
-{
-    $client = Auth::guard('clients')->user();
+    public function show()
+    {
+        $client = Auth::guard('clients')->user();
 
-    $isGoogleOnly = $client->provider === 'google';
+        $isGoogleOnly = $client->provider === 'google';
 
-    return view('client.profile', compact('client', 'isGoogleOnly'));
-}
+        return view('client.profile', compact('client', 'isGoogleOnly'));
+    }
 
     // Update the authenticated client's personal data.
     public function update(Request $request)
@@ -36,37 +36,37 @@ public function show()
         $client = Auth::guard('clients')->user();
 
         $request->validate([
-            'name'           => 'required|string|min:2|max:60',
-            'first_surname'  => 'required|string|min:2|max:60',
+            'name' => 'required|string|min:2|max:60',
+            'first_surname' => 'required|string|min:2|max:60',
             'second_surname' => 'nullable|string|max:60',
-            'gmail'          => 'required|email|max:100|unique:client_table,gmail,' . $client->user_id . ',user_id',
+            'gmail' => 'required|email|max:100|unique:client_table,gmail,'.$client->user_id.',user_id',
         ], [
-            'name.required'          => 'El nombre es obligatorio.',
-            'name.min'               => 'El nombre debe tener al menos 2 caracteres.',
-            'name.max'               => 'El nombre no puede superar los 60 caracteres.',
+            'name.required' => 'El nombre es obligatorio.',
+            'name.min' => 'El nombre debe tener al menos 2 caracteres.',
+            'name.max' => 'El nombre no puede superar los 60 caracteres.',
             'first_surname.required' => 'El primer apellido es obligatorio.',
-            'first_surname.min'      => 'El primer apellido debe tener al menos 2 caracteres.',
-            'first_surname.max'      => 'El primer apellido no puede superar los 60 caracteres.',
-            'second_surname.max'     => 'El segundo apellido no puede superar los 60 caracteres.',
-            'gmail.required'         => 'El correo electrónico es obligatorio.',
-            'gmail.email'            => 'El formato del correo electrónico no es válido.',
-            'gmail.max'              => 'El correo electrónico no puede superar los 100 caracteres.',
-            'gmail.unique'           => 'Este correo electrónico ya está registrado.',
+            'first_surname.min' => 'El primer apellido debe tener al menos 2 caracteres.',
+            'first_surname.max' => 'El primer apellido no puede superar los 60 caracteres.',
+            'second_surname.max' => 'El segundo apellido no puede superar los 60 caracteres.',
+            'gmail.required' => 'El correo electrónico es obligatorio.',
+            'gmail.email' => 'El formato del correo electrónico no es válido.',
+            'gmail.max' => 'El correo electrónico no puede superar los 100 caracteres.',
+            'gmail.unique' => 'Este correo electrónico ya está registrado.',
         ]);
 
         DB::table('client_table')
             ->where('user_id', $client->user_id)
             ->update([
-                'name'           => $request->name,
-                'first_surname'  => $request->first_surname,
+                'name' => $request->name,
+                'first_surname' => $request->first_surname,
                 'second_surname' => $request->second_surname,
-                'gmail'          => $request->gmail,
-                'updated_at'     => now(),
+                'gmail' => $request->gmail,
+                'updated_at' => now(),
             ]);
 
         session([
-            'client_name'           => $request->name,
-            'client_first_surname'  => $request->first_surname,
+            'client_name' => $request->name,
+            'client_first_surname' => $request->first_surname,
             'client_second_surname' => $request->second_surname,
         ]);
 
@@ -83,28 +83,28 @@ public function show()
     // Update the client's password; switches Google accounts to local provider.
     public function updatePassword(Request $request)
     {
-        $client   = Auth::guard('clients')->user();
+        $client = Auth::guard('clients')->user();
         $isGoogle = ($client->provider ?? 'local') === 'google';
 
         $rules = ['new_password' => 'required|string|min:8|confirmed'];
 
-        if (!$isGoogle) {
+        if (! $isGoogle) {
             $rules['current_password'] = 'required|string';
         }
 
         $messages = [
             'current_password.required' => 'La contraseña actual es obligatoria.',
-            'current_password.string'   => 'La contraseña actual no es válida.',
-            'new_password.required'     => 'La nueva contraseña es obligatoria.',
-            'new_password.min'          => 'La contraseña debe tener al menos 8 caracteres.',
-            'new_password.confirmed'    => 'Las contraseñas no coinciden.',
+            'current_password.string' => 'La contraseña actual no es válida.',
+            'new_password.required' => 'La nueva contraseña es obligatoria.',
+            'new_password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'new_password.confirmed' => 'Las contraseñas no coinciden.',
         ];
 
         $request->validate($rules, $messages);
 
         // Verify current password and prevent reuse for local accounts.
-        if (!$isGoogle) {
-            if (!Hash::check($request->current_password, $client->password)) {
+        if (! $isGoogle) {
+            if (! Hash::check($request->current_password, $client->password)) {
                 $error = ['current_password' => ['La contraseña actual no es correcta.']];
 
                 if ($request->ajax() || $request->wantsJson()) {
@@ -128,21 +128,21 @@ public function show()
         DB::table('client_table')
             ->where('user_id', $client->user_id)
             ->update([
-                'password'   => Hash::make($request->new_password),
-                'provider'   => 'local',
+                'password' => Hash::make($request->new_password),
+                'provider' => 'local',
                 'updated_at' => now(),
             ]);
 
         // Use specific flash keys so the JS can trigger the correct alert message.
         $flashKey = $isGoogle ? 'password_defined' : 'password_updated';
-        $message  = $isGoogle
+        $message = $isGoogle
             ? 'Contraseña definida. Ya puedes iniciar sesión con tu correo y contraseña.'
             : 'Contraseña actualizada correctamente.';
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success'          => true,
-                'message'          => $message,
+                'success' => true,
+                'message' => $message,
                 'provider_changed' => $isGoogle,
             ]);
         }
@@ -164,22 +164,22 @@ public function show()
     public function login(Request $request)
     {
         $rules = [
-            'gmail'    => 'required|email',
+            'gmail' => 'required|email',
             'password' => 'required',
         ];
 
         if (config('recaptcha.site_key')) {
-            $rules['g-recaptcha-response'] = ['required', new Recaptcha()];
+            $rules['g-recaptcha-response'] = ['required', new Recaptcha];
         }
 
         $request->validate($rules, [
-            'gmail.required'    => 'El correo electrónico es obligatorio.',
-            'gmail.email'       => 'El formato del correo electrónico no es válido.',
+            'gmail.required' => 'El correo electrónico es obligatorio.',
+            'gmail.email' => 'El formato del correo electrónico no es válido.',
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 
         $credentials = [
-            'gmail'    => $request->gmail,
+            'gmail' => $request->gmail,
             'password' => $request->password,
         ];
         $remember = $request->boolean('remember');
@@ -194,6 +194,7 @@ public function show()
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => $msg], 403);
                 }
+
                 return back()->withErrors(['gmail' => $msg])->withInput();
             }
 
@@ -202,10 +203,10 @@ public function show()
                 Auth::guard('clients')->logout();
 
                 // Generar y enviar código de verificación automáticamente
-                $code    = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
                 $expires = now()->addMinutes(10);
                 $client->update([
-                    'verification_code'            => $code,
+                    'verification_code' => $code,
                     'verification_code_expires_at' => $expires,
                 ]);
                 try {
@@ -213,7 +214,7 @@ public function show()
                         "Hola {$client->name},\n\nTu código de verificación es: {$code}\n\nExpira en 10 minutos.",
                         function ($message) use ($client) {
                             $message->to($client->gmail)
-                                    ->subject('Código de verificación - Ciclo Finca');
+                                ->subject('Código de verificación - Ciclo Finca');
                         }
                     );
                 } catch (\Exception $e) {
@@ -222,31 +223,32 @@ public function show()
 
                 session([
                     'pending_client_id' => $client->user_id,
-                    'pending_gmail'     => $client->gmail,
+                    'pending_gmail' => $client->gmail,
                 ]);
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
-                        'success'  => false,
+                        'success' => false,
                         'redirect' => route('clients.verify.form'),
-                        'message'  => 'Debes verificar tu correo antes de iniciar sesión.',
+                        'message' => 'Debes verificar tu correo antes de iniciar sesión.',
                     ], 403);
                 }
+
                 return redirect()->route('clients.verify.form')
                     ->withErrors(['gmail' => 'Debes verificar tu correo antes de iniciar sesión.']);
             }
 
             session([
-                'client_id'             => $client->user_id,
-                'client_name'           => $client->name,
-                'client_first_surname'  => $client->first_surname,
+                'client_id' => $client->user_id,
+                'client_name' => $client->name,
+                'client_first_surname' => $client->first_surname,
                 'client_second_surname' => $client->second_surname,
             ]);
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
-                    'success'  => true,
+                    'success' => true,
                     'redirect' => route('clients.catalog'),
-                    'message'  => 'Inicio de sesión exitoso.',
+                    'message' => 'Inicio de sesión exitoso.',
                 ]);
             }
 
@@ -276,50 +278,50 @@ public function show()
     {
         $request->validate(
             [
-                'name'                  => ['required', 'string', 'max:50', 'min:2', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
-                'first_surname'         => ['required', 'string', 'max:50', 'min:2', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
-                'second_surname'        => ['nullable', 'string', 'max:50', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
-                'gmail'                 => ['required', 'email', 'unique:client_table,gmail', 'regex:/^[^@]+@gmail\.com$/i'],
-                'password'              => ['required', 'string', 'min:8', 'confirmed'],
+                'name' => ['required', 'string', 'max:50', 'min:2', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
+                'first_surname' => ['required', 'string', 'max:50', 'min:2', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
+                'second_surname' => ['nullable', 'string', 'max:50', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
+                'gmail' => ['required', 'email', 'unique:client_table,gmail', 'regex:/^[^@]+@gmail\.com$/i'],
+                'password' => ['required', 'string', 'min:8', 'confirmed'],
             ],
             [
-                'name.required'             => 'El nombre es obligatorio.',
-                'name.min'                  => 'El nombre debe tener al menos 2 caracteres.',
-                'name.max'                  => 'El nombre no puede superar 50 caracteres.',
-                'name.regex'                => 'El nombre solo puede contener letras y espacios.',
-                'first_surname.required'    => 'El apellido es obligatorio.',
-                'first_surname.min'         => 'El apellido debe tener al menos 2 caracteres.',
-                'first_surname.max'         => 'El apellido no puede superar 50 caracteres.',
-                'first_surname.regex'       => 'El apellido solo puede contener letras y espacios.',
-                'second_surname.max'        => 'El segundo apellido no puede superar 50 caracteres.',
-                'second_surname.regex'      => 'El segundo apellido solo puede contener letras y espacios.',
-                'gmail.required'            => 'El correo Gmail es obligatorio.',
-                'gmail.email'               => 'Debe ingresar un correo electrónico válido.',
-                'gmail.unique'              => 'Este correo ya está registrado.',
-                'gmail.regex'               => 'Solo se aceptan correos de Gmail (@gmail.com).',
-                'password.required'         => 'La contraseña es obligatoria.',
-                'password.min'              => 'La contraseña debe tener al menos 8 caracteres.',
-                'password.confirmed'        => 'Las contraseñas no coinciden.',
+                'name.required' => 'El nombre es obligatorio.',
+                'name.min' => 'El nombre debe tener al menos 2 caracteres.',
+                'name.max' => 'El nombre no puede superar 50 caracteres.',
+                'name.regex' => 'El nombre solo puede contener letras y espacios.',
+                'first_surname.required' => 'El apellido es obligatorio.',
+                'first_surname.min' => 'El apellido debe tener al menos 2 caracteres.',
+                'first_surname.max' => 'El apellido no puede superar 50 caracteres.',
+                'first_surname.regex' => 'El apellido solo puede contener letras y espacios.',
+                'second_surname.max' => 'El segundo apellido no puede superar 50 caracteres.',
+                'second_surname.regex' => 'El segundo apellido solo puede contener letras y espacios.',
+                'gmail.required' => 'El correo Gmail es obligatorio.',
+                'gmail.email' => 'Debe ingresar un correo electrónico válido.',
+                'gmail.unique' => 'Este correo ya está registrado.',
+                'gmail.regex' => 'Solo se aceptan correos de Gmail (@gmail.com).',
+                'password.required' => 'La contraseña es obligatoria.',
+                'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+                'password.confirmed' => 'Las contraseñas no coinciden.',
             ]
         );
 
-        $code    = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expires = now()->addMinutes(10);
 
         $client = Client::create([
-            'name'                         => $request->name,
-            'first_surname'                => $request->first_surname,
-            'second_surname'               => $request->second_surname,
-            'gmail'                        => strtolower($request->gmail),
-            'password'                     => Hash::make($request->password),
-            'verification_code'            => $code,
+            'name' => $request->name,
+            'first_surname' => $request->first_surname,
+            'second_surname' => $request->second_surname,
+            'gmail' => strtolower($request->gmail),
+            'password' => Hash::make($request->password),
+            'verification_code' => $code,
             'verification_code_expires_at' => $expires,
-            'email_verified'               => false,
+            'email_verified' => false,
         ]);
 
         session([
             'pending_client_id' => $client->user_id,
-            'pending_gmail'     => $client->gmail,
+            'pending_gmail' => $client->gmail,
         ]);
 
         $mailWarning = null;
@@ -343,9 +345,10 @@ public function show()
     // Show verify form
     public function showVerifyForm()
     {
-        if (!session('pending_client_id')) {
+        if (! session('pending_client_id')) {
             return redirect()->route('clients.register.form');
         }
+
         return view('client.verify_gmail_code');
     }
 
@@ -356,19 +359,19 @@ public function show()
             ['verification_code' => 'required|digits:6'],
             [
                 'verification_code.required' => 'El código es obligatorio.',
-                'verification_code.digits'   => 'El código debe tener exactamente 6 dígitos.',
+                'verification_code.digits' => 'El código debe tener exactamente 6 dígitos.',
             ]
         );
 
         $clientId = session('pending_client_id');
-        if (!$clientId) {
+        if (! $clientId) {
             return redirect()->route('clients.register.form')
                 ->withErrors(['verification_code' => 'Sesión expirada. Regístrate de nuevo.']);
         }
 
         $client = Client::find($clientId);
 
-        if (!$client || $client->verification_code !== $request->verification_code) {
+        if (! $client || $client->verification_code !== $request->verification_code) {
             return back()->withErrors(['verification_code' => 'Código incorrecto. Inténtalo de nuevo.']);
         }
 
@@ -377,8 +380,8 @@ public function show()
         }
 
         $client->update([
-            'email_verified'               => true,
-            'verification_code'            => null,
+            'email_verified' => true,
+            'verification_code' => null,
             'verification_code_expires_at' => null,
         ]);
 
@@ -387,9 +390,9 @@ public function show()
         Auth::guard('clients')->login($client);
 
         session([
-            'client_id'             => $client->user_id,
-            'client_name'           => $client->name,
-            'client_first_surname'  => $client->first_surname,
+            'client_id' => $client->user_id,
+            'client_name' => $client->name,
+            'client_first_surname' => $client->first_surname,
             'client_second_surname' => $client->second_surname,
         ]);
 
@@ -400,26 +403,28 @@ public function show()
     public function resendCode(Request $request)
     {
         $clientId = session('pending_client_id');
-        if (!$clientId) {
+        if (! $clientId) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Sesión expirada.'], 422);
             }
+
             return redirect()->route('clients.register.form');
         }
 
         $client = Client::find($clientId);
-        if (!$client) {
+        if (! $client) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Cliente no encontrado.'], 422);
             }
+
             return redirect()->route('clients.register.form');
         }
 
-        $code    = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expires = now()->addMinutes(10);
 
         $client->update([
-            'verification_code'            => $code,
+            'verification_code' => $code,
             'verification_code_expires_at' => $expires,
         ]);
 
@@ -469,16 +474,16 @@ public function show()
     {
         $request->validate(
             [
-                'gmail'                     => 'required|email',
-                'new_password'              => 'required|string|min:8|confirmed',
+                'gmail' => 'required|email',
+                'new_password' => 'required|string|min:8|confirmed',
                 'new_password_confirmation' => 'required|string',
             ],
             [
-                'gmail.required'                     => 'El correo es obligatorio.',
-                'gmail.email'                        => 'Ingresa un correo válido.',
-                'new_password.required'              => 'La nueva contraseña es obligatoria.',
-                'new_password.min'                   => 'La contraseña debe tener al menos 8 caracteres.',
-                'new_password.confirmed'             => 'Las contraseñas no coinciden.',
+                'gmail.required' => 'El correo es obligatorio.',
+                'gmail.email' => 'Ingresa un correo válido.',
+                'new_password.required' => 'La nueva contraseña es obligatoria.',
+                'new_password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+                'new_password.confirmed' => 'Las contraseñas no coinciden.',
                 'new_password_confirmation.required' => 'Debes confirmar la nueva contraseña.',
             ]
         );
@@ -487,32 +492,33 @@ public function show()
 
         // Always respond with the same message to avoid email enumeration.
         // If the client doesn't exist, redirect to the verify form anyway.
-        if (!$client) {
+        if (! $client) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
-                    'success'            => true,
+                    'success' => true,
                     'needs_verification' => true,
-                    'redirect'           => route('clients.recovery.verify.form'),
-                    'message'            => 'Si el correo existe, se ha enviado un código de verificación.',
+                    'redirect' => route('clients.recovery.verify.form'),
+                    'message' => 'Si el correo existe, se ha enviado un código de verificación.',
                 ]);
             }
+
             return redirect()->route('clients.recovery.verify.form');
         }
 
-        $code    = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expires = now()->addMinutes(15);
 
         // Store pending password hash in session — only written to DB after code is verified.
         session([
-            'pending_recovery_id'       => $client->user_id,
-            'pending_recovery_gmail'    => $client->gmail,
+            'pending_recovery_id' => $client->user_id,
+            'pending_recovery_gmail' => $client->gmail,
             'pending_recovery_password' => Hash::make($request->new_password),
         ]);
 
         DB::table('client_table')
             ->where('user_id', $client->user_id)
             ->update([
-                'verification_code'            => $code,
+                'verification_code' => $code,
                 'verification_code_expires_at' => $expires,
             ]);
 
@@ -521,19 +527,19 @@ public function show()
                 "Hola {$client->name},\n\nTu código de verificación para recuperar tu contraseña es: {$code}\n\nExpira en 15 minutos.\n\nSi no solicitaste este cambio, ignora este correo.",
                 function ($message) use ($client) {
                     $message->to($client->gmail)
-                            ->subject('Código de recuperación de contraseña - Ciclo Finca 4');
+                        ->subject('Código de recuperación de contraseña - Ciclo Finca 4');
                 }
             );
         } catch (\Exception $e) {
-            Log::error('Recovery mail failed: ' . $e->getMessage());
+            Log::error('Recovery mail failed: '.$e->getMessage());
         }
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success'            => true,
+                'success' => true,
                 'needs_verification' => true,
-                'redirect'           => route('clients.recovery.verify.form'),
-                'message'            => 'Se ha enviado un código de verificación a tu correo.',
+                'redirect' => route('clients.recovery.verify.form'),
+                'message' => 'Se ha enviado un código de verificación a tu correo.',
             ]);
         }
 
@@ -544,9 +550,10 @@ public function show()
     // Recovery step 2: show code-entry form.
     public function showRecoveryVerifyForm()
     {
-        if (!session('pending_recovery_id')) {
+        if (! session('pending_recovery_id')) {
             return redirect()->route('clients.recovery.form');
         }
+
         return view('client.verify_gmail_code');
     }
 
@@ -557,25 +564,27 @@ public function show()
             ['verification_code' => 'required|digits:6'],
             [
                 'verification_code.required' => 'El código es obligatorio.',
-                'verification_code.digits'   => 'El código debe tener exactamente 6 dígitos.',
+                'verification_code.digits' => 'El código debe tener exactamente 6 dígitos.',
             ]
         );
 
         $clientId = session('pending_recovery_id');
-        if (!$clientId) {
+        if (! $clientId) {
             $msg = 'Sesión expirada. Vuelve a intentar la recuperación.';
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg]);
             }
+
             return redirect()->route('clients.recovery.form')->withErrors(['verification_code' => $msg]);
         }
 
         $client = Client::find($clientId);
-        if (!$client || $client->verification_code !== $request->verification_code) {
+        if (! $client || $client->verification_code !== $request->verification_code) {
             $msg = 'Código incorrecto. Inténtalo de nuevo.';
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg]);
             }
+
             return back()->withErrors(['verification_code' => $msg]);
         }
 
@@ -584,6 +593,7 @@ public function show()
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg]);
             }
+
             return redirect()->route('clients.recovery.form')->withErrors(['verification_code' => $msg]);
         }
 
@@ -592,11 +602,11 @@ public function show()
         DB::table('client_table')
             ->where('user_id', $client->user_id)
             ->update([
-                'password'                     => $hashedPassword,
-                'provider'                     => 'local',
-                'verification_code'            => null,
+                'password' => $hashedPassword,
+                'provider' => 'local',
+                'verification_code' => null,
                 'verification_code_expires_at' => null,
-                'updated_at'                   => now(),
+                'updated_at' => now(),
             ]);
 
         session()->forget(['pending_recovery_id', 'pending_recovery_gmail', 'pending_recovery_password']);
@@ -635,7 +645,7 @@ public function show()
             'prompt' => 'select_account',
         ]);
 
-        return redirect()->away('https://accounts.google.com/o/oauth2/v2/auth?' . $query);
+        return redirect()->away('https://accounts.google.com/o/oauth2/v2/auth?'.$query);
     }
 
     /**
@@ -647,14 +657,14 @@ public function show()
             if ($request->filled('error')) {
                 return redirect()->route('clients.home')->with(
                     'error',
-                    'Google rechazó la autenticación: ' . $request->string('error')
+                    'Google rechazó la autenticación: '.$request->string('error')
                 );
             }
 
             $stateFromSession = (string) session()->pull('google_oauth_state', '');
             $stateFromRequest = (string) $request->query('state', '');
 
-            if ($stateFromSession === '' || $stateFromRequest === '' || !hash_equals($stateFromSession, $stateFromRequest)) {
+            if ($stateFromSession === '' || $stateFromRequest === '' || ! hash_equals($stateFromSession, $stateFromRequest)) {
                 return redirect()->route('clients.home')->with('error', 'Sesión OAuth inválida. Inténtalo de nuevo.');
             }
 
@@ -672,7 +682,7 @@ public function show()
                 'grant_type' => 'authorization_code',
             ]);
 
-            if (!$tokenResponse->successful()) {
+            if (! $tokenResponse->successful()) {
                 throw new \RuntimeException('No se pudo obtener el access token de Google.');
             }
 
@@ -682,7 +692,7 @@ public function show()
             }
 
             $profileResponse = Http::withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
-            if (!$profileResponse->successful()) {
+            if (! $profileResponse->successful()) {
                 throw new \RuntimeException('No se pudo obtener el perfil de Google.');
             }
 
@@ -700,11 +710,12 @@ public function show()
                 // Bloquear acceso si el usuario está baneado
                 if ($client->active === false) {
                     $msg = 'En este momento se encuentra baneado, contactar con el administrador para más información.';
+
                     return redirect()->route('clients.home')->with('error', $msg);
                 }
 
                 // Actualizar email_verified solo si la columna existe
-                if (Schema::hasColumn((new Client())->getTable(), 'email_verified')) {
+                if (Schema::hasColumn((new Client)->getTable(), 'email_verified')) {
                     $client->update(['email_verified' => true]);
                 }
             } else {
@@ -713,13 +724,13 @@ public function show()
                 $apellido1 = $partes[1] ?? '-';
                 $apellido2 = $partes[2] ?? null;
                 $data = [
-                    'name'          => $nombre,
+                    'name' => $nombre,
                     'first_surname' => $apellido1,
                     'second_surname' => $apellido2,
-                    'gmail'         => $email,
-                    'password'      => Hash::make(Str::random(32)),
+                    'gmail' => $email,
+                    'password' => Hash::make(Str::random(32)),
                 ];
-                if (Schema::hasColumn((new Client())->getTable(), 'email_verified')) {
+                if (Schema::hasColumn((new Client)->getTable(), 'email_verified')) {
                     $data['email_verified'] = true;
                 }
                 $client = Client::create($data);
@@ -728,24 +739,25 @@ public function show()
             Auth::guard('clients')->login($client);
             $request->session()->regenerate();
             session([
-                'client_id'            => $client->user_id,
-                'client_name'          => $client->name,
-                'client_first_surname'  => $client->first_surname,
+                'client_id' => $client->user_id,
+                'client_name' => $client->name,
+                'client_first_surname' => $client->first_surname,
                 'client_second_surname' => $client->second_surname,
             ]);
 
             return redirect()->route('clients.home')->with('status', 'Inicio de sesión exitoso con Google');
         } catch (\Throwable $e) {
-            $detail = $e->getMessage() ?: get_class($e) . ' en ' . $e->getFile() . ':' . $e->getLine();
-            Log::error('Error en Google OAuth: ' . $detail, [
+            $detail = $e->getMessage() ?: get_class($e).' en '.$e->getFile().':'.$e->getLine();
+            Log::error('Error en Google OAuth: '.$detail, [
                 'exception' => get_class($e),
-                'file'      => $e->getFile(),
-                'line'      => $e->getLine(),
-                'trace'     => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
             ]);
             $message = config('app.debug')
-                ? 'Error al iniciar sesión con Google: ' . $detail
+                ? 'Error al iniciar sesión con Google: '.$detail
                 : 'Error al iniciar sesión con Google. Revisa storage/logs/laravel.log';
+
             return redirect()->route('clients.home')->with('error', $message);
         }
     }

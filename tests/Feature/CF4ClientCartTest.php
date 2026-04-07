@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Client;
 use App\Models\Product;
+use App\Models\Sale;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
@@ -24,15 +25,15 @@ class CF4ClientCartTest extends TestCase
             }
 
             foreach (['client_table', 'products', 'sales', 'sale_items'] as $table) {
-                if (!Schema::hasTable($table)) {
-                    $this->markTestSkipped('Tabla requerida no existe: ' . $table);
+                if (! Schema::hasTable($table)) {
+                    $this->markTestSkipped('Tabla requerida no existe: '.$table);
                 }
             }
 
             // Asegurar que pedidos recientes cuenten como "no expirados" en ventas.
             Config::set('sales.order_expiration_days', 30);
         } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: ' . $e->getMessage());
+            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
         }
     }
 
@@ -149,7 +150,7 @@ class CF4ClientCartTest extends TestCase
         $saleId = $checkoutRes->json('sale_id');
         $this->assertNotEmpty($saleId);
 
-        $sale = \App\Models\Sale::findOrFail($saleId);
+        $sale = Sale::findOrFail($saleId);
         $this->assertEquals('pending', $sale->status);
         $this->assertEquals('web_cart', $sale->order_source);
         $this->assertEquals($client->user_id, $sale->client_id);
@@ -169,4 +170,3 @@ class CF4ClientCartTest extends TestCase
         $cartViewRes->assertSee('Tu carrito está vacío', false);
     }
 }
-

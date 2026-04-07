@@ -13,7 +13,7 @@ class BrandController extends Controller
         $query = Brand::query();
 
         if (request('name')) {
-            $query->where('name', 'like', '%' . request('name') . '%');
+            $query->where('name', 'like', '%'.request('name').'%');
         }
 
         $brands = $query->orderBy('name')->paginate(15);
@@ -27,13 +27,13 @@ class BrandController extends Controller
             'name' => 'required|string|max:100',
         ], [
             'name.required' => 'El nombre de la marca es obligatorio.',
-            'name.max'      => 'El nombre no puede tener más de 100 caracteres.',
+            'name.max' => 'El nombre no puede tener más de 100 caracteres.',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors'  => $validator->errors(),
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -41,10 +41,10 @@ class BrandController extends Controller
         $exactMatch = Brand::whereRaw('BINARY name = ?', [$request->name])->first();
         if ($exactMatch) {
             return response()->json([
-                'success'   => false,
+                'success' => false,
                 'duplicate' => true,
-                'exact'     => true,
-                'existing'  => ['id' => $exactMatch->id, 'name' => $exactMatch->name],
+                'exact' => true,
+                'existing' => ['id' => $exactMatch->id, 'name' => $exactMatch->name],
             ], 422);
         }
 
@@ -52,10 +52,10 @@ class BrandController extends Controller
         $existing = Brand::whereRaw('LOWER(name) = ?', [strtolower($request->name)])->first();
         if ($existing) {
             return response()->json([
-                'success'   => false,
+                'success' => false,
                 'duplicate' => true,
-                'exact'     => false,
-                'existing'  => ['id' => $existing->id, 'name' => $existing->name],
+                'exact' => false,
+                'existing' => ['id' => $existing->id, 'name' => $existing->name],
             ], 422);
         }
 
@@ -64,7 +64,7 @@ class BrandController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Marca creada correctamente.',
-            'brand'   => $brand,
+            'brand' => $brand,
         ]);
     }
 
@@ -74,13 +74,13 @@ class BrandController extends Controller
             'name' => 'required|string|max:100',
         ], [
             'name.required' => 'El nombre de la marca es obligatorio.',
-            'name.max'      => 'El nombre no puede tener más de 100 caracteres.',
+            'name.max' => 'El nombre no puede tener más de 100 caracteres.',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors'  => $validator->errors(),
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -90,10 +90,10 @@ class BrandController extends Controller
             ->first();
         if ($exactMatch) {
             return response()->json([
-                'success'   => false,
+                'success' => false,
                 'duplicate' => true,
-                'exact'     => true,
-                'existing'  => ['id' => $exactMatch->id, 'name' => $exactMatch->name],
+                'exact' => true,
+                'existing' => ['id' => $exactMatch->id, 'name' => $exactMatch->name],
             ], 422);
         }
 
@@ -103,10 +103,10 @@ class BrandController extends Controller
             ->first();
         if ($existing) {
             return response()->json([
-                'success'   => false,
+                'success' => false,
                 'duplicate' => true,
-                'exact'     => false,
-                'existing'  => ['id' => $existing->id, 'name' => $existing->name],
+                'exact' => false,
+                'existing' => ['id' => $existing->id, 'name' => $existing->name],
             ], 422);
         }
 
@@ -115,7 +115,7 @@ class BrandController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Marca actualizada correctamente.',
-            'brand'   => $brand,
+            'brand' => $brand,
         ]);
     }
 
@@ -126,7 +126,7 @@ class BrandController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al verificar los productos asociados: ' . $e->getMessage(),
+                'message' => 'Error al verificar los productos asociados: '.$e->getMessage(),
             ], 500);
         }
 
@@ -134,7 +134,7 @@ class BrandController extends Controller
             return response()->json([
                 'success' => false,
                 'blocked' => true,
-                'message' => "No se puede eliminar \"{$brand->name}\" porque está asociada a {$productCount} " . ($productCount === 1 ? 'producto' : 'productos') . '.',
+                'message' => "No se puede eliminar \"{$brand->name}\" porque está asociada a {$productCount} ".($productCount === 1 ? 'producto' : 'productos').'.',
             ], 422);
         }
 

@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
 {
-
     // Run the database seeds.
     public function run(): void
     {
@@ -50,6 +49,7 @@ class AdminSeeder extends Seeder
             $existing = DB::table('admins')->where('gmail', $data['gmail'])->first();
             if ($existing) {
                 $this->command->warn("El admin {$data['gmail']} ya existe en la base de datos.");
+
                 continue;
             }
             DB::table('admins')->insert($data);

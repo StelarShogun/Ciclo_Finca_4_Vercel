@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    ##initialize
+    // #initialize
     /**
      * Run the migrations.
      */
@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::table('usuarios', function (Blueprint $table) {
             $table->string('rol', 20)->change();
         });
-        
+
         // Luego la cambiamos de vuelta a enum con los nuevos valores
         Schema::table('usuarios', function (Blueprint $table) {
             $table->enum('rol', ['admin', 'cliente', 'tecnico', 'vendedor', 'proveedor'])->default('cliente')->change();

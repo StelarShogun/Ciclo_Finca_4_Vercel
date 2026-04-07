@@ -17,7 +17,7 @@ return new class extends Migration
             $table->decimal('descuento_unitario', 10, 2)->default(0);
             $table->decimal('total', 10, 2);
             $table->timestamps();
-            
+
             // Índices
             $table->index('venta_id');
             $table->index('producto_id');

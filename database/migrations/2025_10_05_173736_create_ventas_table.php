@@ -23,7 +23,7 @@ return new class extends Migration
             $table->text('notas')->nullable();
             $table->timestamp('fecha_venta')->useCurrent();
             $table->timestamps();
-            
+
             // Índices
             $table->index('numero_factura');
             $table->index('cliente_id');

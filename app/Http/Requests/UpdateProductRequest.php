@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Requests;
 
 use App\Models\Product;
@@ -7,7 +8,10 @@ use Illuminate\Validation\Rule;
 
 class UpdateProductRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }
+    public function authorize(): bool
+    {
+        return true;
+    }
 
     /**
      * ID del producto en la ruta (products/{product}) para ignorar en unique(name).
@@ -48,19 +52,19 @@ class UpdateProductRequest extends FormRequest
         }
 
         return [
-            'category_id'  => ['required','exists:categories,category_id'],
-            'supplier_id'  => ['required','exists:suppliers,supplier_id'],
-            'brand_id'     => ['required','exists:brands,id'],
-            'name'         => ['required','string','max:200', $nameRule],
-            'description'  => ['nullable','string'],
-            'sale_price'   => ['required','numeric','min:0','gt:purchase_price'],
-            'purchase_price' => ['required','numeric','min:0'],
-            'stock_current' => ['required','integer','min:0','gte:stock_minimum'],
-            'stock_minimum' => ['required','integer','min:0'],
-            'status'       => ['required','in:active,inactive,out_of_stock,discontinued'],
-            'image'        => ['nullable','image','mimes:jpeg,png,jpg,gif,svg','max:2048'],
-            'images'       => ['nullable','array'],
-            'images.*'     => ['image','mimes:jpeg,png,jpg,gif,svg','max:2048'],
+            'category_id' => ['required', 'exists:categories,category_id'],
+            'supplier_id' => ['required', 'exists:suppliers,supplier_id'],
+            'brand_id' => ['required', 'exists:brands,id'],
+            'name' => ['required', 'string', 'max:200', $nameRule],
+            'description' => ['nullable', 'string'],
+            'sale_price' => ['required', 'numeric', 'min:0', 'gt:purchase_price'],
+            'purchase_price' => ['required', 'numeric', 'min:0'],
+            'stock_current' => ['required', 'integer', 'min:0', 'gte:stock_minimum'],
+            'stock_minimum' => ['required', 'integer', 'min:0'],
+            'status' => ['required', 'in:active,inactive,out_of_stock,discontinued'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
+            'images' => ['nullable', 'array'],
+            'images.*' => ['image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
         ];
     }
 
@@ -112,9 +116,9 @@ class UpdateProductRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'name'      => $this->name ? trim($this->name) : null,
+            'name' => $this->name ? trim($this->name) : null,
             'description' => $this->description ? trim($this->description) : null,
-            'status'      => $this->status ? strtolower($this->status) : null,
+            'status' => $this->status ? strtolower($this->status) : null,
         ]);
     }
 }

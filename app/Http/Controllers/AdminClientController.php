@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
-use Illuminate\Http\Request;
 
 class AdminClientController extends Controller
 {
     public function index()
     {
         $clients = Client::orderBy('name')->get();
+
         return view('admin.users.table_clients', compact('clients'));
     }
 
