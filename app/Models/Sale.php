@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @property-read Client|null $client
@@ -107,7 +108,14 @@ class Sale extends Model
 
     public static function getOrderExpirationDays(): int
     {
-        return (int) config('sales.order_expiration_days', 30);
+        return Cache::remember(AppSetting::cacheKeyOrderExpirationDays(), 3600, function () {
+            $fromDb = AppSetting::getStoredOrderExpirationDays();
+            if ($fromDb !== null && $fromDb > 0) {
+                return $fromDb;
+            }
+
+            return max(1, (int) config('sales.order_expiration_days', 30));
+        });
     }
 
     public function getExpiresAtAttribute(): Carbon

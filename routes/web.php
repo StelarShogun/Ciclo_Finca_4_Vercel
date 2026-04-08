@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\AdminOrderSettingsController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
@@ -90,6 +91,8 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/sales/history/heartbeat', [SalesController::class, 'historyHeartbeat'])->name('sales.history.heartbeat');
 
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
+    Route::put('/orders/settings/order-expiration', [AdminOrderSettingsController::class, 'update'])
+        ->name('admin.orders.settings.order-expiration.update');
 
     // Client Management (admin view)
     Route::get('/clientes', [AdminClientController::class, 'index'])->name('admin.clients.index');
