@@ -246,3 +246,44 @@
   justify-content: flex-end;
   gap: 0.65rem;
 }
+
+/* =====================================================================
+ * CF4 — Pedidos a Proveedores (.cf4-supplier-orders-module)
+ * Reutiliza toda la estructura de .cf4-orders-module y extiende los
+ * estados propios del flujo proveedor: confirmed, delivered.
+ * ===================================================================== */
+
+/* Pills de estado adicionales */
+.cf4-supplier-orders-module .order-status-pill.confirmed {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+.cf4-supplier-orders-module .order-status-pill.delivered {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+/* Botón inline de nombre de proveedor */
+.supplier-name-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.15s ease, color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.supplier-name-btn:hover {
+  color: var(--color-primary-dark, #1b5e20);
+  text-decoration-color: currentColor;
+}

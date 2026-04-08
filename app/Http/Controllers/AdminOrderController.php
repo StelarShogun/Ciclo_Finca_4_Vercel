@@ -39,7 +39,7 @@ class AdminOrderController extends Controller
             });
         }
 
-        $orders = $query->orderBy('sale_date', 'desc')->paginate(15)->withQueryString();
+        $orders = $query->orderBy('sale_date', 'desc')->paginate(10)->withQueryString();
 
         $basePurchasesQuery = Sale::query()
             ->whereIn('status', ['pending', 'completed'])

@@ -43,7 +43,13 @@
             <li class="{{ request()->routeIs('admin.orders.index') ? 'active' : '' }}">
                 <a href="{{ route('admin.orders.index') }}">
                     <i class="fas fa-shopping-cart"></i>
-                    <span class="sidebar-label">Pedidos</span>
+                    <span class="sidebar-label">Órdenes</span>
+                </a>
+            </li>
+            <li class="{{ request()->routeIs('admin.supplier-orders.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.supplier-orders.index') }}">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span class="sidebar-label">Pedidos Proveedores</span>
                 </a>
             </li>
             <li>
