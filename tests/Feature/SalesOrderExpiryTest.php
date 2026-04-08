@@ -2,8 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\AdminUser;
+use App\Models\Client;
 use App\Models\Sale;
-use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
@@ -21,9 +22,9 @@ class SalesOrderExpiryTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected Usuario $admin;
+    protected AdminUser $adminUser;
 
-    protected Usuario $customer;
+    protected Client $customer;
 
     protected function setUp(): void
     {
@@ -41,19 +42,23 @@ class SalesOrderExpiryTest extends TestCase
         }
         Config::set('sales.order_expiration_days', 30);
         Config::set('sales.expiry_alert_days', 2);
-        $this->admin = Usuario::create([
-            'nombre' => 'Admin',
-            'apellido' => 'Test',
-            'email' => 'admin-test@example.com',
+
+        $this->adminUser = AdminUser::create([
+            'name' => 'Admin',
+            'first_surname' => 'Test',
+            'second_surname' => null,
+            'gmail' => 'admin-expiry@example.com',
             'password' => bcrypt('password'),
-            'rol' => 'admin',
+            'last_access' => now(),
         ]);
-        $this->customer = Usuario::create([
-            'nombre' => 'Cliente',
-            'apellido' => 'Test',
-            'email' => 'cliente-test@example.com',
+
+        $this->customer = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Test',
+            'second_surname' => null,
+            'gmail' => 'cliente-expiry@example.com',
             'password' => bcrypt('password'),
-            'rol' => 'cliente',
+            'provider' => 'local',
         ]);
     }
 
@@ -62,8 +67,10 @@ class SalesOrderExpiryTest extends TestCase
     {
         $sale = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0001',
-            'customer_id' => $this->customer->usuario_id,
-            'seller_id' => $this->admin->usuario_id,
+            'customer_id' => null,
+            'seller_id' => null,
+            'client_id' => $this->customer->user_id,
+            'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
             'iva' => 13,
             'discount' => 0,
@@ -75,12 +82,12 @@ class SalesOrderExpiryTest extends TestCase
             'sale_date' => now(),
         ]);
 
-        $response = $this->actingAs($this->admin)->get(route('sales.index'));
+        $response = $this->actingAs($this->adminUser, 'admin')->get(route('sales.index'));
         $response->assertStatus(200);
         $response->assertSee($sale->sale_date->format('d/m/Y'), false);
         $response->assertSee($sale->sale_date->format('H:i'), false);
 
-        $responseJson = $this->actingAs($this->admin)->getJson(route('sales.show', $sale->sale_id));
+        $responseJson = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
         $responseJson->assertStatus(200);
         $responseJson->assertJsonPath('sale.sale_date', $sale->sale_date->toISOString());
     }
@@ -90,8 +97,10 @@ class SalesOrderExpiryTest extends TestCase
     {
         $sale = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0002',
-            'customer_id' => $this->customer->usuario_id,
-            'seller_id' => $this->admin->usuario_id,
+            'customer_id' => null,
+            'seller_id' => null,
+            'client_id' => $this->customer->user_id,
+            'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
             'iva' => 13,
             'discount' => 0,
@@ -103,7 +112,7 @@ class SalesOrderExpiryTest extends TestCase
             'sale_date' => now()->subDays(10),
         ]);
 
-        $response = $this->actingAs($this->admin)->getJson(route('sales.show', $sale->sale_id));
+        $response = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
         $response->assertStatus(200);
         $response->assertJsonStructure(['sale' => ['days_remaining_until_expiration', 'expires_at', 'is_expiry_warning']]);
         $this->assertEquals(20, $response->json('sale.days_remaining_until_expiration'));
@@ -115,8 +124,10 @@ class SalesOrderExpiryTest extends TestCase
         $saleDate = now()->subDays(25);
         $sale = Sale::create([
             'invoice_number' => 'INV'.$saleDate->format('Ymd').'0003',
-            'customer_id' => $this->customer->usuario_id,
-            'seller_id' => $this->admin->usuario_id,
+            'customer_id' => null,
+            'seller_id' => null,
+            'client_id' => $this->customer->user_id,
+            'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
             'iva' => 13,
             'discount' => 0,
@@ -133,7 +144,7 @@ class SalesOrderExpiryTest extends TestCase
         $this->assertGreaterThanOrEqual(0, $daysRemaining);
         $this->assertLessThanOrEqual(30, $daysRemaining);
         // El valor viene del modelo (calculado con now()), por tanto se actualiza en cada carga
-        $response = $this->actingAs($this->admin)->getJson(route('sales.show', $sale->sale_id));
+        $response = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
         $response->assertJsonPath('sale.days_remaining_until_expiration', $daysRemaining);
     }
 
@@ -142,8 +153,10 @@ class SalesOrderExpiryTest extends TestCase
     {
         $sale = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0004',
-            'customer_id' => $this->customer->usuario_id,
-            'seller_id' => $this->admin->usuario_id,
+            'customer_id' => null,
+            'seller_id' => null,
+            'client_id' => $this->customer->user_id,
+            'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
             'iva' => 13,
             'discount' => 0,
@@ -156,7 +169,7 @@ class SalesOrderExpiryTest extends TestCase
         ]);
 
         $this->assertTrue($sale->is_expiry_warning);
-        $response = $this->actingAs($this->admin)->get(route('sales.index'));
+        $response = $this->actingAs($this->adminUser, 'admin')->get(route('sales.index'));
         $response->assertStatus(200);
         $response->assertSee('expiry-warning', false);
         $response->assertSee('exclamation-triangle', false);
@@ -168,8 +181,10 @@ class SalesOrderExpiryTest extends TestCase
         $oldDate = now()->subDays(31);
         $sale = Sale::create([
             'invoice_number' => 'INV'.$oldDate->format('Ymd').'0005',
-            'customer_id' => $this->customer->usuario_id,
-            'seller_id' => $this->admin->usuario_id,
+            'customer_id' => null,
+            'seller_id' => null,
+            'client_id' => $this->customer->user_id,
+            'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
             'iva' => 13,
             'discount' => 0,
@@ -191,8 +206,10 @@ class SalesOrderExpiryTest extends TestCase
     {
         $sale = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0006',
-            'customer_id' => $this->customer->usuario_id,
-            'seller_id' => $this->admin->usuario_id,
+            'customer_id' => null,
+            'seller_id' => null,
+            'client_id' => $this->customer->user_id,
+            'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
             'iva' => 13,
             'discount' => 0,
@@ -204,7 +221,7 @@ class SalesOrderExpiryTest extends TestCase
             'sale_date' => now(),
         ]);
 
-        $response = $this->actingAs($this->admin)->getJson(route('sales.show', $sale->sale_id));
+        $response = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
         $response->assertStatus(200);
         $this->assertEquals(30, $response->json('sale.days_remaining_until_expiration'));
     }
@@ -214,8 +231,10 @@ class SalesOrderExpiryTest extends TestCase
     {
         $sale = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0007',
-            'customer_id' => $this->customer->usuario_id,
-            'seller_id' => $this->admin->usuario_id,
+            'customer_id' => null,
+            'seller_id' => null,
+            'client_id' => $this->customer->user_id,
+            'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
             'iva' => 13,
             'discount' => 0,
@@ -227,7 +246,7 @@ class SalesOrderExpiryTest extends TestCase
             'sale_date' => now()->subDays(29),
         ]);
 
-        $response = $this->actingAs($this->admin)->getJson(route('sales.show', $sale->sale_id));
+        $response = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
         $response->assertStatus(200);
         $this->assertEquals(1, $response->json('sale.days_remaining_until_expiration'));
     }
@@ -238,8 +257,10 @@ class SalesOrderExpiryTest extends TestCase
         $oldDate = now()->subDays(31);
         $sale = Sale::create([
             'invoice_number' => 'INV'.$oldDate->format('Ymd').'0008',
-            'customer_id' => $this->customer->usuario_id,
-            'seller_id' => $this->admin->usuario_id,
+            'customer_id' => null,
+            'seller_id' => null,
+            'client_id' => $this->customer->user_id,
+            'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
             'iva' => 13,
             'discount' => 0,
@@ -254,7 +275,7 @@ class SalesOrderExpiryTest extends TestCase
 
         $this->artisan('sales:delete-expired')->assertSuccessful();
 
-        $response = $this->actingAs($this->admin)->get(route('sales.index'));
+        $response = $this->actingAs($this->adminUser, 'admin')->get(route('sales.index'));
         $response->assertStatus(200);
         $response->assertDontSee($invoice, false);
     }

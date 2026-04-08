@@ -2,7 +2,6 @@
 
 use App\Models\AdminUser;
 use App\Models\Client;
-use App\Models\Usuario;
 
 return [
 
@@ -74,7 +73,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => Usuario::class,
+            'model' => Client::class,
         ],
         'clients' => [
             'driver' => 'eloquent',

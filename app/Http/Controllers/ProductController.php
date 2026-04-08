@@ -326,13 +326,13 @@ class ProductController extends Controller
         $paginator = $query->paginate($perPage);
 
         // Normalize raw Eloquent models into a consistent shape expected by the view
-        $products = $paginator->getCollection()->map(function ($product) {
+        $products = $paginator->getCollection()->map(function (Product $product) {
             return (object) [
                 'product_id' => $product->product_id,
                 'id' => $product->product_id,
                 'name' => $product->name,
                 // SKU is derived from the primary key since the table has no dedicated column
-                'sku' => 'BK-'.str_pad($product->product_id, 3, '0', STR_PAD_LEFT),
+                'sku' => 'BK-'.str_pad((string) $product->product_id, 3, '0', STR_PAD_LEFT),
                 'image' => $product->image ?? 'default.png',
                 'category' => (object) ['name' => $product->category?->name ?? 'Uncategorized'],
                 'stock' => $product->stock_current,
@@ -376,7 +376,7 @@ class ProductController extends Controller
             $xml = new \SimpleXMLElement('<products/>');
             foreach ($data as $p) {
                 $n = $xml->addChild('product');
-                $n->addChild('id', $p->product_id);
+                $n->addChild('id', (string) $p->product_id);
                 $n->addChild('name', htmlspecialchars($p->name));
                 $n->addChild('description', htmlspecialchars($p->description ?? ''));
                 $n->addChild('category', htmlspecialchars(optional($p->category)->name));

@@ -1,0 +1,14 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+
+parameters:
+    paths:
+        - app
+        - database/factories
+        - database/seeders
+        - tests
+
+    level: 5
+
+    tmpDir: .phpstan-cache

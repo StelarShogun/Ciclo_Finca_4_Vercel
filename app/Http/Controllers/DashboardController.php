@@ -71,7 +71,7 @@ class DashboardController extends Controller
             }])
                 ->orderBy('products_count', 'desc')
                 ->get()
-                ->map(function ($categoria) {
+                ->map(function (Category $categoria) {
                     return [
                         'categoria' => $categoria->name,
                         'total' => $categoria->products_count,
@@ -223,14 +223,14 @@ class DashboardController extends Controller
                 ->orderBy('date')
                 ->get();
 
-            $salesData = $this->fillSalesChartSeries($salesRows, $startDate, Carbon::now()->startOfDay());
+            $salesData = $this->fillSalesChartSeries(collect($salesRows), $startDate, Carbon::now()->startOfDay());
 
             $categoryData = Category::withCount(['products' => function ($query) {
                 $query->where('status', 'active');
             }])
                 ->orderBy('products_count', 'desc')
                 ->get()
-                ->map(function ($category) {
+                ->map(function (Category $category) {
                     return [
                         'categoria' => $category->name,
                         'total' => $category->products_count,
@@ -308,7 +308,7 @@ class DashboardController extends Controller
      * @param  Collection<int, object>  $rows
      * @return array<int, array{date: string, total: float}>
      */
-    private function fillSalesChartSeries($rows, Carbon $rangeStart, Carbon $rangeEnd): array
+    private function fillSalesChartSeries(Collection $rows, Carbon $rangeStart, Carbon $rangeEnd): array
     {
         $byDate = [];
         foreach ($rows as $row) {

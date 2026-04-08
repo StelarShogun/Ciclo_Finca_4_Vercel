@@ -203,7 +203,7 @@ class ClientUserController extends Controller
                 Auth::guard('clients')->logout();
 
                 // Generar y enviar código de verificación automáticamente
-                $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
                 $expires = now()->addMinutes(10);
                 $client->update([
                     'verification_code' => $code,
@@ -305,7 +305,7 @@ class ClientUserController extends Controller
             ]
         );
 
-        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expires = now()->addMinutes(10);
 
         $client = Client::create([
@@ -420,7 +420,7 @@ class ClientUserController extends Controller
             return redirect()->route('clients.register.form');
         }
 
-        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expires = now()->addMinutes(10);
 
         $client->update([
@@ -505,7 +505,7 @@ class ClientUserController extends Controller
             return redirect()->route('clients.recovery.verify.form');
         }
 
-        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expires = now()->addMinutes(15);
 
         // Store pending password hash in session — only written to DB after code is verified.

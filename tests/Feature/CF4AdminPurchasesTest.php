@@ -7,7 +7,6 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
@@ -28,7 +27,7 @@ class CF4AdminPurchasesTest extends TestCase
                 $this->markTestSkipped('CF4 admin compras requiere MySQL para el esquema en inglés.');
             }
 
-            foreach (['admins', 'usuarios', 'client_table', 'products', 'sales', 'sale_items'] as $table) {
+            foreach (['admins', 'client_table', 'products', 'sales', 'sale_items'] as $table) {
                 if (! Schema::hasTable($table)) {
                     $this->markTestSkipped('Tabla requerida no existe: '.$table);
                 }
@@ -40,20 +39,21 @@ class CF4AdminPurchasesTest extends TestCase
         }
     }
 
-    private function authenticateAdmin(Usuario $usuario, AdminUser $adminUser): void
+    private function authenticateAdmin(Client $webClient, AdminUser $adminUser): void
     {
-        Auth::guard('web')->login($usuario);
+        Auth::guard('web')->login($webClient);
         Auth::guard('admin')->login($adminUser);
     }
 
     public function test_admin_purchases_table_shows_pending_and_completed_web_cart(): void
     {
-        $usuarioAdmin = Usuario::create([
-            'nombre' => 'Admin',
-            'apellido' => 'Test',
-            'email' => 'admin-cf4@example.com',
+        $webClient = Client::create([
+            'name' => 'Admin',
+            'first_surname' => 'Test',
+            'second_surname' => null,
+            'gmail' => 'admin-web-cf4@example.com',
             'password' => bcrypt('password'),
-            'rol' => 'admin',
+            'provider' => 'local',
         ]);
 
         $adminUser = AdminUser::create([
@@ -140,7 +140,7 @@ class CF4AdminPurchasesTest extends TestCase
             'total' => $total,
         ]);
 
-        $this->authenticateAdmin($usuarioAdmin, $adminUser);
+        $this->authenticateAdmin($webClient, $adminUser);
 
         $response = $this->get(route('admin.orders.index'));
         $response->assertStatus(200);
@@ -152,12 +152,13 @@ class CF4AdminPurchasesTest extends TestCase
 
     public function test_admin_purchases_heartbeat_detects_new_web_cart_sale(): void
     {
-        $usuarioAdmin = Usuario::create([
-            'nombre' => 'Admin',
-            'apellido' => 'Test',
-            'email' => 'admin-cf4-heartbeat@example.com',
+        $webClient = Client::create([
+            'name' => 'Admin',
+            'first_surname' => 'Test',
+            'second_surname' => null,
+            'gmail' => 'admin-web-cf4-heartbeat@example.com',
             'password' => bcrypt('password'),
-            'rol' => 'admin',
+            'provider' => 'local',
         ]);
 
         $adminUser = AdminUser::create([
@@ -219,7 +220,7 @@ class CF4AdminPurchasesTest extends TestCase
             'total' => $total,
         ]);
 
-        $this->authenticateAdmin($usuarioAdmin, $adminUser);
+        $this->authenticateAdmin($webClient, $adminUser);
 
         $heartbeatRes1 = $this->getJson('/sales/history/heartbeat?since='.$sale1->sale_id);
         $heartbeatRes1->assertStatus(200);

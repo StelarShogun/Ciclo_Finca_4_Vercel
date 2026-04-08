@@ -87,7 +87,7 @@ class Sale extends Model
         $date = now()->format('Ymd');
         $lastNumber = self::whereDate('sale_date', now())->count() + 1;
 
-        return $prefix.$date.str_pad($lastNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix.$date.str_pad((string) $lastNumber, 4, '0', STR_PAD_LEFT);
     }
 
     public function calculateTotal()

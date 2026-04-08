@@ -147,7 +147,7 @@ class SalesController extends Controller
                         'second_surname' => $sale->client->second_surname,
                         'gmail' => $sale->client->gmail,
                     ] : null,
-                    'sale_items' => $sale->saleItems->map(function ($item) {
+                    'sale_items' => $sale->saleItems->map(function (SaleItem $item) {
                         return [
                             'id' => $item->id,
                             'product_id' => $item->product_id,
@@ -158,7 +158,7 @@ class SalesController extends Controller
                                 'product_id' => $item->product->product_id,
                                 'name' => $item->product->name,
                                 // SKU is derived from the PK; no dedicated column exists
-                                'sku' => 'BK-'.str_pad($item->product->product_id, 3, '0', STR_PAD_LEFT),
+                                'sku' => 'BK-'.str_pad((string) $item->product->product_id, 3, '0', STR_PAD_LEFT),
                             ] : null,
                         ];
                     }),
