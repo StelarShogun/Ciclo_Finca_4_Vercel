@@ -3,6 +3,47 @@ function getCSRFToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
 }
 
+/* ---- Date range validation ---- */
+document.addEventListener('DOMContentLoaded', () => {
+    const form     = document.getElementById('supplier-orders-filters-form');
+    const dateFrom = document.getElementById('date_from');
+    const dateTo   = document.getElementById('date_to');
+
+    if (dateFrom && dateTo) {
+        // Keep min of dateTo in sync with dateFrom
+        dateFrom.addEventListener('change', () => {
+            dateTo.min = dateFrom.value || '';
+            if (dateTo.value && dateTo.value < dateFrom.value) {
+                dateTo.value = dateFrom.value;
+            }
+        });
+
+        // Restore min on page load if dateFrom already has a value
+        if (dateFrom.value) dateTo.min = dateFrom.value;
+    }
+
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            const from = dateFrom?.value;
+            const to   = dateTo?.value;
+            if (from && to && to < from) {
+                e.preventDefault();
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Rango de fechas inválido',
+                        text: 'La fecha "Hasta" no puede ser anterior a la fecha "Desde".',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#2e7d32',
+                    });
+                } else {
+                    alert('La fecha "Hasta" no puede ser anterior a la fecha "Desde".');
+                }
+            }
+        });
+    }
+});
+
 /* ---- Modal helpers ---- */
 function closeViewOrderModal()    { document.getElementById('view-order-modal')?.classList.remove('active'); }
 function closeViewSupplierModal() { document.getElementById('view-supplier-modal')?.classList.remove('active'); }

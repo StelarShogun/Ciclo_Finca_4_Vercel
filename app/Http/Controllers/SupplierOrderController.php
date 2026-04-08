@@ -15,6 +15,11 @@ class SupplierOrderController extends Controller
         $dateFrom = $request->get('date_from');
         $dateTo   = $request->get('date_to');
 
+        // Swap silently if hasta < desde
+        if ($dateFrom && $dateTo && $dateTo < $dateFrom) {
+            [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+        }
+
         $query = Order::with('supplier')->orderBy('date', 'desc');
 
         if ($state) {
