@@ -40,7 +40,7 @@
                     <span class="sidebar-label">Usuarios</span>
                 </a>
             </li>
-            <li class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
+            <li class="{{ request()->routeIs('admin.orders.index') ? 'active' : '' }}">
                 <a href="{{ route('admin.orders.index') }}">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="sidebar-label">Órdenes</span>

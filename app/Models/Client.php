@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property int $user_id
+ * @property string $name
+ * @property string|null $first_surname
+ * @property string|null $second_surname
+ * @property string $gmail
+ */
 class Client extends Authenticatable
 {
     use Notifiable;

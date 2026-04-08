@@ -8,6 +8,10 @@
 
 @section('aside')
     @include('admin.parts.aside')
+@push('scripts')
+    @vite(['resources/js/admin/orders/orders.js'])
+@endpush
+
 @endsection
 
 @section('contenido')
@@ -23,6 +27,10 @@
 
     <div class="sales-container cf4-orders-module">
 
+        @if (session('status'))
+            <div class="cf4-orders-flash-success" role="status">{{ session('status') }}</div>
+        @endif
+
         <header class="sales-header">
             <div>
                 <h1>Pedidos en línea</h1>
@@ -31,6 +39,11 @@
                     Solo los pedidos pendientes pueden confirmarse o rechazarse. Las ventas ya confirmadas están en
                     <a href="{{ route('sales.index') }}">Ventas</a>.
                 </p>
+            </div>
+            <div class="sales-header-actions">
+                <button type="button" class="btn btn-secondary btn-sm orders-settings-link" id="btn-open-order-expiration-modal">
+                    <i class="fas fa-clock"></i> Plazo de cancelación
+                </button>
             </div>
         </header>
 
@@ -173,6 +186,52 @@
          data-value="{{ $latestPurchaseSaleId ?? 0 }}"
          style="display:none;"></div>
 
+    <div id="order-expiration-modal" class="modal-overlay" aria-hidden="true" data-order-expiration-modal>
+        <div class="modal-content modal-auto-size cf4-order-expiry-modal-panel">
+            <div class="modal-header">
+                <h3><i class="fas fa-clock"></i> Plazo para cancelación automática</h3>
+                <button type="button" class="modal-close" data-close-order-expiration-modal aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="cf4-order-expiry-modal-intro">
+                    Días que el sistema espera desde la fecha del pedido antes de considerarlo vencido y eliminarlo
+                    (<code>sales:delete-expired</code>).
+                </p>
+                @if($usesEnvDefaultForExpiry)
+                    <p class="cf4-order-expiry-modal-hint">Se usa el valor por defecto (<code>ORDER_EXPIRATION_DAYS</code>) hasta que guarde un valor aquí.</p>
+                @endif
+                <form id="order-expiration-form" class="orders-settings-form" novalidate>
+                    @csrf
+                    @method('PUT')
+                    <div class="form-group">
+                        <label for="order_expiration_days">Días máximos de vigencia del pedido</label>
+                        <input
+                            type="number"
+                            id="order_expiration_days"
+                            name="order_expiration_days"
+                            min="1"
+                            step="1"
+                            required
+                            value="{{ old('order_expiration_days', $orderExpirationDays) }}"
+                        >
+                        <p id="order-expiration-form-error" class="form-error" style="display:none;" role="alert"></p>
+                        <p class="form-help">Debe ser un entero mayor que cero (por ejemplo 7 o 30).</p>
+                    </div>
+                    <div class="modal-footer cf4-order-expiry-modal-footer">
+                        <button type="button" class="btn btn-secondary" data-close-order-expiration-modal>
+                            <i class="fas fa-times"></i> Cerrar
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="order-expiration-submit">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <meta name="order-expiration-update-url" content="{{ route('admin.orders.settings.order-expiration.update') }}">
+
     <div id="view-sale-modal" class="modal-overlay">
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
@@ -194,3 +253,8 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    @vite(['resources/js/admin/orders/orders.js'])
+@endpush
+

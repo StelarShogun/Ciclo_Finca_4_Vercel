@@ -1,66 +1,64 @@
-import { defineConfig } from 'vite'
-import laravel from 'laravel-vite-plugin'
+import { defineConfig } from "vite";
+import laravel from "laravel-vite-plugin";
 
-const vitePort = Number(process.env.VITE_PORT) || 5173
+const vitePort = Number(process.env.VITE_PORT) || 5173;
 
 // =======================
 // ADMIN ASSETS
 // =======================
 const adminAssets = [
-  // JS
-  'resources/js/admin/dashboard/dashboard.js',
-  'resources/js/admin/inventory/inventory.js',
-  'resources/js/admin/sales/sales.js',
-  'resources/js/admin/orders/supplier-orders.js',
-  'resources/js/admin/suppliers/suppliers.js',
-  'resources/js/admin/login/login.js',
-  'resources/js/admin/users/clients.js',
-  'resources/js/admin/brand/brand.js',
+    // JS
+    "resources/js/admin/dashboard/dashboard.js",
+    "resources/js/admin/inventory/inventory.js",
+    "resources/js/admin/sales/sales.js",
+    "resources/js/admin/orders/orders.js",
+    "resources/js/admin/orders/supplier-orders.js",
+    "resources/js/admin/suppliers/suppliers.js",
+    "resources/js/admin/login/login.js",
+    "resources/js/admin/users/clients.js",
+    "resources/js/admin/brand/brand.js",
 
-  // CSS
-  'resources/css/admin/products/inventory.css',
-  'resources/css/admin/products/products-pdf.css',
-  'resources/css/admin/sales/sales.css',
-  'resources/css/admin/sales/invoice-document.css',
-  'resources/css/admin/orders/orders.css',
-  'resources/css/admin/suppliers/suppliers.css',
-  'resources/css/admin/dashboard/dashboard.css',
-  'resources/css/admin/dashboard/dashboard-pdf.css',
-  'resources/css/admin/users/clients.css',
-  'resources/css/admin/brands/brand.css',
-  'resources/css/admin/login/login.css',
-]
+    // CSS
+    "resources/css/admin/products/inventory.css",
+    "resources/css/admin/products/products-pdf.css",
+    "resources/css/admin/sales/sales.css",
+    "resources/css/admin/sales/invoice-document.css",
+    "resources/css/admin/orders/orders.css",
+    "resources/css/admin/suppliers/suppliers.css",
+    "resources/css/admin/dashboard/dashboard.css",
+    "resources/css/admin/dashboard/dashboard-pdf.css",
+    "resources/css/admin/users/clients.css",
+    "resources/css/admin/brands/brand.css",
+    "resources/css/admin/login/login.css",
+];
 
 // =======================
 // CLIENT ASSETS
 // =======================
 const clientAssets = [
-  // JS
-  'resources/js/client/clients-page.js',
-  'resources/js/client/clients-users.js',
+    // JS
+    "resources/js/client/clients-page.js",
+    "resources/js/client/clients-users.js",
 
-  // CSS
-  'resources/css/client/clients-page.css',
-  'resources/css/client/clients-users.css',
-]
+    // CSS
+    "resources/css/client/clients-page.css",
+    "resources/css/client/clients-users.css",
+];
 
 export default defineConfig({
-  plugins: [
-    laravel({
-      detectTls: false,
-      input: [
-        ...adminAssets,
-        ...clientAssets,
-      ],
-      refresh: true,
-    }),
-  ],
-  server: {
-    host: '0.0.0.0', // Para Docker
-    port: vitePort,
-    strictPort: true,
-    hmr: {
-      host: 'localhost', // Navegador accede desde tu máquina
+    plugins: [
+        laravel({
+            detectTls: false,
+            input: [...adminAssets, ...clientAssets],
+            refresh: true,
+        }),
+    ],
+    server: {
+        host: "0.0.0.0", // Para Docker
+        port: vitePort,
+        strictPort: true,
+        hmr: {
+            host: "localhost", // Navegador accede desde tu máquina
+        },
     },
-  },
-})
+});

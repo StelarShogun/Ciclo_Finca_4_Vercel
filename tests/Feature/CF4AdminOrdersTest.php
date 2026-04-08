@@ -7,7 +7,6 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
@@ -28,7 +27,7 @@ class CF4AdminOrdersTest extends TestCase
                 $this->markTestSkipped('CF4-21 pedidos admin requiere MySQL para el esquema en inglés.');
             }
 
-            foreach (['admins', 'usuarios', 'client_table', 'products', 'sales', 'sale_items'] as $table) {
+            foreach (['admins', 'client_table', 'products', 'sales', 'sale_items'] as $table) {
                 if (! Schema::hasTable($table)) {
                     $this->markTestSkipped('Tabla requerida no existe: '.$table);
                 }
@@ -40,20 +39,21 @@ class CF4AdminOrdersTest extends TestCase
         }
     }
 
-    private function authenticateAdmin(Usuario $usuario, AdminUser $adminUser): void
+    private function authenticateAdmin(Client $webClient, AdminUser $adminUser): void
     {
-        Auth::guard('web')->login($usuario);
+        Auth::guard('web')->login($webClient);
         Auth::guard('admin')->login($adminUser);
     }
 
     public function test_orders_index_lists_web_cart_orders(): void
     {
-        $usuarioAdmin = Usuario::create([
-            'nombre' => 'Admin',
-            'apellido' => 'Orders',
-            'email' => 'admin-orders@example.com',
+        $webClient = Client::create([
+            'name' => 'Admin',
+            'first_surname' => 'Orders',
+            'second_surname' => null,
+            'gmail' => 'admin-web-orders@example.com',
             'password' => bcrypt('password'),
-            'rol' => 'admin',
+            'provider' => 'local',
         ]);
 
         $adminUser = AdminUser::create([
@@ -114,7 +114,7 @@ class CF4AdminOrdersTest extends TestCase
             'total' => 100,
         ]);
 
-        $this->authenticateAdmin($usuarioAdmin, $adminUser);
+        $this->authenticateAdmin($webClient, $adminUser);
 
         $response = $this->get(route('admin.orders.index'));
         $response->assertStatus(200);
@@ -125,12 +125,13 @@ class CF4AdminOrdersTest extends TestCase
 
     public function test_complete_pending_returns_invoice_and_second_complete_fails(): void
     {
-        $usuarioAdmin = Usuario::create([
-            'nombre' => 'Admin',
-            'apellido' => 'Complete',
-            'email' => 'admin-complete@example.com',
+        $webClient = Client::create([
+            'name' => 'Admin',
+            'first_surname' => 'Complete',
+            'second_surname' => null,
+            'gmail' => 'admin-web-complete@example.com',
             'password' => bcrypt('password'),
-            'rol' => 'admin',
+            'provider' => 'local',
         ]);
 
         $adminUser = AdminUser::create([
@@ -190,7 +191,7 @@ class CF4AdminOrdersTest extends TestCase
             'total' => 10,
         ]);
 
-        $this->authenticateAdmin($usuarioAdmin, $adminUser);
+        $this->authenticateAdmin($webClient, $adminUser);
 
         $complete = $this->postJson(route('sales.complete', $sale->sale_id));
         $complete->assertStatus(200);
@@ -206,12 +207,13 @@ class CF4AdminOrdersTest extends TestCase
 
     public function test_complete_generates_invoice_when_missing(): void
     {
-        $usuarioAdmin = Usuario::create([
-            'nombre' => 'Admin',
-            'apellido' => 'Inv',
-            'email' => 'admin-inv@example.com',
+        $webClient = Client::create([
+            'name' => 'Admin',
+            'first_surname' => 'Inv',
+            'second_surname' => null,
+            'gmail' => 'admin-web-inv@example.com',
             'password' => bcrypt('password'),
-            'rol' => 'admin',
+            'provider' => 'local',
         ]);
 
         $adminUser = AdminUser::create([
@@ -271,7 +273,7 @@ class CF4AdminOrdersTest extends TestCase
             'total' => 5,
         ]);
 
-        $this->authenticateAdmin($usuarioAdmin, $adminUser);
+        $this->authenticateAdmin($webClient, $adminUser);
 
         $complete = $this->postJson(route('sales.complete', $sale->sale_id));
         $complete->assertStatus(200);

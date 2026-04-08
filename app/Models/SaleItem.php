@@ -5,6 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int|string $id
+ * @property int $sale_id
+ * @property int $product_id
+ * @property int $quantity
+ * @property numeric-string|null $unit_price
+ * @property numeric-string|null $total
+ * @property-read Product|null $product
+ */
 class SaleItem extends Model
 {
     protected $table = 'sale_items';

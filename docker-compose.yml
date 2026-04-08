@@ -7,14 +7,14 @@ services:
     container_name: laravel_app_ciclo
     ports:
       - "8080:80"
-      - "5173:5173" 
+      - "5173:5173"
     volumes:
       - .:/var/www/html
+    # No inyectar DB_DATABASE / usuario / contraseña: el volumen monta `.env` y en tests
+    # Laravel carga `.env.testing` sin que Compose pise el nombre de BD (p. ej. laravel_test).
     environment:
       - DB_HOST=db_ciclo
-      - DB_DATABASE=${DB_DATABASE}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=3306
       - VITE_PORT=5173
     depends_on:
       - db_ciclo
@@ -48,7 +48,7 @@ services:
       PMA_USER: ${DB_USERNAME}
       PMA_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "8082:80"
+      - "8081:80"
     depends_on:
       - db_ciclo
 

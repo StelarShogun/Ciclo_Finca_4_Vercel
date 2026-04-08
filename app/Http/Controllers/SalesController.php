@@ -147,7 +147,7 @@ class SalesController extends Controller
                         'second_surname' => $sale->client->second_surname,
                         'gmail' => $sale->client->gmail,
                     ] : null,
-                    'sale_items' => $sale->saleItems->map(function ($item) {
+                    'sale_items' => $sale->saleItems->map(function (SaleItem $item) {
                         return [
                             'id' => $item->id,
                             'product_id' => $item->product_id,
@@ -158,7 +158,7 @@ class SalesController extends Controller
                                 'product_id' => $item->product->product_id,
                                 'name' => $item->product->name,
                                 // SKU is derived from the PK; no dedicated column exists
-                                'sku' => 'BK-'.str_pad($item->product->product_id, 3, '0', STR_PAD_LEFT),
+                                'sku' => 'BK-'.str_pad((string) $item->product->product_id, 3, '0', STR_PAD_LEFT),
                             ] : null,
                         ];
                     }),
@@ -480,7 +480,7 @@ class SalesController extends Controller
         // Restore inventory for every item included in the refund
         foreach ($sale->saleItems as $item) {
             if ($item->product) {
-                $item->product->increment('stock_actual', $item->quantity);
+                $item->product->increment('stock_current', $item->quantity);
             }
         }
 
@@ -544,7 +544,11 @@ class SalesController extends Controller
                 ], ';');
 
                 foreach ($sales as $sale) {
-                    $items = $sale->saleItems->map(fn ($item) => $item->product->name.' (x'.$item->quantity.')')->implode(', ');
+                    $items = $sale->saleItems->map(function (SaleItem $item): string {
+                        $label = $item->product !== null ? $item->product->name : '?';
+
+                        return $label.' (x'.$item->quantity.')';
+                    })->implode(', ');
 
                     // Prefer the linked client record; fall back to inline buyer fields for walk-in sales
                     $customerDisplayName = $sale->client

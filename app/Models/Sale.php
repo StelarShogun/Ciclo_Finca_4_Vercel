@@ -3,10 +3,16 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
+/**
+ * @property-read Client|null $client
+ * @property-read Collection<int, SaleItem> $saleItems
+ */
 class Sale extends Model
 {
     protected $table = 'sales';
@@ -87,7 +93,7 @@ class Sale extends Model
         $date = now()->format('Ymd');
         $lastNumber = self::whereDate('sale_date', now())->count() + 1;
 
-        return $prefix.$date.str_pad($lastNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix.$date.str_pad((string) $lastNumber, 4, '0', STR_PAD_LEFT);
     }
 
     public function calculateTotal()
@@ -102,7 +108,14 @@ class Sale extends Model
 
     public static function getOrderExpirationDays(): int
     {
-        return (int) config('sales.order_expiration_days', 30);
+        return Cache::remember(AppSetting::cacheKeyOrderExpirationDays(), 3600, function () {
+            $fromDb = AppSetting::getStoredOrderExpirationDays();
+            if ($fromDb !== null && $fromDb > 0) {
+                return $fromDb;
+            }
+
+            return max(1, (int) config('sales.order_expiration_days', 30));
+        });
     }
 
     public function getExpiresAtAttribute(): Carbon

@@ -36,9 +36,11 @@ return new class extends Migration
             $table->index('status', 'idx_supplier_status');
         });
 
-        // CHECK constraints
-        DB::statement('ALTER TABLE suppliers ADD CONSTRAINT chk_rating CHECK (rating >= 0.00 AND rating <= 5.00)');
-        DB::statement('ALTER TABLE suppliers ADD CONSTRAINT chk_delivery_time CHECK (delivery_time >= 0)');
+        // CHECK constraints (MySQL; SQLite no soporta ADD CONSTRAINT CHECK igual en tests :memory:)
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE suppliers ADD CONSTRAINT chk_rating CHECK (rating >= 0.00 AND rating <= 5.00)');
+            DB::statement('ALTER TABLE suppliers ADD CONSTRAINT chk_delivery_time CHECK (delivery_time >= 0)');
+        }
     }
 
     public function down(): void

@@ -163,6 +163,90 @@
   background: rgba(0, 0, 0, 0.015);
 }
 
+/* CF4-61 — plazo cancelación (botón cabecera + modal) */
+.cf4-orders-module .cf4-orders-flash-success {
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: rgba(46, 125, 50, 0.12);
+  border: 1px solid rgba(46, 125, 50, 0.35);
+  color: var(--color-text, #1a1a1a);
+  font-weight: 500;
+}
+
+.cf4-orders-module .sales-header-actions .orders-settings-link {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  font: inherit;
+}
+
+.cf4-orders-module .sales-header-actions .orders-settings-link:hover {
+  background: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+#order-expiration-modal .cf4-order-expiry-modal-panel {
+  max-width: 460px;
+}
+
+#order-expiration-modal .cf4-order-expiry-modal-intro,
+#order-expiration-modal .cf4-order-expiry-modal-hint {
+  margin: 0 0 1rem 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
+#order-expiration-modal .cf4-order-expiry-modal-hint {
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+#order-expiration-modal .orders-settings-form .form-group {
+  margin-bottom: 0;
+}
+
+#order-expiration-modal .orders-settings-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.45rem;
+  color: var(--color-text, #1a1a1a);
+}
+
+#order-expiration-modal .orders-settings-form input[type="number"] {
+  width: 100%;
+  max-width: 200px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 0.6rem 0.85rem;
+  font-size: 1rem;
+}
+
+#order-expiration-modal .form-error {
+  display: block;
+  color: var(--color-danger, #c62828);
+  font-size: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+#order-expiration-modal .form-help {
+  margin: 0.4rem 0 0 0;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+#order-expiration-modal .cf4-order-expiry-modal-footer {
+  margin-top: 1.25rem;
+  padding-top: 0;
+  border-top: none;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
 /* =====================================================================
  * CF4 — Pedidos a Proveedores (.cf4-supplier-orders-module)
  * Reutiliza toda la estructura de .cf4-orders-module y extiende los

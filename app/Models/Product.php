@@ -2,10 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * @property-read Category|null $category
+ * @property-read Collection<int, Brand> $brands
+ */
 class Product extends Model
 {
     use HasFactory;
@@ -48,23 +56,23 @@ class Product extends Model
     }
 
     // Relationships to other models, allowing easy access to category and supplier information for each product
-    public function category()
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id', 'category_id');
     }
 
-    public function supplier()
+    public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class, 'supplier_id', 'supplier_id');
     }
 
     // Sales module relationship
-    public function saleItems()
+    public function saleItems(): HasMany
     {
         return $this->hasMany(SaleItem::class, 'product_id', 'product_id');
     }
 
-    public function brands()
+    public function brands(): BelongsToMany
     {
         return $this->belongsToMany(Brand::class, 'products_brand', 'product_id', 'brand_id', 'product_id', 'id');
     }
