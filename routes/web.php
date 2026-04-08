@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\SupplierOrderController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientPageController;
@@ -90,6 +91,12 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/sales/history/heartbeat', [SalesController::class, 'historyHeartbeat'])->name('sales.history.heartbeat');
 
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
+
+    // Supplier Purchase Orders
+    Route::get('/supplier-orders', [SupplierOrderController::class, 'index'])->name('admin.supplier-orders.index');
+    Route::get('/supplier-orders/{id}', [SupplierOrderController::class, 'show'])->name('admin.supplier-orders.show');
+    Route::patch('/supplier-orders/{id}/state', [SupplierOrderController::class, 'updateState'])->name('admin.supplier-orders.update-state');
+    Route::get('/supplier/details/{id}', [SupplierOrderController::class, 'supplierDetails'])->name('admin.supplier-orders.supplier');
 
     // Client Management (admin view)
     Route::get('/clientes', [AdminClientController::class, 'index'])->name('admin.clients.index');
