@@ -68,8 +68,8 @@ class ClientPageController extends Controller
                     $parentCategoryForSubcats = $selectedCategory;
                 } else {
                     $query->where('category_id', $selectedCategory->category_id);
-                    $parentCategoryForSubcats = $selectedCategory->parentCategory;
-                    if ($parentCategoryForSubcats) {
+                    $parentCategoryForSubcats = $selectedCategory->parent()->first();
+                    if ($parentCategoryForSubcats instanceof Category) {
                         $subcategories = Category::where('parent_category_id', $parentCategoryForSubcats->category_id)->orderBy('name')->get();
                     }
                 }

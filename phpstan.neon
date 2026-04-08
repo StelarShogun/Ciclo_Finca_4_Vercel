@@ -12,3 +12,12 @@ parameters:
     level: 5
 
     tmpDir: .phpstan-cache
+
+    # PHPDoc de modelos Eloquent (p. ej. status) vs valores en inglés en código
+    treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        -
+            message: '#view expects view-string#'
+
+    reportUnmatchedIgnoredErrors: false

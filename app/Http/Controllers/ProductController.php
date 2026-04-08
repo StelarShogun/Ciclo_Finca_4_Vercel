@@ -103,7 +103,8 @@ class ProductController extends Controller
 
             if (request()->wantsJson() || request()->ajax()) {
                 $productData = $product->toArray();
-                $productData['brand_id'] = $product->brands->first()?->id;
+                $firstBrand = $product->brands->first();
+                $productData['brand_id'] = $firstBrand instanceof Brand ? $firstBrand->id : null;
 
                 return response()->json([
                     'success' => true,
@@ -326,7 +327,7 @@ class ProductController extends Controller
         $paginator = $query->paginate($perPage);
 
         // Normalize raw Eloquent models into a consistent shape expected by the view
-        $products = $paginator->getCollection()->map(function (Product $product) {
+        $products = collect($paginator->items())->map(function (Product $product) {
             return (object) [
                 'product_id' => $product->product_id,
                 'id' => $product->product_id,
@@ -334,7 +335,7 @@ class ProductController extends Controller
                 // SKU is derived from the primary key since the table has no dedicated column
                 'sku' => 'BK-'.str_pad((string) $product->product_id, 3, '0', STR_PAD_LEFT),
                 'image' => $product->image ?? 'default.png',
-                'category' => (object) ['name' => $product->category?->name ?? 'Uncategorized'],
+                'category' => (object) ['name' => optional($product->category)->name ?? 'Uncategorized'],
                 'stock' => $product->stock_current,
                 'stock_status_class' => $product->stock_current > 10 ? 'success' :
                                       ($product->stock_current > 0 ? 'warning' : 'danger'),

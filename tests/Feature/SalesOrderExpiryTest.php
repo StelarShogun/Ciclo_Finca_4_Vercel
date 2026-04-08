@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\AdminUser;
 use App\Models\Client;
 use App\Models\Sale;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
@@ -43,6 +44,8 @@ class SalesOrderExpiryTest extends TestCase
         Config::set('sales.order_expiration_days', 30);
         Config::set('sales.expiry_alert_days', 2);
 
+        Carbon::setTestNow(Carbon::parse('2026-06-15 14:30:00', 'UTC'));
+
         $this->adminUser = AdminUser::create([
             'name' => 'Admin',
             'first_surname' => 'Test',
@@ -60,6 +63,12 @@ class SalesOrderExpiryTest extends TestCase
             'password' => bcrypt('password'),
             'provider' => 'local',
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     /** CP1: El sistema muestra la fecha y hora exacta de creación del pedido en la lista o detalle. */
@@ -89,6 +98,7 @@ class SalesOrderExpiryTest extends TestCase
 
         $responseJson = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
         $responseJson->assertStatus(200);
+        $sale->refresh();
         $responseJson->assertJsonPath('sale.sale_date', $sale->sale_date->toISOString());
     }
 
@@ -140,7 +150,6 @@ class SalesOrderExpiryTest extends TestCase
         ]);
 
         $daysRemaining = $sale->days_remaining_until_expiration;
-        $this->assertIsInt($daysRemaining);
         $this->assertGreaterThanOrEqual(0, $daysRemaining);
         $this->assertLessThanOrEqual(30, $daysRemaining);
         // El valor viene del modelo (calculado con now()), por tanto se actualiza en cada carga

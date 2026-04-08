@@ -480,7 +480,7 @@ class SalesController extends Controller
         // Restore inventory for every item included in the refund
         foreach ($sale->saleItems as $item) {
             if ($item->product) {
-                $item->product->increment('stock_actual', $item->quantity);
+                $item->product->increment('stock_current', $item->quantity);
             }
         }
 
@@ -544,7 +544,11 @@ class SalesController extends Controller
                 ], ';');
 
                 foreach ($sales as $sale) {
-                    $items = $sale->saleItems->map(fn ($item) => $item->product->name.' (x'.$item->quantity.')')->implode(', ');
+                    $items = $sale->saleItems->map(function (SaleItem $item): string {
+                        $label = $item->product !== null ? $item->product->name : '?';
+
+                        return $label.' (x'.$item->quantity.')';
+                    })->implode(', ');
 
                     // Prefer the linked client record; fall back to inline buyer fields for walk-in sales
                     $customerDisplayName = $sale->client
