@@ -290,10 +290,6 @@ function printSale(id) {
     window.open(`/sales/${id}/print`, '_blank');
 }
 
-function openSaleInvoice(id) {
-    window.open(`/sales/${id}/invoice`, '_blank');
-}
-
 //Expose public functions on window (required by Vite/ESM) 
 Object.assign(window, {
     openNewSaleModal,
@@ -306,7 +302,6 @@ Object.assign(window, {
     cancelSale,
     refundSale,
     printSale,
-    openSaleInvoice,
 });
 
 // DOMContentLoaded 

@@ -145,11 +145,15 @@
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         @endif
-                                        <button class="action-btn secondary" type="button"
-                                                onclick="openSaleInvoice('{{ $sale->sale_id }}')"
-                                                title="Ver factura">
-                                            <i class="fas fa-file-invoice"></i>
-                                        </button>
+                                        @if($sale->status === 'completed')
+                                            <a href="{{ route('sales.invoice', $sale->sale_id) }}"
+                                               target="_blank" rel="noopener noreferrer"
+                                               class="action-link-invoice"
+                                               title="Ver factura en formato estructurado">
+                                                <i class="fas fa-file-invoice" aria-hidden="true"></i>
+                                                Ver factura
+                                            </a>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

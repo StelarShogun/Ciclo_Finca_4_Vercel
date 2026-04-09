@@ -503,6 +503,10 @@ class SalesController extends Controller
     {
         $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
 
+        if ($sale->status !== 'completed') {
+            abort(403, 'La factura solo está disponible para ventas confirmadas.');
+        }
+
         return view('admin.sales.invoice', compact('sale'));
     }
 
