@@ -101,18 +101,34 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::patch('/supplier-orders/{id}/state', [SupplierOrderController::class, 'updateState'])->name('admin.supplier-orders.update-state');
     Route::get('/supplier/details/{id}', [SupplierOrderController::class, 'supplierDetails'])->name('admin.supplier-orders.supplier');
 
-    // Admin Product Catalog (read-only client view)
-    Route::get('/admin/catalog', [ProductController::class, 'adminCatalog'])->name('admin.catalog');
-
     // Client Management (admin view)
     Route::get('/clientes', [AdminClientController::class, 'index'])->name('admin.clients.index');
     Route::patch('/clientes/{id}/ban', [AdminClientController::class, 'ban'])->name('admin.clients.ban');
     Route::patch('/clientes/{id}/unban', [AdminClientController::class, 'unban'])->name('admin.clients.unban');
+
+    // Admin catalog preview — stores admin identity in session then redirects to client catalog
+    Route::get('/admin/catalog-preview', function () {
+        $admin = auth('admin')->user();
+        session([
+            'admin_catalog_mode' => [
+                'name'           => $admin->name,
+                'first_surname'  => $admin->first_surname,
+                'gmail'          => $admin->gmail,
+            ],
+        ]);
+        return redirect()->route('clients.catalog');
+    })->name('admin.catalog.preview');
 });
 
 // ============================================================
 // CLIENT ROUTES
 // ============================================================
+
+// Clears admin catalog preview mode and returns to admin panel
+Route::get('/admin/catalog-exit', function () {
+    session()->forget('admin_catalog_mode');
+    return redirect('/dashboard');
+})->name('admin.catalog.exit');
 
 // --- Public Pages ---
 Route::get('/', [ClientPageController::class, 'home'])->name('clients.home');
