@@ -75,7 +75,7 @@
             </div>
 
             {{-- reCAPTCHA v2 widget --}}
-            <div class="form-group">
+            <div class="form-group recaptcha-wrap">
                 <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
             </div>
 
