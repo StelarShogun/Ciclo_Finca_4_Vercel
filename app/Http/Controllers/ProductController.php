@@ -365,6 +365,84 @@ class ProductController extends Controller
         ]);
     }
 
+    public function adminCatalog(Request $request)
+    {
+        $query = Product::with(['category'])
+            ->where('status', 'active')
+            ->where('stock_current', '>', 0);
+
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('description', 'like', '%'.$searchTerm.'%');
+            });
+        }
+
+        $selectedCategory = null;
+        $subcategories = collect();
+        $parentCategoryForSubcats = null;
+
+        if ($request->filled('category_id')) {
+            $selectedCategory = Category::find($request->category_id);
+            if ($selectedCategory) {
+                if (is_null($selectedCategory->parent_category_id)) {
+                    $childIds = Category::where('parent_category_id', $selectedCategory->category_id)->pluck('category_id');
+                    $query->where(function ($q) use ($selectedCategory, $childIds) {
+                        $q->where('category_id', $selectedCategory->category_id)
+                            ->orWhereIn('category_id', $childIds);
+                    });
+                    $subcategories = Category::where('parent_category_id', $selectedCategory->category_id)->orderBy('name')->get();
+                    $parentCategoryForSubcats = $selectedCategory;
+                } else {
+                    $query->where('category_id', $selectedCategory->category_id);
+                    $parentCategoryForSubcats = $selectedCategory->parent()->first();
+                    if ($parentCategoryForSubcats instanceof Category) {
+                        $subcategories = Category::where('parent_category_id', $parentCategoryForSubcats->category_id)->orderBy('name')->get();
+                    }
+                }
+            }
+        }
+
+        $minPrice = $request->filled('min_price') ? $request->input('min_price') : null;
+        $maxPrice = $request->filled('max_price') ? $request->input('max_price') : null;
+
+        if (is_numeric($minPrice) && is_numeric($maxPrice) && (float) $minPrice > (float) $maxPrice) {
+            return redirect()->route('admin.catalog', $request->except('min_price', 'max_price', 'page'))
+                ->withInput()
+                ->withErrors(['price_range' => 'El precio mínimo debe ser menor o igual al precio máximo.']);
+        }
+
+        if (is_numeric($minPrice) && is_numeric($maxPrice)) {
+            $query->whereBetween('sale_price', [$minPrice, $maxPrice]);
+        } elseif (is_numeric($minPrice)) {
+            $query->where('sale_price', '>=', $minPrice);
+        } elseif (is_numeric($maxPrice)) {
+            $query->where('sale_price', '<=', $maxPrice);
+        }
+
+        $sort = $request->get('sort', 'created_at');
+        $order = $request->get('direction', 'desc');
+
+        match ($sort) {
+            'price' => $query->orderBy('sale_price', $order),
+            'name' => $query->orderBy('name', $order),
+            default => $query->orderBy('created_at', $order),
+        };
+
+        $perPage = $request->get('per_page', 12);
+        $products = $query->paginate($perPage)->withQueryString();
+
+        $categories = Category::whereNull('parent_category_id')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.products.catalog', compact(
+            'products', 'categories',
+            'selectedCategory', 'subcategories', 'parentCategoryForSubcats'
+        ));
+    }
+
     public function export(Request $request, $format = null)
     {
         $format = strtolower($format ?? $request->get('format', 'csv'));

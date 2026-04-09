@@ -52,6 +52,12 @@
                     <span class="sidebar-label">Pedidos Proveedores</span>
                 </a>
             </li>
+            <li class="{{ request()->routeIs('admin.catalog') ? 'active' : '' }}">
+                <a href="{{ route('admin.catalog') }}">
+                    <i class="fas fa-store"></i>
+                    <span class="sidebar-label">Ver catálogo de Productos</span>
+                </a>
+            </li>
             <li>
                 <a href="{{ url('/moderation') }}">
                     <i class="fas fa-comments"></i>
