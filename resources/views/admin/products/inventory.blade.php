@@ -162,6 +162,7 @@
                                 <th>Producto</th>
                                 <th>Categoría</th>
                                 <th>Stock</th>
+                                <th>Disponibilidad</th>
                                 <th>Precio</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
@@ -169,6 +170,7 @@
                         </thead>
                         <tbody>
                             @foreach($paginator as $product)
+                                @php $adminAv = $product->adminAvailabilityLabel(); @endphp
                                 <tr>
                                     <td class="product-cell">
                                         {{-- Falls back to default image if none is set --}}
@@ -192,9 +194,18 @@
                                     </td>
                                     <td>
                                         {{-- Stock badge: success >10, warning >0, danger =0 --}}
-                                        <span class="stock-badge {{ $product->stock_current > 10 ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger') }}">
+                                        <span class="stock-badge {{ $product->stock_current > \App\Models\Product::CLIENT_LOW_STOCK_THRESHOLD ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger') }}">
                                             {{ $product->stock_current }}
                                         </span>
+                                    </td>
+                                    <td>
+                                        <span @class([
+                                            'inventory-availability',
+                                            'inventory-availability--ok' => $adminAv === 'Disponible',
+                                            'inventory-availability--low' => $adminAv === 'Quedan pocas unidades',
+                                            'inventory-availability--out' => $adminAv === 'Agotado',
+                                            'inventory-availability--na' => $adminAv === 'No disponible',
+                                        ])>{{ $adminAv }}</span>
                                     </td>
                                     <td>₡{{ number_format($product->sale_price, 0, ',', '.') }}</td>
                                     <td>
@@ -233,6 +244,7 @@
                 <div class="products-table grid-view">
                     <div class="products-grid">
                         @foreach($paginator as $product)
+                            @php $adminAvGrid = $product->adminAvailabilityLabel(); @endphp
                             <div class="product-card">
                                 <div class="product-card-header">
                                     <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
@@ -260,9 +272,21 @@
                                     <div class="product-card-detail">
                                         <span class="product-card-detail-label">Stock</span>
                                         <span class="product-card-detail-value">
-                                            <span class="stock-badge {{ $product->stock_current > 10 ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger') }}">
+                                            <span class="stock-badge {{ $product->stock_current > \App\Models\Product::CLIENT_LOW_STOCK_THRESHOLD ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger') }}">
                                                 {{ $product->stock_current }}
                                             </span>
+                                        </span>
+                                    </div>
+                                    <div class="product-card-detail">
+                                        <span class="product-card-detail-label">Disponibilidad</span>
+                                        <span class="product-card-detail-value">
+                                            <span @class([
+                                                'inventory-availability',
+                                                'inventory-availability--ok' => $adminAvGrid === 'Disponible',
+                                                'inventory-availability--low' => $adminAvGrid === 'Quedan pocas unidades',
+                                                'inventory-availability--out' => $adminAvGrid === 'Agotado',
+                                                'inventory-availability--na' => $adminAvGrid === 'No disponible',
+                                            ])>{{ $adminAvGrid }}</span>
                                         </span>
                                     </div>
                                     <div class="product-card-detail">

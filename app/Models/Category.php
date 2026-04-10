@@ -3,8 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
+/**
+ * @property-read int|null $products_count
+ */
 class Category extends Model
 {
     protected $table = 'categories';
@@ -20,27 +25,27 @@ class Category extends Model
     protected $fillable = ['name', 'description', 'parent_category_id'];
 
     // Relationship with products
-    public function products()
+    public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'category_id', 'category_id');
     }
 
-    public function parent()
+    public function parent(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_category_id', 'category_id');
     }
 
-    public function children()
+    public function children(): HasMany
     {
         return $this->hasMany(Category::class, 'parent_category_id', 'category_id');
     }
 
-    public function parentCategory()
+    public function parentCategory(): BelongsTo
     {
         return $this->parent();
     }
 
-    public function childCategories()
+    public function childCategories(): HasMany
     {
         return $this->children();
     }
@@ -100,7 +105,7 @@ class Category extends Model
         }
 
         return collect($buckets)->map(
-            fn (array $items) => collect($items)->sortBy(fn ($i) => mb_strtolower((string) ($i['name'] ?? '')))->values()
+            fn (array $items) => collect($items)->sortBy(fn (array $i) => mb_strtolower((string) $i['name']))->values()
         );
     }
 

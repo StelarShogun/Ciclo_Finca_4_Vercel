@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Client;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
@@ -145,7 +146,7 @@ class CF4ClientCartTest extends TestCase
 
         $checkoutRes = $this->postJson(route('clients.cart.checkout'));
         $checkoutRes->assertStatus(200);
-        $checkoutRes->assertTrue($checkoutRes->json('success'));
+        $this->assertTrue($checkoutRes->json('success'));
 
         $saleId = $checkoutRes->json('sale_id');
         $this->assertNotEmpty($saleId);
@@ -162,11 +163,73 @@ class CF4ClientCartTest extends TestCase
         $items = $sale->saleItems()->get();
         $this->assertCount(2, $items);
 
-        $this->assertEquals(50, (float) $items->firstWhere('product_id', $product1->product_id)->unit_price);
-        $this->assertEquals(40, (float) $items->firstWhere('product_id', $product2->product_id)->unit_price);
+        $line1 = $items->firstWhere('product_id', $product1->product_id);
+        $line2 = $items->firstWhere('product_id', $product2->product_id);
+        $this->assertInstanceOf(SaleItem::class, $line1);
+        $this->assertInstanceOf(SaleItem::class, $line2);
+        $this->assertEquals(50, (float) $line1->unit_price);
+        $this->assertEquals(40, (float) $line2->unit_price);
 
         $cartViewRes = $this->get(route('clients.cart'));
         $cartViewRes->assertStatus(200);
         $cartViewRes->assertSee('Tu carrito está vacío', false);
+    }
+
+    public function test_add_to_cart_rejects_out_of_stock_with_message_producto_agotado(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Agotado',
+            'second_surname' => null,
+            'gmail' => 'cliente-agotado@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $product = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Producto sin stock',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 100,
+            'purchase_price' => 10,
+            'stock_current' => 0,
+            'stock_minimum' => 1,
+            'status' => 'out_of_stock',
+        ]);
+
+        $this->actingAs($client, 'clients');
+
+        $res = $this->postJson(route('clients.cart.add'), [
+            'product_id' => $product->product_id,
+            'quantity' => 1,
+        ]);
+
+        $res->assertStatus(400);
+        $this->assertFalse($res->json('success'));
+        $this->assertSame(Product::MSG_CLIENT_AGOTADO, $res->json('message'));
+    }
+
+    public function test_product_page_redirects_to_canonical_slug_url(): void
+    {
+        $product = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Bicicleta Test SEO',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 100,
+            'purchase_price' => 50,
+            'stock_current' => 3,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        $canonical = $product->clientProductUrl();
+        $path = parse_url($canonical, PHP_URL_PATH) ?? '/';
+
+        $this->get('/product/'.$product->product_id)->assertRedirect($canonical);
+        $this->get($path)->assertStatus(200);
     }
 }

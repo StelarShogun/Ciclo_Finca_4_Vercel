@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AppSetting;
 use App\Models\Sale;
 use Illuminate\Http\Request;
 
@@ -38,7 +39,7 @@ class AdminOrderController extends Controller
             });
         }
 
-        $orders = $query->orderBy('sale_date', 'desc')->paginate(15)->withQueryString();
+        $orders = $query->orderBy('sale_date', 'desc')->paginate(10)->withQueryString();
 
         $basePurchasesQuery = Sale::query()
             ->whereIn('status', ['pending', 'completed'])
@@ -50,6 +51,17 @@ class AdminOrderController extends Controller
 
         $latestPurchaseSaleId = (clone $basePurchasesQuery)->max('sale_id') ?? 0;
 
-        return view('admin.orders.index', compact('orders', 'latestPurchaseSaleId'));
+        $stored = AppSetting::getStoredOrderExpirationDays();
+        $orderExpirationDays = ($stored !== null && $stored > 0)
+            ? $stored
+            : max(1, (int) config('sales.order_expiration_days', 30));
+        $usesEnvDefaultForExpiry = $stored === null;
+
+        return view('admin.orders.index', compact(
+            'orders',
+            'latestPurchaseSaleId',
+            'orderExpirationDays',
+            'usesEnvDefaultForExpiry'
+        ));
     }
 }

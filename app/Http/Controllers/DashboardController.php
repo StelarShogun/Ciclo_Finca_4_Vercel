@@ -8,7 +8,6 @@ use App\Models\Sale;
 use App\Models\Supplier;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -40,13 +39,10 @@ class DashboardController extends Controller
                 ->where('status', 'completed')
                 ->sum('total');
 
-            $lowStockProducts = Product::where('stock_current', '<', 10)
-                ->where('status', 'active')
-                ->count();
+            $lowStockProducts = Product::lowStockAlert()->count();
 
             $lowStockProductsList = Product::with(['category', 'supplier'])
-                ->where('stock_current', '<', 10)
-                ->where('status', 'active')
+                ->lowStockAlert()
                 ->orderBy('stock_current', 'asc')
                 ->limit(5)
                 ->get();
@@ -71,7 +67,7 @@ class DashboardController extends Controller
             }])
                 ->orderBy('products_count', 'desc')
                 ->get()
-                ->map(function ($categoria) {
+                ->map(function (Category $categoria) {
                     return [
                         'categoria' => $categoria->name,
                         'total' => $categoria->products_count,
@@ -181,9 +177,7 @@ class DashboardController extends Controller
                 ->where('status', 'completed')
                 ->sum('total');
 
-            $lowStockProducts = Product::where('stock_current', '<', 10)
-                ->where('status', 'active')
-                ->count();
+            $lowStockProducts = Product::lowStockAlert()->count();
 
             return response()->json([
                 'success' => true,
@@ -223,14 +217,14 @@ class DashboardController extends Controller
                 ->orderBy('date')
                 ->get();
 
-            $salesData = $this->fillSalesChartSeries($salesRows, $startDate, Carbon::now()->startOfDay());
+            $salesData = $this->fillSalesChartSeries(collect($salesRows), $startDate, Carbon::now()->startOfDay());
 
             $categoryData = Category::withCount(['products' => function ($query) {
                 $query->where('status', 'active');
             }])
                 ->orderBy('products_count', 'desc')
                 ->get()
-                ->map(function ($category) {
+                ->map(function (Category $category) {
                     return [
                         'categoria' => $category->name,
                         'total' => $category->products_count,
@@ -305,16 +299,16 @@ class DashboardController extends Controller
     /**
      * Una entrada por día en el rango con total 0 si no hubo ventas (el gráfico no queda “vacío”).
      *
-     * @param  Collection<int, object>  $rows
+     * @param  iterable<int, Sale|object>  $rows  filas agregadas con columnas date/total (consulta SQL)
      * @return array<int, array{date: string, total: float}>
      */
-    private function fillSalesChartSeries($rows, Carbon $rangeStart, Carbon $rangeEnd): array
+    private function fillSalesChartSeries(iterable $rows, Carbon $rangeStart, Carbon $rangeEnd): array
     {
         $byDate = [];
         foreach ($rows as $row) {
-            $d = $row->date;
+            $d = data_get($row, 'date');
             $key = $d instanceof Carbon ? $d->format('Y-m-d') : substr((string) $d, 0, 10);
-            $byDate[$key] = (float) $row->total;
+            $byDate[$key] = (float) data_get($row, 'total');
         }
 
         $out = [];
@@ -337,9 +331,7 @@ class DashboardController extends Controller
             'todaySales' => Sale::whereDate('sale_date', Carbon::today())
                 ->where('status', 'completed')
                 ->sum('total'),
-            'lowStockProducts' => Product::where('stock_current', '<', 10)
-                ->where('status', 'active')
-                ->count(),
+            'lowStockProducts' => Product::lowStockAlert()->count(),
             'monthlySales' => Sale::whereMonth('sale_date', Carbon::now()->month)
                 ->whereYear('sale_date', Carbon::now()->year)
                 ->where('status', 'completed')
