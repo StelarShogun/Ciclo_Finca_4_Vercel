@@ -44,16 +44,14 @@
                     <i class="fas fa-lock login-field-icon" aria-hidden="true"></i>
                     Nueva Contraseña
                 </label>
-                <div style="position:relative;">
+                <div class="login-pass-wrap">
                     <input type="password" id="recovery-password" name="new_password"
                            class="form-control"
                            required
                            minlength="8"
                            placeholder="Mínimo 8 caracteres"
-                           autocomplete="new-password"
-                           style="padding-right:40px;">
-                    <button type="button" id="toggle-recovery-password"
-                            style="position:absolute;top:50%;right:8px;transform:translateY(-50%);background:none;border:none;cursor:pointer;">
+                           autocomplete="new-password">
+                    <button type="button" id="toggle-recovery-password" class="login-pass-toggle">
                         <i class="fas fa-eye" id="eye-recovery-password"></i>
                     </button>
                 </div>
@@ -66,16 +64,14 @@
                     <i class="fas fa-lock login-field-icon" aria-hidden="true"></i>
                     Confirmar Nueva Contraseña
                 </label>
-                <div style="position:relative;">
+                <div class="login-pass-wrap">
                     <input type="password" id="recovery-password-confirm" name="new_password_confirmation"
                            class="form-control"
                            required
                            minlength="8"
                            placeholder="Repite la contraseña"
-                           autocomplete="new-password"
-                           style="padding-right:40px;">
-                    <button type="button" id="toggle-recovery-confirm"
-                            style="position:absolute;top:50%;right:8px;transform:translateY(-50%);background:none;border:none;cursor:pointer;">
+                           autocomplete="new-password">
+                    <button type="button" id="toggle-recovery-confirm" class="login-pass-toggle">
                         <i class="fas fa-eye" id="eye-recovery-confirm"></i>
                     </button>
                 </div>

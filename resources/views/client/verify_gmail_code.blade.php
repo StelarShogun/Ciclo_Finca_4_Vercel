@@ -56,7 +56,7 @@
                        placeholder="_ _ _ _ _ _"
                        autocomplete="one-time-code"
                        inputmode="numeric"
-                       style="width:100%;padding:12px;font-size:1.8rem;letter-spacing:0.5rem;font-weight:700;text-align:center;border:1px solid #dadce0;border-radius:10px;outline:none;">
+                       style="width:100%;padding:12px;font-size:clamp(1.3rem, 8vw, 1.8rem);letter-spacing:0.5rem;font-weight:700;text-align:center;border:1px solid #dadce0;border-radius:10px;outline:none;box-sizing:border-box;">
                 {{-- Shown by JS when the code length is not exactly 6 digits --}}
                 <div id="code-error" style="display:none;color:#c0392b;text-align:center;font-size:0.82rem;margin-top:6px;">
                     El código debe tener exactamente 6 dígitos.

@@ -41,7 +41,7 @@
                     value="{{ old('gmail') }}" placeholder="ejemplo@gmail.com" autocomplete="email">
             </div>
             @if(config('recaptcha.site_key'))
-                <div class="form-group mb-3">
+                <div class="form-group mb-3 recaptcha-wrap">
                     <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
                 </div>
             @endif
