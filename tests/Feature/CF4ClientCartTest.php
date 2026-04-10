@@ -174,4 +174,62 @@ class CF4ClientCartTest extends TestCase
         $cartViewRes->assertStatus(200);
         $cartViewRes->assertSee('Tu carrito está vacío', false);
     }
+
+    public function test_add_to_cart_rejects_out_of_stock_with_message_producto_agotado(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Agotado',
+            'second_surname' => null,
+            'gmail' => 'cliente-agotado@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $product = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Producto sin stock',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 100,
+            'purchase_price' => 10,
+            'stock_current' => 0,
+            'stock_minimum' => 1,
+            'status' => 'out_of_stock',
+        ]);
+
+        $this->actingAs($client, 'clients');
+
+        $res = $this->postJson(route('clients.cart.add'), [
+            'product_id' => $product->product_id,
+            'quantity' => 1,
+        ]);
+
+        $res->assertStatus(400);
+        $this->assertFalse($res->json('success'));
+        $this->assertSame(Product::MSG_CLIENT_AGOTADO, $res->json('message'));
+    }
+
+    public function test_product_page_redirects_to_canonical_slug_url(): void
+    {
+        $product = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Bicicleta Test SEO',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 100,
+            'purchase_price' => 50,
+            'stock_current' => 3,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        $canonical = $product->clientProductUrl();
+        $path = parse_url($canonical, PHP_URL_PATH) ?? '/';
+
+        $this->get('/product/'.$product->product_id)->assertRedirect($canonical);
+        $this->get($path)->assertStatus(200);
+    }
 }
