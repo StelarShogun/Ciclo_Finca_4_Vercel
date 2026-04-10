@@ -435,32 +435,6 @@ function smoothScrollTop() {
     }
 }
 
-// Ensure SweetAlert2 appears above any modals
-if (typeof Swal !== 'undefined') {
-    const originalFire = Swal.fire;
-    Swal.fire = function(...args) {
-        const config = args[0] || {};
-        
-        config.customClass = {
-            ...config.customClass,
-            popup: 'swal-high-z-index'
-        };
-        
-        const originalDidOpen = config.didOpen;
-        config.didOpen = function() {
-            const popup = Swal.getPopup();
-            if (popup) {
-                popup.style.zIndex = '10000';
-            }
-            if (originalDidOpen) {
-                originalDidOpen.call(this);
-            }
-        };
-        
-        return originalFire.call(this, config);
-    };
-}
-
 // Sidebar toggle with state persistence
 (function initSidebarToggle() {
     const btn = qs('#sidebarToggle');

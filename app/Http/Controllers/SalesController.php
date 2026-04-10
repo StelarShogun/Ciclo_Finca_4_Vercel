@@ -226,7 +226,8 @@ class SalesController extends Controller
 
         DB::beginTransaction();
         try {
-            // Validate stock for all items before writing anything to avoid partial commits
+            $preparedLines = [];
+
             foreach ($request->items as $item) {
                 $product = Product::find($item['product_id']);
                 if (! $product || $item['quantity'] > $product->stock_current) {
@@ -239,7 +240,40 @@ class SalesController extends Controller
                         'message' => "Insufficient stock for \"{$name}\". Available: {$available}",
                     ], 400);
                 }
+
+                $quantity = (int) $item['quantity'];
+                $unitPrice = $this->roundMoney((float) $item['precio_unitario']);
+                $lineTotal = $this->roundMoney($quantity * $unitPrice);
+
+                $preparedLines[] = [
+                    'product' => $product,
+                    'product_id' => (int) $item['product_id'],
+                    'quantity' => $quantity,
+                    'unit_price' => $unitPrice,
+                    'total' => $lineTotal,
+                ];
             }
+
+            $subtotal = 0.0;
+            foreach ($preparedLines as $line) {
+                $subtotal = $this->roundMoney($subtotal + $line['total']);
+            }
+
+            $discount = $this->roundMoney(max(0.0, (float) ($request->discount ?? 0)));
+            if ($discount > $subtotal) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El descuento no puede ser mayor que el subtotal (₡'.number_format($subtotal, 2, ',', '.').').',
+                ], 422);
+            }
+
+            $ivaPercent = (float) ($request->input('iva_percentage', 0));
+            $ivaPercent = max(0.0, min(13.0, $ivaPercent));
+            $taxableBase = $this->roundMoney($subtotal - $discount);
+            $iva = $this->roundMoney($taxableBase * ($ivaPercent / 100));
+            $total = $this->roundMoney($taxableBase + $iva);
 
             $orderSource = $clientId ? 'web_cart' : 'walk_in';
             $sale = Sale::create([
@@ -252,48 +286,27 @@ class SalesController extends Controller
                 'payment_method' => $request->payment_method,
                 'payment_reference' => $request->payment_reference ?? null,
                 'status' => 'completed',
-                'discount' => $request->discount ?? 0,
+                'discount' => $discount,
                 'notes' => $request->notes,
                 'buyer_name' => $buyerName,
                 'buyer_email' => $buyerEmail,
                 'order_source' => $orderSource,
-                'total' => 0,  // recalculated below after items are inserted
-            ]);
-
-            $subtotal = 0;
-
-            foreach ($request->items as $item) {
-                $product = Product::find($item['product_id']);
-                $quantity = $item['quantity'];
-                $price = $item['precio_unitario'];
-                $itemTotal = $item['total'];
-
-                SaleItem::create([
-                    'sale_id' => $sale->sale_id,
-                    'product_id' => $item['product_id'],
-                    'quantity' => $quantity,
-                    'unit_price' => $price,
-                    'total' => $itemTotal,
-                ]);
-
-                $subtotal += $itemTotal;
-                $product->decrement('stock_current', $quantity);
-            }
-
-            // IVA is capped at 13% to match Costa Rica's maximum tax rate
-            $discount = $request->discount ?? 0;
-            $subtotalAfterDiscount = $subtotal - $discount;
-            $ivaPercent = (float) ($request->input('iva_percentage', 0));
-            $ivaPercent = max(0, min(13, $ivaPercent));
-            $iva = $subtotalAfterDiscount * ($ivaPercent / 100);
-            $total = $subtotalAfterDiscount + $iva;
-
-            $sale->update([
                 'subtotal' => $subtotal,
-                'discount' => $discount,
                 'iva' => $iva,
                 'total' => $total,
             ]);
+
+            foreach ($preparedLines as $line) {
+                SaleItem::create([
+                    'sale_id' => $sale->sale_id,
+                    'product_id' => $line['product_id'],
+                    'quantity' => $line['quantity'],
+                    'unit_price' => $line['unit_price'],
+                    'total' => $line['total'],
+                ]);
+
+                $line['product']->decrement('stock_current', $line['quantity']);
+            }
 
             DB::commit();
 
@@ -503,6 +516,10 @@ class SalesController extends Controller
     {
         $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
 
+        if ($sale->status !== 'completed') {
+            abort(403, 'La factura solo está disponible para ventas confirmadas.');
+        }
+
         return view('admin.sales.invoice', compact('sale'));
     }
 
@@ -665,5 +682,14 @@ class SalesController extends Controller
         $map = ['efectivo' => 'cash', 'sinpe' => 'sinpe', 'transferencia' => 'transfer'];
 
         return $map[strtolower($value)] ?? $value;
+    }
+
+    /**
+     * Montos en colones almacenados con 2 decimales (columnas decimal(10,2)).
+     * IVA sobre base imponible = subtotal − descuento, luego total = base + IVA.
+     */
+    private function roundMoney(float $amount): float
+    {
+        return round($amount, 2);
     }
 }
