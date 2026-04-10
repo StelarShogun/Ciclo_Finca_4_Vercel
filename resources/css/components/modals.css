@@ -1,5 +1,6 @@
 /* ===== MODALS CSS - ESTILOS UNIFICADOS ===== */
 /* Este archivo contiene todos los estilos compartidos para modales */
+@import "../admin/sweetalert2-modal-zindex.css";
 
 /* ===== MODAL BASE ===== */
 .edit-modal {
@@ -211,23 +212,7 @@
   }
 }
 
-/* ===== INTEGRACIÓN CON SWEETALERT2 ===== */
-/* Asegurar que SweetAlert2 se muestre por encima de modales */
-.swal2-container {
-  z-index: 10000 !important;
-}
-
-.swal2-popup {
-  z-index: 10001 !important;
-}
-
-.swal2-backdrop {
-  z-index: 9999 !important;
-}
-
-.swal-high-z-index {
-  z-index: 10000 !important;
-}
+/* SweetAlert2: ver ../admin/sweetalert2-modal-zindex.css (import arriba). */
 
 /* ===== MENSAJES DE ERROR EN MODALES ===== */
 .modal-body .error-message {

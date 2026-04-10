@@ -1,6 +1,7 @@
 @import "../variables-reset.css";
 @import "../utilities.css";
 @import "../sidebar.css";
+@import "../sweetalert2-modal-zindex.css";
 
 /* ============================================================
   1. MAIN LAYOUT
@@ -605,6 +606,11 @@
   padding: 25px;
   margin-top: 20px;
   box-shadow: var(--shadow-sm);
+}
+
+.sale-totals--discount-over {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.2);
 }
 
 .total-row {
