@@ -63,7 +63,7 @@
 
                 {{-- Stock level with color-coded indicators --}}
                 <td class="text-center">
-                    @if($product->stock_current > 10)
+                    @if($product->stock_current > \App\Models\Product::CLIENT_LOW_STOCK_THRESHOLD)
                         <span class="stock-high">{{ $product->stock_current }}</span>
                     @elseif($product->stock_current > 0)
                         <span class="stock-medium">{{ $product->stock_current }}</span>

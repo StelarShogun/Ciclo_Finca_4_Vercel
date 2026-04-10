@@ -1277,3 +1277,14 @@ img, svg, table {
 .brand-combobox.error .brand-combobox-chevron {
   color: #ef4444;
 }
+
+/* Disponibilidad (alineada con la tienda: Disponible / pocas / agotado / no disponible) */
+.inventory-availability {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.inventory-availability--ok { color: #059669; }
+.inventory-availability--low { color: #d97706; }
+.inventory-availability--out { color: #dc2626; }
+.inventory-availability--na { color: #6b7280; }

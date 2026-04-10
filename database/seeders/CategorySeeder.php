@@ -22,7 +22,15 @@ class CategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            Category::create($category);
+            Category::firstOrCreate(
+                [
+                    'name' => $category['name'],
+                    'parent_category_id' => $category['parent_category_id'],
+                ],
+                [
+                    'description' => $category['description'],
+                ]
+            );
         }
 
         $parents = Category::whereNull('parent_category_id')->get()->keyBy('name');
