@@ -133,7 +133,9 @@ Route::get('/admin/catalog-exit', function () {
 // --- Public Pages ---
 Route::get('/', [ClientPageController::class, 'home'])->name('clients.home');
 Route::get('/catalog', [ClientPageController::class, 'catalog'])->name('clients.catalog');
-Route::get('/product/{id}', [ClientPageController::class, 'product'])->name('clients.product');
+Route::get('/product/{id}/{slug?}', [ClientPageController::class, 'product'])
+    ->where(['id' => '[0-9]+', 'slug' => '[a-z0-9\-]*'])
+    ->name('clients.product');
 
 // --- Client Authentication (public) ---
 Route::get('/login', [ClientUserController::class, 'showLoginForm'])->name('login.show');

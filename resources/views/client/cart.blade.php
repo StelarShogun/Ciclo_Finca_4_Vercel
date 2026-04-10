@@ -44,7 +44,7 @@
                                 <div class="item-info">
                                     <h3 class="item-name">{{ $item['name'] }}</h3>
                                     <p class="item-price">₡{{ number_format($item['price'], 0, ',', '.') }} c/u</p>
-                                    <p class="item-stock">Stock disponible: {{ $item['stock_available'] }}</p>
+                                    <p class="item-stock">Disponibles: {{ $item['stock_available'] }} unidades</p>
                                 </div>
                                 <div class="item-controls">
                                     <label class="item-controls-label">Cantidad:</label>

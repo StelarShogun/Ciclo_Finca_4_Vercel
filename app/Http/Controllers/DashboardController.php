@@ -39,13 +39,10 @@ class DashboardController extends Controller
                 ->where('status', 'completed')
                 ->sum('total');
 
-            $lowStockProducts = Product::where('stock_current', '<', 10)
-                ->where('status', 'active')
-                ->count();
+            $lowStockProducts = Product::lowStockAlert()->count();
 
             $lowStockProductsList = Product::with(['category', 'supplier'])
-                ->where('stock_current', '<', 10)
-                ->where('status', 'active')
+                ->lowStockAlert()
                 ->orderBy('stock_current', 'asc')
                 ->limit(5)
                 ->get();
@@ -180,9 +177,7 @@ class DashboardController extends Controller
                 ->where('status', 'completed')
                 ->sum('total');
 
-            $lowStockProducts = Product::where('stock_current', '<', 10)
-                ->where('status', 'active')
-                ->count();
+            $lowStockProducts = Product::lowStockAlert()->count();
 
             return response()->json([
                 'success' => true,
@@ -336,9 +331,7 @@ class DashboardController extends Controller
             'todaySales' => Sale::whereDate('sale_date', Carbon::today())
                 ->where('status', 'completed')
                 ->sum('total'),
-            'lowStockProducts' => Product::where('stock_current', '<', 10)
-                ->where('status', 'active')
-                ->count(),
+            'lowStockProducts' => Product::lowStockAlert()->count(),
             'monthlySales' => Sale::whereMonth('sale_date', Carbon::now()->month)
                 ->whereYear('sale_date', Carbon::now()->year)
                 ->where('status', 'completed')
