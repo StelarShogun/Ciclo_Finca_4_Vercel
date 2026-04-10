@@ -778,6 +778,38 @@ document.addEventListener('DOMContentLoaded', function () {
         updateButtons();
     })();
 
+    // Catalog: toggle del sidebar de filtros en mobile.
+    (function initCatalogFilterToggle() {
+        var btn     = document.getElementById('catalog-filter-toggle');
+        var sidebar = document.getElementById('catalog-sidebar');
+        if (!btn || !sidebar) return;
+
+        function checkMobile() {
+            if (window.innerWidth <= 768) {
+                btn.style.display = 'flex';
+                if (btn.getAttribute('aria-expanded') !== 'true') {
+                    sidebar.style.display = 'none';
+                }
+            } else {
+                btn.style.display = 'none';
+                sidebar.style.display = '';
+            }
+        }
+
+        btn.addEventListener('click', function () {
+            var open = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', !open);
+            sidebar.style.display = open ? 'none' : '';
+            var caret = btn.querySelector('.fa-chevron-down');
+            if (caret) caret.style.transform = open ? '' : 'rotate(180deg)';
+            var label = btn.querySelector('span');
+            if (label) label.textContent = open ? 'Mostrar filtros' : 'Ocultar filtros';
+        });
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+    })();
+
     // Home: reveal progresivo de secciones al hacer scroll.
     (function initHomeRevealSections() {
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;

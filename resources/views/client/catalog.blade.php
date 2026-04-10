@@ -17,7 +17,16 @@
 
     <div class="container">
         <div class="catalog-layout">
-            <aside class="catalog-sidebar">
+            {{-- Mobile: filter toggle button --}}
+            <button class="btn btn-outline-secondary catalog-filter-toggle" id="catalog-filter-toggle" type="button"
+                    aria-expanded="false" aria-controls="catalog-sidebar"
+                    style="display:none; align-items:center; gap:8px; width:100%; margin-bottom:12px;">
+                <i class="fas fa-filter"></i>
+                <span>Mostrar filtros</span>
+                <i class="fas fa-chevron-down" style="margin-left:auto; font-size:0.8rem; transition:transform 0.25s ease;"></i>
+            </button>
+
+            <aside class="catalog-sidebar" id="catalog-sidebar">
                 <div class="filters-card">
                     <h3 class="filters-title">
                         <i class="fas fa-filter"></i>
