@@ -43,7 +43,7 @@
                 {{-- Header actions: cart and user menu --}}
                 <div class="header-actions">
 
-                    @auth('clients')
+                    @if(auth('clients')->check())
                         {{-- Cart button with item counter --}}
                         <a href="{{ route('clients.cart') }}" class="cart-btn cart-btn-link" id="cart-link"
                             data-cart-count="{{ $cartCount ?? 0 }}" title="Ver carrito">
@@ -51,11 +51,10 @@
                             <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
                         </a>
 
-                        {{-- Dropdown menu for the authenticated user --}}
+                        {{-- Dropdown menu for the authenticated client --}}
                         <div class="user-menu-wrap" id="user-menu">
                             <button class="user-menu-trigger" id="user-menu-trigger" type="button" aria-expanded="false"
                                 aria-haspopup="true" title="Mi cuenta">
-                                {{-- Avatar with the client's initials --}}
                                 <div class="user-avatar-bubble">
                                     {{ strtoupper(substr(Auth::guard('clients')->user()->name, 0, 1)) }}{{ strtoupper(substr(Auth::guard('clients')->user()->first_surname, 0, 1)) }}
                                 </div>
@@ -66,8 +65,6 @@
                             </button>
 
                             <div class="user-dropdown-panel" id="user-dropdown" aria-hidden="true" role="menu">
-
-                                {{-- Dropdown header: full name and email --}}
                                 <div class="user-dropdown-head">
                                     <p class="user-dropdown-fullname">
                                         {{ Auth::guard('clients')->user()->name }}
@@ -77,8 +74,6 @@
                                         {{ Auth::guard('clients')->user()->gmail }}
                                     </p>
                                 </div>
-
-                                {{-- Profile link --}}
                                 <div class="user-dropdown-body">
                                     <a href="{{ route('clients.profile') }}"
                                         class="user-dropdown-item {{ request()->routeIs('clients.profile') ? 'active' : '' }}"
@@ -87,8 +82,6 @@
                                         Mi Perfil
                                     </a>
                                 </div>
-
-                                {{-- Dropdown footer: logout --}}
                                 <div class="user-dropdown-foot">
                                     <form action="{{ route('logout') }}" method="POST" class="logout-form">
                                         @csrf
@@ -100,6 +93,43 @@
                                 </div>
                             </div>
                         </div>
+
+                    @elseif(session('admin_catalog_mode'))
+                        {{-- Admin browsing the client catalog — shows admin identity, no cart, "Volver" instead of logout --}}
+                        @php $adminSession = session('admin_catalog_mode'); @endphp
+                        <div class="user-menu-wrap" id="user-menu">
+                            <button class="user-menu-trigger" id="user-menu-trigger" type="button" aria-expanded="false"
+                                aria-haspopup="true" title="Mi cuenta">
+                                <div class="user-avatar-bubble">
+                                    {{ strtoupper(substr($adminSession['name'], 0, 1)) }}{{ strtoupper(substr($adminSession['first_surname'], 0, 1)) }}
+                                </div>
+                                <span class="user-trigger-name">{{ $adminSession['name'] }}</span>
+                                <i class="fas fa-chevron-down user-trigger-caret"></i>
+                            </button>
+
+                            <div class="user-dropdown-panel" id="user-dropdown" aria-hidden="true" role="menu">
+                                <div class="user-dropdown-head">
+                                    <p class="user-dropdown-fullname">
+                                        {{ $adminSession['name'] }} {{ $adminSession['first_surname'] }}
+                                    </p>
+                                    <p class="user-dropdown-email">{{ $adminSession['gmail'] }}</p>
+                                </div>
+                                <div class="user-dropdown-body">
+                                    <span class="user-dropdown-item" style="cursor:default;opacity:.7;">
+                                        <i class="fas fa-shield-alt"></i>
+                                        Administrador
+                                    </span>
+                                </div>
+                                <div class="user-dropdown-foot">
+                                    <a href="{{ route('admin.catalog.exit') }}" class="user-dropdown-item"
+                                       role="menuitem" style="color:var(--color-primary);text-decoration:none;">
+                                        <i class="fas fa-arrow-left"></i>
+                                        Volver al panel admin
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
                     @else
                         {{-- Cart button for unauthenticated guests --}}
                         <button class="cart-btn" id="cart-guest" type="button" data-cart-count="0" title="Ver carrito">
@@ -138,7 +168,7 @@
                                 <span>Iniciar Sesión</span>
                             </a>
                         @endif
-                    @endauth
+                    @endif
 
                 </div>{{-- /header-actions --}}
             </div>{{-- /header-menu-panel --}}

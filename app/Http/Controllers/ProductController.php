@@ -316,10 +316,11 @@ class ProductController extends Controller
         if ($request->filled('stock_status')) {
             switch ($request->stock_status) {
                 case 'in-stock':
-                    $query->where('stock_current', '>', 10);
+                    $query->where('stock_current', '>', Product::CLIENT_LOW_STOCK_THRESHOLD);
                     break;
                 case 'low':
-                    $query->where('stock_current', '>', 0)->where('stock_current', '<=', 10);
+                    $query->where('stock_current', '>', 0)
+                        ->where('stock_current', '<=', Product::CLIENT_LOW_STOCK_THRESHOLD);
                     break;
                 case 'out':
                     $query->where('stock_current', 0);
@@ -349,7 +350,7 @@ class ProductController extends Controller
                 'image' => $product->image ?? 'default.png',
                 'category' => (object) ['name' => optional($product->category)->name ?? 'Uncategorized'],
                 'stock' => $product->stock_current,
-                'stock_status_class' => $product->stock_current > 10 ? 'success' :
+                'stock_status_class' => $product->stock_current > Product::CLIENT_LOW_STOCK_THRESHOLD ? 'success' :
                                       ($product->stock_current > 0 ? 'warning' : 'danger'),
                 'price' => $product->sale_price,
                 'status' => ucfirst(str_replace('_', ' ', $product->status)),

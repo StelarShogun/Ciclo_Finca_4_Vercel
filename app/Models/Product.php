@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -52,7 +54,42 @@ class Product extends Model
         'updated_at' => 'datetime',
     ];
 
-    // Returns an array of image URLs, ensuring the main image is included and handling cases where images may be missing
+    public const CLIENT_LOW_STOCK_THRESHOLD = 10;
+
+    public const MSG_CLIENT_AGOTADO = 'Producto agotado';
+
+    public const MSG_CLIENT_STOCK_INSUFICIENTE = 'Stock insuficiente';
+
+    public static function canonicalStatus(?string $raw): string
+    {
+        $s = strtolower(trim((string) $raw));
+
+        return match ($s) {
+            'activo' => 'active',
+            'inactivo' => 'inactive',
+            'agotado' => 'out_of_stock',
+            'descontinuado' => 'discontinued',
+            'active', 'inactive', 'out_of_stock', 'discontinued' => $s,
+            default => $s,
+        };
+    }
+
+    public function effectiveStatus(): string
+    {
+        return self::canonicalStatus($this->attributes['status'] ?? null);
+    }
+
+    public function scopeActiveInClientStore(Builder $query): Builder
+    {
+        $ok = ['active', 'activo'];
+        $placeholders = implode(',', array_fill(0, count($ok), '?'));
+
+        return $query->whereRaw(
+            'LOWER(TRIM(COALESCE(status, \'\'))) IN ('.$placeholders.')',
+            $ok
+        );
+    }
+
     public function getDisplayImages(): array
     {
         $main = $this->image ?? 'default.png';
@@ -62,7 +99,6 @@ class Product extends Model
         return array_filter($all) ?: ['default.png'];
     }
 
-    // Relationships to other models, allowing easy access to category and supplier information for each product
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id', 'category_id');
@@ -73,7 +109,6 @@ class Product extends Model
         return $this->belongsTo(Supplier::class, 'supplier_id', 'supplier_id');
     }
 
-    // Sales module relationship
     public function saleItems(): HasMany
     {
         return $this->hasMany(SaleItem::class, 'product_id', 'product_id');
@@ -84,7 +119,7 @@ class Product extends Model
         return $this->belongsToMany(Brand::class, 'products_brand', 'product_id', 'brand_id', 'product_id', 'id');
     }
 
-    /** Assigned classification values (one row per dimension per product via pivot). */
+    /** CF4-84: Assigned classification values (one row per dimension per product via pivot). */
     public function classificationValues(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -97,11 +132,87 @@ class Product extends Model
         )->withPivot('classification_dimension_id');
     }
 
-    // Validation rules to ensure data integrity when saving products, with specific checks for active products and price consistency
+    /** CF4-62: Etiqueta corta para listados del cliente. */
+    public function clientCatalogStockLabel(): string
+    {
+        $st = $this->effectiveStatus();
+
+        if ($this->stock_current <= 0 || $st === 'out_of_stock') {
+            return 'Agotado';
+        }
+
+        if ($st !== 'active') {
+            return 'No disponible';
+        }
+
+        if ($this->stock_current <= self::CLIENT_LOW_STOCK_THRESHOLD) {
+            return 'Quedan pocas unidades';
+        }
+
+        return 'Disponible';
+    }
+
+    public function adminAvailabilityLabel(): string
+    {
+        $st = $this->effectiveStatus();
+
+        if (in_array($st, ['inactive', 'discontinued'], true)) {
+            return 'No disponible';
+        }
+
+        if ($st === 'out_of_stock' || $this->stock_current <= 0) {
+            return 'Agotado';
+        }
+
+        if ($st === 'active' && $this->stock_current > 0) {
+            if ($this->stock_current <= self::CLIENT_LOW_STOCK_THRESHOLD) {
+                return 'Quedan pocas unidades';
+            }
+
+            return 'Disponible';
+        }
+
+        return 'No disponible';
+    }
+
+    public function clientShowsLowStockWarning(): bool
+    {
+        return $this->effectiveStatus() === 'active'
+            && $this->stock_current > 0
+            && $this->stock_current <= self::CLIENT_LOW_STOCK_THRESHOLD;
+    }
+
+    public function isPurchasableByClient(): bool
+    {
+        return $this->effectiveStatus() === 'active' && $this->stock_current > 0;
+    }
+
+    public function clientPublicSlug(): string
+    {
+        $s = Str::slug((string) ($this->name ?? 'producto'));
+
+        return $s !== '' ? $s : 'producto';
+    }
+
+    public function clientProductUrl(): string
+    {
+        return route('clients.product', [
+            'id' => $this->product_id,
+            'slug' => $this->clientPublicSlug(),
+        ]);
+    }
+
+    public function scopeLowStockAlert(Builder $query): Builder
+    {
+        return $query->activeInClientStore()
+            ->where('stock_current', '>', 0)
+            ->where('stock_current', '<=', self::CLIENT_LOW_STOCK_THRESHOLD);
+    }
+
     protected static function booted(): void
     {
         static::saving(function ($p) {
-            if ($p->status === 'active') {
+            if ($p->effectiveStatus() === 'active') {
                 if ($p->stock_minimum < 1) {
                     throw ValidationException::withMessages([
                         'stock_minimum' => 'El stock mínimo debe ser ≥ 1 para productos activos.',

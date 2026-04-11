@@ -4,272 +4,121 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Supplier;
 use Illuminate\Database\Seeder;
 
 class ProductsSeeder extends Seeder
 {
     public function run(): void
     {
-        $products = [
-            [
-                'categoria_padre' => 'Bicicletas',
-                'subcategoria' => 'MTB',
-                'proveedor_id' => 1,
-                'nombre' => 'Trek Fuel EX 8',
-                'descripcion' => 'Bicicleta de montaña full suspension 29" con transmisión Shimano XT',
-                'precio_compra' => 1200000,
-                'precio_venta' => 1500000,
-                'stock_actual' => 5,
-                'stock_minimo' => 5,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Bicicletas',
-                'subcategoria' => 'Ruta / Gravel',
-                'proveedor_id' => 2,
-                'nombre' => 'Specialized Tarmac SL7',
-                'descripcion' => 'Bicicleta de ruta de carbono con grupo Shimano 105',
-                'precio_compra' => 1800000,
-                'precio_venta' => 2200000,
-                'stock_actual' => 5,
-                'stock_minimo' => 5,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Bicicletas',
-                'subcategoria' => 'Urbana / Híbrida',
-                'proveedor_id' => 5,
-                'nombre' => 'Giant Escape 3',
-                'descripcion' => 'Bicicleta urbana híbrida con frenos de disco',
-                'precio_compra' => 180000,
-                'precio_venta' => 250000,
-                'stock_actual' => 8,
-                'stock_minimo' => 5,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Componentes',
-                'subcategoria' => 'Transmisión',
-                'proveedor_id' => 3,
-                'nombre' => 'Shimano Deore XT M8100',
-                'descripcion' => 'Grupo de transmisión completo 12 velocidades',
-                'precio_compra' => 180000,
-                'precio_venta' => 250000,
-                'stock_actual' => 5,
-                'stock_minimo' => 5,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Componentes',
-                'subcategoria' => 'Transmisión',
-                'proveedor_id' => 4,
-                'nombre' => 'SRAM GX Eagle',
-                'descripcion' => 'Grupo de transmisión 12 velocidades para MTB',
-                'precio_compra' => 220000,
-                'precio_venta' => 300000,
-                'stock_actual' => 5,
-                'stock_minimo' => 5,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Componentes',
-                'subcategoria' => 'Frenos',
-                'proveedor_id' => 3,
-                'nombre' => 'Frenos de Disco Shimano BR-MT200',
-                'descripcion' => 'Frenos de disco hidráulicos para MTB',
-                'precio_compra' => 45000,
-                'precio_venta' => 65000,
-                'stock_actual' => 12,
-                'stock_minimo' => 6,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Componentes',
-                'subcategoria' => 'Ruedas y neumáticos',
-                'proveedor_id' => 3,
-                'nombre' => 'Neumático Kenda Small Block Eight 29"',
-                'descripcion' => 'Neumático MTB 29"; ejemplo de marca + uso + medida en clasificaciones.',
-                'precio_compra' => 28000,
-                'precio_venta' => 45000,
-                'stock_actual' => 20,
-                'stock_minimo' => 8,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Accesorios',
-                'subcategoria' => 'Iluminación',
-                'proveedor_id' => 7,
-                'nombre' => 'Luces LED Cateye Volt 400',
-                'descripcion' => 'Luz delantera LED recargable 400 lumens',
-                'precio_compra' => 25000,
-                'precio_venta' => 40000,
-                'stock_actual' => 20,
-                'stock_minimo' => 10,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Seguridad',
-                'subcategoria' => 'Candados',
-                'proveedor_id' => 7,
-                'nombre' => 'Candado Kryptonite Evolution',
-                'descripcion' => 'Candado en U de acero endurecido',
-                'precio_compra' => 35000,
-                'precio_venta' => 55000,
-                'stock_actual' => 18,
-                'stock_minimo' => 8,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Seguridad',
-                'subcategoria' => 'Cascos',
-                'proveedor_id' => 7,
-                'nombre' => 'Casco Giro Synthe MIPS',
-                'descripcion' => 'Casco de carretera con tecnología MIPS',
-                'precio_compra' => 85000,
-                'precio_venta' => 120000,
-                'stock_actual' => 15,
-                'stock_minimo' => 8,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Ropa deportiva',
-                'subcategoria' => 'Jerseys',
-                'proveedor_id' => 8,
-                'nombre' => 'Jersey Castelli Free Aero',
-                'descripcion' => 'Jersey de ciclismo de carretera con bolsillos',
-                'precio_compra' => 45000,
-                'precio_venta' => 75000,
-                'stock_actual' => 25,
-                'stock_minimo' => 12,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Ropa deportiva',
-                'subcategoria' => 'Culotes / Shorts',
-                'proveedor_id' => 8,
-                'nombre' => 'Culote Pearl Izumi Quest',
-                'descripcion' => 'Culote con badana para ciclismo de larga distancia',
-                'precio_compra' => 35000,
-                'precio_venta' => 60000,
-                'stock_actual' => 30,
-                'stock_minimo' => 15,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Herramientas',
-                'subcategoria' => 'Multiherramientas',
-                'proveedor_id' => 7,
-                'nombre' => 'Kit de Herramientas Park Tool',
-                'descripcion' => 'Kit completo de herramientas para mantenimiento',
-                'precio_compra' => 85000,
-                'precio_venta' => 130000,
-                'stock_actual' => 6,
-                'stock_minimo' => 5,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Herramientas',
-                'subcategoria' => 'Llaves y extractores',
-                'proveedor_id' => 7,
-                'nombre' => 'Bomba de Aire Topeak Joe Blow',
-                'descripcion' => 'Bomba de piso con manómetro digital',
-                'precio_compra' => 25000,
-                'precio_venta' => 45000,
-                'stock_actual' => 10,
-                'stock_minimo' => 5,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Seguridad',
-                'subcategoria' => 'Cascos',
-                'proveedor_id' => 7,
-                'nombre' => 'Casco MTB Fox Proframe',
-                'descripcion' => 'Casco de enduro con protección facial',
-                'precio_compra' => 120000,
-                'precio_venta' => 180000,
-                'stock_actual' => 8,
-                'stock_minimo' => 5,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Seguridad',
-                'subcategoria' => 'Luces',
-                'proveedor_id' => 7,
-                'nombre' => 'Reflectores LED traseros',
-                'descripcion' => 'Set de 2 reflectores LED para la parte trasera',
-                'precio_compra' => 8000,
-                'precio_venta' => 15000,
-                'stock_actual' => 40,
-                'stock_minimo' => 20,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Nutrición',
-                'subcategoria' => 'Geles',
-                'proveedor_id' => 7,
-                'nombre' => 'Geles Energéticos GU Energy',
-                'descripcion' => 'Pack de 24 geles energéticos sabor fresa',
-                'precio_compra' => 15000,
-                'precio_venta' => 25000,
-                'stock_actual' => 50,
-                'stock_minimo' => 25,
-                'estado' => 'activo',
-            ],
-            [
-                'categoria_padre' => 'Nutrición',
-                'subcategoria' => 'Bebidas',
-                'proveedor_id' => 7,
-                'nombre' => 'Bebida Isotónica Powerade',
-                'descripcion' => 'Polvo para bebida isotónica sabor limón',
-                'precio_compra' => 12000,
-                'precio_venta' => 20000,
-                'stock_actual' => 35,
-                'stock_minimo' => 18,
-                'estado' => 'activo',
-            ],
+        if (Product::query()->exists()) {
+            $this->command?->warn('ProductsSeeder: ya hay productos; se omite. Usa migrate:fresh --seed para repoblar desde cero.');
+
+            return;
+        }
+
+        $supplierIds = Supplier::query()->pluck('supplier_id', 'name');
+
+        $rows = [
+            $this->row('Bicicletas', 'MTB', $supplierIds, 'Trek Costa Rica', 'Trek Fuel EX 8', 'MTB doble suspensión 29"', 1200000, 1500000, 6, 5, true),
+            $this->row('Bicicletas', 'MTB', $supplierIds, 'Giant Bicycles CR', 'Giant Trance X 29 2', 'Trail 29" aluminio', 980000, 1250000, 18, 10, true),
+            $this->row('Bicicletas', 'MTB', $supplierIds, 'Cannondale Costa Rica', 'Cannondale Habit 4', 'Enduro ligero 27.5"', 1100000, 1390000, 12, 8, false),
+            $this->row('Bicicletas', 'Ruta / Gravel', $supplierIds, 'Specialized Centroamérica', 'Specialized Tarmac SL7', 'Carretera carbono, grupo 105', 1800000, 2200000, 5, 5, true),
+            $this->row('Bicicletas', 'Ruta / Gravel', $supplierIds, 'Trek Costa Rica', 'Trek Domane AL 4', 'Endurance aluminio', 620000, 799000, 14, 10, false),
+            $this->row('Bicicletas', 'Ruta / Gravel', $supplierIds, 'Giant Bicycles CR', 'Giant Revolt 2', 'Gravel aluminio', 720000, 920000, 9, 8, false),
+            $this->row('Bicicletas', 'Urbana / Híbrida', $supplierIds, 'Giant Bicycles CR', 'Giant Escape 3', 'Urbana híbrida frenos disco', 180000, 250000, 20, 10, true),
+            $this->row('Bicicletas', 'Urbana / Híbrida', $supplierIds, 'Specialized Centroamérica', 'Specialized Sirrus X 2.0', 'Fitness urbana', 320000, 410000, 11, 8, false),
+
+            $this->row('Componentes', 'Transmisión', $supplierIds, 'Shimano Costa Rica', 'Shimano Deore XT M8100', 'Grupo 12v completo', 180000, 250000, 16, 10, false),
+            $this->row('Componentes', 'Transmisión', $supplierIds, 'SRAM Centroamérica', 'SRAM GX Eagle', 'Grupo 12v MTB', 220000, 300000, 14, 10, true),
+            $this->row('Componentes', 'Transmisión', $supplierIds, 'Shimano Costa Rica', 'Shimano 105 R7120', 'Grupo carretera 12v', 340000, 449000, 8, 8, false),
+            $this->row('Componentes', 'Frenos', $supplierIds, 'Shimano Costa Rica', 'Shimano BR-MT200', 'Freno disco hidráulico MTB', 45000, 65000, 24, 12, false),
+            $this->row('Componentes', 'Frenos', $supplierIds, 'SRAM Centroamérica', 'SRAM Level T', 'Freno hidráulico par', 52000, 72000, 19, 12, false),
+            $this->row('Componentes', 'Ruedas y neumáticos', $supplierIds, 'Shimano Costa Rica', 'Rueda trasera Deore WH-MT500', 'Boost 12mm', 125000, 165000, 7, 6, false),
+            $this->row('Componentes', 'Ruedas y neumáticos', $supplierIds, 'SRAM Centroamérica', 'Neumático Maxxis Minion DHF 29x2.5', 'Tubeless ready', 38000, 52000, 40, 20, false),
+
+            $this->row('Accesorios', 'Iluminación', $supplierIds, 'Accesorios Ciclismo Pro', 'Cateye Volt 800', 'Luz delantera USB', 28000, 42000, 22, 12, false),
+            $this->row('Accesorios', 'Iluminación', $supplierIds, 'Accesorios Ciclismo Pro', 'Led trasero Knog Blinder', 'USB recargable', 12000, 19000, 35, 18, false),
+            $this->row('Accesorios', 'Portabultos', $supplierIds, 'Accesorios Ciclismo Pro', 'Portabultos Topeak Explorer', 'Aluminio 29"', 35000, 48000, 15, 10, false),
+            $this->row('Accesorios', 'Hidratación', $supplierIds, 'Accesorios Ciclismo Pro', 'Bidón Elite Fly 750ml', 'Ligero', 4500, 8500, 60, 30, false),
+
+            $this->row('Ropa deportiva', 'Jerseys', $supplierIds, 'Ropa Deportiva Ciclismo', 'Jersey Castelli Entrata', 'Manga corta', 28000, 48000, 26, 14, true),
+            $this->row('Ropa deportiva', 'Jerseys', $supplierIds, 'Ropa Deportiva Ciclismo', 'Jersey Pearl Izumi Quest', 'Transpirable', 22000, 39000, 30, 15, false),
+            $this->row('Ropa deportiva', 'Culotes / Shorts', $supplierIds, 'Ropa Deportiva Ciclismo', 'Culote Pearl Izumi Quest', 'Badana gel', 35000, 60000, 20, 15, false),
+            $this->row('Ropa deportiva', 'Chaquetas', $supplierIds, 'Ropa Deportiva Ciclismo', 'Chubasquero Gore Shakedry', 'Ultraligero', 95000, 135000, 6, 6, false),
+
+            $this->row('Herramientas', 'Multiherramientas', $supplierIds, 'Accesorios Ciclismo Pro', 'Park Tool IB-3', 'Mini multiherramienta', 18000, 28000, 28, 14, false),
+            $this->row('Herramientas', 'Llaves y extractores', $supplierIds, 'Accesorios Ciclismo Pro', 'Llave dinamométrica Park TW-5', '2–14 Nm', 42000, 62000, 10, 8, false),
+            $this->row('Herramientas', 'Multiherramientas', $supplierIds, 'Accesorios Ciclismo Pro', 'Kit Park Tool AK-5', 'Taller portátil', 85000, 130000, 5, 5, false),
+
+            $this->row('Seguridad', 'Cascos', $supplierIds, 'Accesorios Ciclismo Pro', 'Casco Giro Synthe MIPS', 'Carretera', 85000, 120000, 14, 10, true),
+            $this->row('Seguridad', 'Cascos', $supplierIds, 'Accesorios Ciclismo Pro', 'Casco Fox Proframe', 'Enduro integral', 120000, 180000, 8, 8, false),
+            $this->row('Seguridad', 'Luces', $supplierIds, 'Accesorios Ciclismo Pro', 'Luces LED set delantero/trasero', 'Pilas incluidas', 8000, 15000, 45, 22, false),
+            $this->row('Seguridad', 'Candados', $supplierIds, 'Accesorios Ciclismo Pro', 'Candado Kryptonite Evolution', 'U-lock + cable', 35000, 55000, 18, 12, false),
+
+            $this->row('Nutrición', 'Geles', $supplierIds, 'Accesorios Ciclismo Pro', 'Geles GU Energy (caja 24)', 'Varios sabores', 15000, 25000, 50, 25, false),
+            $this->row('Nutrición', 'Bebidas', $supplierIds, 'Accesorios Ciclismo Pro', 'Isotónico Powerade polvo', 'Limón 500g', 12000, 20000, 35, 18, false),
+            $this->row('Nutrición', 'Barras', $supplierIds, 'Accesorios Ciclismo Pro', 'Barras Clif Bar (caja 12)', 'Energía', 18000, 28000, 42, 20, true),
+
+            $this->row('Seguridad', 'Candados', $supplierIds, 'Accesorios Ciclismo Pro', 'Candado U demo agotado', 'Ejemplo sin stock en tienda', 15000, 22000, 0, 5, false, 'out_of_stock'),
         ];
 
-        foreach ($products as $product) {
-            $categoryId = $this->resolveSubcategoryId(
-                $product['categoria_padre'],
-                $product['subcategoria']
-            );
-            if ($categoryId === null) {
-                $this->command?->warn(
-                    'ProductsSeeder: no se encontró subcategoría «'.$product['subcategoria'].'» bajo «'.$product['categoria_padre'].'». Se omite «'.$product['nombre'].'».'
-                );
-
-                continue;
-            }
-
-            Product::create([
-                'category_id' => $categoryId,
-                'supplier_id' => $product['proveedor_id'],
-                'name' => $product['nombre'],
-                'description' => $product['descripcion'],
-                'purchase_price' => $product['precio_compra'],
-                'sale_price' => $product['precio_venta'],
-                'stock_current' => $product['stock_actual'],
-                'stock_minimum' => $product['stock_minimo'],
-                'status' => 'active',
-            ]);
+        foreach ($rows as $data) {
+            Product::create($data);
         }
+
+        $this->command?->info('ProductsSeeder: '.count($rows).' productos creados.');
     }
 
-    private function resolveSubcategoryId(string $parentName, string $subName): ?int
+    /**
+     * @param  \Illuminate\Support\Collection<string, int>  $supplierIds
+     * @return array<string, mixed>
+     */
+    private function row(
+        string $parentName,
+        string $subName,
+        $supplierIds,
+        string $supplierName,
+        string $name,
+        string $description,
+        int $purchase,
+        int $sale,
+        int $stockCurrent,
+        int $stockMinimum,
+        bool $isFeatured,
+        string $status = 'active',
+    ): array {
+        $sid = $supplierIds->get($supplierName);
+        if ($sid === null) {
+            throw new \RuntimeException("Proveedor no encontrado en seeder: {$supplierName}");
+        }
+
+        return [
+            'category_id' => $this->subcategoryId($parentName, $subName),
+            'supplier_id' => (int) $sid,
+            'name' => $name,
+            'description' => $description,
+            'purchase_price' => $purchase,
+            'sale_price' => $sale,
+            'stock_current' => $stockCurrent,
+            'stock_minimum' => $stockMinimum,
+            'status' => $status,
+            'is_featured' => $isFeatured,
+        ];
+    }
+
+    private function subcategoryId(string $parentName, string $subName): int
     {
         $parent = Category::query()
             ->where('name', $parentName)
             ->whereNull('parent_category_id')
-            ->first();
+            ->firstOrFail();
 
-        if ($parent === null) {
-            return null;
-        }
-
-        return Category::query()
-            ->where('parent_category_id', $parent->category_id)
+        $sub = Category::query()
             ->where('name', $subName)
-            ->value('category_id');
+            ->where('parent_category_id', $parent->category_id)
+            ->firstOrFail();
+
+        return (int) $sub->category_id;
     }
 }
