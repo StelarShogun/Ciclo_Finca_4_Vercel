@@ -34,6 +34,26 @@ function jsonHeaders() {
     };
 }
 
+/** Sincroniza botones estrella destacado (vista tabla y cuadrícula) tras toggle o recarga de datos. */
+function syncFeaturedStarButtons(productId, isFeatured) {
+    const id = String(productId);
+    const on = Boolean(isFeatured);
+    qsa('.featured-star-btn').forEach((b) => {
+        if (String(b.dataset.productId) !== id) {
+            return;
+        }
+        b.dataset.featured = on ? '1' : '0';
+        b.classList.toggle('is-featured', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.setAttribute('aria-label', on ? 'Quitar de destacados en tienda' : 'Marcar como destacado en tienda');
+        const icon = b.querySelector('.featured-star-icon');
+        if (icon) {
+            icon.classList.toggle('fas', on);
+            icon.classList.toggle('far', !on);
+        }
+    });
+}
+
 /**
  * Rellena el select de subcategorías según el padre.
  * En el filtro (#subcategory-filter), si no hay padre, lista todas las subcategorías (para poder filtrar solo por sub).
@@ -592,6 +612,7 @@ if (typeof Swal !== 'undefined') {
 
             setButtonLoading(saveNewProductBtn, true);
             const formData = new FormData(newProductForm);
+            formData.set('is_featured', qs('#new-featured')?.checked ? '1' : '0');
 
             smartFetch(newProductForm.action, {
                 method: 'POST',
@@ -727,6 +748,10 @@ if (typeof Swal !== 'undefined') {
                     qs('#edit-stock').value = product.stock_current || '';
                     qs('#edit-stock-min').value = product.stock_minimum || '';
                     qs('#edit-status').value = product.status || 'active';
+                    const editFeatured = qs('#edit-featured');
+                    if (editFeatured) {
+                        editFeatured.checked = Boolean(product.is_featured);
+                    }
                     editModal.classList.add('active');
                 } else {
                     Swal.fire({
@@ -790,6 +815,7 @@ if (typeof Swal !== 'undefined') {
             setButtonLoading(saveEditBtn, true);
             const formData = new FormData(editProductForm);
             formData.append('_method', 'PUT');
+            formData.set('is_featured', qs('#edit-featured')?.checked ? '1' : '0');
 
             smartFetch(editProductForm.action, {
                 method: 'POST',
@@ -932,6 +958,10 @@ if (typeof Swal !== 'undefined') {
                             <div class="product-details-item">
                                 <label><i class="fas fa-info-circle icon"></i> Estado:</label>
                                 <p>${product.status}</p>
+                            </div>
+                            <div class="product-details-item">
+                                <label><i class="fas fa-star icon"></i> Destacado en tienda:</label>
+                                <p>${product.is_featured ? 'Sí (inicio y catálogo)' : 'No'}</p>
                             </div>
                         </div>
                     `;
@@ -1160,6 +1190,76 @@ if (typeof Swal !== 'undefined') {
     });
 })();
 
+(function initInventoryFeaturedToggle() {
+    const root = qs('.products-section');
+    if (!root) {
+        return;
+    }
+
+    root.addEventListener('click', (e) => {
+        const btn = e.target.closest('.featured-star-btn');
+        if (!btn || !root.contains(btn)) {
+            return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (btn.getAttribute('aria-busy') === 'true') {
+            return;
+        }
+
+        const productId = btn.dataset.productId;
+        if (!productId) {
+            return;
+        }
+
+        btn.setAttribute('aria-busy', 'true');
+        btn.classList.add('featured-star-btn--busy');
+
+        smartFetch(`/products/${productId}/toggle-featured`, {
+            method: 'POST',
+            headers: {
+                ...jsonHeaders(),
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}),
+        })
+            .then(async (response) => {
+                let data = {};
+                try {
+                    data = await response.json();
+                } catch {
+                    data = {};
+                }
+                btn.removeAttribute('aria-busy');
+                btn.classList.remove('featured-star-btn--busy');
+
+                if (response.ok && data.success) {
+                    syncFeaturedStarButtons(productId, data.is_featured);
+                    showSubtleNotification(data.message || 'Destacado actualizado', 'success');
+                } else if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'No se pudo actualizar el destacado.',
+                        icon: 'error',
+                        confirmButtonText: 'Entendido',
+                    });
+                }
+            })
+            .catch(() => {
+                btn.removeAttribute('aria-busy');
+                btn.classList.remove('featured-star-btn--busy');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'No se pudo actualizar el destacado.',
+                        icon: 'error',
+                        confirmButtonText: 'Entendido',
+                    });
+                }
+            });
+    });
+})();
 
 // Product deletion with confirmation and feedback
 (function initProductDeletion() {
