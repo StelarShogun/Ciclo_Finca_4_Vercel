@@ -25,18 +25,9 @@
                     @csrf
                     @method('PUT')
                     <div class="form-group">
-                        <label for="slug">Código interno *</label>
-                        <input type="text" id="slug" name="slug" value="{{ old('slug', $dimension->slug) }}" required pattern="[a-z0-9_-]+" maxlength="64">
-                        <div class="error-message">{{ $errors->first('slug') }}</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="label">Nombre visible *</label>
+                        <label for="label">Nombre del atributo *</label>
                         <input type="text" id="label" name="label" value="{{ old('label', $dimension->label) }}" required maxlength="255">
                         <div class="error-message">{{ $errors->first('label') }}</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="sort_order">Orden</label>
-                        <input type="number" id="sort_order" name="sort_order" value="{{ old('sort_order', $dimension->sort_order) }}" min="0">
                     </div>
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Guardar</button>

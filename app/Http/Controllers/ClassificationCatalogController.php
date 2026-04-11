@@ -9,19 +9,18 @@ use App\Http\Requests\UpdateClassificationValueRequest;
 use App\Models\Category;
 use App\Models\ClassificationDimension;
 use App\Models\ClassificationValue;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
  * CF4-84 — Admin: atributos (Color, Talla…) y valores por subcategoría.
- * En código persisten modelos ClassificationDimension / ClassificationValue.
  */
 class ClassificationCatalogController extends Controller
 {
-    /** TTL corto: el modal pide el mismo JSON muchas veces; se invalida al CRUD de atributos/valores. */
     private const OPTIONS_CACHE_TTL_SECONDS = 300;
 
     private static function classificationOptionsCacheKey(int $categoryId): string
@@ -41,9 +40,34 @@ class ClassificationCatalogController extends Controller
         }
     }
 
+    private function generateUniqueSlug(string $label, int $categoryId, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($label) ?: 'attr';
+        $slug = $base;
+        $i = 2;
+
+        while (true) {
+            $query = ClassificationDimension::withTrashed()
+                ->where('category_id', $categoryId)
+                ->where('slug', $slug);
+
+            if ($ignoreId) {
+                $query->where('id', '!=', $ignoreId);
+            }
+
+            if (! $query->exists()) {
+                break;
+            }
+
+            $slug = $base.'-'.$i;
+            $i++;
+        }
+
+        return $slug;
+    }
+
     /**
      * JSON para el inventario: atributos y valores posibles por subcategoría.
-     * Clave `attributes` (antes `dimensions`); se mantiene alias `dimensions` por compatibilidad.
      */
     public function optionsForCategory(Category $category): JsonResponse
     {
@@ -85,7 +109,6 @@ class ClassificationCatalogController extends Controller
 
     public function index(): View
     {
-        // Misma deduplicación que inventario/jerarquía: varios seeds crean raíces/subs repetidas por nombre.
         $subcategories = Category::hierarchyRowsForAdminDisplay()
             ->filter(fn (Category $c) => $c->parent_category_id !== null)
             ->sortBy(fn (Category $c) => mb_strtolower((string) ($c->name ?? '')))
@@ -115,7 +138,7 @@ class ClassificationCatalogController extends Controller
     {
         $this->assertSubcategory($category);
         $category->load('parent:category_id,name');
-        $attributes = ClassificationDimension::query()
+        $attributes = ClassificationDimension::withTrashed()
             ->forCategory((int) $category->category_id)
             ->orderBy('sort_order')
             ->orderBy('id')
@@ -129,14 +152,20 @@ class ClassificationCatalogController extends Controller
     {
         $this->assertSubcategory($category);
         $data = $request->validated();
-        $data['sort_order'] = $data['sort_order'] ?? 0;
+        $data['slug'] = $this->generateUniqueSlug($data['label'], (int) $category->category_id);
         $data['category_id'] = $category->category_id;
+
+        $maxOrder = ClassificationDimension::withTrashed()
+            ->where('category_id', $category->category_id)
+            ->max('sort_order') ?? -1;
+        $data['sort_order'] = $maxOrder + 1;
+
         ClassificationDimension::create($data);
         self::forgetClassificationOptionsCacheForCategory((int) $category->category_id);
 
         return redirect()
             ->route('admin.classifications.catalog.show', $category)
-            ->with('status', 'Listo: nuevo atributo para este tipo de producto.');
+            ->with('status', 'Atributo creado.');
     }
 
     public function editDimension(ClassificationDimension $dimension): View
@@ -152,13 +181,13 @@ class ClassificationCatalogController extends Controller
         $dimension->load('category');
         $this->assertSubcategory($dimension->category);
         $data = $request->validated();
-        $data['sort_order'] = $data['sort_order'] ?? 0;
+        $data['slug'] = $this->generateUniqueSlug($data['label'], (int) $dimension->category_id, $dimension->id);
         $dimension->update($data);
         self::forgetClassificationOptionsCacheForCategory((int) $dimension->category->category_id);
 
         return redirect()
             ->route('admin.classifications.catalog.show', $dimension->category)
-            ->with('status', 'Cambios guardados.');
+            ->with('status', 'Atributo actualizado.');
     }
 
     public function destroyDimension(ClassificationDimension $dimension): RedirectResponse
@@ -171,12 +200,25 @@ class ClassificationCatalogController extends Controller
 
         return redirect()
             ->route('admin.classifications.catalog.show', $dimension->category)
-            ->with('status', 'Atributo oculto. Los productos que ya tenían un valor siguen igual hasta que los edites.');
+            ->with('status', 'Atributo desactivado. Los productos que ya tenían un valor siguen igual.');
+    }
+
+    public function restoreDimension(int $dimensionId): RedirectResponse
+    {
+        $dimension = ClassificationDimension::withTrashed()->findOrFail($dimensionId);
+        $dimension->load('category');
+        $this->assertSubcategory($dimension->category);
+        $dimension->restore();
+        self::forgetClassificationOptionsCacheForCategory((int) $dimension->category->category_id);
+
+        return redirect()
+            ->route('admin.classifications.catalog.show', $dimension->category)
+            ->with('status', 'Atributo activado de nuevo.');
     }
 
     public function indexValues(ClassificationDimension $dimension): View
     {
-        $dimension->load(['category.parent', 'values' => fn ($q) => $q->orderBy('sort_order')->orderBy('id')]);
+        $dimension->load(['category.parent', 'values' => fn ($q) => $q->withTrashed()->orderBy('sort_order')->orderBy('id')]);
         $this->assertSubcategory($dimension->category);
 
         return view('admin.classifications.catalog.values', compact('dimension'));
@@ -187,9 +229,14 @@ class ClassificationCatalogController extends Controller
         $dimension->load('category');
         $this->assertSubcategory($dimension->category);
         $data = $request->validated();
-        $data['sort_order'] = $data['sort_order'] ?? 0;
         $data['classification_dimension_id'] = $dimension->id;
         $data['normalized_value'] = ClassificationValue::normalizeStoredValue($data['value']);
+
+        $maxOrder = ClassificationValue::withTrashed()
+            ->where('classification_dimension_id', $dimension->id)
+            ->max('sort_order') ?? -1;
+        $data['sort_order'] = $maxOrder + 1;
+
         ClassificationValue::create($data);
         self::forgetClassificationOptionsCacheForCategory((int) $dimension->category->category_id);
 
@@ -213,7 +260,6 @@ class ClassificationCatalogController extends Controller
         $dimension = $value->dimension;
         $this->assertSubcategory($dimension->category);
         $data = $request->validated();
-        $data['sort_order'] = $data['sort_order'] ?? 0;
         $data['normalized_value'] = ClassificationValue::normalizeStoredValue($data['value']);
         $value->update($data);
         self::forgetClassificationOptionsCacheForCategory((int) $dimension->category->category_id);
@@ -234,6 +280,20 @@ class ClassificationCatalogController extends Controller
 
         return redirect()
             ->route('admin.classifications.values.index', $dimension)
-            ->with('status', 'Valor oculto.');
+            ->with('status', 'Valor desactivado.');
+    }
+
+    public function restoreValue(int $valueId): RedirectResponse
+    {
+        $value = ClassificationValue::withTrashed()->findOrFail($valueId);
+        $value->load('dimension.category');
+        $dimension = $value->dimension;
+        $this->assertSubcategory($dimension->category);
+        $value->restore();
+        self::forgetClassificationOptionsCacheForCategory((int) $dimension->category->category_id);
+
+        return redirect()
+            ->route('admin.classifications.values.index', $dimension)
+            ->with('status', 'Valor activado de nuevo.');
     }
 }

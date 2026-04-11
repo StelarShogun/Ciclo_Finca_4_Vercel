@@ -34,10 +34,6 @@
                             <input type="text" id="value" name="value" value="{{ old('value') }}" required maxlength="255" placeholder="Rojo">
                             <div class="error-message">{{ $errors->first('value') }}</div>
                         </div>
-                        <div class="form-group">
-                            <label for="sort_order">Orden</label>
-                            <input type="number" id="sort_order" name="sort_order" value="{{ old('sort_order', 0) }}" min="0">
-                        </div>
                         <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Añadir</button>
                     </div>
                 </form>
@@ -52,20 +48,35 @@
                         <thead>
                             <tr style="border-bottom:2px solid #e5e7eb; text-align:left;">
                                 <th style="padding:0.5rem;">Valor</th>
+                                <th style="padding:0.5rem;">Estado</th>
                                 <th style="padding:0.5rem;"></th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($dimension->values as $val)
-                                <tr style="border-bottom:1px solid #f3f4f6;">
+                                <tr style="border-bottom:1px solid #f3f4f6; {{ $val->trashed() ? 'opacity:0.5;' : '' }}">
                                     <td style="padding:0.5rem;">{{ $val->value }}</td>
                                     <td style="padding:0.5rem;">
-                                        <a href="{{ route('admin.classifications.values.edit', $val) }}" class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.85rem;">Editar</a>
-                                        <form action="{{ route('admin.classifications.values.destroy', $val) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.85rem; color:#b91c1c;" data-confirm="Se ocultará este valor. Los productos que ya lo tenían siguen igual hasta que los edites.">Ocultar</button>
-                                        </form>
+                                        @if ($val->trashed())
+                                            <span style="color:#b91c1c; font-weight:600;">Inactivo</span>
+                                        @else
+                                            <span style="color:#15803d; font-weight:600;">Activo</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding:0.5rem;">
+                                        @if (! $val->trashed())
+                                            <a href="{{ route('admin.classifications.values.edit', $val) }}" class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.85rem;">Editar</a>
+                                            <form action="{{ route('admin.classifications.values.destroy', $val) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.85rem; color:#b91c1c;" data-confirm="Se desactivará este valor. Los productos que ya lo tenían siguen igual.">Desactivar</button>
+                                            </form>
+                                        @else
+                                            <form action="{{ route('admin.classifications.values.restore', $val) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                <button type="button" class="btn btn-primary" style="padding:0.25rem 0.5rem; font-size:0.85rem;" data-confirm="Se activará de nuevo este valor.">Activar</button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

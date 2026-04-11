@@ -16,7 +16,6 @@ class StoreClassificationValueRequest extends FormRequest
     {
         return [
             'value' => ['required', 'string', 'max:255'],
-            'sort_order' => ['nullable', 'integer', 'min:0', 'max:999999'],
         ];
     }
 
@@ -30,7 +29,7 @@ class StoreClassificationValueRequest extends FormRequest
             $dimId = (int) $dimension->id;
             $norm = ClassificationValue::normalizeStoredValue((string) $this->input('value'));
 
-            $dup = ClassificationValue::query()
+            $dup = ClassificationValue::withTrashed()
                 ->where('classification_dimension_id', $dimId)
                 ->where('normalized_value', $norm)
                 ->exists();

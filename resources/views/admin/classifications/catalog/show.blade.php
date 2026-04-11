@@ -31,18 +31,9 @@
                     @csrf
                     <div class="form-row" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
                         <div class="form-group">
-                            <label for="slug">Código interno (sin espacios, para el sistema) *</label>
-                            <input type="text" id="slug" name="slug" value="{{ old('slug') }}" required placeholder="color" pattern="[a-z0-9_-]+" maxlength="64">
-                            <div class="error-message">{{ $errors->first('slug') }}</div>
-                        </div>
-                        <div class="form-group">
-                            <label for="label">Nombre del atributo (vos y la tienda) *</label>
+                            <label for="label">Nombre del atributo *</label>
                             <input type="text" id="label" name="label" value="{{ old('label') }}" required maxlength="255" placeholder="Color">
                             <div class="error-message">{{ $errors->first('label') }}</div>
-                        </div>
-                        <div class="form-group">
-                            <label for="sort_order">Orden</label>
-                            <input type="number" id="sort_order" name="sort_order" value="{{ old('sort_order', 0) }}" min="0">
                         </div>
                         <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Añadir</button>
                     </div>
@@ -58,25 +49,39 @@
                         <thead>
                             <tr style="border-bottom:2px solid #e5e7eb; text-align:left;">
                                 <th style="padding:0.5rem;">Atributo</th>
-                                <th style="padding:0.5rem;">Código</th>
                                 <th style="padding:0.5rem;">Cantidad de valores</th>
+                                <th style="padding:0.5rem;">Estado</th>
                                 <th style="padding:0.5rem;"></th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($attributes as $dim)
-                                <tr style="border-bottom:1px solid #f3f4f6;">
+                                <tr style="border-bottom:1px solid #f3f4f6; {{ $dim->trashed() ? 'opacity:0.5;' : '' }}">
                                     <td style="padding:0.5rem;">{{ $dim->label }}</td>
-                                    <td style="padding:0.5rem;"><code>{{ $dim->slug }}</code></td>
                                     <td style="padding:0.5rem;">{{ $dim->values_count }}</td>
                                     <td style="padding:0.5rem;">
+                                        @if ($dim->trashed())
+                                            <span style="color:#b91c1c; font-weight:600;">Inactivo</span>
+                                        @else
+                                            <span style="color:#15803d; font-weight:600;">Activo</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding:0.5rem;">
                                         <a href="{{ route('admin.classifications.values.index', $dim) }}" class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.85rem;">Valores</a>
-                                        <a href="{{ route('admin.classifications.dimensions.edit', $dim) }}" class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.85rem;">Editar</a>
-                                        <form action="{{ route('admin.classifications.dimensions.destroy', $dim) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.85rem; color:#b91c1c;" data-confirm="Se ocultará este atributo. Los productos que ya tenían un valor siguen igual hasta que los edites.">Ocultar</button>
-                                        </form>
+
+                                        @if (! $dim->trashed())
+                                            <a href="{{ route('admin.classifications.dimensions.edit', $dim) }}" class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.85rem;">Editar</a>
+                                            <form action="{{ route('admin.classifications.dimensions.destroy', $dim) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.85rem; color:#b91c1c;" data-confirm="Se desactivará este atributo. Los productos que ya tenían un valor siguen igual.">Desactivar</button>
+                                            </form>
+                                        @else
+                                            <form action="{{ route('admin.classifications.dimensions.restore', $dim) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                <button type="button" class="btn btn-primary" style="padding:0.25rem 0.5rem; font-size:0.85rem;" data-confirm="Se activará de nuevo este atributo.">Activar</button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

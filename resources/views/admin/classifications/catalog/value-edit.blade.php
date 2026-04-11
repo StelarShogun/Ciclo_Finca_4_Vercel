@@ -25,13 +25,9 @@
                     @csrf
                     @method('PUT')
                     <div class="form-group">
-                        <label for="value">Texto *</label>
+                        <label for="value">Valor (lo que verá el cliente) *</label>
                         <input type="text" id="value" name="value" value="{{ old('value', $value->value) }}" required maxlength="255">
                         <div class="error-message">{{ $errors->first('value') }}</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="sort_order">Orden</label>
-                        <input type="number" id="sort_order" name="sort_order" value="{{ old('sort_order', $value->sort_order) }}" min="0">
                     </div>
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Guardar</button>

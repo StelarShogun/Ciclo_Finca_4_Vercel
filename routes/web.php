@@ -76,11 +76,13 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/classifications/dimensions/{dimension}/edit', [ClassificationCatalogController::class, 'editDimension'])->name('admin.classifications.dimensions.edit');
     Route::put('/classifications/dimensions/{dimension}', [ClassificationCatalogController::class, 'updateDimension'])->name('admin.classifications.dimensions.update');
     Route::delete('/classifications/dimensions/{dimension}', [ClassificationCatalogController::class, 'destroyDimension'])->name('admin.classifications.dimensions.destroy');
+    Route::post('/classifications/dimensions/{dimension}/restore', [ClassificationCatalogController::class, 'restoreDimension'])->name('admin.classifications.dimensions.restore');
     Route::get('/classifications/dimensions/{dimension}/values', [ClassificationCatalogController::class, 'indexValues'])->name('admin.classifications.values.index');
     Route::post('/classifications/dimensions/{dimension}/values', [ClassificationCatalogController::class, 'storeValue'])->name('admin.classifications.values.store');
     Route::get('/classifications/values/{value}/edit', [ClassificationCatalogController::class, 'editValue'])->name('admin.classifications.values.edit');
     Route::put('/classifications/values/{value}', [ClassificationCatalogController::class, 'updateValue'])->name('admin.classifications.values.update');
     Route::delete('/classifications/values/{value}', [ClassificationCatalogController::class, 'destroyValue'])->name('admin.classifications.values.destroy');
+    Route::post('/classifications/values/{value}/restore', [ClassificationCatalogController::class, 'restoreValue'])->name('admin.classifications.values.restore');
 
     // CF4-84 — asignación de clasificaciones al producto (subcategoría)
     Route::get('/product-classifications', [ProductClassificationController::class, 'index'])->name('admin.product-classifications.index');
