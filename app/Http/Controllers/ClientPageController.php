@@ -120,7 +120,7 @@ class ClientPageController extends Controller
 
     public function product($id)
     {
-        $product = Product::with(['category', 'supplier'])
+        $product = Product::with(['category', 'supplier', 'classificationValues.dimension'])
             ->where('status', 'active')
             ->findOrFail($id);
 

@@ -37,6 +37,16 @@
                     </div>
                 @endif
 
+                @if($product->classificationValues->isNotEmpty())
+                    <ul class="product-detail-classifications" style="list-style:none;padding:0;margin:0.75rem 0;font-size:0.95rem;">
+                        @foreach($product->classificationValues as $cv)
+                            <li style="margin-bottom:0.35rem;">
+                                <strong>{{ optional($cv->dimension)->label ?? '—' }}:</strong> {{ $cv->value }}
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+
                 <div class="product-detail-price">
                     <span class="price-label">Precio:</span>
                     <span class="price-amount">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>

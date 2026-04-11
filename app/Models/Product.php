@@ -23,6 +23,12 @@ class Product extends Model
 
     protected $primaryKey = 'product_id';
 
+    /** Route parameter `{product}` resolves by `product_id` (not `id`). */
+    public function getRouteKeyName(): string
+    {
+        return 'product_id';
+    }
+
     public $timestamps = true;
 
     const CREATED_AT = 'created_at';
