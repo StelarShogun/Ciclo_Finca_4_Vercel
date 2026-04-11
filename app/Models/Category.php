@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 
 /**
  * @property-read int|null $products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ClassificationDimension> $classificationDimensions
  */
 class Category extends Model
 {
@@ -48,6 +49,12 @@ class Category extends Model
     public function childCategories(): HasMany
     {
         return $this->children();
+    }
+
+    /** CF4-84: dimensions (e.g. color, size) scoped to this category row (typically a subcategory). */
+    public function classificationDimensions(): HasMany
+    {
+        return $this->hasMany(ClassificationDimension::class, 'category_id', 'category_id');
     }
 
     /**

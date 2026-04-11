@@ -13,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * @property-read Category|null $category
  * @property-read Collection<int, Brand> $brands
+ * @property-read Collection<int, ClassificationValue> $classificationValues
  */
 class Product extends Model
 {
@@ -75,6 +76,19 @@ class Product extends Model
     public function brands(): BelongsToMany
     {
         return $this->belongsToMany(Brand::class, 'products_brand', 'product_id', 'brand_id', 'product_id', 'id');
+    }
+
+    /** Assigned classification values (one row per dimension per product via pivot). */
+    public function classificationValues(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ClassificationValue::class,
+            'classification_product',
+            'product_id',
+            'classification_value_id',
+            'product_id',
+            'id',
+        )->withPivot('classification_dimension_id');
     }
 
     // Validation rules to ensure data integrity when saving products, with specific checks for active products and price consistency
