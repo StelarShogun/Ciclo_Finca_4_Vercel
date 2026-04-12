@@ -20,6 +20,18 @@
                     <span class="sidebar-label">Inventario</span>
                 </a>
             </li>
+            <li class="{{ request()->routeIs('admin.product-classifications.*') || request()->routeIs('admin.products.classifications.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.product-classifications.index') }}">
+                    <i class="fas fa-layer-group"></i>
+                    <span class="sidebar-label">Características por producto</span>
+                </a>
+            </li>
+            <li class="{{ request()->routeIs('admin.classifications.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.classifications.catalog.index') }}">
+                    <i class="fas fa-th-list"></i>
+                    <span class="sidebar-label">Opciones por tipo</span>
+                </a>
+            </li>
             <li class="{{ request()->routeIs('brands.*') ? 'active' : '' }}">
                 <a href="{{ route('brands.index') }}">
                     <i class="fas fa-tags"></i>

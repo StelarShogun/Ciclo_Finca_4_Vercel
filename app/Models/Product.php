@@ -15,6 +15,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * @property-read Category|null $category
  * @property-read Collection<int, Brand> $brands
+ * @property-read Collection<int, ClassificationValue> $classificationValues
  */
 class Product extends Model
 {
@@ -23,6 +24,12 @@ class Product extends Model
     protected $table = 'products';
 
     protected $primaryKey = 'product_id';
+
+    /** Route parameter `{product}` resolves by `product_id` (not `id`). */
+    public function getRouteKeyName(): string
+    {
+        return 'product_id';
+    }
 
     public $timestamps = true;
 
@@ -47,17 +54,12 @@ class Product extends Model
         'updated_at' => 'datetime',
     ];
 
-    /** Umbral público (catálogo, detalle, invitado o logueado): por encima no se muestra aviso de “pocas unidades”. */
     public const CLIENT_LOW_STOCK_THRESHOLD = 10;
 
-    /** Respuestas JSON cortas para carrito y checkout (cliente). */
     public const MSG_CLIENT_AGOTADO = 'Producto agotado';
 
     public const MSG_CLIENT_STOCK_INSUFICIENTE = 'Stock insuficiente';
 
-    /**
-     * Normaliza estado (inglés o legacy español) al ENUM canónico en inglés.
-     */
     public static function canonicalStatus(?string $raw): string
     {
         $s = strtolower(trim((string) $raw));
@@ -72,13 +74,11 @@ class Product extends Model
         };
     }
 
-    /** Estado lógico para reglas de tienda (etiquetas, carrito). */
     public function effectiveStatus(): string
     {
         return self::canonicalStatus($this->attributes['status'] ?? null);
     }
 
-    /** Destacados en inicio: solo “activo” (inglés o español). */
     public function scopeActiveInClientStore(Builder $query): Builder
     {
         $ok = ['active', 'activo'];
@@ -90,7 +90,6 @@ class Product extends Model
         );
     }
 
-    // Returns an array of image URLs, ensuring the main image is included and handling cases where images may be missing
     public function getDisplayImages(): array
     {
         $main = $this->image ?? 'default.png';
@@ -100,7 +99,6 @@ class Product extends Model
         return array_filter($all) ?: ['default.png'];
     }
 
-    // Relationships to other models, allowing easy access to category and supplier information for each product
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id', 'category_id');
@@ -111,7 +109,6 @@ class Product extends Model
         return $this->belongsTo(Supplier::class, 'supplier_id', 'supplier_id');
     }
 
-    // Sales module relationship
     public function saleItems(): HasMany
     {
         return $this->hasMany(SaleItem::class, 'product_id', 'product_id');
@@ -122,11 +119,20 @@ class Product extends Model
         return $this->belongsToMany(Brand::class, 'products_brand', 'product_id', 'brand_id', 'product_id', 'id');
     }
 
-    /**
-     * Etiqueta corta para listados del cliente (catálogo, home, relacionados).
-     * La cantidad numérica se muestra en las vistas cuando {@see isPurchasableByClient()} es true (CF4-62).
-     * “Quedan pocas unidades” solo si hay stock pero no supera {@see self::CLIENT_LOW_STOCK_THRESHOLD}.
-     */
+    /** CF4-84: Assigned classification values (one row per dimension per product via pivot). */
+    public function classificationValues(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ClassificationValue::class,
+            'classification_product',
+            'product_id',
+            'classification_value_id',
+            'product_id',
+            'id',
+        )->withPivot('classification_dimension_id');
+    }
+
+    /** CF4-62: Etiqueta corta para listados del cliente. */
     public function clientCatalogStockLabel(): string
     {
         $st = $this->effectiveStatus();
@@ -146,9 +152,6 @@ class Product extends Model
         return 'Disponible';
     }
 
-    /**
-     * Disponibilidad para inventario admin (misma lógica de umbrales que la tienda; incluye inactivo/descontinuado).
-     */
     public function adminAvailabilityLabel(): string
     {
         $st = $this->effectiveStatus();
@@ -172,7 +175,6 @@ class Product extends Model
         return 'No disponible';
     }
 
-    /** Invitado o cliente: aviso “pocas unidades” (misma regla que {@see clientCatalogStockLabel()} para stock > 0). */
     public function clientShowsLowStockWarning(): bool
     {
         return $this->effectiveStatus() === 'active'
@@ -180,13 +182,11 @@ class Product extends Model
             && $this->stock_current <= self::CLIENT_LOW_STOCK_THRESHOLD;
     }
 
-    /** Puede añadirse al carrito desde la tienda (activo y con existencias). */
     public function isPurchasableByClient(): bool
     {
         return $this->effectiveStatus() === 'active' && $this->stock_current > 0;
     }
 
-    /** Fragmento de URL legible para SEO (nombre del producto). */
     public function clientPublicSlug(): string
     {
         $s = Str::slug((string) ($this->name ?? 'producto'));
@@ -194,7 +194,6 @@ class Product extends Model
         return $s !== '' ? $s : 'producto';
     }
 
-    /** URL canónica de la ficha en la tienda pública. */
     public function clientProductUrl(): string
     {
         return route('clients.product', [
@@ -203,10 +202,6 @@ class Product extends Model
         ]);
     }
 
-    /**
-     * Productos activos con existencia pero en o por debajo del umbral (1…{@see CLIENT_LOW_STOCK_THRESHOLD}).
-     * Excluye agotados (0) para alinear KPI admin con la tienda pública.
-     */
     public function scopeLowStockAlert(Builder $query): Builder
     {
         return $query->activeInClientStore()
@@ -214,7 +209,6 @@ class Product extends Model
             ->where('stock_current', '<=', self::CLIENT_LOW_STOCK_THRESHOLD);
     }
 
-    // Validation rules to ensure data integrity when saving products, with specific checks for active products and price consistency
     protected static function booted(): void
     {
         static::saving(function ($p) {

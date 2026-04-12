@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -110,16 +111,51 @@ class ClientPageController extends Controller
             ->get();
 
         $cartCount = $this->getCartCount();
+        $catalogSpotlight = $this->catalogSpotlightProductRows();
 
         return view('client.catalog', compact(
             'products', 'categories', 'cartCount',
-            'selectedCategory', 'subcategories', 'parentCategoryForSubcats'
+            'selectedCategory', 'subcategories', 'parentCategoryForSubcats',
+            'catalogSpotlight'
         ));
+    }
+
+    /**
+     * Featured and newest active products for the catalog spotlight (CF4-29).
+     *
+     * @return Collection<int, array{product: Product, spotlight: 'featured'|'novelty'}>
+     */
+    private function catalogSpotlightProductRows(): Collection
+    {
+        $maxTotal = 12;
+        $maxFeatured = 8;
+
+        $featured = Product::with(['category'])
+            ->activeInClientStore()
+            ->where('is_featured', true)
+            ->orderByDesc('created_at')
+            ->limit($maxFeatured)
+            ->get();
+
+        $featuredIds = $featured->pluck('product_id')->all();
+        $remaining = max(0, $maxTotal - $featured->count());
+
+        $novelties = $remaining > 0
+            ? Product::with(['category'])
+                ->activeInClientStore()
+                ->whereNotIn('product_id', $featuredIds)
+                ->orderByDesc('created_at')
+                ->limit($remaining)
+                ->get()
+            : collect();
+
+        return $featured->map(fn (Product $p) => ['product' => $p, 'spotlight' => 'featured'])
+            ->concat($novelties->map(fn (Product $p) => ['product' => $p, 'spotlight' => 'novelty']));
     }
 
     public function product($id, ?string $slug = null)
     {
-        $product = Product::with(['category', 'supplier'])->findOrFail($id);
+        $product = Product::with(['category', 'supplier', 'classificationValues.dimension'])->findOrFail($id);
 
         $canonicalSlug = $product->clientPublicSlug();
         if ($slug !== $canonicalSlug) {
