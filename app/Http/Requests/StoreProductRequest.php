@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Category;
+use App\Services\ProductClassificationAssignmentService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class StoreProductRequest extends FormRequest
 {
@@ -36,7 +39,52 @@ class StoreProductRequest extends FormRequest
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'classification_value_ids' => 'nullable|array',
+            'classification_value_ids.*' => ['integer', Rule::exists('classification_values', 'id')->whereNull('deleted_at')],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (! $this->has('classification_value_ids') || ! is_array($this->input('classification_value_ids'))) {
+            $this->merge(['classification_value_ids' => []]);
+
+            return;
+        }
+        $filtered = array_values(array_filter(
+            $this->input('classification_value_ids', []),
+            fn ($v) => $v !== null && $v !== '' && $v !== false
+        ));
+        $this->merge(['classification_value_ids' => array_map('intval', $filtered)]);
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+            $ids = $this->input('classification_value_ids', []);
+            if (! is_array($ids) || $ids === []) {
+                return;
+            }
+            $categoryId = (int) $this->input('category_id');
+            $category = Category::query()->find($categoryId);
+            if (! $category || $category->parent_category_id === null) {
+                $validator->errors()->add('classification_value_ids', 'Color, talla, etc. solo aplican cuando el producto tiene un tipo concreto (no solo el rubro).');
+
+                return;
+            }
+            try {
+                app(ProductClassificationAssignmentService::class)->assertValuesValidForCategory($categoryId, $ids);
+            } catch (ValidationException $e) {
+                foreach ($e->errors() as $key => $messages) {
+                    foreach ($messages as $message) {
+                        $validator->errors()->add($key, $message);
+                    }
+                }
+            }
+        });
     }
 
     public function messages(): array

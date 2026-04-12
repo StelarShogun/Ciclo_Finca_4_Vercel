@@ -2,9 +2,12 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Category;
 use App\Models\Product;
+use App\Services\ProductClassificationAssignmentService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class UpdateProductRequest extends FormRequest
 {
@@ -66,7 +69,41 @@ class UpdateProductRequest extends FormRequest
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
+            'classification_value_ids' => ['sometimes', 'array', 'nullable'],
+            'classification_value_ids.*' => ['integer', Rule::exists('classification_values', 'id')->whereNull('deleted_at')],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+            if (! $this->has('classification_value_ids')) {
+                return;
+            }
+            $ids = $this->input('classification_value_ids', []);
+            if (! is_array($ids) || $ids === []) {
+                return;
+            }
+            $categoryId = (int) $this->input('category_id');
+            $category = Category::query()->find($categoryId);
+            if (! $category || $category->parent_category_id === null) {
+                $validator->errors()->add('classification_value_ids', 'Color, talla, etc. solo aplican cuando el producto tiene un tipo concreto (no solo el rubro).');
+
+                return;
+            }
+            try {
+                app(ProductClassificationAssignmentService::class)->assertValuesValidForCategory($categoryId, $ids);
+            } catch (ValidationException $e) {
+                foreach ($e->errors() as $key => $messages) {
+                    foreach ($messages as $message) {
+                        $validator->errors()->add($key, $message);
+                    }
+                }
+            }
+        });
     }
 
     public function messages(): array
@@ -117,11 +154,19 @@ class UpdateProductRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge([
+        $merge = [
             'name' => $this->name ? trim($this->name) : null,
             'description' => $this->description ? trim($this->description) : null,
             'status' => $this->status ? strtolower($this->status) : null,
             'is_featured' => $this->boolean('is_featured'),
-        ]);
+        ];
+        if ($this->has('classification_value_ids') && is_array($this->input('classification_value_ids'))) {
+            $filtered = array_values(array_filter(
+                $this->input('classification_value_ids', []),
+                fn ($v) => $v !== null && $v !== '' && $v !== false
+            ));
+            $merge['classification_value_ids'] = array_map('intval', $filtered);
+        }
+        $this->merge($merge);
     }
 }

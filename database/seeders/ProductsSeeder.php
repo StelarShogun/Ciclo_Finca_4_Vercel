@@ -20,19 +20,15 @@ class ProductsSeeder extends Seeder
         $supplierIds = Supplier::query()->pluck('supplier_id', 'name');
 
         $rows = [
-            // Bicicletas > MTB
             $this->row('Bicicletas', 'MTB', $supplierIds, 'Trek Costa Rica', 'Trek Fuel EX 8', 'MTB doble suspensión 29"', 1200000, 1500000, 6, 5, true),
             $this->row('Bicicletas', 'MTB', $supplierIds, 'Giant Bicycles CR', 'Giant Trance X 29 2', 'Trail 29" aluminio', 980000, 1250000, 18, 10, true),
             $this->row('Bicicletas', 'MTB', $supplierIds, 'Cannondale Costa Rica', 'Cannondale Habit 4', 'Enduro ligero 27.5"', 1100000, 1390000, 12, 8, false),
-            // Bicicletas > Ruta / Gravel
             $this->row('Bicicletas', 'Ruta / Gravel', $supplierIds, 'Specialized Centroamérica', 'Specialized Tarmac SL7', 'Carretera carbono, grupo 105', 1800000, 2200000, 5, 5, true),
             $this->row('Bicicletas', 'Ruta / Gravel', $supplierIds, 'Trek Costa Rica', 'Trek Domane AL 4', 'Endurance aluminio', 620000, 799000, 14, 10, false),
             $this->row('Bicicletas', 'Ruta / Gravel', $supplierIds, 'Giant Bicycles CR', 'Giant Revolt 2', 'Gravel aluminio', 720000, 920000, 9, 8, false),
-            // Bicicletas > Urbana / Híbrida
             $this->row('Bicicletas', 'Urbana / Híbrida', $supplierIds, 'Giant Bicycles CR', 'Giant Escape 3', 'Urbana híbrida frenos disco', 180000, 250000, 20, 10, true),
             $this->row('Bicicletas', 'Urbana / Híbrida', $supplierIds, 'Specialized Centroamérica', 'Specialized Sirrus X 2.0', 'Fitness urbana', 320000, 410000, 11, 8, false),
 
-            // Componentes
             $this->row('Componentes', 'Transmisión', $supplierIds, 'Shimano Costa Rica', 'Shimano Deore XT M8100', 'Grupo 12v completo', 180000, 250000, 16, 10, false),
             $this->row('Componentes', 'Transmisión', $supplierIds, 'SRAM Centroamérica', 'SRAM GX Eagle', 'Grupo 12v MTB', 220000, 300000, 14, 10, true),
             $this->row('Componentes', 'Transmisión', $supplierIds, 'Shimano Costa Rica', 'Shimano 105 R7120', 'Grupo carretera 12v', 340000, 449000, 8, 8, false),
@@ -41,35 +37,29 @@ class ProductsSeeder extends Seeder
             $this->row('Componentes', 'Ruedas y neumáticos', $supplierIds, 'Shimano Costa Rica', 'Rueda trasera Deore WH-MT500', 'Boost 12mm', 125000, 165000, 7, 6, false),
             $this->row('Componentes', 'Ruedas y neumáticos', $supplierIds, 'SRAM Centroamérica', 'Neumático Maxxis Minion DHF 29x2.5', 'Tubeless ready', 38000, 52000, 40, 20, false),
 
-            // Accesorios
             $this->row('Accesorios', 'Iluminación', $supplierIds, 'Accesorios Ciclismo Pro', 'Cateye Volt 800', 'Luz delantera USB', 28000, 42000, 22, 12, false),
             $this->row('Accesorios', 'Iluminación', $supplierIds, 'Accesorios Ciclismo Pro', 'Led trasero Knog Blinder', 'USB recargable', 12000, 19000, 35, 18, false),
             $this->row('Accesorios', 'Portabultos', $supplierIds, 'Accesorios Ciclismo Pro', 'Portabultos Topeak Explorer', 'Aluminio 29"', 35000, 48000, 15, 10, false),
             $this->row('Accesorios', 'Hidratación', $supplierIds, 'Accesorios Ciclismo Pro', 'Bidón Elite Fly 750ml', 'Ligero', 4500, 8500, 60, 30, false),
 
-            // Ropa
             $this->row('Ropa deportiva', 'Jerseys', $supplierIds, 'Ropa Deportiva Ciclismo', 'Jersey Castelli Entrata', 'Manga corta', 28000, 48000, 26, 14, true),
             $this->row('Ropa deportiva', 'Jerseys', $supplierIds, 'Ropa Deportiva Ciclismo', 'Jersey Pearl Izumi Quest', 'Transpirable', 22000, 39000, 30, 15, false),
             $this->row('Ropa deportiva', 'Culotes / Shorts', $supplierIds, 'Ropa Deportiva Ciclismo', 'Culote Pearl Izumi Quest', 'Badana gel', 35000, 60000, 20, 15, false),
             $this->row('Ropa deportiva', 'Chaquetas', $supplierIds, 'Ropa Deportiva Ciclismo', 'Chubasquero Gore Shakedry', 'Ultraligero', 95000, 135000, 6, 6, false),
 
-            // Herramientas
             $this->row('Herramientas', 'Multiherramientas', $supplierIds, 'Accesorios Ciclismo Pro', 'Park Tool IB-3', 'Mini multiherramienta', 18000, 28000, 28, 14, false),
             $this->row('Herramientas', 'Llaves y extractores', $supplierIds, 'Accesorios Ciclismo Pro', 'Llave dinamométrica Park TW-5', '2–14 Nm', 42000, 62000, 10, 8, false),
             $this->row('Herramientas', 'Multiherramientas', $supplierIds, 'Accesorios Ciclismo Pro', 'Kit Park Tool AK-5', 'Taller portátil', 85000, 130000, 5, 5, false),
 
-            // Seguridad
             $this->row('Seguridad', 'Cascos', $supplierIds, 'Accesorios Ciclismo Pro', 'Casco Giro Synthe MIPS', 'Carretera', 85000, 120000, 14, 10, true),
             $this->row('Seguridad', 'Cascos', $supplierIds, 'Accesorios Ciclismo Pro', 'Casco Fox Proframe', 'Enduro integral', 120000, 180000, 8, 8, false),
             $this->row('Seguridad', 'Luces', $supplierIds, 'Accesorios Ciclismo Pro', 'Luces LED set delantero/trasero', 'Pilas incluidas', 8000, 15000, 45, 22, false),
             $this->row('Seguridad', 'Candados', $supplierIds, 'Accesorios Ciclismo Pro', 'Candado Kryptonite Evolution', 'U-lock + cable', 35000, 55000, 18, 12, false),
 
-            // Nutrición
             $this->row('Nutrición', 'Geles', $supplierIds, 'Accesorios Ciclismo Pro', 'Geles GU Energy (caja 24)', 'Varios sabores', 15000, 25000, 50, 25, false),
             $this->row('Nutrición', 'Bebidas', $supplierIds, 'Accesorios Ciclismo Pro', 'Isotónico Powerade polvo', 'Limón 500g', 12000, 20000, 35, 18, false),
             $this->row('Nutrición', 'Barras', $supplierIds, 'Accesorios Ciclismo Pro', 'Barras Clif Bar (caja 12)', 'Energía', 18000, 28000, 42, 20, true),
 
-            // Ejemplo HU: visible en catálogo como agotado (no comprable)
             $this->row('Seguridad', 'Candados', $supplierIds, 'Accesorios Ciclismo Pro', 'Candado U demo agotado', 'Ejemplo sin stock en tienda', 15000, 22000, 0, 5, false, 'out_of_stock'),
         ];
 
@@ -77,7 +67,7 @@ class ProductsSeeder extends Seeder
             Product::create($data);
         }
 
-        $this->command?->info('ProductsSeeder: '.count($rows).' productos creados (categorías y subcategorías resueltas por nombre).');
+        $this->command?->info('ProductsSeeder: '.count($rows).' productos creados.');
     }
 
     /**

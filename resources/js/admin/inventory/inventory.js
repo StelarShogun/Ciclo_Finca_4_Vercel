@@ -62,7 +62,7 @@ function fillSubcategoryOptions(subSelect, parentId, selectedId = '') {
     if (!subSelect) return;
     const tree = window.inventoryCategoryTree || {};
     const isFilter = subSelect.id === 'subcategory-filter';
-    const emptyLabel = isFilter ? 'Todas las subcategorías' : 'Sin subcategoría';
+    const emptyLabel = isFilter ? 'Todos los tipos' : 'Solo el rubro general';
 
     subSelect.innerHTML = '';
     const opt0 = document.createElement('option');
@@ -116,6 +116,73 @@ function syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput) {
     } else {
         hiddenCategoryInput.value = '';
     }
+}
+
+/** CF4-84 — selectores por atributo (JSON: attributes; alias dimensions) */
+function refreshClassificationFields(containerSelector, categoryId, preselectedIds) {
+    const container = qs(containerSelector);
+    if (!container) return;
+    container.innerHTML = '';
+    if (!categoryId) {
+        return;
+    }
+    fetch(`/classifications/catalog/${categoryId}/options`, {
+        credentials: 'same-origin',
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    })
+        .then((r) => {
+            if (!r.ok) throw new Error('options');
+            return r.json();
+        })
+        .then((data) => {
+            const attrs = data.attributes || data.dimensions || [];
+            if (!attrs.length) {
+                const p = document.createElement('p');
+                p.className = 'form-text text-muted';
+                p.style.fontSize = '0.9rem';
+                p.textContent =
+                    'No hay atributos para este tipo. Elegí una subcategoría o cargá atributos y valores en «Opciones por tipo».';
+                container.appendChild(p);
+                return;
+            }
+            const preset = Array.isArray(preselectedIds) ? preselectedIds.map((x) => Number(x)) : [];
+            attrs.forEach((attr) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'form-group';
+                const label = document.createElement('label');
+                label.setAttribute('for', `cf-attr-${attr.id}`);
+                label.textContent = attr.label;
+                const select = document.createElement('select');
+                select.id = `cf-attr-${attr.id}`;
+                select.name = 'classification_value_ids[]';
+                const opt0 = document.createElement('option');
+                opt0.value = '';
+                opt0.textContent = '— Ninguno —';
+                select.appendChild(opt0);
+                (attr.values || []).forEach((v) => {
+                    const opt = document.createElement('option');
+                    opt.value = String(v.id);
+                    opt.textContent = v.value;
+                    if (preset.includes(Number(v.id))) {
+                        opt.selected = true;
+                    }
+                    select.appendChild(opt);
+                });
+                wrap.appendChild(label);
+                wrap.appendChild(select);
+                container.appendChild(wrap);
+            });
+        })
+        .catch(() => {
+            const p = document.createElement('p');
+            p.className = 'form-text text-muted';
+            p.style.color = '#b91c1c';
+            p.textContent = 'No se pudieron cargar atributos y valores. Probá de nuevo.';
+            container.appendChild(p);
+        });
 }
 
 function bindDependentCategorySelectors({ parentSelect, subSelect, hiddenCategoryInput }) {
@@ -541,6 +608,7 @@ function smoothScrollTop() {
             newBrandCombobox?.reset();
             newProductModal.classList.add('active');
             syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
+            refreshClassificationFields('#new-classification-fields', newFinalCategory?.value || '', null);
         });
     }
 
@@ -568,7 +636,7 @@ function smoothScrollTop() {
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({
                         title: 'Categoría',
-                        text: 'Selecciona una categoría. La subcategoría es opcional: puedes dejar «Sin subcategoría» para guardar el producto en la categoría padre.',
+                        text: 'Elegí el rubro. El tipo concreto es opcional, pero si lo dejás solo en el rubro general no podrás usar color, talla, etc.',
                         icon: 'info',
                         confirmButtonText: 'Entendido',
                     });
@@ -722,6 +790,12 @@ function smoothScrollTop() {
                     qs('#edit-stock').value = product.stock_current || '';
                     qs('#edit-stock-min').value = product.stock_minimum || '';
                     qs('#edit-status').value = product.status || 'active';
+                    editClassificationPreset = product.classification_value_ids || [];
+                    refreshClassificationFields(
+                        '#edit-classification-fields',
+                        editFinalCategory?.value || '',
+                        editClassificationPreset
+                    );
                     const editFeatured = qs('#edit-featured');
                     if (editFeatured) {
                         editFeatured.checked = Boolean(product.is_featured);
@@ -764,6 +838,33 @@ function smoothScrollTop() {
         parentSelect: editParentCategory,
         subSelect: editSubcategory,
         hiddenCategoryInput: editFinalCategory
+    });
+
+    /** CF4-84 — al cambiar categoría en edición se limpian selecciones previas */
+    let editClassificationPreset = [];
+
+    newParentCategory?.addEventListener('change', () => {
+        setTimeout(() => {
+            refreshClassificationFields('#new-classification-fields', newFinalCategory?.value || '', null);
+        }, 0);
+    });
+    newSubcategory?.addEventListener('change', () => {
+        setTimeout(() => {
+            refreshClassificationFields('#new-classification-fields', newFinalCategory?.value || '', null);
+        }, 0);
+    });
+
+    editParentCategory?.addEventListener('change', () => {
+        editClassificationPreset = [];
+        setTimeout(() => {
+            refreshClassificationFields('#edit-classification-fields', editFinalCategory?.value || '', []);
+        }, 0);
+    });
+    editSubcategory?.addEventListener('change', () => {
+        editClassificationPreset = [];
+        setTimeout(() => {
+            refreshClassificationFields('#edit-classification-fields', editFinalCategory?.value || '', []);
+        }, 0);
     });
 
     const newBrandCombobox  = initBrandCombobox('new-brand-search',  'new-brand',  'new-brand-dropdown',  'new-brand-combobox');

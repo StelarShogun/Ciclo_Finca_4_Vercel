@@ -155,7 +155,7 @@ class ClientPageController extends Controller
 
     public function product($id, ?string $slug = null)
     {
-        $product = Product::with(['category', 'supplier'])->findOrFail($id);
+        $product = Product::with(['category', 'supplier', 'classificationValues.dimension'])->findOrFail($id);
 
         $canonicalSlug = $product->clientPublicSlug();
         if ($slug !== $canonicalSlug) {

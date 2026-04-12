@@ -8,6 +8,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Services\ProductClassificationAssignmentService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -37,6 +38,8 @@ class ProductController extends Controller
                 $data = $request->validated();
                 $brandId = $data['brand_id'];
                 unset($data['brand_id']);
+                $classificationIds = $data['classification_value_ids'] ?? [];
+                unset($data['classification_value_ids']);
 
                 if ($request->hasFile('image')) {
                     $imageName = time().'.'.$request->image->extension();
@@ -60,6 +63,7 @@ class ProductController extends Controller
 
                 $product = Product::create($data);
                 $product->brands()->attach($brandId);
+                app(ProductClassificationAssignmentService::class)->syncForProduct($product, $classificationIds);
 
                 return $product;
             });
@@ -68,7 +72,7 @@ class ProductController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Producto creado con éxito',
-                    'data' => $product->load(['category.parent', 'supplier']),
+                    'data' => $product->load(['category.parent', 'supplier', 'classificationValues.dimension']),
                 ]);
             }
 
@@ -99,12 +103,13 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            $product = Product::with(['category.parent', 'supplier', 'brands'])->findOrFail($id);
+            $product = Product::with(['category.parent', 'supplier', 'brands', 'classificationValues'])->findOrFail($id);
 
             if (request()->wantsJson() || request()->ajax()) {
                 $productData = $product->toArray();
                 $firstBrand = $product->brands->first();
                 $productData['brand_id'] = $firstBrand instanceof Brand ? $firstBrand->id : null;
+                $productData['classification_value_ids'] = $product->classificationValues->pluck('id')->values()->all();
 
                 return response()->json([
                     'success' => true,
@@ -156,6 +161,9 @@ class ProductController extends Controller
                 $data = $request->validated();
                 $brandId = $data['brand_id'];
                 unset($data['brand_id']);
+                $syncClassifications = $request->has('classification_value_ids');
+                $classificationIds = $syncClassifications ? ($data['classification_value_ids'] ?? []) : null;
+                unset($data['classification_value_ids']);
 
                 if ($request->hasFile('image')) {
                     // Delete the old image file before storing the new one
@@ -186,6 +194,10 @@ class ProductController extends Controller
 
                 $p->update($data);
                 $p->brands()->sync([$brandId]);
+                $p->refresh();
+                if ($syncClassifications) {
+                    app(ProductClassificationAssignmentService::class)->syncForProduct($p, $classificationIds ?? []);
+                }
 
                 return $p;
             });
@@ -194,7 +206,7 @@ class ProductController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Producto actualizado con éxito',
-                    'data' => $product->load(['category.parent', 'supplier']),
+                    'data' => $product->load(['category.parent', 'supplier', 'classificationValues.dimension']),
                 ]);
             }
 

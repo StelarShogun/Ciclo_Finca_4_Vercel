@@ -70,9 +70,9 @@
                     <div class="filters-grid">
 
                         <div class="filter-group">
-                            <label for="parent-category-filter">Categoría</label>
+                            <label for="parent-category-filter">Rubro</label>
                             <select id="parent-category-filter" name="parent_category_id">
-                                <option value="">Todas las categorías</option>
+                                <option value="">Todos los rubros</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}"
                                         @selected((string) request('parent_category_id') === (string) $category->category_id)>
@@ -83,9 +83,9 @@
                         </div>
 
                         <div class="filter-group">
-                            <label for="subcategory-filter">Subcategoría</label>
+                            <label for="subcategory-filter">Tipo de producto</label>
                             <select id="subcategory-filter" name="subcategory_id" data-selected="{{ request('subcategory_id') }}">
-                                <option value="">Todas las subcategorías</option>
+                                <option value="">Todos los tipos</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -395,20 +395,20 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-parent-category">Categoría *</label>
+                            <label for="new-parent-category">Rubro *</label>
                             <select id="new-parent-category" required>
-                                <option value="">Seleccionar categoría</option>
+                                <option value="">Seleccionar rubro</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="new-subcategory">Subcategoría <span class="text-muted">(opcional)</span></label>
+                            <label for="new-subcategory">Tipo concreto <span class="text-muted">(recomendado)</span></label>
                             <select id="new-subcategory" aria-describedby="new-subcategory-hint">
-                                <option value="">Sin subcategoría</option>
+                                <option value="">Solo el rubro general</option>
                             </select>
-                            <small id="new-subcategory-hint" class="form-text text-muted">Si no eliges subcategoría, el producto queda en la categoría padre.</small>
+                            <small id="new-subcategory-hint" class="form-text text-muted">Si dejás solo el rubro (ej. Bicicletas), no vas a poder cargar color, talla, etc. Elegí el tipo (ej. MTB) para usar esas opciones.</small>
                             <input type="hidden" id="new-category" name="category_id" value="">
                         </div>
                         <div class="form-group">
@@ -465,6 +465,11 @@
                             <option value="out_of_stock">Agotado</option>
                             <option value="discontinued">Descontinuado</option>
                         </select>
+                    </div>
+                    <div class="form-group" id="new-classification-section">
+                        <label>Atributos (color, talla…)</label>
+                        <div id="new-classification-fields"></div>
+                        <small class="form-text text-muted">Un valor por atributo. Aparece cuando elegís subcategoría y cargaste atributos en «Opciones por tipo».</small>
                     </div>
                     <div class="form-group form-group-featured">
                         <label class="featured-checkbox-label" for="new-featured">
@@ -525,18 +530,18 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="edit-parent-category">Categoría padre *</label>
+                            <label for="edit-parent-category">Rubro *</label>
                             <select id="edit-parent-category" required>
-                                <option value="">Seleccionar categoría padre</option>
+                                <option value="">Seleccionar rubro</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="edit-subcategory">Subcategoría <span class="text-muted">(opcional)</span></label>
+                            <label for="edit-subcategory">Tipo concreto <span class="text-muted">(recomendado)</span></label>
                             <select id="edit-subcategory">
-                                <option value="">Sin subcategoría</option>
+                                <option value="">Solo el rubro general</option>
                             </select>
                             <input type="hidden" id="edit-category" name="category_id" required>
                         </div>
@@ -590,6 +595,11 @@
                             <option value="out_of_stock">Agotado</option>
                             <option value="discontinued">Descontinuado</option>
                         </select>
+                    </div>
+                    <div class="form-group" id="edit-classification-section">
+                        <label>Atributos (color, talla…)</label>
+                        <div id="edit-classification-fields"></div>
+                        <small class="form-text text-muted">Un valor por atributo. Visible si el producto tiene subcategoría y atributos en «Opciones por tipo».</small>
                     </div>
                     <div class="form-group form-group-featured">
                         <label class="featured-checkbox-label" for="edit-featured">
