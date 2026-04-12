@@ -65,6 +65,7 @@ class UpdateProductRequest extends FormRequest
             'stock_current' => ['required', 'integer', 'min:0', 'gte:stock_minimum'],
             'stock_minimum' => ['required', 'integer', 'min:0'],
             'status' => ['required', 'in:active,inactive,out_of_stock,discontinued'],
+            'is_featured' => ['boolean'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
@@ -144,6 +145,7 @@ class UpdateProductRequest extends FormRequest
             'stock_current' => 'stock actual',
             'stock_minimum' => 'stock mínimo',
             'status' => 'estado',
+            'is_featured' => 'destacado en tienda',
             'image' => 'imagen del producto',
             'images' => 'imágenes adicionales',
             'images.*' => 'imagen adicional',
@@ -156,6 +158,7 @@ class UpdateProductRequest extends FormRequest
             'name' => $this->name ? trim($this->name) : null,
             'description' => $this->description ? trim($this->description) : null,
             'status' => $this->status ? strtolower($this->status) : null,
+            'is_featured' => $this->boolean('is_featured'),
         ];
         if ($this->has('classification_value_ids') && is_array($this->input('classification_value_ids'))) {
             $filtered = array_values(array_filter(

@@ -74,11 +74,17 @@ function updateRemoveButtons() {
     });
 }
 
+/** Coincide con SalesController::roundMoney (2 decimales). */
+function roundMoney(n) {
+    return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+}
+
 // Calculate total for a single product row (price * quantity)
 function calculateProductTotal(row) {
     const precio   = parseFloat(row.querySelector('input[name*="[precio_unitario]"]').value) || 0;
-    const cantidad = parseInt(row.querySelector('input[name*="[quantity]"]').value) || 0;
-    row.querySelector('input[name*="[total]"]').value = (precio * cantidad).toFixed(2);
+    const cantidad = parseInt(row.querySelector('input[name*="[quantity]"]').value, 10) || 0;
+    const lineTotal = roundMoney(precio * cantidad);
+    row.querySelector('input[name*="[total]"]').value = lineTotal.toFixed(2);
     calculateTotals();
 }
 
@@ -86,19 +92,26 @@ function calculateProductTotal(row) {
 function calculateTotals() {
     let subtotal = 0;
     document.querySelectorAll('input[name*="[total]"]').forEach(i => {
-        subtotal += parseFloat(i.value) || 0;
+        subtotal = roundMoney(subtotal + (parseFloat(i.value) || 0));
     });
 
-    const discount              = parseFloat(document.getElementById('discount')?.value) || 0;
-    const subtotalAfterDiscount = subtotal - discount;
-    const ivaPercent            = parseInt(document.getElementById('iva_percentage')?.value, 10) || 0;
-    const iva                   = subtotalAfterDiscount * (ivaPercent / 100);
-    const total                 = subtotalAfterDiscount + iva;
+    const discountRaw = roundMoney(parseFloat(document.getElementById('discount')?.value) || 0);
+    const discountApplied = roundMoney(Math.min(Math.max(0, discountRaw), subtotal));
+    const ivaPercent = parseFloat(document.getElementById('iva_percentage')?.value) || 0;
+    const pct = Math.min(13, Math.max(0, ivaPercent));
+    const taxableBase = roundMoney(subtotal - discountApplied);
+    const iva = roundMoney(taxableBase * (pct / 100));
+    const total = roundMoney(taxableBase + iva);
 
     const el = id => document.getElementById(id);
     if (el('subtotal')) el('subtotal').textContent = '₡' + subtotal.toFixed(2);
     if (el('iva'))      el('iva').textContent      = '₡' + iva.toFixed(2);
     if (el('total'))    el('total').textContent    = '₡' + total.toFixed(2);
+
+    const totalsBox = document.querySelector('.sale-totals');
+    if (totalsBox) {
+        totalsBox.classList.toggle('sale-totals--discount-over', subtotal > 0 && discountRaw > subtotal);
+    }
 }
 
 // Fetch and display full sale details in a modal
@@ -290,10 +303,6 @@ function printSale(id) {
     window.open(`/sales/${id}/print`, '_blank');
 }
 
-function openSaleInvoice(id) {
-    window.open(`/sales/${id}/invoice`, '_blank');
-}
-
 //Expose public functions on window (required by Vite/ESM) 
 Object.assign(window, {
     openNewSaleModal,
@@ -306,7 +315,6 @@ Object.assign(window, {
     cancelSale,
     refundSale,
     printSale,
-    openSaleInvoice,
 });
 
 // DOMContentLoaded 
@@ -346,6 +354,21 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const storeUrl = ROUTES.store;
             if (!storeUrl) return;
+
+            let sub = 0;
+            document.querySelectorAll('input[name*="[total]"]').forEach(i => {
+                sub = roundMoney(sub + (parseFloat(i.value) || 0));
+            });
+            const disc = roundMoney(parseFloat(document.getElementById('discount')?.value) || 0);
+            if (disc > sub) {
+                Swal.fire({
+                    title: 'Descuento inválido',
+                    text: 'El descuento no puede ser mayor que el subtotal (₡' + sub.toFixed(2) + ').',
+                    icon: 'warning',
+                    confirmButtonText: 'Corregir'
+                });
+                return;
+            }
 
             fetch(storeUrl, {
                 method: 'POST',
@@ -397,6 +420,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // Discount or VAT change: recalc totals
         if (['discount', 'iva_percentage'].includes(e.target.id)) {
+            calculateTotals();
+        }
+    });
+
+    document.addEventListener('input', function (e) {
+        if (e.target.id === 'discount') {
             calculateTotals();
         }
     });

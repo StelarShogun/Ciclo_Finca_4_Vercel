@@ -173,9 +173,20 @@
                                 @php $adminAv = $product->adminAvailabilityLabel(); @endphp
                                 <tr>
                                     <td class="product-cell">
-                                        {{-- Falls back to default image if none is set --}}
-                                        <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
-                                             alt="{{ $product->name }}">
+                                        <div class="product-thumb-wrap product-thumb-wrap--table">
+                                            {{-- Falls back to default image if none is set --}}
+                                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
+                                                 alt="{{ $product->name }}">
+                                            <button type="button"
+                                                    class="featured-star-btn {{ $product->is_featured ? 'is-featured' : '' }}"
+                                                    data-product-id="{{ $product->product_id }}"
+                                                    data-featured="{{ $product->is_featured ? '1' : '0' }}"
+                                                    aria-pressed="{{ $product->is_featured ? 'true' : 'false' }}"
+                                                    aria-label="{{ $product->is_featured ? 'Quitar de destacados en tienda' : 'Marcar como destacado en tienda' }}"
+                                                    title="Destacado en tienda (inicio y catálogo)">
+                                                <i class="featured-star-icon {{ $product->is_featured ? 'fas' : 'far' }} fa-star" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
                                         <div class="product-info">
                                             <h4>{{ $product->name }}</h4>
                                             <span class="sku">SKU: {{ 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT) }}</span>
@@ -247,8 +258,19 @@
                             @php $adminAvGrid = $product->adminAvailabilityLabel(); @endphp
                             <div class="product-card">
                                 <div class="product-card-header">
-                                    <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
-                                         alt="{{ $product->name }}" class="product-card-image">
+                                    <div class="product-thumb-wrap product-thumb-wrap--card">
+                                        <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
+                                             alt="{{ $product->name }}" class="product-card-image">
+                                        <button type="button"
+                                                class="featured-star-btn {{ $product->is_featured ? 'is-featured' : '' }}"
+                                                data-product-id="{{ $product->product_id }}"
+                                                data-featured="{{ $product->is_featured ? '1' : '0' }}"
+                                                aria-pressed="{{ $product->is_featured ? 'true' : 'false' }}"
+                                                aria-label="{{ $product->is_featured ? 'Quitar de destacados en tienda' : 'Marcar como destacado en tienda' }}"
+                                                title="Destacado en tienda (inicio y catálogo)">
+                                            <i class="featured-star-icon {{ $product->is_featured ? 'fas' : 'far' }} fa-star" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
                                     <div class="product-card-info">
                                         <h4>{{ $product->name }}</h4>
                                         <span class="sku">SKU: {{ 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT) }}</span>
@@ -449,6 +471,15 @@
                         <div id="new-classification-fields"></div>
                         <small class="form-text text-muted">Un valor por atributo. Aparece cuando elegís subcategoría y cargaste atributos en «Opciones por tipo».</small>
                     </div>
+                    <div class="form-group form-group-featured">
+                        <label class="featured-checkbox-label" for="new-featured">
+                            <input type="checkbox" id="new-featured" value="1">
+                            <span class="featured-checkbox-text">
+                                <span class="featured-checkbox-title">Destacado en tienda</span>
+                                <small>Se muestra en el inicio y en «Destacados y novedades» del catálogo público.</small>
+                            </span>
+                        </label>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -569,6 +600,15 @@
                         <label>Atributos (color, talla…)</label>
                         <div id="edit-classification-fields"></div>
                         <small class="form-text text-muted">Un valor por atributo. Visible si el producto tiene subcategoría y atributos en «Opciones por tipo».</small>
+                    </div>
+                    <div class="form-group form-group-featured">
+                        <label class="featured-checkbox-label" for="edit-featured">
+                            <input type="checkbox" id="edit-featured" value="1">
+                            <span class="featured-checkbox-text">
+                                <span class="featured-checkbox-title">Destacado en tienda</span>
+                                <small>Se muestra en el inicio y en «Destacados y novedades» del catálogo público.</small>
+                            </span>
+                        </label>
                     </div>
                 </form>
             </div>

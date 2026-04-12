@@ -1,6 +1,7 @@
 @import "../variables-reset.css";
 @import "../utilities.css";
 @import "../sidebar.css";
+@import "../sweetalert2-modal-zindex.css";
 
 /* ============================================================
     1. MAIN LAYOUT

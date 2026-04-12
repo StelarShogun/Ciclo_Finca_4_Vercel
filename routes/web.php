@@ -4,7 +4,6 @@ use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminOrderSettingsController;
 use App\Http\Controllers\AdminUserController;
-use App\Http\Controllers\SupplierOrderController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientPageController;
@@ -15,6 +14,7 @@ use App\Http\Controllers\ProductClassificationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SupplierOrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -89,6 +89,8 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/products/{product}/classifications/edit', [ProductClassificationController::class, 'edit'])->name('admin.products.classifications.edit');
     Route::put('/products/{product}/classifications', [ProductClassificationController::class, 'update'])->name('admin.products.classifications.update');
 
+    // CF4-29 — featured toggle
+    Route::post('/products/{id}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
     Route::resource('products', ProductController::class)->except(['create']);
     Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
     Route::get('/inventory/export/{format?}', [ProductController::class, 'export'])->name('products.export');
@@ -134,11 +136,12 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
         $admin = auth('admin')->user();
         session([
             'admin_catalog_mode' => [
-                'name'           => $admin->name,
-                'first_surname'  => $admin->first_surname,
-                'gmail'          => $admin->gmail,
+                'name' => $admin->name,
+                'first_surname' => $admin->first_surname,
+                'gmail' => $admin->gmail,
             ],
         ]);
+
         return redirect()->route('clients.catalog');
     })->name('admin.catalog.preview');
 });
@@ -150,6 +153,7 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
 // Clears admin catalog preview mode and returns to admin panel
 Route::get('/admin/catalog-exit', function () {
     session()->forget('admin_catalog_mode');
+
     return redirect('/dashboard');
 })->name('admin.catalog.exit');
 

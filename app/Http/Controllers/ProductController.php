@@ -131,6 +131,28 @@ class ProductController extends Controller
         }
     }
 
+    public function toggleFeatured(int $id)
+    {
+        try {
+            $product = Product::findOrFail($id);
+            $product->is_featured = ! $product->is_featured;
+            $product->save();
+
+            return response()->json([
+                'success' => true,
+                'is_featured' => (bool) $product->is_featured,
+                'message' => $product->is_featured
+                    ? 'Producto marcado como destacado en la tienda (inicio y catálogo).'
+                    : 'Producto quitado de destacados en la tienda.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo actualizar el destacado. Inténtalo de nuevo.',
+            ], 500);
+        }
+    }
+
     public function update(UpdateProductRequest $request, $id)
     {
         try {
