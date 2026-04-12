@@ -32,6 +32,7 @@ class StoreProductRequest extends FormRequest
             'stock_current' => 'required|integer|min:0|gte:stock_minimum',
             'stock_minimum' => 'required|integer|min:0',
             'status' => 'required|in:active,inactive,out_of_stock,discontinued',
+            'is_featured' => 'boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -77,9 +78,17 @@ class StoreProductRequest extends FormRequest
             'stock_current' => 'stock actual',
             'stock_minimum' => 'stock mínimo',
             'status' => 'estado',
+            'is_featured' => 'destacado en tienda',
             'image' => 'imagen del producto',
             'images' => 'imágenes adicionales',
             'images.*' => 'imagen adicional',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'is_featured' => $this->boolean('is_featured'),
+        ]);
     }
 }
