@@ -79,9 +79,12 @@ Briefly describe what this PR changes and why it is needed.
 
 ## 📸 Evidence
 
-(Add screenshots or links if applicable.)
 
----
+| # | Descripción | Imagen / enlace |
+|---|-------------|-----------------|
+| 1 | *(qué se ve o qué prueba)* | [Ver captura](./docs/evidencia/01.png) o `![alt](url)` |
+| 2 | | |
+| 3 | | |
 
 ## 🔗 Relation to system requirements
 
