@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -17,7 +18,7 @@ class ClientPageController extends Controller
     {
         // Featured products: active, in stock, latest first
         $featuredProducts = Product::with(['category'])
-            ->where('status', 'active')
+            ->activeInClientStore()
             ->where('is_featured', true)
             ->where('stock_current', '>', 0)
             ->orderBy('created_at', 'desc')
@@ -38,9 +39,8 @@ class ClientPageController extends Controller
 
     public function catalog(Request $request)
     {
-        $query = Product::with(['category'])
-            ->where('status', 'active')
-            ->where('stock_current', '>', 0);
+        // Misma base que inventario admin: todos los productos; disponibilidad solo en la vista (CF4-62).
+        $query = Product::with(['category']);
 
         if ($request->filled('search')) {
             $searchTerm = $request->search;
@@ -111,25 +111,64 @@ class ClientPageController extends Controller
             ->get();
 
         $cartCount = $this->getCartCount();
+        $catalogSpotlight = $this->catalogSpotlightProductRows();
 
         return view('client.catalog', compact(
             'products', 'categories', 'cartCount',
-            'selectedCategory', 'subcategories', 'parentCategoryForSubcats'
+            'selectedCategory', 'subcategories', 'parentCategoryForSubcats',
+            'catalogSpotlight'
         ));
     }
 
-    public function product($id)
+    /**
+     * Featured and newest active products for the catalog spotlight (CF4-29).
+     *
+     * @return Collection<int, array{product: Product, spotlight: 'featured'|'novelty'}>
+     */
+    private function catalogSpotlightProductRows(): Collection
     {
-        $product = Product::with(['category', 'supplier'])
-            ->where('status', 'active')
-            ->findOrFail($id);
+        $maxTotal = 12;
+        $maxFeatured = 8;
 
-        // Related products from the same category, excluding the current one
+        $featured = Product::with(['category'])
+            ->activeInClientStore()
+            ->where('is_featured', true)
+            ->orderByDesc('created_at')
+            ->limit($maxFeatured)
+            ->get();
+
+        $featuredIds = $featured->pluck('product_id')->all();
+        $remaining = max(0, $maxTotal - $featured->count());
+
+        $novelties = $remaining > 0
+            ? Product::with(['category'])
+                ->activeInClientStore()
+                ->whereNotIn('product_id', $featuredIds)
+                ->orderByDesc('created_at')
+                ->limit($remaining)
+                ->get()
+            : collect();
+
+        return $featured->map(fn (Product $p) => ['product' => $p, 'spotlight' => 'featured'])
+            ->concat($novelties->map(fn (Product $p) => ['product' => $p, 'spotlight' => 'novelty']));
+    }
+
+    public function product($id, ?string $slug = null)
+    {
+        $product = Product::with(['category', 'supplier', 'classificationValues.dimension'])->findOrFail($id);
+
+        $canonicalSlug = $product->clientPublicSlug();
+        if ($slug !== $canonicalSlug) {
+            return redirect()->route('clients.product', [
+                'id' => $product->product_id,
+                'slug' => $canonicalSlug,
+            ], 301);
+        }
+
+        // Relacionados: misma regla de visibilidad que el catálogo (pueden estar agotados)
         $relatedProducts = Product::with(['category'])
             ->where('category_id', $product->category_id)
             ->where('product_id', '!=', $product->product_id)
-            ->where('status', 'active')
-            ->where('stock_current', '>', 0)
             ->limit(4)
             ->get();
 
@@ -147,12 +186,17 @@ class ClientPageController extends Controller
 
         $product = Product::findOrFail($request->product_id);
 
-        if ($product->status !== 'active') {
-            return response()->json(['success' => false, 'message' => 'Este producto no está disponible'], 400);
+        if (! $product->isPurchasableByClient()) {
+            return response()->json(['success' => false, 'message' => Product::MSG_CLIENT_AGOTADO], 400);
         }
 
         if ($product->stock_current < $request->quantity) {
-            return response()->json(['success' => false, 'message' => 'Stock insuficiente. Disponible: '.$product->stock_current], 400);
+            return response()->json([
+                'success' => false,
+                'message' => $product->stock_current < 1
+                    ? Product::MSG_CLIENT_AGOTADO
+                    : Product::MSG_CLIENT_STOCK_INSUFICIENTE,
+            ], 400);
         }
 
         $cart = Session::get('cart', []);
@@ -170,7 +214,12 @@ class ClientPageController extends Controller
             $newQuantity = ($cart[$existingIndex]['quantity'] ?? 0) + $request->quantity;
 
             if ($newQuantity > $product->stock_current) {
-                return response()->json(['success' => false, 'message' => 'Stock insuficiente. Disponible: '.$product->stock_current], 400);
+                return response()->json([
+                    'success' => false,
+                    'message' => $product->stock_current < 1
+                        ? Product::MSG_CLIENT_AGOTADO
+                        : Product::MSG_CLIENT_STOCK_INSUFICIENTE,
+                ], 400);
             }
 
             $cart[$existingIndex]['quantity'] = $newQuantity;
@@ -204,8 +253,13 @@ class ClientPageController extends Controller
         foreach ($cart as $item) {
             $product = Product::find($item['product_id']);
 
-            if ($product && $product->status === 'active') {
-                $subtotal = $item['price'] * $item['quantity'];
+            if ($product && $product->isPurchasableByClient()) {
+                $qty = min((int) $item['quantity'], $product->stock_current);
+                if ($qty < 1) {
+                    continue;
+                }
+
+                $subtotal = $item['price'] * $qty;
                 $total += $subtotal;
 
                 $cartItems[] = [
@@ -213,12 +267,11 @@ class ClientPageController extends Controller
                     'name' => $product->name,
                     'price' => $item['price'],
                     'image' => $product->image ?? 'default.png',
-                    'quantity' => $item['quantity'],
+                    'quantity' => $qty,
                     'stock_available' => $product->stock_current,
                     'subtotal' => $subtotal,
                 ];
             }
-            // Inactive products are silently dropped from the session
         }
 
         Session::put('cart', $cartItems);
@@ -237,12 +290,17 @@ class ClientPageController extends Controller
 
         $product = Product::findOrFail($request->product_id);
 
-        if ($product->status !== 'active') {
-            return response()->json(['success' => false, 'message' => 'Este producto no está disponible'], 400);
+        if (! $product->isPurchasableByClient()) {
+            return response()->json(['success' => false, 'message' => Product::MSG_CLIENT_AGOTADO], 400);
         }
 
         if ($product->stock_current < $request->quantity) {
-            return response()->json(['success' => false, 'message' => 'Stock insuficiente. Disponible: '.$product->stock_current], 400);
+            return response()->json([
+                'success' => false,
+                'message' => $product->stock_current < 1
+                    ? Product::MSG_CLIENT_AGOTADO
+                    : Product::MSG_CLIENT_STOCK_INSUFICIENTE,
+            ], 400);
         }
 
         $cart = Session::get('cart', []);
@@ -302,16 +360,21 @@ class ClientPageController extends Controller
             foreach ($cart as $item) {
                 $product = Product::find($item['product_id']);
 
-                if (! $product || $product->status !== 'active') {
+                if (! $product || ! $product->isPurchasableByClient()) {
                     DB::rollBack();
 
-                    return response()->json(['success' => false, 'message' => 'El producto "'.($item['name'] ?? '').'" ya no está disponible'], 400);
+                    return response()->json(['success' => false, 'message' => Product::MSG_CLIENT_AGOTADO], 400);
                 }
 
                 if ($product->stock_current < $item['quantity']) {
                     DB::rollBack();
 
-                    return response()->json(['success' => false, 'message' => 'Stock insuficiente para "'.$product->name.'". Disponible: '.$product->stock_current], 400);
+                    return response()->json([
+                        'success' => false,
+                        'message' => $product->stock_current < 1
+                            ? Product::MSG_CLIENT_AGOTADO
+                            : Product::MSG_CLIENT_STOCK_INSUFICIENTE,
+                    ], 400);
                 }
 
                 $itemTotal = $item['price'] * $item['quantity'];

@@ -1,6 +1,7 @@
 @import "../variables-reset.css";
 @import "../utilities.css";
 @import "../sidebar.css";
+@import "../sweetalert2-modal-zindex.css";
 
 /* ============================================================
   1. MAIN LAYOUT
@@ -517,12 +518,6 @@
   border-left: 3px solid var(--color-primary);
   margin-bottom: 1rem;
 }
-
-/* SweetAlert z-index */
-.swal2-container { z-index: 10000 !important; }
-.swal2-popup     { z-index: 10001 !important; }
-.swal2-backdrop  { z-index: 9999  !important; }
-.swal-high-z-index { z-index: 10000 !important; }
 
 /* ============================================================
   9. FORMS (CREATE / EDIT)

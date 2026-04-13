@@ -139,6 +139,97 @@
                     </div>
                 @endif
 
+                @if($catalogSpotlight->isNotEmpty())
+                    <section class="catalog-spotlight-section" aria-labelledby="catalog-spotlight-heading">
+                        <div class="catalog-spotlight-inner">
+                            <header class="catalog-spotlight-header">
+                                <h2 id="catalog-spotlight-heading" class="catalog-spotlight-title">Destacados y novedades</h2>
+                                <p class="catalog-spotlight-subtitle">Productos recomendados y recién incorporados al catálogo.</p>
+                            </header>
+                            <div class="catalog-spotlight-grid" role="list">
+                                @foreach($catalogSpotlight as $row)
+                                    @php
+                                        /** @var \App\Models\Product $product */
+                                        $product = $row['product'];
+                                        $spotlight = $row['spotlight'];
+                                        $catLabel = $product->clientCatalogStockLabel();
+                                        $canBuy = $product->isPurchasableByClient();
+                                    @endphp
+                                    <article class="product-card product-card--catalog-spotlight" role="listitem">
+                                        <div class="product-image">
+                                            <span @class([
+                                                'spotlight-badge',
+                                                'spotlight-badge--featured' => $spotlight === 'featured',
+                                                'spotlight-badge--novelty' => $spotlight === 'novelty',
+                                            ])>
+                                                {{ $spotlight === 'featured' ? 'Destacado' : 'Novedad' }}
+                                            </span>
+                                            <a href="{{ $product->clientProductUrl() }}">
+                                                <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
+                                                     alt="{{ $product->name }}"
+                                                     data-fallback-src="{{ asset('favicon.svg') }}"
+                                                     onerror="this.src=this.dataset.fallbackSrc;">
+                                            </a>
+                                        </div>
+                                        <div class="product-info">
+                                            <div class="product-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
+                                            <h3 class="product-name">
+                                                <a href="{{ $product->clientProductUrl() }}">{{ $product->name }}</a>
+                                            </h3>
+                                            <p @class([
+                                                'product-availability-text',
+                                                'is-available' => $catLabel === 'Disponible',
+                                                'is-low' => $catLabel === 'Quedan pocas unidades',
+                                                'is-out' => $catLabel === 'Agotado',
+                                                'is-na' => $catLabel === 'No disponible',
+                                            ])>{{ $catLabel }}</p>
+                                            @if($canBuy)
+                                                <p class="product-stock-qty">{{ number_format((int) ($product->stock_current ?? 0), 0, ',', '.') }} unidades disponibles</p>
+                                            @endif
+                                            <div class="product-footer product-footer--spotlight-compact">
+                                                <div class="product-price-bar">
+                                                    <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
+                                                </div>
+                                                <div class="product-actions">
+                                                    <a href="{{ $product->clientProductUrl() }}" class="btn-product btn-ver-detalles">
+                                                        <i class="fas fa-arrow-right"></i>
+                                                        Ver detalles
+                                                    </a>
+                                                    @if($canBuy)
+                                                        @auth('clients')
+                                                            <button type="button" class="btn-product btn-agregar add-to-cart-btn"
+                                                                    data-purchasable="1"
+                                                                    data-product-id="{{ $product->product_id }}"
+                                                                    data-product-name="{{ $product->name }}"
+                                                                    data-product-price="{{ $product->sale_price }}"
+                                                                    data-product-stock="{{ $product->stock_current }}">
+                                                                <i class="fas fa-cart-plus"></i>
+                                                                Agregar
+                                                            </button>
+                                                        @else
+                                                            <button type="button" class="btn-product btn-agregar guest-add-btn"
+                                                                    data-purchasable="1"
+                                                                    data-product-stock="{{ $product->stock_current }}">
+                                                                <i class="fas fa-cart-plus"></i>
+                                                                Agregar
+                                                            </button>
+                                                        @endauth
+                                                    @else
+                                                        <button type="button" class="btn-product btn-agotado" disabled>
+                                                            <i class="fas fa-ban"></i>
+                                                            {{ $catLabel === 'Agotado' ? 'Agotado' : 'No disponible' }}
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </div>
+                    </section>
+                @endif
+
                 <div class="catalog-results">
                     <div class="results-header">
                         @if($selectedCategory)
@@ -154,26 +245,34 @@
                     @if($products->count() > 0)
                         <div class="products-grid">
                             @foreach($products as $product)
+                                @php $catLabel = $product->clientCatalogStockLabel(); $canBuy = $product->isPurchasableByClient(); @endphp
                                 <div class="product-card">
                                     <div class="product-image">
-                                        <a href="{{ route('clients.product', $product->product_id) }}">
+                                        <a href="{{ $product->clientProductUrl() }}">
                                             {{-- Fallback to favicon if product image is missing --}}
                                             <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
                                                  alt="{{ $product->name }}"
                                                  data-fallback-src="{{ asset('favicon.svg') }}"
                                                  onerror="this.src=this.dataset.fallbackSrc;">
                                         </a>
-                                        @if($product->stock_current <= 10)
-                                            <span class="product-badge stock-low">Stock Bajo</span>
-                                        @endif
                                     </div>
                                     <div class="product-info">
                                         <div class="product-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
                                         <h3 class="product-name">
-                                            <a href="{{ route('clients.product', $product->product_id) }}">
+                                            <a href="{{ $product->clientProductUrl() }}">
                                                 {{ $product->name }}
                                             </a>
                                         </h3>
+                                        <p @class([
+                                            'product-availability-text',
+                                            'is-available' => $catLabel === 'Disponible',
+                                            'is-low' => $catLabel === 'Quedan pocas unidades',
+                                            'is-out' => $catLabel === 'Agotado',
+                                            'is-na' => $catLabel === 'No disponible',
+                                        ])>{{ $catLabel }}</p>
+                                        @if($canBuy)
+                                            <p class="product-stock-qty">{{ number_format((int) ($product->stock_current ?? 0), 0, ',', '.') }} unidades disponibles</p>
+                                        @endif
                                         @if($product->description)
                                             <p class="product-description">{{ Str::limit($product->description, 100) }}</p>
                                         @endif
@@ -182,26 +281,35 @@
                                                 <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
                                             </div>
                                             <div class="product-actions">
-                                                <a href="{{ route('clients.product', $product->product_id) }}" class="btn-product btn-ver-detalles">
+                                                <a href="{{ $product->clientProductUrl() }}" class="btn-product btn-ver-detalles">
                                                     <i class="fas fa-arrow-right"></i>
                                                     Ver detalles
                                                 </a>
-                                                @auth('clients')
-                                                    <button class="btn-product btn-agregar add-to-cart-btn"
-                                                            data-product-id="{{ $product->product_id }}"
-                                                            data-product-name="{{ $product->name }}"
-                                                            data-product-price="{{ $product->sale_price }}"
-                                                            data-product-stock="{{ $product->stock_current }}">
-                                                        <i class="fas fa-cart-plus"></i>
-                                                        Agregar
-                                                    </button>
+                                                @if($canBuy)
+                                                    @auth('clients')
+                                                        <button type="button" class="btn-product btn-agregar add-to-cart-btn"
+                                                                data-purchasable="1"
+                                                                data-product-id="{{ $product->product_id }}"
+                                                                data-product-name="{{ $product->name }}"
+                                                                data-product-price="{{ $product->sale_price }}"
+                                                                data-product-stock="{{ $product->stock_current }}">
+                                                            <i class="fas fa-cart-plus"></i>
+                                                            Agregar
+                                                        </button>
+                                                    @else
+                                                        <button type="button" class="btn-product btn-agregar guest-add-btn"
+                                                                data-purchasable="1"
+                                                                data-product-stock="{{ $product->stock_current }}">
+                                                            <i class="fas fa-cart-plus"></i>
+                                                            Agregar
+                                                        </button>
+                                                    @endauth
                                                 @else
-                                                    {{-- Guest button triggers a login prompt via JS --}}
-                                                    <button class="btn-product btn-agregar guest-add-btn" type="button">
-                                                        <i class="fas fa-cart-plus"></i>
-                                                        Agregar
+                                                    <button type="button" class="btn-product btn-agotado" disabled>
+                                                        <i class="fas fa-ban"></i>
+                                                        {{ $catLabel === 'Agotado' ? 'Agotado' : 'No disponible' }}
                                                     </button>
-                                                @endauth
+                                                @endif
                                             </div>
                                         </div>
                                     </div>

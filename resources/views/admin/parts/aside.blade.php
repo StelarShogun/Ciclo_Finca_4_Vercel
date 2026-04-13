@@ -1,6 +1,10 @@
 <aside class="admin-sidebar expanded">
     <div class="sidebar-header">
         <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Finca 4 Logo" class="logo">
+        <a href="{{ route('admin.catalog.preview') }}" class="sidebar-catalog-btn" title="Ver catálogo de Productos">
+            <i class="fas fa-store"></i>
+            <span class="sidebar-label">Ver catálogo</span>
+        </a>
     </div>
     <nav class="sidebar-nav">
         <ul>
@@ -14,6 +18,18 @@
                 <a href="{{ route('inventory') }}">
                     <i class="fas fa-box"></i>
                     <span class="sidebar-label">Inventario</span>
+                </a>
+            </li>
+            <li class="{{ request()->routeIs('admin.product-classifications.*') || request()->routeIs('admin.products.classifications.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.product-classifications.index') }}">
+                    <i class="fas fa-layer-group"></i>
+                    <span class="sidebar-label">Características por producto</span>
+                </a>
+            </li>
+            <li class="{{ request()->routeIs('admin.classifications.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.classifications.catalog.index') }}">
+                    <i class="fas fa-th-list"></i>
+                    <span class="sidebar-label">Opciones por tipo</span>
                 </a>
             </li>
             <li class="{{ request()->routeIs('brands.*') ? 'active' : '' }}">
