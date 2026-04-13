@@ -49,8 +49,8 @@
                 </div>
             </div>
 
-            {{-- First and second surname rendered side by side --}}
-            <div style="display:flex; gap:16px; margin-bottom:1rem;">
+            {{-- First and second surname rendered side by side (stacks on mobile via .surnames-row) --}}
+            <div class="surnames-row" style="display:flex; gap:16px; margin-bottom:1rem;">
                 <div class="form-group" style="flex:1; min-width:0; margin-bottom:0;">
                     <label for="first_surname">Apellido <span class="text-danger">*</span></label>
                     <input type="text" id="first_surname" name="first_surname"

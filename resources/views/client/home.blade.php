@@ -26,7 +26,7 @@
             </div>
 
             <h1 class="hero-title">
-                Equípate para rodar<br>
+                Equípate para rodar
                 <strong>con asesoría real en tienda</strong>
             </h1>
 
