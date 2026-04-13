@@ -5,7 +5,6 @@
             {{-- Logo --}}
             <div class="logo-section">
                 <div class="logo-link" aria-label="Marca Ciclo Finca 4">
-                    {{-- Ícono circular completo (PNG 500×500, sin texto); wordmark en HTML --}}
                     <span class="logo-icon-wrap" aria-hidden="true">
                         <img src="{{ asset('assets/images/brand/logo-ciclo-finca-icon-transparent.png') }}" alt=""
                             width="500" height="500" class="logo-img logo-img--icon-only" loading="eager" decoding="async"
@@ -20,12 +19,14 @@
                 </div>
             </div>
 
+            {{-- Hamburger toggle: only visible on mobile (CSS controls display) --}}
             <button class="header-menu-toggle" id="header-menu-toggle" type="button"
                 aria-label="Abrir menú de navegación" aria-controls="header-menu-panel" aria-expanded="false">
                 <i class="fas fa-bars" aria-hidden="true"></i>
             </button>
 
-            <div class="header-menu-panel" id="header-menu-panel">
+            {{-- Collapsible panel: nav + actions. aria-hidden toggled by JS. --}}
+            <div class="header-menu-panel" id="header-menu-panel" aria-hidden="true">
                 {{-- Main navigation --}}
                 <nav class="main-nav">
                     <a href="{{ route('clients.home') }}"
@@ -146,13 +147,9 @@
                             </a>
                         @elseif(session('client_id'))
                             {{-- Fallback: session-based user with no active Auth guard --}}
-                            <a href="{{ route('clients.profile') }}" class="user-dropdown-item" title="Mi Perfil"
-                                style="display:flex;flex-direction:column;align-items:center;
-                                      text-decoration:none;color:var(--color-primary);">
-                                <i class="fas fa-user-circle" style="font-size:2rem;"></i>
-                                <span style="font-size:.9rem;margin-top:2px;">
-                                    {{ session('client_name') }}
-                                </span>
+                            <a href="{{ route('clients.profile') }}" class="user-dropdown-item session-profile-link" title="Mi Perfil">
+                                <i class="fas fa-user-circle"></i>
+                                <span>{{ session('client_name') }}</span>
                             </a>
                             <form action="{{ route('logout') }}" method="POST" class="logout-form" style="margin:0;">
                                 @csrf
