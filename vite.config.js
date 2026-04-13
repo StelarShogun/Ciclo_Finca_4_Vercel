@@ -41,6 +41,9 @@ const clientAssets = [
     "resources/js/client/clients-users.js",
 
     // CSS
+    "resources/css/client/variables-reset.css",
+    "resources/css/client/header.css",
+    "resources/css/client/footer.css",
     "resources/css/client/clients-page.css",
     "resources/css/client/clients-users.css",
 ];

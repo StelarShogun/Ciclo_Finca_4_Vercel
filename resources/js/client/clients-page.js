@@ -658,6 +658,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         Swal.fire({
                             icon: 'success',
+                            title: '¡Pedido confirmado!',
                             text: 'Su pedido fue enviado con éxito. Tiene un lapso de 3 días para retirarlo en nuestro local. El pago se realiza de forma presencial mediante SINPE, efectivo o tarjeta.',
                             confirmButtonText: 'Entendido'
                         });
@@ -778,28 +779,33 @@ document.addEventListener('DOMContentLoaded', function () {
         updateButtons();
     })();
 
-    // Catalog: toggle del sidebar de filtros en mobile.
+    // ----------------------------------------------------------------
+    // FIX: Catalog filter toggle — usa clase .open en vez de style.display
+    // ----------------------------------------------------------------
     (function initCatalogFilterToggle() {
         var btn     = document.getElementById('catalog-filter-toggle');
         var sidebar = document.getElementById('catalog-sidebar');
         if (!btn || !sidebar) return;
 
         function checkMobile() {
-            if (window.innerWidth <= 768) {
+            if (window.innerWidth <= 1024) {
                 btn.style.display = 'flex';
+                // Si no está expandido, asegurar que .open no esté
                 if (btn.getAttribute('aria-expanded') !== 'true') {
-                    sidebar.style.display = 'none';
+                    sidebar.classList.remove('open');
                 }
             } else {
                 btn.style.display = 'none';
-                sidebar.style.display = '';
+                // En desktop siempre visible: agregar .open para que el CSS lo muestre
+                sidebar.classList.add('open');
             }
         }
 
         btn.addEventListener('click', function () {
             var open = btn.getAttribute('aria-expanded') === 'true';
-            btn.setAttribute('aria-expanded', !open);
-            sidebar.style.display = open ? 'none' : '';
+            btn.setAttribute('aria-expanded', String(!open));
+            // Toggle la clase .open que el CSS usa para max-height/opacity
+            sidebar.classList.toggle('open', !open);
             var caret = btn.querySelector('.fa-chevron-down');
             if (caret) caret.style.transform = open ? '' : 'rotate(180deg)';
             var label = btn.querySelector('span');
