@@ -2218,13 +2218,15 @@ body.guest-layout {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;           /* FIX: title + actions wrap on narrow screens */
+  gap: 12px;
   margin-bottom: 30px;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--border-color);
 }
 
 .cart-title {
-  font-size: 2rem;
+  font-size: clamp(1.4rem, 4vw, 2rem);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -2257,7 +2259,8 @@ body.guest-layout {
   border-radius: var(--border-radius-large);
   padding: 20px;
   display: flex;
-  gap: 20px;
+  flex-wrap: wrap;           /* FIX: allow children to wrap */
+  gap: 16px;
   align-items: flex-start;
   transition: var(--transition);
 }
@@ -2296,7 +2299,7 @@ body.guest-layout {
 /* Cart item text column */
 .item-info {
   flex: 1;
-  min-width: 0;
+  min-width: 0;              /* FIX: prevent text overflow breaking layout */
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -2638,7 +2641,24 @@ body.guest-layout {
 
   /* Cart item — wrap on small screens */
   .cart-item {
-    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .cart-item-image {
+    width: 88px;
+    height: 88px;
+  }
+
+  .item-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Controls row takes full width below image+info */
+  .item-controls {
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
     gap: 12px;
   }
 
@@ -2738,6 +2758,17 @@ body.guest-layout {
   .section-title { font-size: 1.65rem; }
   .catalog-title { font-size: 1.65rem; }
 
+  /* Cart header: stack vertically on phones */
+  .cart-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cart-header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
   /* Cart item: imagen más pequeña en móvil */
   .cart-item-image {
     width: 72px;
@@ -2824,10 +2855,12 @@ body.guest-layout {
   .hero-section .hero-actions .btn { width: 100%; justify-content: center; }
   .hero-section .hero-benefits { grid-template-columns: 1fr; gap: 10px; }
 
-  /* Cart item actions: stack */
+  /* Cart item actions: keep row on 480px but allow column on very small */
   .cart-item-right {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
     gap: 10px;
   }
 
@@ -2865,6 +2898,18 @@ body.guest-layout {
   .section-title { font-size: 1.45rem; }
   .catalog-title { font-size: 1.45rem; }
   .btn { padding: 10px 14px; font-size: 0.88rem; }
+
+  /* Cart: stack subtotal+trash on very tiny screens */
+  .cart-item-right {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .cart-item-image {
+    width: 60px;
+    height: 60px;
+  }
 }
 
 /* --- Reduced motion --- */
