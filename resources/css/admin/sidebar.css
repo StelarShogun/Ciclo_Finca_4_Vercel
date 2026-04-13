@@ -99,3 +99,41 @@
 }
  
 .logout-btn i { width: 1.25rem; margin-right: 1rem; font-size: 1.1rem; }
+/* ============================================================
+   CATALOG PREVIEW BUTTON (sidebar header)
+   ============================================================ */
+.sidebar-catalog-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.85rem;
+    background: var(--color-primary, #2e7d32);
+    color: #fff;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background 0.2s ease, transform 0.15s ease;
+    flex-shrink: 0;
+}
+
+.sidebar-catalog-btn:hover {
+    background: var(--color-primary-dark, #1b5e20);
+    transform: translateY(-1px);
+    color: #fff;
+}
+
+.sidebar-catalog-btn i {
+    font-size: 1rem;
+}
+
+/* Hide text label when sidebar is collapsed */
+.admin-sidebar:not(.expanded) .sidebar-catalog-btn .sidebar-label {
+    display: none;
+}
+
+.admin-sidebar:not(.expanded) .sidebar-catalog-btn {
+    padding: 0.5rem;
+    justify-content: center;
+}

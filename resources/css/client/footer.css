@@ -2,10 +2,11 @@
    FOOTER
    =================================================================== */
 .cliente-footer {
-  background: var(--color-dark);
-  color: white;
-  padding: 40px 0 20px;
+  background: linear-gradient(180deg, #1b1f23 0%, #121518 100%);
+  color: #e9edf1;
+  padding: 56px 0 18px;
   margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .footer-container {
@@ -14,30 +15,180 @@
   padding: 0 20px;
 }
 
-.footer-content {
+/* 4-column grid: brand + 3 content cols */
+.footer-top {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 30px;
-  margin-bottom: 30px;
+  grid-template-columns: 1.25fr 1fr 1fr 1fr;
+  gap: 28px;
+  margin-bottom: 28px;
 }
 
-.footer-section h4 { font-size: 1.1rem; margin-bottom: 15px; color: white; }
-.footer-section p  { color: rgba(255, 255, 255, 0.7); line-height: 1.6; }
+/* Brand column */
+.footer-brand-link {
+  display: flex;
+  gap: 14px;
+  text-decoration: none;
+  color: inherit;
+  align-items: center;
+  cursor: default;
+}
 
-.footer-links         { list-style: none; padding: 0; }
-.footer-links li      { margin-bottom: 8px; }
-.footer-links a       { color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: var(--transition); }
-.footer-links a:hover { color: white; }
+.footer-brand-link * { cursor: default; }
 
-.footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 20px;
+.footer-brand-media {
+  width: 140px;
+  height: 140px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.footer-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.25));
+}
+
+/* Fallback text mark shown when image fails */
+.footer-brand-mark {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.9), rgba(46, 125, 50, 1));
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(46, 125, 50, 0.28);
+}
+
+.footer-brand-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #fff;
+}
+
+.footer-brand-text {
+  color: rgba(233, 237, 241, 0.75);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+/* Content columns */
+.footer-col h4 {
+  font-size: 1rem;
+  margin-bottom: 12px;
+  color: #fff;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.footer-links a {
+  color: rgba(233, 237, 241, 0.78);
+  text-decoration: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+  display: inline-block;
+}
+
+.footer-links a:hover {
+  color: #7fd184;
+  transform: translateX(2px);
+}
+
+.footer-static-item {
+  color: rgba(233, 237, 241, 0.72);
+}
+
+/* Contact column */
+.footer-contact li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(233, 237, 241, 0.75);
+}
+
+.footer-contact i {
+  color: #7fd184;
+  width: 16px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Bottom bar */
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  padding-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.footer-bottom p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: rgba(233, 237, 241, 0.6);
+}
+
+.footer-bottom-cta {
+  color: #7fd184;
+  text-decoration: none;
+  font-weight: 600;
   font-size: 0.9rem;
 }
 
-/* Responsive */
+.footer-bottom-cta:hover { color: #a5e3a8; }
+
+/* ===================================================================
+   RESPONSIVE
+   =================================================================== */
+
+/* 992px: 2-column grid */
+@media (max-width: 992px) {
+  .footer-top {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+}
+
+/* 480px: single column */
 @media (max-width: 480px) {
-  .footer-content { grid-template-columns: 1fr; }
+  .footer-container { padding: 0 14px; }
+
+  .footer-top {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .footer-brand-link {
+    align-items: flex-start;
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .footer-brand-media {
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }

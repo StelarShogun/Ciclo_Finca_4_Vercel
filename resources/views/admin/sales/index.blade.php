@@ -134,7 +134,7 @@
         {{-- ==================== SALES TABLE ==================== --}}
         {{-- Label maps for status and payment method display --}}
         @php
-            $statusLabels  = ['pending' => 'Pendiente', 'completed' => 'Completado', 'cancelled' => 'Cancelado', 'refunded' => 'Reembolsado'];
+            $statusLabels  = ['pending' => 'Pendiente', 'completed' => 'Confirmada', 'cancelled' => 'Cancelado', 'refunded' => 'Reembolsado'];
             $paymentLabels = ['cash' => 'Efectivo', 'sinpe' => 'SINPE Móvil', 'transfer' => 'Transferencia'];
         @endphp
 
@@ -218,6 +218,13 @@
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     @if($sale->status === 'completed')
+                                        <a href="{{ route('sales.invoice', $sale->sale_id) }}"
+                                           target="_blank" rel="noopener noreferrer"
+                                           class="action-link-invoice"
+                                           title="Ver factura en formato estructurado">
+                                            <i class="fas fa-file-invoice" aria-hidden="true"></i>
+                                            Ver factura
+                                        </a>
                                         <button class="action-btn warning"
                                                 onclick="refundSale('{{ $sale->sale_id }}')"
                                                 title="Reembolsar">

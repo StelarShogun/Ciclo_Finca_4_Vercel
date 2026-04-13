@@ -9,12 +9,19 @@ use Illuminate\Support\Collection;
 
 /**
  * @property-read int|null $products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ClassificationDimension> $classificationDimensions
  */
 class Category extends Model
 {
     protected $table = 'categories';
 
     protected $primaryKey = 'category_id';
+
+    /** `{category}` en rutas usa `category_id`. */
+    public function getRouteKeyName(): string
+    {
+        return 'category_id';
+    }
 
     public $timestamps = true;
 
@@ -48,6 +55,12 @@ class Category extends Model
     public function childCategories(): HasMany
     {
         return $this->children();
+    }
+
+    /** CF4-84: atributos (Color, Talla…) por fila de categoría (suele ser subcategoría). Modelo: ClassificationDimension. */
+    public function classificationDimensions(): HasMany
+    {
+        return $this->hasMany(ClassificationDimension::class, 'category_id', 'category_id');
     }
 
     /**

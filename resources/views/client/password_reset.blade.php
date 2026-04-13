@@ -29,21 +29,31 @@
             <input type="hidden" name="token" value="{{ $token }}">
             <input type="hidden" name="gmail" value="{{ $gmail }}">
 
-            <div class="form-group mb-3 position-relative">
+            <div class="form-group mb-3">
                 <label for="reset-password" class="login-field-label">
                     <i class="fas fa-lock login-field-icon" aria-hidden="true"></i>
                     Nueva contraseña
                 </label>
-                <input type="password" id="reset-password" name="password" class="form-control" required
-                    minlength="8" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+                <div class="login-pass-wrap">
+                    <input type="password" id="reset-password" name="password" class="form-control" required
+                        minlength="8" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+                    <button type="button" class="login-pass-toggle" onclick="toggleResetPass('reset-password','eye-reset-1')">
+                        <i class="fas fa-eye" id="eye-reset-1"></i>
+                    </button>
+                </div>
             </div>
             <div class="form-group mb-3">
                 <label for="reset-password-confirm" class="login-field-label">
                     <i class="fas fa-lock login-field-icon" aria-hidden="true"></i>
                     Confirmar contraseña
                 </label>
-                <input type="password" id="reset-password-confirm" name="password_confirmation" class="form-control" required
-                    minlength="8" placeholder="Repite la contraseña" autocomplete="new-password">
+                <div class="login-pass-wrap">
+                    <input type="password" id="reset-password-confirm" name="password_confirmation" class="form-control" required
+                        minlength="8" placeholder="Repite la contraseña" autocomplete="new-password">
+                    <button type="button" class="login-pass-toggle" onclick="toggleResetPass('reset-password-confirm','eye-reset-2')">
+                        <i class="fas fa-eye" id="eye-reset-2"></i>
+                    </button>
+                </div>
             </div>
             <button type="submit" class="btn btn-primary btn-block btn-lg mt-2">
                 <i class="fas fa-check"></i>
@@ -56,4 +66,18 @@
 
 @push('styles')
     @vite(['resources/css/client/clients-users.css'])
+@endpush
+
+@push('scripts')
+<script>
+function toggleResetPass(inputId, eyeId) {
+    const input = document.getElementById(inputId);
+    const eye   = document.getElementById(eyeId);
+    if (!input || !eye) return;
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    eye.classList.toggle('fa-eye',      !show);
+    eye.classList.toggle('fa-eye-slash', show);
+}
+</script>
 @endpush
