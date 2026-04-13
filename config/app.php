@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Deploy helpers (HTTP migrate / seed)
+    |--------------------------------------------------------------------------
+    |
+    | In non-local environments, /run-migrations and /run-seeders require
+    | ?key=<DEPLOY_SECRET>. Set DEPLOY_SECRET in the host environment only.
+    |
+    */
+
+    'deploy_secret' => env('DEPLOY_SECRET'),
+
 ];
