@@ -6,10 +6,10 @@ use App\Http\Controllers\AdminOrderSettingsController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ClassificationCatalogController;
 use App\Http\Controllers\ClientPageController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ClassificationCatalogController;
 use App\Http\Controllers\ProductClassificationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SalesController;
@@ -20,33 +20,74 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+/**
+ * Allow HTTP-triggered migrate/seed only in local/testing, or when ?key= matches config('app.deploy_secret').
+ */
+$assertDeployHelperAllowed = function (Request $request): void {
+    if (app()->environment('local', 'testing')) {
+        return;
+    }
+    $secret = (string) config('app.deploy_secret', '');
+    if ($secret === '') {
+        abort(404);
+    }
+    if (! hash_equals($secret, (string) $request->query('key', ''))) {
+        abort(404);
+    }
+};
+
 // ============================================================
-// DEV UTILITIES — Remove before deploying to production
+// DEPLOY UTILITIES — Protected outside local/testing (see DEPLOY_SECRET)
 // ============================================================
 
-Route::get('/run-migrations', function () {
+Route::get('/run-migrations', function (Request $request) use ($assertDeployHelperAllowed) {
+    $assertDeployHelperAllowed($request);
     try {
-        Artisan::call('migrate', ['--force' => true]);
+        $exitCode = Artisan::call('migrate', ['--force' => true]);
+        $output = Artisan::output();
 
-        return '✅ Migrations executed successfully: <br><pre>'.Artisan::output().'</pre>';
-    } catch (Exception $e) {
-        return '❌ Error running migrations: '.$e->getMessage();
+        if ($exitCode !== 0) {
+            return response(
+                '❌ migrate exited with code '.$exitCode.'<br><pre>'.e($output).'</pre>',
+                500
+            );
+        }
+
+        return '✅ Migrations executed successfully:<br><pre>'.e($output).'</pre>';
+    } catch (Throwable $e) {
+        return response('❌ Error running migrations: '.e($e->getMessage()), 500);
     }
 });
 
-Route::get('/run-seeders/{class?}', function ($class = null) {
+Route::get('/run-seeders/{class?}', function (Request $request, ?string $class = null) use ($assertDeployHelperAllowed) {
+    $assertDeployHelperAllowed($request);
+
+    if ($class !== null && $class !== '') {
+        if (! preg_match('/^Database\\\\Seeders\\\\[A-Za-z0-9_]+$/', $class)) {
+            return response('❌ Invalid seeder class name.', 400);
+        }
+    }
+
     try {
         $params = ['--force' => true];
         if ($class) {
             $params['--class'] = $class;
         }
-        Artisan::call('db:seed', $params);
+        $exitCode = Artisan::call('db:seed', $params);
+        $output = Artisan::output();
 
-        return '✅ Seeder executed:<br><pre>'.Artisan::output().'</pre>';
-    } catch (Exception $e) {
-        return '❌ Error: '.$e->getMessage();
+        if ($exitCode !== 0) {
+            return response(
+                '❌ db:seed exited with code '.$exitCode.'<br><pre>'.e($output).'</pre>',
+                500
+            );
+        }
+
+        return '✅ Seeder executed:<br><pre>'.e($output).'</pre>';
+    } catch (Throwable $e) {
+        return response('❌ Error: '.e($e->getMessage()), 500);
     }
-});
+})->where('class', '[A-Za-z0-9\\\\_]+');
 
 // ============================================================
 // ADMIN ROUTES
@@ -150,11 +191,15 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
 // CLIENT ROUTES
 // ============================================================
 
-// Clears admin catalog preview mode and returns to admin panel
+// Clears admin catalog preview mode and returns to admin panel (or home if not admin)
 Route::get('/admin/catalog-exit', function () {
     session()->forget('admin_catalog_mode');
 
-    return redirect('/dashboard');
+    if (auth('admin')->check()) {
+        return redirect('/dashboard');
+    }
+
+    return redirect()->route('clients.home');
 })->name('admin.catalog.exit');
 
 // --- Public Pages ---
