@@ -174,8 +174,8 @@
                                 <tr>
                                     <td class="product-cell">
                                         <div class="product-thumb-wrap product-thumb-wrap--table">
-                                            {{-- Falls back to default image if none is set --}}
-                                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
+                                            {{-- MediaLibrary image with legacy fallback --}}
+                                            <img src="{{ $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
                                                  alt="{{ $product->name }}">
                                             <button type="button"
                                                     class="featured-star-btn {{ $product->is_featured ? 'is-featured' : '' }}"
@@ -259,7 +259,7 @@
                             <div class="product-card">
                                 <div class="product-card-header">
                                     <div class="product-thumb-wrap product-thumb-wrap--card">
-                                        <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
+                                        <img src="{{ $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
                                              alt="{{ $product->name }}" class="product-card-image">
                                         <button type="button"
                                                 class="featured-star-btn {{ $product->is_featured ? 'is-featured' : '' }}"

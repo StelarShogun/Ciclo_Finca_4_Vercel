@@ -105,6 +105,8 @@ class ProductController extends Controller
                 $firstBrand = $product->brands->first();
                 $productData['brand_id'] = $firstBrand instanceof Brand ? $firstBrand->id : null;
                 $productData['classification_value_ids'] = $product->classificationValues->pluck('id')->values()->all();
+                $productData['media_main']    = $product->getFirstMediaUrl('main_image');
+                $productData['media_gallery'] = $product->getMedia('gallery')->map(fn($m) => $m->getUrl())->values()->toArray();
 
                 return response()->json([
                     'success' => true,

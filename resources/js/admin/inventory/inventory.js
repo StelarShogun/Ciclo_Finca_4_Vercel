@@ -972,6 +972,42 @@ function smoothScrollTop() {
     const cancelViewProductBtn = qs('#cancel-view-product');
     const viewProductBody = qs('#view-product-body');
 
+    function initAdminViewCarousel() {
+        var track = document.getElementById('admin-carousel-track');
+        if (!track) return;
+        var slides = track.querySelectorAll('.carousel-slide');
+        var total  = slides.length;
+        if (total <= 1) return;
+        var prevBtn  = document.getElementById('admin-carousel-prev');
+        var nextBtn  = document.getElementById('admin-carousel-next');
+        var dotsWrap = document.getElementById('admin-carousel-dots');
+        var dots     = dotsWrap ? Array.from(dotsWrap.querySelectorAll('.carousel-dot')) : [];
+        var current  = 0;
+
+        function goTo(index) {
+            current = Math.max(0, Math.min(total - 1, index));
+            track.style.transform = 'translateX(-' + (current * 100) + '%)';
+            dots.forEach(function (d, i) { d.classList.toggle('active', i === current); });
+            if (prevBtn) prevBtn.disabled = current === 0;
+            if (nextBtn) nextBtn.disabled = current === total - 1;
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', function () { goTo(current - 1); });
+        if (nextBtn) nextBtn.addEventListener('click', function () { goTo(current + 1); });
+        dots.forEach(function (d, i) { d.addEventListener('click', function () { goTo(i); }); });
+
+        var startX = null;
+        track.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
+        track.addEventListener('touchend', function (e) {
+            if (startX === null) return;
+            var diff = startX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 40) goTo(diff > 0 ? current + 1 : current - 1);
+            startX = null;
+        }, { passive: true });
+
+        goTo(0);
+    }
+
     viewDetailsBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             setActionButtonLoading(btn, true, 'Ver detalles');
@@ -992,11 +1028,40 @@ function smoothScrollTop() {
                 setModalLoading(viewProductModal, false);
                 if(data.success){
                     const product = data.data;
+                    // Build image carousel slides from MediaLibrary URLs, fallback to legacy field
+                    const allImages = [];
+                    if (product.media_main) allImages.push(product.media_main);
+                    if (Array.isArray(product.media_gallery)) allImages.push(...product.media_gallery);
+                    if (!allImages.length && product.image) allImages.push('/assets/images/products/' + product.image);
+
+                    let imageHtml;
+                    if (!allImages.length) {
+                        imageHtml = '<p>No hay imagen</p>';
+                    } else if (allImages.length === 1) {
+                        imageHtml = `<img src="${allImages[0]}" alt="${product.name}" style="max-width:100%;height:auto;border-radius:var(--border-radius);margin-top:10px;">`;
+                    } else {
+                        const slides = allImages.map(url =>
+                            `<div class="carousel-slide"><img src="${url}" alt="${product.name}"></div>`
+                        ).join('');
+                        const dots = allImages.map((_, i) =>
+                            `<button class="carousel-dot${i === 0 ? ' active' : ''}" aria-label="Imagen ${i + 1}"></button>`
+                        ).join('');
+                        imageHtml = `
+                            <div class="admin-product-carousel" style="margin-top:10px;">
+                                <div class="carousel-viewport">
+                                    <div class="carousel-track" id="admin-carousel-track">${slides}</div>
+                                </div>
+                                <button class="carousel-btn carousel-btn--prev" id="admin-carousel-prev" disabled aria-label="Anterior">&#8249;</button>
+                                <button class="carousel-btn carousel-btn--next" id="admin-carousel-next" aria-label="Siguiente">&#8250;</button>
+                                <div class="carousel-dots" id="admin-carousel-dots">${dots}</div>
+                            </div>`;
+                    }
+
                     viewProductBody.innerHTML = `
                         <div class="product-details-grid">
                             <div class="product-details-item">
                                 <label><i class="fas fa-image icon"></i> Imagen:</label>
-                                ${product.image ? `<img src="/assets/images/products/${product.image}" alt="${product.name}" style="max-width: 100%; height: auto; border-radius: var(--border-radius); margin-top: 10px;">` : '<p>No hay imagen</p>'}
+                                ${imageHtml}
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-tag icon"></i> Nombre:</label>
@@ -1040,6 +1105,7 @@ function smoothScrollTop() {
                             </div>
                         </div>
                     `;
+                    initAdminViewCarousel();
                     viewProductModal.classList.add('active');
                 } else {
                     Swal.fire({
