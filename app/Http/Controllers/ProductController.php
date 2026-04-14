@@ -13,6 +13,7 @@ use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
@@ -51,15 +52,36 @@ class ProductController extends Controller
                 return $product;
             });
 
-            // Main image: singleFile() ensures only one exists at a time
+            // Save images to public/images/{product_name}/ then register with MediaLibrary
+            $folderPath = public_path('images/' . $product->name);
+            if (! is_dir($folderPath)) {
+                mkdir($folderPath, 0755, true);
+            }
+            $slug = Str::slug($product->name, '_');
+
             if ($request->hasFile('image')) {
-                $product->addMediaFromRequest('image')->toMediaCollection('main_image');
+                $file     = $request->file('image');
+                $ext      = $file->extension() ?: $file->getClientOriginalExtension();
+                $filename = $slug . '_main.' . $ext;
+                $file->move($folderPath, $filename);
+                $product->addMedia($folderPath . '/' . $filename)
+                    ->preservingOriginal()
+                    ->toMediaCollection('main_image');
             }
 
-            // Gallery: each file is appended as a separate media item
             if ($request->hasFile('images')) {
+                $i = 2;
                 foreach ($request->file('images') as $file) {
-                    $product->addMedia($file)->toMediaCollection('gallery');
+                    if (! $file->isValid() || ! str_starts_with($file->getMimeType() ?? '', 'image/')) {
+                        continue;
+                    }
+                    $ext      = $file->extension() ?: $file->getClientOriginalExtension();
+                    $filename = $slug . '_' . $i . '.' . $ext;
+                    $file->move($folderPath, $filename);
+                    $product->addMedia($folderPath . '/' . $filename)
+                        ->preservingOriginal()
+                        ->toMediaCollection('gallery');
+                    $i++;
                 }
             }
 
@@ -175,16 +197,47 @@ class ProductController extends Controller
                 return $p;
             });
 
+            // Save images to public/images/{product_name}/ then register with MediaLibrary
+            $folderPath = public_path('images/' . $product->name);
+            if (! is_dir($folderPath)) {
+                mkdir($folderPath, 0755, true);
+            }
+            $slug = Str::slug($product->name, '_');
+
             // Replace main image when a new one is uploaded (singleFile handles deletion of the old one)
             if ($request->hasFile('image')) {
-                $product->addMediaFromRequest('image')->toMediaCollection('main_image');
+                $file = $request->file('image');
+                $ext  = $file->extension() ?: $file->getClientOriginalExtension();
+                // Remove any existing main file for this product
+                foreach (glob($folderPath . '/' . $slug . '_main.*') ?: [] as $old) {
+                    @unlink($old);
+                }
+                $filename = $slug . '_main.' . $ext;
+                $file->move($folderPath, $filename);
+                $product->addMedia($folderPath . '/' . $filename)
+                    ->preservingOriginal()
+                    ->toMediaCollection('main_image');
             }
 
             // Replace the entire gallery when new files are provided
             if ($request->hasFile('images')) {
+                // Remove existing numbered gallery files from the folder
+                foreach (glob($folderPath . '/' . $slug . '_[0-9]*.{jpg,jpeg,png,webp,gif,avif}', GLOB_BRACE) ?: [] as $old) {
+                    @unlink($old);
+                }
                 $product->clearMediaCollection('gallery');
+                $i = 2;
                 foreach ($request->file('images') as $file) {
-                    $product->addMedia($file)->toMediaCollection('gallery');
+                    if (! $file->isValid() || ! str_starts_with($file->getMimeType() ?? '', 'image/')) {
+                        continue;
+                    }
+                    $ext      = $file->extension() ?: $file->getClientOriginalExtension();
+                    $filename = $slug . '_' . $i . '.' . $ext;
+                    $file->move($folderPath, $filename);
+                    $product->addMedia($folderPath . '/' . $filename)
+                        ->preservingOriginal()
+                        ->toMediaCollection('gallery');
+                    $i++;
                 }
             }
 

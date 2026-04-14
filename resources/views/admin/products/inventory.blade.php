@@ -388,9 +388,9 @@
                     {{-- Multiple images rendered as a carousel on the product page --}}
                     <div class="form-group">
                         <label for="new-images">Imágenes adicionales (carrusel)</label>
-                        <input type="file" id="new-images" name="images[]" accept="image/*" multiple>
+                        <input type="file" id="new-images" name="images[]" accept="image/*" multiple webkitdirectory>
                         <small class="form-text text-muted">
-                            Opcional. Varias imágenes se mostrarán en un carrusel en la ficha del producto.
+                            Opcional. Selecciona una carpeta o varios archivos. Las imágenes se mostrarán en un carrusel en la ficha del producto.
                         </small>
                     </div>
                     <div class="form-row">
@@ -525,8 +525,8 @@
                     {{-- Uploading new images replaces the existing carousel set --}}
                     <div class="form-group">
                         <label for="edit-images">Imágenes adicionales (carrusel)</label>
-                        <input type="file" id="edit-images" name="images[]" accept="image/*" multiple>
-                        <small class="form-text text-muted">Opcional. Al subir nuevas, reemplazan las actuales del carrusel.</small>
+                        <input type="file" id="edit-images" name="images[]" accept="image/*" multiple webkitdirectory>
+                        <small class="form-text text-muted">Opcional. Selecciona una carpeta o varios archivos. Al subir nuevas, reemplazan las actuales del carrusel.</small>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
