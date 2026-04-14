@@ -597,6 +597,40 @@ function smoothScrollTop() {
     const newSubcategory = qs('#new-subcategory');
     const newFinalCategory = qs('#new-category');
 
+    // --- Gallery input validation (webkitdirectory may pick non-image files) ---
+    const VALID_IMAGE_TYPES = ['image/jpeg','image/png','image/gif','image/svg+xml','image/webp','image/avif'];
+
+    function validateGalleryInput(inputEl, hintEl) {
+        if (!inputEl || !inputEl.files || inputEl.files.length === 0) return true;
+        const images = Array.from(inputEl.files).filter(f => VALID_IMAGE_TYPES.includes(f.type));
+        if (images.length === 0) {
+            Swal.fire({
+                title: 'Sin imágenes válidas',
+                text: 'La carpeta seleccionada no contiene imágenes (jpeg, png, webp, gif, svg, avif). Seleccioná una carpeta con imágenes.',
+                icon: 'warning',
+                confirmButtonText: 'Entendido',
+            });
+            inputEl.value = '';
+            if (hintEl) hintEl.textContent = 'Ningún archivo seleccionado';
+            return false;
+        }
+        if (hintEl) hintEl.textContent = images.length + ' imagen' + (images.length > 1 ? 'es' : '') + ' seleccionada' + (images.length > 1 ? 's' : '');
+        return true;
+    }
+
+    const newImagesInput  = qs('#new-images');
+    const editImagesInput = qs('#edit-images');
+
+    newImagesInput?.addEventListener('change', function () {
+        const hint = this.closest('.form-group')?.querySelector('small');
+        validateGalleryInput(this, hint);
+    });
+
+    editImagesInput?.addEventListener('change', function () {
+        const hint = this.closest('.form-group')?.querySelector('small');
+        validateGalleryInput(this, hint);
+    });
+
     if (openNewProductModalBtn) {
         openNewProductModalBtn.addEventListener('click', () => {
             if (newProductForm) {
@@ -652,8 +686,21 @@ function smoothScrollTop() {
             }
             qs('#new-brand-combobox')?.classList.remove('error');
 
+            // Validate gallery: if a folder was selected, ensure it has at least one image
+            if (newImagesInput?.files?.length > 0) {
+                const hint = newImagesInput.closest('.form-group')?.querySelector('small');
+                if (!validateGalleryInput(newImagesInput, hint)) return;
+            }
+
             setButtonLoading(saveNewProductBtn, true);
             const formData = new FormData(newProductForm);
+            // Rebuild images[] with only valid image files (webkitdirectory may include non-images)
+            formData.delete('images[]');
+            if (newImagesInput?.files?.length > 0) {
+                Array.from(newImagesInput.files)
+                    .filter(f => VALID_IMAGE_TYPES.includes(f.type))
+                    .forEach(f => formData.append('images[]', f));
+            }
             formData.set('is_featured', qs('#new-featured')?.checked ? '1' : '0');
 
             smartFetch(newProductForm.action, {
@@ -672,13 +719,14 @@ function smoothScrollTop() {
                 if (data.success) {
                     newProductModal.classList.remove('active');
                     Swal.fire({
-                        title: 'Éxito',
+                        title: 'Producto creado',
                         text: data.message,
                         icon: 'success',
-                        confirmButtonText: 'Entendido'
-                    }).then(() => {
-                        location.reload();
-                    });
+                        timer: 1500,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                    }).then(() => { location.reload(); });
+                    location.reload();
                 } else if (data.errors) {
                     // Remove previous error messages
                     qsa('.error-message', newProductForm).forEach(el => el.remove());
@@ -887,8 +935,21 @@ function smoothScrollTop() {
             }
             qs('#edit-brand-combobox')?.classList.remove('error');
 
+            // Validate gallery: if a folder was selected, ensure it has at least one image
+            if (editImagesInput?.files?.length > 0) {
+                const hint = editImagesInput.closest('.form-group')?.querySelector('small');
+                if (!validateGalleryInput(editImagesInput, hint)) return;
+            }
+
             setButtonLoading(saveEditBtn, true);
             const formData = new FormData(editProductForm);
+            // Rebuild images[] with only valid image files
+            formData.delete('images[]');
+            if (editImagesInput?.files?.length > 0) {
+                Array.from(editImagesInput.files)
+                    .filter(f => VALID_IMAGE_TYPES.includes(f.type))
+                    .forEach(f => formData.append('images[]', f));
+            }
             formData.append('_method', 'PUT');
             formData.set('is_featured', qs('#edit-featured')?.checked ? '1' : '0');
 
@@ -908,13 +969,14 @@ function smoothScrollTop() {
                 if (data.success) {
                     editModal.classList.remove('active');
                     Swal.fire({
-                        title: 'Éxito',
+                        title: 'Producto actualizado',
                         text: data.message,
                         icon: 'success',
-                        confirmButtonText: 'Entendido'
-                    }).then(() => {
-                        location.reload();
-                    });
+                        timer: 1500,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                    }).then(() => { location.reload(); });
+                    location.reload();
                 } else if (data.errors) {
                     qsa('.error-message', editProductForm).forEach(el => el.remove());
 
