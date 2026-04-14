@@ -9,7 +9,7 @@
     if ($metaDesc === '') {
         $metaDesc = $product->name.' — Ciclo Finca 4';
     }
-    $ogImage = asset('assets/images/products/'.($product->image ?? 'default.png'));
+    $ogImage = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/'.($product->image ?? 'default.png'));
 @endphp
 <link rel="canonical" href="{{ $canonicalProductUrl }}" />
 <meta name="description" content="{{ $metaDesc }}" />
@@ -42,13 +42,40 @@
             <span>{{ $product->name }}</span>
         </nav>
 
+        @php
+    $mainUrl     = $product->getFirstMediaUrl('main_image');
+    $galleryUrls = $product->getMedia('gallery')->map(fn($m) => $m->getUrl())->toArray();
+    $fallbackUrl = asset('assets/images/products/' . ($product->image ?? 'default.png'));
+    $allImages   = array_values(array_filter(array_merge($mainUrl ? [$mainUrl] : [], $galleryUrls)));
+    if (empty($allImages)) { $allImages = [$fallbackUrl]; }
+@endphp
+
         <div class="product-detail-layout">
             <div class="product-detail-image">
-                <!-- Fallback to favicon if product image is missing -->
-                <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}" 
-                     alt="{{ $product->name }}"
-                     data-fallback-src="{{ asset('favicon.svg') }}"
-                     onerror="this.src=this.dataset.fallbackSrc;">
+                <div class="product-carousel" id="product-carousel">
+                    <div class="carousel-viewport">
+                        <div class="carousel-track" id="carousel-track">
+                            @foreach($allImages as $imgUrl)
+                                <div class="carousel-slide">
+                                    <img src="{{ $imgUrl }}" alt="{{ $product->name }}">
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @if(count($allImages) > 1)
+                        <button class="carousel-btn carousel-btn--prev" id="carousel-prev" aria-label="Imagen anterior" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="carousel-btn carousel-btn--next" id="carousel-next" aria-label="Imagen siguiente">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <div class="carousel-dots" id="carousel-dots">
+                            @foreach($allImages as $i => $imgUrl)
+                                <button class="carousel-dot {{ $i === 0 ? 'active' : '' }}" data-index="{{ $i }}" aria-label="Imagen {{ $i + 1 }}"></button>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
             </div>
 
             <div class="product-detail-info">
@@ -148,8 +175,8 @@
                         <div class="product-card">
                             <div class="product-image">
                                 <a href="{{ $related->clientProductUrl() }}">
-                                    <img src="{{ asset('assets/images/products/' . ($related->image ?? 'default.png')) }}"
-                                         alt="{{ $related->name }}"
+                                    @php $relatedImgUrl = $related->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($related->image ?? 'default.png')); @endphp
+                                    <img src="{{ $relatedImgUrl }}" alt="{{ $related->name }}"
                                          data-fallback-src="{{ asset('favicon.svg') }}"
                                          onerror="this.src=this.dataset.fallbackSrc;">
                                 </a>

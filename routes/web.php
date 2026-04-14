@@ -132,6 +132,9 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
 
     // CF4-29 — featured toggle
     Route::post('/products/{id}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
+    // Media management (Spatie MediaLibrary)
+    Route::post('/products/{id}/gallery/{mediaId}/promote', [ProductController::class, 'promoteToMain'])->name('products.gallery.promote');
+    Route::delete('/products/{id}/gallery/{mediaId}', [ProductController::class, 'removeGalleryImage'])->name('products.gallery.destroy');
     Route::resource('products', ProductController::class)->except(['create']);
     Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
     Route::get('/inventory/export/{format?}', [ProductController::class, 'export'])->name('products.export');
