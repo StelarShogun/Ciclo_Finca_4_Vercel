@@ -383,6 +383,11 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* Buttons in header should not look like links */
+.sales-header a.btn {
+  text-decoration: none;
+}
 .sales-header a:hover { opacity: 0.92; }
 .sales-actions   { display: flex; gap: 15px; align-items: center; }
 

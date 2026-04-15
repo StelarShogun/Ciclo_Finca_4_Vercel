@@ -14,6 +14,7 @@
 
     @php
         $stateLabels = [
+            'draft'     => 'Borrador',
             'pending'   => 'Pendiente',
             'confirmed' => 'Confirmado',
             'delivered' => 'Entregado',
@@ -33,6 +34,12 @@
                     <a href="{{ route('admin.orders.index') }}">Órdenes</a>.
                 </p>
             </div>
+            <div class="sales-actions">
+                <a href="{{ route('admin.supplier-orders.create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Nuevo pedido
+                </a>
+            </div>
         </header>
 
         <div class="orders-table-card">
@@ -41,6 +48,7 @@
                     <label for="supplier-orders-state">Estado</label>
                     <select id="supplier-orders-state" name="state">
                         <option value="">Todos</option>
+                        <option value="draft"     {{ request('state') === 'draft'     ? 'selected' : '' }}>Borrador</option>
                         <option value="pending"   {{ request('state') === 'pending'   ? 'selected' : '' }}>Pendiente</option>
                         <option value="confirmed" {{ request('state') === 'confirmed' ? 'selected' : '' }}>Confirmado</option>
                         <option value="delivered" {{ request('state') === 'delivered' ? 'selected' : '' }}>Entregado</option>
@@ -56,10 +64,12 @@
                     <input type="date" id="date_to" name="date_to" value="{{ request('date_to') }}">
                 </div>
                 <div class="filter-group orders-search-wrap">
-                    <label for="supplier-orders-search">Buscar</label>
-                    <i class="fas fa-search" aria-hidden="true"></i>
-                    <input type="text" id="supplier-orders-search" name="search" value="{{ request('search') }}"
-                           placeholder="Nº pedido o proveedor" autocomplete="off">
+                    <label for="supplier-orders-search">Buscar (PO / proveedor / producto)</label>
+                    <div class="orders-search-field">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="text" id="supplier-orders-search" name="search" value="{{ request('search') }}"
+                               placeholder="Ej: PO-2026-0001, Trek, grasa…" autocomplete="off">
+                    </div>
                 </div>
                 <div class="orders-toolbar-actions">
                     <button type="submit" class="btn btn-primary btn-sm">
@@ -69,14 +79,41 @@
                 </div>
             </form>
 
+            @php
+                $base = request()->except('state', 'page');
+                $activeState = (string) request('state', '');
+                $pill = function (string $value, string $label) use ($base, $activeState) {
+                    $qs = array_merge($base, $value !== '' ? ['state' => $value] : []);
+                    $url = route('admin.supplier-orders.index', $qs);
+                    $isActive = $activeState === $value;
+
+                    return '<a href="'.$url.'" class="btn btn-sm '.($isActive ? 'btn-primary' : 'btn-secondary').'" style="margin-right:6px; margin-bottom:6px;">'.$label.'</a>';
+                };
+            @endphp
+
+            <div class="orders-toolbar" style="padding-top:0; border-top:none;">
+                <div class="filter-group" style="flex:1;">
+                    <label style="opacity:.8;">Filtros rápidos</label>
+                    <div>
+                        {!! $pill('', 'Todos') !!}
+                        {!! $pill('draft', 'Borrador') !!}
+                        {!! $pill('pending', 'Pendiente') !!}
+                        {!! $pill('confirmed', 'Confirmado') !!}
+                        {!! $pill('delivered', 'Entregado') !!}
+                        {!! $pill('cancelled', 'Cancelado') !!}
+                    </div>
+                </div>
+            </div>
+
             <div class="sales-table-container">
                 <table class="sales-table cf4-purchases-table">
                     <thead>
                         <tr>
-                            <th>Nº Pedido</th>
+                            <th>Nº Pedido (PO)</th>
                             <th>Proveedor</th>
                             <th>Productos</th>
                             <th>Fecha</th>
+                            <th>Entrega</th>
                             <th>Estado</th>
                             <th>Total</th>
                             <th>Acciones</th>
@@ -84,8 +121,17 @@
                     </thead>
                     <tbody>
                         @forelse($orders as $order)
-                            <tr>
-                                <td><strong>#{{ $order->num_order }}</strong></td>
+                            <tr data-order-id="{{ $order->num_order }}" data-order-state="{{ $order->state }}">
+                                <td>
+                                    @php
+                                        $poFull = $order->po_number ?? ('#'.$order->num_order);
+                                        $poShort = $poFull;
+                                        if (is_string($order->po_number) && preg_match('/^PO-(\d{4})-(\d{4})$/', $order->po_number, $m)) {
+                                            $poShort = 'PO-'.$m[2];
+                                        }
+                                    @endphp
+                                    <strong class="po-number" title="{{ $poFull }}">{{ $poShort }}</strong>
+                                </td>
                                 <td>
                                     @if($order->supplier)
                                         <button class="supplier-name-btn" type="button"
@@ -111,12 +157,31 @@
                                 </td>
                                 <td>{{ $order->date->format('d/m/Y H:i') }}</td>
                                 <td>
+                                    @php
+                                        $edd = $order->estimated_delivery_date;
+                                        $eddLabel = $edd?->format('d/m/Y') ?? '—';
+                                        $eddClass = '';
+                                        if ($edd) {
+                                            if ($edd->isPast() && $order->state !== 'delivered' && $order->state !== 'cancelled') {
+                                                $eddClass = 'edd-pill edd-late';
+                                            } elseif ($edd->isToday() && $order->state !== 'delivered' && $order->state !== 'cancelled') {
+                                                $eddClass = 'edd-pill edd-today';
+                                            }
+                                        }
+                                    @endphp
+                                    @if($eddClass)
+                                        <span class="{{ $eddClass }}">{{ $eddLabel }}</span>
+                                    @else
+                                        {{ $eddLabel }}
+                                    @endif
+                                </td>
+                                <td>
                                     @php $label = $stateLabels[$order->state] ?? ucfirst($order->state); @endphp
-                                    <span class="order-status-pill {{ $order->state }}">{{ $label }}</span>
+                                    <span class="order-status-pill {{ $order->state }}" data-role="order-state-pill">{{ $label }}</span>
                                 </td>
                                 <td><strong>₡{{ number_format($order->total, 0, ',', '.') }}</strong></td>
                                 <td>
-                                    <div class="actions-container">
+                                    <div class="actions-container" data-role="order-actions">
                                         <button class="action-btn secondary" type="button"
                                                 onclick="viewOrder('{{ $order->num_order }}')"
                                                 title="Ver detalles">
@@ -127,6 +192,17 @@
                                                     onclick="confirmOrder('{{ $order->num_order }}')"
                                                     title="Confirmar pedido">
                                                 <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="action-btn danger" type="button"
+                                                    onclick="cancelOrder('{{ $order->num_order }}')"
+                                                    title="Cancelar pedido">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        @elseif($order->state === 'draft')
+                                            <button class="action-btn success" type="button"
+                                                    onclick="sendOrder('{{ $order->num_order }}')"
+                                                    title="Enviar pedido (pasar a Pendiente)">
+                                                <i class="fas fa-paper-plane"></i>
                                             </button>
                                             <button class="action-btn danger" type="button"
                                                     onclick="cancelOrder('{{ $order->num_order }}')"
@@ -150,7 +226,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7">
+                                <td colspan="8">
                                     <div class="orders-empty">
                                         <div class="orders-empty-icon"><i class="fas fa-inbox"></i></div>
                                         <p style="margin:0; font-size:1rem;">No hay pedidos que coincidan con los filtros.</p>

@@ -61,9 +61,11 @@
                 </div>
                 <div class="filter-group orders-search-wrap">
                     <label for="orders-search">Buscar</label>
-                    <i class="fas fa-search" aria-hidden="true"></i>
-                    <input type="text" id="orders-search" name="search" value="{{ request('search') }}"
-                           placeholder="Nº pedido, factura o cliente" autocomplete="off">
+                    <div class="orders-search-field">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="text" id="orders-search" name="search" value="{{ request('search') }}"
+                               placeholder="Nº pedido, factura o cliente" autocomplete="off">
+                    </div>
                 </div>
                 <div class="orders-toolbar-actions">
                     <button type="submit" class="btn btn-primary btn-sm">

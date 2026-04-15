@@ -202,6 +202,11 @@ class Product extends Model
         ]);
     }
 
+    public static function skuFromId(int $productId): string
+    {
+        return 'BK-'.str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
+    }
+
     public function scopeLowStockAlert(Builder $query): Builder
     {
         return $query->activeInClientStore()
