@@ -86,17 +86,7 @@ Briefly describe what this PR changes and why it is needed.
 | 2 | | |
 | 3 | | |
 
-## 🔗 Relation to system requirements
 
-**Related functional requirements:**
-
-- RF-XXX
-- RF-XXX
-
-**Related use cases:**
-
-- CU-XX
-- CU-XX
 
 **Security:** *(if applicable)*
 
