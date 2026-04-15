@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminOrderSettingsController;
@@ -107,6 +108,11 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
     Route::get('/dashboard/export', [DashboardController::class, 'exportReport'])->name('dashboard.export');
 
+    // CF4-30 — reportes admin (hub + productos más vendidos)
+    Route::get('/reports', [ReportsController::class, 'index'])->name('admin.reports.index');
+    Route::get('/reports/productos-vendidos', [ReportsController::class, 'productSales'])->name('admin.reports.product-sales');
+    Route::get('/reports/productos-vendidos/table', [ReportsController::class, 'productSalesTable'])->name('admin.reports.product-sales.table');
+
     // Inventory / Products
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');
     // CF4-84 — catálogo CRUD dimensiones/valores por subcategoría
@@ -185,6 +191,21 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
 
         return redirect()->route('clients.catalog');
     })->name('admin.catalog.preview');
+
+    // Admin opens public store home — same session flag as catalog preview so the client header
+    // shows "Volver al panel" and POST /logout does not wipe the admin session (see web.php logout).
+    Route::get('/admin/visit-store', function () {
+        $admin = auth('admin')->user();
+        session([
+            'admin_catalog_mode' => [
+                'name' => $admin->name,
+                'first_surname' => $admin->first_surname,
+                'gmail' => $admin->gmail,
+            ],
+        ]);
+
+        return redirect()->route('clients.home');
+    })->name('admin.visit-store');
 });
 
 // ============================================================
@@ -229,9 +250,26 @@ Route::post('/recovery', [ClientUserController::class, 'resetPassword'])->name('
 Route::get('/recovery/verify', [ClientUserController::class, 'showRecoveryVerifyForm'])->name('clients.recovery.verify.form');
 Route::post('/recovery/verify', [ClientUserController::class, 'verifyRecoveryAndReset'])->name('clients.recovery.verify');
 
-// Logs out both guards to prevent inconsistent session state
+// Client logout: if an admin is still logged in (same session), do not invalidate the session or the
+// admin loses access when returning to /dashboard.
 Route::post('/logout', function (Request $request) {
     Auth::guard('clients')->logout();
+
+    if (Auth::guard('admin')->check()) {
+        $request->session()->forget([
+            'client_id',
+            'client_name',
+            'client_first_surname',
+            'client_second_surname',
+            'pending_client_id',
+            'pending_gmail',
+            'cart',
+        ]);
+        $request->session()->regenerateToken();
+
+        return redirect()->route('clients.home')->with('status', 'Sesión de cliente cerrada.');
+    }
+
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
