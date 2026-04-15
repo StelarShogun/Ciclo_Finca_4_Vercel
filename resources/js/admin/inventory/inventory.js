@@ -1067,6 +1067,13 @@ function smoothScrollTop() {
             startX = null;
         }, { passive: true });
 
+        // Keyboard arrow navigation (active while modal is open)
+        function onKeyDown(e) {
+            if (e.key === 'ArrowLeft')  goTo(current - 1);
+            if (e.key === 'ArrowRight') goTo(current + 1);
+        }
+        document.addEventListener('keydown', onKeyDown);
+
         goTo(0);
     }
 

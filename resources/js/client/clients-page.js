@@ -912,6 +912,12 @@ document.addEventListener('DOMContentLoaded', function () {
             startX = null;
         }, { passive: true });
 
+        // Keyboard arrow navigation
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowLeft')  goTo(current - 1);
+            if (e.key === 'ArrowRight') goTo(current + 1);
+        });
+
         goTo(0);
     })();
 
