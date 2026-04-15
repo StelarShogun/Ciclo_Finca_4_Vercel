@@ -8,6 +8,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Services\AuditLogger;
 use App\Services\ProductClassificationAssignmentService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Http\Request;
@@ -67,6 +68,15 @@ class ProductController extends Controller
 
                 return $product;
             });
+
+            $this->logAudit(
+                'product_create',
+                'Product created.',
+                [
+                    'product_id' => $product->product_id,
+                    'name' => $product->name,
+                ]
+            );
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -138,6 +148,16 @@ class ProductController extends Controller
             $product->is_featured = ! $product->is_featured;
             $product->save();
 
+            $this->logAudit(
+                'product_toggle_featured',
+                $product->is_featured ? 'Product marked as featured.' : 'Product removed from featured.',
+                [
+                    'product_id' => $product->product_id,
+                    'name' => $product->name,
+                    'is_featured' => (bool) $product->is_featured,
+                ]
+            );
+
             return response()->json([
                 'success' => true,
                 'is_featured' => (bool) $product->is_featured,
@@ -202,6 +222,15 @@ class ProductController extends Controller
                 return $p;
             });
 
+            $this->logAudit(
+                'product_update',
+                'Product updated.',
+                [
+                    'product_id' => $product->product_id,
+                    'name' => $product->name,
+                ]
+            );
+
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
@@ -243,11 +272,18 @@ class ProductController extends Controller
     public function destroy($id)
     {
         try {
-            DB::transaction(function () use ($id) {
+            $productName = null;
+            DB::transaction(function () use ($id, &$productName) {
                 $p = Product::findOrFail($id);
+                $productName = $p->name;
                 // Soft-delete by marking inactive rather than removing the record
                 $p->update(['status' => 'inactive']);
             });
+
+            $this->logAudit('product_delete', 'Product deactivated.', [
+                'product_id' => (int) $id,
+                'name' => $productName,
+            ]);
 
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
@@ -272,10 +308,17 @@ class ProductController extends Controller
     public function forceDelete($id)
     {
         try {
-            DB::transaction(function () use ($id) {
+            $productName = null;
+            DB::transaction(function () use ($id, &$productName) {
                 $p = Product::findOrFail($id);
+                $productName = $p->name;
                 $p->delete();
             });
+
+            $this->logAudit('product_force_delete', 'Product permanently deleted.', [
+                'product_id' => (int) $id,
+                'name' => $productName,
+            ]);
 
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
@@ -645,6 +688,16 @@ class ProductController extends Controller
                 DB::commit();
             }
 
+            $this->logAudit(
+                'products_import',
+                'Products import processed (XML).',
+                [
+                    'format' => 'xml',
+                    'imported' => $importados,
+                    'errors_count' => count($errores),
+                ]
+            );
+
             return $this->handleImportResult($importados, $errores);
 
         } catch (\Exception $e) {
@@ -685,6 +738,16 @@ class ProductController extends Controller
             DB::commit();
         }
 
+        $this->logAudit(
+            'products_import',
+            'Products import processed (CSV).',
+            [
+                'format' => 'csv',
+                'imported' => $importados,
+                'errors_count' => count($errores),
+            ]
+        );
+
         return $this->handleImportResult($importados, $errores);
     }
 
@@ -717,7 +780,29 @@ class ProductController extends Controller
             DB::commit();
         }
 
+        $this->logAudit(
+            'products_import',
+            'Products import processed (JSON).',
+            [
+                'format' => 'json',
+                'imported' => $importados,
+                'errors_count' => count($errores),
+            ]
+        );
+
         return $this->handleImportResult($importados, $errores);
+    }
+
+    private function logAudit(string $actionType, string $description, array $meta = []): void
+    {
+        try {
+            app(AuditLogger::class)->logAdminAction($actionType, 'products', $description, $meta);
+        } catch (\Throwable $e) {
+            Log::warning('Audit log write failed', [
+                'action_type' => $actionType,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function createProductFromData($data)
