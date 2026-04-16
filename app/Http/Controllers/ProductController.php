@@ -419,8 +419,7 @@ class ProductController extends Controller
                 'image' => $product->image ?? 'default.png',
                 'category' => (object) ['name' => optional($product->category)->name ?? 'Uncategorized'],
                 'stock' => $product->stock_current,
-                'stock_status_class' => $product->stock_current > Product::CLIENT_LOW_STOCK_THRESHOLD ? 'success' :
-                                      ($product->stock_current > 0 ? 'warning' : 'danger'),
+                'stock_status_class' => $product->adminInventoryStockBadgeClass(),
                 'price' => $product->sale_price,
                 'status' => ucfirst(str_replace('_', ' ', $product->status)),
                 'status_class' => $product->status === 'active' ? 'success' :
