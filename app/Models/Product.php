@@ -54,6 +54,8 @@ class Product extends Model
         'updated_at' => 'datetime',
     ];
 
+    public const CLIENT_LOW_STOCK_THRESHOLD = 10;
+
     public const MSG_CLIENT_AGOTADO = 'Producto agotado';
 
     public const MSG_CLIENT_STOCK_INSUFICIENTE = 'Stock insuficiente';
@@ -130,7 +132,7 @@ class Product extends Model
         )->withPivot('classification_dimension_id');
     }
 
-    /** CF4-62 / CF4-50: Etiqueta corta para listados del cliente (umbral = stock mínimo por producto). */
+    /** CF4-62: Etiqueta corta para listados del cliente. */
     public function clientCatalogStockLabel(): string
     {
         $st = $this->effectiveStatus();
@@ -143,7 +145,7 @@ class Product extends Model
             return 'No disponible';
         }
 
-        if ((int) $this->stock_minimum > 0 && $this->stock_current <= (int) $this->stock_minimum) {
+        if ($this->stock_current <= self::CLIENT_LOW_STOCK_THRESHOLD) {
             return 'Quedan pocas unidades';
         }
 
@@ -163,7 +165,7 @@ class Product extends Model
         }
 
         if ($st === 'active' && $this->stock_current > 0) {
-            if ((int) $this->stock_minimum > 0 && $this->stock_current <= (int) $this->stock_minimum) {
+            if ($this->stock_current <= self::CLIENT_LOW_STOCK_THRESHOLD) {
                 return 'Quedan pocas unidades';
             }
 
@@ -177,8 +179,7 @@ class Product extends Model
     {
         return $this->effectiveStatus() === 'active'
             && $this->stock_current > 0
-            && (int) $this->stock_minimum > 0
-            && $this->stock_current <= (int) $this->stock_minimum;
+            && $this->stock_current <= self::CLIENT_LOW_STOCK_THRESHOLD;
     }
 
     public function isPurchasableByClient(): bool
@@ -201,51 +202,25 @@ class Product extends Model
         ]);
     }
 
-    /** CF4-50: Stock por encima de cero pero en o por debajo del mínimo configurado (si el mínimo es 0, no alerta). */
     public function scopeLowStockAlert(Builder $query): Builder
     {
         return $query->activeInClientStore()
-            ->where('stock_minimum', '>', 0)
             ->where('stock_current', '>', 0)
-            ->whereColumn('stock_current', '<=', 'stock_minimum');
-    }
-
-    /** Badge en inventario admin: danger = sin stock, warning = en o bajo el mínimo, success = por encima del mínimo. */
-    public function adminInventoryStockBadgeClass(): string
-    {
-        if ($this->stock_current <= 0) {
-            return 'danger';
-        }
-
-        if ((int) $this->stock_minimum > 0 && $this->stock_current <= (int) $this->stock_minimum) {
-            return 'warning';
-        }
-
-        return 'success';
-    }
-
-    /**
-     * Para exportes PDF: 'high' = stock OK, 'medium' = bajo respecto al mínimo, 'low' = agotado.
-     */
-    public static function adminStockExportTier(int $stockCurrent, int $stockMinimum): string
-    {
-        if ($stockCurrent <= 0) {
-            return 'low';
-        }
-        if ($stockMinimum > 0 && $stockCurrent <= $stockMinimum) {
-            return 'medium';
-        }
-
-        return 'high';
+            ->where('stock_current', '<=', self::CLIENT_LOW_STOCK_THRESHOLD);
     }
 
     protected static function booted(): void
     {
         static::saving(function ($p) {
             if ($p->effectiveStatus() === 'active') {
-                if ((int) $p->stock_minimum < 0) {
+                if ($p->stock_minimum < 1) {
                     throw ValidationException::withMessages([
-                        'stock_minimum' => 'El stock mínimo no puede ser negativo.',
+                        'stock_minimum' => 'El stock mínimo debe ser ≥ 1 para productos activos.',
+                    ]);
+                }
+                if ($p->stock_current < $p->stock_minimum) {
+                    throw ValidationException::withMessages([
+                        'stock_current' => 'El stock actual no puede ser menor que el stock mínimo.',
                     ]);
                 }
             }
