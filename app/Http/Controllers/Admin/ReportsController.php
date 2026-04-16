@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SalesPerformanceRangeRequest;
 use App\Models\Product;
 use App\Services\SalesPerformanceDateRangeService;
+use App\Services\SalesPerformanceMetricsService;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Query\Builder;
@@ -30,7 +31,35 @@ class ReportsController extends Controller
     {
         $resolved = $rangeService->resolve($request->validated());
 
-        return response()->json([
+        return response()->json($this->salesPerformanceRangePayload($resolved));
+    }
+
+    /**
+     * CF4-24 Fase 2: totals for completed sales in the selected period (count + revenue).
+     */
+    public function salesPerformanceMetrics(
+        SalesPerformanceRangeRequest $request,
+        SalesPerformanceDateRangeService $rangeService,
+        SalesPerformanceMetricsService $metricsService,
+    ) {
+        $resolved = $rangeService->resolve($request->validated());
+        $current = $metricsService->aggregateCompletedSales(
+            $resolved['current_start'],
+            $resolved['current_end'],
+        );
+
+        return response()->json(array_merge($this->salesPerformanceRangePayload($resolved), [
+            'current_metrics' => $current,
+        ]));
+    }
+
+    /**
+     * @param  array<string, mixed>  $resolved
+     * @return array<string, mixed>
+     */
+    private function salesPerformanceRangePayload(array $resolved): array
+    {
+        return [
             'success' => true,
             'preset' => $resolved['preset'],
             'from' => $resolved['from'],
@@ -45,7 +74,7 @@ class ReportsController extends Controller
                 'end' => $resolved['previous_end']->toIso8601String(),
                 'label' => $this->humanRangeLabel($resolved['previous_start'], $resolved['previous_end']),
             ],
-        ]);
+        ];
     }
 
     public function productSales(Request $request)
