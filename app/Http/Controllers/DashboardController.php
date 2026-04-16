@@ -10,6 +10,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
@@ -22,13 +24,13 @@ class DashboardController extends Controller
 
         try {
             // Abort early if required tables are missing to avoid misleading query errors
-            if (! \Schema::hasTable('products') || ! \Schema::hasTable('categories') || ! \Schema::hasTable('suppliers') || ! \Schema::hasTable('sales')) {
+            if (! Schema::hasTable('products') || ! Schema::hasTable('categories') || ! Schema::hasTable('suppliers') || ! Schema::hasTable('sales')) {
                 throw new \Exception('Database tables not found');
             }
 
             if (config('app.debug')) {
                 $categoriasExistentes = Category::count();
-                \Log::debug("Categorías en DB: {$categoriasExistentes}");
+                Log::debug("Categorías en DB: {$categoriasExistentes}");
             }
 
             $totalProducts = Product::count();
@@ -39,12 +41,14 @@ class DashboardController extends Controller
                 ->where('status', 'completed')
                 ->sum('total');
 
-            $lowStockProducts = Product::lowStockAlert()->count();
+            // Filtra estrictamente productos cuyo stock actual sea menor al mínimo configurado
+            $lowStockProducts = Product::whereColumn('stock_current', '<', 'stock_minimum')
+                ->count();
 
             $lowStockProductsList = Product::with(['category', 'supplier'])
-                ->lowStockAlert()
+                ->whereColumn('stock_current', '<', 'stock_minimum')
                 ->orderBy('stock_current', 'asc')
-                ->limit(5)
+                ->limit(10)
                 ->get();
 
             $recentSales = Sale::with(['client'])
@@ -132,7 +136,7 @@ class DashboardController extends Controller
             ));
 
         } catch (\Exception $e) {
-            \Log::error('Error en DashboardController: '.$e->getMessage(), [
+            Log::error('Error en DashboardController: '.$e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
@@ -162,7 +166,7 @@ class DashboardController extends Controller
     public function getDashboardData()
     {
         try {
-            if (! \Schema::hasTable('products') || ! \Schema::hasTable('categories') || ! \Schema::hasTable('suppliers') || ! \Schema::hasTable('sales')) {
+            if (! Schema::hasTable('products') || ! Schema::hasTable('categories') || ! Schema::hasTable('suppliers') || ! Schema::hasTable('sales')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Database tables not found',
@@ -177,7 +181,7 @@ class DashboardController extends Controller
                 ->where('status', 'completed')
                 ->sum('total');
 
-            $lowStockProducts = Product::lowStockAlert()->count();
+            $lowStockProducts = Product::whereColumn('stock_current', '<', 'stock_minimum')->count();
 
             return response()->json([
                 'success' => true,
@@ -189,7 +193,7 @@ class DashboardController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error en getDashboardData: '.$e->getMessage());
+            Log::error('Error en getDashboardData: '.$e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -201,7 +205,7 @@ class DashboardController extends Controller
     public function getChartData(Request $request)
     {
         // Default to the last 7 days if no period is specified
-        $period = $request->get('period', '7d');
+        $period = $request->input('period', '7d');
 
         try {
             $startDate = $this->getStartDate($period)->startOfDay();
@@ -247,7 +251,7 @@ class DashboardController extends Controller
 
     public function exportReport(Request $request)
     {
-        $format = $request->get('format', 'pdf');
+        $format = $request->input('format', 'pdf');
 
         try {
             $data = $this->getDashboardDataInternal();
@@ -297,7 +301,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Una entrada por día en el rango con total 0 si no hubo ventas (el gráfico no queda “vacío”).
+     * Una entrada por día en el rango con total 0 si no hubo ventas (el gráfico no queda "vacío").
      *
      * @param  iterable<int, Sale|object>  $rows  filas agregadas con columnas date/total (consulta SQL)
      * @return array<int, array{date: string, total: float}>
@@ -331,7 +335,7 @@ class DashboardController extends Controller
             'todaySales' => Sale::whereDate('sale_date', Carbon::today())
                 ->where('status', 'completed')
                 ->sum('total'),
-            'lowStockProducts' => Product::lowStockAlert()->count(),
+            'lowStockProducts' => Product::whereColumn('stock_current', '<', 'stock_minimum')->count(),
             'monthlySales' => Sale::whereMonth('sale_date', Carbon::now()->month)
                 ->whereYear('sale_date', Carbon::now()->year)
                 ->where('status', 'completed')
