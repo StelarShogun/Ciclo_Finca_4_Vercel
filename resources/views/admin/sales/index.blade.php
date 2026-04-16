@@ -125,6 +125,20 @@
                         <a href="{{ route('sales.index') }}" class="btn btn-primary filter-btn">
                             <i class="fas fa-times"></i> Limpiar
                         </a>
+                        @php
+                            $salesExportQuery = array_filter(
+                                request()->only(['status', 'date_range', 'start_date', 'end_date', 'payment_method', 'search']),
+                                fn ($v) => $v !== null && $v !== ''
+                            );
+                            $salesExportQs = http_build_query(array_merge($salesExportQuery, ['format' => 'csv']));
+                            $salesExportPdfQs = http_build_query(array_merge($salesExportQuery, ['format' => 'pdf']));
+                        @endphp
+                        <a href="{{ route('sales.export').'?'.$salesExportQs }}" class="btn btn-secondary filter-btn">
+                            <i class="fas fa-file-csv"></i> Exportar CSV
+                        </a>
+                        <a href="{{ route('sales.export').'?'.$salesExportPdfQs }}" class="btn btn-secondary filter-btn" target="_blank" rel="noopener noreferrer">
+                            <i class="fas fa-file-pdf"></i> Exportar PDF
+                        </a>
                     </div>
 
                 </div>

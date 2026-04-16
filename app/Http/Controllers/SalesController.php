@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\ReportPdfFilename;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,54 +22,9 @@ class SalesController extends Controller
         $salesStatusUi = in_array($statusFilter, ['cancelled', 'refunded', 'all'], true)
             ? $statusFilter
             : 'completed';
-        $dateRange = $request->get('date_range');
-        $paymentMethod = $request->get('payment_method');
-        $search = $request->get('search');
 
         $query = Sale::with(['client', 'sellerAdmin', 'saleItems.product']);
-
-        $query->notExpired();
-
-        $this->applyVentasStatusScope($query, $statusFilter);
-
-        if ($dateRange) {
-            switch ($dateRange) {
-                case 'today':
-                    $query->whereDate('sale_date', Carbon::today());
-                    break;
-                case 'week':
-                    $query->whereBetween('sale_date', [
-                        Carbon::now()->startOfWeek(),
-                        Carbon::now()->endOfWeek(),
-                    ]);
-                    break;
-                case 'month':
-                    $query->whereMonth('sale_date', Carbon::now()->month)
-                        ->whereYear('sale_date', Carbon::now()->year);
-                    break;
-                case 'custom':
-                    // Custom range is applied by the caller via additional query parameters
-                    break;
-            }
-        }
-
-        if ($paymentMethod) {
-            $query->where('payment_method', $paymentMethod);
-        }
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('sale_id', 'like', "%{$search}%")
-                    ->orWhere('invoice_number', 'like', "%{$search}%")
-                    ->orWhere('buyer_name', 'like', "%{$search}%")
-                    ->orWhere('buyer_email', 'like', "%{$search}%")
-                    ->orWhereHas('client', function ($subQ) use ($search) {
-                        $subQ->where('name', 'like', "%{$search}%")
-                            ->orWhere('first_surname', 'like', "%{$search}%")
-                            ->orWhere('gmail', 'like', "%{$search}%");
-                    });
-            });
-        }
+        $this->applySalesAdminListFilters($query, $request);
 
         $sales = $query->orderBy('sale_date', 'desc')->paginate(15)->withQueryString();
 
@@ -525,24 +484,17 @@ class SalesController extends Controller
     public function export(Request $request)
     {
         try {
-            $sales = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])
-                ->when($request->start_date, fn ($q) => $q->whereDate('sale_date', '>=', $request->start_date))
-                ->when($request->end_date, fn ($q) => $q->whereDate('sale_date', '<=', $request->end_date))
-                ->tap(fn ($q) => $this->applyVentasStatusScope($q, $request->get('status')))
-                ->when($request->payment_method, fn ($q) => $q->where('payment_method', $request->payment_method))
-                ->when($request->search, function ($q) use ($request) {
-                    $search = $request->search;
+            $format = strtolower((string) $request->get('format', 'csv'));
 
-                    return $q->where('sale_id', 'like', '%'.$search.'%')
-                        ->orWhere('invoice_number', 'like', '%'.$search.'%')
-                        ->orWhere('buyer_name', 'like', '%'.$search.'%')
-                        ->orWhere('buyer_email', 'like', '%'.$search.'%')
-                        ->orWhereHas('client', function ($sub) use ($search) {
-                            $sub->where('name', 'like', '%'.$search.'%')
-                                ->orWhere('first_surname', 'like', '%'.$search.'%')
-                                ->orWhere('gmail', 'like', '%'.$search.'%');
-                        });
-                })
+            $base = Sale::query();
+            $this->applySalesAdminListFilters($base, $request);
+
+            if ($format === 'pdf') {
+                return $this->exportSalesPdf($request, $base);
+            }
+
+            $sales = (clone $base)
+                ->with(['client', 'sellerAdmin', 'saleItems.product'])
                 ->orderBy('sale_date', 'desc')
                 ->get();
 
@@ -594,11 +546,145 @@ class SalesController extends Controller
             };
 
             return response()->stream($callback, 200, $headers);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error exporting sales: '.$e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * @param  Builder<Sale>  $base
+     */
+    private function exportSalesPdf(Request $request, Builder $base)
+    {
+        $maxRows = AdminPdfExportLimits::SALES_MAX_ROWS;
+        $totalMatching = (clone $base)->count();
+
+        $filterLines = $this->salesExportFilterLines($request);
+        if ($totalMatching > $maxRows) {
+            $filterLines[] = 'Nota: el PDF incluye como máximo '.$maxRows.' filas ('.$totalMatching.' ventas coinciden con los filtros).';
+        }
+
+        $totals = [
+            'count' => $totalMatching,
+            'sum_total' => (clone $base)->sum('total'),
+            'sum_subtotal' => (clone $base)->sum('subtotal'),
+            'sum_iva' => (clone $base)->sum('iva'),
+            'sum_discount' => (clone $base)->sum('discount'),
+        ];
+
+        $rows = (clone $base)
+            ->with(['client'])
+            ->orderBy('sale_date', 'desc')
+            ->limit($maxRows)
+            ->get();
+
+        $logoPath = public_path('assets/images/brand/logo-ciclo-finca-icon.png');
+
+        $pdf = PDF::loadView('admin.sales.sales-pdf', [
+            'sales' => $rows,
+            'totals' => $totals,
+            'pdfTitle' => 'Reporte de ventas',
+            'pdfSubtitle' => 'Listado filtrado — Ciclo Finca 4',
+            'logoPath' => is_file($logoPath) ? $logoPath : null,
+            'filterLines' => $filterLines,
+            'generatedFor' => 'Administración',
+        ]);
+
+        return $pdf->download(ReportPdfFilename::make('ventas'));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function salesExportFilterLines(Request $request): array
+    {
+        $lines = [];
+
+        $status = $request->query('status');
+        if (in_array($status, ['cancelled', 'refunded', 'all'], true)) {
+            $lines[] = 'Estado: '.$status;
+        } else {
+            $lines[] = 'Estado: confirmadas (completadas)';
+        }
+
+        if ($request->filled('date_range')) {
+            $lines[] = 'Rango: '.$request->date_range;
+        }
+        if ($request->filled('start_date') || $request->filled('end_date')) {
+            $lines[] = 'Fechas: '.($request->start_date ?: '…').' — '.($request->end_date ?: '…');
+        }
+
+        if ($request->filled('payment_method')) {
+            $lines[] = 'Método de pago: '.$request->payment_method;
+        }
+
+        if ($request->filled('search')) {
+            $lines[] = 'Búsqueda: '.$request->search;
+        }
+
+        return $lines;
+    }
+
+    /**
+     * @param  Builder<Sale>  $query
+     */
+    private function applySalesAdminListFilters(Builder $query, Request $request): void
+    {
+        $query->notExpired();
+
+        $statusFilter = $request->query('status');
+        $this->applyVentasStatusScope($query, $statusFilter);
+
+        if ($request->filled('start_date') || $request->filled('end_date')) {
+            if ($request->filled('start_date')) {
+                $query->whereDate('sale_date', '>=', $request->start_date);
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('sale_date', '<=', $request->end_date);
+            }
+        } else {
+            $dateRange = $request->get('date_range');
+            if ($dateRange) {
+                switch ($dateRange) {
+                    case 'today':
+                        $query->whereDate('sale_date', Carbon::today());
+                        break;
+                    case 'week':
+                        $query->whereBetween('sale_date', [
+                            Carbon::now()->startOfWeek(),
+                            Carbon::now()->endOfWeek(),
+                        ]);
+                        break;
+                    case 'month':
+                        $query->whereMonth('sale_date', Carbon::now()->month)
+                            ->whereYear('sale_date', Carbon::now()->year);
+                        break;
+                    case 'custom':
+                        break;
+                }
+            }
+        }
+
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('sale_id', 'like', "%{$search}%")
+                    ->orWhere('invoice_number', 'like', "%{$search}%")
+                    ->orWhere('buyer_name', 'like', "%{$search}%")
+                    ->orWhere('buyer_email', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($subQ) use ($search) {
+                        $subQ->where('name', 'like', "%{$search}%")
+                            ->orWhere('first_surname', 'like', "%{$search}%")
+                            ->orWhere('gmail', 'like', "%{$search}%");
+                    });
+            });
         }
     }
 

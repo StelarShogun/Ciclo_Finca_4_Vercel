@@ -380,39 +380,25 @@ class Dashboard {
         }
     }
 
-    // Export current dashboard as a printable report
+    // Export dashboard PDF (same period as the active sales chart toggle)
     exportReport() {
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <html>
-                <head>
-                    <title>Reporte Dashboard - ${new Date().toLocaleDateString('es-ES')}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        .header { text-align: center; margin-bottom: 30px; }
-                        .section { margin-bottom: 20px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background-color: #f2f2f2; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>Reporte del Dashboard</h1>
-                        <p>Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}</p>
-                    </div>
-                    <div class="section">
-                        <h2>Resumen de KPIs</h2>
-                        <p>Total Productos: ${document.getElementById('total-products')?.textContent || 'N/A'}</p>
-                        <p>Ventas Hoy: ${document.getElementById('today-sales')?.textContent || 'N/A'}</p>
-                        <p>Proveedores: ${document.getElementById('total-suppliers')?.textContent || 'N/A'}</p>
-                        <p>Stock Bajo: ${document.getElementById('low-stock')?.textContent || 'N/A'}</p>
-                    </div>
-                </body>
-            </html>
-        `);
-        printWindow.document.close();
-        printWindow.print();
+        const btn = document.getElementById('export-report');
+        const base = btn?.dataset?.exportUrl;
+        if (!base) {
+            this.showNotification('No se encontró la URL de exportación.', 'error');
+            return;
+        }
+        const activePeriod = document.querySelector('.chart-btn.active');
+        const period = activePeriod?.dataset?.period || '7d';
+        const sep = base.includes('?') ? '&' : '?';
+        const url = `${base}${sep}format=pdf&period=${encodeURIComponent(period)}`;
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 
     // Handle chart period change (daily/weekly/monthly)

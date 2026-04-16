@@ -53,9 +53,10 @@
                             <i class="fas fa-sync-alt"></i>
                             Actualizar
                         </button>
-                        <button class="btn btn-secondary" id="export-report">
+                        <button type="button" class="btn btn-secondary" id="export-report"
+                            data-export-url="{{ route('dashboard.export') }}">
                             <i class="fas fa-download"></i>
-                            Exportar Reporte
+                            Exportar PDF
                         </button>
                     </div>
 

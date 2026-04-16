@@ -112,6 +112,7 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/reports', [ReportsController::class, 'index'])->name('admin.reports.index');
     Route::get('/reports/productos-vendidos', [ReportsController::class, 'productSales'])->name('admin.reports.product-sales');
     Route::get('/reports/productos-vendidos/table', [ReportsController::class, 'productSalesTable'])->name('admin.reports.product-sales.table');
+    Route::get('/reports/productos-vendidos/pdf', [ReportsController::class, 'productSalesPdf'])->name('admin.reports.product-sales.pdf');
 
     // Inventory / Products
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');
@@ -156,15 +157,15 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/categories/subcategories/create', [CategoryController::class, 'createSubcategory'])->name('categories.subcategories.create');
     Route::post('/categories/subcategories', [CategoryController::class, 'store'])->name('categories.subcategories.store');
 
-    // Sales
+    // Sales — static paths must be registered before Route::resource to avoid matching `{sale}` = "export".
+    Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
+    Route::get('/sales/history/heartbeat', [SalesController::class, 'historyHeartbeat'])->name('sales.history.heartbeat');
     Route::resource('sales', SalesController::class);
     Route::post('/sales/{id}/complete', [SalesController::class, 'complete'])->name('sales.complete');
     Route::post('/sales/{id}/cancel', [SalesController::class, 'cancel'])->name('sales.cancel');
     Route::post('/sales/{id}/refund', [SalesController::class, 'refund'])->name('sales.refund');
     Route::get('/sales/{id}/print', [SalesController::class, 'print'])->name('sales.print');
     Route::get('/sales/{id}/invoice', [SalesController::class, 'invoice'])->name('sales.invoice');
-    Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
-    Route::get('/sales/history/heartbeat', [SalesController::class, 'historyHeartbeat'])->name('sales.history.heartbeat');
 
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::put('/orders/settings/order-expiration', [AdminOrderSettingsController::class, 'update'])

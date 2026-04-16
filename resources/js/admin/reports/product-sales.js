@@ -255,6 +255,31 @@ function initProductSalesReport() {
     });
 
     updateTop10Hint();
+
+    const pdfBtn = document.getElementById('product-sales-pdf-btn');
+    const pdfUrl = root.dataset.pdfUrl;
+    if (pdfBtn && pdfUrl) {
+        pdfBtn.addEventListener('click', () => {
+            const params = new URLSearchParams({
+                period,
+                sort,
+                dir,
+                top10: top10 || 'revenue',
+            });
+            const trimmed = searchInput.value.trim();
+            if (trimmed) {
+                params.set('q', trimmed);
+            }
+            const a = document.createElement('a');
+            a.href = `${pdfUrl}?${params.toString()}`;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+    }
+
     loadFromApi();
 }
 

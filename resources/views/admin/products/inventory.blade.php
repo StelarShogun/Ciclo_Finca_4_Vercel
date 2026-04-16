@@ -619,6 +619,14 @@
         </div>
     </div>
 
+    @php
+        $inventoryExportQuery = array_filter(
+            request()->only(['search', 'subcategory_id', 'parent_category_id', 'category_id', 'stock_status', 'status', 'sort', 'order']),
+            fn ($v) => $v !== null && $v !== ''
+        );
+        $inventoryExportSuffix = count($inventoryExportQuery) ? '?'.http_build_query($inventoryExportQuery) : '';
+    @endphp
+
     {{-- ==================== MODAL: EXPORT ==================== --}}
     <div class="edit-modal" id="export-modal">
         <div class="modal-backdrop"></div>
@@ -638,7 +646,7 @@
                             <h4>XML</h4>
                             <p>Formato estructurado para intercambio de datos</p>
                         </div>
-                        <a href="{{ route('products.export', 'xml') }}" class="btn btn-primary">
+                        <a href="{{ route('products.export', ['format' => 'xml']).$inventoryExportSuffix }}" class="btn btn-primary">
                             <i class="fas fa-download"></i> Exportar XML
                         </a>
                     </div>
@@ -649,7 +657,7 @@
                             <h4>CSV</h4>
                             <p>Formato de hoja de cálculo compatible con Excel</p>
                         </div>
-                        <a href="{{ route('products.export', 'csv') }}" class="btn btn-primary">
+                        <a href="{{ route('products.export', ['format' => 'csv']).$inventoryExportSuffix }}" class="btn btn-primary">
                             <i class="fas fa-download"></i> Exportar CSV
                         </a>
                     </div>
@@ -660,7 +668,7 @@
                             <h4>JSON</h4>
                             <p>Formato ligero para aplicaciones web</p>
                         </div>
-                        <a href="{{ route('products.export', 'json') }}" class="btn btn-primary">
+                        <a href="{{ route('products.export', ['format' => 'json']).$inventoryExportSuffix }}" class="btn btn-primary">
                             <i class="fas fa-download"></i> Exportar JSON
                         </a>
                     </div>
@@ -671,7 +679,7 @@
                             <h4>PDF</h4>
                             <p>Documento profesional para impresión</p>
                         </div>
-                        <a href="{{ route('products.export', 'pdf') }}" class="btn btn-primary">
+                        <a href="{{ route('products.export', ['format' => 'pdf']).$inventoryExportSuffix }}" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
                             <i class="fas fa-download"></i> Exportar PDF
                         </a>
                     </div>
