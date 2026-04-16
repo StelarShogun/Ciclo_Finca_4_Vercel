@@ -248,11 +248,6 @@ class Product extends Model
                         'stock_minimum' => 'El stock mínimo no puede ser negativo.',
                     ]);
                 }
-                if ((int) $p->stock_minimum > 0 && $p->stock_current < $p->stock_minimum) {
-                    throw ValidationException::withMessages([
-                        'stock_current' => 'El stock actual no puede ser menor que el stock mínimo.',
-                    ]);
-                }
             }
             if ($p->sale_price < $p->purchase_price) {
                 throw ValidationException::withMessages([
