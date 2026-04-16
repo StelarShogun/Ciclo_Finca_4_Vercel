@@ -1,10 +1,6 @@
 <aside class="admin-sidebar expanded">
     <div class="sidebar-header">
         <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Finca 4 Logo" class="logo">
-        <a href="{{ route('admin.catalog.preview') }}" class="sidebar-catalog-btn" title="Ver catálogo de Productos">
-            <i class="fas fa-store"></i>
-            <span class="sidebar-label">Ver catálogo</span>
-        </a>
     </div>
     <nav class="sidebar-nav">
         <ul>
@@ -74,8 +70,8 @@
                     <span class="sidebar-label">Moderación</span>
                 </a>
             </li>
-            <li>
-                <a href="{{ url('/reports') }}">
+            <li class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.reports.index') }}">
                     <i class="fas fa-file-alt"></i>
                     <span class="sidebar-label">Reportes</span>
                 </a>
@@ -85,7 +81,10 @@
     <!-- Footer fijo en la parte inferior -->
     <div class="sidebar-footer">
         @auth('admin')
-            <!-- Botón de Cerrar Sesión -->
+            <a href="{{ route('admin.visit-store') }}" class="sidebar-catalog-btn sidebar-footer-web-btn" title="Abrir la página principal del sitio web (mantiene la sesión de administrador)">
+                <i class="fas fa-globe"></i>
+                <span class="sidebar-label">Ir a sitio web</span>
+            </a>
             <form action="{{ route('admin.logout') }}" method="POST" style="margin: 0;">
                 @csrf
                 <button type="submit" class="logout-btn" title="Cerrar sesión">

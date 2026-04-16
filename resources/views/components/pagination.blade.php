@@ -17,7 +17,7 @@
     $hasNext = $current < max(1, $paginator->lastPage());
 @endphp
 
-<div class="pagination" role="navigation" aria-label="Paginación {{ $label ?? '' }}">
+<div class="pagination is-compact" role="navigation" aria-label="Paginación {{ $label ?? '' }}">
     {{-- Info --}}
     <div class="results-info" aria-live="polite">
         Mostrando {{ $from }} a {{ $to }} de {{ $total }} resultados
