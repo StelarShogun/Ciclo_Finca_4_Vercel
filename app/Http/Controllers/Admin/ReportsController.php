@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SalesPerformanceRangeRequest;
 use App\Models\Product;
+use App\Services\SalesPerformanceDateRangeService;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +21,31 @@ class ReportsController extends Controller
     public function index()
     {
         return view('admin.reports.index');
+    }
+
+    /**
+     * CF4-24 Fase 1: resolve selected period + equivalent previous period.
+     */
+    public function salesPerformanceRange(SalesPerformanceRangeRequest $request, SalesPerformanceDateRangeService $rangeService)
+    {
+        $resolved = $rangeService->resolve($request->validated());
+
+        return response()->json([
+            'success' => true,
+            'preset' => $resolved['preset'],
+            'from' => $resolved['from'],
+            'to' => $resolved['to'],
+            'current_period' => [
+                'start' => $resolved['current_start']->toIso8601String(),
+                'end' => $resolved['current_end']->toIso8601String(),
+                'label' => $this->humanRangeLabel($resolved['current_start'], $resolved['current_end']),
+            ],
+            'previous_period' => [
+                'start' => $resolved['previous_start']->toIso8601String(),
+                'end' => $resolved['previous_end']->toIso8601String(),
+                'label' => $this->humanRangeLabel($resolved['previous_start'], $resolved['previous_end']),
+            ],
+        ]);
     }
 
     public function productSales(Request $request)
@@ -165,5 +193,10 @@ class ReportsController extends Controller
         $v = is_string($value) ? strtolower(trim($value)) : '';
 
         return in_array($v, self::TOP10_METRICS, true) ? $v : 'revenue';
+    }
+
+    private function humanRangeLabel(CarbonInterface $start, CarbonInterface $end): string
+    {
+        return $start->format('d/m/Y').' - '.$end->format('d/m/Y');
     }
 }

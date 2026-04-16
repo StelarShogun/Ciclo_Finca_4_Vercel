@@ -112,6 +112,7 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/reports', [ReportsController::class, 'index'])->name('admin.reports.index');
     Route::get('/reports/productos-vendidos', [ReportsController::class, 'productSales'])->name('admin.reports.product-sales');
     Route::get('/reports/productos-vendidos/table', [ReportsController::class, 'productSalesTable'])->name('admin.reports.product-sales.table');
+    Route::get('/reports/ventas/range', [ReportsController::class, 'salesPerformanceRange'])->name('admin.reports.sales.range');
 
     // Inventory / Products
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');
