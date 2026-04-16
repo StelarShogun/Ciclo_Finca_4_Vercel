@@ -6,20 +6,22 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * @property-read Category|null $category
  * @property-read Collection<int, Brand> $brands
  * @property-read Collection<int, ClassificationValue> $classificationValues
  */
-class Product extends Model
+class Product extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $table = 'products';
 
@@ -60,6 +62,15 @@ class Product extends Model
 
     public const MSG_CLIENT_STOCK_INSUFICIENTE = 'Stock insuficiente';
 
+    /**
+     * SKU de catálogo derivado del ID (no existe columna dedicada).
+     * Debe coincidir con SQL: CONCAT('BK-', LPAD(product_id, 3, '0')).
+     */
+    public static function skuFromId(int $productId): string
+    {
+        return 'BK-'.str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
+    }
+
     public static function canonicalStatus(?string $raw): string
     {
         $s = strtolower(trim((string) $raw));
@@ -88,6 +99,18 @@ class Product extends Model
             'LOWER(TRIM(COALESCE(status, \'\'))) IN ('.$placeholders.')',
             $ok
         );
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $disk = config('media-library.disk_name', 'public');
+
+        $this->addMediaCollection('main_image')
+             ->useDisk($disk)
+             ->singleFile();
+
+        $this->addMediaCollection('gallery')
+             ->useDisk($disk);
     }
 
     public function getDisplayImages(): array

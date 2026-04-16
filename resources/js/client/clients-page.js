@@ -878,6 +878,49 @@ document.addEventListener('DOMContentLoaded', function () {
         sections.forEach(function (section) { observer.observe(section); });
     })();
 
+    // ---- Product image carousel ----
+    (function initProductCarousel() {
+        var track = document.getElementById('carousel-track');
+        if (!track) return;
+        var slides  = track.querySelectorAll('.carousel-slide');
+        var total   = slides.length;
+        if (total <= 1) return;
+        var prevBtn = document.getElementById('carousel-prev');
+        var nextBtn = document.getElementById('carousel-next');
+        var dots    = document.querySelectorAll('.carousel-dot');
+        var current = 0;
+
+        function goTo(index) {
+            current = Math.max(0, Math.min(total - 1, index));
+            track.style.transform = 'translateX(-' + (current * 100) + '%)';
+            dots.forEach(function (d, i) { d.classList.toggle('active', i === current); });
+            if (prevBtn) prevBtn.disabled = current === 0;
+            if (nextBtn) nextBtn.disabled = current === total - 1;
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', function () { goTo(current - 1); });
+        if (nextBtn) nextBtn.addEventListener('click', function () { goTo(current + 1); });
+        dots.forEach(function (d, i) { d.addEventListener('click', function () { goTo(i); }); });
+
+        // Swipe support (touch devices)
+        var startX = null;
+        track.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
+        track.addEventListener('touchend', function (e) {
+            if (startX === null) return;
+            var diff = startX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 40) goTo(diff > 0 ? current + 1 : current - 1);
+            startX = null;
+        }, { passive: true });
+
+        // Keyboard arrow navigation
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowLeft')  goTo(current - 1);
+            if (e.key === 'ArrowRight') goTo(current + 1);
+        });
+
+        goTo(0);
+    })();
+
 }); // end DOMContentLoaded
 
 // ----------------------------------------------------------------

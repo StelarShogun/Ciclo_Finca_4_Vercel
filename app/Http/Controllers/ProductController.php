@@ -13,6 +13,7 @@ use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
@@ -41,25 +42,8 @@ class ProductController extends Controller
                 $classificationIds = $data['classification_value_ids'] ?? [];
                 unset($data['classification_value_ids']);
 
-                if ($request->hasFile('image')) {
-                    $imageName = time().'.'.$request->image->extension();
-                    $request->image->move(public_path('assets/images/products'), $imageName);
-                    $data['image'] = $imageName;
-                }
-
-                if ($request->hasFile('images')) {
-                    $paths = [];
-                    foreach ($request->file('images') as $i => $file) {
-                        $name = time().'_'.$i.'.'.$file->extension();
-                        $file->move(public_path('assets/images/products'), $name);
-                        $paths[] = $name;
-                    }
-                    $data['images'] = $paths;
-                    // Use the first gallery image as the main thumbnail when none was uploaded
-                    if (empty($data['image']) && ! empty($paths)) {
-                        $data['image'] = $paths[0];
-                    }
-                }
+                // File fields are handled by MediaLibrary after the product is created
+                unset($data['image'], $data['images']);
 
                 $product = Product::create($data);
                 $product->brands()->attach($brandId);
@@ -67,6 +51,39 @@ class ProductController extends Controller
 
                 return $product;
             });
+
+            // Save images to public/images/{product_name}/ then register with MediaLibrary
+            $folderPath = public_path('images/' . $product->name);
+            if (! is_dir($folderPath)) {
+                mkdir($folderPath, 0755, true);
+            }
+            $slug = Str::slug($product->name, '_');
+
+            if ($request->hasFile('image')) {
+                $file     = $request->file('image');
+                $ext      = $file->extension() ?: $file->getClientOriginalExtension();
+                $filename = $slug . '_main.' . $ext;
+                $file->move($folderPath, $filename);
+                $product->addMedia($folderPath . '/' . $filename)
+                    ->preservingOriginal()
+                    ->toMediaCollection('main_image');
+            }
+
+            if ($request->hasFile('images')) {
+                $i = 2;
+                foreach ($request->file('images') as $file) {
+                    if (! $file->isValid() || ! str_starts_with($file->getMimeType() ?? '', 'image/')) {
+                        continue;
+                    }
+                    $ext      = $file->extension() ?: $file->getClientOriginalExtension();
+                    $filename = $slug . '_' . $i . '.' . $ext;
+                    $file->move($folderPath, $filename);
+                    $product->addMedia($folderPath . '/' . $filename)
+                        ->preservingOriginal()
+                        ->toMediaCollection('gallery');
+                    $i++;
+                }
+            }
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -110,6 +127,8 @@ class ProductController extends Controller
                 $firstBrand = $product->brands->first();
                 $productData['brand_id'] = $firstBrand instanceof Brand ? $firstBrand->id : null;
                 $productData['classification_value_ids'] = $product->classificationValues->pluck('id')->values()->all();
+                $productData['media_main']    = $product->getFirstMediaUrl('main_image');
+                $productData['media_gallery'] = $product->getMedia('gallery')->map(fn($m) => $m->getUrl())->values()->toArray();
 
                 return response()->json([
                     'success' => true,
@@ -165,32 +184,8 @@ class ProductController extends Controller
                 $classificationIds = $syncClassifications ? ($data['classification_value_ids'] ?? []) : null;
                 unset($data['classification_value_ids']);
 
-                if ($request->hasFile('image')) {
-                    // Delete the old image file before storing the new one
-                    if ($p->image && file_exists(public_path('assets/images/products/'.$p->image))) {
-                        @unlink(public_path('assets/images/products/'.$p->image));
-                    }
-                    $imageName = time().'.'.$request->image->extension();
-                    $request->image->move(public_path('assets/images/products'), $imageName);
-                    $data['image'] = $imageName;
-                }
-
-                if ($request->hasFile('images')) {
-                    // Remove all existing gallery images before saving the new set
-                    $oldImages = $p->images ?? [];
-                    foreach (is_array($oldImages) ? $oldImages : [] as $old) {
-                        if ($old && file_exists(public_path('assets/images/products/'.$old))) {
-                            @unlink(public_path('assets/images/products/'.$old));
-                        }
-                    }
-                    $paths = [];
-                    foreach ($request->file('images') as $i => $file) {
-                        $name = time().'_'.$i.'.'.$file->extension();
-                        $file->move(public_path('assets/images/products'), $name);
-                        $paths[] = $name;
-                    }
-                    $data['images'] = $paths;
-                }
+                // File fields are handled by MediaLibrary after the product is updated
+                unset($data['image'], $data['images']);
 
                 $p->update($data);
                 $p->brands()->sync([$brandId]);
@@ -201,6 +196,50 @@ class ProductController extends Controller
 
                 return $p;
             });
+
+            // Save images to public/images/{product_name}/ then register with MediaLibrary
+            $folderPath = public_path('images/' . $product->name);
+            if (! is_dir($folderPath)) {
+                mkdir($folderPath, 0755, true);
+            }
+            $slug = Str::slug($product->name, '_');
+
+            // Replace main image when a new one is uploaded (singleFile handles deletion of the old one)
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $ext  = $file->extension() ?: $file->getClientOriginalExtension();
+                // Remove any existing main file for this product
+                foreach (glob($folderPath . '/' . $slug . '_main.*') ?: [] as $old) {
+                    @unlink($old);
+                }
+                $filename = $slug . '_main.' . $ext;
+                $file->move($folderPath, $filename);
+                $product->addMedia($folderPath . '/' . $filename)
+                    ->preservingOriginal()
+                    ->toMediaCollection('main_image');
+            }
+
+            // Replace the entire gallery when new files are provided
+            if ($request->hasFile('images')) {
+                // Remove existing numbered gallery files from the folder
+                foreach (glob($folderPath . '/' . $slug . '_[0-9]*.{jpg,jpeg,png,webp,gif,avif}', GLOB_BRACE) ?: [] as $old) {
+                    @unlink($old);
+                }
+                $product->clearMediaCollection('gallery');
+                $i = 2;
+                foreach ($request->file('images') as $file) {
+                    if (! $file->isValid() || ! str_starts_with($file->getMimeType() ?? '', 'image/')) {
+                        continue;
+                    }
+                    $ext      = $file->extension() ?: $file->getClientOriginalExtension();
+                    $filename = $slug . '_' . $i . '.' . $ext;
+                    $file->move($folderPath, $filename);
+                    $product->addMedia($folderPath . '/' . $filename)
+                        ->preservingOriginal()
+                        ->toMediaCollection('gallery');
+                    $i++;
+                }
+            }
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -302,6 +341,57 @@ class ProductController extends Controller
         return view('products.create');
     }
 
+    /**
+     * Promote a gallery image to the main_image collection (replaces the current main image).
+     * POST /products/{id}/gallery/{mediaId}/promote
+     */
+    public function promoteToMain(int $id, int $mediaId)
+    {
+        try {
+            $product = Product::findOrFail($id);
+            $mediaItem = $product->media()->where('id', $mediaId)->firstOrFail();
+
+            // Copy the file preserving the gallery item, then set as single main image
+            $product->addMedia($mediaItem->getPath())
+                    ->preservingOriginal()
+                    ->toMediaCollection('main_image');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Imagen promovida como principal.',
+                'url' => $product->getFirstMediaUrl('main_image'),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo promover la imagen.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove a single image from the gallery collection.
+     * DELETE /products/{id}/gallery/{mediaId}
+     */
+    public function removeGalleryImage(int $id, int $mediaId)
+    {
+        try {
+            $product = Product::findOrFail($id);
+            $mediaItem = $product->media()->where('id', $mediaId)->firstOrFail();
+            $mediaItem->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Imagen eliminada de la galería.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo eliminar la imagen.',
+            ], 500);
+        }
+    }
+
     public function edit($id)
     {
         $product = Product::findOrFail($id);
@@ -367,8 +457,7 @@ class ProductController extends Controller
                 'product_id' => $product->product_id,
                 'id' => $product->product_id,
                 'name' => $product->name,
-                // SKU is derived from the primary key since the table has no dedicated column
-                'sku' => 'BK-'.str_pad((string) $product->product_id, 3, '0', STR_PAD_LEFT),
+                'sku' => Product::skuFromId((int) $product->product_id),
                 'image' => $product->image ?? 'default.png',
                 'category' => (object) ['name' => optional($product->category)->name ?? 'Uncategorized'],
                 'stock' => $product->stock_current,
