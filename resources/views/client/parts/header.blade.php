@@ -193,7 +193,7 @@
 {{-- Invoice heartbeat meta (only for authenticated clients) --}}
 @auth('clients')
 <meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
-<<meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
+<meta name="cf4-invoice-initial-count" content="{{ \App\Models\Sale::where('client_id', auth('clients')->user()->user_id)->where('status', 'pending')->count() }}">
 @endauth
 
 @vite('resources/js/client/clients-users.js')
