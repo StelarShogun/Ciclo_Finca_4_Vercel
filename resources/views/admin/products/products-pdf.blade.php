@@ -61,12 +61,11 @@
                 <td>{{ $product->category }}</td>
                 <td>{{ $product->supplier }}</td>
 
-                {{-- Stock level: umbral = stock mínimo por producto (CF4-50) --}}
+                {{-- Stock level with color-coded indicators --}}
                 <td class="text-center">
-                    @php $tier = \App\Models\Product::adminStockExportTier((int) $product->stock_current, (int) $product->stock_minimum); @endphp
-                    @if($tier === 'high')
+                    @if($product->stock_current > \App\Models\Product::CLIENT_LOW_STOCK_THRESHOLD)
                         <span class="stock-high">{{ $product->stock_current }}</span>
-                    @elseif($tier === 'medium')
+                    @elseif($product->stock_current > 0)
                         <span class="stock-medium">{{ $product->stock_current }}</span>
                     @else
                         <span class="stock-low">{{ $product->stock_current }}</span>

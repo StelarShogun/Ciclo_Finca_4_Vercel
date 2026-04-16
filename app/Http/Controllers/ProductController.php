@@ -338,16 +338,11 @@ class ProductController extends Controller
         if ($request->filled('stock_status')) {
             switch ($request->stock_status) {
                 case 'in-stock':
-                    $query->where('stock_current', '>', 0)
-                        ->where(function ($q) {
-                            $q->where('stock_minimum', '<=', 0)
-                                ->orWhereColumn('stock_current', '>', 'stock_minimum');
-                        });
+                    $query->where('stock_current', '>', Product::CLIENT_LOW_STOCK_THRESHOLD);
                     break;
                 case 'low':
-                    $query->where('stock_minimum', '>', 0)
-                        ->where('stock_current', '>', 0)
-                        ->whereColumn('stock_current', '<=', 'stock_minimum');
+                    $query->where('stock_current', '>', 0)
+                        ->where('stock_current', '<=', Product::CLIENT_LOW_STOCK_THRESHOLD);
                     break;
                 case 'out':
                     $query->where('stock_current', 0);
@@ -377,7 +372,8 @@ class ProductController extends Controller
                 'image' => $product->image ?? 'default.png',
                 'category' => (object) ['name' => optional($product->category)->name ?? 'Uncategorized'],
                 'stock' => $product->stock_current,
-                'stock_status_class' => $product->adminInventoryStockBadgeClass(),
+                'stock_status_class' => $product->stock_current > Product::CLIENT_LOW_STOCK_THRESHOLD ? 'success' :
+                                      ($product->stock_current > 0 ? 'warning' : 'danger'),
                 'price' => $product->sale_price,
                 'status' => ucfirst(str_replace('_', ' ', $product->status)),
                 'status_class' => $product->status === 'active' ? 'success' :
@@ -478,7 +474,7 @@ class ProductController extends Controller
                 ];
             });
 
-            $pdf = PDF::loadView('admin.products.products-pdf', [
+            $pdf = PDF::loadView('products.products-pdf', [
                 'products' => $products,
                 'total' => $products->count(),
                 'fecha_exportacion' => now()->format('d/m/Y H:i:s'),
