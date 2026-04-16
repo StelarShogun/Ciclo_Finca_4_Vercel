@@ -201,8 +201,8 @@
                                         @endif
                                     </td>
                                     <td>
-                                        {{-- Stock badge: success >10, warning >0, danger =0 --}}
-                                        <span class="stock-badge {{ $product->stock_current > \App\Models\Product::CLIENT_LOW_STOCK_THRESHOLD ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger') }}">
+                                        {{-- Stock badge: según stock mínimo por producto (CF4-50) --}}
+                                        <span class="stock-badge {{ $product->adminInventoryStockBadgeClass() }}">
                                             {{ $product->stock_current }}
                                         </span>
                                     </td>
@@ -291,7 +291,7 @@
                                     <div class="product-card-detail">
                                         <span class="product-card-detail-label">Stock</span>
                                         <span class="product-card-detail-value">
-                                            <span class="stock-badge {{ $product->stock_current > \App\Models\Product::CLIENT_LOW_STOCK_THRESHOLD ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger') }}">
+                                            <span class="stock-badge {{ $product->adminInventoryStockBadgeClass() }}">
                                                 {{ $product->stock_current }}
                                             </span>
                                         </span>
