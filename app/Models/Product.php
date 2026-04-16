@@ -11,15 +11,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Validation\ValidationException;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * @property-read Category|null $category
  * @property-read Collection<int, Brand> $brands
  * @property-read Collection<int, ClassificationValue> $classificationValues
  */
-class Product extends Model
+class Product extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $table = 'products';
 
@@ -88,6 +90,18 @@ class Product extends Model
             'LOWER(TRIM(COALESCE(status, \'\'))) IN ('.$placeholders.')',
             $ok
         );
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $disk = config('media-library.disk_name', 'public');
+
+        $this->addMediaCollection('main_image')
+             ->useDisk($disk)
+             ->singleFile();
+
+        $this->addMediaCollection('gallery')
+             ->useDisk($disk);
     }
 
     public function getDisplayImages(): array
