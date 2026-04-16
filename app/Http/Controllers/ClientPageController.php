@@ -473,10 +473,22 @@ class ClientPageController extends Controller
             ->where('client_id', $client->user_id)
             ->where('status', 'pending')
             ->orderByDesc('sale_date')
-            ->paginate(15);
+            ->get();
 
         $cartCount = $this->getCartCount();
+        $invoiceCount = $orders->count();
 
-        return view('client.Invoices', compact('orders', 'cartCount'));
+        return view('client.Invoices', compact('orders', 'cartCount', 'invoiceCount'));
+    }
+
+    public function invoicesHeartbeat()
+    {
+        $client = Auth::guard('clients')->user();
+
+        $count = Sale::where('client_id', $client->user_id)
+            ->where('status', 'pending')
+            ->count();
+
+        return response()->json(['count' => $count]);
     }
 }

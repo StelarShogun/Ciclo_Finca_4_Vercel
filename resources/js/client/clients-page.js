@@ -688,6 +688,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         updateCartCount(0);
                         showCartEmptyState();
 
+                        // Increment invoice badge immediately — no need to wait for heartbeat.
+                        if (typeof updateInvoiceCount === 'function') {
+                            var currentBadge = document.getElementById('invoice-count');
+                            var currentVal   = currentBadge ? parseInt(currentBadge.textContent, 10) || 0 : 0;
+                            updateInvoiceCount(currentVal + 1);
+                        }
+
                         Swal.fire({
                             icon: 'success',
                             title: '¡Pedido confirmado!',

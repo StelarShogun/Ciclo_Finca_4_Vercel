@@ -1,5 +1,8 @@
 @extends('client.layouts.app')
 
+@section('hideFooter')
+@endsection
+
 @section('title', 'Mis Facturas - Ciclo Finca 4')
 
 @push('styles')
@@ -7,6 +10,9 @@
 @endpush
 
 @section('content')
+
+    <meta name="cf4-invoice-count" content="{{ $invoiceCount }}">
+    <meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
 
     <div class="cf4-invoices-header">
         <div class="cf4-invoices-header-inner">
@@ -71,14 +77,37 @@
                     </tbody>
                 </table>
             </div>
-
-            @if($orders->count() > 0)
-                <div class="cf4-invoices-pagination-wrap">
-                    <x-pagination :paginator="$orders" label="facturas" />
-                </div>
-            @endif
         </div>
 
     </div>
 
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    const metaCount = document.querySelector('meta[name="cf4-invoice-count"]');
+    const metaUrl   = document.querySelector('meta[name="cf4-invoice-heartbeat-url"]');
+    if (!metaCount || !metaUrl) return;
+
+    let lastCount = parseInt(metaCount.getAttribute('content'), 10);
+    const url = metaUrl.getAttribute('content');
+
+    setInterval(async function () {
+        try {
+            const res = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.count !== lastCount) {
+                location.reload();
+            }
+        } catch (_) {}
+    }, 15000);
+})();
+</script>
+@endpush
