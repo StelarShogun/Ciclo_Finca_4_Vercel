@@ -62,7 +62,7 @@ class UpdateProductRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'sale_price' => ['required', 'numeric', 'min:0', 'gt:purchase_price'],
             'purchase_price' => ['required', 'numeric', 'min:0'],
-            'stock_current' => ['required', 'integer', 'min:0', 'gte:stock_minimum'],
+            'stock_current' => ['required', 'integer', 'min:0'],
             'stock_minimum' => ['required', 'integer', 'min:0'],
             'status' => ['required', 'in:active,inactive,out_of_stock,discontinued'],
             'is_featured' => ['boolean'],
@@ -125,8 +125,8 @@ class UpdateProductRequest extends FormRequest
             'mimes' => 'El campo :attribute solo admite: jpeg, png, jpg, gif, svg, webp o avif.',
 
             'sale_price.gt' => 'El precio de venta debe ser mayor que el precio de compra.',
-            'stock_current.gte' => 'El stock actual debe ser mayor o igual al stock mínimo.',
-
+            'stock_minimum.min' => 'El stock mínimo debe ser mayor o igual a 0.',
+            'stock_current.min' => 'El stock actual debe ser mayor o igual a 0.',
             'images.*.image' => 'Cada imagen adicional debe ser un archivo de imagen válido.',
             'images.*.mimes' => 'Cada imagen adicional debe ser jpeg, png, jpg, gif, svg, webp o avif.',
             'images.*.max' => 'Cada imagen adicional no puede superar :max kilobytes.',
