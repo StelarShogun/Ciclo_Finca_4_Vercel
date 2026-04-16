@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             ClassificationCatalogSeeder::class,
             SupplierSeeder::class,
+            BrandSeeder::class,
             ProductsSeeder::class,
             ProductClassificationDemoSeeder::class,
             ProductImagesSeeder::class,
