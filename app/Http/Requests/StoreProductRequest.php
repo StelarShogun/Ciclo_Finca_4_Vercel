@@ -106,6 +106,8 @@ class StoreProductRequest extends FormRequest
             'mimes' => 'El campo :attribute solo admite: jpeg, png, jpg, gif o svg.',
 
             'sale_price.gt' => 'El precio de venta debe ser mayor que el precio de compra.',
+            'stock_minimum.min' => 'El stock mínimo debe ser mayor o igual a 0.',
+            'stock_current.min' => 'El stock actual debe ser mayor o igual a 0.',
             'images.*.image' => 'Cada imagen adicional debe ser un archivo de imagen válido.',
             'images.*.mimes' => 'Cada imagen adicional debe ser jpeg, png, jpg, gif o svg.',
             'images.*.max' => 'Cada imagen adicional no puede superar :max kilobytes.',
