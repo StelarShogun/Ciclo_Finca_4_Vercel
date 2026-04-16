@@ -90,9 +90,7 @@ class CF4AdminPurchasesTest extends TestCase
         $total = 50; // 25 * 2
         $salePending = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0010',
-            'customer_id' => null,
             'client_id' => $client->user_id,
-            'seller_id' => null,
             'seller_admin_id' => null,
             'sale_date' => now(),
             'payment_method' => 'cash',
@@ -116,9 +114,7 @@ class CF4AdminPurchasesTest extends TestCase
 
         $saleCompleted = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0011',
-            'customer_id' => null,
             'client_id' => $client->user_id,
-            'seller_id' => null,
             'seller_admin_id' => null,
             'sale_date' => now(),
             'payment_method' => 'cash',
@@ -196,9 +192,7 @@ class CF4AdminPurchasesTest extends TestCase
 
         $sale1 = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0100',
-            'customer_id' => null,
             'client_id' => $client->user_id,
-            'seller_id' => null,
             'seller_admin_id' => null,
             'sale_date' => now(),
             'payment_method' => 'cash',
@@ -229,9 +223,7 @@ class CF4AdminPurchasesTest extends TestCase
         // Crear una nueva compra para que heartbeat detecte cambios.
         $sale2 = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0101',
-            'customer_id' => null,
             'client_id' => $client->user_id,
-            'seller_id' => null,
             'seller_admin_id' => null,
             'sale_date' => now(),
             'payment_method' => 'cash',

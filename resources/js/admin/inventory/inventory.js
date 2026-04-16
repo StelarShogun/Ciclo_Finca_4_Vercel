@@ -1608,18 +1608,6 @@ function smoothScrollTop() {
 
 // Initial loading spinner and filter form behavior
 document.addEventListener('DOMContentLoaded', () => {
-    const exportModal = document.getElementById('export-modal');
-    const exportBtn = document.getElementById('export-btn');
-    if (exportBtn && exportModal) {
-        exportBtn.addEventListener('click', () => exportModal.classList.add('active'));
-        document.getElementById('close-export-modal')?.addEventListener('click', () => {
-            exportModal.classList.remove('active');
-        });
-        exportModal.querySelector('.modal-backdrop')?.addEventListener('click', () => {
-            exportModal.classList.remove('active');
-        });
-    }
-
     const productSection = document.querySelector('.products-section');
     const loadingSpinner = document.querySelector('.loading-spinner-overlay');
     const filterForm = document.querySelector('.filter-form');

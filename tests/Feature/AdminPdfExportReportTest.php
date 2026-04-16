@@ -61,6 +61,31 @@ class AdminPdfExportReportTest extends TestCase
         return $admin;
     }
 
+    public function test_reports_exports_page_renders_for_admin(): void
+    {
+        $this->loginAdmin();
+
+        $response = $this->get('/reports/exportaciones');
+
+        $response->assertOk();
+        $response->assertSee('Exportar datos y PDF', false);
+        $response->assertSee(route('dashboard.export'), false);
+        $response->assertSee('Listados administrativos', false);
+        $response->assertSee('/reports/exportaciones/descarga/proveedores', false);
+    }
+
+    public function test_registry_proveedores_pdf_download_response(): void
+    {
+        $this->loginAdmin();
+
+        $response = $this->get('/reports/exportaciones/descarga/proveedores?format=pdf');
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('Content-Type'));
+        $disposition = (string) $response->headers->get('Content-Disposition');
+        $this->assertStringContainsString('reporte-proveedores-', $disposition);
+    }
+
     public function test_dashboard_pdf_download_response(): void
     {
         $this->loginAdmin();

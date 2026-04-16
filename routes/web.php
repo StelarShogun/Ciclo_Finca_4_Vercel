@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ReportsController;
+use App\Http\Controllers\Admin\ReportsRegistryExportController;
 use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminOrderSettingsController;
@@ -110,6 +111,10 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
 
     // CF4-30 — reportes admin (hub + productos más vendidos)
     Route::get('/reports', [ReportsController::class, 'index'])->name('admin.reports.index');
+    Route::get('/reports/exportaciones', [ReportsController::class, 'exports'])->name('admin.reports.exports');
+    Route::get('/reports/exportaciones/descarga/{slug}', [ReportsRegistryExportController::class, 'download'])
+        ->where('slug', 'proveedores|marcas|pedidos-proveedores|usuarios|pedidos-clientes')
+        ->name('admin.reports.exports.registry');
     Route::get('/reports/productos-vendidos', [ReportsController::class, 'productSales'])->name('admin.reports.product-sales');
     Route::get('/reports/productos-vendidos/table', [ReportsController::class, 'productSalesTable'])->name('admin.reports.product-sales.table');
     Route::get('/reports/productos-vendidos/pdf', [ReportsController::class, 'productSalesPdf'])->name('admin.reports.product-sales.pdf');

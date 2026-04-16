@@ -22,6 +22,15 @@ class ReportsController extends Controller
         return view('admin.reports.index');
     }
 
+    /**
+     * Centro único de exportación (PDF y datos) desde el módulo Reportes.
+     * Los enlaces respetan querystring opcional (p. ej. filtros de inventario o ventas pasados desde esas pantallas).
+     */
+    public function exports()
+    {
+        return view('admin.reports.exports');
+    }
+
     public function productSales(Request $request)
     {
         return view('admin.reports.product-sales', [

@@ -454,11 +454,10 @@ class ProductController extends Controller
         $baseQuery = $this->inventoryProductsFilteredQuery($request);
         $filterLines = $this->inventoryExportFilterLines($request);
 
-        $data = (clone $baseQuery)
-            ->with(['category:category_id,name', 'supplier:supplier_id,name'])
-            ->get();
+        $withRelations = ['category:category_id,name', 'supplier:supplier_id,name'];
 
         if ($format === 'xml') {
+            $data = (clone $baseQuery)->with($withRelations)->get();
             $xml = new \SimpleXMLElement('<products/>');
             foreach ($data as $p) {
                 $n = $xml->addChild('product');
@@ -483,6 +482,7 @@ class ProductController extends Controller
         }
 
         if ($format === 'json') {
+            $data = (clone $baseQuery)->with($withRelations)->get();
             $payload = $data->map(function ($p) {
                 return [
                     'id' => $p->product_id,
@@ -515,7 +515,7 @@ class ProductController extends Controller
             }
 
             $pdfRows = (clone $baseQuery)
-                ->with(['category:category_id,name', 'supplier:supplier_id,name'])
+                ->with($withRelations)
                 ->limit($maxRows)
                 ->get();
 
@@ -552,29 +552,38 @@ class ProductController extends Controller
             return $pdf->download(ReportPdfFilename::make('inventario'));
         }
 
-        // Default to CSV export
+        // Default to CSV export (streaming por chunks: no cargar todo el inventario en memoria).
         $filename = 'products_'.date('Ymd_His').'.csv';
+        $chunk = AdminPdfExportLimits::INVENTORY_CSV_CHUNK;
 
-        return response()->streamDownload(function () use ($data) {
+        return response()->streamDownload(function () use ($baseQuery, $withRelations, $chunk): void {
             $out = fopen('php://output', 'w');
+            if ($out === false) {
+                return;
+            }
             fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for correct Excel rendering
             fputcsv($out, ['ID', 'Name', 'Description', 'Image', 'Category', 'Supplier', 'Purchase Price', 'Sale Price', 'Stock', 'Minimum', 'Status', 'Created']);
-            foreach ($data as $p) {
-                fputcsv($out, [
-                    $p->product_id,
-                    $p->name,
-                    $p->description,
-                    $p->image ?? '',
-                    optional($p->category)->name,
-                    optional($p->supplier)->name,
-                    $p->purchase_price,
-                    $p->sale_price,
-                    $p->stock_current,
-                    $p->stock_minimum,
-                    $p->status,
-                    $p->created_at ? $p->created_at->format('Y-m-d H:i:s') : '',
-                ]);
-            }
+            (clone $baseQuery)
+                ->with($withRelations)
+                ->orderBy('product_id')
+                ->chunkById($chunk, function ($products) use ($out): void {
+                    foreach ($products as $p) {
+                        fputcsv($out, [
+                            $p->product_id,
+                            $p->name,
+                            $p->description,
+                            $p->image ?? '',
+                            optional($p->category)->name,
+                            optional($p->supplier)->name,
+                            $p->purchase_price,
+                            $p->sale_price,
+                            $p->stock_current,
+                            $p->stock_minimum,
+                            $p->status,
+                            $p->created_at ? $p->created_at->format('Y-m-d H:i:s') : '',
+                        ]);
+                    }
+                }, 'product_id');
             fclose($out);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }

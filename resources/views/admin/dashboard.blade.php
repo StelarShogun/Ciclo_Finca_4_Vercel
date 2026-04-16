@@ -53,11 +53,6 @@
                             <i class="fas fa-sync-alt"></i>
                             Actualizar
                         </button>
-                        <button type="button" class="btn btn-secondary" id="export-report"
-                            data-export-url="{{ route('dashboard.export') }}">
-                            <i class="fas fa-download"></i>
-                            Exportar PDF
-                        </button>
                     </div>
 
                 </div>
@@ -132,7 +127,7 @@
             <section class="charts-section">
 
                 {{-- Sales trend chart with period toggle --}}
-                <div class="chart-container">
+                <div class="chart-container chart-container--sales">
                     <div class="chart-header">
                         <h3>Ventas de los Últimos 7 Días</h3>
                         <div class="chart-controls">
@@ -141,18 +136,21 @@
                             <button class="chart-btn" data-period="90d">90 días</button>
                         </div>
                     </div>
-                    <div class="chart-wrapper">
+                    <div class="chart-wrapper chart-wrapper--sales">
                         <canvas id="sales-chart"></canvas>
                     </div>
                 </div>
 
                 {{-- Product distribution by category --}}
-                <div class="chart-container">
+                <div class="chart-container chart-container--category">
                     <div class="chart-header">
                         <h3>Productos por Categoría</h3>
                     </div>
-                    <div class="chart-wrapper">
-                        <canvas id="category-chart"></canvas>
+                    <div class="category-chart-body">
+                        <div class="chart-wrapper chart-wrapper--category-donut">
+                            <canvas id="category-chart"></canvas>
+                        </div>
+                        <div id="category-chart-legend" class="category-chart-legend" role="list" aria-label="Leyenda de categorías"></div>
                     </div>
                 </div>
 
@@ -299,14 +297,6 @@
                         <div class="action-content">
                             <h4>Nuevo Proveedor</h4>
                             <p>Registrar un nuevo proveedor</p>
-                        </div>
-                    </a>
-
-                    <a href="{{ route('products.export') }}" class="action-card">
-                        <div class="action-icon"><i class="fas fa-download"></i></div>
-                        <div class="action-content">
-                            <h4>Exportar Datos</h4>
-                            <p>Exportar inventario y reportes</p>
                         </div>
                     </a>
 

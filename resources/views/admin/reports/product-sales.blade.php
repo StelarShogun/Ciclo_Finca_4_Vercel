@@ -32,7 +32,6 @@
         data-dir="{{ e($dir) }}"
         data-top10="{{ e($top10 ?? 'revenue') }}"
         data-initial-q="{{ e($q) }}"
-        data-pdf-url="{{ route('admin.reports.product-sales.pdf') }}"
     >
         <nav class="reports-breadcrumb">
             <a href="{{ route('admin.reports.index') }}">Reportes</a>
@@ -57,10 +56,6 @@
                 <label for="product-sales-search" class="sr-only">Filtrar por nombre o SKU</label>
                 <input type="search" id="product-sales-search" class="product-sales-search" placeholder="Filtrar por nombre o SKU…" value="{{ e($q) }}" autocomplete="off">
             </div>
-            <button type="button" class="btn btn-secondary product-sales-pdf-btn" id="product-sales-pdf-btn">
-                <i class="fas fa-file-pdf" aria-hidden="true"></i>
-                Descargar PDF
-            </button>
         </div>
 
         <section class="top10-section" aria-labelledby="top10-heading">

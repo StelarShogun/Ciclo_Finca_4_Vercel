@@ -395,8 +395,6 @@ class ClientPageController extends Controller
             $sale = Sale::create([
                 'invoice_number' => (new Sale)->generateInvoiceNumber(),
                 'client_id' => $client?->user_id,
-                'customer_id' => null,
-                'seller_id' => null,
                 'sale_date' => now(),
                 'payment_method' => 'cash',
                 'status' => 'pending',

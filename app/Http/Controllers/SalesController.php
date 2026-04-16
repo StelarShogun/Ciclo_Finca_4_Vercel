@@ -236,9 +236,7 @@ class SalesController extends Controller
             $orderSource = $clientId ? 'web_cart' : 'walk_in';
             $sale = Sale::create([
                 'invoice_number' => (new Sale)->generateInvoiceNumber(),
-                'customer_id' => null,
                 'client_id' => $clientId,
-                'seller_id' => null,
                 'seller_admin_id' => Auth::guard('admin')->id(),
                 'sale_date' => now(),
                 'payment_method' => $request->payment_method,
@@ -493,55 +491,62 @@ class SalesController extends Controller
                 return $this->exportSalesPdf($request, $base);
             }
 
-            $sales = (clone $base)
-                ->with(['client', 'sellerAdmin', 'saleItems.product'])
-                ->orderBy('sale_date', 'desc')
-                ->get();
-
             $filename = 'sales_'.now()->format('Y-m-d_H-i-s').'.csv';
             $headers = [
                 'Content-Type' => 'text/csv; charset=UTF-8',
                 'Content-Disposition' => 'attachment; filename="'.$filename.'"',
             ];
 
-            $callback = function () use ($sales) {
+            $chunkSize = AdminPdfExportLimits::SALES_CSV_CHUNK;
+
+            $callback = function () use ($base, $chunkSize): void {
                 $file = fopen('php://output', 'w');
+                if ($file === false) {
+                    return;
+                }
                 fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM for correct Excel rendering
                 fputcsv($file, [
                     'Sale ID', 'Customer', 'Email', 'Date', 'Status', 'Payment', 'Subtotal', 'IVA', 'Discount', 'Total', 'Items', 'Notes',
                 ], ';');
 
-                foreach ($sales as $sale) {
-                    $items = $sale->saleItems->map(function (SaleItem $item): string {
-                        $label = $item->product !== null ? $item->product->name : '?';
+                (clone $base)
+                    ->with(['client', 'sellerAdmin', 'saleItems.product'])
+                    ->orderBy('sale_id')
+                    ->chunkById($chunkSize, function ($sales) use ($file): void {
+                        foreach ($sales as $sale) {
+                            $items = $sale->saleItems->map(function (SaleItem $item): string {
+                                $label = $item->product !== null ? $item->product->name : '?';
 
-                        return $label.' (x'.$item->quantity.')';
-                    })->implode(', ');
+                                return $label.' (x'.$item->quantity.')';
+                            })->implode(', ');
 
-                    // Prefer the linked client record; fall back to inline buyer fields for walk-in sales
-                    $customerDisplayName = $sale->client
-                        ? trim($sale->client->name.' '.$sale->client->first_surname.' '.($sale->client->second_surname ?: ''))
-                        : ($sale->buyer_name ?: 'Walk-in / Sin datos');
+                            $customerDisplayName = $sale->client
+                                ? trim($sale->client->name.' '.$sale->client->first_surname.' '.($sale->client->second_surname ?: ''))
+                                : ($sale->buyer_name ?: 'Walk-in / Sin datos');
 
-                    $customerEmail = $sale->client
-                        ? $sale->client->gmail
-                        : ($sale->buyer_email ?: 'N/A');
+                            $customerEmail = $sale->client
+                                ? $sale->client->gmail
+                                : ($sale->buyer_email ?: 'N/A');
 
-                    fputcsv($file, [
-                        $sale->sale_id,
-                        $customerDisplayName,
-                        $customerEmail,
-                        $sale->sale_date->format('d/m/Y H:i'),
-                        ucfirst($sale->status),
-                        ucfirst($sale->payment_method),
-                        '₡'.number_format((float) $sale->subtotal, 2, ',', '.'),
-                        '₡'.number_format((float) $sale->iva, 2, ',', '.'),
-                        '₡'.number_format((float) $sale->discount, 2, ',', '.'),
-                        '₡'.number_format((float) $sale->total, 2, ',', '.'),
-                        $items,
-                        $sale->notes ?? '',
-                    ], ';');
-                }
+                            $saleDate = $sale->sale_date;
+
+                            fputcsv($file, [
+                                $sale->sale_id,
+                                $customerDisplayName,
+                                $customerEmail,
+                                $saleDate !== null ? $saleDate->format('d/m/Y H:i') : '',
+                                ucfirst((string) $sale->status),
+                                ucfirst((string) $sale->payment_method),
+                                '₡'.number_format((float) $sale->subtotal, 2, ',', '.'),
+                                '₡'.number_format((float) $sale->iva, 2, ',', '.'),
+                                '₡'.number_format((float) $sale->discount, 2, ',', '.'),
+                                '₡'.number_format((float) $sale->total, 2, ',', '.'),
+                                $items,
+                                $sale->notes ?? '',
+                            ], ';');
+                        }
+                    }, 'sale_id');
+
                 fclose($file);
             };
 
@@ -554,9 +559,6 @@ class SalesController extends Controller
         }
     }
 
-    /**
-     * @param  Builder<Sale>  $base
-     */
     private function exportSalesPdf(Request $request, Builder $base)
     {
         $maxRows = AdminPdfExportLimits::SALES_MAX_ROWS;
@@ -567,12 +569,22 @@ class SalesController extends Controller
             $filterLines[] = 'Nota: el PDF incluye como máximo '.$maxRows.' filas ('.$totalMatching.' ventas coinciden con los filtros).';
         }
 
+        $aggregate = (clone $base)
+            ->selectRaw('COUNT(*) as agg_count')
+            ->selectRaw('COALESCE(SUM(total), 0) as agg_sum_total')
+            ->selectRaw('COALESCE(SUM(subtotal), 0) as agg_sum_subtotal')
+            ->selectRaw('COALESCE(SUM(iva), 0) as agg_sum_iva')
+            ->selectRaw('COALESCE(SUM(discount), 0) as agg_sum_discount')
+            ->first();
+
+        $agg = $aggregate !== null ? $aggregate->getAttributes() : [];
+
         $totals = [
-            'count' => $totalMatching,
-            'sum_total' => (clone $base)->sum('total'),
-            'sum_subtotal' => (clone $base)->sum('subtotal'),
-            'sum_iva' => (clone $base)->sum('iva'),
-            'sum_discount' => (clone $base)->sum('discount'),
+            'count' => (int) ($agg['agg_count'] ?? 0),
+            'sum_total' => (float) ($agg['agg_sum_total'] ?? 0.0),
+            'sum_subtotal' => (float) ($agg['agg_sum_subtotal'] ?? 0.0),
+            'sum_iva' => (float) ($agg['agg_sum_iva'] ?? 0.0),
+            'sum_discount' => (float) ($agg['agg_sum_discount'] ?? 0.0),
         ];
 
         $rows = (clone $base)
