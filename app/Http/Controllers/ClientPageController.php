@@ -464,4 +464,19 @@ class ClientPageController extends Controller
             'cart_total' => 0,
         ]);
     }
+
+    public function invoices()
+    {
+        $client = Auth::guard('clients')->user();
+
+        $orders = Sale::with(['saleItems.product'])
+            ->where('client_id', $client->user_id)
+            ->where('status', 'pending')
+            ->orderByDesc('sale_date')
+            ->paginate(15);
+
+        $cartCount = $this->getCartCount();
+
+        return view('client.Invoices', compact('orders', 'cartCount'));
+    }
 }

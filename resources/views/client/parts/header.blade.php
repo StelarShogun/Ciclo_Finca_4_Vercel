@@ -52,6 +52,11 @@
                             <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
                         </a>
 
+                        {{-- Invoices button --}}
+                        <a href="{{ route('clients.invoices') }}" class="cf4-invoices-btn {{ request()->routeIs('clients.invoices') ? 'active' : '' }}" title="Mis facturas">
+                            <i class="fas fa-file-invoice"></i>
+                        </a>
+
                         {{-- Dropdown menu for the authenticated client --}}
                         <div class="user-menu-wrap" id="user-menu">
                             <button class="user-menu-trigger" id="user-menu-trigger" type="button" aria-expanded="false"

@@ -300,6 +300,9 @@ Route::middleware(['auth:clients'])->group(function () {
     Route::delete('/cart/clear', [ClientPageController::class, 'clearCart'])->name('clients.cart.clear');
     Route::post('/cart/checkout', [ClientPageController::class, 'checkout'])->name('clients.cart.checkout');
 
+    // Invoices
+    Route::get('/invoices', [ClientPageController::class, 'invoices'])->name('clients.invoices');
+
     // Profile
     Route::get('/profile', [ClientUserController::class, 'show'])->name('clients.profile');
     Route::put('/profile', [ClientUserController::class, 'update'])->name('clients.profile.update');
