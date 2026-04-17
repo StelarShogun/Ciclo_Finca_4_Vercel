@@ -55,7 +55,7 @@
             <li class="{{ request()->routeIs('admin.orders.index') ? 'active' : '' }}">
                 <a href="{{ route('admin.orders.index') }}">
                     <i class="fas fa-shopping-cart"></i>
-                    <span class="sidebar-label">Órdenes</span>
+                    <span class="sidebar-label">Encargos</span>
                 </a>
             </li>
             <li class="{{ request()->routeIs('admin.supplier-orders.*') ? 'active' : '' }}">

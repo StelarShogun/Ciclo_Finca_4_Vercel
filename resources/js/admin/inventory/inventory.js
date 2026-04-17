@@ -600,6 +600,8 @@ function smoothScrollTop() {
     // --- Gallery input validation (webkitdirectory may pick non-image files) ---
     const VALID_IMAGE_TYPES = ['image/jpeg','image/png','image/gif','image/svg+xml','image/webp','image/avif'];
 
+    const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB por imagen (igual al límite del servidor)
+
     function validateGalleryInput(inputEl, hintEl) {
         if (!inputEl || !inputEl.files || inputEl.files.length === 0) return true;
         const images = Array.from(inputEl.files).filter(f => VALID_IMAGE_TYPES.includes(f.type));
@@ -608,6 +610,18 @@ function smoothScrollTop() {
                 title: 'Sin imágenes válidas',
                 text: 'La carpeta seleccionada no contiene imágenes (jpeg, png, webp, gif, svg, avif). Seleccioná una carpeta con imágenes.',
                 icon: 'warning',
+                confirmButtonText: 'Entendido',
+            });
+            inputEl.value = '';
+            if (hintEl) hintEl.textContent = 'Ningún archivo seleccionado';
+            return false;
+        }
+        const oversized = images.filter(f => f.size > MAX_IMAGE_SIZE_BYTES);
+        if (oversized.length > 0) {
+            Swal.fire({
+                title: 'Error',
+                text: 'Ha excedido la capacidad de imágenes que puedes cargar. Cada imagen no puede superar 10 MB.',
+                icon: 'error',
                 confirmButtonText: 'Entendido',
             });
             inputEl.value = '';
@@ -711,6 +725,9 @@ function smoothScrollTop() {
                 }
             })
             .then(response => {
+                if (response.status === 413) {
+                    throw Object.assign(new Error('PAYLOAD_TOO_LARGE'), { isSizeError: true });
+                }
                 return response.json();
             })
             .then(data => {
@@ -770,7 +787,9 @@ function smoothScrollTop() {
                 console.error('Error:', error);
                 Swal.fire({
                     title: 'Error',
-                    text: 'Ocurrió un error inesperado. Por favor, revisa los logs.',
+                    text: error.isSizeError
+                        ? 'Ha excedido la capacidad de imágenes que puedes cargar.'
+                        : 'Ocurrió un error inesperado. Por favor, revisa los logs.',
                     icon: 'error',
                     confirmButtonText: 'Entendido'
                 });
@@ -961,6 +980,9 @@ function smoothScrollTop() {
                 }
             })
             .then(response => {
+                if (response.status === 413) {
+                    throw Object.assign(new Error('PAYLOAD_TOO_LARGE'), { isSizeError: true });
+                }
                 return response.json();
             })
             .then(data => {
@@ -1019,7 +1041,9 @@ function smoothScrollTop() {
                 console.error('Error:', error);
                 Swal.fire({
                     title: 'Error',
-                    text: 'Ocurrió un error inesperado. Por favor, revisa los logs.',
+                    text: error.isSizeError
+                        ? 'Ha excedido la capacidad de imágenes que puedes cargar.'
+                        : 'Ocurrió un error inesperado. Por favor, revisa los logs.',
                     icon: 'error',
                     confirmButtonText: 'Entendido'
                 });
