@@ -12,9 +12,7 @@
 
 @section('contenido')
     @php
-        $invKeys = ['search', 'subcategory_id', 'parent_category_id', 'category_id', 'stock_status', 'status', 'sort', 'order'];
-        $invParams = array_filter(request()->only($invKeys), fn ($v) => $v !== null && $v !== '');
-        $invQuery = count($invParams) ? '?'.http_build_query($invParams) : '';
+        $invQuery = \App\Services\Admin\AdminInventoryExportQuery::queryStringFromRequest(request());
 
         $salesKeys = ['status', 'date_range', 'start_date', 'end_date', 'payment_method', 'search'];
         $salesParams = array_filter(request()->only($salesKeys), fn ($v) => $v !== null && $v !== '');
@@ -44,10 +42,22 @@
 
         $exportFmt = fn (string $fmt) => route('products.export', ['format' => $fmt]).$invQuery;
 
-        $soKeys = ['state', 'search', 'date_from', 'date_to'];
-        $soParams = array_filter(request()->only($soKeys), fn ($v) => $v !== null && $v !== '');
-        $coKeys = ['status', 'search'];
-        $coParams = array_filter(request()->only($coKeys), fn ($v) => $v !== null && $v !== '');
+        $soParams = array_filter(
+            request()->only(\App\Services\Admin\AdminSupplierOrdersExportQuery::QUERY_KEYS),
+            fn ($v) => $v !== null && $v !== ''
+        );
+        $coParams = array_filter(
+            request()->only(\App\Services\Admin\AdminClientOrdersExportQuery::QUERY_KEYS),
+            fn ($v) => $v !== null && $v !== ''
+        );
+        $spParams = array_filter(
+            request()->only(\App\Services\Admin\AdminSuppliersCatalogExportQuery::QUERY_KEYS),
+            fn ($v) => $v !== null && $v !== ''
+        );
+        $brParams = array_filter(
+            request()->only(\App\Services\Admin\AdminBrandsCatalogExportQuery::QUERY_KEYS),
+            fn ($v) => $v !== null && $v !== ''
+        );
 
         $regUrl = function (string $slug, string $format, array $extra = []) {
             return route('admin.reports.exports.registry', ['slug' => $slug]).'?'.http_build_query(array_merge($extra, ['format' => $format]));
@@ -131,15 +141,15 @@
                     <li>
                         <span class="exports-item-label">Proveedores</span>
                         <span class="exports-item-actions">
-                            <a href="{{ $regUrl('proveedores', 'csv') }}" class="exports-chip" target="_blank" rel="noopener noreferrer">CSV</a>
-                            <a href="{{ $regUrl('proveedores', 'pdf') }}" class="exports-chip exports-chip-primary" target="_blank" rel="noopener noreferrer">PDF</a>
+                            <a href="{{ $regUrl('proveedores', 'csv', $spParams) }}" class="exports-chip" target="_blank" rel="noopener noreferrer">CSV</a>
+                            <a href="{{ $regUrl('proveedores', 'pdf', $spParams) }}" class="exports-chip exports-chip-primary" target="_blank" rel="noopener noreferrer">PDF</a>
                         </span>
                     </li>
                     <li>
                         <span class="exports-item-label">Marcas</span>
                         <span class="exports-item-actions">
-                            <a href="{{ $regUrl('marcas', 'csv') }}" class="exports-chip" target="_blank" rel="noopener noreferrer">CSV</a>
-                            <a href="{{ $regUrl('marcas', 'pdf') }}" class="exports-chip exports-chip-primary" target="_blank" rel="noopener noreferrer">PDF</a>
+                            <a href="{{ $regUrl('marcas', 'csv', $brParams) }}" class="exports-chip" target="_blank" rel="noopener noreferrer">CSV</a>
+                            <a href="{{ $regUrl('marcas', 'pdf', $brParams) }}" class="exports-chip exports-chip-primary" target="_blank" rel="noopener noreferrer">PDF</a>
                         </span>
                     </li>
                     <li>

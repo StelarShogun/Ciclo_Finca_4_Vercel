@@ -74,6 +74,49 @@ class AdminPdfExportReportTest extends TestCase
         $response->assertSee('/reports/exportaciones/descarga/proveedores', false);
     }
 
+    public function test_exports_page_propagates_inventory_filters_to_catalog_download_links(): void
+    {
+        $this->loginAdmin();
+
+        $response = $this->get('/reports/exportaciones?search=bici&stock_status=low');
+
+        $response->assertOk();
+        $response->assertSee('search=bici', false);
+        $response->assertSee('stock_status=low', false);
+    }
+
+    public function test_exports_page_propagates_supplier_order_filters_to_registry_links(): void
+    {
+        $this->loginAdmin();
+
+        $response = $this->get('/reports/exportaciones?state=pending&date_from=2026-01-01');
+
+        $response->assertOk();
+        $response->assertSee('state=pending', false);
+        $response->assertSee('date_from=2026-01-01', false);
+    }
+
+    public function test_exports_page_propagates_client_order_filters_to_registry_links(): void
+    {
+        $this->loginAdmin();
+
+        $response = $this->get('/reports/exportaciones?status=pending&search=foo');
+
+        $response->assertOk();
+        $response->assertSee('status=pending', false);
+        $response->assertSee('search=foo', false);
+    }
+
+    public function test_registry_proveedores_pdf_respects_name_filter(): void
+    {
+        $this->loginAdmin();
+
+        $response = $this->get('/reports/exportaciones/descarga/proveedores?format=pdf&name=xyznone');
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('Content-Type'));
+    }
+
     public function test_registry_proveedores_pdf_download_response(): void
     {
         $this->loginAdmin();
