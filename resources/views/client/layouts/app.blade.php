@@ -56,7 +56,7 @@
         @yield('content')
     </main>
 
-    @unless(View::hasSection('hideNav'))
+    @unless(View::hasSection('hideNav') || View::hasSection('hideFooter'))
         @include('client.parts.footer')
     @endunless
 

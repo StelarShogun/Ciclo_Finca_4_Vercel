@@ -50,14 +50,14 @@ Route::get('/run-migrations', function (Request $request) use ($assertDeployHelp
 
         if ($exitCode !== 0) {
             return response(
-                '❌ migrate exited with code '.$exitCode.'<br><pre>'.e($output).'</pre>',
+                '❌ migrate exited with code ' . $exitCode . '<br><pre>' . e($output) . '</pre>',
                 500
             );
         }
 
-        return '✅ Migrations executed successfully:<br><pre>'.e($output).'</pre>';
+        return '✅ Migrations executed successfully:<br><pre>' . e($output) . '</pre>';
     } catch (Throwable $e) {
-        return response('❌ Error running migrations: '.e($e->getMessage()), 500);
+        return response('❌ Error running migrations: ' . e($e->getMessage()), 500);
     }
 });
 
@@ -80,14 +80,14 @@ Route::get('/run-seeders/{class?}', function (Request $request, ?string $class =
 
         if ($exitCode !== 0) {
             return response(
-                '❌ db:seed exited with code '.$exitCode.'<br><pre>'.e($output).'</pre>',
+                '❌ db:seed exited with code ' . $exitCode . '<br><pre>' . e($output) . '</pre>',
                 500
             );
         }
 
-        return '✅ Seeder executed:<br><pre>'.e($output).'</pre>';
+        return '✅ Seeder executed:<br><pre>' . e($output) . '</pre>';
     } catch (Throwable $e) {
-        return response('❌ Error: '.e($e->getMessage()), 500);
+        return response('❌ Error: ' . e($e->getMessage()), 500);
     }
 })->where('class', '[A-Za-z0-9\\\\_]+');
 
@@ -151,6 +151,13 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
     Route::get('/inventory/export/{format?}', [ProductController::class, 'export'])->name('products.export');
     Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
+    Route::post('/inventory/add-manual/{id}',    [ProductController::class, 'addManualStock'])
+        ->name('products.stock.add')
+        ->whereNumber('id');
+
+    Route::post('/inventory/remove-manual/{id}', [ProductController::class, 'removeManualStock'])
+        ->name('products.stock.remove')
+        ->whereNumber('id');
 
     // Suppliers
     Route::resource('suppliers', SupplierController::class);
@@ -305,6 +312,10 @@ Route::middleware(['auth:clients'])->group(function () {
     Route::delete('/cart/remove/{id}', [ClientPageController::class, 'removeFromCart'])->name('clients.cart.remove');
     Route::delete('/cart/clear', [ClientPageController::class, 'clearCart'])->name('clients.cart.clear');
     Route::post('/cart/checkout', [ClientPageController::class, 'checkout'])->name('clients.cart.checkout');
+
+    // Invoices
+    Route::get('/invoices', [ClientPageController::class, 'invoices'])->name('clients.invoices');
+    Route::get('/invoices/heartbeat', [ClientPageController::class, 'invoicesHeartbeat'])->name('clients.invoices.heartbeat');
 
     // Profile
     Route::get('/profile', [ClientUserController::class, 'show'])->name('clients.profile');

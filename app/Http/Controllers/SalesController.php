@@ -125,7 +125,7 @@ class SalesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading sale: '.$e->getMessage(),
+                'message' => 'Error loading sale: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -190,7 +190,7 @@ class SalesController extends Controller
                 $product = Product::find($item['product_id']);
                 if (! $product || $item['quantity'] > $product->stock_current) {
                     DB::rollBack();
-                    $name = $product ? $product->name : 'ID '.$item['product_id'];
+                    $name = $product ? $product->name : 'ID ' . $item['product_id'];
                     $available = $product ? $product->stock_current : 0;
 
                     return response()->json([
@@ -223,7 +223,7 @@ class SalesController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'El descuento no puede ser mayor que el subtotal (₡'.number_format($subtotal, 2, ',', '.').').',
+                    'message' => 'El descuento no puede ser mayor que el subtotal (₡' . number_format($subtotal, 2, ',', '.') . ').',
                 ], 422);
             }
 
@@ -276,7 +276,7 @@ class SalesController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating sale: '.$e->getMessage(),
+                'message' => 'Error creating sale: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -377,7 +377,7 @@ class SalesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al confirmar el pedido: '.$e->getMessage(),
+                'message' => 'Error al confirmar el pedido: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -430,7 +430,7 @@ class SalesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al rechazar el pedido: '.$e->getMessage(),
+                'message' => 'Error al rechazar el pedido: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -491,10 +491,10 @@ class SalesController extends Controller
                 return $this->exportSalesPdf($request, $base);
             }
 
-            $filename = 'sales_'.now()->format('Y-m-d_H-i-s').'.csv';
+            $filename = 'sales_' . now()->format('Y-m-d_H-i-s') . '.csv';
             $headers = [
                 'Content-Type' => 'text/csv; charset=UTF-8',
-                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             ];
 
             $chunkSize = AdminPdfExportLimits::SALES_CSV_CHUNK;
@@ -506,7 +506,18 @@ class SalesController extends Controller
                 }
                 fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM for correct Excel rendering
                 fputcsv($file, [
-                    'Sale ID', 'Customer', 'Email', 'Date', 'Status', 'Payment', 'Subtotal', 'IVA', 'Discount', 'Total', 'Items', 'Notes',
+                    'Sale ID',
+                    'Customer',
+                    'Email',
+                    'Date',
+                    'Status',
+                    'Payment',
+                    'Subtotal',
+                    'IVA',
+                    'Discount',
+                    'Total',
+                    'Items',
+                    'Notes',
                 ], ';');
 
                 (clone $base)
@@ -554,7 +565,7 @@ class SalesController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error exporting sales: '.$e->getMessage(),
+                'message' => 'Error exporting sales: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -788,5 +799,95 @@ class SalesController extends Controller
     private function roundMoney(float $amount): float
     {
         return round($amount, 2);
+    }
+
+    public function byCategory(Request $request)
+    {
+        $dateRange = $request->input('date_range', 'month');
+        $dateFrom  = $request->input('date_from');
+        $dateTo    = $request->input('date_to');
+
+        if ($dateRange === 'custom') {
+            $request->validate([
+                'date_from' => 'required|date',
+                'date_to'   => 'required|date|after_or_equal:date_from',
+            ], [
+                'date_from.required'      => 'La fecha de inicio es obligatoria.',
+                'date_from.date'          => 'La fecha de inicio no es válida.',
+                'date_to.required'        => 'La fecha de fin es obligatoria.',
+                'date_to.date'            => 'La fecha de fin no es válida.',
+                'date_to.after_or_equal'  => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
+            ]);
+        }
+
+        [$from, $to] = $this->resolveDateRange($dateRange, $dateFrom, $dateTo);
+
+        $rows = SaleItem::query()
+            ->join('sales',      'sale_items.sale_id',    '=', 'sales.sale_id')
+            ->join('products',   'sale_items.product_id', '=', 'products.product_id')
+            ->join('categories', 'products.category_id',  '=', 'categories.category_id')
+            ->where('sales.status', 'completed')
+            ->whereBetween('sales.sale_date', [$from, $to])
+            ->groupBy('categories.category_id', 'categories.name')
+            ->selectRaw('
+                categories.category_id,
+                categories.name          AS category_name,
+                SUM(sale_items.quantity) AS total_units,
+                SUM(sale_items.total)    AS total_revenue
+            ')
+            ->orderByDesc('total_revenue')
+            ->get();
+
+        $grandTotal = $rows->sum('total_revenue');
+
+        $rows->transform(function ($row) use ($grandTotal) {
+            $row->percentage = $grandTotal > 0
+                ? round(($row->total_revenue / $grandTotal) * 100, 1)
+                : 0;
+            return $row;
+        });
+
+        $chartData = $rows->map(function ($r) {
+            return [
+                'label'   => $r->category_name,
+                'value'   => $r->total_revenue,
+                'percent' => $r->percentage,
+            ];
+        })->values()->toArray();
+
+        return view('admin.sales.reports-by-category', compact(
+            'rows', 'grandTotal', 'from', 'to', 'dateRange', 'chartData'
+        ));
+    }
+
+    private function resolveDateRange(string $range, ?string $dateFrom, ?string $dateTo): array
+    {
+        switch ($range) {
+            case 'today':
+                return [
+                    now()->startOfDay()->toDateTimeString(),
+                    now()->endOfDay()->toDateTimeString(),
+                ];
+            case 'week':
+                return [
+                    now()->startOfWeek()->startOfDay()->toDateTimeString(),
+                    now()->endOfWeek()->endOfDay()->toDateTimeString(),
+                ];
+            case 'month':
+                return [
+                    now()->startOfMonth()->startOfDay()->toDateTimeString(),
+                    now()->endOfMonth()->endOfDay()->toDateTimeString(),
+                ];
+            case 'custom':
+                return [
+                    $dateFrom ? Carbon::parse($dateFrom)->startOfDay()->toDateTimeString() : now()->startOfDay()->toDateTimeString(),
+                    $dateTo   ? Carbon::parse($dateTo)->endOfDay()->toDateTimeString()     : now()->endOfDay()->toDateTimeString(),
+                ];
+            default:
+                return [
+                    now()->startOfMonth()->startOfDay()->toDateTimeString(),
+                    now()->endOfMonth()->endOfDay()->toDateTimeString(),
+                ];
+        }
     }
 }

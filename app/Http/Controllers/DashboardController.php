@@ -29,7 +29,7 @@ class DashboardController extends Controller
             return view('admin.dashboard', $data);
 
         } catch (\Exception $e) {
-            \Log::error('Error en DashboardController: '.$e->getMessage(), [
+            Log::error('Error en DashboardController: '.$e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
@@ -73,7 +73,7 @@ class DashboardController extends Controller
                 ->where('status', 'completed')
                 ->sum('total');
 
-            $lowStockProducts = Product::lowStockAlert()->count();
+            $lowStockProducts = Product::whereColumn('stock_current', '<', 'stock_minimum')->count();
 
             return response()->json([
                 'success' => true,
@@ -85,7 +85,7 @@ class DashboardController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error en getDashboardData: '.$e->getMessage());
+            Log::error('Error en getDashboardData: '.$e->getMessage());
 
             return response()->json([
                 'success' => false,

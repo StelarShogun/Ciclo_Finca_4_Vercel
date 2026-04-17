@@ -21,6 +21,7 @@
 
     {{-- Chart.js for data visualization --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body class="admin-layout">
@@ -42,7 +43,7 @@
 
                         {{-- Data load error notice --}}
                         @if(isset($error))
-                            <div class="alert alert-warning" style="margin-top: 10px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; color: #856404;">
+                            <div class="alert alert-warning alert-inline-error">
                                 <i class="fas fa-exclamation-triangle"></i> {{ $error }}
                             </div>
                         @endif
@@ -159,16 +160,22 @@
             {{-- ==================== DATA TABLES ==================== --}}
             <section class="tables-section">
 
-                {{-- Low stock products table --}}
+                {{-- Low stock products table (top 10 strictly below stock_minimum) --}}
                 <div class="table-container">
                     <div class="table-header">
-                        <h3>Productos con Stock Bajo</h3>
+                        <h3>
+                            Top 10 Productos con Stock Bajo
+                            @if(($lowStockProducts ?? 0) > 0)
+                                <span class="badge-count">{{ $lowStockProducts }}</span>
+                            @endif
+                        </h3>
                         <a href="{{ route('inventory') }}" class="btn btn-sm btn-primary">
                             Ver Todos
                             <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
-                    <div class="table-content">
+                    <div class="table-content table-content--scroll">
+                        <div class="table-scroll-wrapper">
                         <table class="dashboard-table">
                             <thead>
                                 <tr>
@@ -178,8 +185,8 @@
                                     <th>Estado</th>
                                 </tr>
                             </thead>
-                            <tbody id="low-stock-table">
-                                @forelse($lowStockProductsList ?? [] as $product)
+                            <tbody id="low-stock-table" class="tbody-scroll">
+                                @forelse(($lowStockProductsList ?? collect())->take(10) as $product)
                                     <tr>
                                         <td>
                                             <div class="product-info">
@@ -194,7 +201,16 @@
                                         </td>
                                         <td>{{ $product->stock_minimum }}</td>
                                         <td>
-                                            <span class="status-badge warning">Stock Bajo</span>
+                                            {{-- Porcentaje real respecto al mínimo configurado --}}
+                                            @php
+                                                $pct = $product->stock_minimum > 0
+                                                    ? round(($product->stock_current / $product->stock_minimum) * 100)
+                                                    : 0;
+                                            @endphp
+                                            <span class="status-badge {{ $pct <= 0 ? 'danger' : 'warning' }}"
+                                                  title="{{ $pct }}% del mínimo requerido">
+                                                {{ $pct <= 0 ? 'Sin Stock' : 'Stock Bajo ('.$pct.'%)' }}
+                                            </span>
                                         </td>
                                     </tr>
                                 @empty
@@ -209,6 +225,7 @@
                                 @endforelse
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
 
@@ -221,7 +238,8 @@
                             <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
-                    <div class="table-content">
+                    <div class="table-content table-content--scroll">
+                        <div class="table-scroll-wrapper">
                         <table class="dashboard-table">
                             <thead>
                                 <tr>
@@ -232,8 +250,8 @@
                                     <th>Status</th>
                                 </tr>
                             </thead>
-                            <tbody id="recent-sales-table">
-                                @forelse($recentSales ?? [] as $sale)
+                            <tbody id="recent-sales-table" class="tbody-scroll">
+                                @forelse(($recentSales ?? collect())->take(10) as $sale)
                                     <tr>
                                         <td>{{ $sale->invoice_number ?? '#' . $sale->sale_id }}</td>
                                         <td>
@@ -266,6 +284,7 @@
                                 @endforelse
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
 
@@ -308,6 +327,50 @@
 
     {{-- Dashboard scripts --}}
     @vite(['resources/js/admin/dashboard/dashboard.js'])
+
+
+    {{-- ==================== LOW-STOCK TOAST ==================== --}}
+    {{-- Se muestra automáticamente al cargar si hay productos bajo su stock mínimo --}}
+    @if(($lowStockProducts ?? 0) > 0)
+    <div id="low-stock-toast" class="ls-toast ls-toast--visible" role="alert" aria-live="assertive">
+        <div class="ls-toast__icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="ls-toast__body">
+            <strong class="ls-toast__title">Alerta de inventario</strong>
+            <p class="ls-toast__msg">
+                {{ $lowStockProducts }} producto{{ $lowStockProducts > 1 ? 's' : '' }}
+                {{ $lowStockProducts > 1 ? 'están' : 'está' }} por debajo del stock mínimo configurado.
+            </p>
+            <a href="{{ route('inventory') }}" class="ls-toast__link">
+                Ver inventario <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <button class="ls-toast__close" id="close-low-stock-toast" aria-label="Cerrar">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <script>
+        (function () {
+            var toast    = document.getElementById('low-stock-toast');
+            var closeBtn = document.getElementById('close-low-stock-toast');
+            if (!toast) return;
+
+            function hideToast() {
+                toast.classList.add('ls-toast--hiding');
+                toast.addEventListener('transitionend', function () { toast.remove(); }, { once: true });
+            }
+
+            var autoTimer = setTimeout(hideToast, 7000);
+
+            closeBtn.addEventListener('click', function () {
+                clearTimeout(autoTimer);
+                hideToast();
+            });
+        })();
+    </script>
+    @endif
 
 </body>
 </html>
