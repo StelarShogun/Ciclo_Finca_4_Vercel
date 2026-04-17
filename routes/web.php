@@ -172,6 +172,7 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     // Sales — static paths must be registered before Route::resource to avoid matching `{sale}` = "export".
     Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
     Route::get('/sales/history/heartbeat', [SalesController::class, 'historyHeartbeat'])->name('sales.history.heartbeat');
+    Route::get('/sales/reports/by-category', [SalesController::class, 'byCategory'])->name('sales.reports.byCategory');
     Route::resource('sales', SalesController::class);
     Route::post('/sales/{id}/complete', [SalesController::class, 'complete'])->name('sales.complete');
     Route::post('/sales/{id}/cancel', [SalesController::class, 'cancel'])->name('sales.cancel');
