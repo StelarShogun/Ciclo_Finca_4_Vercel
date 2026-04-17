@@ -18,7 +18,7 @@
         </header>
 
         <div class="reports-cards">
-            <a href="{{ route('admin.reports.exports') }}" class="report-card">
+            <a href="{{ route('admin.reports.exports').(request()->getQueryString() !== null && request()->getQueryString() !== '' ? '?'.request()->getQueryString() : '') }}" class="report-card">
                 <div class="report-card-icon"><i class="fas fa-file-export"></i></div>
                 <div class="report-card-body">
                     <h2>Exportar datos y PDF</h2>

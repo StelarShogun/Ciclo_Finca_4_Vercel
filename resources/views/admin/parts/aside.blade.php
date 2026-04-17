@@ -81,7 +81,7 @@
             </li>
 
             <li class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
-                <a href="{{ route('admin.reports.index') }}">
+                <a href="{{ route('admin.reports.index').\App\Services\Admin\AdminReportsHubQuery::sidebarReportsIndexSuffix(request()) }}">
                     <i class="fas fa-file-alt"></i>
                     <span class="sidebar-label">Reportes</span>
                 </a>

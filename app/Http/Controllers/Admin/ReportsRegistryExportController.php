@@ -41,8 +41,8 @@ class ReportsRegistryExportController extends Controller
         }
 
         return match ($slug) {
-            'proveedores' => $format === 'pdf' ? $this->suppliersPdf() : $this->suppliersCsv(),
-            'marcas' => $format === 'pdf' ? $this->brandsPdf() : $this->brandsCsv(),
+            'proveedores' => $format === 'pdf' ? $this->suppliersPdf($request) : $this->suppliersCsv($request),
+            'marcas' => $format === 'pdf' ? $this->brandsPdf($request) : $this->brandsCsv($request),
             'pedidos-proveedores' => $format === 'pdf' ? $this->supplierOrdersPdf($request) : $this->supplierOrdersCsv($request),
             'usuarios' => $format === 'pdf' ? $this->clientsPdf() : $this->clientsCsv(),
             'pedidos-clientes' => $format === 'pdf' ? $this->clientOrdersPdf($request) : $this->clientOrdersCsv($request),
@@ -56,39 +56,85 @@ class ReportsRegistryExportController extends Controller
         return is_file($path) ? $path : null;
     }
 
-    private function suppliersPdf(): Response
+    private function suppliersBase(Request $request): Builder
     {
-        $rows = Supplier::query()->orderBy('name')->limit(AdminPdfExportLimits::REGISTRY_MAX_ROWS)->get();
+        $query = Supplier::query()->orderBy('name');
+
+        if ($request->filled('name')) {
+            $term = trim((string) $request->get('name'));
+            $query->where('name', 'like', '%'.$term.'%');
+        }
+        if ($request->filled('contact')) {
+            $term = trim((string) $request->get('contact'));
+            $query->where('primary_contact', 'like', '%'.$term.'%');
+        }
+
+        return $query;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function suppliersCatalogFilterLines(Request $request): array
+    {
+        $lines = [];
+        if ($request->filled('name')) {
+            $lines[] = 'Nombre: '.$request->string('name');
+        }
+        if ($request->filled('contact')) {
+            $lines[] = 'Contacto: '.$request->string('contact');
+        }
+
+        return $lines;
+    }
+
+    private function suppliersPdf(Request $request): Response
+    {
+        $base = $this->suppliersBase($request);
+        $total = (clone $base)->count();
+        $filterLines = $this->suppliersCatalogFilterLines($request);
+        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        if ($total > $max) {
+            $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' proveedores coinciden).';
+        }
+
+        $rows = (clone $base)->limit($max)->get();
         $headers = ['ID', 'Nombre', 'Contacto', 'Teléfono', 'Email', 'Dirección', 'Entrega (días)', 'Valoración', 'Estado'];
-        $data = $rows->map(fn (Supplier $s): array => [
-            (string) $s->supplier_id,
-            $s->name,
-            (string) ($s->primary_contact ?? ''),
-            (string) ($s->phone ?? ''),
-            (string) ($s->email ?? ''),
-            Str::limit((string) ($s->address ?? ''), 80),
-            (string) ($s->delivery_time ?? ''),
-            (string) ($s->rating ?? ''),
-            (string) ($s->status ?? ''),
-        ])->values()->all();
+        $data = [];
+        foreach ($rows as $s) {
+            if (! $s instanceof Supplier) {
+                continue;
+            }
+            $data[] = [
+                (string) $s->supplier_id,
+                $s->name,
+                (string) ($s->primary_contact ?? ''),
+                (string) ($s->phone ?? ''),
+                (string) ($s->email ?? ''),
+                Str::limit((string) ($s->address ?? ''), 80),
+                (string) ($s->delivery_time ?? ''),
+                (string) ($s->rating ?? ''),
+                (string) ($s->status ?? ''),
+            ];
+        }
 
         return $this->registryPdf(
             'Proveedores',
             'Listado de proveedores — Ciclo Finca 4',
-            [],
+            $filterLines,
             $headers,
             $data,
             'proveedores'
         );
     }
 
-    private function suppliersCsv(): StreamedResponse
+    private function suppliersCsv(Request $request): StreamedResponse
     {
         return $this->streamRegistryCsv(
             'proveedores_'.now()->format('Y-m-d_His').'.csv',
             ['ID', 'Nombre', 'Contacto', 'Teléfono', 'Email', 'Dirección', 'Entrega_dias', 'Valoracion', 'Estado'],
-            function (callable $emitRow): void {
-                foreach (Supplier::query()->orderBy('name')->cursor() as $s) {
+            function (callable $emitRow) use ($request): void {
+                foreach ($this->suppliersBase($request)->cursor() as $s) {
                     if (! $s instanceof Supplier) {
                         continue;
                     }
@@ -108,22 +154,61 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    private function brandsPdf(): Response
+    private function brandsBase(Request $request): Builder
     {
-        $rows = Brand::query()->orderBy('name')->limit(AdminPdfExportLimits::REGISTRY_MAX_ROWS)->get();
-        $headers = ['ID', 'Nombre'];
-        $data = $rows->map(fn (Brand $b): array => [(string) $b->id, $b->name])->values()->all();
+        $query = Brand::query()->orderBy('name');
 
-        return $this->registryPdf('Marcas', 'Catálogo de marcas — Ciclo Finca 4', [], $headers, $data, 'marcas');
+        if ($request->filled('name')) {
+            $term = trim((string) $request->get('name'));
+            $query->where('name', 'like', '%'.$term.'%');
+        }
+
+        return $query;
     }
 
-    private function brandsCsv(): StreamedResponse
+    /**
+     * @return array<int, string>
+     */
+    private function brandsCatalogFilterLines(Request $request): array
+    {
+        $lines = [];
+        if ($request->filled('name')) {
+            $lines[] = 'Nombre: '.$request->string('name');
+        }
+
+        return $lines;
+    }
+
+    private function brandsPdf(Request $request): Response
+    {
+        $base = $this->brandsBase($request);
+        $total = (clone $base)->count();
+        $filterLines = $this->brandsCatalogFilterLines($request);
+        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        if ($total > $max) {
+            $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' marcas coinciden).';
+        }
+
+        $rows = (clone $base)->limit($max)->get();
+        $headers = ['ID', 'Nombre'];
+        $data = [];
+        foreach ($rows as $b) {
+            if (! $b instanceof Brand) {
+                continue;
+            }
+            $data[] = [(string) $b->id, $b->name];
+        }
+
+        return $this->registryPdf('Marcas', 'Catálogo de marcas — Ciclo Finca 4', $filterLines, $headers, $data, 'marcas');
+    }
+
+    private function brandsCsv(Request $request): StreamedResponse
     {
         return $this->streamRegistryCsv(
             'marcas_'.now()->format('Y-m-d_His').'.csv',
             ['ID', 'Nombre'],
-            function (callable $emitRow): void {
-                foreach (Brand::query()->orderBy('name')->cursor() as $b) {
+            function (callable $emitRow) use ($request): void {
+                foreach ($this->brandsBase($request)->cursor() as $b) {
                     if (! $b instanceof Brand) {
                         continue;
                     }

@@ -8,6 +8,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Services\Admin\AdminInventoryExportQuery;
 use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\ReportPdfFilename;
 use App\Services\ProductClassificationAssignmentService;
@@ -443,6 +444,7 @@ class ProductController extends Controller
             'categories' => $categories,
             'subcategoriesByParent' => $subcategoriesByParent,
             'brands' => Brand::orderBy('name')->get(['id', 'name']),
+            'inventoryExportsQuery' => AdminInventoryExportQuery::queryStringFromRequest($request),
         ]);
     }
 
