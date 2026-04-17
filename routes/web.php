@@ -172,6 +172,8 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/sales/{id}/invoice', [SalesController::class, 'invoice'])->name('sales.invoice');
     Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
     Route::get('/sales/history/heartbeat', [SalesController::class, 'historyHeartbeat'])->name('sales.history.heartbeat');
+    Route::get('/sales/reports/by-category', [SalesController::class, 'byCategory'])
+     ->name('sales.reports.byCategory');
 
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::put('/orders/settings/order-expiration', [AdminOrderSettingsController::class, 'update'])
