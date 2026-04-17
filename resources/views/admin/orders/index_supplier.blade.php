@@ -34,10 +34,13 @@
                     <a href="{{ route('admin.orders.index') }}">Órdenes</a>.
                 </p>
             </div>
-            <div class="sales-actions">
-                <a href="{{ route('admin.supplier-orders.create') }}" class="btn btn-primary">
+            <div class="sales-header-actions">
+                <a href="{{ route('admin.supplier-orders.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i>
                     Nuevo pedido
+                </a>
+                <a href="{{ route('admin.reports.exports').\App\Services\Admin\AdminSupplierOrdersExportQuery::queryStringFromRequest(request()) }}" class="btn btn-secondary btn-sm" title="Centro de exportación; los listados de pedidos a proveedores respetan los filtros aplicados aquí">
+                    <i class="fas fa-file-export"></i> Exportar datos
                 </a>
             </div>
         </header>
@@ -145,10 +148,10 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($order->products && count($order->products) > 0)
+                                    @if($order->orderItems && $order->orderItems->count() > 0)
                                         <div style="display:flex; flex-direction:column; gap:6px;">
-                                            @foreach($order->products as $item)
-                                                <div>{{ $item['quantity'] }} × {{ $item['name'] }}</div>
+                                            @foreach($order->orderItems as $item)
+                                                <div>{{ $item->quantity }} × {{ $item->name }}</div>
                                             @endforeach
                                         </div>
                                     @else
@@ -187,22 +190,22 @@
                                                 title="Ver detalles">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        @if($order->state === 'pending')
+                                        @if($order->state === 'draft')
                                             <button class="action-btn success" type="button"
-                                                    onclick="confirmOrder('{{ $order->num_order }}')"
-                                                    title="Confirmar pedido">
-                                                <i class="fas fa-check"></i>
+                                                    onclick="submitDraftOrder('{{ $order->num_order }}')"
+                                                    title="Enviar a pendiente">
+                                                <i class="fas fa-paper-plane"></i>
                                             </button>
                                             <button class="action-btn danger" type="button"
                                                     onclick="cancelOrder('{{ $order->num_order }}')"
                                                     title="Cancelar pedido">
                                                 <i class="fas fa-times"></i>
                                             </button>
-                                        @elseif($order->state === 'draft')
+                                        @elseif($order->state === 'pending')
                                             <button class="action-btn success" type="button"
-                                                    onclick="sendOrder('{{ $order->num_order }}')"
-                                                    title="Enviar pedido (pasar a Pendiente)">
-                                                <i class="fas fa-paper-plane"></i>
+                                                    onclick="confirmOrder('{{ $order->num_order }}')"
+                                                    title="Confirmar pedido">
+                                                <i class="fas fa-check"></i>
                                             </button>
                                             <button class="action-btn danger" type="button"
                                                     onclick="cancelOrder('{{ $order->num_order }}')"

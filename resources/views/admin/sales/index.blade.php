@@ -152,7 +152,7 @@
             $statusLabels = [
                 'pending' => 'Pendiente',
                 'completed' => 'Confirmada',
-                'cancelled' => 'Cancelado',
+                'cancelled' => 'Rechazado',
                 'refunded' => 'Reembolsado',
             ];
             $paymentLabels = ['cash' => 'Efectivo', 'sinpe' => 'SINPE Móvil', 'transfer' => 'Transferencia'];
@@ -250,10 +250,12 @@
                                             <i class="fas fa-undo"></i>
                                         </button>
                                     @endif
-                                    <button class="action-btn secondary" onclick="printSale('{{ $sale->sale_id }}')"
-                                        title="Imprimir">
-                                        <i class="fas fa-print"></i>
-                                    </button>
+                                    @if ($sale->status !== 'cancelled')
+                                        <button class="action-btn secondary" onclick="printSale('{{ $sale->sale_id }}')"
+                                            title="Imprimir">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

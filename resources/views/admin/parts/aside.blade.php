@@ -1,15 +1,41 @@
 <aside class="admin-sidebar expanded">
     <div class="sidebar-header">
-        <img src="{{ asset('assets/images/logo.png') }}" alt="Ciclo Finca 4 Logo" class="logo">
+        <a href="{{ route('dashboard') }}" class="sidebar-header-brand" title="Ir al panel de administración">
+            <img src="{{ asset('assets/images/logo.png') }}" alt="" class="logo" width="88" height="88">
+            <div class="sidebar-header-text">
+                <span class="sidebar-header-admin">Admin</span>
+                <span class="sidebar-header-title">Ciclo Finca 4</span>
+            </div>
+        </a>
     </div>
     <nav class="sidebar-nav">
         <ul>
-            <li>
-                <a href="{{ url('/dashboard') }}">
+            <li class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <a href="{{ route('dashboard') }}">
                     <i class="fas fa-chart-line"></i>
                     <span class="sidebar-label">Dashboard</span>
                 </a>
             </li>
+
+            <li class="{{ request()->routeIs('sales.*') ? 'active' : '' }}">
+                <a href="{{ route('sales.index') }}">
+                    <i class="fas fa-cash-register"></i>
+                    <span class="sidebar-label">Ventas</span>
+                </a>
+            </li>
+            <li class="{{ request()->routeIs('admin.orders.index') ? 'active' : '' }}">
+                <a href="{{ route('admin.orders.index') }}">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="sidebar-label">Encargos</span>
+                </a>
+            </li>
+            <li class="{{ request()->routeIs('admin.supplier-orders.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.supplier-orders.index') }}">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span class="sidebar-label">Pedidos proveedores</span>
+                </a>
+            </li>
+
             <li class="{{ request()->routeIs('inventory') ? 'active' : '' }}">
                 <a href="{{ route('inventory') }}">
                     <i class="fas fa-box"></i>
@@ -39,29 +65,12 @@
                     <i class="fas fa-truck"></i>
                     <span class="sidebar-label">Proveedores</span>
                 </a>
-            </li>  
-            <li class="{{ request()->routeIs('sales.*') ? 'active' : '' }}">
-                <a href="{{ route('sales.index') }}">
-                    <i class="fas fa-cash-register"></i>
-                    <span class="sidebar-label">Ventas</span>
-                </a>
             </li>
+
             <li class="{{ request()->routeIs('admin.clients.*') ? 'active' : '' }}">
                 <a href="{{ route('admin.clients.index') }}">
                     <i class="fas fa-users"></i>
                     <span class="sidebar-label">Usuarios</span>
-                </a>
-            </li>
-            <li class="{{ request()->routeIs('admin.orders.index') ? 'active' : '' }}">
-                <a href="{{ route('admin.orders.index') }}">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="sidebar-label">Encargos</span>
-                </a>
-            </li>
-            <li class="{{ request()->routeIs('admin.supplier-orders.*') ? 'active' : '' }}">
-                <a href="{{ route('admin.supplier-orders.index') }}">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span class="sidebar-label">Pedidos Proveedores</span>
                 </a>
             </li>
             <li>
@@ -70,8 +79,9 @@
                     <span class="sidebar-label">Moderación</span>
                 </a>
             </li>
+
             <li class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
-                <a href="{{ route('admin.reports.index') }}">
+                <a href="{{ route('admin.reports.index').\App\Services\Admin\AdminReportsHubQuery::sidebarReportsIndexSuffix(request()) }}">
                     <i class="fas fa-file-alt"></i>
                     <span class="sidebar-label">Reportes</span>
                 </a>

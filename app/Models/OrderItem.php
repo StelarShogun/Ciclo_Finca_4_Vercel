@@ -5,6 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Normalized line for a supplier purchase order (`orders`).
+ *
+ * @property int $id
+ * @property int $order_num_order
+ * @property int $product_id
+ * @property string $name
+ * @property int $quantity
+ * @property numeric-string $unit_price
+ * @property numeric-string $total
+ */
 class OrderItem extends Model
 {
     protected $table = 'order_items';
@@ -34,4 +45,3 @@ class OrderItem extends Model
         return $this->belongsTo(Product::class, 'product_id', 'product_id');
     }
 }
-

@@ -1,6 +1,7 @@
 @import "../variables-reset.css";
 @import "../utilities.css";
 @import "../sidebar.css";
+@import "../../components/modals.css";
 
 /* Layout base: el aside es position:fixed; sin este offset el contenido queda debajo del sidebar (solo existía padding en breakpoints ≤1024px). */
 .admin-layout {
@@ -55,32 +56,71 @@
   pointer-events: none;
 }
 
+/* Botones por defecto: legibles sobre fondos claros (modales, tablas, tarjetas). */
 .btn-primary {
+  background: var(--color-primary, #2e7d32);
+  color: #fff;
+  border: 2px solid var(--color-primary, #2e7d32);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-dark, #1b5e20);
+  border-color: var(--color-primary-dark, #1b5e20);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.35);
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #1e293b;
+  border: 2px solid #cbd5e1;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+/* Encabezado verde del dashboard: estilo «cristal» sobre fondo oscuro */
+.dashboard-header .btn-primary {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 2px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(10px);
 }
 
-.btn-primary:hover:not(:disabled) {
+.dashboard-header .btn-primary:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.3);
   border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.btn-secondary {
+.dashboard-header .btn-secondary {
   background: rgba(255, 255, 255, 0.15);
   color: white;
   border: 2px solid rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(10px);
 }
 
-.btn-secondary:hover:not(:disabled) {
+.dashboard-header .btn-secondary:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.25);
   border-color: rgba(255, 255, 255, 0.4);
-  transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.btn-outline-primary {
+  background: transparent;
+  color: var(--color-primary, #2e7d32);
+  border: 2px solid var(--color-primary, #2e7d32);
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+  background: rgba(46, 125, 50, 0.08);
+  color: var(--color-primary-dark, #1b5e20);
+  border-color: var(--color-primary-dark, #1b5e20);
+  transform: translateY(-1px);
 }
 
 .btn-sm {
@@ -340,9 +380,31 @@
 
 .charts-section {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr);
   gap: 30px;
   margin-bottom: 30px;
+  align-items: start;
+}
+
+/* Ventas: el canvas usa todo el ancho de la celda y crece en altura */
+.chart-container--sales {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 440px;
+}
+
+.chart-container--sales .chart-header {
+  flex-shrink: 0;
+}
+
+.chart-wrapper--sales {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 360px;
+  height: clamp(360px, 38vh, 520px);
 }
 
 .chart-container {
@@ -351,6 +413,87 @@
   padding: 25px;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
+}
+
+/* Gráfico de categorías: dona fija + leyenda HTML con scroll propio */
+.chart-container--category .category-chart-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.chart-wrapper--category-donut {
+  height: 260px;
+  flex-shrink: 0;
+}
+
+.category-chart-legend {
+  max-height: 7.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.35rem 0.25rem 0.35rem 0;
+  margin: 0;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  -webkit-overflow-scrolling: touch;
+}
+
+.category-chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.15rem;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.category-chart-legend-item:hover {
+  background: var(--color-light);
+}
+
+.category-chart-legend-item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.category-chart-legend-item--hidden {
+  opacity: 0.45;
+}
+
+.category-chart-legend-item--hidden .category-chart-legend-name {
+  text-decoration: line-through;
+}
+
+.category-chart-legend-item:last-child {
+  border-bottom: none;
+}
+
+.category-chart-legend-swatch {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.category-chart-legend-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 500;
+  color: var(--color-dark);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.category-chart-legend-value {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
 }
 
 .chart-header {
@@ -689,6 +832,15 @@
   .kpis-section { grid-template-columns: 1fr; }
   .actions-grid { grid-template-columns: 1fr; }
   .chart-wrapper { height: 250px; }
+
+  .chart-container--sales {
+    min-height: 380px;
+  }
+
+  .chart-wrapper--sales {
+    min-height: 260px;
+    height: clamp(260px, 32vh, 400px);
+  }
   .btn { padding: 10px 16px; font-size: 0.9rem; }
   .btn-sm { padding: 6px 10px; font-size: 0.8rem; }
   .dashboard-header { border-radius: 10px; padding: 0.875rem 1rem; }

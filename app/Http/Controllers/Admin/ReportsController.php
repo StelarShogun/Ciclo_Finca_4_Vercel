@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
+use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\ProductSalesReportQuery;
+use App\Services\Admin\ReportPdfFilename;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -18,6 +20,15 @@ class ReportsController extends Controller
     public function index()
     {
         return view('admin.reports.index');
+    }
+
+    /**
+     * Centro único de exportación (PDF y datos) desde el módulo Reportes.
+     * Los enlaces respetan querystring opcional (p. ej. filtros de inventario o ventas pasados desde esas pantallas).
+     */
+    public function exports()
+    {
+        return view('admin.reports.exports');
     }
 
     public function productSales(Request $request)
@@ -44,13 +55,13 @@ class ReportsController extends Controller
         $start = $this->periodStart($period);
 
         $top10SortColumn = $top10Metric === 'units' ? 'units_sold' : 'revenue';
-        $top10 = $this->newProductSalesQuery($start, $q)
+        $top10 = ProductSalesReportQuery::base($start, $q)
             ->orderByDesc($top10SortColumn)
             ->limit(10)
             ->get();
 
         $sortColumn = $sort === 'units' ? 'units_sold' : 'revenue';
-        $paginator = $this->newProductSalesQuery($start, $q)
+        $paginator = ProductSalesReportQuery::base($start, $q)
             ->orderBy($sortColumn, $dir)
             ->paginate($perPage, ['*'], 'page', $page);
 
@@ -64,13 +75,7 @@ class ReportsController extends Controller
         ]);
 
         $formatRow = function ($row) {
-            return [
-                'product_id' => (int) $row->product_id,
-                'name' => (string) $row->name,
-                'sku' => Product::skuFromId((int) $row->product_id),
-                'units_sold' => (int) $row->units_sold,
-                'revenue' => round((float) $row->revenue, 2),
-            ];
+            return ProductSalesReportQuery::formatRow($row);
         };
 
         return response()->json([
@@ -95,29 +100,77 @@ class ReportsController extends Controller
         ]);
     }
 
-    private function newProductSalesQuery(Carbon $start, string $q): Builder
+    public function productSalesPdf(Request $request)
     {
-        $skuExpr = "CONCAT('BK-', LPAD(products.product_id, 3, '0'))";
+        $period = $this->normalizePeriod($request->query('period'));
+        $sort = $this->normalizeSort($request->query('sort'));
+        $dir = $this->normalizeDir($request->query('dir'));
+        $q = $this->normalizeQuery($request->query('q'));
+        $top10Metric = $this->normalizeTop10Metric($request->query('top10'));
 
-        $query = DB::table('sale_items')
-            ->join('products', 'sale_items.product_id', '=', 'products.product_id')
-            ->join('sales', 'sale_items.sale_id', '=', 'sales.sale_id')
-            ->where('sales.status', 'completed')
-            ->where('sales.sale_date', '>=', $start)
-            ->select(
-                'products.product_id',
-                'products.name',
-                DB::raw('SUM(sale_items.quantity) as units_sold'),
-                DB::raw('SUM(sale_items.total) as revenue'),
-            )
-            ->groupBy('products.product_id', 'products.name');
+        $start = $this->periodStart($period);
+        $top10SortColumn = $top10Metric === 'units' ? 'units_sold' : 'revenue';
+        $sortColumn = $sort === 'units' ? 'units_sold' : 'revenue';
 
+        $top10 = ProductSalesReportQuery::base($start, $q)
+            ->orderByDesc($top10SortColumn)
+            ->limit(10)
+            ->get();
+
+        $maxRows = AdminPdfExportLimits::PRODUCT_SALES_TABLE_MAX_ROWS;
+        $tableRows = ProductSalesReportQuery::base($start, $q)
+            ->orderBy($sortColumn, $dir)
+            ->limit($maxRows)
+            ->get();
+
+        $totalMatching = (int) DB::query()
+            ->fromSub(ProductSalesReportQuery::base($start, $q), 'product_sales_agg')
+            ->count();
+
+        $filterLines = [
+            'Periodo: '.$this->periodLabel($period),
+            'Top 10 por: '.($top10Metric === 'units' ? 'unidades' : 'ingresos'),
+            'Tabla ordenada por: '.($sort === 'units' ? 'unidades' : 'ingresos').' ('.$dir.')',
+        ];
         if ($q !== '') {
-            $like = '%'.addcslashes($q, '%_\\').'%';
-            $query->havingRaw("(products.name LIKE ? OR {$skuExpr} LIKE ?)", [$like, $like]);
+            $filterLines[] = 'Búsqueda: '.$q;
+        }
+        if ($totalMatching > $maxRows) {
+            $filterLines[] = 'Nota: la tabla del PDF incluye como máximo '.$maxRows.' filas ('.$totalMatching.' productos con ventas en el periodo).';
         }
 
-        return $query;
+        $top10Formatted = $top10->map(fn ($row) => ProductSalesReportQuery::formatRow($row));
+        $tableFormatted = $tableRows->map(fn ($row) => ProductSalesReportQuery::formatRow($row));
+
+        $maxBarUnits = max(1, (int) $top10Formatted->max('units_sold'));
+        $maxBarRevenue = max(1.0, (float) $top10Formatted->max('revenue'));
+
+        $logoPath = public_path('assets/images/brand/logo-ciclo-finca-icon.png');
+
+        $pdf = PDF::loadView('admin.reports.product-sales-pdf', [
+            'period' => $period,
+            'top10Metric' => $top10Metric,
+            'top10' => $top10Formatted,
+            'tableRows' => $tableFormatted,
+            'maxBarUnits' => $maxBarUnits,
+            'maxBarRevenue' => $maxBarRevenue,
+            'pdfTitle' => 'Productos más vendidos',
+            'pdfSubtitle' => 'Ventas completadas — Ciclo Finca 4',
+            'logoPath' => is_file($logoPath) ? $logoPath : null,
+            'filterLines' => $filterLines,
+            'generatedFor' => 'Administración',
+        ]);
+
+        return $pdf->download(ReportPdfFilename::make('productos-vendidos'));
+    }
+
+    private function periodLabel(string $period): string
+    {
+        return match ($period) {
+            '7d' => 'últimos 7 días',
+            '90d' => 'últimos 90 días',
+            default => 'últimos 30 días',
+        };
     }
 
     private function periodStart(string $period): Carbon

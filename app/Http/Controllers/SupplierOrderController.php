@@ -95,7 +95,7 @@ class SupplierOrderController extends Controller
             [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
         }
 
-        $query = Order::with('supplier')->orderBy('orders.date', 'desc');
+        $query = Order::with(['supplier', 'orderItems'])->orderBy('orders.date', 'desc');
 
         if ($state) {
             $query->where('state', $state);
@@ -154,7 +154,7 @@ class SupplierOrderController extends Controller
 
     public function detail($id)
     {
-        $order = Order::with('supplier')->findOrFail($id);
+        $order = Order::with(['supplier', 'orderItems'])->findOrFail($id);
 
         return view('admin.orders.detail_supplier', compact('order'));
     }
@@ -230,7 +230,6 @@ class SupplierOrderController extends Controller
             $order = Order::create([
                 'po_number' => $po,
                 'supplier_id' => (int) $validated['supplier_id'],
-                'products' => $lines,
                 'date' => now(),
                 'estimated_delivery_date' => $validated['estimated_delivery_date'],
                 'state' => 'draft',
@@ -254,7 +253,15 @@ class SupplierOrderController extends Controller
 
     public function show($id)
     {
-        $order = Order::with('supplier')->findOrFail($id);
+        $order = Order::with(['supplier', 'orderItems'])->findOrFail($id);
+
+        $productsPayload = $order->orderItems->map(fn ($line) => [
+            'name' => $line->name,
+            'quantity' => (int) $line->quantity,
+            'unit_price' => (float) $line->unit_price,
+            'total' => (float) $line->total,
+            'product_id' => (int) $line->product_id,
+        ])->values()->all();
 
         return response()->json([
             'success' => true,
@@ -268,7 +275,7 @@ class SupplierOrderController extends Controller
                     'email' => $order->supplier->email,
                     'phone' => $order->supplier->phone,
                 ] : null,
-                'products' => $order->products ?? [],
+                'products' => $productsPayload,
                 'date' => $order->date?->format('d/m/Y H:i'),
                 'estimated_delivery_date' => $order->estimated_delivery_date?->format('d/m/Y'),
                 'state' => $order->state,

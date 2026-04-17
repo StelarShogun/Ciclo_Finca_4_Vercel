@@ -38,13 +38,14 @@
                     <button class="btn btn-primary" id="open-new-product-modal">
                         <i class="fas fa-plus"></i> Nuevo Producto
                     </button>
+                    <a class="btn btn-secondary" href="{{ route('admin.reports.exports') }}{{ $inventoryExportsQuery }}" title="Abre el centro de exportación; las descargas de inventario respetan los filtros aplicados en esta pantalla">
+                        <i class="fas fa-file-export"></i>
+                        Exportar datos
+                    </a>
                     <a class="btn btn-secondary" href="{{ route('categories.subcategories.create') }}">
                         <i class="fas fa-sitemap"></i>
                         Crear Subcategoría
                     </a>
-                    <button class="btn btn-secondary" id="export-btn">
-                        <i class="fas fa-download"></i> Exportar
-                    </button>
                     <button class="btn btn-secondary" id="import-btn">
                         <i class="fas fa-upload"></i> Importar
                     </button>
@@ -635,68 +636,6 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="cancel-edit">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="save-edit">Guardar Cambios</button>
-            </div>
-        </div>
-    </div>
-
-    {{-- ==================== MODAL: EXPORT ==================== --}}
-    <div class="edit-modal" id="export-modal">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content modal-auto-size">
-            <div class="modal-header">
-                <h3><i class="fas fa-download"></i> Exportar Productos</h3>
-                <button class="modal-close" id="close-export-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="export-options">
-
-                    <div class="export-option">
-                        <div class="export-icon"><i class="fas fa-file-code"></i></div>
-                        <div class="export-info">
-                            <h4>XML</h4>
-                            <p>Formato estructurado para intercambio de datos</p>
-                        </div>
-                        <a href="{{ route('products.export', 'xml') }}" class="btn btn-primary">
-                            <i class="fas fa-download"></i> Exportar XML
-                        </a>
-                    </div>
-
-                    <div class="export-option">
-                        <div class="export-icon"><i class="fas fa-file-csv"></i></div>
-                        <div class="export-info">
-                            <h4>CSV</h4>
-                            <p>Formato de hoja de cálculo compatible con Excel</p>
-                        </div>
-                        <a href="{{ route('products.export', 'csv') }}" class="btn btn-primary">
-                            <i class="fas fa-download"></i> Exportar CSV
-                        </a>
-                    </div>
-
-                    <div class="export-option">
-                        <div class="export-icon"><i class="fas fa-file-alt"></i></div>
-                        <div class="export-info">
-                            <h4>JSON</h4>
-                            <p>Formato ligero para aplicaciones web</p>
-                        </div>
-                        <a href="{{ route('products.export', 'json') }}" class="btn btn-primary">
-                            <i class="fas fa-download"></i> Exportar JSON
-                        </a>
-                    </div>
-
-                    <div class="export-option">
-                        <div class="export-icon"><i class="fas fa-file-pdf"></i></div>
-                        <div class="export-info">
-                            <h4>PDF</h4>
-                            <p>Documento profesional para impresión</p>
-                        </div>
-                        <a href="{{ route('products.export', 'pdf') }}" class="btn btn-primary">
-                            <i class="fas fa-download"></i> Exportar PDF
-                        </a>
-                    </div>
-
-                </div>
             </div>
         </div>
     </div>

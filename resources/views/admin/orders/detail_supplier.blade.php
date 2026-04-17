@@ -105,12 +105,12 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse(($order->products ?? []) as $item)
+                            @forelse($order->orderItems ?? [] as $item)
                                 <tr>
-                                    <td>{{ $item['name'] ?? 'N/A' }}</td>
-                                    <td class="num">{{ (int) ($item['quantity'] ?? 0) }}</td>
-                                    <td class="num">₡{{ number_format((float) ($item['unit_price'] ?? 0), 2, ',', '.') }}</td>
-                                    <td class="num"><strong>₡{{ number_format((float) ($item['total'] ?? 0), 2, ',', '.') }}</strong></td>
+                                    <td>{{ $item->name }}</td>
+                                    <td class="num">{{ (int) $item->quantity }}</td>
+                                    <td class="num">₡{{ number_format((float) $item->unit_price, 2, ',', '.') }}</td>
+                                    <td class="num"><strong>₡{{ number_format((float) $item->total, 2, ',', '.') }}</strong></td>
                                 </tr>
                             @empty
                                 <tr><td colspan="4" class="empty-cell">Sin productos</td></tr>

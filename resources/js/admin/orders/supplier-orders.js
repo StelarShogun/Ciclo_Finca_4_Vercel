@@ -311,6 +311,16 @@ function _orderAction(id, state, confirmText, successMsg) {
     });
 }
 
+function submitDraftOrder(id) {
+    _orderAction(id, 'pending', {
+        title: '¿Enviar borrador?',
+        text: 'El pedido pasará a estado pendiente ante el proveedor.',
+        icon: 'question',
+        color: '#2e7d32',
+        confirm: 'Sí, enviar',
+    }, 'Pedido enviado a pendiente.');
+}
+
 function confirmOrder(id) {
     _orderAction(id, 'confirmed', {
         title:   '¿Confirmar pedido?',
@@ -357,6 +367,7 @@ Object.assign(window, {
     closeViewSupplierModal,
     viewOrder,
     viewSupplier,
+    submitDraftOrder,
     confirmOrder,
     deliverOrder,
     sendOrder,
