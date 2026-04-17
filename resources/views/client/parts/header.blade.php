@@ -45,11 +45,28 @@
                 <div class="header-actions">
 
                     @if(auth('clients')->check())
+                        @php
+                            $pendingInvoiceCount = \App\Models\Sale::where('client_id', auth('clients')->user()->user_id)
+                                ->where('status', 'pending')
+                                ->count();
+                        @endphp
+
                         {{-- Cart button with item counter --}}
                         <a href="{{ route('clients.cart') }}" class="cart-btn cart-btn-link" id="cart-link"
                             data-cart-count="{{ $cartCount ?? 0 }}" title="Ver carrito">
                             <i class="fas fa-shopping-cart"></i>
                             <span class="cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
+                        </a>
+
+                        {{-- Invoices button with pending count badge --}}
+                        <a href="{{ route('clients.invoices') }}"
+                           class="cf4-invoices-btn {{ request()->routeIs('clients.invoices') ? 'active' : '' }}"
+                           id="invoices-link"
+                           title="Mis facturas pendientes">
+                            <i class="fas fa-file-invoice"></i>
+                            @if($pendingInvoiceCount > 0)
+                                <span class="cf4-invoice-count" id="invoice-count">{{ $pendingInvoiceCount }}</span>
+                            @endif
                         </a>
 
                         {{-- Dropdown menu for the authenticated client --}}
@@ -172,5 +189,11 @@
         </div>
     </div>
 </header>
+
+{{-- Invoice heartbeat meta (only for authenticated clients) --}}
+@auth('clients')
+<meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
+<meta name="cf4-invoice-initial-count" content="{{ \App\Models\Sale::where('client_id', auth('clients')->user()->user_id)->where('status', 'pending')->count() }}">
+@endauth
 
 @vite('resources/js/client/clients-users.js')

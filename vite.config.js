@@ -11,6 +11,7 @@ const adminAssets = [
     "resources/js/admin/dashboard/dashboard.js",
     "resources/js/admin/inventory/inventory.js",
     "resources/js/admin/sales/sales.js",
+    'resources/js/admin/sales/reports-by-category.js',
     "resources/js/admin/orders/orders.js",
     "resources/js/admin/orders/supplier-orders.js",
     "resources/js/admin/orders/supplier-order-create.js",

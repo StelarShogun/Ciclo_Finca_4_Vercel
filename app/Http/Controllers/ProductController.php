@@ -428,11 +428,16 @@ class ProductController extends Controller
         if ($request->filled('stock_status')) {
             switch ($request->stock_status) {
                 case 'in-stock':
-                    $query->where('stock_current', '>', Product::CLIENT_LOW_STOCK_THRESHOLD);
+                    $query->where('stock_current', '>', 0)
+                        ->where(function ($q) {
+                            $q->where('stock_minimum', '<=', 0)
+                                ->orWhereColumn('stock_current', '>', 'stock_minimum');
+                        });
                     break;
                 case 'low':
-                    $query->where('stock_current', '>', 0)
-                        ->where('stock_current', '<=', Product::CLIENT_LOW_STOCK_THRESHOLD);
+                    $query->where('stock_minimum', '>', 0)
+                        ->where('stock_current', '>', 0)
+                        ->whereColumn('stock_current', '<=', 'stock_minimum');
                     break;
                 case 'out':
                     $query->where('stock_current', 0);
@@ -461,8 +466,7 @@ class ProductController extends Controller
                 'image' => $product->image ?? 'default.png',
                 'category' => (object) ['name' => optional($product->category)->name ?? 'Uncategorized'],
                 'stock' => $product->stock_current,
-                'stock_status_class' => $product->stock_current > Product::CLIENT_LOW_STOCK_THRESHOLD ? 'success' :
-                                      ($product->stock_current > 0 ? 'warning' : 'danger'),
+                'stock_status_class' => $product->adminInventoryStockBadgeClass(),
                 'price' => $product->sale_price,
                 'status' => ucfirst(str_replace('_', ' ', $product->status)),
                 'status_class' => $product->status === 'active' ? 'success' :
@@ -563,7 +567,7 @@ class ProductController extends Controller
                 ];
             });
 
-            $pdf = PDF::loadView('products.products-pdf', [
+            $pdf = PDF::loadView('admin.products.products-pdf', [
                 'products' => $products,
                 'total' => $products->count(),
                 'fecha_exportacion' => now()->format('d/m/Y H:i:s'),
@@ -878,5 +882,132 @@ class ProductController extends Controller
         }
 
         return redirect()->route('inventory')->with('status', $mensaje);
+    }
+    
+     /**
+     * POST /inventory/add-manual/{id}
+     * Manually add stock to a product.
+     */
+    public function addManualStock(Request $request, int $id)
+    {
+        $validReasons = ['manual_adjustment', 'damage', 'refund'];
+ 
+        try {
+            $validated = $request->validate([
+                'quantity' => ['required', 'numeric', 'min:1'],
+                'reason'   => ['required', 'string', 'in:' . implode(',', $validReasons)],
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $e->errors(),
+                'message' => 'Datos inválidos.',
+            ], 422);
+        }
+ 
+        try {
+            $product = DB::transaction(function () use ($id, $validated) {
+                /** @var \App\Models\Product $product */
+                $product = \App\Models\Product::lockForUpdate()->findOrFail($id);
+ 
+                $product->stock_current += (int) $validated['quantity'];
+                $product->save();
+ 
+                return $product;
+            });
+ 
+            return response()->json([
+                'success'       => true,
+                'message'       => "Se agregaron {$validated['quantity']} unidades correctamente.",
+                'stock_current' => $product->stock_current,
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Producto no encontrado.',
+            ], 404);
+        } catch (ValidationException $e) {
+            // Triggered by the Product model's booted() saving hook
+            return response()->json([
+                'success' => false,
+                'errors'  => $e->errors(),
+                'message' => 'No se pudo actualizar el stock: ' . collect($e->errors())->flatten()->first(),
+            ], 422);
+        } catch (\Throwable $e) {
+            Log::error('addManualStock error', ['product_id' => $id, 'error' => $e->getMessage()]);
+ 
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno al actualizar el stock. Inténtalo de nuevo.',
+            ], 500);
+        }
+    }
+ 
+    /**
+     * POST /inventory/remove-manual/{id}
+     * Manually remove stock from a product.
+     */
+    public function removeManualStock(Request $request, int $id)
+    {
+        $validReasons = ['manual_adjustment', 'damage', 'refund'];
+ 
+        try {
+            $validated = $request->validate([
+                'quantity' => ['required', 'numeric', 'min:1'],
+                'reason'   => ['required', 'string', 'in:' . implode(',', $validReasons)],
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $e->errors(),
+                'message' => 'Datos inválidos.',
+            ], 422);
+        }
+ 
+        try {
+            $product = DB::transaction(function () use ($id, $validated) {
+                /** @var \App\Models\Product $product */
+                $product = \App\Models\Product::lockForUpdate()->findOrFail($id);
+ 
+                $qty = (int) $validated['quantity'];
+ 
+                if ($qty > $product->stock_current) {
+                    throw ValidationException::withMessages([
+                        'quantity' => [
+                            "La cantidad ({$qty}) supera el stock disponible ({$product->stock_current}).",
+                        ],
+                    ]);
+                }
+ 
+                $product->stock_current -= $qty;
+                $product->save();
+ 
+                return $product;
+            });
+ 
+            return response()->json([
+                'success'       => true,
+                'message'       => "Se eliminaron {$validated['quantity']} unidades correctamente.",
+                'stock_current' => $product->stock_current,
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Producto no encontrado.',
+            ], 404);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $e->errors(),
+                'message' => collect($e->errors())->flatten()->first(),
+            ], 422);
+        } catch (\Throwable $e) {
+            Log::error('removeManualStock error', ['product_id' => $id, 'error' => $e->getMessage()]);
+ 
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno al actualizar el stock. Inténtalo de nuevo.',
+            ], 500);
+        }
     }
 }

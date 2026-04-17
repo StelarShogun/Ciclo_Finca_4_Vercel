@@ -86,14 +86,15 @@ class Sale extends Model
         return $query->whereDate('sale_date', $date);
     }
 
-    // Sequential suffix is based on today's count, so numbers reset each day
+    // Global sequential invoice number in CF4-NNNN format (e.g. CF4-0001, CF4-0002…)
     public function generateInvoiceNumber(): string
     {
-        $prefix = 'INV';
-        $date = now()->format('Ymd');
-        $lastNumber = self::whereDate('sale_date', now())->count() + 1;
+        $maxNum = self::where('invoice_number', 'like', 'CF4-%')
+            ->get(['invoice_number'])
+            ->map(fn ($s) => (int) substr($s->invoice_number, 4))
+            ->max() ?? 0;
 
-        return $prefix.$date.str_pad((string) $lastNumber, 4, '0', STR_PAD_LEFT);
+        return 'CF4-'.str_pad((string) ($maxNum + 1), 4, '0', STR_PAD_LEFT);
     }
 
     public function calculateTotal()
