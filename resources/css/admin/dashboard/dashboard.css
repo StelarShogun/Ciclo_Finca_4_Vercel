@@ -398,6 +398,13 @@
   height: 300px;
 }
 
+/* Fix para el gráfico de pastel/donut: Chart.js necesita que el canvas
+   no exceda el contenedor cuando maintainAspectRatio es false.
+   Se aplica solo al contenedor del gráfico de categorías (segundo .chart-wrapper). */
+.chart-wrapper canvas {
+  max-height: 100%;
+}
+
 .tables-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -698,4 +705,213 @@
   .dashboard-table th,
   .dashboard-table td { padding: 10px; }
   .dashboard-container { padding: 10px; }
+}
+
+/* ============================================================
+   5. SCROLLABLE TABLE BODY
+   Muestra ~5 filas y activa scroll vertical a partir de la 6.ª.
+   El thead permanece fijo (sticky) gracias a overflow en el
+   wrapper. Máximo 10 registros limitado con ->take(10) en Blade.
+
+   Técnica: el wrapper .table-scroll-wrapper tiene max-height y
+   overflow-y: auto. El <thead> usa position: sticky + top: 0
+   para mantenerse visible durante el scroll. La tabla conserva
+   su layout nativo (border-collapse) sin hacks de display: block,
+   lo que garantiza alineación perfecta de columnas.
+   ============================================================ */
+
+/* Wrapper que envuelve <table> y genera el scroll */
+.table-content--scroll {
+  overflow: hidden; /* Recorta borde de .table-container */
+}
+
+.table-scroll-wrapper {
+  max-height: 480px;   /* ~5 filas reales con espacio generoso */
+  overflow-y: auto;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+/* Scrollbar delgada WebKit */
+.table-scroll-wrapper::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 4px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}
+
+/* Thead fijo: se pega al tope del wrapper durante el scroll */
+.table-content--scroll .dashboard-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  /* Asegura que el fondo tape las filas que pasan por debajo */
+  background: var(--color-light);
+  box-shadow: 0 1px 0 var(--border-color);
+}
+
+/* La tabla ocupa el ancho completo del wrapper */
+.table-content--scroll .dashboard-table {
+  width: 100%;
+  min-width: 100%;
+}
+
+/* Encabezados siempre en una sola línea, sin saltos */
+.table-content--scroll .dashboard-table thead th {
+  white-space: nowrap;
+}
+
+/* Ancho mínimo para que las 4 columnas de stock quepan sin comprimir */
+#low-stock-table,
+#low-stock-table + * {
+  /* aplicado directamente a la tabla padre vía el wrapper */
+}
+.table-content--scroll:has(#low-stock-table) .dashboard-table {
+  min-width: 480px;
+}
+
+/* tbody-scroll: clase legacy mantenida por compatibilidad (no hace nada extra) */
+.table-content--scroll .tbody-scroll {
+  /* El scroll lo gestiona .table-scroll-wrapper; esta clase se conserva
+     por si se referencia desde JS, pero no debe alterar el layout. */
+}
+/* ============================================================
+   6. ALERT INLINE (error de carga en el header)
+   ============================================================ */
+.alert-inline-error {
+  margin-top: 10px;
+  padding: 10px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 5px;
+  color: #856404;
+}
+
+/* ============================================================
+   7. LOW-STOCK TOAST
+   ============================================================ */
+.ls-toast {
+  position: fixed;
+  top: -140px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 340px;
+  padding: 16px 18px;
+  background: #fff;
+  border-left: 4px solid #f59e0b;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  transition: top 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+  opacity: 0;
+}
+
+.ls-toast--visible {
+  top: 24px;
+  opacity: 1;
+}
+
+.ls-toast--hiding {
+  top: -140px !important;
+  opacity: 0 !important;
+}
+
+.ls-toast__icon {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #fef3c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d97706;
+  font-size: 16px;
+}
+
+.ls-toast__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ls-toast__title {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 3px;
+}
+
+.ls-toast__msg {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.ls-toast__link {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f59e0b;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s;
+}
+
+.ls-toast__link:hover {
+  color: #d97706;
+}
+
+.ls-toast__close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.2s, background 0.2s;
+  align-self: flex-start;
+}
+
+.ls-toast__close:hover {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+/* ============================================================
+   8. BADGE COUNT (contador rojo en el título de la tabla)
+   ============================================================ */
+.badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  margin-left: 8px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 12px;
+  vertical-align: middle;
+  line-height: 1;
 }
