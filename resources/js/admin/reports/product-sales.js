@@ -255,6 +255,7 @@ function initProductSalesReport() {
     });
 
     updateTop10Hint();
+
     loadFromApi();
 }
 

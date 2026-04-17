@@ -20,7 +20,7 @@ class SupplierOrderController extends Controller
             [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
         }
 
-        $query = Order::with('supplier')->orderBy('date', 'desc');
+        $query = Order::with(['supplier', 'orderItems'])->orderBy('date', 'desc');
 
         if ($state) {
             $query->where('state', $state);
@@ -49,7 +49,15 @@ class SupplierOrderController extends Controller
 
     public function show($id)
     {
-        $order = Order::with('supplier')->findOrFail($id);
+        $order = Order::with(['supplier', 'orderItems'])->findOrFail($id);
+
+        $productsPayload = $order->orderItems->map(fn ($line) => [
+            'name' => $line->name,
+            'quantity' => (int) $line->quantity,
+            'unit_price' => (float) $line->unit_price,
+            'total' => (float) $line->total,
+            'product_id' => (int) $line->product_id,
+        ])->values()->all();
 
         return response()->json([
             'success' => true,
@@ -62,7 +70,7 @@ class SupplierOrderController extends Controller
                     'email'           => $order->supplier->email,
                     'phone'           => $order->supplier->phone,
                 ] : null,
-                'products'  => $order->products ?? [],
+                'products'  => $productsPayload,
                 'date'      => $order->date?->format('d/m/Y H:i'),
                 'state'     => $order->state,
                 'total'     => (float) $order->total,
@@ -75,10 +83,11 @@ class SupplierOrderController extends Controller
         $order = Order::findOrFail($id);
 
         $request->validate([
-            'state' => 'required|in:pending,confirmed,delivered,cancelled',
+            'state' => 'required|in:draft,pending,confirmed,delivered,cancelled',
         ]);
 
         $transitions = [
+            'draft'     => ['pending', 'cancelled'],
             'pending'   => ['confirmed', 'cancelled'],
             'confirmed' => ['delivered', 'cancelled'],
         ];

@@ -18,6 +18,14 @@
         </header>
 
         <div class="reports-cards">
+            <a href="{{ route('admin.reports.exports').(request()->getQueryString() !== null && request()->getQueryString() !== '' ? '?'.request()->getQueryString() : '') }}" class="report-card">
+                <div class="report-card-icon"><i class="fas fa-file-export"></i></div>
+                <div class="report-card-body">
+                    <h2>Exportar datos y PDF</h2>
+                    <p>Descargas centralizadas: PDF y CSV, XML o JSON de inventario y ventas, más proveedores, marcas, pedidos a proveedores, usuarios y encargos.</p>
+                </div>
+                <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
+            </a>
             <a href="{{ route('admin.reports.sales-performance') }}" class="report-card">
                 <div class="report-card-icon"><i class="fas fa-chart-line"></i></div>
                 <div class="report-card-body">
