@@ -157,8 +157,7 @@ class SalesController extends Controller
                             'product' => $item->product ? [
                                 'product_id' => $item->product->product_id,
                                 'name' => $item->product->name,
-                                // SKU is derived from the PK; no dedicated column exists
-                                'sku' => 'BK-' . str_pad((string) $item->product->product_id, 3, '0', STR_PAD_LEFT),
+                                'sku' => Product::skuFromId((int) $item->product->product_id),
                             ] : null,
                         ];
                     }),
@@ -705,63 +704,64 @@ class SalesController extends Controller
     }
 
     public function byCategory(Request $request)
-{
-    $dateRange = $request->input('date_range', 'month');
-    $dateFrom  = $request->input('date_from');
-    $dateTo    = $request->input('date_to');
+    {
+        $dateRange = $request->input('date_range', 'month');
+        $dateFrom  = $request->input('date_from');
+        $dateTo    = $request->input('date_to');
 
-    if ($dateRange === 'custom') {
-        $request->validate([
-            'date_from' => 'required|date',
-            'date_to'   => 'required|date|after_or_equal:date_from',
-        ], [
-            'date_from.required'      => 'La fecha de inicio es obligatoria.',
-            'date_from.date'          => 'La fecha de inicio no es válida.',
-            'date_to.required'        => 'La fecha de fin es obligatoria.',
-            'date_to.date'            => 'La fecha de fin no es válida.',
-            'date_to.after_or_equal'  => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
-        ]);
+        if ($dateRange === 'custom') {
+            $request->validate([
+                'date_from' => 'required|date',
+                'date_to'   => 'required|date|after_or_equal:date_from',
+            ], [
+                'date_from.required'      => 'La fecha de inicio es obligatoria.',
+                'date_from.date'          => 'La fecha de inicio no es válida.',
+                'date_to.required'        => 'La fecha de fin es obligatoria.',
+                'date_to.date'            => 'La fecha de fin no es válida.',
+                'date_to.after_or_equal'  => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
+            ]);
+        }
+
+        [$from, $to] = $this->resolveDateRange($dateRange, $dateFrom, $dateTo);
+
+        $rows = SaleItem::query()
+            ->join('sales',      'sale_items.sale_id',    '=', 'sales.sale_id')
+            ->join('products',   'sale_items.product_id', '=', 'products.product_id')
+            ->join('categories', 'products.category_id',  '=', 'categories.category_id')
+            ->where('sales.status', 'completed')
+            ->whereBetween('sales.sale_date', [$from, $to])
+            ->groupBy('categories.category_id', 'categories.name')
+            ->selectRaw('
+                categories.category_id,
+                categories.name          AS category_name,
+                SUM(sale_items.quantity) AS total_units,
+                SUM(sale_items.total)    AS total_revenue
+            ')
+            ->orderByDesc('total_revenue')
+            ->get();
+
+        $grandTotal = $rows->sum('total_revenue');
+
+        $rows->transform(function ($row) use ($grandTotal) {
+            $row->percentage = $grandTotal > 0
+                ? round(($row->total_revenue / $grandTotal) * 100, 1)
+                : 0;
+            return $row;
+        });
+
+        $chartData = $rows->map(function ($r) {
+            return [
+                'label'   => $r->category_name,
+                'value'   => $r->total_revenue,
+                'percent' => $r->percentage,
+            ];
+        })->values()->toArray();
+
+        return view('admin.sales.reports-by-category', compact(
+            'rows', 'grandTotal', 'from', 'to', 'dateRange', 'chartData'
+        ));
     }
 
-    [$from, $to] = $this->resolveDateRange($dateRange, $dateFrom, $dateTo);
-
-    $rows = SaleItem::query()
-        ->join('sales',      'sale_items.sale_id',    '=', 'sales.sale_id')
-        ->join('products',   'sale_items.product_id', '=', 'products.product_id')
-        ->join('categories', 'products.category_id',  '=', 'categories.category_id')
-        ->where('sales.status', 'completed')
-        ->whereBetween('sales.sale_date', [$from, $to])
-        ->groupBy('categories.category_id', 'categories.name')
-        ->selectRaw('
-            categories.category_id,
-            categories.name          AS category_name,
-            SUM(sale_items.quantity) AS total_units,
-            SUM(sale_items.total)    AS total_revenue
-        ')
-        ->orderByDesc('total_revenue')
-        ->get();
-
-    $grandTotal = $rows->sum('total_revenue');
-
-    $rows->transform(function ($row) use ($grandTotal) {
-        $row->percentage = $grandTotal > 0
-            ? round(($row->total_revenue / $grandTotal) * 100, 1)
-            : 0;
-        return $row;
-    });
-
-    $chartData = $rows->map(function ($r) {
-        return [
-            'label'   => $r->category_name,
-            'value'   => $r->total_revenue,
-            'percent' => $r->percentage,
-        ];
-    })->values()->toArray();
-
-    return view('admin.sales.reports-by-category', compact(
-        'rows', 'grandTotal', 'from', 'to', 'dateRange', 'chartData'
-    ));
-}
     private function resolveDateRange(string $range, ?string $dateFrom, ?string $dateTo): array
     {
         switch ($range) {

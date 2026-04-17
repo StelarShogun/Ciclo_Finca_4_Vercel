@@ -34,6 +34,8 @@ php artisan storage:link --force 2>/dev/null || true
 
 # Permisos
 chown -R www-data:www-data storage bootstrap/cache
+mkdir -p public/images
+chown -R www-data:www-data public/images
 
 echo ">>> Iniciando Apache..."
 exec apache2-foreground

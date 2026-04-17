@@ -20,6 +20,7 @@ const adminAssets = [
     "resources/js/admin/brand/brand.js",
     "resources/js/admin/product-classifications/edit.js",
     "resources/js/admin/classifications/catalog.js",
+    "resources/js/admin/reports/product-sales.js",
 
     // CSS
     "resources/css/admin/products/inventory.css",
@@ -33,6 +34,8 @@ const adminAssets = [
     "resources/css/admin/users/clients.css",
     "resources/css/admin/brands/brand.css",
     "resources/css/admin/login/login.css",
+    "resources/css/admin/reports/reports-hub.css",
+    "resources/css/admin/reports/product-sales.css",
 ];
 
 // =======================

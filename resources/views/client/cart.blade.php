@@ -35,8 +35,7 @@
                         @foreach($cartItems as $item)
                             <div class="cart-item" data-product-id="{{ $item['product_id'] }}">
                                 <div class="cart-item-image">
-                                    {{-- Fallback to favicon if product image is missing --}}
-                                    <img src="{{ asset('assets/images/products/' . $item['image']) }}"
+                                    <img src="{{ $item['image_url'] }}"
                                          alt="{{ $item['name'] }}"
                                          data-fallback-src="{{ asset('favicon.svg') }}"
                                          onerror="this.src=this.dataset.fallbackSrc;">

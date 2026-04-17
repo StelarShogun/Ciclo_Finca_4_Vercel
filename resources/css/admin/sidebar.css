@@ -22,7 +22,7 @@
     border-bottom: 0.125rem solid var(--sidebar-border);
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
 }
  
 .sidebar-header .logo {
@@ -100,8 +100,15 @@
  
 .logout-btn i { width: 1.25rem; margin-right: 1rem; font-size: 1.1rem; }
 /* ============================================================
-   CATALOG PREVIEW BUTTON (sidebar header)
+   PRIMARY ACTION (ej. ir al sitio web — sidebar footer)
    ============================================================ */
+.sidebar-footer .sidebar-footer-web-btn {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    box-sizing: border-box;
+}
+
 .sidebar-catalog-btn {
     display: flex;
     align-items: center;

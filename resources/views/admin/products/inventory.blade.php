@@ -174,8 +174,8 @@
                                 <tr>
                                     <td class="product-cell">
                                         <div class="product-thumb-wrap product-thumb-wrap--table">
-                                            {{-- Falls back to default image if none is set --}}
-                                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
+                                            {{-- MediaLibrary image with legacy fallback --}}
+                                            <img src="{{ $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
                                                  alt="{{ $product->name }}">
                                             <button type="button"
                                                     class="featured-star-btn {{ $product->is_featured ? 'is-featured' : '' }}"
@@ -204,8 +204,8 @@
                                         @endif
                                     </td>
                                     <td>
-                                        {{-- Stock badge: success >10, warning >0, danger =0 --}}
-                                        <span class="stock-badge {{ $product->stock_current > \App\Models\Product::CLIENT_LOW_STOCK_THRESHOLD ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger') }}">
+                                        {{-- Stock badge: según stock mínimo por producto (CF4-50) --}}
+                                        <span class="stock-badge {{ $product->adminInventoryStockBadgeClass() }}">
                                             {{ $product->stock_current }}
                                         </span>
                                     </td>
@@ -259,7 +259,7 @@
                             <div class="product-card">
                                 <div class="product-card-header">
                                     <div class="product-thumb-wrap product-thumb-wrap--card">
-                                        <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
+                                        <img src="{{ $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
                                              alt="{{ $product->name }}" class="product-card-image">
                                         <button type="button"
                                                 class="featured-star-btn {{ $product->is_featured ? 'is-featured' : '' }}"
@@ -294,7 +294,7 @@
                                     <div class="product-card-detail">
                                         <span class="product-card-detail-label">Stock</span>
                                         <span class="product-card-detail-value">
-                                            <span class="stock-badge {{ $product->stock_current > \App\Models\Product::CLIENT_LOW_STOCK_THRESHOLD ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger') }}">
+                                            <span class="stock-badge {{ $product->adminInventoryStockBadgeClass() }}">
                                                 {{ $product->stock_current }}
                                             </span>
                                         </span>
@@ -388,9 +388,9 @@
                     {{-- Multiple images rendered as a carousel on the product page --}}
                     <div class="form-group">
                         <label for="new-images">Imágenes adicionales (carrusel)</label>
-                        <input type="file" id="new-images" name="images[]" accept="image/*" multiple>
+                        <input type="file" id="new-images" name="images[]" accept="image/*" multiple webkitdirectory>
                         <small class="form-text text-muted">
-                            Opcional. Varias imágenes se mostrarán en un carrusel en la ficha del producto.
+                            Opcional. Selecciona una carpeta o varios archivos. Las imágenes se mostrarán en un carrusel en la ficha del producto.
                         </small>
                     </div>
                     <div class="form-row">
@@ -525,8 +525,8 @@
                     {{-- Uploading new images replaces the existing carousel set --}}
                     <div class="form-group">
                         <label for="edit-images">Imágenes adicionales (carrusel)</label>
-                        <input type="file" id="edit-images" name="images[]" accept="image/*" multiple>
-                        <small class="form-text text-muted">Opcional. Al subir nuevas, reemplazan las actuales del carrusel.</small>
+                        <input type="file" id="edit-images" name="images[]" accept="image/*" multiple webkitdirectory>
+                        <small class="form-text text-muted">Opcional. Selecciona una carpeta o varios archivos. Al subir nuevas, reemplazan las actuales del carrusel.</small>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
