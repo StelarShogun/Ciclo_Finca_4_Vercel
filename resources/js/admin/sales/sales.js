@@ -260,30 +260,32 @@ function _saleAction(url, successMsg) {
 }
 
 // Mark sale as completed
-function completeSale(id) {
+function completeSale(id, invoiceNumber) {
+    const invoiceLabel = invoiceNumber || ('#' + id);
     Swal.fire({
-        title: '¿Confirmar pedido?',
-        text: 'El pedido pasará a confirmado y quedará registrado como venta con su factura.',
+        title: `¿Confirmar encargo con factura: ${invoiceLabel}?`,
+        text: 'El encargo pasará a confirmado y quedará registrado como venta con su factura.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#2e7d32',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Sí, confirmar',
         cancelButtonText: 'Cancelar'
-    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/complete`, 'Pedido confirmado correctamente.'));
+    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/complete`, 'Encargo confirmado correctamente.'));
 }
 
-function cancelSale(id) {
+function cancelSale(id, invoiceNumber) {
+    const invoiceLabel = invoiceNumber || ('#' + id);
     Swal.fire({
-        title: '¿Rechazar pedido?',
-        text: 'Se cancelará el pedido y se devolverá el stock al inventario.',
+        title: `¿Rechazar encargo con factura: ${invoiceLabel}?`,
+        text: 'Se cancelará el encargo y se devolverá el stock al inventario.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Sí, rechazar',
         cancelButtonText: 'No'
-    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/cancel`, 'Pedido rechazado.'));
+    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/cancel`, `Encargo: ${invoiceLabel} eliminado.`));
 }
 
 function refundSale(id) {
