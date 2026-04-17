@@ -103,9 +103,7 @@ class SeedBulkSalesManualCommand extends Command
 
                 $sale = Sale::create([
                     'invoice_number' => self::INVOICE_PREFIX.str_pad((string) ($i + 1), 5, '0', STR_PAD_LEFT).'-'.substr(sha1((string) microtime(true).$i), 0, 6),
-                    'customer_id' => null,
                     'client_id' => null,
-                    'seller_id' => null,
                     'seller_admin_id' => $admin->user_id,
                     'subtotal' => $subtotal,
                     'iva' => $iva,

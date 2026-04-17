@@ -16,6 +16,9 @@
                 <p>Administra las marcas de productos</p>
             </div>
             <div class="brands-actions">
+                <a href="{{ route('admin.reports.exports').\App\Services\Admin\AdminBrandsCatalogExportQuery::queryStringFromRequest(request()) }}" class="btn btn-secondary" title="Centro de exportación; CSV/PDF de marcas respeta el filtro por nombre si lo aplicó">
+                    <i class="fas fa-file-export"></i> Exportar datos
+                </a>
                 <span class="brands-count-badge">
                     <i class="fas fa-tags"></i>
                     {{ $brands->total() }} marca(s)

@@ -35,6 +35,7 @@ const adminAssets = [
     "resources/css/admin/brands/brand.css",
     "resources/css/admin/login/login.css",
     "resources/css/admin/reports/reports-hub.css",
+    "resources/css/admin/reports/exports.css",
     "resources/css/admin/reports/product-sales.css",
 ];
 

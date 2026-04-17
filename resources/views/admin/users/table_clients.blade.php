@@ -28,6 +28,9 @@
                 <p class="text-muted">Administra los clientes registrados en la plataforma</p>
             </div>
             <div class="page-header-actions">
+                <a href="{{ route('admin.reports.exports') }}" class="btn btn-secondary btn-sm" title="Centro de exportación (CSV/PDF de usuarios clientes)">
+                    <i class="fas fa-file-export"></i> Exportar datos
+                </a>
                 <span class="clients-count-badge">
                     <i class="fas fa-users"></i>
                     {{ $clients->count() }} usuario(s)

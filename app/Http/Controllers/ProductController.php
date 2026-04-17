@@ -8,8 +8,12 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Services\Admin\AdminInventoryExportQuery;
+use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\ReportPdfFilename;
 use App\Services\ProductClassificationAssignmentService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -53,18 +57,18 @@ class ProductController extends Controller
             });
 
             // Save images to public/images/{product_name}/ then register with MediaLibrary
-            $folderPath = public_path('images/' . $product->name);
+            $folderPath = public_path('images/'.$product->name);
             if (! is_dir($folderPath)) {
                 mkdir($folderPath, 0755, true);
             }
             $slug = Str::slug($product->name, '_');
 
             if ($request->hasFile('image')) {
-                $file     = $request->file('image');
-                $ext      = $file->extension() ?: $file->getClientOriginalExtension();
-                $filename = $slug . '_main.' . $ext;
+                $file = $request->file('image');
+                $ext = $file->extension() ?: $file->getClientOriginalExtension();
+                $filename = $slug.'_main.'.$ext;
                 $file->move($folderPath, $filename);
-                $product->addMedia($folderPath . '/' . $filename)
+                $product->addMedia($folderPath.'/'.$filename)
                     ->preservingOriginal()
                     ->toMediaCollection('main_image');
             }
@@ -75,10 +79,10 @@ class ProductController extends Controller
                     if (! $file->isValid() || ! str_starts_with($file->getMimeType() ?? '', 'image/')) {
                         continue;
                     }
-                    $ext      = $file->extension() ?: $file->getClientOriginalExtension();
-                    $filename = $slug . '_' . $i . '.' . $ext;
+                    $ext = $file->extension() ?: $file->getClientOriginalExtension();
+                    $filename = $slug.'_'.$i.'.'.$ext;
                     $file->move($folderPath, $filename);
-                    $product->addMedia($folderPath . '/' . $filename)
+                    $product->addMedia($folderPath.'/'.$filename)
                         ->preservingOriginal()
                         ->toMediaCollection('gallery');
                     $i++;
@@ -127,8 +131,8 @@ class ProductController extends Controller
                 $firstBrand = $product->brands->first();
                 $productData['brand_id'] = $firstBrand instanceof Brand ? $firstBrand->id : null;
                 $productData['classification_value_ids'] = $product->classificationValues->pluck('id')->values()->all();
-                $productData['media_main']    = $product->getFirstMediaUrl('main_image');
-                $productData['media_gallery'] = $product->getMedia('gallery')->map(fn($m) => $m->getUrl())->values()->toArray();
+                $productData['media_main'] = $product->getFirstMediaUrl('main_image');
+                $productData['media_gallery'] = $product->getMedia('gallery')->map(fn ($m) => $m->getUrl())->values()->toArray();
 
                 return response()->json([
                     'success' => true,
@@ -198,7 +202,7 @@ class ProductController extends Controller
             });
 
             // Save images to public/images/{product_name}/ then register with MediaLibrary
-            $folderPath = public_path('images/' . $product->name);
+            $folderPath = public_path('images/'.$product->name);
             if (! is_dir($folderPath)) {
                 mkdir($folderPath, 0755, true);
             }
@@ -207,14 +211,14 @@ class ProductController extends Controller
             // Replace main image when a new one is uploaded (singleFile handles deletion of the old one)
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
-                $ext  = $file->extension() ?: $file->getClientOriginalExtension();
+                $ext = $file->extension() ?: $file->getClientOriginalExtension();
                 // Remove any existing main file for this product
-                foreach (glob($folderPath . '/' . $slug . '_main.*') ?: [] as $old) {
+                foreach (glob($folderPath.'/'.$slug.'_main.*') ?: [] as $old) {
                     @unlink($old);
                 }
-                $filename = $slug . '_main.' . $ext;
+                $filename = $slug.'_main.'.$ext;
                 $file->move($folderPath, $filename);
-                $product->addMedia($folderPath . '/' . $filename)
+                $product->addMedia($folderPath.'/'.$filename)
                     ->preservingOriginal()
                     ->toMediaCollection('main_image');
             }
@@ -222,7 +226,7 @@ class ProductController extends Controller
             // Replace the entire gallery when new files are provided
             if ($request->hasFile('images')) {
                 // Remove existing numbered gallery files from the folder
-                foreach (glob($folderPath . '/' . $slug . '_[0-9]*.{jpg,jpeg,png,webp,gif,avif}', GLOB_BRACE) ?: [] as $old) {
+                foreach (glob($folderPath.'/'.$slug.'_[0-9]*.{jpg,jpeg,png,webp,gif,avif}', GLOB_BRACE) ?: [] as $old) {
                     @unlink($old);
                 }
                 $product->clearMediaCollection('gallery');
@@ -231,10 +235,10 @@ class ProductController extends Controller
                     if (! $file->isValid() || ! str_starts_with($file->getMimeType() ?? '', 'image/')) {
                         continue;
                     }
-                    $ext      = $file->extension() ?: $file->getClientOriginalExtension();
-                    $filename = $slug . '_' . $i . '.' . $ext;
+                    $ext = $file->extension() ?: $file->getClientOriginalExtension();
+                    $filename = $slug.'_'.$i.'.'.$ext;
                     $file->move($folderPath, $filename);
-                    $product->addMedia($folderPath . '/' . $filename)
+                    $product->addMedia($folderPath.'/'.$filename)
                         ->preservingOriginal()
                         ->toMediaCollection('gallery');
                     $i++;
@@ -353,8 +357,8 @@ class ProductController extends Controller
 
             // Copy the file preserving the gallery item, then set as single main image
             $product->addMedia($mediaItem->getPath())
-                    ->preservingOriginal()
-                    ->toMediaCollection('main_image');
+                ->preservingOriginal()
+                ->toMediaCollection('main_image');
 
             return response()->json([
                 'success' => true,
@@ -401,57 +405,7 @@ class ProductController extends Controller
 
     public function inventory(Request $request)
     {
-        $query = Product::with(['category.parent', 'supplier']);
-
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%'.$request->search.'%')
-                    ->orWhere('description', 'like', '%'.$request->search.'%');
-            });
-        }
-
-        if ($request->filled('subcategory_id')) {
-            $query->where('category_id', $request->subcategory_id);
-        } elseif ($request->filled('parent_category_id')) {
-            $canonicalParentId = (int) $request->parent_category_id;
-            $physicalParentIds = Category::physicalRootIdsForCanonicalParent($canonicalParentId);
-            $childIds = Category::whereIn('parent_category_id', $physicalParentIds)->pluck('category_id');
-            $query->where(function ($q) use ($physicalParentIds, $childIds) {
-                $q->whereIn('category_id', $physicalParentIds)
-                    ->orWhereIn('category_id', $childIds);
-            });
-        } elseif ($request->filled('category_id')) {
-            // Backward compatibility with previous single-category filter.
-            $query->where('category_id', $request->category_id);
-        }
-
-        if ($request->filled('stock_status')) {
-            switch ($request->stock_status) {
-                case 'in-stock':
-                    $query->where('stock_current', '>', 0)
-                        ->where(function ($q) {
-                            $q->where('stock_minimum', '<=', 0)
-                                ->orWhereColumn('stock_current', '>', 'stock_minimum');
-                        });
-                    break;
-                case 'low':
-                    $query->where('stock_minimum', '>', 0)
-                        ->where('stock_current', '>', 0)
-                        ->whereColumn('stock_current', '<=', 'stock_minimum');
-                    break;
-                case 'out':
-                    $query->where('stock_current', 0);
-                    break;
-            }
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $sort = $request->get('sort', 'product_id');
-        $order = $request->get('order', 'desc');
-        $query->orderBy($sort, $order);
+        $query = $this->inventoryProductsFilteredQuery($request)->with(['category.parent', 'supplier']);
 
         $perPage = $request->get('per_page', 10);
         $paginator = $query->paginate($perPage);
@@ -490,6 +444,7 @@ class ProductController extends Controller
             'categories' => $categories,
             'subcategoriesByParent' => $subcategoriesByParent,
             'brands' => Brand::orderBy('name')->get(['id', 'name']),
+            'inventoryExportsQuery' => AdminInventoryExportQuery::queryStringFromRequest($request),
         ]);
     }
 
@@ -497,11 +452,13 @@ class ProductController extends Controller
     {
         $format = strtolower($format ?? $request->get('format', 'csv'));
 
-        $data = Product::with(['category:category_id,name', 'supplier:supplier_id,name'])
-            ->orderBy('name')
-            ->get();
+        $baseQuery = $this->inventoryProductsFilteredQuery($request);
+        $filterLines = $this->inventoryExportFilterLines($request);
+
+        $withRelations = ['category:category_id,name', 'supplier:supplier_id,name'];
 
         if ($format === 'xml') {
+            $data = (clone $baseQuery)->with($withRelations)->get();
             $xml = new \SimpleXMLElement('<products/>');
             foreach ($data as $p) {
                 $n = $xml->addChild('product');
@@ -526,6 +483,7 @@ class ProductController extends Controller
         }
 
         if ($format === 'json') {
+            $data = (clone $baseQuery)->with($withRelations)->get();
             $payload = $data->map(function ($p) {
                 return [
                     'id' => $p->product_id,
@@ -549,9 +507,20 @@ class ProductController extends Controller
         }
 
         if ($format === 'pdf') {
-            $filename = 'products_'.date('Ymd_His').'.pdf';
+            $maxRows = AdminPdfExportLimits::INVENTORY_MAX_ROWS;
+            $totalMatching = (clone $baseQuery)->count();
 
-            $products = $data->map(function ($p) {
+            $pdfFilterLines = $filterLines;
+            if ($totalMatching > $maxRows) {
+                $pdfFilterLines[] = 'Nota: el PDF incluye como máximo '.$maxRows.' productos ('.$totalMatching.' coinciden con los filtros).';
+            }
+
+            $pdfRows = (clone $baseQuery)
+                ->with($withRelations)
+                ->limit($maxRows)
+                ->get();
+
+            $products = $pdfRows->map(function ($p) {
                 return (object) [
                     'id' => $p->product_id,
                     'name' => $p->name,
@@ -567,38 +536,55 @@ class ProductController extends Controller
                 ];
             });
 
+            $logoPath = public_path('assets/images/brand/logo-ciclo-finca-icon.png');
+
             $pdf = PDF::loadView('admin.products.products-pdf', [
                 'products' => $products,
                 'total' => $products->count(),
-                'fecha_exportacion' => now()->format('d/m/Y H:i:s'),
+                'totalMatching' => $totalMatching,
+                'fecha_exportacion' => now()->timezone(config('app.timezone'))->format('d/m/Y H:i:s'),
+                'pdfTitle' => 'Reporte de inventario',
+                'pdfSubtitle' => 'Productos filtrados — Ciclo Finca 4',
+                'logoPath' => is_file($logoPath) ? $logoPath : null,
+                'filterLines' => $pdfFilterLines,
+                'generatedFor' => 'Administración',
             ]);
 
-            return $pdf->download($filename);
+            return $pdf->download(ReportPdfFilename::make('inventario'));
         }
 
-        // Default to CSV export
+        // Default to CSV export (streaming por chunks: no cargar todo el inventario en memoria).
         $filename = 'products_'.date('Ymd_His').'.csv';
+        $chunk = AdminPdfExportLimits::INVENTORY_CSV_CHUNK;
 
-        return response()->streamDownload(function () use ($data) {
+        return response()->streamDownload(function () use ($baseQuery, $withRelations, $chunk): void {
             $out = fopen('php://output', 'w');
+            if ($out === false) {
+                return;
+            }
             fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for correct Excel rendering
             fputcsv($out, ['ID', 'Name', 'Description', 'Image', 'Category', 'Supplier', 'Purchase Price', 'Sale Price', 'Stock', 'Minimum', 'Status', 'Created']);
-            foreach ($data as $p) {
-                fputcsv($out, [
-                    $p->product_id,
-                    $p->name,
-                    $p->description,
-                    $p->image ?? '',
-                    optional($p->category)->name,
-                    optional($p->supplier)->name,
-                    $p->purchase_price,
-                    $p->sale_price,
-                    $p->stock_current,
-                    $p->stock_minimum,
-                    $p->status,
-                    $p->created_at ? $p->created_at->format('Y-m-d H:i:s') : '',
-                ]);
-            }
+            (clone $baseQuery)
+                ->with($withRelations)
+                ->orderBy('product_id')
+                ->chunkById($chunk, function ($products) use ($out): void {
+                    foreach ($products as $p) {
+                        fputcsv($out, [
+                            $p->product_id,
+                            $p->name,
+                            $p->description,
+                            $p->image ?? '',
+                            optional($p->category)->name,
+                            optional($p->supplier)->name,
+                            $p->purchase_price,
+                            $p->sale_price,
+                            $p->stock_current,
+                            $p->stock_minimum,
+                            $p->status,
+                            $p->created_at ? $p->created_at->format('Y-m-d H:i:s') : '',
+                        ]);
+                    }
+                }, 'product_id');
             fclose($out);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
@@ -883,131 +869,112 @@ class ProductController extends Controller
 
         return redirect()->route('inventory')->with('status', $mensaje);
     }
-    
-     /**
-     * POST /inventory/add-manual/{id}
-     * Manually add stock to a product.
-     */
-    public function addManualStock(Request $request, int $id)
-    {
-        $validReasons = ['manual_adjustment', 'damage', 'refund'];
- 
-        try {
-            $validated = $request->validate([
-                'quantity' => ['required', 'numeric', 'min:1'],
-                'reason'   => ['required', 'string', 'in:' . implode(',', $validReasons)],
-            ]);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'errors'  => $e->errors(),
-                'message' => 'Datos inválidos.',
-            ], 422);
-        }
- 
-        try {
-            $product = DB::transaction(function () use ($id, $validated) {
-                /** @var \App\Models\Product $product */
-                $product = \App\Models\Product::lockForUpdate()->findOrFail($id);
- 
-                $product->stock_current += (int) $validated['quantity'];
-                $product->save();
- 
-                return $product;
-            });
- 
-            return response()->json([
-                'success'       => true,
-                'message'       => "Se agregaron {$validated['quantity']} unidades correctamente.",
-                'stock_current' => $product->stock_current,
-            ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Producto no encontrado.',
-            ], 404);
-        } catch (ValidationException $e) {
-            // Triggered by the Product model's booted() saving hook
-            return response()->json([
-                'success' => false,
-                'errors'  => $e->errors(),
-                'message' => 'No se pudo actualizar el stock: ' . collect($e->errors())->flatten()->first(),
-            ], 422);
-        } catch (\Throwable $e) {
-            Log::error('addManualStock error', ['product_id' => $id, 'error' => $e->getMessage()]);
- 
-            return response()->json([
-                'success' => false,
-                'message' => 'Error interno al actualizar el stock. Inténtalo de nuevo.',
-            ], 500);
-        }
-    }
- 
+
     /**
-     * POST /inventory/remove-manual/{id}
-     * Manually remove stock from a product.
+     * @return Builder<Product>
      */
-    public function removeManualStock(Request $request, int $id)
+    private function inventoryProductsFilteredQuery(Request $request): Builder
     {
-        $validReasons = ['manual_adjustment', 'damage', 'refund'];
- 
-        try {
-            $validated = $request->validate([
-                'quantity' => ['required', 'numeric', 'min:1'],
-                'reason'   => ['required', 'string', 'in:' . implode(',', $validReasons)],
-            ]);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'errors'  => $e->errors(),
-                'message' => 'Datos inválidos.',
-            ], 422);
-        }
- 
-        try {
-            $product = DB::transaction(function () use ($id, $validated) {
-                /** @var \App\Models\Product $product */
-                $product = \App\Models\Product::lockForUpdate()->findOrFail($id);
- 
-                $qty = (int) $validated['quantity'];
- 
-                if ($qty > $product->stock_current) {
-                    throw ValidationException::withMessages([
-                        'quantity' => [
-                            "La cantidad ({$qty}) supera el stock disponible ({$product->stock_current}).",
-                        ],
-                    ]);
-                }
- 
-                $product->stock_current -= $qty;
-                $product->save();
- 
-                return $product;
+        $query = Product::query();
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->search.'%')
+                    ->orWhere('description', 'like', '%'.$request->search.'%');
             });
- 
-            return response()->json([
-                'success'       => true,
-                'message'       => "Se eliminaron {$validated['quantity']} unidades correctamente.",
-                'stock_current' => $product->stock_current,
-            ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Producto no encontrado.',
-            ], 404);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'errors'  => $e->errors(),
-                'message' => collect($e->errors())->flatten()->first(),
-            ], 422);
-        } catch (\Throwable $e) {
-            Log::error('removeManualStock error', ['product_id' => $id, 'error' => $e->getMessage()]);
- 
-            return response()->json([
-                'success' => false,
-                'message' => 'Error interno al actualizar el stock. Inténtalo de nuevo.',
-            ], 500);
         }
+
+        if ($request->filled('subcategory_id')) {
+            $query->where('category_id', $request->subcategory_id);
+        } elseif ($request->filled('parent_category_id')) {
+            $canonicalParentId = (int) $request->parent_category_id;
+            $physicalParentIds = Category::physicalRootIdsForCanonicalParent($canonicalParentId);
+            $childIds = Category::whereIn('parent_category_id', $physicalParentIds)->pluck('category_id');
+            $query->where(function ($q) use ($physicalParentIds, $childIds) {
+                $q->whereIn('category_id', $physicalParentIds)
+                    ->orWhereIn('category_id', $childIds);
+            });
+        } elseif ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('stock_status')) {
+            switch ($request->stock_status) {
+                case 'in-stock':
+                    $query->where('stock_current', '>', Product::CLIENT_LOW_STOCK_THRESHOLD);
+                    break;
+                case 'low':
+                    $query->where('stock_current', '>', 0)
+                        ->where('stock_current', '<=', Product::CLIENT_LOW_STOCK_THRESHOLD);
+                    break;
+                case 'out':
+                    $query->where('stock_current', 0);
+                    break;
+            }
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        [$sort, $order] = $this->validatedInventorySort($request->get('sort'), $request->get('order'));
+        $query->orderBy($sort, $order);
+
+        return $query;
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    private function validatedInventorySort(mixed $sort, mixed $order): array
+    {
+        $allowed = ['product_id', 'name', 'stock_current', 'sale_price', 'status', 'category_id'];
+        $col = is_string($sort) && in_array($sort, $allowed, true) ? $sort : 'product_id';
+        $dir = is_string($order) && strtolower($order) === 'asc' ? 'asc' : 'desc';
+
+        return [$col, $dir];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function inventoryExportFilterLines(Request $request): array
+    {
+        $lines = [];
+
+        if ($request->filled('search')) {
+            $lines[] = 'Búsqueda: '.$request->search;
+        }
+        if ($request->filled('subcategory_id')) {
+            $sub = Category::find($request->subcategory_id);
+            $lines[] = 'Subcategoría: '.($sub !== null ? $sub->name : '#'.$request->subcategory_id);
+        } elseif ($request->filled('parent_category_id')) {
+            $canonicalParentId = (int) $request->parent_category_id;
+            $roots = Category::physicalRootIdsForCanonicalParent($canonicalParentId);
+            $label = Category::whereIn('category_id', $roots)->value('name');
+            $lines[] = 'Categoría: '.($label ?? 'ID '.$canonicalParentId);
+        } elseif ($request->filled('category_id')) {
+            $cat = Category::find($request->category_id);
+            $lines[] = 'Categoría (ID): '.($cat !== null ? $cat->name : '#'.$request->category_id);
+        }
+
+        if ($request->filled('stock_status')) {
+            $lines[] = 'Stock: '.match ($request->stock_status) {
+                'in-stock' => 'En stock',
+                'low' => 'Stock bajo',
+                'out' => 'Sin stock',
+                default => (string) $request->stock_status,
+            };
+        }
+
+        if ($request->filled('status')) {
+            $lines[] = 'Estado producto: '.$request->status;
+        }
+
+        if (count($lines) === 0) {
+            $lines[] = 'Sin filtros adicionales (todos los productos según orden por defecto).';
+        }
+
+        return $lines;
     }
 }

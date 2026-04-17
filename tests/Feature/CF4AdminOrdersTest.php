@@ -90,9 +90,7 @@ class CF4AdminOrdersTest extends TestCase
         $inv = 'INV'.now()->format('Ymd').'0999';
         $sale = Sale::create([
             'invoice_number' => $inv,
-            'customer_id' => null,
             'client_id' => $client->user_id,
-            'seller_id' => null,
             'seller_admin_id' => null,
             'sale_date' => now(),
             'payment_method' => 'cash',
@@ -167,9 +165,7 @@ class CF4AdminOrdersTest extends TestCase
 
         $sale = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0888',
-            'customer_id' => null,
             'client_id' => $client->user_id,
-            'seller_id' => null,
             'seller_admin_id' => null,
             'sale_date' => now(),
             'payment_method' => 'cash',
@@ -249,9 +245,7 @@ class CF4AdminOrdersTest extends TestCase
 
         $sale = Sale::create([
             'invoice_number' => '',
-            'customer_id' => null,
             'client_id' => $client->user_id,
-            'seller_id' => null,
             'seller_admin_id' => null,
             'sale_date' => now(),
             'payment_method' => 'cash',

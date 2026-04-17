@@ -92,9 +92,7 @@ class ProductSalesReportTest extends TestCase
 
         $sale = Sale::create([
             'invoice_number' => 'INV-CF30-'.now()->format('YmdHis'),
-            'customer_id' => null,
             'client_id' => null,
-            'seller_id' => null,
             'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 1000,
             'iva' => 0,

@@ -76,8 +76,6 @@ class SalesOrderExpiryTest extends TestCase
     {
         $sale = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0001',
-            'customer_id' => null,
-            'seller_id' => null,
             'client_id' => $this->customer->user_id,
             'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
@@ -107,8 +105,6 @@ class SalesOrderExpiryTest extends TestCase
     {
         $sale = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0002',
-            'customer_id' => null,
-            'seller_id' => null,
             'client_id' => $this->customer->user_id,
             'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
@@ -134,8 +130,6 @@ class SalesOrderExpiryTest extends TestCase
         $saleDate = now()->subDays(25);
         $sale = Sale::create([
             'invoice_number' => 'INV'.$saleDate->format('Ymd').'0003',
-            'customer_id' => null,
-            'seller_id' => null,
             'client_id' => $this->customer->user_id,
             'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
@@ -162,8 +156,6 @@ class SalesOrderExpiryTest extends TestCase
     {
         $sale = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0004',
-            'customer_id' => null,
-            'seller_id' => null,
             'client_id' => $this->customer->user_id,
             'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
@@ -190,8 +182,6 @@ class SalesOrderExpiryTest extends TestCase
         $oldDate = now()->subDays(31);
         $sale = Sale::create([
             'invoice_number' => 'INV'.$oldDate->format('Ymd').'0005',
-            'customer_id' => null,
-            'seller_id' => null,
             'client_id' => $this->customer->user_id,
             'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
@@ -215,8 +205,6 @@ class SalesOrderExpiryTest extends TestCase
     {
         $sale = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0006',
-            'customer_id' => null,
-            'seller_id' => null,
             'client_id' => $this->customer->user_id,
             'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
@@ -240,8 +228,6 @@ class SalesOrderExpiryTest extends TestCase
     {
         $sale = Sale::create([
             'invoice_number' => 'INV'.now()->format('Ymd').'0007',
-            'customer_id' => null,
-            'seller_id' => null,
             'client_id' => $this->customer->user_id,
             'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
@@ -266,8 +252,6 @@ class SalesOrderExpiryTest extends TestCase
         $oldDate = now()->subDays(31);
         $sale = Sale::create([
             'invoice_number' => 'INV'.$oldDate->format('Ymd').'0008',
-            'customer_id' => null,
-            'seller_id' => null,
             'client_id' => $this->customer->user_id,
             'seller_admin_id' => $this->adminUser->user_id,
             'subtotal' => 100,
