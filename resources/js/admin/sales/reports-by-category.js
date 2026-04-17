@@ -14,6 +14,35 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Validación de rango de fechas personalizadas
+    const form = document.getElementById('report-filter-form');
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            const range = document.getElementById('date-range');
+            if (!range || range.value !== 'custom') return;
+
+            const fromInput = document.getElementById('date-from');
+            const toInput   = document.getElementById('date-to');
+
+            if (!fromInput || !toInput) return;
+
+            const from = new Date(fromInput.value);
+            const to   = new Date(toInput.value);
+
+            if (!fromInput.value || !toInput.value) {
+                e.preventDefault();
+                alert('Debe ingresar ambas fechas para el rango personalizado.');
+                return;
+            }
+
+            if (to < from) {
+                e.preventDefault();
+                alert('La fecha de fin debe ser igual o posterior a la fecha de inicio.');
+                toInput.focus();
+            }
+        });
+    }
+
     // Gráfico
     const canvas = document.getElementById('category-chart');
     if (!canvas) return;
