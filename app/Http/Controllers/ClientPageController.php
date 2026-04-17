@@ -262,11 +262,12 @@ class ClientPageController extends Controller
                 $subtotal = $item['price'] * $qty;
                 $total += $subtotal;
 
+                $mediaUrl = $product->getFirstMediaUrl('main_image');
                 $cartItems[] = [
                     'product_id' => $product->product_id,
                     'name' => $product->name,
                     'price' => $item['price'],
-                    'image' => $product->image ?? 'default.png',
+                    'image_url' => $mediaUrl ?: asset('assets/images/products/' . ($product->image ?? 'default.png')),
                     'quantity' => $qty,
                     'stock_available' => $product->stock_current,
                     'subtotal' => $subtotal,

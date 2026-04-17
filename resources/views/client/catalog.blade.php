@@ -165,7 +165,8 @@
                                                 {{ $spotlight === 'featured' ? 'Destacado' : 'Novedad' }}
                                             </span>
                                             <a href="{{ $product->clientProductUrl() }}">
-                                                <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
+                                                @php $spotlightImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')); @endphp
+                                                <img src="{{ $spotlightImgUrl }}"
                                                      alt="{{ $product->name }}"
                                                      data-fallback-src="{{ asset('favicon.svg') }}"
                                                      onerror="this.src=this.dataset.fallbackSrc;">
@@ -248,9 +249,10 @@
                                 @php $catLabel = $product->clientCatalogStockLabel(); $canBuy = $product->isPurchasableByClient(); @endphp
                                 <div class="product-card">
                                     <div class="product-image">
-                                        <a href="{{ $product->clientProductUrl() }}">
+                            @php $cardImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')); @endphp
+                                    <a href="{{ $product->clientProductUrl() }}">
                                             {{-- Fallback to favicon if product image is missing --}}
-                                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
+                                            <img src="{{ $cardImgUrl }}"
                                                  alt="{{ $product->name }}"
                                                  data-fallback-src="{{ asset('favicon.svg') }}"
                                                  onerror="this.src=this.dataset.fallbackSrc;">

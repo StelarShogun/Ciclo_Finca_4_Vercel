@@ -157,8 +157,7 @@ class SalesController extends Controller
                             'product' => $item->product ? [
                                 'product_id' => $item->product->product_id,
                                 'name' => $item->product->name,
-                                // SKU is derived from the PK; no dedicated column exists
-                                'sku' => 'BK-'.str_pad((string) $item->product->product_id, 3, '0', STR_PAD_LEFT),
+                                'sku' => Product::skuFromId((int) $item->product->product_id),
                             ] : null,
                         ];
                     }),

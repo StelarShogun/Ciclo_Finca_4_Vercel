@@ -6,20 +6,22 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * @property-read Category|null $category
  * @property-read Collection<int, Brand> $brands
  * @property-read Collection<int, ClassificationValue> $classificationValues
  */
-class Product extends Model
+class Product extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $table = 'products';
 
@@ -54,11 +56,18 @@ class Product extends Model
         'updated_at' => 'datetime',
     ];
 
-    public const CLIENT_LOW_STOCK_THRESHOLD = 10;
-
     public const MSG_CLIENT_AGOTADO = 'Producto agotado';
 
     public const MSG_CLIENT_STOCK_INSUFICIENTE = 'Stock insuficiente';
+
+    /**
+     * SKU de catálogo derivado del ID (no existe columna dedicada).
+     * Debe coincidir con SQL: CONCAT('BK-', LPAD(product_id, 3, '0')).
+     */
+    public static function skuFromId(int $productId): string
+    {
+        return 'BK-'.str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
+    }
 
     public static function canonicalStatus(?string $raw): string
     {
@@ -88,6 +97,18 @@ class Product extends Model
             'LOWER(TRIM(COALESCE(status, \'\'))) IN ('.$placeholders.')',
             $ok
         );
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $disk = config('media-library.disk_name', 'public');
+
+        $this->addMediaCollection('main_image')
+             ->useDisk($disk)
+             ->singleFile();
+
+        $this->addMediaCollection('gallery')
+             ->useDisk($disk);
     }
 
     public function getDisplayImages(): array
@@ -132,7 +153,7 @@ class Product extends Model
         )->withPivot('classification_dimension_id');
     }
 
-    /** CF4-62: Etiqueta corta para listados del cliente. */
+    /** CF4-62 / CF4-50: Etiqueta corta para listados del cliente (umbral = stock mínimo por producto). */
     public function clientCatalogStockLabel(): string
     {
         $st = $this->effectiveStatus();
@@ -145,7 +166,7 @@ class Product extends Model
             return 'No disponible';
         }
 
-        if ($this->stock_current <= self::CLIENT_LOW_STOCK_THRESHOLD) {
+        if ((int) $this->stock_minimum > 0 && $this->stock_current <= (int) $this->stock_minimum) {
             return 'Quedan pocas unidades';
         }
 
@@ -165,7 +186,7 @@ class Product extends Model
         }
 
         if ($st === 'active' && $this->stock_current > 0) {
-            if ($this->stock_current <= self::CLIENT_LOW_STOCK_THRESHOLD) {
+            if ((int) $this->stock_minimum > 0 && $this->stock_current <= (int) $this->stock_minimum) {
                 return 'Quedan pocas unidades';
             }
 
@@ -179,7 +200,8 @@ class Product extends Model
     {
         return $this->effectiveStatus() === 'active'
             && $this->stock_current > 0
-            && $this->stock_current <= self::CLIENT_LOW_STOCK_THRESHOLD;
+            && (int) $this->stock_minimum > 0
+            && $this->stock_current <= (int) $this->stock_minimum;
     }
 
     public function isPurchasableByClient(): bool
@@ -202,25 +224,51 @@ class Product extends Model
         ]);
     }
 
+    /** CF4-50: Stock por encima de cero pero en o por debajo del mínimo configurado (si el mínimo es 0, no alerta). */
     public function scopeLowStockAlert(Builder $query): Builder
     {
         return $query->activeInClientStore()
+            ->where('stock_minimum', '>', 0)
             ->where('stock_current', '>', 0)
-            ->where('stock_current', '<=', self::CLIENT_LOW_STOCK_THRESHOLD);
+            ->whereColumn('stock_current', '<=', 'stock_minimum');
+    }
+
+    /** Badge en inventario admin: danger = sin stock, warning = en o bajo el mínimo, success = por encima del mínimo. */
+    public function adminInventoryStockBadgeClass(): string
+    {
+        if ($this->stock_current <= 0) {
+            return 'danger';
+        }
+
+        if ((int) $this->stock_minimum > 0 && $this->stock_current <= (int) $this->stock_minimum) {
+            return 'warning';
+        }
+
+        return 'success';
+    }
+
+    /**
+     * Para exportes PDF: 'high' = stock OK, 'medium' = bajo respecto al mínimo, 'low' = agotado.
+     */
+    public static function adminStockExportTier(int $stockCurrent, int $stockMinimum): string
+    {
+        if ($stockCurrent <= 0) {
+            return 'low';
+        }
+        if ($stockMinimum > 0 && $stockCurrent <= $stockMinimum) {
+            return 'medium';
+        }
+
+        return 'high';
     }
 
     protected static function booted(): void
     {
         static::saving(function ($p) {
             if ($p->effectiveStatus() === 'active') {
-                if ($p->stock_minimum < 1) {
+                if ((int) $p->stock_minimum < 0) {
                     throw ValidationException::withMessages([
-                        'stock_minimum' => 'El stock mínimo debe ser ≥ 1 para productos activos.',
-                    ]);
-                }
-                if ($p->stock_current < $p->stock_minimum) {
-                    throw ValidationException::withMessages([
-                        'stock_current' => 'El stock actual no puede ser menor que el stock mínimo.',
+                        'stock_minimum' => 'El stock mínimo no puede ser negativo.',
                     ]);
                 }
             }
