@@ -42,9 +42,6 @@
                         <i class="fas fa-sitemap"></i>
                         Crear Subcategoría
                     </a>
-                    <button class="btn btn-secondary" id="export-btn">
-                        <i class="fas fa-download"></i> Exportar
-                    </button>
                     <button class="btn btn-secondary" id="import-btn">
                         <i class="fas fa-upload"></i> Importar
                     </button>
@@ -236,6 +233,7 @@
                                                     title="Edit product">
                                                 <i class="fas fa-edit"></i>
                                             </button>
+
                                             <button class="action-btn delete"
                                                     data-action="delete"
                                                     data-product-id="{{ $product->product_id }}"
@@ -336,6 +334,24 @@
                                                 title="Edit product">
                                             <i class="fas fa-edit"></i>
                                         </button>
+                                        {{-- Add stock (green plus) --}}
+                                        <button class="action-btn stock-adjust"
+                                                data-stock-action="add"
+                                                data-product-id="{{ $product->product_id }}"
+                                                data-product-name="{{ $product->name }}"
+                                                data-product-stock="{{ $product->stock_current }}"
+                                                title="Add stock">
+                                            <i class="fas fa-plus-circle" style="color:#16a34a;"></i>
+                                        </button>
+                                        {{-- Remove stock (red minus) --}}
+                                        <button class="action-btn stock-adjust"
+                                                data-stock-action="remove"
+                                                data-product-id="{{ $product->product_id }}"
+                                                data-product-name="{{ $product->name }}"
+                                                data-product-stock="{{ $product->stock_current }}"
+                                                title="Remove stock">
+                                            <i class="fas fa-minus-circle" style="color:#dc2626;"></i>
+                                        </button>
                                         <button class="action-btn delete"
                                                 data-action="delete"
                                                 data-product-id="{{ $product->product_id }}"
@@ -344,6 +360,7 @@
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
+
                                 </div>
                             </div>
                         @endforeach
@@ -619,68 +636,6 @@
         </div>
     </div>
 
-    {{-- ==================== MODAL: EXPORT ==================== --}}
-    <div class="edit-modal" id="export-modal">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content modal-auto-size">
-            <div class="modal-header">
-                <h3><i class="fas fa-download"></i> Exportar Productos</h3>
-                <button class="modal-close" id="close-export-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="export-options">
-
-                    <div class="export-option">
-                        <div class="export-icon"><i class="fas fa-file-code"></i></div>
-                        <div class="export-info">
-                            <h4>XML</h4>
-                            <p>Formato estructurado para intercambio de datos</p>
-                        </div>
-                        <a href="{{ route('products.export', 'xml') }}" class="btn btn-primary">
-                            <i class="fas fa-download"></i> Exportar XML
-                        </a>
-                    </div>
-
-                    <div class="export-option">
-                        <div class="export-icon"><i class="fas fa-file-csv"></i></div>
-                        <div class="export-info">
-                            <h4>CSV</h4>
-                            <p>Formato de hoja de cálculo compatible con Excel</p>
-                        </div>
-                        <a href="{{ route('products.export', 'csv') }}" class="btn btn-primary">
-                            <i class="fas fa-download"></i> Exportar CSV
-                        </a>
-                    </div>
-
-                    <div class="export-option">
-                        <div class="export-icon"><i class="fas fa-file-alt"></i></div>
-                        <div class="export-info">
-                            <h4>JSON</h4>
-                            <p>Formato ligero para aplicaciones web</p>
-                        </div>
-                        <a href="{{ route('products.export', 'json') }}" class="btn btn-primary">
-                            <i class="fas fa-download"></i> Exportar JSON
-                        </a>
-                    </div>
-
-                    <div class="export-option">
-                        <div class="export-icon"><i class="fas fa-file-pdf"></i></div>
-                        <div class="export-info">
-                            <h4>PDF</h4>
-                            <p>Documento profesional para impresión</p>
-                        </div>
-                        <a href="{{ route('products.export', 'pdf') }}" class="btn btn-primary">
-                            <i class="fas fa-download"></i> Exportar PDF
-                        </a>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
     {{-- ==================== MODAL: IMPORT ==================== --}}
     <div class="edit-modal" id="import-modal">
         <div class="modal-backdrop"></div>
@@ -818,9 +773,92 @@
         window.inventoryBrands = @json($brands->map(fn($b) => ['id' => $b->id, 'name' => $b->name]) ?? []);
     </script>
 
+    {{-- ==================== MODAL: STOCK ADJUSTMENT ==================== --}}
+    <div class="edit-modal" id="stock-adjust-modal" role="dialog" aria-modal="true"
+         aria-labelledby="stock-modal-title">
+        <div class="stock-modal-backdrop"></div>
+
+        <div class="stock-modal-box">
+
+            {{-- Header --}}
+            <div class="stock-modal-header">
+                <h3>
+                    <i id="stock-modal-title-icon" class="fas fa-plus-circle modal-icon-add"></i>
+                    <span id="stock-modal-title">Agregar Stock</span>
+                </h3>
+                <button class="stock-modal-close" id="stock-modal-close-btn"
+                        aria-label="Cerrar modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            {{-- Product info strip --}}
+            <div class="stock-modal-product-info">
+                <div>
+                    <div class="product-name" id="stock-modal-product-name">—</div>
+                    <div class="product-stock">
+                        Stock actual:
+                        <span class="stock-pill" id="stock-modal-product-stock">—</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Body --}}
+            <div class="stock-modal-body">
+
+                {{-- Hidden product ID --}}
+                <input type="hidden" id="stock-modal-product-id" value="">
+
+                {{-- Alert banner --}}
+                <div class="stock-modal-alert" id="stock-modal-alert" role="alert">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="stock-modal-alert-msg"></span>
+                </div>
+
+                {{-- Quantity --}}
+                <div class="stock-form-group">
+                    <label for="stock-modal-qty">Cantidad *</label>
+                    <input type="number"
+                           id="stock-modal-qty"
+                           min="1"
+                           step="1"
+                           placeholder="Ej: 10">
+                    <span class="stock-field-error" id="stock-modal-qty-error"></span>
+                </div>
+
+                {{-- Reason --}}
+                <div class="stock-form-group">
+                    <label for="stock-modal-reason">Motivo *</label>
+                    <select id="stock-modal-reason">
+                        <option value="" disabled selected>Selecciona un motivo…</option>
+                        <option value="manual_adjustment">Ajuste Manual</option>
+                        <option value="damage">Daño</option>
+                        <option value="refund">Reembolso</option>
+                    </select>
+                    <span class="stock-field-error" id="stock-modal-reason-error"></span>
+                </div>
+
+            </div>
+
+            {{-- Footer --}}
+            <div class="stock-modal-footer">
+                <button type="button" class="stock-btn stock-btn-cancel"
+                        id="stock-modal-cancel-btn">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="stock-btn stock-btn-confirm-add"
+                        id="stock-modal-confirm-btn">
+                    <span class="spinner-border-sm" id="stock-modal-confirm-spinner"
+                          style="display:none;" aria-hidden="true"></span>
+                    <span id="stock-modal-confirm-text">Confirmar</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     {{-- Scripts: SweetAlert2 loaded before inventory.js --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @vite(['resources/js/admin/inventory/inventory.js'])
-
 </body>
 </html>

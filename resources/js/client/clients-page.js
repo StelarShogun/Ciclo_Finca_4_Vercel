@@ -688,6 +688,23 @@ document.addEventListener('DOMContentLoaded', function () {
                         updateCartCount(0);
                         showCartEmptyState();
 
+                        // Increment invoice badge immediately without waiting for heartbeat.
+                        (function () {
+                            var invoiceLink = document.getElementById('invoices-link');
+                            if (!invoiceLink) return;
+                            var badge = document.getElementById('invoice-count');
+                            var currentVal = badge ? (parseInt(badge.textContent, 10) || 0) : 0;
+                            var newVal = currentVal + 1;
+                            if (!badge) {
+                                badge = document.createElement('span');
+                                badge.id = 'invoice-count';
+                                badge.className = 'cf4-invoice-count';
+                                invoiceLink.appendChild(badge);
+                            }
+                            badge.textContent = newVal;
+                            badge.style.display = 'flex';
+                        })();
+
                         Swal.fire({
                             icon: 'success',
                             title: '¡Pedido confirmado!',

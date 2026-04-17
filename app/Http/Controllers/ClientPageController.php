@@ -395,8 +395,6 @@ class ClientPageController extends Controller
             $sale = Sale::create([
                 'invoice_number' => (new Sale)->generateInvoiceNumber(),
                 'client_id' => $client?->user_id,
-                'customer_id' => null,
-                'seller_id' => null,
                 'sale_date' => now(),
                 'payment_method' => 'cash',
                 'status' => 'pending',
@@ -463,5 +461,32 @@ class ClientPageController extends Controller
             'cart_count' => 0,
             'cart_total' => 0,
         ]);
+    }
+
+    public function invoices()
+    {
+        $client = Auth::guard('clients')->user();
+
+        $orders = Sale::with(['saleItems.product'])
+            ->where('client_id', $client->user_id)
+            ->where('status', 'pending')
+            ->orderByDesc('sale_date')
+            ->get();
+
+        $cartCount = $this->getCartCount();
+        $invoiceCount = $orders->count();
+
+        return view('client.Invoices', compact('orders', 'cartCount', 'invoiceCount'));
+    }
+
+    public function invoicesHeartbeat()
+    {
+        $client = Auth::guard('clients')->user();
+
+        $count = Sale::where('client_id', $client->user_id)
+            ->where('status', 'pending')
+            ->count();
+
+        return response()->json(['count' => $count]);
     }
 }

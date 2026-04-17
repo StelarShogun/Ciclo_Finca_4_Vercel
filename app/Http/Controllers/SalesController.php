@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\ReportPdfFilename;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,54 +22,9 @@ class SalesController extends Controller
         $salesStatusUi = in_array($statusFilter, ['cancelled', 'refunded', 'all'], true)
             ? $statusFilter
             : 'completed';
-        $dateRange = $request->get('date_range');
-        $paymentMethod = $request->get('payment_method');
-        $search = $request->get('search');
 
         $query = Sale::with(['client', 'sellerAdmin', 'saleItems.product']);
-
-        $query->notExpired();
-
-        $this->applyVentasStatusScope($query, $statusFilter);
-
-        if ($dateRange) {
-            switch ($dateRange) {
-                case 'today':
-                    $query->whereDate('sale_date', Carbon::today());
-                    break;
-                case 'week':
-                    $query->whereBetween('sale_date', [
-                        Carbon::now()->startOfWeek(),
-                        Carbon::now()->endOfWeek(),
-                    ]);
-                    break;
-                case 'month':
-                    $query->whereMonth('sale_date', Carbon::now()->month)
-                        ->whereYear('sale_date', Carbon::now()->year);
-                    break;
-                case 'custom':
-                    // Custom range is applied by the caller via additional query parameters
-                    break;
-            }
-        }
-
-        if ($paymentMethod) {
-            $query->where('payment_method', $paymentMethod);
-        }
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('sale_id', 'like', "%{$search}%")
-                    ->orWhere('invoice_number', 'like', "%{$search}%")
-                    ->orWhere('buyer_name', 'like', "%{$search}%")
-                    ->orWhere('buyer_email', 'like', "%{$search}%")
-                    ->orWhereHas('client', function ($subQ) use ($search) {
-                        $subQ->where('name', 'like', "%{$search}%")
-                            ->orWhere('first_surname', 'like', "%{$search}%")
-                            ->orWhere('gmail', 'like', "%{$search}%");
-                    });
-            });
-        }
+        $this->applySalesAdminListFilters($query, $request);
 
         $sales = $query->orderBy('sale_date', 'desc')->paginate(15)->withQueryString();
 
@@ -166,7 +125,7 @@ class SalesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading sale: '.$e->getMessage(),
+                'message' => 'Error loading sale: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -231,7 +190,7 @@ class SalesController extends Controller
                 $product = Product::find($item['product_id']);
                 if (! $product || $item['quantity'] > $product->stock_current) {
                     DB::rollBack();
-                    $name = $product ? $product->name : 'ID '.$item['product_id'];
+                    $name = $product ? $product->name : 'ID ' . $item['product_id'];
                     $available = $product ? $product->stock_current : 0;
 
                     return response()->json([
@@ -264,7 +223,7 @@ class SalesController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'El descuento no puede ser mayor que el subtotal (₡'.number_format($subtotal, 2, ',', '.').').',
+                    'message' => 'El descuento no puede ser mayor que el subtotal (₡' . number_format($subtotal, 2, ',', '.') . ').',
                 ], 422);
             }
 
@@ -277,9 +236,7 @@ class SalesController extends Controller
             $orderSource = $clientId ? 'web_cart' : 'walk_in';
             $sale = Sale::create([
                 'invoice_number' => (new Sale)->generateInvoiceNumber(),
-                'customer_id' => null,
                 'client_id' => $clientId,
-                'seller_id' => null,
                 'seller_admin_id' => Auth::guard('admin')->id(),
                 'sale_date' => now(),
                 'payment_method' => $request->payment_method,
@@ -319,7 +276,7 @@ class SalesController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating sale: '.$e->getMessage(),
+                'message' => 'Error creating sale: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -420,7 +377,7 @@ class SalesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al confirmar el pedido: '.$e->getMessage(),
+                'message' => 'Error al confirmar el pedido: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -473,7 +430,7 @@ class SalesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al rechazar el pedido: '.$e->getMessage(),
+                'message' => 'Error al rechazar el pedido: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -525,80 +482,232 @@ class SalesController extends Controller
     public function export(Request $request)
     {
         try {
-            $sales = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])
-                ->when($request->start_date, fn ($q) => $q->whereDate('sale_date', '>=', $request->start_date))
-                ->when($request->end_date, fn ($q) => $q->whereDate('sale_date', '<=', $request->end_date))
-                ->tap(fn ($q) => $this->applyVentasStatusScope($q, $request->get('status')))
-                ->when($request->payment_method, fn ($q) => $q->where('payment_method', $request->payment_method))
-                ->when($request->search, function ($q) use ($request) {
-                    $search = $request->search;
+            $format = strtolower((string) $request->get('format', 'csv'));
 
-                    return $q->where('sale_id', 'like', '%'.$search.'%')
-                        ->orWhere('invoice_number', 'like', '%'.$search.'%')
-                        ->orWhere('buyer_name', 'like', '%'.$search.'%')
-                        ->orWhere('buyer_email', 'like', '%'.$search.'%')
-                        ->orWhereHas('client', function ($sub) use ($search) {
-                            $sub->where('name', 'like', '%'.$search.'%')
-                                ->orWhere('first_surname', 'like', '%'.$search.'%')
-                                ->orWhere('gmail', 'like', '%'.$search.'%');
-                        });
-                })
-                ->orderBy('sale_date', 'desc')
-                ->get();
+            $base = Sale::query();
+            $this->applySalesAdminListFilters($base, $request);
 
-            $filename = 'sales_'.now()->format('Y-m-d_H-i-s').'.csv';
+            if ($format === 'pdf') {
+                return $this->exportSalesPdf($request, $base);
+            }
+
+            $filename = 'sales_' . now()->format('Y-m-d_H-i-s') . '.csv';
             $headers = [
                 'Content-Type' => 'text/csv; charset=UTF-8',
-                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             ];
 
-            $callback = function () use ($sales) {
+            $chunkSize = AdminPdfExportLimits::SALES_CSV_CHUNK;
+
+            $callback = function () use ($base, $chunkSize): void {
                 $file = fopen('php://output', 'w');
+                if ($file === false) {
+                    return;
+                }
                 fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM for correct Excel rendering
                 fputcsv($file, [
-                    'Sale ID', 'Customer', 'Email', 'Date', 'Status', 'Payment', 'Subtotal', 'IVA', 'Discount', 'Total', 'Items', 'Notes',
+                    'Sale ID',
+                    'Customer',
+                    'Email',
+                    'Date',
+                    'Status',
+                    'Payment',
+                    'Subtotal',
+                    'IVA',
+                    'Discount',
+                    'Total',
+                    'Items',
+                    'Notes',
                 ], ';');
 
-                foreach ($sales as $sale) {
-                    $items = $sale->saleItems->map(function (SaleItem $item): string {
-                        $label = $item->product !== null ? $item->product->name : '?';
+                (clone $base)
+                    ->with(['client', 'sellerAdmin', 'saleItems.product'])
+                    ->orderBy('sale_id')
+                    ->chunkById($chunkSize, function ($sales) use ($file): void {
+                        foreach ($sales as $sale) {
+                            $items = $sale->saleItems->map(function (SaleItem $item): string {
+                                $label = $item->product !== null ? $item->product->name : '?';
 
-                        return $label.' (x'.$item->quantity.')';
-                    })->implode(', ');
+                                return $label.' (x'.$item->quantity.')';
+                            })->implode(', ');
 
-                    // Prefer the linked client record; fall back to inline buyer fields for walk-in sales
-                    $customerDisplayName = $sale->client
-                        ? trim($sale->client->name.' '.$sale->client->first_surname.' '.($sale->client->second_surname ?: ''))
-                        : ($sale->buyer_name ?: 'Walk-in / Sin datos');
+                            $customerDisplayName = $sale->client
+                                ? trim($sale->client->name.' '.$sale->client->first_surname.' '.($sale->client->second_surname ?: ''))
+                                : ($sale->buyer_name ?: 'Walk-in / Sin datos');
 
-                    $customerEmail = $sale->client
-                        ? $sale->client->gmail
-                        : ($sale->buyer_email ?: 'N/A');
+                            $customerEmail = $sale->client
+                                ? $sale->client->gmail
+                                : ($sale->buyer_email ?: 'N/A');
 
-                    fputcsv($file, [
-                        $sale->sale_id,
-                        $customerDisplayName,
-                        $customerEmail,
-                        $sale->sale_date->format('d/m/Y H:i'),
-                        ucfirst($sale->status),
-                        ucfirst($sale->payment_method),
-                        '₡'.number_format((float) $sale->subtotal, 2, ',', '.'),
-                        '₡'.number_format((float) $sale->iva, 2, ',', '.'),
-                        '₡'.number_format((float) $sale->discount, 2, ',', '.'),
-                        '₡'.number_format((float) $sale->total, 2, ',', '.'),
-                        $items,
-                        $sale->notes ?? '',
-                    ], ';');
-                }
+                            $saleDate = $sale->sale_date;
+
+                            fputcsv($file, [
+                                $sale->sale_id,
+                                $customerDisplayName,
+                                $customerEmail,
+                                $saleDate !== null ? $saleDate->format('d/m/Y H:i') : '',
+                                ucfirst((string) $sale->status),
+                                ucfirst((string) $sale->payment_method),
+                                '₡'.number_format((float) $sale->subtotal, 2, ',', '.'),
+                                '₡'.number_format((float) $sale->iva, 2, ',', '.'),
+                                '₡'.number_format((float) $sale->discount, 2, ',', '.'),
+                                '₡'.number_format((float) $sale->total, 2, ',', '.'),
+                                $items,
+                                $sale->notes ?? '',
+                            ], ';');
+                        }
+                    }, 'sale_id');
+
                 fclose($file);
             };
 
             return response()->stream($callback, 200, $headers);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error exporting sales: '.$e->getMessage(),
+                'message' => 'Error exporting sales: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    private function exportSalesPdf(Request $request, Builder $base)
+    {
+        $maxRows = AdminPdfExportLimits::SALES_MAX_ROWS;
+        $totalMatching = (clone $base)->count();
+
+        $filterLines = $this->salesExportFilterLines($request);
+        if ($totalMatching > $maxRows) {
+            $filterLines[] = 'Nota: el PDF incluye como máximo '.$maxRows.' filas ('.$totalMatching.' ventas coinciden con los filtros).';
+        }
+
+        $aggregate = (clone $base)
+            ->selectRaw('COUNT(*) as agg_count')
+            ->selectRaw('COALESCE(SUM(total), 0) as agg_sum_total')
+            ->selectRaw('COALESCE(SUM(subtotal), 0) as agg_sum_subtotal')
+            ->selectRaw('COALESCE(SUM(iva), 0) as agg_sum_iva')
+            ->selectRaw('COALESCE(SUM(discount), 0) as agg_sum_discount')
+            ->first();
+
+        $agg = $aggregate !== null ? $aggregate->getAttributes() : [];
+
+        $totals = [
+            'count' => (int) ($agg['agg_count'] ?? 0),
+            'sum_total' => (float) ($agg['agg_sum_total'] ?? 0.0),
+            'sum_subtotal' => (float) ($agg['agg_sum_subtotal'] ?? 0.0),
+            'sum_iva' => (float) ($agg['agg_sum_iva'] ?? 0.0),
+            'sum_discount' => (float) ($agg['agg_sum_discount'] ?? 0.0),
+        ];
+
+        $rows = (clone $base)
+            ->with(['client'])
+            ->orderBy('sale_date', 'desc')
+            ->limit($maxRows)
+            ->get();
+
+        $logoPath = public_path('assets/images/brand/logo-ciclo-finca-icon.png');
+
+        $pdf = PDF::loadView('admin.sales.sales-pdf', [
+            'sales' => $rows,
+            'totals' => $totals,
+            'pdfTitle' => 'Reporte de ventas',
+            'pdfSubtitle' => 'Listado filtrado — Ciclo Finca 4',
+            'logoPath' => is_file($logoPath) ? $logoPath : null,
+            'filterLines' => $filterLines,
+            'generatedFor' => 'Administración',
+        ]);
+
+        return $pdf->download(ReportPdfFilename::make('ventas'));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function salesExportFilterLines(Request $request): array
+    {
+        $lines = [];
+
+        $status = $request->query('status');
+        if (in_array($status, ['cancelled', 'refunded', 'all'], true)) {
+            $lines[] = 'Estado: '.$status;
+        } else {
+            $lines[] = 'Estado: confirmadas (completadas)';
+        }
+
+        if ($request->filled('date_range')) {
+            $lines[] = 'Rango: '.$request->date_range;
+        }
+        if ($request->filled('start_date') || $request->filled('end_date')) {
+            $lines[] = 'Fechas: '.($request->start_date ?: '…').' — '.($request->end_date ?: '…');
+        }
+
+        if ($request->filled('payment_method')) {
+            $lines[] = 'Método de pago: '.$request->payment_method;
+        }
+
+        if ($request->filled('search')) {
+            $lines[] = 'Búsqueda: '.$request->search;
+        }
+
+        return $lines;
+    }
+
+    /**
+     * @param  Builder<Sale>  $query
+     */
+    private function applySalesAdminListFilters(Builder $query, Request $request): void
+    {
+        $query->notExpired();
+
+        $statusFilter = $request->query('status');
+        $this->applyVentasStatusScope($query, $statusFilter);
+
+        if ($request->filled('start_date') || $request->filled('end_date')) {
+            if ($request->filled('start_date')) {
+                $query->whereDate('sale_date', '>=', $request->start_date);
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('sale_date', '<=', $request->end_date);
+            }
+        } else {
+            $dateRange = $request->get('date_range');
+            if ($dateRange) {
+                switch ($dateRange) {
+                    case 'today':
+                        $query->whereDate('sale_date', Carbon::today());
+                        break;
+                    case 'week':
+                        $query->whereBetween('sale_date', [
+                            Carbon::now()->startOfWeek(),
+                            Carbon::now()->endOfWeek(),
+                        ]);
+                        break;
+                    case 'month':
+                        $query->whereMonth('sale_date', Carbon::now()->month)
+                            ->whereYear('sale_date', Carbon::now()->year);
+                        break;
+                    case 'custom':
+                        break;
+                }
+            }
+        }
+
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('sale_id', 'like', "%{$search}%")
+                    ->orWhere('invoice_number', 'like', "%{$search}%")
+                    ->orWhere('buyer_name', 'like', "%{$search}%")
+                    ->orWhere('buyer_email', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($subQ) use ($search) {
+                        $subQ->where('name', 'like', "%{$search}%")
+                            ->orWhere('first_surname', 'like', "%{$search}%")
+                            ->orWhere('gmail', 'like', "%{$search}%");
+                    });
+            });
         }
     }
 
@@ -690,5 +799,95 @@ class SalesController extends Controller
     private function roundMoney(float $amount): float
     {
         return round($amount, 2);
+    }
+
+    public function byCategory(Request $request)
+    {
+        $dateRange = $request->input('date_range', 'month');
+        $dateFrom  = $request->input('date_from');
+        $dateTo    = $request->input('date_to');
+
+        if ($dateRange === 'custom') {
+            $request->validate([
+                'date_from' => 'required|date',
+                'date_to'   => 'required|date|after_or_equal:date_from',
+            ], [
+                'date_from.required'      => 'La fecha de inicio es obligatoria.',
+                'date_from.date'          => 'La fecha de inicio no es válida.',
+                'date_to.required'        => 'La fecha de fin es obligatoria.',
+                'date_to.date'            => 'La fecha de fin no es válida.',
+                'date_to.after_or_equal'  => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
+            ]);
+        }
+
+        [$from, $to] = $this->resolveDateRange($dateRange, $dateFrom, $dateTo);
+
+        $rows = SaleItem::query()
+            ->join('sales',      'sale_items.sale_id',    '=', 'sales.sale_id')
+            ->join('products',   'sale_items.product_id', '=', 'products.product_id')
+            ->join('categories', 'products.category_id',  '=', 'categories.category_id')
+            ->where('sales.status', 'completed')
+            ->whereBetween('sales.sale_date', [$from, $to])
+            ->groupBy('categories.category_id', 'categories.name')
+            ->selectRaw('
+                categories.category_id,
+                categories.name          AS category_name,
+                SUM(sale_items.quantity) AS total_units,
+                SUM(sale_items.total)    AS total_revenue
+            ')
+            ->orderByDesc('total_revenue')
+            ->get();
+
+        $grandTotal = $rows->sum('total_revenue');
+
+        $rows->transform(function ($row) use ($grandTotal) {
+            $row->percentage = $grandTotal > 0
+                ? round(($row->total_revenue / $grandTotal) * 100, 1)
+                : 0;
+            return $row;
+        });
+
+        $chartData = $rows->map(function ($r) {
+            return [
+                'label'   => $r->category_name,
+                'value'   => $r->total_revenue,
+                'percent' => $r->percentage,
+            ];
+        })->values()->toArray();
+
+        return view('admin.sales.reports-by-category', compact(
+            'rows', 'grandTotal', 'from', 'to', 'dateRange', 'chartData'
+        ));
+    }
+
+    private function resolveDateRange(string $range, ?string $dateFrom, ?string $dateTo): array
+    {
+        switch ($range) {
+            case 'today':
+                return [
+                    now()->startOfDay()->toDateTimeString(),
+                    now()->endOfDay()->toDateTimeString(),
+                ];
+            case 'week':
+                return [
+                    now()->startOfWeek()->startOfDay()->toDateTimeString(),
+                    now()->endOfWeek()->endOfDay()->toDateTimeString(),
+                ];
+            case 'month':
+                return [
+                    now()->startOfMonth()->startOfDay()->toDateTimeString(),
+                    now()->endOfMonth()->endOfDay()->toDateTimeString(),
+                ];
+            case 'custom':
+                return [
+                    $dateFrom ? Carbon::parse($dateFrom)->startOfDay()->toDateTimeString() : now()->startOfDay()->toDateTimeString(),
+                    $dateTo   ? Carbon::parse($dateTo)->endOfDay()->toDateTimeString()     : now()->endOfDay()->toDateTimeString(),
+                ];
+            default:
+                return [
+                    now()->startOfMonth()->startOfDay()->toDateTimeString(),
+                    now()->endOfMonth()->endOfDay()->toDateTimeString(),
+                ];
+        }
     }
 }

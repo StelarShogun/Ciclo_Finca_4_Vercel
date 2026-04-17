@@ -14,6 +14,7 @@
 
     @php
         $stateLabels = [
+            'draft'     => 'Borrador',
             'pending'   => 'Pendiente',
             'confirmed' => 'Confirmado',
             'delivered' => 'Entregado',
@@ -41,6 +42,7 @@
                     <label for="supplier-orders-state">Estado</label>
                     <select id="supplier-orders-state" name="state">
                         <option value="">Todos</option>
+                        <option value="draft"     {{ request('state') === 'draft'     ? 'selected' : '' }}>Borrador</option>
                         <option value="pending"   {{ request('state') === 'pending'   ? 'selected' : '' }}>Pendiente</option>
                         <option value="confirmed" {{ request('state') === 'confirmed' ? 'selected' : '' }}>Confirmado</option>
                         <option value="delivered" {{ request('state') === 'delivered' ? 'selected' : '' }}>Entregado</option>
@@ -99,10 +101,10 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($order->products && count($order->products) > 0)
+                                    @if($order->orderItems && $order->orderItems->count() > 0)
                                         <div style="display:flex; flex-direction:column; gap:6px;">
-                                            @foreach($order->products as $item)
-                                                <div>{{ $item['quantity'] }} × {{ $item['name'] }}</div>
+                                            @foreach($order->orderItems as $item)
+                                                <div>{{ $item->quantity }} × {{ $item->name }}</div>
                                             @endforeach
                                         </div>
                                     @else
@@ -122,7 +124,18 @@
                                                 title="Ver detalles">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        @if($order->state === 'pending')
+                                        @if($order->state === 'draft')
+                                            <button class="action-btn success" type="button"
+                                                    onclick="submitDraftOrder('{{ $order->num_order }}')"
+                                                    title="Enviar a pendiente">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </button>
+                                            <button class="action-btn danger" type="button"
+                                                    onclick="cancelOrder('{{ $order->num_order }}')"
+                                                    title="Cancelar pedido">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        @elseif($order->state === 'pending')
                                             <button class="action-btn success" type="button"
                                                     onclick="confirmOrder('{{ $order->num_order }}')"
                                                     title="Confirmar pedido">
