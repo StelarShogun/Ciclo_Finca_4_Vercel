@@ -135,13 +135,13 @@
                                         </button>
                                         @if($sale->status === 'pending')
                                             <button class="action-btn success" type="button"
-                                                    onclick="completeSale('{{ $sale->sale_id }}')"
-                                                    title="Confirmar pedido">
+                                                    onclick="completeSale('{{ $sale->sale_id }}', '{{ $sale->invoice_number ?? '#'.$sale->sale_id }}')"
+                                                    title="Confirmar encargo">
                                                 <i class="fas fa-check"></i>
                                             </button>
                                             <button class="action-btn danger" type="button"
-                                                    onclick="cancelSale('{{ $sale->sale_id }}')"
-                                                    title="Rechazar pedido">
+                                                    onclick="cancelSale('{{ $sale->sale_id }}', '{{ $sale->invoice_number ?? '#'.$sale->sale_id }}')"
+                                                    title="Rechazar encargo">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         @endif
