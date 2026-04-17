@@ -1,9 +1,12 @@
 /**
  * CF4-24 — desempeño de ventas: métricas y comparativa vía JSON sin recargar.
- * Fechas personalizadas: solo dígitos, validación de calendario (incl. febrero), 2025–hoy.
+ * Rango personalizado: calendario real, desde 2025-01-01 hasta hoy, máx. 731 días inclusivos (alineado al backend).
  */
 
 const YEAR_MIN = 2025;
+
+/** Mismo límite que SalesPerformanceRangeRequest::MAX_CUSTOM_RANGE_DAYS_INCLUSIVE */
+const MAX_CUSTOM_RANGE_DAYS_INCLUSIVE = 731;
 
 function todayParts() {
     const n = new Date();
@@ -18,12 +21,20 @@ function ymdToDate(y, m, d) {
     return new Date(y, m - 1, d);
 }
 
-/** Fecha real de calendario y dentro de límites razonables */
-function isValidCalendarDate(y, m, d) {
+/** Fecha de calendario real (p. ej. 31/02 inválido), sin política de año mínimo */
+function isCalendarDateStructurallyValid(y, m, d) {
     if (!Number.isInteger(y) || !Number.isInteger(m) || !Number.isInteger(d)) return false;
-    if (y < YEAR_MIN || m < 1 || m > 12 || d < 1 || d > 31) return false;
+    if (m < 1 || m > 12 || d < 1 || d > 31) return false;
     const dt = ymdToDate(y, m, d);
     return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
+}
+
+function daysInclusiveBetweenYmd(fromStr, toStr) {
+    const [ay, am, ad] = fromStr.split('-').map((x) => parseInt(x, 10));
+    const [by, bm, bd] = toStr.split('-').map((x) => parseInt(x, 10));
+    const t0 = Date.UTC(ay, am - 1, ad);
+    const t1 = Date.UTC(by, bm - 1, bd);
+    return Math.floor((t1 - t0) / (24 * 60 * 60 * 1000)) + 1;
 }
 
 function dateNotAfterToday(y, m, d) {
@@ -150,14 +161,18 @@ function validateCustomRange(elsFrom, elsTo) {
     const b = readParts(elsTo);
 
     if ([a.d, a.m, a.y, b.d, b.m, b.y].some((n) => Number.isNaN(n))) {
-        return { ok: false, msg: 'Completá día, mes y año en ambas fechas (solo números).' };
+        return { ok: false, msg: 'Completá día, mes y año en ambas fechas.' };
     }
 
-    if (!isValidCalendarDate(a.y, a.m, a.d)) {
-        return { ok: false, msg: 'La fecha “Desde” no es válida (revisá día y mes, p. ej. febrero).' };
+    if (!isCalendarDateStructurallyValid(a.y, a.m, a.d)) {
+        return { ok: false, msg: 'La fecha “Desde” no existe en el calendario (revisá día y mes, p. ej. febrero).' };
     }
-    if (!isValidCalendarDate(b.y, b.m, b.d)) {
-        return { ok: false, msg: 'La fecha “Hasta” no es válida (revisá día y mes, p. ej. febrero).' };
+    if (!isCalendarDateStructurallyValid(b.y, b.m, b.d)) {
+        return { ok: false, msg: 'La fecha “Hasta” no existe en el calendario (revisá día y mes, p. ej. febrero).' };
+    }
+
+    if (a.y < YEAR_MIN || b.y < YEAR_MIN) {
+        return { ok: false, msg: 'Las fechas deben ser desde el 1 de enero de 2025 en adelante (política del reporte).' };
     }
 
     if (!dateNotAfterToday(a.y, a.m, a.d) || !dateNotAfterToday(b.y, b.m, b.d)) {
@@ -169,6 +184,14 @@ function validateCustomRange(elsFrom, elsTo) {
 
     if (fromStr > toStr) {
         return { ok: false, msg: 'La fecha “Desde” no puede ser mayor que “Hasta”.' };
+    }
+
+    const spanDays = daysInclusiveBetweenYmd(fromStr, toStr);
+    if (spanDays > MAX_CUSTOM_RANGE_DAYS_INCLUSIVE) {
+        return {
+            ok: false,
+            msg: `El rango personalizado no puede superar ${MAX_CUSTOM_RANGE_DAYS_INCLUSIVE} días (incluyendo inicio y fin). Acortá el periodo o usá filtros predefinidos (mes, año).`,
+        };
     }
 
     return { ok: true, from: fromStr, to: toStr };
@@ -190,6 +213,7 @@ function initSalesPerformanceReport() {
     const pageUrl = root.dataset.pageUrl;
     const loadingEl = document.getElementById('sales-performance-loading');
     const contentEl = document.getElementById('sales-performance-content');
+    const resultsSectionEl = document.getElementById('sales-perf-results');
     const errorEl = document.getElementById('sales-performance-error');
     const customRow = document.getElementById('sales-custom-range');
     const applyBtn = document.getElementById('sales-apply-custom');
@@ -258,6 +282,12 @@ function initSalesPerformanceReport() {
         errorEl.textContent = '';
     }
 
+    function setResultsPanelVisible(visible) {
+        if (resultsSectionEl) {
+            resultsSectionEl.hidden = !visible;
+        }
+    }
+
     function clearCustomInputs() {
         [elsFrom.d, elsFrom.m, elsFrom.y, elsTo.d, elsTo.m, elsTo.y].forEach((el) => {
             el.value = '';
@@ -266,6 +296,7 @@ function initSalesPerformanceReport() {
 
     async function loadMetrics() {
         hideError();
+        setResultsPanelVisible(true);
         loadingEl.hidden = false;
         contentEl.hidden = true;
 
@@ -274,6 +305,7 @@ function initSalesPerformanceReport() {
             if (!v.ok) {
                 loadingEl.hidden = true;
                 contentEl.hidden = true;
+                setResultsPanelVisible(false);
                 showError(v.msg);
                 return;
             }
@@ -296,9 +328,10 @@ function initSalesPerformanceReport() {
             const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
+                const errMsgs = data.errors && Object.values(data.errors).flat().filter(Boolean);
                 const msg =
+                    (errMsgs && errMsgs.length ? errMsgs.join(' ') : '') ||
                     data.message ||
-                    (data.errors && Object.values(data.errors).flat().join(' ')) ||
                     `No se pudo cargar (${res.status}).`;
                 throw new Error(msg);
             }
@@ -357,6 +390,7 @@ function initSalesPerformanceReport() {
             contentEl.hidden = false;
         } catch (e) {
             contentEl.hidden = true;
+            setResultsPanelVisible(false);
             showError(e instanceof Error ? e.message : 'Error al cargar.');
         } finally {
             loadingEl.hidden = true;

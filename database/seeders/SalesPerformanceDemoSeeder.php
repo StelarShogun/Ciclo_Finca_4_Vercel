@@ -8,11 +8,14 @@ use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
 /**
- * Ventas completadas en la semana actual y en la anterior (misma lógica que el reporte CF4-24).
- * Sirve para probar totales y comparativa en "Esta semana".
+ * Ventas completadas de demo para CF4-24:
+ * - Semana actual y anterior (útil en "Esta semana").
+ * - Fechas ancladas al año calendario actual y al anterior (útil en "Este año" y otros presets amplios).
  */
 class SalesPerformanceDemoSeeder extends Seeder
 {
+    private const NOTES = 'Demo CF4-24';
+
     public function run(): void
     {
         $admin = AdminUser::query()->orderBy('user_id')->first();
@@ -22,10 +25,13 @@ class SalesPerformanceDemoSeeder extends Seeder
             return;
         }
 
+        Sale::query()->where('notes', self::NOTES)->delete();
+
         $tz = config('app.timezone', 'America/Costa_Rica');
         $now = Carbon::now($tz);
         $weekStart = $now->copy()->startOfWeek(Carbon::MONDAY);
         $prevWeekStart = $weekStart->copy()->subWeek();
+        $y = (int) $now->year;
 
         $rows = [
             [$weekStart->copy()->addDay(), 45_000.00],
@@ -33,6 +39,10 @@ class SalesPerformanceDemoSeeder extends Seeder
             [$weekStart->copy()->addDays(4), 8_200.00],
             [$prevWeekStart->copy()->addDay(), 30_000.00],
             [$prevWeekStart->copy()->addDays(3), 55_750.00],
+            [Carbon::create($y, 1, 15, 10, 0, 0, $tz), 25_000.00],
+            [Carbon::create($y, 8, 1, 14, 0, 0, $tz), 18_500.00],
+            [Carbon::create($y - 1, 4, 20, 9, 0, 0, $tz), 40_000.00],
+            [Carbon::create($y - 1, 11, 5, 16, 0, 0, $tz), 22_000.00],
         ];
 
         foreach ($rows as $i => [$date, $total]) {
@@ -49,7 +59,7 @@ class SalesPerformanceDemoSeeder extends Seeder
                 'payment_method' => 'cash',
                 'payment_reference' => null,
                 'status' => 'completed',
-                'notes' => 'Demo CF4-24',
+                'notes' => self::NOTES,
                 'sale_date' => $date,
                 'buyer_name' => null,
                 'buyer_email' => null,
@@ -57,6 +67,6 @@ class SalesPerformanceDemoSeeder extends Seeder
             ]);
         }
 
-        $this->command?->info('SalesPerformanceDemoSeeder: '.count($rows).' ventas completadas (esta semana + anterior).');
+        $this->command?->info('SalesPerformanceDemoSeeder: '.count($rows).' ventas completadas (semana + año actual/anterior).');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Requests\SalesPerformanceRangeRequest;
 use App\Models\AdminUser;
 use App\Models\Sale;
 use Carbon\Carbon;
@@ -181,5 +182,42 @@ class SalesPerformanceMetricsTest extends TestCase
         $response->assertJsonPath('comparison.revenue_change_percent', null);
         $response->assertJsonPath('comparison.revenue_percent_not_comparable', true);
         $response->assertJsonPath('comparison.revenue_trend', 'up');
+    }
+
+    public function test_custom_range_rejects_from_before_2025(): void
+    {
+        $response = $this->actingAs($this->adminUser, 'admin')
+            ->getJson(route('admin.reports.sales.metrics', [
+                'preset' => 'custom',
+                'from' => '2024-04-01',
+                'to' => '2026-04-16',
+            ]));
+
+        $response->assertStatus(422);
+        $response->assertJsonFragment([
+            'Las fechas deben ser desde el 1 de enero de 2025 en adelante (política del reporte).',
+        ]);
+    }
+
+    public function test_custom_range_rejects_span_over_max_days(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2028-06-15 12:00:00', 'UTC'));
+        try {
+            $response = $this->actingAs($this->adminUser, 'admin')
+                ->getJson(route('admin.reports.sales.metrics', [
+                    'preset' => 'custom',
+                    'from' => '2025-01-01',
+                    'to' => '2027-01-02',
+                ]));
+
+            $response->assertStatus(422);
+            $json = $response->json();
+            $fromErrors = $json['errors']['from'] ?? [];
+            $joined = implode(' ', $fromErrors);
+            $this->assertStringContainsString((string) SalesPerformanceRangeRequest::MAX_CUSTOM_RANGE_DAYS_INCLUSIVE, $joined);
+            $this->assertStringContainsString('Acortá el periodo', $joined);
+        } finally {
+            Carbon::setTestNow(Carbon::parse('2026-06-15 14:00:00', 'UTC'));
+        }
     }
 }

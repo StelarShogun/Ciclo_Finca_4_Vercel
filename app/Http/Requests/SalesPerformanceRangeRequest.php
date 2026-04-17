@@ -2,10 +2,15 @@
 
 namespace App\Http\Requests;
 
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class SalesPerformanceRangeRequest extends FormRequest
 {
+    /** Máximo de días inclusivos permitidos en rango personalizado (debe coincidir con el frontend). */
+    public const MAX_CUSTOM_RANGE_DAYS_INCLUSIVE = 731;
+
     public function authorize(): bool
     {
         return true;
@@ -44,9 +49,42 @@ class SalesPerformanceRangeRequest extends FormRequest
             'from.date_format' => 'La fecha inicial no es válida.',
             'to.date_format' => 'La fecha final no es válida.',
             'from.before_or_equal' => 'Revisá el rango: la fecha inicial no puede ser mayor que la final ni posterior a hoy.',
-            'to.after_or_equal' => 'Revisá el rango: la fecha final no puede ser menor que la inicial.',
-            'from.after_or_equal' => 'La fecha debe ser desde el 1 de enero de 2025.',
-            'to.after_or_equal' => 'La fecha debe ser desde el 1 de enero de 2025.',
+            'to.after_or_equal' => 'Revisá el rango: la fecha final debe ser desde el 1 de enero de 2025 y no puede ser menor que la inicial.',
+            'from.after_or_equal' => 'Las fechas deben ser desde el 1 de enero de 2025 en adelante (política del reporte).',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            if ($this->input('preset') !== 'custom') {
+                return;
+            }
+
+            $from = $this->input('from');
+            $to = $this->input('to');
+            if (! is_string($from) || ! is_string($to) || $validator->errors()->has('from') || $validator->errors()->has('to')) {
+                return;
+            }
+
+            try {
+                $start = Carbon::parse($from)->startOfDay();
+                $end = Carbon::parse($to)->startOfDay();
+            } catch (\Throwable) {
+                return;
+            }
+
+            if ($end < $start) {
+                return;
+            }
+
+            $daysInclusive = (int) $start->diffInDays($end) + 1;
+            if ($daysInclusive > self::MAX_CUSTOM_RANGE_DAYS_INCLUSIVE) {
+                $validator->errors()->add(
+                    'from',
+                    'El rango personalizado no puede superar '.self::MAX_CUSTOM_RANGE_DAYS_INCLUSIVE.' días (incluyendo inicio y fin). Acortá el periodo o usá filtros predefinidos (mes, año).',
+                );
+            }
+        });
     }
 }

@@ -82,7 +82,7 @@
             <div class="sales-perf-main">
                 <div id="sales-performance-error" class="sales-performance-error" role="alert" hidden></div>
 
-                <section class="sales-perf-results" aria-live="polite">
+                <section id="sales-perf-results" class="sales-perf-results" aria-live="polite">
                     <div id="sales-performance-loading" class="sales-performance-loading" hidden>
                         <span class="loading-dot" aria-hidden="true"></span>
                         <span>Cargando datos…</span>
