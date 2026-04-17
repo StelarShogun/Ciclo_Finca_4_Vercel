@@ -25,7 +25,27 @@ class ReportsController extends Controller
     }
 
     /**
-     * CF4-24 Fase 1: resolve selected period + equivalent previous period.
+     * CF4-24: admin UI — sales totals and comparison by date range (loads metrics via JSON).
+     */
+    public function salesPerformance(Request $request)
+    {
+        $allowed = ['today', 'week', 'month', 'year', 'custom'];
+        $preset = (string) $request->query('preset', 'month');
+        if (! in_array($preset, $allowed, true)) {
+            $preset = 'month';
+        }
+        $from = $request->query('from');
+        $to = $request->query('to');
+
+        return view('admin.reports.sales-performance', [
+            'initialPreset' => $preset,
+            'initialFrom' => is_string($from) ? $from : '',
+            'initialTo' => is_string($to) ? $to : '',
+        ]);
+    }
+
+    /**
+     * CF4-24: resolve selected period + equivalent previous period.
      */
     public function salesPerformanceRange(SalesPerformanceRangeRequest $request, SalesPerformanceDateRangeService $rangeService)
     {
@@ -35,7 +55,7 @@ class ReportsController extends Controller
     }
 
     /**
-     * CF4-24 Fase 2: totals for completed sales in the selected period (count + revenue).
+     * CF4-24: completed sales totals for current and prior equivalent period + comparison.
      */
     public function salesPerformanceMetrics(
         SalesPerformanceRangeRequest $request,
@@ -47,9 +67,16 @@ class ReportsController extends Controller
             $resolved['current_start'],
             $resolved['current_end'],
         );
+        $previous = $metricsService->aggregateCompletedSales(
+            $resolved['previous_start'],
+            $resolved['previous_end'],
+        );
+        $comparison = $metricsService->comparisonVersusPrior($current, $previous);
 
         return response()->json(array_merge($this->salesPerformanceRangePayload($resolved), [
             'current_metrics' => $current,
+            'previous_metrics' => $previous,
+            'comparison' => $comparison,
         ]));
     }
 

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
- * CF4-24 Fase 2 — métricas de ventas por rango (ventas completadas + ingresos).
+ * CF4-24 — métricas de ventas por rango (completadas + ingresos + comparativa).
  */
 class SalesPerformanceMetricsTest extends TestCase
 {
@@ -142,5 +142,44 @@ class SalesPerformanceMetricsTest extends TestCase
         $response->assertJsonPath('success', true);
         $response->assertJsonPath('current_metrics.sales_count', 2);
         $response->assertJsonPath('current_metrics.revenue', 150);
+        $response->assertJsonPath('previous_metrics.sales_count', 1);
+        $response->assertJsonPath('previous_metrics.revenue', 1000);
+        $response->assertJsonPath('comparison.revenue_change_percent', -85);
+        $response->assertJsonPath('comparison.revenue_trend', 'down');
+        $response->assertJsonPath('comparison.sales_count_change_percent', 100);
+        $response->assertJsonPath('comparison.revenue_percent_not_comparable', false);
+    }
+
+    public function test_comparison_marks_revenue_percent_not_comparable_when_prior_revenue_is_zero(): void
+    {
+        Sale::create([
+            'invoice_number' => 'INV-CF24-TODAY',
+            'customer_id' => null,
+            'client_id' => null,
+            'seller_id' => null,
+            'seller_admin_id' => $this->adminUser->user_id,
+            'subtotal' => 200,
+            'iva' => 0,
+            'discount' => 0,
+            'total' => 200,
+            'payment_method' => 'cash',
+            'payment_reference' => null,
+            'status' => 'completed',
+            'notes' => null,
+            'sale_date' => now(),
+            'buyer_name' => null,
+            'buyer_email' => null,
+            'order_source' => 'walk_in',
+        ]);
+
+        $response = $this->actingAs($this->adminUser, 'admin')
+            ->getJson(route('admin.reports.sales.metrics', ['preset' => 'today']));
+
+        $response->assertOk();
+        $response->assertJsonPath('previous_metrics.revenue', 0);
+        $response->assertJsonPath('current_metrics.revenue', 200);
+        $response->assertJsonPath('comparison.revenue_change_percent', null);
+        $response->assertJsonPath('comparison.revenue_percent_not_comparable', true);
+        $response->assertJsonPath('comparison.revenue_trend', 'up');
     }
 }

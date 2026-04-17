@@ -18,6 +18,14 @@
         </header>
 
         <div class="reports-cards">
+            <a href="{{ route('admin.reports.sales-performance') }}" class="report-card">
+                <div class="report-card-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="report-card-body">
+                    <h2>Desempeño de ventas</h2>
+                    <p>Filtrá por día, semana, mes, año o rango propio. Ves totales e ingresos y la variación frente al periodo anterior equivalente.</p>
+                </div>
+                <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
+            </a>
             <a href="{{ route('admin.reports.product-sales', ['period' => '30d', 'sort' => 'revenue', 'dir' => 'desc']) }}" class="report-card">
                 <div class="report-card-icon"><i class="fas fa-chart-bar"></i></div>
                 <div class="report-card-body">
