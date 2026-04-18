@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SalesPerformanceRangeRequest;
 use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\ProductSalesExcelExport;
 use App\Services\Admin\ProductSalesReportQuery;
+use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
 use App\Services\SalesPerformanceDateRangeService;
 use App\Services\SalesPerformanceMetricsService;
@@ -14,6 +16,7 @@ use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportsController extends Controller
 {
@@ -211,17 +214,9 @@ class ReportsController extends Controller
             ->fromSub(ProductSalesReportQuery::base($start, $q), 'product_sales_agg')
             ->count();
 
-        $filterLines = [
-            'Periodo: '.$this->periodLabel($period),
-            'Top 10 por: '.($top10Metric === 'units' ? 'unidades' : 'ingresos'),
-            'Tabla ordenada por: '.($sort === 'units' ? 'unidades' : 'ingresos').' ('.$dir.')',
-        ];
-        if ($q !== '') {
-            $filterLines[] = 'Búsqueda: '.$q;
-        }
-        if ($totalMatching > $maxRows) {
-            $filterLines[] = 'Nota: la tabla del PDF incluye como máximo '.$maxRows.' filas ('.$totalMatching.' productos con ventas en el periodo).';
-        }
+        $filterLines = $this->buildProductSalesFilterLines(
+            $period, $top10Metric, $sort, $dir, $q, $totalMatching, $maxRows
+        );
 
         $top10Formatted = $top10->map(fn ($row) => ProductSalesReportQuery::formatRow($row));
         $tableFormatted = $tableRows->map(fn ($row) => ProductSalesReportQuery::formatRow($row));
@@ -246,6 +241,83 @@ class ReportsController extends Controller
         ]);
 
         return $pdf->download(ReportPdfFilename::make('productos-vendidos'));
+    }
+
+    /**
+     * Excel export — same dataset and filter logic as the PDF export.
+     * Produces: reporte-productos-vendidos-YYYY-MM-DD.xlsx
+     */
+    public function productSalesExcel(Request $request, ProductSalesExcelExport $excelExport): StreamedResponse
+    {
+        $period = $this->normalizePeriod($request->query('period'));
+        $sort = $this->normalizeSort($request->query('sort'));
+        $dir = $this->normalizeDir($request->query('dir'));
+        $q = $this->normalizeQuery($request->query('q'));
+        $top10Metric = $this->normalizeTop10Metric($request->query('top10'));
+
+        $start = $this->periodStart($period);
+        $top10SortColumn = $top10Metric === 'units' ? 'units_sold' : 'revenue';
+        $sortColumn = $sort === 'units' ? 'units_sold' : 'revenue';
+
+        $top10 = ProductSalesReportQuery::base($start, $q)
+            ->orderByDesc($top10SortColumn)
+            ->limit(10)
+            ->get()
+            ->map(fn ($row) => ProductSalesReportQuery::formatRow($row));
+
+        $maxRows = AdminPdfExportLimits::PRODUCT_SALES_TABLE_MAX_ROWS;
+        $tableRows = ProductSalesReportQuery::base($start, $q)
+            ->orderBy($sortColumn, $dir)
+            ->limit($maxRows)
+            ->get()
+            ->map(fn ($row) => ProductSalesReportQuery::formatRow($row));
+
+        $totalMatching = (int) DB::query()
+            ->fromSub(ProductSalesReportQuery::base($start, $q), 'product_sales_agg')
+            ->count();
+
+        $filterLines = $this->buildProductSalesFilterLines(
+            $period, $top10Metric, $sort, $dir, $q, $totalMatching, $maxRows
+        );
+
+        return $excelExport->download(
+            $top10,
+            $tableRows,
+            $top10Metric,
+            $filterLines,
+            ReportExcelFilename::make('productos-vendidos'),
+        );
+    }
+
+    // ── Shared filter-line builder (used by both PDF and Excel) ─────────────
+
+    /**
+     * @return array<int, string>
+     */
+    private function buildProductSalesFilterLines(
+        string $period,
+        string $top10Metric,
+        string $sort,
+        string $dir,
+        string $q,
+        int $totalMatching,
+        int $maxRows,
+    ): array {
+        $lines = [
+            'Periodo: '.$this->periodLabel($period),
+            'Top 10 por: '.($top10Metric === 'units' ? 'unidades' : 'ingresos'),
+            'Tabla ordenada por: '.($sort === 'units' ? 'unidades' : 'ingresos').' ('.$dir.')',
+        ];
+
+        if ($q !== '') {
+            $lines[] = 'Búsqueda: '.$q;
+        }
+
+        if ($totalMatching > $maxRows) {
+            $lines[] = 'Nota: la exportación incluye como máximo '.$maxRows.' filas ('.$totalMatching.' productos con ventas en el periodo).';
+        }
+
+        return $lines;
     }
 
     private function periodLabel(string $period): string

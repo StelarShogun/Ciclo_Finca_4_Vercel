@@ -192,6 +192,42 @@
   }
 }
 
+.exports-chip.exports-chip--excel {
+    background-color: #1d6f42;
+    color: #ffffff;
+    border-color: #1d6f42;
+    gap: 0.3rem;
+    display: inline-flex;
+    align-items: center;
+}
+ 
+.exports-chip.exports-chip--excel:hover,
+.exports-chip.exports-chip--excel:focus-visible {
+    background-color: #155230;
+    border-color: #155230;
+    color: #ffffff;
+    text-decoration: none;
+}
+ 
+.exports-chip.exports-chip--excel .fa-file-excel {
+    font-size: 0.85em;
+}
+ 
+/* ── Button variant (used inside exports-button-row) ───────────────────── */
+.exports-btn.exports-btn--excel {
+    background-color: #1d6f42;
+    color: #ffffff;
+    border-color: #1d6f42;
+}
+ 
+.exports-btn.exports-btn--excel:hover,
+.exports-btn.exports-btn--excel:focus-visible {
+    background-color: #155230;
+    border-color: #155230;
+    color: #ffffff;
+    text-decoration: none;
+}
+
 .exports-chip {
   display: inline-flex;
   align-items: center;

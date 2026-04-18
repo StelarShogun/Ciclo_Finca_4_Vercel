@@ -121,6 +121,8 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/reports/productos-vendidos', [ReportsController::class, 'productSales'])->name('admin.reports.product-sales');
     Route::get('/reports/productos-vendidos/table', [ReportsController::class, 'productSalesTable'])->name('admin.reports.product-sales.table');
     Route::get('/reports/productos-vendidos/pdf', [ReportsController::class, 'productSalesPdf'])->name('admin.reports.product-sales.pdf');
+    Route::get('/reports/productos-vendidos/excel', [ReportsController::class, 'productSalesExcel'])
+     ->name('admin.reports.product-sales.excel');
 
     // Inventory / Products
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');

@@ -22,23 +22,24 @@
         $salesPdfUrl = route('sales.export').'?'.http_build_query(array_merge($salesParams, ['format' => 'pdf']));
         $salesCsvUrl = route('sales.export').'?'.http_build_query(array_merge($salesParams, ['format' => 'csv']));
 
-        $productSalesPdfParams = array_filter(
+        $productSalesParams = array_filter(
             request()->only(['period', 'sort', 'dir', 'q', 'top10']),
             fn ($v) => $v !== null && $v !== ''
         );
-        if (! isset($productSalesPdfParams['period'])) {
-            $productSalesPdfParams['period'] = '30d';
+        if (! isset($productSalesParams['period'])) {
+            $productSalesParams['period'] = '30d';
         }
-        if (! isset($productSalesPdfParams['sort'])) {
-            $productSalesPdfParams['sort'] = 'revenue';
+        if (! isset($productSalesParams['sort'])) {
+            $productSalesParams['sort'] = 'revenue';
         }
-        if (! isset($productSalesPdfParams['dir'])) {
-            $productSalesPdfParams['dir'] = 'desc';
+        if (! isset($productSalesParams['dir'])) {
+            $productSalesParams['dir'] = 'desc';
         }
-        if (! isset($productSalesPdfParams['top10'])) {
-            $productSalesPdfParams['top10'] = 'revenue';
+        if (! isset($productSalesParams['top10'])) {
+            $productSalesParams['top10'] = 'revenue';
         }
-        $productSalesPdfUrl = route('admin.reports.product-sales.pdf').'?'.http_build_query($productSalesPdfParams);
+        $productSalesPdfUrl   = route('admin.reports.product-sales.pdf')  .'?'.http_build_query($productSalesParams);
+        $productSalesExcelUrl = route('admin.reports.product-sales.excel').'?'.http_build_query($productSalesParams);
 
         $exportFmt = fn (string $fmt) => route('products.export', ['format' => $fmt]).$invQuery;
 
@@ -74,14 +75,14 @@
         <header class="reports-hub-header reports-exports-intro">
             <h1>Exportar datos y PDF</h1>
             <div class="reports-exports-intro-text">
-                <p>Aquí descarga <strong>informes en PDF</strong> y <strong>archivos de inventario y ventas</strong> desde un solo lugar.</p>
+                <p>Aquí descarga <strong>informes en PDF</strong>, <strong>Excel</strong> y <strong>archivos de inventario y ventas</strong> desde un solo lugar.</p>
                 <p>Cada enlace abre el resultado en una <strong>nueva pestaña</strong> del navegador.</p>
             </div>
         </header>
 
         <div class="reports-exports-layout">
             <section class="exports-section exports-section--pdf" aria-labelledby="exports-pdf-title">
-                <h2 id="exports-pdf-title" class="exports-section-title">Reportes en PDF</h2>
+                <h2 id="exports-pdf-title" class="exports-section-title">Reportes en PDF y Excel</h2>
                 <ul class="exports-link-list">
                     <li>
                         <span class="exports-item-label">Dashboard</span>
@@ -101,6 +102,9 @@
                         <span class="exports-item-label">Productos más vendidos</span>
                         <span class="exports-item-actions">
                             <a href="{{ $productSalesPdfUrl }}" class="exports-chip exports-chip-primary" title="PDF de productos más vendidos" target="_blank" rel="noopener noreferrer">PDF</a>
+                            <a href="{{ $productSalesExcelUrl }}" class="exports-chip exports-chip-excel" title="Excel de productos más vendidos" target="_blank" rel="noopener noreferrer">
+                                <i class="fas fa-file-excel" aria-hidden="true"></i> Excel
+                            </a>
                         </span>
                     </li>
                     <li>
