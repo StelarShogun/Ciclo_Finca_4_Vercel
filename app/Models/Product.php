@@ -224,7 +224,6 @@ class Product extends Model implements HasMedia
         ]);
     }
 
-    /** CF4-50: Stock por encima de cero pero en o por debajo del mínimo configurado (si el mínimo es 0, no alerta). */
     public function scopeLowStockAlert(Builder $query): Builder
     {
         return $query->activeInClientStore()

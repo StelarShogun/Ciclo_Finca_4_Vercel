@@ -55,13 +55,17 @@
 }
 
 .cf4-orders-module .orders-search-wrap {
-  position: relative;
   flex: 1;
   min-width: 200px;
   max-width: 320px;
 }
 
-.cf4-orders-module .orders-search-wrap .fa-search {
+.cf4-orders-module .orders-search-field {
+  position: relative;
+  width: 100%;
+}
+
+.cf4-orders-module .orders-search-field .fa-search {
   position: absolute;
   left: 12px;
   top: 50%;
@@ -71,7 +75,7 @@
   pointer-events: none;
 }
 
-.cf4-orders-module .orders-search-wrap input {
+.cf4-orders-module .orders-search-field input {
   width: 100%;
   padding-left: 2.35rem !important;
 }
@@ -116,6 +120,21 @@
   vertical-align: middle;
 }
 
+.cf4-orders-module .actions-container {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.cf4-orders-module .actions-container .action-btn {
+  flex: 0 0 auto;
+}
+
+.cf4-orders-module .po-number {
+  white-space: nowrap;
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+}
+
 .cf4-orders-module .order-status-pill {
   display: inline-flex;
   align-items: center;
@@ -128,6 +147,11 @@
 .cf4-orders-module .order-status-pill.pending {
   background: var(--color-warning-bg);
   color: var(--color-warning);
+}
+
+.cf4-orders-module .order-status-pill.draft {
+  background: rgba(69, 90, 100, 0.12);
+  color: #37474f;
 }
 
 .cf4-orders-module .order-status-pill.completed {
@@ -262,6 +286,26 @@
 .cf4-supplier-orders-module .order-status-pill.delivered {
   background: var(--color-success-bg);
   color: var(--color-success);
+}
+
+.cf4-supplier-orders-module .edd-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cf4-supplier-orders-module .edd-pill.edd-today {
+  background: rgba(245, 124, 0, 0.16);
+  color: #e65100;
+}
+
+.cf4-supplier-orders-module .edd-pill.edd-late {
+  background: rgba(198, 40, 40, 0.14);
+  color: #b71c1c;
 }
 
 /* Botón inline de nombre de proveedor */

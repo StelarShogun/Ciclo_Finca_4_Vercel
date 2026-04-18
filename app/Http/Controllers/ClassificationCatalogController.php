@@ -152,7 +152,7 @@ class ClassificationCatalogController extends Controller
     {
         $this->assertSubcategory($category);
         $data = $request->validated();
-        $data['slug'] = $this->generateUniqueSlug($data['label'], (int) $category->category_id);
+        $data['slug'] = $data['slug'] ?? $this->generateUniqueSlug($data['label'], (int) $category->category_id);
         $data['category_id'] = $category->category_id;
 
         $maxOrder = ClassificationDimension::withTrashed()

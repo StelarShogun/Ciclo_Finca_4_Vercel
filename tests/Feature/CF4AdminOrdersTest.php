@@ -273,7 +273,7 @@ class CF4AdminOrdersTest extends TestCase
         $complete->assertStatus(200);
         $inv = $complete->json('sale.invoice_number');
         $this->assertNotEmpty($inv);
-        $this->assertStringStartsWith('INV', $inv);
+        $this->assertMatchesRegularExpression('/^CF4-\d{4}$/', $inv);
 
         $sale->refresh();
         $this->assertSame($inv, $sale->invoice_number);
