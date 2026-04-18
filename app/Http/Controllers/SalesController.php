@@ -175,7 +175,6 @@ class SalesController extends Controller
             'payment_method' => 'required|in:cash,sinpe,transfer',
             'payment_reference' => 'nullable|string|max:255',
             'discount' => 'nullable|numeric|min:0',
-            'iva_percentage' => 'nullable|numeric|min:0|max:13',
             'notes' => 'nullable|string|max:500',
         ], [
             'items.required' => 'At least one item is required.',
@@ -227,11 +226,9 @@ class SalesController extends Controller
                 ], 422);
             }
 
-            $ivaPercent = (float) ($request->input('iva_percentage', 0));
-            $ivaPercent = max(0.0, min(13.0, $ivaPercent));
             $taxableBase = $this->roundMoney($subtotal - $discount);
-            $iva = $this->roundMoney($taxableBase * ($ivaPercent / 100));
-            $total = $this->roundMoney($taxableBase + $iva);
+            $iva = 0.0;
+            $total = $taxableBase;
 
             $orderSource = $clientId ? 'web_cart' : 'walk_in';
             $sale = Sale::create([

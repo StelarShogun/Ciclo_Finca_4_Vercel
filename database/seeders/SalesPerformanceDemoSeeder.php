@@ -48,9 +48,7 @@ class SalesPerformanceDemoSeeder extends Seeder
         foreach ($rows as $i => [$date, $total]) {
             Sale::create([
                 'invoice_number' => 'INV-DEMO-'.$now->format('Ymd').'-'.str_pad((string) ($i + 1), 3, '0', STR_PAD_LEFT),
-                'customer_id' => null,
                 'client_id' => null,
-                'seller_id' => null,
                 'seller_admin_id' => $admin->user_id,
                 'subtotal' => $total,
                 'iva' => 0,

@@ -88,7 +88,7 @@ function calculateProductTotal(row) {
     calculateTotals();
 }
 
-// Recalculate all totals (subtotal, discount, VAT, final total)
+// Recalculate all totals (subtotal, discount, final total)
 function calculateTotals() {
     let subtotal = 0;
     document.querySelectorAll('input[name*="[total]"]').forEach(i => {
@@ -97,15 +97,11 @@ function calculateTotals() {
 
     const discountRaw = roundMoney(parseFloat(document.getElementById('discount')?.value) || 0);
     const discountApplied = roundMoney(Math.min(Math.max(0, discountRaw), subtotal));
-    const ivaPercent = parseFloat(document.getElementById('iva_percentage')?.value) || 0;
-    const pct = Math.min(13, Math.max(0, ivaPercent));
     const taxableBase = roundMoney(subtotal - discountApplied);
-    const iva = roundMoney(taxableBase * (pct / 100));
-    const total = roundMoney(taxableBase + iva);
+    const total = taxableBase;
 
     const el = id => document.getElementById(id);
     if (el('subtotal')) el('subtotal').textContent = '₡' + subtotal.toFixed(2);
-    if (el('iva'))      el('iva').textContent      = '₡' + iva.toFixed(2);
     if (el('total'))    el('total').textContent    = '₡' + total.toFixed(2);
 
     const totalsBox = document.querySelector('.sale-totals');
@@ -215,7 +211,6 @@ function viewSale(id) {
                     <div class="totals-summary">
                         <div class="total-item"><span>Subtotal:</span><span>₡${parseFloat(sale.subtotal || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span></div>
                         ${(sale.discount || 0) > 0 ? `<div class="total-item"><span>Descuento:</span><span>-₡${parseFloat(sale.discount).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span></div>` : ''}
-                        <div class="total-item"><span>IVA:</span><span>₡${parseFloat(sale.iva || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span></div>
                         <div class="total-item total-final"><span><strong>Total:</strong></span><span><strong>₡${parseFloat(sale.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></span></div>
                     </div>
                 </div>
@@ -420,8 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.name?.includes('[quantity]')) {
             calculateProductTotal(e.target.closest('.product-row'));
         }
-        // Discount or VAT change: recalc totals
-        if (['discount', 'iva_percentage'].includes(e.target.id)) {
+        if (e.target.id === 'discount') {
             calculateTotals();
         }
     });

@@ -365,7 +365,7 @@
                         <i class="fas fa-plus"></i> Agregar Producto
                     </button>
 
-                    {{-- Order totals: subtotal, discount, IVA, and final total --}}
+                    {{-- Order totals: subtotal, discount, final total --}}
                     <div class="sale-totals">
                         <div class="total-row">
                             <span>Subtotal:</span>
@@ -375,18 +375,6 @@
                             <span>Descuento:</span>
                             <input type="number" id="discount" name="discount" value="0" step="0.01"
                                 min="0">
-                        </div>
-                        <div class="total-row">
-                            <span>IVA (%):</span>
-                            <span class="iva-select-group">
-                                <select id="iva_percentage" name="iva_percentage" class="iva-select">
-                                    @for ($p = 0; $p <= 13; $p++)
-                                        <option value="{{ $p }}" {{ $p == 0 ? 'selected' : '' }}>
-                                            {{ $p }}%</option>
-                                    @endfor
-                                </select>
-                                <span id="iva">₡0.00</span>
-                            </span>
                         </div>
                         <div class="total-row total-final">
                             <span>Total:</span>
