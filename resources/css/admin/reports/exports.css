@@ -192,42 +192,44 @@
   }
 }
 
+/* ── Excel chip ─────────────────────────────────────────────────────────────── */
 .exports-chip.exports-chip--excel {
-    background-color: #1d6f42;
-    color: #ffffff;
-    border-color: #1d6f42;
-    gap: 0.3rem;
-    display: inline-flex;
-    align-items: center;
-}
- 
-.exports-chip.exports-chip--excel:hover,
-.exports-chip.exports-chip--excel:focus-visible {
-    background-color: #155230;
-    border-color: #155230;
-    color: #ffffff;
-    text-decoration: none;
-}
- 
-.exports-chip.exports-chip--excel .fa-file-excel {
-    font-size: 0.85em;
-}
- 
-/* ── Button variant (used inside exports-button-row) ───────────────────── */
-.exports-btn.exports-btn--excel {
-    background-color: #1d6f42;
-    color: #ffffff;
-    border-color: #1d6f42;
-}
- 
-.exports-btn.exports-btn--excel:hover,
-.exports-btn.exports-btn--excel:focus-visible {
-    background-color: #155230;
-    border-color: #155230;
-    color: #ffffff;
-    text-decoration: none;
+  background-color: #1d6f42;
+  color: #ffffff;
+  border-color: #1d6f42;
+  gap: 0.3rem;
+  display: inline-flex;
+  align-items: center;
 }
 
+.exports-chip.exports-chip--excel:hover,
+.exports-chip.exports-chip--excel:focus-visible {
+  background-color: #155230;
+  border-color: #155230;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.exports-chip.exports-chip--excel .fa-file-excel {
+  font-size: 0.85em;
+}
+
+/* ── Excel button (usado dentro de exports-button-row) ──────────────────────── */
+.exports-btn.exports-btn--excel {
+  background-color: #1d6f42;
+  color: #ffffff;
+  border-color: #1d6f42;
+}
+
+.exports-btn.exports-btn--excel:hover,
+.exports-btn.exports-btn--excel:focus-visible {
+  background-color: #155230;
+  border-color: #155230;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+/* ── Base chip ──────────────────────────────────────────────────────────────── */
 .exports-chip {
   display: inline-flex;
   align-items: center;
@@ -275,6 +277,7 @@
   box-shadow: 0 3px 10px rgba(46, 125, 50, 0.35);
 }
 
+/* ── Button row ─────────────────────────────────────────────────────────────── */
 .exports-button-row {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
@@ -282,9 +285,10 @@
   margin-top: auto;
 }
 
+/* Filas con pocos botones (2–3): columnas fijas más compactas */
 .exports-button-row--few {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  max-width: 22rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 30rem;
 }
 
 @media (max-width: 420px) {
@@ -293,10 +297,12 @@
   }
 
   .exports-button-row--few {
+    grid-template-columns: 1fr;
     max-width: none;
   }
 }
 
+/* ── Base button ────────────────────────────────────────────────────────────── */
 .exports-btn {
   display: inline-flex;
   align-items: center;
@@ -339,6 +345,7 @@
   box-shadow: 0 3px 12px rgba(46, 125, 50, 0.35);
 }
 
+/* ── Footer ─────────────────────────────────────────────────────────────────── */
 .exports-footnote {
   margin-top: 1.75rem;
   padding-top: 1.25rem;
@@ -355,11 +362,24 @@
   font-weight: 600;
 }
 
+/* ── Compact registry list (ahora con 3 acciones: CSV | Excel | PDF) ─────────── */
 .exports-link-list--compact .exports-item-label {
-  min-width: 11.5rem;
+  min-width: 10.5rem;
 }
 
 .exports-link-list--compact li {
   padding-top: 0.65rem;
   padding-bottom: 0.65rem;
+}
+
+/* En pantallas estrechas el label ocupa fila completa y las acciones se apilan */
+@media (max-width: 680px) {
+  .exports-link-list--compact li {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .exports-link-list--compact .exports-item-actions {
+    justify-content: flex-start;
+  }
 }

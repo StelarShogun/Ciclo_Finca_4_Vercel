@@ -11,7 +11,9 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Supplier;
 use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
+use App\Services\Admin\RegistryExcelExport;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -36,16 +38,36 @@ class ReportsRegistryExportController extends Controller
         }
 
         $format = strtolower((string) $request->query('format', 'csv'));
-        if (! in_array($format, ['csv', 'pdf'], true)) {
-            abort(400, 'Formato no válido. Use csv o pdf.');
+        if (! in_array($format, ['csv', 'pdf', 'excel'], true)) {
+            abort(400, 'Formato no válido. Use csv, pdf o excel.');
         }
 
         return match ($slug) {
-            'proveedores' => $format === 'pdf' ? $this->suppliersPdf($request) : $this->suppliersCsv($request),
-            'marcas' => $format === 'pdf' ? $this->brandsPdf($request) : $this->brandsCsv($request),
-            'pedidos-proveedores' => $format === 'pdf' ? $this->supplierOrdersPdf($request) : $this->supplierOrdersCsv($request),
-            'usuarios' => $format === 'pdf' ? $this->clientsPdf() : $this->clientsCsv(),
-            'pedidos-clientes' => $format === 'pdf' ? $this->clientOrdersPdf($request) : $this->clientOrdersCsv($request),
+            'proveedores' => match ($format) {
+                'pdf'   => $this->suppliersPdf($request),
+                'excel' => $this->suppliersExcel($request),
+                default => $this->suppliersCsv($request),
+            },
+            'marcas' => match ($format) {
+                'pdf'   => $this->brandsPdf($request),
+                'excel' => $this->brandsExcel($request),
+                default => $this->brandsCsv($request),
+            },
+            'pedidos-proveedores' => match ($format) {
+                'pdf'   => $this->supplierOrdersPdf($request),
+                'excel' => $this->supplierOrdersExcel($request),
+                default => $this->supplierOrdersCsv($request),
+            },
+            'usuarios' => match ($format) {
+                'pdf'   => $this->clientsPdf(),
+                'excel' => $this->clientsExcel(),
+                default => $this->clientsCsv(),
+            },
+            'pedidos-clientes' => match ($format) {
+                'pdf'   => $this->clientOrdersPdf($request),
+                'excel' => $this->clientOrdersExcel($request),
+                default => $this->clientOrdersCsv($request),
+            },
         };
     }
 
@@ -55,6 +77,10 @@ class ReportsRegistryExportController extends Controller
 
         return is_file($path) ? $path : null;
     }
+
+    // =========================================================================
+    // PROVEEDORES
+    // =========================================================================
 
     private function suppliersBase(Request $request): Builder
     {
@@ -72,9 +98,7 @@ class ReportsRegistryExportController extends Controller
         return $query;
     }
 
-    /**
-     * @return array<int, string>
-     */
+    /** @return array<int, string> */
     private function suppliersCatalogFilterLines(Request $request): array
     {
         $lines = [];
@@ -88,43 +112,74 @@ class ReportsRegistryExportController extends Controller
         return $lines;
     }
 
-    private function suppliersPdf(Request $request): Response
+    private function suppliersHeaders(): array
     {
-        $base = $this->suppliersBase($request);
-        $total = (clone $base)->count();
-        $filterLines = $this->suppliersCatalogFilterLines($request);
-        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
-        if ($total > $max) {
-            $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' proveedores coinciden).';
-        }
+        return ['ID', 'Nombre', 'Contacto', 'Teléfono', 'Email', 'Dirección', 'Entrega (días)', 'Valoración', 'Estado'];
+    }
 
-        $rows = (clone $base)->limit($max)->get();
-        $headers = ['ID', 'Nombre', 'Contacto', 'Teléfono', 'Email', 'Dirección', 'Entrega (días)', 'Valoración', 'Estado'];
+    private function suppliersRows(Builder $base, int $limit, bool $truncateAddress = false): array
+    {
         $data = [];
-        foreach ($rows as $s) {
+        foreach ((clone $base)->limit($limit)->get() as $s) {
             if (! $s instanceof Supplier) {
                 continue;
             }
+            $address = $truncateAddress
+                ? Str::limit((string) ($s->address ?? ''), 80)
+                : (string) ($s->address ?? '');
             $data[] = [
                 (string) $s->supplier_id,
                 $s->name,
                 (string) ($s->primary_contact ?? ''),
                 (string) ($s->phone ?? ''),
                 (string) ($s->email ?? ''),
-                Str::limit((string) ($s->address ?? ''), 80),
+                $address,
                 (string) ($s->delivery_time ?? ''),
                 (string) ($s->rating ?? ''),
                 (string) ($s->status ?? ''),
             ];
         }
 
+        return $data;
+    }
+
+    private function suppliersPdf(Request $request): Response
+    {
+        $base        = $this->suppliersBase($request);
+        $total       = (clone $base)->count();
+        $filterLines = $this->suppliersCatalogFilterLines($request);
+        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        if ($total > $max) {
+            $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' proveedores coinciden).';
+        }
+
         return $this->registryPdf(
             'Proveedores',
             'Listado de proveedores — Ciclo Finca 4',
             $filterLines,
-            $headers,
-            $data,
+            $this->suppliersHeaders(),
+            $this->suppliersRows($base, $max, true),
             'proveedores'
+        );
+    }
+
+    private function suppliersExcel(Request $request): StreamedResponse
+    {
+        $base        = $this->suppliersBase($request);
+        $total       = (clone $base)->count();
+        $filterLines = $this->suppliersCatalogFilterLines($request);
+        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        if ($total > $max) {
+            $filterLines[] = 'Nota: el Excel incluye como máximo '.$max.' filas ('.$total.' proveedores coinciden).';
+        }
+
+        return app(RegistryExcelExport::class)->download(
+            'Proveedores',
+            'Listado de proveedores — Ciclo Finca 4',
+            $this->suppliersHeaders(),
+            $this->suppliersRows($base, $max),
+            $filterLines,
+            ReportExcelFilename::make('proveedores'),
         );
     }
 
@@ -154,6 +209,10 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
+    // =========================================================================
+    // MARCAS
+    // =========================================================================
+
     private function brandsBase(Request $request): Builder
     {
         $query = Brand::query()->orderBy('name');
@@ -166,9 +225,7 @@ class ReportsRegistryExportController extends Controller
         return $query;
     }
 
-    /**
-     * @return array<int, string>
-     */
+    /** @return array<int, string> */
     private function brandsCatalogFilterLines(Request $request): array
     {
         $lines = [];
@@ -179,27 +236,55 @@ class ReportsRegistryExportController extends Controller
         return $lines;
     }
 
-    private function brandsPdf(Request $request): Response
+    private function brandsHeaders(): array
     {
-        $base = $this->brandsBase($request);
-        $total = (clone $base)->count();
-        $filterLines = $this->brandsCatalogFilterLines($request);
-        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
-        if ($total > $max) {
-            $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' marcas coinciden).';
-        }
+        return ['ID', 'Nombre'];
+    }
 
-        $rows = (clone $base)->limit($max)->get();
-        $headers = ['ID', 'Nombre'];
+    private function brandsRows(Builder $base, int $limit): array
+    {
         $data = [];
-        foreach ($rows as $b) {
+        foreach ((clone $base)->limit($limit)->get() as $b) {
             if (! $b instanceof Brand) {
                 continue;
             }
             $data[] = [(string) $b->id, $b->name];
         }
 
-        return $this->registryPdf('Marcas', 'Catálogo de marcas — Ciclo Finca 4', $filterLines, $headers, $data, 'marcas');
+        return $data;
+    }
+
+    private function brandsPdf(Request $request): Response
+    {
+        $base        = $this->brandsBase($request);
+        $total       = (clone $base)->count();
+        $filterLines = $this->brandsCatalogFilterLines($request);
+        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        if ($total > $max) {
+            $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' marcas coinciden).';
+        }
+
+        return $this->registryPdf('Marcas', 'Catálogo de marcas — Ciclo Finca 4', $filterLines, $this->brandsHeaders(), $this->brandsRows($base, $max), 'marcas');
+    }
+
+    private function brandsExcel(Request $request): StreamedResponse
+    {
+        $base        = $this->brandsBase($request);
+        $total       = (clone $base)->count();
+        $filterLines = $this->brandsCatalogFilterLines($request);
+        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        if ($total > $max) {
+            $filterLines[] = 'Nota: el Excel incluye como máximo '.$max.' filas ('.$total.' marcas coinciden).';
+        }
+
+        return app(RegistryExcelExport::class)->download(
+            'Marcas',
+            'Catálogo de marcas — Ciclo Finca 4',
+            $this->brandsHeaders(),
+            $this->brandsRows($base, $max),
+            $filterLines,
+            ReportExcelFilename::make('marcas'),
+        );
     }
 
     private function brandsCsv(Request $request): StreamedResponse
@@ -218,9 +303,11 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    /**
-     * @return array<int, string>
-     */
+    // =========================================================================
+    // PEDIDOS A PROVEEDORES
+    // =========================================================================
+
+    /** @return array<int, string> */
     private function supplierOrderFilterLines(Request $request): array
     {
         $lines = [];
@@ -243,7 +330,7 @@ class ReportsRegistryExportController extends Controller
     private function supplierOrdersBase(Request $request): Builder
     {
         $dateFrom = $request->get('date_from');
-        $dateTo = $request->get('date_to');
+        $dateTo   = $request->get('date_to');
         if ($dateFrom && $dateTo && $dateTo < $dateFrom) {
             [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
         }
@@ -270,43 +357,71 @@ class ReportsRegistryExportController extends Controller
         return $query;
     }
 
-    private function supplierOrdersPdf(Request $request): Response
+    private function supplierOrdersHeaders(): array
     {
-        $base = $this->supplierOrdersBase($request);
-        $total = (clone $base)->count();
-        $filterLines = $this->supplierOrderFilterLines($request);
-        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
-        if ($total > $max) {
-            $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' pedidos coinciden).';
-        }
+        return ['Nº pedido', 'Proveedor', 'Fecha', 'Estado', 'Total', 'Productos (resumen)'];
+    }
 
-        $rows = (clone $base)->limit($max)->get();
-        $headers = ['Nº pedido', 'Proveedor', 'Fecha', 'Estado', 'Total', 'Productos (resumen)'];
+    private function supplierOrdersRows(Builder $base, int $limit, bool $truncateSummary = false): array
+    {
         $data = [];
-        foreach ($rows as $o) {
+        foreach ((clone $base)->limit($limit)->get() as $o) {
             if (! $o instanceof Order) {
                 continue;
             }
-            $supplierRel = $o->supplier;
-            $supplierName = ($supplierRel instanceof Supplier) ? $supplierRel->name : '—';
-            $dateStr = $o->date !== null ? $o->date->format('d/m/Y H:i') : '';
+            $supplierName = ($o->supplier instanceof Supplier) ? $o->supplier->name : '—';
+            $dateStr      = $o->date !== null ? $o->date->format('d/m/Y H:i') : '';
+            $summary      = $this->summarizeSupplierOrderLines($o);
             $data[] = [
                 (string) $o->num_order,
                 $supplierName,
                 $dateStr,
                 (string) $o->state,
                 '₡'.number_format((float) $o->total, 0, ',', '.'),
-                Str::limit($this->summarizeSupplierOrderLines($o), 120),
+                $truncateSummary ? Str::limit($summary, 120) : $summary,
             ];
+        }
+
+        return $data;
+    }
+
+    private function supplierOrdersPdf(Request $request): Response
+    {
+        $base        = $this->supplierOrdersBase($request);
+        $total       = (clone $base)->count();
+        $filterLines = $this->supplierOrderFilterLines($request);
+        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        if ($total > $max) {
+            $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' pedidos coinciden).';
         }
 
         return $this->registryPdf(
             'Pedidos a proveedores',
             'Pedidos de reposición — Ciclo Finca 4',
             $filterLines,
-            $headers,
-            $data,
+            $this->supplierOrdersHeaders(),
+            $this->supplierOrdersRows($base, $max, true),
             'pedidos-proveedores'
+        );
+    }
+
+    private function supplierOrdersExcel(Request $request): StreamedResponse
+    {
+        $base        = $this->supplierOrdersBase($request);
+        $total       = (clone $base)->count();
+        $filterLines = $this->supplierOrderFilterLines($request);
+        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        if ($total > $max) {
+            $filterLines[] = 'Nota: el Excel incluye como máximo '.$max.' filas ('.$total.' pedidos coinciden).';
+        }
+
+        return app(RegistryExcelExport::class)->download(
+            'Pedidos a proveedores',
+            'Pedidos de reposición — Ciclo Finca 4',
+            $this->supplierOrdersHeaders(),
+            $this->supplierOrdersRows($base, $max),
+            $filterLines,
+            ReportExcelFilename::make('pedidos-proveedores'),
         );
     }
 
@@ -323,18 +438,17 @@ class ReportsRegistryExportController extends Controller
                         if (! $o instanceof Order) {
                             continue;
                         }
-                        $supplierRel = $o->supplier;
-                        $supplierName = ($supplierRel instanceof Supplier) ? $supplierRel->name : null;
-                        $dateStr = $o->date !== null ? $o->date->format('Y-m-d H:i:s') : null;
-                        $lines = $o->relationLoaded('orderItems')
+                        $supplierName = ($o->supplier instanceof Supplier) ? $o->supplier->name : null;
+                        $dateStr      = $o->date !== null ? $o->date->format('Y-m-d H:i:s') : null;
+                        $lines        = $o->relationLoaded('orderItems')
                             ? $o->orderItems
                             : OrderItem::query()->where('order_num_order', $o->num_order)->get();
                         $payload = $lines->map(fn (OrderItem $line) => [
                             'product_id' => (int) $line->product_id,
-                            'name' => $line->name,
-                            'quantity' => (int) $line->quantity,
+                            'name'       => $line->name,
+                            'quantity'   => (int) $line->quantity,
                             'unit_price' => (float) $line->unit_price,
-                            'total' => (float) $line->total,
+                            'total'      => (float) $line->total,
                         ])->values()->all();
                         $emitRow([
                             $o->num_order,
@@ -367,28 +481,56 @@ class ReportsRegistryExportController extends Controller
         return implode(', ', $parts);
     }
 
+    // =========================================================================
+    // USUARIOS (clientes web)
+    // =========================================================================
+
+    private function clientsHeaders(): array
+    {
+        return ['ID', 'Nombre', 'Apellido 1', 'Apellido 2', 'Email', 'Activo', 'Proveedor', 'Email verificado'];
+    }
+
+    private function clientsRows(): array
+    {
+        return Client::query()
+            ->orderBy('name')
+            ->limit(AdminPdfExportLimits::REGISTRY_MAX_ROWS)
+            ->get()
+            ->map(fn (Client $c): array => [
+                (string) $c->user_id,
+                $c->name,
+                (string) ($c->first_surname ?? ''),
+                (string) ($c->second_surname ?? ''),
+                $c->gmail,
+                $c->active ? 'Sí' : 'No',
+                (string) $c->provider,
+                $c->email_verified ? 'Sí' : 'No',
+            ])
+            ->values()
+            ->all();
+    }
+
     private function clientsPdf(): Response
     {
-        $rows = Client::query()->orderBy('name')->limit(AdminPdfExportLimits::REGISTRY_MAX_ROWS)->get();
-        $headers = ['ID', 'Nombre', 'Apellido 1', 'Apellido 2', 'Email', 'Activo', 'Proveedor', 'Email verificado'];
-        $data = $rows->map(fn (Client $c): array => [
-            (string) $c->user_id,
-            $c->name,
-            (string) ($c->first_surname ?? ''),
-            (string) ($c->second_surname ?? ''),
-            $c->gmail,
-            $c->active ? 'Sí' : 'No',
-            (string) $c->provider,
-            $c->email_verified ? 'Sí' : 'No',
-        ])->values()->all();
-
         return $this->registryPdf(
             'Usuarios (clientes web)',
             'Cuentas registradas en la tienda — Ciclo Finca 4',
             [],
-            $headers,
-            $data,
+            $this->clientsHeaders(),
+            $this->clientsRows(),
             'usuarios-clientes'
+        );
+    }
+
+    private function clientsExcel(): StreamedResponse
+    {
+        return app(RegistryExcelExport::class)->download(
+            'Usuarios (clientes web)',
+            'Cuentas registradas en la tienda — Ciclo Finca 4',
+            $this->clientsHeaders(),
+            $this->clientsRows(),
+            [],
+            ReportExcelFilename::make('usuarios-clientes'),
         );
     }
 
@@ -417,9 +559,11 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    /**
-     * @return array<int, string>
-     */
+    // =========================================================================
+    // PEDIDOS CLIENTES (encargos web)
+    // =========================================================================
+
+    /** @return array<int, string> */
     private function clientOrderFilterLines(Request $request): array
     {
         $lines = [];
@@ -464,20 +608,15 @@ class ReportsRegistryExportController extends Controller
         return $query->orderBy('sale_date', 'desc');
     }
 
-    private function clientOrdersPdf(Request $request): Response
+    private function clientOrdersHeaders(): array
     {
-        $base = $this->clientOrdersBase($request);
-        $total = (clone $base)->count();
-        $filterLines = $this->clientOrderFilterLines($request);
-        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
-        if ($total > $max) {
-            $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' pedidos coinciden).';
-        }
+        return ['Factura / ID', 'Cliente', 'Fecha', 'Estado', 'Total', 'Ítems (resumen)'];
+    }
 
-        $rows = (clone $base)->limit($max)->get();
-        $headers = ['Factura / ID', 'Cliente', 'Fecha', 'Estado', 'Total', 'Ítems (resumen)'];
+    private function clientOrdersRows(Builder $base, int $limit, bool $truncate = false): array
+    {
         $data = [];
-        foreach ($rows as $sale) {
+        foreach ((clone $base)->limit($limit)->get() as $sale) {
             if (! $sale instanceof Sale) {
                 continue;
             }
@@ -485,28 +624,59 @@ class ReportsRegistryExportController extends Controller
                 ? trim($sale->client->name.' '.($sale->client->first_surname ?? '').' '.($sale->client->second_surname ?? ''))
                 : ($sale->buyer_name ?: '—');
             $items = $sale->saleItems->map(function (SaleItem $item): string {
-                $label = $item->product !== null ? $item->product->name : '?';
-
-                return $label.' (×'.$item->quantity.')';
+                return ($item->product !== null ? $item->product->name : '?').' (×'.$item->quantity.')';
             })->implode(', ');
             $saleDate = $sale->sale_date;
-            $data[] = [
+            $data[]   = [
                 (string) ($sale->invoice_number ?? '#'.$sale->sale_id),
-                Str::limit($customer, 40),
+                $truncate ? Str::limit($customer, 40) : $customer,
                 $saleDate !== null ? $saleDate->format('d/m/Y H:i') : '',
                 ucfirst((string) $sale->status),
                 '₡'.number_format((float) $sale->total, 0, ',', '.'),
-                Str::limit($items, 100),
+                $truncate ? Str::limit($items, 100) : $items,
             ];
+        }
+
+        return $data;
+    }
+
+    private function clientOrdersPdf(Request $request): Response
+    {
+        $base        = $this->clientOrdersBase($request);
+        $total       = (clone $base)->count();
+        $filterLines = $this->clientOrderFilterLines($request);
+        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        if ($total > $max) {
+            $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' pedidos coinciden).';
         }
 
         return $this->registryPdf(
             'Pedidos clientes',
             'Pedidos web / carrito — Ciclo Finca 4',
             $filterLines,
-            $headers,
-            $data,
+            $this->clientOrdersHeaders(),
+            $this->clientOrdersRows($base, $max, true),
             'pedidos-clientes'
+        );
+    }
+
+    private function clientOrdersExcel(Request $request): StreamedResponse
+    {
+        $base        = $this->clientOrdersBase($request);
+        $total       = (clone $base)->count();
+        $filterLines = $this->clientOrderFilterLines($request);
+        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        if ($total > $max) {
+            $filterLines[] = 'Nota: el Excel incluye como máximo '.$max.' filas ('.$total.' pedidos coinciden).';
+        }
+
+        return app(RegistryExcelExport::class)->download(
+            'Pedidos clientes',
+            'Pedidos web / carrito — Ciclo Finca 4',
+            $this->clientOrdersHeaders(),
+            $this->clientOrdersRows($base, $max),
+            $filterLines,
+            ReportExcelFilename::make('pedidos-clientes'),
         );
     }
 
@@ -516,9 +686,7 @@ class ReportsRegistryExportController extends Controller
 
         return $this->streamRegistryCsv(
             'pedidos_clientes_'.now()->format('Y-m-d_His').'.csv',
-            [
-                'sale_id', 'invoice', 'cliente', 'email_cliente', 'fecha', 'estado', 'total', 'items_resumen',
-            ],
+            ['sale_id', 'invoice', 'cliente', 'email_cliente', 'fecha', 'estado', 'total', 'items_resumen'],
             function (callable $emitRow) use ($request, $chunk): void {
                 $this->clientOrdersBase($request)->chunkById($chunk, function ($sales) use ($emitRow): void {
                     foreach ($sales as $sale) {
@@ -530,9 +698,7 @@ class ReportsRegistryExportController extends Controller
                             : ($sale->buyer_name ?: '');
                         $email = $sale->client ? $sale->client->gmail : ($sale->buyer_email ?? '');
                         $items = $sale->saleItems->map(function (SaleItem $item): string {
-                            $label = $item->product !== null ? $item->product->name : '?';
-
-                            return $label.' (x'.$item->quantity.')';
+                            return ($item->product !== null ? $item->product->name : '?').' (x'.$item->quantity.')';
                         })->implode(', ');
                         $saleDate = $sale->sale_date;
                         $emitRow([
@@ -551,9 +717,13 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
+    // =========================================================================
+    // HELPERS COMPARTIDOS
+    // =========================================================================
+
     /**
-     * @param  array<int, string>  $filterLines
-     * @param  array<int, string>  $headers
+     * @param  array<int, string>              $filterLines
+     * @param  array<int, string>              $headers
      * @param  array<int, array<int, string>>  $rows
      */
     private function registryPdf(
@@ -565,13 +735,13 @@ class ReportsRegistryExportController extends Controller
         string $filenameSlug
     ): Response {
         $pdf = PDF::loadView('admin.exports.registry-table-pdf', [
-            'pdfTitle' => $title,
-            'pdfSubtitle' => $subtitle,
-            'logoPath' => $this->resolvedLogoPath(),
-            'filterLines' => $filterLines,
+            'pdfTitle'     => $title,
+            'pdfSubtitle'  => $subtitle,
+            'logoPath'     => $this->resolvedLogoPath(),
+            'filterLines'  => $filterLines,
             'generatedFor' => 'Administración',
-            'headers' => $headers,
-            'rows' => $rows,
+            'headers'      => $headers,
+            'rows'         => $rows,
         ]);
 
         return $pdf->download(ReportPdfFilename::make($filenameSlug));
@@ -580,12 +750,12 @@ class ReportsRegistryExportController extends Controller
     /**
      * CSV en streaming: una fila a la vez sin acumular todo el dataset en memoria.
      *
-     * @param  callable(callable(array<int, mixed>): void): void  $producer  Recibe $emitRow para cada fila.
+     * @param  callable(callable(array<int, mixed>): void): void  $producer
      */
     private function streamRegistryCsv(string $filename, array $headerRow, callable $producer): StreamedResponse
     {
         $httpHeaders = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type'        => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
 

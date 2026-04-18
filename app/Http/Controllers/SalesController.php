@@ -6,7 +6,9 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
+use App\Services\Admin\RegistryExcelExport;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -491,6 +493,10 @@ class SalesController extends Controller
                 return $this->exportSalesPdf($request, $base);
             }
 
+            if ($format === 'excel') {
+                return $this->exportSalesExcel($request, $base);
+            }
+
             $filename = 'sales_' . now()->format('Y-m-d_H-i-s') . '.csv';
             $headers = [
                 'Content-Type' => 'text/csv; charset=UTF-8',
@@ -568,6 +574,61 @@ class SalesController extends Controller
                 'message' => 'Error exporting sales: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    private function exportSalesExcel(Request $request, Builder $base): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $maxRows     = AdminPdfExportLimits::SALES_MAX_ROWS;
+        $totalMatching = (clone $base)->count();
+
+        $filterLines = $this->salesExportFilterLines($request);
+        if ($totalMatching > $maxRows) {
+            $filterLines[] = 'Nota: el Excel incluye como máximo '.$maxRows.' filas ('.$totalMatching.' ventas coinciden con los filtros).';
+        }
+
+        $rows = (clone $base)
+            ->with(['client', 'saleItems.product'])
+            ->orderBy('sale_date', 'desc')
+            ->limit($maxRows)
+            ->get();
+
+        $headers = ['ID Venta', 'Factura', 'Cliente', 'Email', 'Fecha', 'Estado', 'Método pago', 'Subtotal (₡)', 'IVA (₡)', 'Descuento (₡)', 'Total (₡)', 'Ítems', 'Notas'];
+
+        $dataRows = $rows->map(function (Sale $sale): array {
+            $customer = $sale->client
+                ? trim($sale->client->name.' '.($sale->client->first_surname ?? '').' '.($sale->client->second_surname ?? ''))
+                : ($sale->buyer_name ?: 'Walk-in / Sin datos');
+            $email = $sale->client ? $sale->client->gmail : ($sale->buyer_email ?: '');
+            $items = $sale->saleItems->map(function (SaleItem $item): string {
+                return ($item->product !== null ? $item->product->name : '?').' (×'.$item->quantity.')';
+            })->implode(', ');
+            $saleDate = $sale->sale_date;
+
+            return [
+                (string) $sale->sale_id,
+                (string) ($sale->invoice_number ?? ''),
+                $customer,
+                $email,
+                $saleDate !== null ? $saleDate->format('d/m/Y H:i') : '',
+                ucfirst((string) $sale->status),
+                ucfirst((string) $sale->payment_method),
+                number_format((float) $sale->subtotal, 2, '.', ''),
+                number_format((float) $sale->iva, 2, '.', ''),
+                number_format((float) $sale->discount, 2, '.', ''),
+                number_format((float) $sale->total, 2, '.', ''),
+                $items,
+                (string) ($sale->notes ?? ''),
+            ];
+        })->values()->all();
+
+        return app(RegistryExcelExport::class)->download(
+            'Ventas',
+            'Listado de ventas — Ciclo Finca 4',
+            $headers,
+            $dataRows,
+            $filterLines,
+            ReportExcelFilename::make('ventas'),
+        );
     }
 
     private function exportSalesPdf(Request $request, Builder $base)
