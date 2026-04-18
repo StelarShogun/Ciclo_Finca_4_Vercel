@@ -27,13 +27,15 @@ class ClientPurchaseHistoryController extends Controller
             $sort = 'total_purchased';
         }
         $dir = strtolower((string) $request->query('dir', 'desc')) === 'asc' ? 'asc' : 'desc';
-        $q = is_string($request->query('q')) ? trim($request->query('q')) : '';
+        $q = ClientPurchaseHistoryQuery::normalizeSearchInput(
+            is_string($request->query('q')) ? $request->query('q') : null
+        );
 
         return view('admin.reports.client-purchases', [
             'period' => $period,
             'sort' => $sort,
             'dir' => $dir,
-            'q' => mb_substr($q, 0, 100),
+            'q' => $q,
         ]);
     }
 

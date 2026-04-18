@@ -18,6 +18,22 @@ final class ClientPurchaseHistoryQuery
     /**
      * @return array{0: Carbon, 1: Carbon}
      */
+    /**
+     * Texto de búsqueda: largo máximo, sin bytes nulos ni caracteres de control (evita pegados raros / fuzzing).
+     * El LIKE usa parámetros enlazados; los wildcards % y _ del usuario se escapan en baseAggregates().
+     */
+    public static function normalizeSearchInput(?string $q): string
+    {
+        if ($q === null || $q === '') {
+            return '';
+        }
+        $q = str_replace("\0", '', $q);
+        $q = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $q) ?? '';
+        $q = trim($q);
+
+        return mb_substr($q, 0, 100);
+    }
+
     public static function periodBounds(string $period): array
     {
         $end = Carbon::now()->endOfDay();

@@ -15,8 +15,11 @@ class ClientPurchaseHistoryTableRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $raw = $this->input('q');
+        $q = ClientPurchaseHistoryQuery::normalizeSearchInput(is_string($raw) ? $raw : null);
         $this->merge([
             'page' => $this->input('page', 1),
+            'q' => $q,
         ]);
     }
 

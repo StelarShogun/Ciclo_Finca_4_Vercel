@@ -290,4 +290,22 @@ class ClientPurchaseHistoryReportTest extends TestCase
         $response->assertOk();
         $this->assertCount(0, $response->json('rows'));
     }
+
+    /** Búsqueda: cadenas con apariencia de SQL/HTML no rompen la petición (consulta parametrizada + JSON seguro). */
+    public function test_table_search_malicious_looking_string_returns_ok_without_crash(): void
+    {
+        $payload = "'; DROP TABLE sales; -- <script>alert(1)</script>";
+
+        $response = $this->actingAs($this->adminUser, 'admin')
+            ->getJson(route('admin.reports.client-purchases.table', [
+                'period' => '30d',
+                'sort' => 'total_purchased',
+                'dir' => 'desc',
+                'q' => $payload,
+            ]));
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $this->assertIsArray($response->json('rows'));
+        $this->assertSame($payload, $response->json('q'));
+    }
 }
