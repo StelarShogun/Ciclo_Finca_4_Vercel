@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ClientPurchaseHistoryController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\ReportsRegistryExportController;
 use App\Http\Controllers\AdminClientController;
@@ -121,6 +122,11 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/reports/productos-vendidos', [ReportsController::class, 'productSales'])->name('admin.reports.product-sales');
     Route::get('/reports/productos-vendidos/table', [ReportsController::class, 'productSalesTable'])->name('admin.reports.product-sales.table');
     Route::get('/reports/productos-vendidos/pdf', [ReportsController::class, 'productSalesPdf'])->name('admin.reports.product-sales.pdf');
+
+    // CF4-33 — historial de compras por cliente
+    Route::get('/reports/compras-por-cliente', [ClientPurchaseHistoryController::class, 'index'])->name('admin.reports.client-purchases');
+    Route::get('/reports/compras-por-cliente/table', [ClientPurchaseHistoryController::class, 'table'])->name('admin.reports.client-purchases.table');
+    Route::get('/reports/compras-por-cliente/{client}/ordenes', [ClientPurchaseHistoryController::class, 'clientOrders'])->name('admin.reports.client-purchases.orders');
 
     // Inventory / Products
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');

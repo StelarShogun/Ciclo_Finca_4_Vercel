@@ -34,6 +34,14 @@
                 </div>
                 <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
             </a>
+            <a href="{{ route('admin.reports.client-purchases') }}" class="report-card">
+                <div class="report-card-icon"><i class="fas fa-user-clock"></i></div>
+                <div class="report-card-body">
+                    <h2>Compras por cliente</h2>
+                    <p>Historial de ventas completadas por usuario: totales, cantidad de órdenes y ticket promedio; detalle por periodo.</p>
+                </div>
+                <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
+            </a>
             <a href="{{ route('admin.reports.product-sales', ['period' => '30d', 'sort' => 'revenue', 'dir' => 'desc']) }}" class="report-card">
                 <div class="report-card-icon"><i class="fas fa-chart-bar"></i></div>
                 <div class="report-card-body">
