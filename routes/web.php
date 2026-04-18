@@ -126,7 +126,12 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     // CF4-33 — historial de compras por cliente
     Route::get('/reports/client-purchases', [ClientPurchaseHistoryController::class, 'index'])->name('admin.reports.client-purchases');
     Route::get('/reports/client-purchases/table', [ClientPurchaseHistoryController::class, 'table'])->name('admin.reports.client-purchases.table');
-    Route::get('/reports/client-purchases/{client}/orders', [ClientPurchaseHistoryController::class, 'clientOrders'])->name('admin.reports.client-purchases.orders');
+    Route::get('/reports/client-purchases/{client}', [ClientPurchaseHistoryController::class, 'show'])
+        ->whereNumber('client')
+        ->name('admin.reports.client-purchases.show');
+    Route::get('/reports/client-purchases/{client}/orders', [ClientPurchaseHistoryController::class, 'clientOrders'])
+        ->whereNumber('client')
+        ->name('admin.reports.client-purchases.orders');
 
     // Inventory / Products
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');

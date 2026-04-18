@@ -102,6 +102,75 @@
     background: #f5f5f5;
 }
 
+a.period-btn-link {
+    text-decoration: none;
+    color: inherit;
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+a.period-btn-link:hover:not(.active) {
+    background: #f5f5f5;
+}
+
+.client-purchases-show-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.client-purchases-show-heading h1 {
+    margin: 0 0 0.5rem;
+    font-size: 1.65rem;
+    color: var(--color-primary-dark, #1b5e20);
+}
+
+.client-purchases-show-meta {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--color-muted, #6c757d);
+}
+
+.client-purchases-show-email {
+    display: block;
+    margin-top: 0.25rem;
+    font-weight: 400;
+}
+
+.btn-back-to-list {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--color-primary, #2e7d32);
+    border: 1px solid var(--color-primary, #2e7d32);
+    border-radius: var(--border-radius, 8px);
+    background: #fff;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-back-to-list:hover {
+    background: var(--color-primary, #2e7d32);
+    color: #fff;
+}
+
+.client-purchases-show-table tbody tr:hover {
+    background: rgba(46, 125, 50, 0.06);
+}
+
+a.btn-client-orders-open {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
 .search-wrap {
     flex: 1;
     min-width: 200px;
@@ -199,13 +268,40 @@
     color: var(--color-muted, #5f6368);
 }
 
+.client-sale-detail-dialog .sale-detail-dialog-body {
+    max-height: min(70vh, 560px);
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+/*
+ * Centrado en el viewport. Evitar `inset:0` + `width` fija: en algunos motores el cuadro queda
+ * pegado a la izquierda. Si el <dialog> está dentro de <main>, moverlo a document.body en JS.
+ */
 .client-orders-dialog {
-    max-width: min(560px, 96vw);
-    width: 100%;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    width: min(620px, 96vw);
+    max-width: min(620px, 96vw);
+    height: fit-content;
+    max-height: min(90vh, 900px);
     border: none;
-    border-radius: 12px;
+    border-radius: var(--border-radius-large, 12px);
     padding: 0;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    box-shadow: var(--shadow-heavy, 0 8px 32px rgba(0, 0, 0, 0.18));
+    border-top: 4px solid var(--color-primary, #2e7d32);
+    overflow: hidden;
+    z-index: 10000;
+}
+
+.client-orders-dialog.client-sale-detail-dialog {
+    width: min(720px, 96vw);
+    max-width: min(720px, 96vw);
 }
 
 .client-orders-dialog::backdrop {
@@ -213,38 +309,160 @@
 }
 
 .client-orders-dialog-inner {
-    padding: 1.15rem 1.25rem 1.35rem;
+    padding: 1.25rem 1.35rem 1.5rem;
+    background: var(--background-white, #fff);
 }
 
 .client-orders-dialog-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.35rem;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(46, 125, 50, 0.2);
+}
+
+.client-orders-dialog-title-wrap {
+    flex: 1;
+    min-width: 0;
 }
 
 .client-orders-dialog-header h2 {
+    margin: 0 0 0.35rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-primary-dark, #1b5e20);
+}
+
+.client-orders-dialog-hint {
     margin: 0;
-    font-size: 1.15rem;
+    font-size: 0.82rem;
+    color: var(--color-muted, #6c757d);
+    line-height: 1.4;
 }
 
 .client-orders-dialog-close {
-    border: none;
-    background: transparent;
-    font-size: 1.5rem;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--color-danger, #d32f2f);
+    border-radius: var(--border-radius, 8px);
+    background: var(--color-danger-bg, #ffebee);
+    color: var(--color-danger, #d32f2f);
+    font-size: 1.1rem;
     line-height: 1;
     cursor: pointer;
-    color: #666;
-    padding: 0 0.25rem;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .client-orders-dialog-close:hover {
-    color: #111;
+    background: var(--color-danger, #d32f2f);
+    color: #fff;
+    border-color: var(--color-danger, #d32f2f);
+}
+
+.client-orders-dialog-close:focus-visible {
+    outline: 2px solid var(--color-danger, #d32f2f);
+    outline-offset: 2px;
 }
 
 .client-orders-dialog-meta {
-    margin: 0 0 0.85rem;
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary, #666);
+    padding: 0.5rem 0.75rem;
+    background: var(--color-success-bg, #e8f5e9);
+    border-radius: var(--border-radius, 8px);
+    border-left: 3px solid var(--color-primary, #2e7d32);
+}
+
+.client-orders-dialog-table-wrap {
+    margin-top: 0.25rem;
+}
+
+.client-orders-table.report-table tbody tr:nth-child(even) {
+    background: rgba(46, 125, 50, 0.04);
+}
+
+.client-orders-table.report-table tbody tr:hover {
+    background: rgba(46, 125, 50, 0.08);
+}
+
+.client-orders-invoice {
     font-size: 0.88rem;
-    color: var(--color-muted, #5f6368);
+    background: rgba(46, 125, 50, 0.08);
+    padding: 0.2rem 0.45rem;
+    border-radius: 4px;
+}
+
+.report-table th.col-actions,
+.report-table td.col-actions {
+    text-align: center;
+    white-space: nowrap;
+    width: 1%;
+}
+
+.btn-client-orders-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.75rem;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--color-primary, #2e7d32);
+    border-radius: var(--border-radius, 8px);
+    background: #fff;
+    color: var(--color-primary, #2e7d32);
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-client-orders-open:hover {
+    background: var(--color-primary, #2e7d32);
+    color: #fff;
+}
+
+.btn-client-orders-open:focus-visible {
+    outline: 2px solid var(--color-primary, #2e7d32);
+    outline-offset: 2px;
+}
+
+.btn-ver-venta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: var(--border-radius-small, 4px);
+    background: var(--color-primary, #2e7d32);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s ease, filter 0.15s ease;
+}
+
+.btn-ver-venta:hover {
+    background: var(--color-primary-dark, #1b5e20);
+    filter: brightness(1.02);
+}
+
+.btn-ver-venta:focus-visible {
+    outline: 2px solid var(--color-primary-dark, #1b5e20);
+    outline-offset: 2px;
+}
+
+.is-clickable .col-actions {
+    cursor: default;
+}
+
+.is-clickable .col-actions a {
+    cursor: pointer;
 }

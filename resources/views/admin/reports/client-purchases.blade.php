@@ -26,7 +26,7 @@
         id="client-purchases-root"
         class="client-purchases-report"
         data-table-url="{{ route('admin.reports.client-purchases.table') }}"
-        data-orders-url-template="{{ url('/reports/client-purchases') }}/__CLIENT__/orders"
+        data-show-url-template="{{ url('/reports/client-purchases') }}/__CLIENT__"
         data-page-url="{{ url('/reports/client-purchases') }}"
         data-period="{{ e($period) }}"
         data-sort="{{ e($sort) }}"
@@ -87,39 +87,16 @@
                                     @endif
                                 </button>
                             </th>
+                            <th class="col-actions" scope="col">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="client-purchases-body">
-                        <tr><td colspan="5" class="loading-cell">Cargando…</td></tr>
+                        <tr><td colspan="6" class="loading-cell">Cargando…</td></tr>
                     </tbody>
                 </table>
             </div>
             <div id="client-purchases-pagination" class="pagination-wrapper" aria-live="polite"></div>
             <p id="client-purchases-empty" class="empty-msg" hidden>No hay clientes con compras completadas en este periodo para los criterios seleccionados.</p>
         </section>
-
-        <dialog id="client-orders-dialog" class="client-orders-dialog" aria-labelledby="client-orders-dialog-title">
-            <div class="client-orders-dialog-inner">
-                <header class="client-orders-dialog-header">
-                    <h2 id="client-orders-dialog-title">Órdenes del cliente</h2>
-                    <button type="button" class="client-orders-dialog-close" id="client-orders-dialog-close" aria-label="Cerrar">&times;</button>
-                </header>
-                <p class="client-orders-dialog-meta" id="client-orders-dialog-meta"></p>
-                <div class="table-wrap">
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>Factura</th>
-                                <th>Fecha</th>
-                                <th class="num">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="client-orders-dialog-body">
-                            <tr><td colspan="3" class="loading-cell">Cargando…</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </dialog>
     </div>
 @endsection

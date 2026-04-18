@@ -62,6 +62,12 @@ class ClientPurchaseHistoryReportTest extends TestCase
         ]))->assertUnauthorized();
     }
 
+    public function test_guest_cannot_access_client_purchases_show(): void
+    {
+        $this->get(route('admin.reports.client-purchases.show', ['client' => 1]))
+            ->assertRedirect();
+    }
+
     /** CP33-01 — totales correctos al buscar por correo. */
     public function test_cp33_01_table_totals_match_sales_for_email_search(): void
     {

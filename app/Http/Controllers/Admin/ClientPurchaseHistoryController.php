@@ -39,6 +39,43 @@ class ClientPurchaseHistoryController extends Controller
         ]);
     }
 
+    /**
+     * Vista dedicada: todas las ventas completadas del cliente (sin filtro por periodo).
+     */
+    public function show(Request $request, int $client)
+    {
+        $clientRow = Client::query()->where('user_id', $client)->firstOrFail();
+
+        $orders = DB::table('sales')
+            ->where('client_id', $client)
+            ->where('status', 'completed')
+            ->orderByDesc('sale_date')
+            ->get(['sale_id', 'invoice_number', 'sale_date', 'total']);
+
+        $parts = array_filter([
+            (string) $clientRow->name,
+            (string) ($clientRow->first_surname ?? ''),
+            (string) ($clientRow->second_surname ?? ''),
+        ], fn (string $p): bool => $p !== '');
+        $displayName = trim(implode(' ', $parts));
+
+        $backParams = array_filter([
+            'back_period' => $request->query('back_period'),
+            'back_sort' => $request->query('back_sort'),
+            'back_dir' => $request->query('back_dir'),
+            'back_page' => $request->query('back_page'),
+            'back_q' => $request->query('back_q'),
+        ], fn ($v) => $v !== null && $v !== '');
+
+        return view('admin.reports.client-purchases-show', [
+            'clientId' => $client,
+            'displayName' => $displayName !== '' ? $displayName : (string) $clientRow->gmail,
+            'gmail' => (string) $clientRow->gmail,
+            'orders' => $orders,
+            'backParams' => $backParams,
+        ]);
+    }
+
     public function table(ClientPurchaseHistoryTableRequest $request)
     {
         $validated = $request->validated();

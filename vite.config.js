@@ -24,6 +24,7 @@ const adminAssets = [
     "resources/js/admin/reports/product-sales.js",
     "resources/js/admin/reports/sales-performance.js",
     "resources/js/admin/reports/client-purchase-history.js",
+    "resources/js/admin/reports/client-purchase-client-show.js",
 
     // CSS
     "resources/css/admin/products/inventory.css",

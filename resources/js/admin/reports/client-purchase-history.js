@@ -1,5 +1,5 @@
 /**
- * CF4-33 — compras por cliente: tabla JSON, ordenación, búsqueda, detalle en modal.
+ * CF4-33 — listado de compras por cliente: tabla JSON; detalle en vista dedicada por cliente.
  */
 
 function formatColones(value) {
@@ -66,23 +66,6 @@ async function fetchTable(tableUrl, { period, sort, dir, q, page }) {
     return res.json();
 }
 
-function buildRowsHtml(rows) {
-    if (!rows.length) {
-        return '<tr><td colspan="5" class="empty-cell">Sin resultados</td></tr>';
-    }
-    return rows
-        .map(
-            (row) => `<tr class="is-clickable" data-client-id="${String(row.client_id)}" tabindex="0" role="button">
-                <td>${esc(row.display_name)}</td>
-                <td>${esc(row.gmail)}</td>
-                <td class="num">${esc(formatColones(row.total_purchased))}</td>
-                <td class="num">${esc(String(row.orders_count))}</td>
-                <td class="num">${esc(formatColones(row.avg_ticket))}</td>
-            </tr>`,
-        )
-        .join('');
-}
-
 function initClientPurchasesReport() {
     const root = document.getElementById('client-purchases-root');
     if (!root) {
@@ -91,7 +74,7 @@ function initClientPurchasesReport() {
 
     const tableUrl = root.dataset.tableUrl;
     const pageUrl = root.dataset.pageUrl;
-    const ordersUrlTemplate = root.dataset.ordersUrlTemplate || '';
+    const showUrlTemplate = root.dataset.showUrlTemplate || '';
     let period = root.dataset.period || '30d';
     let sort = root.dataset.sort || 'total_purchased';
     let dir = root.dataset.dir || 'desc';
@@ -101,10 +84,6 @@ function initClientPurchasesReport() {
     const tbody = document.getElementById('client-purchases-body');
     const emptyMsg = document.getElementById('client-purchases-empty');
     const paginationWrap = document.getElementById('client-purchases-pagination');
-    const dialog = document.getElementById('client-orders-dialog');
-    const dialogBody = document.getElementById('client-orders-dialog-body');
-    const dialogMeta = document.getElementById('client-orders-dialog-meta');
-    const dialogClose = document.getElementById('client-orders-dialog-close');
 
     if (!tableUrl || !pageUrl || !searchInput || !tbody) {
         return;
@@ -115,59 +94,64 @@ function initClientPurchasesReport() {
     let debounceTimer = null;
     const debounceMs = 250;
 
-    function ordersUrlForClient(clientId) {
-        return ordersUrlTemplate.replace('__CLIENT__', String(clientId));
+    function buildClientShowHref(clientId) {
+        const base = showUrlTemplate.replace('__CLIENT__', String(clientId));
+        const u = new URL(base, window.location.origin);
+        u.searchParams.set('back_period', period);
+        u.searchParams.set('back_sort', sort);
+        u.searchParams.set('back_dir', dir);
+        u.searchParams.set('back_page', String(page));
+        const tq = searchInput.value.trim();
+        if (tq) {
+            u.searchParams.set('back_q', tq);
+        }
+        return `${u.pathname}${u.search}`;
     }
 
-    async function openOrdersDialog(clientId) {
-        if (!dialog || !dialogBody || !dialogMeta) return;
-        dialogBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Cargando…</td></tr>';
-        dialogMeta.textContent = '';
-        dialog.showModal();
-
-        const url = `${ordersUrlForClient(clientId)}?${new URLSearchParams({ period }).toString()}`;
-        try {
-            const res = await fetch(url, {
-                headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok || !data.success) {
-                throw new Error(data.message || 'No se pudo cargar el detalle.');
-            }
-            const c = data.client || {};
-            dialogMeta.textContent = `${c.display_name || ''} · ${c.gmail || ''}`;
-            const orders = data.orders || [];
-            if (!orders.length) {
-                dialogBody.innerHTML =
-                    '<tr><td colspan="3" class="empty-cell">Sin órdenes en el periodo.</td></tr>';
-                return;
-            }
-            dialogBody.innerHTML = orders
-                .map(
-                    (o) => `<tr>
-                    <td><code>${esc(o.invoice_number)}</code></td>
-                    <td>${esc(o.sale_date)}</td>
-                    <td class="num">${esc(formatColones(o.total))}</td>
-                </tr>`,
-                )
-                .join('');
-        } catch (e) {
-            dialogBody.innerHTML = `<tr><td colspan="3" class="empty-cell">${esc(e instanceof Error ? e.message : 'Error')}</td></tr>`;
+    function buildRowsHtml(rows) {
+        if (!rows.length) {
+            return '<tr><td colspan="6" class="empty-cell">Sin resultados</td></tr>';
         }
+        return rows
+            .map((row) => {
+                const href = esc(buildClientShowHref(row.client_id));
+                return `<tr class="is-clickable" data-client-id="${String(row.client_id)}" tabindex="0" role="button">
+                <td>${esc(row.display_name)}</td>
+                <td>${esc(row.gmail)}</td>
+                <td class="num">${esc(formatColones(row.total_purchased))}</td>
+                <td class="num">${esc(String(row.orders_count))}</td>
+                <td class="num">${esc(formatColones(row.avg_ticket))}</td>
+                <td class="col-actions" onclick="event.stopPropagation()">
+                    <a class="btn-client-orders-open" href="${href}">
+                        <i class="fas fa-list" aria-hidden="true"></i> Ver órdenes
+                    </a>
+                </td>
+            </tr>`;
+            })
+            .join('');
+    }
+
+    function goToClient(clientId) {
+        window.location.href = buildClientShowHref(clientId);
     }
 
     function wireRowClicks() {
         tbody.querySelectorAll('tr[data-client-id]').forEach((tr) => {
-            const go = () => {
+            tr.addEventListener('click', (e) => {
+                if (e.target.closest('a.btn-client-orders-open')) {
+                    return;
+                }
                 const id = tr.getAttribute('data-client-id');
-                if (id) void openOrdersDialog(id);
-            };
-            tr.addEventListener('click', go);
+                if (id) goToClient(id);
+            });
             tr.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
+                    if (e.target.closest('a.btn-client-orders-open')) {
+                        return;
+                    }
                     e.preventDefault();
-                    go();
+                    const id = tr.getAttribute('data-client-id');
+                    if (id) goToClient(id);
                 }
             });
         });
@@ -199,7 +183,7 @@ function initClientPurchasesReport() {
             }
         } catch {
             tbody.innerHTML =
-                '<tr><td colspan="5" class="empty-cell">No se pudo cargar el reporte.</td></tr>';
+                '<tr><td colspan="6" class="empty-cell">No se pudo cargar el reporte.</td></tr>';
             if (paginationWrap) {
                 paginationWrap.innerHTML = '';
             }
@@ -293,17 +277,6 @@ function initClientPurchasesReport() {
             void loadFromApi();
         }, debounceMs);
     });
-
-    if (dialogClose && dialog) {
-        dialogClose.addEventListener('click', () => dialog.close());
-    }
-    if (dialog) {
-        dialog.addEventListener('click', (e) => {
-            if (e.target === dialog) {
-                dialog.close();
-            }
-        });
-    }
 
     void loadFromApi();
 }
