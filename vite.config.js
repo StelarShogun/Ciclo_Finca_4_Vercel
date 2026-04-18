@@ -22,6 +22,7 @@ const adminAssets = [
     "resources/js/admin/product-classifications/edit.js",
     "resources/js/admin/classifications/catalog.js",
     "resources/js/admin/reports/product-sales.js",
+    "resources/js/admin/reports/sales-performance.js",
 
     // CSS
     "resources/css/admin/products/inventory.css",
@@ -40,6 +41,7 @@ const adminAssets = [
     "resources/css/admin/reports/reports-hub.css",
     "resources/css/admin/reports/exports.css",
     "resources/css/admin/reports/product-sales.css",
+    "resources/css/admin/reports/sales-performance.css",
 ];
 
 // =======================

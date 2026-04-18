@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SalesPerformanceRangeRequest;
 use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\ProductSalesReportQuery;
 use App\Services\Admin\ReportPdfFilename;
+use App\Services\SalesPerformanceDateRangeService;
+use App\Services\SalesPerformanceMetricsService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -29,6 +33,86 @@ class ReportsController extends Controller
     public function exports()
     {
         return view('admin.reports.exports');
+    }
+
+    /**
+     * CF4-24: admin UI — sales totals and comparison by date range (loads metrics via JSON).
+     */
+    public function salesPerformance(Request $request)
+    {
+        $allowed = ['today', 'week', 'month', 'year', 'custom'];
+        $preset = (string) $request->query('preset', 'month');
+        if (! in_array($preset, $allowed, true)) {
+            $preset = 'month';
+        }
+        $from = $request->query('from');
+        $to = $request->query('to');
+
+        return view('admin.reports.sales-performance', [
+            'initialPreset' => $preset,
+            'initialFrom' => is_string($from) ? $from : '',
+            'initialTo' => is_string($to) ? $to : '',
+        ]);
+    }
+
+    /**
+     * CF4-24: resolve selected period + equivalent previous period.
+     */
+    public function salesPerformanceRange(SalesPerformanceRangeRequest $request, SalesPerformanceDateRangeService $rangeService)
+    {
+        $resolved = $rangeService->resolve($request->validated());
+
+        return response()->json($this->salesPerformanceRangePayload($resolved));
+    }
+
+    /**
+     * CF4-24: completed sales totals for current and prior equivalent period + comparison.
+     */
+    public function salesPerformanceMetrics(
+        SalesPerformanceRangeRequest $request,
+        SalesPerformanceDateRangeService $rangeService,
+        SalesPerformanceMetricsService $metricsService,
+    ) {
+        $resolved = $rangeService->resolve($request->validated());
+        $current = $metricsService->aggregateCompletedSales(
+            $resolved['current_start'],
+            $resolved['current_end'],
+        );
+        $previous = $metricsService->aggregateCompletedSales(
+            $resolved['previous_start'],
+            $resolved['previous_end'],
+        );
+        $comparison = $metricsService->comparisonVersusPrior($current, $previous);
+
+        return response()->json(array_merge($this->salesPerformanceRangePayload($resolved), [
+            'current_metrics' => $current,
+            'previous_metrics' => $previous,
+            'comparison' => $comparison,
+        ]));
+    }
+
+    /**
+     * @param  array<string, mixed>  $resolved
+     * @return array<string, mixed>
+     */
+    private function salesPerformanceRangePayload(array $resolved): array
+    {
+        return [
+            'success' => true,
+            'preset' => $resolved['preset'],
+            'from' => $resolved['from'],
+            'to' => $resolved['to'],
+            'current_period' => [
+                'start' => $resolved['current_start']->toIso8601String(),
+                'end' => $resolved['current_end']->toIso8601String(),
+                'label' => $this->humanRangeLabel($resolved['current_start'], $resolved['current_end']),
+            ],
+            'previous_period' => [
+                'start' => $resolved['previous_start']->toIso8601String(),
+                'end' => $resolved['previous_end']->toIso8601String(),
+                'label' => $this->humanRangeLabel($resolved['previous_start'], $resolved['previous_end']),
+            ],
+        ];
     }
 
     public function productSales(Request $request)
@@ -218,5 +302,10 @@ class ReportsController extends Controller
         $v = is_string($value) ? strtolower(trim($value)) : '';
 
         return in_array($v, self::TOP10_METRICS, true) ? $v : 'revenue';
+    }
+
+    private function humanRangeLabel(CarbonInterface $start, CarbonInterface $end): string
+    {
+        return $start->format('d/m/Y').' - '.$end->format('d/m/Y');
     }
 }
