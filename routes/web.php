@@ -109,12 +109,15 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
     Route::get('/dashboard/export', [DashboardController::class, 'exportReport'])->name('dashboard.export');
 
-    // CF4-30 — reportes admin (hub + productos más vendidos)
+    // CF4-30 — reportes admin (hub + exportaciones + productos más vendidos) + CF4-24 desempeño de ventas
     Route::get('/reports', [ReportsController::class, 'index'])->name('admin.reports.index');
     Route::get('/reports/exportaciones', [ReportsController::class, 'exports'])->name('admin.reports.exports');
     Route::get('/reports/exportaciones/descarga/{slug}', [ReportsRegistryExportController::class, 'download'])
         ->where('slug', 'proveedores|marcas|pedidos-proveedores|usuarios|pedidos-clientes')
         ->name('admin.reports.exports.registry');
+    Route::get('/reports/desempeno-ventas', [ReportsController::class, 'salesPerformance'])->name('admin.reports.sales-performance');
+    Route::get('/reports/ventas/range', [ReportsController::class, 'salesPerformanceRange'])->name('admin.reports.sales.range');
+    Route::get('/reports/ventas/metrics', [ReportsController::class, 'salesPerformanceMetrics'])->name('admin.reports.sales.metrics');
     Route::get('/reports/productos-vendidos', [ReportsController::class, 'productSales'])->name('admin.reports.product-sales');
     Route::get('/reports/productos-vendidos/table', [ReportsController::class, 'productSalesTable'])->name('admin.reports.product-sales.table');
     Route::get('/reports/productos-vendidos/pdf', [ReportsController::class, 'productSalesPdf'])->name('admin.reports.product-sales.pdf');
