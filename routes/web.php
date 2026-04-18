@@ -22,17 +22,18 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-/**
- * Allow HTTP-triggered migrate/seed only in local/testing, or when ?key= matches config('app.deploy_secret').
- */
+// Guard closure: allows HTTP-triggered deploy helpers only in local/testing,
+// or when the ?key= query parameter matches the configured DEPLOY_SECRET.
 $assertDeployHelperAllowed = function (Request $request): void {
     if (app()->environment('local', 'testing')) {
         return;
     }
     $secret = (string) config('app.deploy_secret', '');
+    // Treat an empty secret as disabled; return 404 to avoid leaking the endpoint.
     if ($secret === '') {
         abort(404);
     }
+    // Use timing-safe comparison to prevent timing-based secret enumeration.
     if (! hash_equals($secret, (string) $request->query('key', ''))) {
         abort(404);
     }
@@ -42,6 +43,7 @@ $assertDeployHelperAllowed = function (Request $request): void {
 // DEPLOY UTILITIES — Protected outside local/testing (see DEPLOY_SECRET)
 // ============================================================
 
+// Runs pending database migrations; intended for CI/CD pipelines or post-deploy hooks.
 Route::get('/run-migrations', function (Request $request) use ($assertDeployHelperAllowed) {
     $assertDeployHelperAllowed($request);
     try {
@@ -61,9 +63,12 @@ Route::get('/run-migrations', function (Request $request) use ($assertDeployHelp
     }
 });
 
+// Runs a seeder class; when no class is provided, the default DatabaseSeeder is used.
+// The class name is validated against a whitelist pattern to prevent arbitrary code execution.
 Route::get('/run-seeders/{class?}', function (Request $request, ?string $class = null) use ($assertDeployHelperAllowed) {
     $assertDeployHelperAllowed($request);
 
+    // Restrict the class name to fully-qualified seeder classes under the expected namespace.
     if ($class !== null && $class !== '') {
         if (! preg_match('/^Database\\\\Seeders\\\\[A-Za-z0-9_]+$/', $class)) {
             return response('❌ Invalid seeder class name.', 400);
@@ -100,7 +105,7 @@ Route::get('/admin/login', [AdminUserController::class, 'showLoginForm'])->name(
 Route::post('/admin/login', [AdminUserController::class, 'login'])->name('admin.login.submit');
 Route::post('/admin/logout', [AdminUserController::class, 'logout'])->name('admin.logout');
 
-// --- Admin Protected Routes ---
+// --- Admin Protected Routes (requires admin.only + prevent.direct middlewares) ---
 Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
 
     // Dashboard
@@ -109,9 +114,10 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
     Route::get('/dashboard/export', [DashboardController::class, 'exportReport'])->name('dashboard.export');
 
-    // CF4-30 — reportes admin (hub + exportaciones + productos más vendidos) + CF4-24 desempeño de ventas
+    // Reports hub, registry exports, sales-performance dashboard, and product-sales report (CF4-30, CF4-24).
     Route::get('/reports', [ReportsController::class, 'index'])->name('admin.reports.index');
     Route::get('/reports/exportaciones', [ReportsController::class, 'exports'])->name('admin.reports.exports');
+    // Slug constraint mirrors the SLUGS constant defined in ReportsRegistryExportController.
     Route::get('/reports/exportaciones/descarga/{slug}', [ReportsRegistryExportController::class, 'download'])
         ->where('slug', 'proveedores|marcas|pedidos-proveedores|usuarios|pedidos-clientes')
         ->name('admin.reports.exports.registry');
@@ -123,10 +129,12 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/reports/productos-vendidos/pdf', [ReportsController::class, 'productSalesPdf'])->name('admin.reports.product-sales.pdf');
     Route::get('/reports/productos-vendidos/excel', [ReportsController::class, 'productSalesExcel'])
      ->name('admin.reports.product-sales.excel');
+    Route::get('/sales/reports/by-category', [ReportsController::class, 'byCategory'])->name('sales.reports.byCategory');
 
     // Inventory / Products
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');
-    // CF4-84 — catálogo CRUD dimensiones/valores por subcategoría
+
+    // Classification catalogue: CRUD for dimensions and values per subcategory (CF4-84).
     Route::get('/classifications/catalog', [ClassificationCatalogController::class, 'index'])->name('admin.classifications.catalog.index');
     Route::get('/classifications/catalog/{category}/options', [ClassificationCatalogController::class, 'optionsForCategory'])->name('admin.classifications.catalog.options');
     Route::get('/classifications/catalog/{category}', [ClassificationCatalogController::class, 'showCategory'])->name('admin.classifications.catalog.show');
@@ -142,14 +150,15 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::delete('/classifications/values/{value}', [ClassificationCatalogController::class, 'destroyValue'])->name('admin.classifications.values.destroy');
     Route::post('/classifications/values/{value}/restore', [ClassificationCatalogController::class, 'restoreValue'])->name('admin.classifications.values.restore');
 
-    // CF4-84 — asignación de clasificaciones al producto (subcategoría)
+    // Product-classification assignment per subcategory (CF4-84).
     Route::get('/product-classifications', [ProductClassificationController::class, 'index'])->name('admin.product-classifications.index');
     Route::get('/products/{product}/classifications/edit', [ProductClassificationController::class, 'edit'])->name('admin.products.classifications.edit');
     Route::put('/products/{product}/classifications', [ProductClassificationController::class, 'update'])->name('admin.products.classifications.update');
 
-    // CF4-29 — featured toggle
+    // Featured product toggle (CF4-29).
     Route::post('/products/{id}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
-    // Media management (Spatie MediaLibrary)
+
+    // Media management via Spatie MediaLibrary.
     Route::post('/products/{id}/gallery/{mediaId}/promote', [ProductController::class, 'promoteToMain'])->name('products.gallery.promote');
     Route::delete('/products/{id}/gallery/{mediaId}', [ProductController::class, 'removeGalleryImage'])->name('products.gallery.destroy');
     Route::resource('products', ProductController::class)->except(['create']);
@@ -170,14 +179,14 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     // Brands
     Route::resource('brands', BrandController::class)->only(['index', 'store', 'update', 'destroy']);
 
-    // Categories — subcategorías (CF4-68)
+    // Subcategories (CF4-68).
     Route::get('/categories/subcategories/create', [CategoryController::class, 'createSubcategory'])->name('categories.subcategories.create');
     Route::post('/categories/subcategories', [CategoryController::class, 'store'])->name('categories.subcategories.store');
 
-    // Sales — static paths must be registered before Route::resource to avoid matching `{sale}` = "export".
+    // Sales — static paths are registered before Route::resource to prevent 'export' matching the {sale} segment.
     Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
     Route::get('/sales/history/heartbeat', [SalesController::class, 'historyHeartbeat'])->name('sales.history.heartbeat');
-    Route::get('/sales/reports/by-category', [SalesController::class, 'byCategory'])->name('sales.reports.byCategory');
+
     Route::resource('sales', SalesController::class);
     Route::post('/sales/{id}/complete', [SalesController::class, 'complete'])->name('sales.complete');
     Route::post('/sales/{id}/cancel', [SalesController::class, 'cancel'])->name('sales.cancel');
@@ -185,6 +194,7 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/sales/{id}/print', [SalesController::class, 'print'])->name('sales.print');
     Route::get('/sales/{id}/invoice', [SalesController::class, 'invoice'])->name('sales.invoice');
 
+    // Client orders (web cart) management.
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::put('/orders/settings/order-expiration', [AdminOrderSettingsController::class, 'update'])
         ->name('admin.orders.settings.order-expiration.update');
@@ -204,7 +214,7 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::patch('/clientes/{id}/ban', [AdminClientController::class, 'ban'])->name('admin.clients.ban');
     Route::patch('/clientes/{id}/unban', [AdminClientController::class, 'unban'])->name('admin.clients.unban');
 
-    // Admin catalog preview — stores admin identity in session then redirects to client catalog
+    // Stores the admin identity in session then redirects to the client-facing catalogue for preview.
     Route::get('/admin/catalog-preview', function () {
         $admin = auth('admin')->user();
         session([
@@ -218,8 +228,8 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
         return redirect()->route('clients.catalog');
     })->name('admin.catalog.preview');
 
-    // Admin opens public store home — same session flag as catalog preview so the client header
-    // shows "Volver al panel" and POST /logout does not wipe the admin session (see web.php logout).
+    // Sets the same admin_catalog_mode session flag as catalog-preview so the client header shows
+    // "Volver al panel" and the client logout route does not wipe the active admin session.
     Route::get('/admin/visit-store', function () {
         $admin = auth('admin')->user();
         session([
@@ -238,7 +248,8 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
 // CLIENT ROUTES
 // ============================================================
 
-// Clears admin catalog preview mode and returns to admin panel (or home if not admin)
+// Clears the admin catalog-preview session flag and returns the admin to the dashboard,
+// or any other user to the store home page.
 Route::get('/admin/catalog-exit', function () {
     session()->forget('admin_catalog_mode');
 
@@ -252,6 +263,7 @@ Route::get('/admin/catalog-exit', function () {
 // --- Public Pages ---
 Route::get('/', [ClientPageController::class, 'home'])->name('clients.home');
 Route::get('/catalog', [ClientPageController::class, 'catalog'])->name('clients.catalog');
+// Numeric ID is required; the slug segment is optional and used for SEO-friendly URLs only.
 Route::get('/product/{id}/{slug?}', [ClientPageController::class, 'product'])
     ->where(['id' => '[0-9]+', 'slug' => '[a-z0-9\-]*'])
     ->name('clients.product');
@@ -261,7 +273,7 @@ Route::get('/login', [ClientUserController::class, 'showLoginForm'])->name('logi
 Route::get('/register', [ClientUserController::class, 'showRegisterForm'])->name('clients.register.form');
 Route::post('/register', [ClientUserController::class, 'register'])->name('clients.register');
 
-// Throttle prevents brute-force attacks (max 5 attempts per minute)
+// Login is throttled to a maximum of 5 attempts per minute to prevent brute-force attacks.
 Route::post('/login', [ClientUserController::class, 'login'])
     ->middleware('throttle:5,1')
     ->name('login');
@@ -271,17 +283,19 @@ Route::get('/verify', [ClientUserController::class, 'showVerifyForm'])->name('cl
 Route::post('/verify', [ClientUserController::class, 'verify'])->name('clients.verify');
 Route::post('/verify/resend', [ClientUserController::class, 'resendCode'])->name('clients.verify.resend');
 
+// Password recovery
 Route::get('/recovery', [ClientUserController::class, 'showRecoveryForm'])->name('clients.recovery.form');
 Route::post('/recovery', [ClientUserController::class, 'resetPassword'])->name('clients.recovery');
 Route::get('/recovery/verify', [ClientUserController::class, 'showRecoveryVerifyForm'])->name('clients.recovery.verify.form');
 Route::post('/recovery/verify', [ClientUserController::class, 'verifyRecoveryAndReset'])->name('clients.recovery.verify');
 
-// Client logout: if an admin is still logged in (same session), do not invalidate the session or the
-// admin loses access when returning to /dashboard.
+// Client logout: when an admin is also authenticated in the same session, only the client-specific
+// session keys are cleared to avoid invalidating the active admin session.
 Route::post('/logout', function (Request $request) {
     Auth::guard('clients')->logout();
 
     if (Auth::guard('admin')->check()) {
+        // Selectively remove client session data while preserving the admin session.
         $request->session()->forget([
             'client_id',
             'client_name',
@@ -296,6 +310,7 @@ Route::post('/logout', function (Request $request) {
         return redirect()->route('clients.home')->with('status', 'Sesión de cliente cerrada.');
     }
 
+    // No active admin session; perform a full session invalidation.
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
@@ -303,7 +318,7 @@ Route::post('/logout', function (Request $request) {
     return redirect()->route('clients.home')->with('status', 'Session closed successfully.');
 })->name('logout');
 
-// Refreshes the CSRF token — called by JS on 419 responses
+// Returns a fresh CSRF token as JSON; called by the frontend on 419 (token mismatch) responses.
 Route::get('/csrf-token', function (Request $request) {
     return response()->json(['csrf_token' => csrf_token()]);
 })->name('csrf.token');

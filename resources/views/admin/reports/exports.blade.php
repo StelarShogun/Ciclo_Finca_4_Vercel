@@ -74,7 +74,7 @@
         </nav>
 
         <header class="reports-hub-header reports-exports-intro">
-            <h1>Exportar datos y PDF</h1>
+            <h1>Exportar datos</h1>
             <div class="reports-exports-intro-text">
                 <p>Aquí descarga <strong>informes en PDF</strong>, <strong>Excel</strong> y <strong>archivos de inventario y ventas</strong> desde un solo lugar.</p>
                 <p>Cada enlace abre el resultado en una <strong>nueva pestaña</strong> del navegador.</p>

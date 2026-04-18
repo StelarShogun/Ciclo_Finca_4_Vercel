@@ -13,6 +13,7 @@ use App\Services\SalesPerformanceDateRangeService;
 use App\Services\SalesPerformanceMetricsService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
+use App\Models\SaleItem;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,31 +21,32 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportsController extends Controller
 {
+    // Allowed relative period slugs for product-sales reports.
     private const PERIODS = ['7d', '30d', '90d'];
 
+    // Allowed sort dimensions for the Top 10 chart.
     private const TOP10_METRICS = ['revenue', 'units'];
 
+    // Renders the main reports dashboard.
     public function index()
     {
         return view('admin.reports.index');
     }
 
-    /**
-     * Centro único de exportación (PDF y datos) desde el módulo Reportes.
-     * Los enlaces respetan querystring opcional (p. ej. filtros de inventario o ventas pasados desde esas pantallas).
-     */
+    // Renders the centralised export hub.
+    // Navigation links preserve any active query-string filters forwarded from other report screens.
     public function exports()
     {
         return view('admin.reports.exports');
     }
 
-    /**
-     * CF4-24: admin UI — sales totals and comparison by date range (loads metrics via JSON).
-     */
+    // Renders the sales-performance view (CF4-24).
+    // Metrics are loaded asynchronously via JSON; only the initial filter state is passed here.
     public function salesPerformance(Request $request)
     {
         $allowed = ['today', 'week', 'month', 'year', 'custom'];
         $preset = (string) $request->query('preset', 'month');
+        // Fall back to 'month' for any unrecognised preset value.
         if (! in_array($preset, $allowed, true)) {
             $preset = 'month';
         }
@@ -58,9 +60,7 @@ class ReportsController extends Controller
         ]);
     }
 
-    /**
-     * CF4-24: resolve selected period + equivalent previous period.
-     */
+    // Returns the resolved current and previous date ranges for the selected preset as JSON (CF4-24).
     public function salesPerformanceRange(SalesPerformanceRangeRequest $request, SalesPerformanceDateRangeService $rangeService)
     {
         $resolved = $rangeService->resolve($request->validated());
@@ -68,9 +68,7 @@ class ReportsController extends Controller
         return response()->json($this->salesPerformanceRangePayload($resolved));
     }
 
-    /**
-     * CF4-24: completed sales totals for current and prior equivalent period + comparison.
-     */
+    // Returns aggregated completed-sales metrics for the current and previous periods, including a comparison delta (CF4-24).
     public function salesPerformanceMetrics(
         SalesPerformanceRangeRequest $request,
         SalesPerformanceDateRangeService $rangeService,
@@ -87,6 +85,7 @@ class ReportsController extends Controller
         );
         $comparison = $metricsService->comparisonVersusPrior($current, $previous);
 
+        // Merge period metadata with the computed metrics before returning.
         return response()->json(array_merge($this->salesPerformanceRangePayload($resolved), [
             'current_metrics' => $current,
             'previous_metrics' => $previous,
@@ -94,10 +93,7 @@ class ReportsController extends Controller
         ]));
     }
 
-    /**
-     * @param  array<string, mixed>  $resolved
-     * @return array<string, mixed>
-     */
+    // Builds the shared period metadata payload included in all sales-performance JSON responses.
     private function salesPerformanceRangePayload(array $resolved): array
     {
         return [
@@ -118,6 +114,7 @@ class ReportsController extends Controller
         ];
     }
 
+    // Renders the product-sales report view with normalised filter state.
     public function productSales(Request $request)
     {
         return view('admin.reports.product-sales', [
@@ -129,6 +126,7 @@ class ReportsController extends Controller
         ]);
     }
 
+    // Returns a paginated product-sales table plus the Top 10 chart data as JSON.
     public function productSalesTable(Request $request)
     {
         $period = $this->normalizePeriod($request->query('period'));
@@ -141,6 +139,7 @@ class ReportsController extends Controller
 
         $start = $this->periodStart($period);
 
+        // Resolve the sort column for the Top 10 chart independently of the table sort.
         $top10SortColumn = $top10Metric === 'units' ? 'units_sold' : 'revenue';
         $top10 = ProductSalesReportQuery::base($start, $q)
             ->orderByDesc($top10SortColumn)
@@ -152,6 +151,7 @@ class ReportsController extends Controller
             ->orderBy($sortColumn, $dir)
             ->paginate($perPage, ['*'], 'page', $page);
 
+        // Attach stable URLs with the current filter state to all paginator links.
         $paginator->setPath(route('admin.reports.product-sales'));
         $paginator->appends([
             'period' => $period,
@@ -180,6 +180,7 @@ class ReportsController extends Controller
                 'total' => $paginator->total(),
                 'last_page' => $paginator->lastPage(),
             ],
+            // Pre-rendered pagination HTML consumed directly by the frontend.
             'pagination_html' => view('components.pagination', [
                 'paginator' => $paginator,
                 'label' => 'reporte',
@@ -187,6 +188,7 @@ class ReportsController extends Controller
         ]);
     }
 
+    // Generates and streams a PDF export of the product-sales report, including the Top 10 chart and the full table.
     public function productSalesPdf(Request $request)
     {
         $period = $this->normalizePeriod($request->query('period'));
@@ -210,6 +212,7 @@ class ReportsController extends Controller
             ->limit($maxRows)
             ->get();
 
+        // Count the full result set to determine whether the row cap was reached.
         $totalMatching = (int) DB::query()
             ->fromSub(ProductSalesReportQuery::base($start, $q), 'product_sales_agg')
             ->count();
@@ -221,6 +224,7 @@ class ReportsController extends Controller
         $top10Formatted = $top10->map(fn ($row) => ProductSalesReportQuery::formatRow($row));
         $tableFormatted = $tableRows->map(fn ($row) => ProductSalesReportQuery::formatRow($row));
 
+        // Derive the chart scale from the Top 10 dataset; guard against empty or zero values.
         $maxBarUnits = max(1, (int) $top10Formatted->max('units_sold'));
         $maxBarRevenue = max(1.0, (float) $top10Formatted->max('revenue'));
 
@@ -243,10 +247,9 @@ class ReportsController extends Controller
         return $pdf->download(ReportPdfFilename::make('productos-vendidos'));
     }
 
-    /**
-     * Excel export — same dataset and filter logic as the PDF export.
-     * Produces: reporte-productos-vendidos-YYYY-MM-DD.xlsx
-     */
+    // Generates and streams an Excel export of the product-sales report.
+    // Applies the same dataset and filter logic as the PDF export.
+    // Output filename format: reporte-productos-vendidos-YYYY-MM-DD.xlsx
     public function productSalesExcel(Request $request, ProductSalesExcelExport $excelExport): StreamedResponse
     {
         $period = $this->normalizePeriod($request->query('period'));
@@ -272,6 +275,7 @@ class ReportsController extends Controller
             ->get()
             ->map(fn ($row) => ProductSalesReportQuery::formatRow($row));
 
+        // Count the full result set to determine whether the row cap was reached.
         $totalMatching = (int) DB::query()
             ->fromSub(ProductSalesReportQuery::base($start, $q), 'product_sales_agg')
             ->count();
@@ -289,11 +293,10 @@ class ReportsController extends Controller
         );
     }
 
-    // ── Shared filter-line builder (used by both PDF and Excel) ─────────────
+    // ── Shared filter-line builder ────────────────────────────────────────────
 
-    /**
-     * @return array<int, string>
-     */
+    // Builds the list of human-readable filter descriptions displayed in the PDF and Excel document headers.
+    // Appends a row-cap notice when the result set exceeds the export limit.
     private function buildProductSalesFilterLines(
         string $period,
         string $top10Metric,
@@ -313,6 +316,7 @@ class ReportsController extends Controller
             $lines[] = 'Búsqueda: '.$q;
         }
 
+        // Warn the user when the dataset was truncated to fit within the export row limit.
         if ($totalMatching > $maxRows) {
             $lines[] = 'Nota: la exportación incluye como máximo '.$maxRows.' filas ('.$totalMatching.' productos con ventas en el periodo).';
         }
@@ -320,6 +324,7 @@ class ReportsController extends Controller
         return $lines;
     }
 
+    // Returns a localised human-readable label for the given period slug.
     private function periodLabel(string $period): string
     {
         return match ($period) {
@@ -329,6 +334,7 @@ class ReportsController extends Controller
         };
     }
 
+    // Returns the start-of-day Carbon timestamp corresponding to the given period slug.
     private function periodStart(string $period): Carbon
     {
         return match ($period) {
@@ -338,6 +344,7 @@ class ReportsController extends Controller
         };
     }
 
+    // Returns the period slug if it is in the allowed list; defaults to '30d'.
     private function normalizePeriod(mixed $value): string
     {
         $v = is_string($value) ? $value : '';
@@ -345,6 +352,7 @@ class ReportsController extends Controller
         return in_array($v, self::PERIODS, true) ? $v : '30d';
     }
 
+    // Returns 'units' or defaults to 'revenue' for the sort dimension.
     private function normalizeSort(mixed $value): string
     {
         $v = is_string($value) ? $value : '';
@@ -352,6 +360,7 @@ class ReportsController extends Controller
         return $v === 'units' ? 'units' : 'revenue';
     }
 
+    // Returns 'asc' or defaults to 'desc' for the sort direction.
     private function normalizeDir(mixed $value): string
     {
         $v = is_string($value) ? strtolower($value) : '';
@@ -359,6 +368,7 @@ class ReportsController extends Controller
         return $v === 'asc' ? 'asc' : 'desc';
     }
 
+    // Trims and truncates the search query to a maximum of 100 characters.
     private function normalizeQuery(mixed $value): string
     {
         if (! is_string($value)) {
@@ -369,6 +379,7 @@ class ReportsController extends Controller
         return mb_substr($t, 0, 100);
     }
 
+    // Returns the Top 10 metric if it is in the allowed list; defaults to 'revenue'.
     private function normalizeTop10Metric(mixed $value): string
     {
         $v = is_string($value) ? strtolower(trim($value)) : '';
@@ -376,8 +387,99 @@ class ReportsController extends Controller
         return in_array($v, self::TOP10_METRICS, true) ? $v : 'revenue';
     }
 
+    // Formats a date range as a localised 'dd/mm/YYYY - dd/mm/YYYY' string for display.
     private function humanRangeLabel(CarbonInterface $start, CarbonInterface $end): string
     {
         return $start->format('d/m/Y').' - '.$end->format('d/m/Y');
+    }
+
+        public function byCategory(Request $request)
+    {
+        $dateRange = $request->input('date_range', 'month');
+        $dateFrom  = $request->input('date_from');
+        $dateTo    = $request->input('date_to');
+
+        if ($dateRange === 'custom') {
+            $request->validate([
+                'date_from' => 'required|date',
+                'date_to'   => 'required|date|after_or_equal:date_from',
+            ], [
+                'date_from.required'      => 'La fecha de inicio es obligatoria.',
+                'date_from.date'          => 'La fecha de inicio no es válida.',
+                'date_to.required'        => 'La fecha de fin es obligatoria.',
+                'date_to.date'            => 'La fecha de fin no es válida.',
+                'date_to.after_or_equal'  => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
+            ]);
+        }
+
+        [$from, $to] = $this->resolveDateRange($dateRange, $dateFrom, $dateTo);
+
+        $rows = SaleItem::query()
+            ->join('sales',      'sale_items.sale_id',    '=', 'sales.sale_id')
+            ->join('products',   'sale_items.product_id', '=', 'products.product_id')
+            ->join('categories', 'products.category_id',  '=', 'categories.category_id')
+            ->where('sales.status', 'completed')
+            ->whereBetween('sales.sale_date', [$from, $to])
+            ->groupBy('categories.category_id', 'categories.name')
+            ->selectRaw('
+                categories.category_id,
+                categories.name          AS category_name,
+                SUM(sale_items.quantity) AS total_units,
+                SUM(sale_items.total)    AS total_revenue
+            ')
+            ->orderByDesc('total_revenue')
+            ->get();
+
+        $grandTotal = $rows->sum('total_revenue');
+
+        $rows->transform(function ($row) use ($grandTotal) {
+            $row->percentage = $grandTotal > 0
+                ? round(($row->total_revenue / $grandTotal) * 100, 1)
+                : 0;
+            return $row;
+        });
+
+        $chartData = $rows->map(function ($r) {
+            return [
+                'label'   => $r->category_name,
+                'value'   => $r->total_revenue,
+                'percent' => $r->percentage,
+            ];
+        })->values()->toArray();
+
+        return view('admin.reports.reports-by-category', compact(
+            'rows', 'grandTotal', 'from', 'to', 'dateRange', 'chartData'
+        ));
+    }
+
+    private function resolveDateRange(string $range, ?string $dateFrom, ?string $dateTo): array
+    {
+        switch ($range) {
+            case 'today':
+                return [
+                    now()->startOfDay()->toDateTimeString(),
+                    now()->endOfDay()->toDateTimeString(),
+                ];
+            case 'week':
+                return [
+                    now()->startOfWeek()->startOfDay()->toDateTimeString(),
+                    now()->endOfWeek()->endOfDay()->toDateTimeString(),
+                ];
+            case 'month':
+                return [
+                    now()->startOfMonth()->startOfDay()->toDateTimeString(),
+                    now()->endOfMonth()->endOfDay()->toDateTimeString(),
+                ];
+            case 'custom':
+                return [
+                    $dateFrom ? Carbon::parse($dateFrom)->startOfDay()->toDateTimeString() : now()->startOfDay()->toDateTimeString(),
+                    $dateTo   ? Carbon::parse($dateTo)->endOfDay()->toDateTimeString()     : now()->endOfDay()->toDateTimeString(),
+                ];
+            default:
+                return [
+                    now()->startOfMonth()->startOfDay()->toDateTimeString(),
+                    now()->endOfMonth()->endOfDay()->toDateTimeString(),
+                ];
+        }
     }
 }
