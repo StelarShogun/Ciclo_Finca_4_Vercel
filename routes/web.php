@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ClientPurchaseHistoryController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\ReportsRegistryExportController;
 use App\Http\Controllers\AdminClientController;
@@ -123,17 +124,26 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/reports/productos-vendidos/table', [ReportsController::class, 'productSalesTable'])->name('admin.reports.product-sales.table');
     Route::get('/reports/productos-vendidos/pdf', [ReportsController::class, 'productSalesPdf'])->name('admin.reports.product-sales.pdf');
 
+    // Movimientos de inventario (HEAD)
     Route::prefix('inventory/movements')->name('admin.inventory.movements.')->group(function () {
-        // Lista de productos para seleccionar cuál auditar
-        Route::get('/',         [InventoryMovementController::class, 'index'])->name('index');
-        // Historial de movimientos de un producto (vista Blade)
-        Route::get('/{productId}', [InventoryMovementController::class, 'show'])->name('show');
-        // Endpoint JSON para AJAX / datatables
+        Route::get('/',                 [InventoryMovementController::class, 'index'])->name('index');
+        Route::get('/{productId}',      [InventoryMovementController::class, 'show'])->name('show');
         Route::get('/{productId}/json', [InventoryMovementController::class, 'json'])->name('json');
     });
 
+    // CF4-33 — historial de compras por cliente (Dev)
+    Route::get('/reports/client-purchases', [ClientPurchaseHistoryController::class, 'index'])->name('admin.reports.client-purchases');
+    Route::get('/reports/client-purchases/table', [ClientPurchaseHistoryController::class, 'table'])->name('admin.reports.client-purchases.table');
+    Route::get('/reports/client-purchases/{client}', [ClientPurchaseHistoryController::class, 'show'])
+        ->whereNumber('client')
+        ->name('admin.reports.client-purchases.show');
+    Route::get('/reports/client-purchases/{client}/orders', [ClientPurchaseHistoryController::class, 'clientOrders'])
+        ->whereNumber('client')
+        ->name('admin.reports.client-purchases.orders');
+
     // Inventory / Products
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');
+
     // CF4-84 — catálogo CRUD dimensiones/valores por subcategoría
     Route::get('/classifications/catalog', [ClassificationCatalogController::class, 'index'])->name('admin.classifications.catalog.index');
     Route::get('/classifications/catalog/{category}/options', [ClassificationCatalogController::class, 'optionsForCategory'])->name('admin.classifications.catalog.options');
@@ -164,10 +174,9 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
     Route::get('/inventory/export/{format?}', [ProductController::class, 'export'])->name('products.export');
     Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
-    Route::post('/inventory/add-manual/{id}',    [ProductController::class, 'addManualStock'])
+    Route::post('/inventory/add-manual/{id}', [ProductController::class, 'addManualStock'])
         ->name('products.stock.add')
         ->whereNumber('id');
-
     Route::post('/inventory/remove-manual/{id}', [ProductController::class, 'removeManualStock'])
         ->name('products.stock.remove')
         ->whereNumber('id');

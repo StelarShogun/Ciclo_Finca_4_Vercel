@@ -23,7 +23,9 @@ const adminAssets = [
     "resources/js/admin/classifications/catalog.js",
     "resources/js/admin/reports/product-sales.js",
     "resources/js/admin/reports/sales-performance.js",
-    "resources/js/admin/reports/inventory-movements.js",
+    "resources/js/admin/reports/inventory-movements.js",        
+    "resources/js/admin/reports/client-purchase-history.js",  
+    "resources/js/admin/reports/client-purchase-client-show.js", 
 
     // CSS
     "resources/css/admin/products/inventory.css",
@@ -43,6 +45,7 @@ const adminAssets = [
     "resources/css/admin/reports/exports.css",
     "resources/css/admin/reports/product-sales.css",
     "resources/css/admin/reports/sales-performance.css",
+    "resources/css/admin/reports/client-purchase-history.css",
 ];
 
 // =======================
@@ -70,11 +73,11 @@ export default defineConfig({
         }),
     ],
     server: {
-        host: "0.0.0.0", // Para Docker
+        host: "0.0.0.0",
         port: vitePort,
         strictPort: true,
         hmr: {
-            host: "localhost", // Navegador accede desde tu máquina
+            host: "localhost",
         },
     },
 });
