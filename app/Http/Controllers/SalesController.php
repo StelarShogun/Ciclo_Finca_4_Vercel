@@ -665,7 +665,7 @@ class SalesController extends Controller
             if ($request->filled('end_date')) {
                 $query->whereDate('sale_date', '<=', $request->end_date);
             }
-        } else {
+        } elseif (! $request->filled('search')) {
             $dateRange = $request->get('date_range');
             if ($dateRange) {
                 switch ($dateRange) {
