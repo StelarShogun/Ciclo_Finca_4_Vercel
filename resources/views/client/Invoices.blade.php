@@ -17,7 +17,16 @@
     <div class="cf4-invoices-header">
         <div class="cf4-invoices-header-inner">
             <h1><i class="fas fa-file-invoice"></i> Mis Facturas</h1>
-            <p>Pedidos pendientes de confirmación por parte de la tienda.</p>
+            <p>{{ $tab === 'historial' ? 'Pedidos confirmados por la tienda.' : 'Pedidos pendientes de confirmación por parte de la tienda.' }}</p>
+        </div>
+        <div class="cf4-invoices-tab-selector">
+            <div class="cf4-select-wrapper">
+                <i class="{{ $tab === 'historial' ? 'fas fa-history' : 'fas fa-file-invoice' }} cf4-select-icon"></i>
+                <select id="cf4-invoice-tab" class="cf4-select" onchange="window.location.href = '{{ route('clients.invoices') }}?tab=' + this.value">
+                    <option value="facturas" {{ $tab === 'facturas' ? 'selected' : '' }}>Facturas pendientes</option>
+                    <option value="historial" {{ $tab === 'historial' ? 'selected' : '' }}>Historial de compras</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -57,7 +66,11 @@
                                 </td>
                                 <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
                                 <td>
-                                    <span class="cf4-invoice-status-pill pending">Pendiente</span>
+                                    @if($tab === 'historial')
+                                        <span class="cf4-invoice-status-pill confirmed">Confirmada</span>
+                                    @else
+                                        <span class="cf4-invoice-status-pill pending">Pendiente</span>
+                                    @endif
                                 </td>
                                 <td><strong>&#8353;{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
                             </tr>
@@ -66,7 +79,7 @@
                                 <td colspan="5">
                                     <div class="cf4-invoices-empty">
                                         <div class="cf4-invoices-empty-icon"><i class="fas fa-file-invoice"></i></div>
-                                        <p>No tienes facturas pendientes.</p>
+                                        <p>{{ $tab === 'historial' ? 'No has realizado ninguna compra aún.' : 'No tienes facturas pendientes.' }}</p>
                                         <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-sm">
                                             <i class="fas fa-th"></i> Ir al catálogo
                                         </a>

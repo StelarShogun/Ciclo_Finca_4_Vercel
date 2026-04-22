@@ -1322,6 +1322,54 @@ body.guest-layout {
     color: var(--color-warning);
 }
 
+.cf4-invoice-status-pill.confirmed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* ── Tab selector in header ── */
+.cf4-invoices-tab-selector {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.cf4-select-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.cf4-select-icon {
+    position: absolute;
+    left: 16px;
+    color: var(--color-primary, #2d6a4f);
+    pointer-events: none;
+    z-index: 1;
+    font-size: 0.85rem;
+}
+
+.cf4-select {
+    appearance: none;
+    background: #fff;
+    border: none;
+    color: var(--color-primary, #2d6a4f);
+    padding: 9px 44px 9px 38px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath stroke='%232d6a4f' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round' d='M1 1l4.5 4.5L10 1'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+}
+
+.cf4-select option {
+    background: #fff;
+    color: var(--color-primary, #2d6a4f);
+}
+
 /* ── Empty state ── */
 .cf4-invoices-empty {
     text-align: center;
