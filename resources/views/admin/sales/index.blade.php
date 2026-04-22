@@ -264,7 +264,11 @@
                             <td colspan="8" class="text-center">
                                 <div class="table-empty-state">
                                     <i class="fas fa-shopping-cart table-empty-icon"></i>
-                                    <p>No hay ventas registradas</p>
+                                    @if(request('search'))
+                                        <p>No se encontraron resultados para <strong>{{ request('search') }}</strong></p>
+                                    @else
+                                        <p>No hay ventas registradas</p>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
