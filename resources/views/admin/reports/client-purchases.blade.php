@@ -73,7 +73,7 @@
                             </th>
                             <th class="num">
                                 <button type="button" class="nav-sort {{ $sort === 'orders_count' ? 'is-active' : '' }}" data-sort="orders_count">
-                                    Órdenes
+                                    Compras
                                     @if ($sort === 'orders_count')
                                         <i class="fas fa-sort-{{ $dir === 'asc' ? 'up' : 'down' }}" aria-hidden="true"></i>
                                     @endif

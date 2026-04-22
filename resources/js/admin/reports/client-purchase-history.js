@@ -123,7 +123,7 @@ function initClientPurchasesReport() {
                 <td class="num">${esc(formatColones(row.avg_ticket))}</td>
                 <td class="col-actions" onclick="event.stopPropagation()">
                     <a class="btn-client-orders-open" href="${href}">
-                        <i class="fas fa-list" aria-hidden="true"></i> Ver órdenes
+                        <i class="fas fa-list" aria-hidden="true"></i> Ver compras
                     </a>
                 </td>
             </tr>`;

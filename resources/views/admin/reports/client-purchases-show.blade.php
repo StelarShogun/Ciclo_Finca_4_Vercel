@@ -1,6 +1,6 @@
 @extends('admin.layouts.admin-shell')
 
-@section('Titulo pagina', 'Órdenes por cliente - Reportes')
+@section('Titulo pagina', 'Compras por cliente - Reportes')
 
 @push('styles')
     @vite(['resources/css/admin/reports/client-purchase-history.css', 'resources/css/admin/sales/sales.css'])
@@ -44,7 +44,7 @@
 
         <header class="client-purchases-header client-purchases-show-header">
             <div class="client-purchases-show-heading">
-                <h1>Órdenes del cliente</h1>
+                <h1>Compras del cliente</h1>
                 <p class="client-purchases-show-meta">
                     <strong>{{ $displayName }}</strong>
                     @if ($gmail)
