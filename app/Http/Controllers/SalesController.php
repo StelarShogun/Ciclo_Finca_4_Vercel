@@ -6,8 +6,10 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
 use App\Services\InventoryMovementService;
+use App\Services\Admin\RegistryExcelExport;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -259,10 +261,9 @@ class SalesController extends Controller
                 ]);
 
                 $inventoryService->recordSale(
-                    product:       $line['product'],
-                    quantity:      $line['quantity'],
-                    saleId:        $sale->sale_id,
-                    invoiceNumber: $sale->invoice_number,
+                    product:  $line['product'],
+                    quantity: $line['quantity'],
+                    saleId:   $sale->sale_id,
                 );
             }
 
@@ -401,7 +402,7 @@ class SalesController extends Controller
     /**
      * Cancela/rechaza un pedido pendiente (pending → cancelled).
      *
-     * MOVIMIENTO AUDITADO: DEVOLUCION / origen 'cancelacion_venta'.
+     * MOVIMIENTO AUDITADO: DEVOLUCION / origen 'return'.
      * El stock que fue descontado en checkout() se devuelve aquí íntegramente.
      * Solo aplica a pedidos pending (el stock ya fue comprometido).
      */
@@ -435,7 +436,6 @@ class SalesController extends Controller
                             product:  $item->product,
                             quantity: (int) $item->quantity,
                             saleId:   $sale->sale_id,
-                            reason:   'cancelacion_venta',
                         );
                     }
                 }
@@ -457,7 +457,7 @@ class SalesController extends Controller
     /**
      * Reembolsa una venta completada (completed → refunded).
      *
-     * MOVIMIENTO AUDITADO: DEVOLUCION / origen 'devolucion_cliente'.
+     * MOVIMIENTO AUDITADO: DEVOLUCION / origen 'return'.
      * Devuelve el stock de cada línea de la venta.
      */
     public function refund(int $id, InventoryMovementService $inventoryService)
@@ -478,7 +478,6 @@ class SalesController extends Controller
                         product:  $item->product,
                         quantity: (int) $item->quantity,
                         saleId:   $sale->sale_id,
-                        reason:   'devolucion_cliente',
                     );
                 }
             }
@@ -520,6 +519,10 @@ class SalesController extends Controller
 
             if ($format === 'pdf') {
                 return $this->exportSalesPdf($request, $base);
+            }
+
+            if ($format === 'excel') {
+                return $this->exportSalesExcel($request, $base);
             }
 
             $filename = 'sales_' . now()->format('Y-m-d_H-i-s') . '.csv';
@@ -589,6 +592,61 @@ class SalesController extends Controller
                 'message' => 'Error exporting sales: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    private function exportSalesExcel(Request $request, Builder $base): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $maxRows     = AdminPdfExportLimits::SALES_MAX_ROWS;
+        $totalMatching = (clone $base)->count();
+
+        $filterLines = $this->salesExportFilterLines($request);
+        if ($totalMatching > $maxRows) {
+            $filterLines[] = 'Nota: el Excel incluye como máximo '.$maxRows.' filas ('.$totalMatching.' ventas coinciden con los filtros).';
+        }
+
+        $rows = (clone $base)
+            ->with(['client', 'saleItems.product'])
+            ->orderBy('sale_date', 'desc')
+            ->limit($maxRows)
+            ->get();
+
+        $headers = ['ID Venta', 'Factura', 'Cliente', 'Email', 'Fecha', 'Estado', 'Método pago', 'Subtotal (₡)', 'IVA (₡)', 'Descuento (₡)', 'Total (₡)', 'Ítems', 'Notas'];
+
+        $dataRows = $rows->map(function (Sale $sale): array {
+            $customer = $sale->client
+                ? trim($sale->client->name.' '.($sale->client->first_surname ?? '').' '.($sale->client->second_surname ?? ''))
+                : ($sale->buyer_name ?: 'Walk-in / Sin datos');
+            $email = $sale->client ? $sale->client->gmail : ($sale->buyer_email ?: '');
+            $items = $sale->saleItems->map(function (SaleItem $item): string {
+                return ($item->product !== null ? $item->product->name : '?').' (×'.$item->quantity.')';
+            })->implode(', ');
+            $saleDate = $sale->sale_date;
+
+            return [
+                (string) $sale->sale_id,
+                (string) ($sale->invoice_number ?? ''),
+                $customer,
+                $email,
+                $saleDate !== null ? $saleDate->format('d/m/Y H:i') : '',
+                ucfirst((string) $sale->status),
+                ucfirst((string) $sale->payment_method),
+                number_format((float) $sale->subtotal, 2, '.', ''),
+                number_format((float) $sale->iva, 2, '.', ''),
+                number_format((float) $sale->discount, 2, '.', ''),
+                number_format((float) $sale->total, 2, '.', ''),
+                $items,
+                (string) ($sale->notes ?? ''),
+            ];
+        })->values()->all();
+
+        return app(RegistryExcelExport::class)->download(
+            'Ventas',
+            'Listado de ventas — Ciclo Finca 4',
+            $headers,
+            $dataRows,
+            $filterLines,
+            ReportExcelFilename::make('ventas'),
+        );
     }
 
     private function exportSalesPdf(Request $request, Builder $base)

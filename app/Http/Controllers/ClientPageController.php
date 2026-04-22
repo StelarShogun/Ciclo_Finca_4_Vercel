@@ -465,20 +465,32 @@ class ClientPageController extends Controller
         ]);
     }
 
-    public function invoices()
+    public function invoices(Request $request)
     {
         $client = Auth::guard('clients')->user();
+        $tab = $request->query('tab', 'facturas');
 
-        $orders = Sale::with(['saleItems.product'])
-            ->where('client_id', $client->user_id)
+        if ($tab === 'historial') {
+            $orders = Sale::with(['saleItems.product'])
+                ->where('client_id', $client->user_id)
+                ->where('status', 'completed')
+                ->orderByDesc('sale_date')
+                ->get();
+        } else {
+            $tab = 'facturas';
+            $orders = Sale::with(['saleItems.product'])
+                ->where('client_id', $client->user_id)
+                ->where('status', 'pending')
+                ->orderByDesc('sale_date')
+                ->get();
+        }
+
+        $cartCount = $this->getCartCount();
+        $invoiceCount = Sale::where('client_id', $client->user_id)
             ->where('status', 'pending')
-            ->orderByDesc('sale_date')
-            ->get();
+            ->count();
 
-        $cartCount    = $this->getCartCount();
-        $invoiceCount = $orders->count();
-
-        return view('client.Invoices', compact('orders', 'cartCount', 'invoiceCount'));
+        return view('client.Invoices', compact('orders', 'cartCount', 'invoiceCount', 'tab'));
     }
 
     public function invoicesHeartbeat()

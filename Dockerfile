@@ -2,7 +2,7 @@ FROM php:8.5-apache
 
 RUN apt-get update && \
     apt-get install -y unzip git zip libzip-dev libpng-dev libexif-dev curl && \
-    docker-php-ext-install pdo pdo_mysql zip exif && \
+    docker-php-ext-install pdo pdo_mysql zip exif gd && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Node.js

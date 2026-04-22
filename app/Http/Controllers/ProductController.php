@@ -10,7 +10,9 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\Admin\AdminInventoryExportQuery;
 use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
+use App\Services\Admin\RegistryExcelExport;
 use App\Services\InventoryMovementService;
 use App\Services\ProductClassificationAssignmentService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
@@ -554,6 +556,47 @@ class ProductController extends Controller
             return $pdf->download(ReportPdfFilename::make('inventario'));
         }
 
+        if ($format === 'excel') {
+            $maxRows = AdminPdfExportLimits::INVENTORY_MAX_ROWS;
+            $totalMatching = (clone $baseQuery)->count();
+
+            $excelFilterLines = $filterLines;
+            if ($totalMatching > $maxRows) {
+                $excelFilterLines[] = 'Nota: el Excel incluye como máximo '.$maxRows.' productos ('.$totalMatching.' coinciden con los filtros).';
+            }
+
+            $rows = (clone $baseQuery)
+                ->with($withRelations)
+                ->limit($maxRows)
+                ->get();
+
+            $headers = ['ID', 'Nombre', 'Descripción', 'Categoría', 'Proveedor', 'Precio compra', 'Precio venta', 'Stock actual', 'Stock mínimo', 'Estado', 'Creado'];
+            $dataRows = $rows->map(function ($p) {
+                return [
+                    (string) $p->product_id,
+                    $p->name,
+                    $p->description ?? '',
+                    optional($p->category)->name ?? '',
+                    optional($p->supplier)->name ?? '',
+                    number_format((float) $p->purchase_price, 2, '.', ''),
+                    number_format((float) $p->sale_price, 2, '.', ''),
+                    (string) $p->stock_current,
+                    (string) $p->stock_minimum,
+                    $p->status,
+                    $p->created_at ? $p->created_at->format('Y-m-d H:i:s') : '',
+                ];
+            })->values()->all();
+
+            return app(RegistryExcelExport::class)->download(
+                'Inventario de productos',
+                'Catálogo de inventario — Ciclo Finca 4',
+                $headers,
+                $dataRows,
+                $excelFilterLines,
+                ReportExcelFilename::make('inventario'),
+            );
+        }
+
         // Default to CSV export (streaming por chunks: no cargar todo el inventario en memoria).
         $filename = 'products_'.date('Ymd_His').'.csv';
         $chunk = AdminPdfExportLimits::INVENTORY_CSV_CHUNK;
@@ -989,7 +1032,7 @@ class ProductController extends Controller
     public function addManualStock(Request $request, int $id, InventoryMovementService $inventoryService)
     {
         $validReasons = ['manual_adjustment', 'damage', 'return'];
- 
+
         try {
             $validated = $request->validate([
                 'quantity' => ['required', 'numeric', 'min:1'],
@@ -1002,45 +1045,45 @@ class ProductController extends Controller
                 'message' => 'Datos inválidos.',
             ], 422);
         }
- 
+
         try {
             $product = Product::findOrFail($id);
- 
+
             $inventoryService->recordManualEntry(
                 product:  $product,
                 quantity: (int) $validated['quantity'],
                 reason:   $validated['reason'],
             );
- 
+
             return response()->json([
                 'success'       => true,
                 'message'       => "Se agregaron {$validated['quantity']} unidades correctamente.",
                 'stock_current' => $product->stock_current,
             ]);
- 
+
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
             return response()->json([
                 'success' => false,
                 'message' => 'Producto no encontrado.',
             ], 404);
- 
+
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'errors'  => $e->errors(),
                 'message' => collect($e->errors())->flatten()->first(),
             ], 422);
- 
+
         } catch (\Throwable $e) {
             Log::error('addManualStock error', ['product_id' => $id, 'error' => $e->getMessage()]);
- 
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error interno al actualizar el stock. Inténtalo de nuevo.',
             ], 500);
         }
     }
- 
+
     /**
      * POST /inventory/remove-manual/{id}
      * Manually remove stock from a product and register an audited inventory movement.
@@ -1051,7 +1094,7 @@ class ProductController extends Controller
     public function removeManualStock(Request $request, int $id, InventoryMovementService $inventoryService)
     {
         $validReasons = ['manual_adjustment', 'damage', 'return'];
- 
+
         try {
             $validated = $request->validate([
                 'quantity' => ['required', 'numeric', 'min:1'],
@@ -1064,43 +1107,42 @@ class ProductController extends Controller
                 'message' => 'Datos inválidos.',
             ], 422);
         }
- 
+
         try {
             $product = Product::findOrFail($id);
- 
+
             $inventoryService->recordManualExit(
                 product:  $product,
                 quantity: (int) $validated['quantity'],
                 reason:   $validated['reason'],
             );
- 
+
             return response()->json([
                 'success'       => true,
                 'message'       => "Se eliminaron {$validated['quantity']} unidades correctamente.",
                 'stock_current' => $product->stock_current,
             ]);
- 
+
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
             return response()->json([
                 'success' => false,
                 'message' => 'Producto no encontrado.',
             ], 404);
- 
+
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'errors'  => $e->errors(),
                 'message' => collect($e->errors())->flatten()->first(),
             ], 422);
- 
+
         } catch (\Throwable $e) {
             Log::error('removeManualStock error', ['product_id' => $id, 'error' => $e->getMessage()]);
- 
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error interno al actualizar el stock. Inténtalo de nuevo.',
             ], 500);
         }
     }
-    
 }
