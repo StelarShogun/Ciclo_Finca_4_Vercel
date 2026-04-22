@@ -39,8 +39,10 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
-            'url' => env('MAIL_URL'),
+            // Treat empty strings as unset: Render often creates keys with blank values,
+            // which would otherwise make Laravel parse an empty MAIL_URL and break transport resolution.
+            'scheme' => env('MAIL_SCHEME') ?: null,
+            'url' => env('MAIL_URL') ?: null,
             'host' => env('MAIL_HOST', '127.0.0.1'),
             'port' => env('MAIL_PORT', 2525),
             'username' => env('MAIL_USERNAME'),
