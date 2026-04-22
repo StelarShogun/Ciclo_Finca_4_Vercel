@@ -79,7 +79,7 @@
                                 <td colspan="5">
                                     <div class="cf4-invoices-empty">
                                         <div class="cf4-invoices-empty-icon"><i class="fas fa-file-invoice"></i></div>
-                                        <p>No tienes facturas pendientes.</p>
+                                        <p>{{ $tab === 'historial' ? 'No has realizado ninguna compra aún.' : 'No tienes facturas pendientes.' }}</p>
                                         <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-sm">
                                             <i class="fas fa-th"></i> Ir al catálogo
                                         </a>
