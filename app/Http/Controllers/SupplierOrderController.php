@@ -43,24 +43,14 @@ class SupplierOrderController extends Controller
         $q = trim((string) $request->query('q', ''));
         $supplierId = (int) $request->query('supplier_id', 0);
 
-        if ($supplierId < 1) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Debes seleccionar un proveedor para buscar productos.',
-                'products' => [],
-            ], 422);
-        }
-
-        if ($q === '' || mb_strlen($q) < 2) {
-            return response()->json(['success' => true, 'products' => []]);
-        }
-
         $products = Product::query()
             ->select(['product_id', 'name', 'purchase_price', 'sale_price'])
-            ->where('supplier_id', $supplierId)
-            ->where(function ($query) use ($q) {
-                $query->where('name', 'like', '%'.$q.'%')
-                    ->orWhereRaw("CONCAT('BK-', LPAD(product_id, 3, '0')) LIKE ?", ['%'.$q.'%']);
+            ->when($supplierId > 0, fn ($q) => $q->where('supplier_id', $supplierId))
+            ->when($q !== '' && mb_strlen($q) >= 2, function ($query) use ($q) {
+                $query->where(function ($inner) use ($q) {
+                    $inner->where('name', 'like', '%'.$q.'%')
+                        ->orWhereRaw("CONCAT('BK-', LPAD(product_id, 3, '0')) LIKE ?", ['%'.$q.'%']);
+                });
             })
             ->orderBy('name')
             ->limit(20)
@@ -163,7 +153,7 @@ class SupplierOrderController extends Controller
     {
         $validated = $request->validate([
             'supplier_id' => ['required', 'integer', 'exists:suppliers,supplier_id'],
-            'estimated_delivery_date' => ['required', 'date'],
+            'estimated_delivery_date' => ['required', 'date', 'after:today'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,product_id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -172,6 +162,7 @@ class SupplierOrderController extends Controller
             'supplier_id.exists' => 'El proveedor seleccionado no existe.',
             'estimated_delivery_date.required' => 'La fecha estimada de entrega es obligatoria.',
             'estimated_delivery_date.date' => 'La fecha estimada no tiene un formato válido.',
+            'estimated_delivery_date.after' => 'La fecha estimada debe ser posterior al día de hoy.',
             'items.required' => 'Debes agregar al menos un producto.',
             'items.min' => 'Debes agregar al menos un producto.',
             'items.*.product_id.required' => 'Selecciona un producto válido.',
