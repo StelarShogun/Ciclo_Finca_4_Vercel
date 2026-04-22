@@ -221,7 +221,7 @@ class SupplierOrderController extends Controller
             $order = Order::create([
                 'po_number' => $po,
                 'supplier_id' => (int) $validated['supplier_id'],
-                'date' => now(),
+                'date' => null,
                 'estimated_delivery_date' => $validated['estimated_delivery_date'],
                 'state' => 'draft',
                 'total' => $total,
@@ -319,7 +319,11 @@ class SupplierOrderController extends Controller
             }
         }
 
-        $order->update(['state' => $new]);
+        $order->update([
+            'state' => $new,
+            'date' => $new === 'confirmed' ? now() : $order->date,
+            'delivered_at' => $new === 'delivered' ? now() : $order->delivered_at,
+        ]);
 
         return response()->json([
             'success' => true,

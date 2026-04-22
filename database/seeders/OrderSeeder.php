@@ -7,10 +7,17 @@ use App\Models\Supplier;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class OrderSeeder extends Seeder
 {
+    private int $seq = 0;
+
+    private function nextPo(): string
+    {
+        $this->seq++;
+        return 'PO-' . now()->format('Y') . '-' . str_pad((string) $this->seq, 4, '0', STR_PAD_LEFT);
+    }
+
     public function run(): void
     {
         $suppliers = Supplier::with(['products' => function ($q) {
@@ -48,20 +55,20 @@ class OrderSeeder extends Seeder
                     ];
                 }
 
+                $state = $states[array_rand($states)];
+                $orderDate = Carbon::now()->subDays(rand(0, 120));
+
                 $row = [
                     'supplier_id' => $supplier->supplier_id,
-                    'date' => Carbon::now()->subDays(rand(0, 120)),
-                    'state' => $states[array_rand($states)],
+                    'date' => in_array($state, ['confirmed', 'delivered']) ? $orderDate : null,
+                    'state' => $state,
                     'total' => round($orderTotal, 2),
+                    'po_number' => $this->nextPo(),
+                    'estimated_delivery_date' => $orderDate->copy()->addDays(rand(3, 14))->toDateString(),
+                    'delivered_at' => $state === 'delivered' ? $orderDate->copy()->addDays(rand(3, 14)) : null,
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),
                 ];
-                if (Schema::hasColumn('orders', 'po_number')) {
-                    $row['po_number'] = null;
-                }
-                if (Schema::hasColumn('orders', 'estimated_delivery_date')) {
-                    $row['estimated_delivery_date'] = null;
-                }
 
                 $numOrder = (int) DB::table('orders')->insertGetId($row);
 

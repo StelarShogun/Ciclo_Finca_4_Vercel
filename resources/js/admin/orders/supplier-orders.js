@@ -293,11 +293,15 @@ function _orderAction(id, state, confirmText, successMsg) {
                     confirmButtonColor: '#2e7d32',
                     confirmButtonText: 'Entendido',
                 }).then(() => {
-                    updateRowState(String(id), state);
-                    if (activeOrderIdInModal === String(id)) {
-                        updateModalState(state);
+                    if (state === 'confirmed' || state === 'delivered') {
+                        window.location.reload();
+                    } else {
+                        updateRowState(String(id), state);
+                        if (activeOrderIdInModal === String(id)) {
+                            updateModalState(state);
+                        }
+                        disableButtons(false);
                     }
-                    disableButtons(false);
                 });
             } else {
                 disableButtons(false);

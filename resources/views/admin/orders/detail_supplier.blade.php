@@ -83,11 +83,22 @@
             <section class="detail-card">
                 <h2><i class="fas fa-info-circle"></i> Información</h2>
                 <div class="kv">
-                    <div class="kv-row"><span>Nº interno</span><strong>#{{ $order->num_order }}</strong></div>
                     <div class="kv-row"><span>Nº pedido (PO)</span><strong>{{ $po }}</strong></div>
                     <div class="kv-row"><span>Proveedor</span><strong>{{ $supplierName }}</strong></div>
-                    <div class="kv-row"><span>Creación</span><strong>{{ $order->date?->format('d/m/Y H:i') }}</strong></div>
-                    <div class="kv-row"><span>Entrega estimada</span><strong>{{ $order->estimated_delivery_date?->format('d/m/Y') }}</strong></div>
+                    <div class="kv-row"><span>Fecha en que se realizó el pedido</span><strong>{{ $order->date?->format('d/m/Y H:i') ?? '—' }}</strong></div>
+                    <div class="kv-row"><span>Entrega estimada</span><strong>{{ $order->estimated_delivery_date?->format('d/m/Y') ?? '—' }}</strong></div>
+                    <div class="kv-row">
+                        <span>Entregado</span>
+                        <strong>
+                            @if($order->state === 'cancelled')
+                                <span style="color:#9ca3af;">Nunca</span>
+                            @elseif($order->delivered_at)
+                                {{ $order->delivered_at->format('d/m/Y H:i') }}
+                            @else
+                                <span style="color:#f59e0b;">En proceso</span>
+                            @endif
+                        </strong>
+                    </div>
                     <div class="kv-row"><span>Estado</span><strong><span class="order-status-pill {{ $order->state }}">{{ $label }}</span></strong></div>
                 </div>
             </section>
