@@ -129,7 +129,7 @@
 
                     <div class="filter-group">
                         <label for="search-sale">Buscar</label>
-                        <input type="text" id="search-sale" name="search" placeholder="Buscar por cliente..."
+                        <input type="text" id="search-sale" name="search" placeholder="Buscar por cliente o factura..."
                             value="{{ request('search') }}">
                     </div>
 
