@@ -134,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <td class="text-end" style="color:var(--color-text-muted,#6b7280)">${fmt(m.stock_before)}</td>
             <td class="text-end" style="font-weight:600">${fmt(m.stock_after)}</td>
             <td class="inv-admin-cell">${m.admin ? escHtml(m.admin.name) : '<span style="color:var(--color-text-muted)">Sistema</span>'}</td>
-            <td class="inv-notes-cell">${m.notes ? escHtml(m.notes) : '<span style="opacity:.4">—</span>'}</td>
         `;
         return tr;
     }

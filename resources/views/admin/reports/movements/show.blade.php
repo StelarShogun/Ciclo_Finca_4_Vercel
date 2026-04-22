@@ -148,10 +148,7 @@
 
                 <section id="inv-mov-results" class="inv-mov-results" aria-live="polite">
 
-                    <div id="inventory-movements-loading" class="inventory-movements-loading" hidden>
-                        <span class="loading-dot" aria-hidden="true"></span>
-                        <span>Cargando movimientos…</span>
-                    </div>
+                    <div id="inventory-movements-loading" hidden></div>
 
                     <div id="inventory-movements-content" class="inventory-movements-content" hidden>
 
@@ -201,7 +198,6 @@
                                             <th class="text-end">Stock antes</th>
                                             <th class="text-end">Stock después</th>
                                             <th>Administrador</th>
-                                            <th>Notas</th>
                                         </tr>
                                     </thead>
                                     <tbody id="inv-table-body">

@@ -278,6 +278,44 @@ class ClientPageController extends Controller
         ]);
     }
 
+        public function cart()
+    {
+        $cart = Session::get('cart', []);
+        $cartItems = [];
+        $total = 0;
+
+        foreach ($cart as $item) {
+            $product = Product::find($item['product_id']);
+
+            if ($product && $product->isPurchasableByClient()) {
+                $qty = min((int) $item['quantity'], $product->stock_current);
+                if ($qty < 1) {
+                    continue;
+                }
+
+                $subtotal = $item['price'] * $qty;
+                $total += $subtotal;
+
+                $mediaUrl = $product->getFirstMediaUrl('main_image');
+                $cartItems[] = [
+                    'product_id' => $product->product_id,
+                    'name' => $product->name,
+                    'price' => $item['price'],
+                    'image_url' => $mediaUrl ?: asset('assets/images/products/' . ($product->image ?? 'default.png')),
+                    'quantity' => $qty,
+                    'stock_available' => $product->stock_current,
+                    'subtotal' => $subtotal,
+                ];
+            }
+        }
+
+        Session::put('cart', $cartItems);
+
+        $cartCount = $this->getCartCount();
+
+        return view('client.cart', compact('cartItems', 'total', 'cartCount'));
+    }
+
     public function removeFromCart($id)
     {
         $cart = Session::get('cart', []);

@@ -80,25 +80,25 @@ class SalesController extends Controller
             return response()->json([
                 'success' => true,
                 'sale' => [
-                    'sale_id'                       => $sale->sale_id,
-                    'invoice_number'                => $sale->invoice_number,
-                    'sale_date'                     => $sale->sale_date->toISOString(),
-                    'status'                        => $sale->status,
-                    'payment_method'                => $sale->payment_method,
-                    'payment_reference'             => $sale->payment_reference,
-                    'subtotal'                      => $sale->subtotal,
-                    'iva'                           => $sale->iva,
-                    'discount'                      => $sale->discount,
-                    'total'                         => $sale->total,
-                    'notes'                         => $sale->notes,
-                    'order_source'                  => $sale->order_source,
+                    'sale_id'                         => $sale->sale_id,
+                    'invoice_number'                  => $sale->invoice_number,
+                    'sale_date'                       => $sale->sale_date->toISOString(),
+                    'status'                          => $sale->status,
+                    'payment_method'                  => $sale->payment_method,
+                    'payment_reference'               => $sale->payment_reference,
+                    'subtotal'                        => $sale->subtotal,
+                    'iva'                             => $sale->iva,
+                    'discount'                        => $sale->discount,
+                    'total'                           => $sale->total,
+                    'notes'                           => $sale->notes,
+                    'order_source'                    => $sale->order_source,
                     'buyer' => [
                         'name'  => $sale->buyer_name,
                         'email' => $sale->buyer_email,
                     ],
                     'days_remaining_until_expiration' => $sale->days_remaining_until_expiration,
-                    'expires_at'                    => $sale->expires_at->toISOString(),
-                    'is_expiry_warning'             => $sale->is_expiry_warning,
+                    'expires_at'                      => $sale->expires_at->toISOString(),
+                    'is_expiry_warning'               => $sale->is_expiry_warning,
                     'client' => $sale->client ? [
                         'user_id'        => $sale->client->user_id,
                         'name'           => $sale->client->name,
@@ -168,15 +168,15 @@ class SalesController extends Controller
             'items.*.quantity'        => 'nullable|integer|min:1',
             'items.*.cantidad'        => 'nullable|integer|min:1',
             'items.*.precio_unitario' => 'required|numeric|min:0',
-            'items.*.total' => 'required|numeric|min:0',
-            'payment_method' => 'required|in:cash,sinpe,transfer',
-            'payment_reference' => 'nullable|string|max:255',
-            'discount' => 'nullable|numeric|min:0',
-            'iva_percentage' => 'nullable|numeric|min:0|max:13',
-            'notes' => 'nullable|string|max:500',
+            'items.*.total'           => 'required|numeric|min:0',
+            'payment_method'          => 'required|in:cash,sinpe,transfer',
+            'payment_reference'       => 'nullable|string|max:255',
+            'discount'                => 'nullable|numeric|min:0',
+            'iva_percentage'          => 'nullable|numeric|min:0|max:13',
+            'notes'                   => 'nullable|string|max:500',
         ], [
-            'items.required'      => 'At least one item is required.',
-            'payment_method.in'   => 'Payment method must be cash, sinpe or transfer.',
+            'items.required'    => 'At least one item is required.',
+            'payment_method.in' => 'Payment method must be cash, sinpe or transfer.',
         ]);
 
         DB::beginTransaction();
@@ -224,11 +224,11 @@ class SalesController extends Controller
                 ], 422);
             }
 
-            $ivaPercent = (float) ($request->input('iva_percentage', 0));
-            $ivaPercent = max(0.0, min(13.0, $ivaPercent));
+            $ivaPercent  = (float) ($request->input('iva_percentage', 0));
+            $ivaPercent  = max(0.0, min(13.0, $ivaPercent));
             $taxableBase = $this->roundMoney($subtotal - $discount);
-            $iva = $this->roundMoney($taxableBase * ($ivaPercent / 100));
-            $total = $this->roundMoney($taxableBase + $iva);
+            $iva         = $this->roundMoney($taxableBase * ($ivaPercent / 100));
+            $total       = $this->roundMoney($taxableBase + $iva);
 
             $orderSource = $clientId ? 'web_cart' : 'walk_in';
             $sale = Sale::create([
@@ -622,13 +622,13 @@ class SalesController extends Controller
         $logoPath = public_path('assets/images/brand/logo-ciclo-finca-icon.png');
 
         $pdf = PDF::loadView('admin.sales.sales-pdf', [
-            'sales'         => $rows,
-            'totals'        => $totals,
-            'pdfTitle'      => 'Reporte de ventas',
-            'pdfSubtitle'   => 'Listado filtrado — Ciclo Finca 4',
-            'logoPath'      => is_file($logoPath) ? $logoPath : null,
-            'filterLines'   => $filterLines,
-            'generatedFor'  => 'Administración',
+            'sales'        => $rows,
+            'totals'       => $totals,
+            'pdfTitle'     => 'Reporte de ventas',
+            'pdfSubtitle'  => 'Listado filtrado — Ciclo Finca 4',
+            'logoPath'     => is_file($logoPath) ? $logoPath : null,
+            'filterLines'  => $filterLines,
+            'generatedFor' => 'Administración',
         ]);
 
         return $pdf->download(ReportPdfFilename::make('ventas'));
