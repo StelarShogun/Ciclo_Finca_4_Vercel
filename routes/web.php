@@ -17,6 +17,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierOrderController;
+use App\Http\Controllers\InventoryMovementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -121,6 +122,15 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/reports/productos-vendidos', [ReportsController::class, 'productSales'])->name('admin.reports.product-sales');
     Route::get('/reports/productos-vendidos/table', [ReportsController::class, 'productSalesTable'])->name('admin.reports.product-sales.table');
     Route::get('/reports/productos-vendidos/pdf', [ReportsController::class, 'productSalesPdf'])->name('admin.reports.product-sales.pdf');
+
+    Route::prefix('inventory/movements')->name('admin.inventory.movements.')->group(function () {
+        // Lista de productos para seleccionar cuál auditar
+        Route::get('/',         [InventoryMovementController::class, 'index'])->name('index');
+        // Historial de movimientos de un producto (vista Blade)
+        Route::get('/{productId}', [InventoryMovementController::class, 'show'])->name('show');
+        // Endpoint JSON para AJAX / datatables
+        Route::get('/{productId}/json', [InventoryMovementController::class, 'json'])->name('json');
+    });
 
     // Inventory / Products
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');

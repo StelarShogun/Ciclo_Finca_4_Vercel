@@ -42,6 +42,14 @@
                 </div>
                 <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
             </a>
+            <a href="{{ route('admin.inventory.movements.index') }}" class="report-card">
+                <div class="report-card-icon"><i class="fas fa-clock-rotate-left"></i></div>
+                <div class="report-card-body">
+                    <h2>Movimientos de inventario</h2>
+                    <p>Auditá el historial completo de entradas, salidas y devoluciones por producto. Filtrá por tipo, origen y rango de fechas.</p>
+                </div>
+                <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
+            </a>
         </div>
     </div>
 @endsection

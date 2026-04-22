@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -39,7 +40,6 @@ class ClientPageController extends Controller
 
     public function catalog(Request $request)
     {
-        // Misma base que inventario admin: todos los productos; disponibilidad solo en la vista (CF4-62).
         $query = Product::with(['category']);
 
         if ($request->filled('search')) {
@@ -50,7 +50,6 @@ class ClientPageController extends Controller
             });
         }
 
-        // Parent category includes itself and all children; child category filters only itself
         $selectedCategory = null;
         $subcategories = collect();
         $parentCategoryForSubcats = null;
@@ -79,7 +78,6 @@ class ClientPageController extends Controller
         $minPrice = $request->filled('min_price') ? $request->input('min_price') : null;
         $maxPrice = $request->filled('max_price') ? $request->input('max_price') : null;
 
-        // Reject invalid range before applying filters
         if (is_numeric($minPrice) && is_numeric($maxPrice) && (float) $minPrice > (float) $maxPrice) {
             return redirect()->route('clients.catalog', $request->except('min_price', 'max_price', 'page'))
                 ->withInput()
@@ -121,8 +119,6 @@ class ClientPageController extends Controller
     }
 
     /**
-     * Featured and newest active products for the catalog spotlight (CF4-29).
-     *
      * @return Collection<int, array{product: Product, spotlight: 'featured'|'novelty'}>
      */
     private function catalogSpotlightProductRows(): Collection
@@ -165,7 +161,6 @@ class ClientPageController extends Controller
             ], 301);
         }
 
-        // Relacionados: misma regla de visibilidad que el catálogo (pueden estar agotados)
         $relatedProducts = Product::with(['category'])
             ->where('category_id', $product->category_id)
             ->where('product_id', '!=', $product->product_id)
@@ -210,7 +205,6 @@ class ClientPageController extends Controller
         }
 
         if ($existingIndex !== null) {
-            // Accumulate quantity and re-validate against current stock
             $newQuantity = ($cart[$existingIndex]['quantity'] ?? 0) + $request->quantity;
 
             if ($newQuantity > $product->stock_current) {
@@ -224,62 +218,23 @@ class ClientPageController extends Controller
 
             $cart[$existingIndex]['quantity'] = $newQuantity;
         } else {
+            $mediaUrl = $product->getFirstMediaUrl('main_image');
             $cart[] = [
                 'product_id' => $product->product_id,
-                'name' => $product->name,
-                'price' => $product->sale_price,
-                'image' => $product->image ?? 'default.png',
-                'quantity' => $request->quantity,
-                'stock_available' => $product->stock_current,
+                'name'       => $product->name,
+                'price'      => $product->sale_price,
+                'quantity'   => $request->quantity,
+                'image'      => $mediaUrl,
             ];
         }
 
         Session::put('cart', $cart);
 
         return response()->json([
-            'success' => true,
-            'message' => 'Producto agregado al carrito',
+            'success'    => true,
+            'message'    => 'Producto agregado al carrito',
             'cart_count' => $this->getCartCount(),
-            'cart_total' => $this->getCartTotal(),
         ]);
-    }
-
-    public function cart()
-    {
-        $cart = Session::get('cart', []);
-        $cartItems = [];
-        $total = 0;
-
-        foreach ($cart as $item) {
-            $product = Product::find($item['product_id']);
-
-            if ($product && $product->isPurchasableByClient()) {
-                $qty = min((int) $item['quantity'], $product->stock_current);
-                if ($qty < 1) {
-                    continue;
-                }
-
-                $subtotal = $item['price'] * $qty;
-                $total += $subtotal;
-
-                $mediaUrl = $product->getFirstMediaUrl('main_image');
-                $cartItems[] = [
-                    'product_id' => $product->product_id,
-                    'name' => $product->name,
-                    'price' => $item['price'],
-                    'image_url' => $mediaUrl ?: asset('assets/images/products/' . ($product->image ?? 'default.png')),
-                    'quantity' => $qty,
-                    'stock_available' => $product->stock_current,
-                    'subtotal' => $subtotal,
-                ];
-            }
-        }
-
-        Session::put('cart', $cartItems);
-
-        $cartCount = $this->getCartCount();
-
-        return view('client.cart', compact('cartItems', 'total', 'cartCount'));
     }
 
     public function updateCart(Request $request)
@@ -316,8 +271,8 @@ class ClientPageController extends Controller
         Session::put('cart', $cart);
 
         return response()->json([
-            'success' => true,
-            'message' => 'Carrito actualizado',
+            'success'    => true,
+            'message'    => 'Carrito actualizado',
             'cart_count' => $this->getCartCount(),
             'cart_total' => $this->getCartTotal(),
         ]);
@@ -331,20 +286,27 @@ class ClientPageController extends Controller
             return response()->json(['success' => false, 'message' => 'El carrito está vacío', 'cart_count' => 0, 'cart_total' => 0], 400);
         }
 
-        // Filter out the item and re-index
         $cart = array_values(array_filter($cart, fn ($item) => $item['product_id'] != $id));
 
         Session::put('cart', $cart);
 
         return response()->json([
-            'success' => true,
-            'message' => 'Producto eliminado del carrito',
+            'success'    => true,
+            'message'    => 'Producto eliminado del carrito',
             'cart_count' => $this->getCartCount(),
             'cart_total' => $this->getCartTotal(),
         ]);
     }
 
-    public function checkout(Request $request)
+    /**
+     * Checkout del carrito web.
+     *
+     * MOVIMIENTO AUDITADO: SALIDA / origin = 'sale_web'
+     * Se usa InventoryMovementService::recordWebCartSale() para que cada línea
+     * del pedido quede auditada con el origen correcto.
+     * Como no existe un admin autenticado en este flujo, user_id queda null.
+     */
+    public function checkout(Request $request, InventoryMovementService $inventoryService)
     {
         $cart = Session::get('cart', []);
 
@@ -357,7 +319,6 @@ class ClientPageController extends Controller
             $subtotal = 0;
             $validatedItems = [];
 
-            // Validate availability and compute totals before any writes
             foreach ($cart as $item) {
                 $product = Product::find($item['product_id']);
 
@@ -382,51 +343,54 @@ class ClientPageController extends Controller
                 $subtotal += $itemTotal;
 
                 $validatedItems[] = [
-                    'product' => $product,
+                    'product'  => $product,
                     'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'total' => $itemTotal,
+                    'price'    => $item['price'],
+                    'total'    => $itemTotal,
                 ];
             }
 
             $client = Auth::guard('clients')->user();
 
-            // Web cart orders are linked via client_id (see migration CF4)
             $sale = Sale::create([
                 'invoice_number' => (new Sale)->generateInvoiceNumber(),
-                'client_id' => $client?->user_id,
-                'sale_date' => now(),
+                'client_id'      => $client?->user_id,
+                'sale_date'      => now(),
                 'payment_method' => 'cash',
-                'status' => 'pending',
-                'order_source' => 'web_cart',
-                'subtotal' => $subtotal,
-                'iva' => 0,
-                'discount' => 0,
-                'total' => $subtotal,
-                'notes' => 'Order placed from the online store',
+                'status'         => 'pending',
+                'order_source'   => 'web_cart',
+                'subtotal'       => $subtotal,
+                'iva'            => 0,
+                'discount'       => 0,
+                'total'          => $subtotal,
+                'notes'          => 'Order placed from the online store',
             ]);
 
-            // Persist line items and deduct stock atomically
             foreach ($validatedItems as $item) {
                 SaleItem::create([
-                    'sale_id' => $sale->sale_id,
-                    'product_id' => $item['product']->product_id,
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['price'],
+                    'sale_id'       => $sale->sale_id,
+                    'product_id'    => $item['product']->product_id,
+                    'quantity'      => $item['quantity'],
+                    'unit_price'    => $item['price'],
                     'unit_discount' => 0,
-                    'total' => $item['total'],
+                    'total'         => $item['total'],
                 ]);
 
-                $item['product']->decrement('stock_current', $item['quantity']);
+                // origin = 'sale_web': pedido desde la tienda web, sin admin autenticado.
+                $inventoryService->recordWebCartSale(
+                    product:  $item['product'],
+                    quantity: (int) $item['quantity'],
+                    saleId:   $sale->sale_id,
+                );
             }
 
             Session::forget('cart');
             DB::commit();
 
             return response()->json([
-                'success' => true,
-                'message' => 'Pedido creado exitosamente',
-                'sale_id' => $sale->sale_id,
+                'success'        => true,
+                'message'        => 'Pedido creado exitosamente',
+                'sale_id'        => $sale->sale_id,
                 'invoice_number' => $sale->invoice_number,
             ]);
 
@@ -456,8 +420,8 @@ class ClientPageController extends Controller
         Session::forget('cart');
 
         return response()->json([
-            'success' => true,
-            'message' => 'Carrito vaciado exitosamente',
+            'success'    => true,
+            'message'    => 'Carrito vaciado exitosamente',
             'cart_count' => 0,
             'cart_total' => 0,
         ]);
@@ -473,7 +437,7 @@ class ClientPageController extends Controller
             ->orderByDesc('sale_date')
             ->get();
 
-        $cartCount = $this->getCartCount();
+        $cartCount    = $this->getCartCount();
         $invoiceCount = $orders->count();
 
         return view('client.Invoices', compact('orders', 'cartCount', 'invoiceCount'));

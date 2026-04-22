@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -284,7 +285,7 @@ class SupplierOrderController extends Controller
         ]);
     }
 
-    public function updateState(Request $request, $id)
+    public function updateState(Request $request, int $id, InventoryMovementService $inventoryService)
     {
         $order = Order::findOrFail($id);
 
@@ -293,8 +294,8 @@ class SupplierOrderController extends Controller
         ]);
 
         $transitions = [
-            'draft' => ['pending', 'cancelled'],
-            'pending' => ['confirmed', 'cancelled'],
+            'draft'     => ['pending', 'cancelled'],
+            'pending'   => ['confirmed', 'cancelled'],
             'confirmed' => ['delivered', 'cancelled'],
         ];
 
@@ -312,19 +313,39 @@ class SupplierOrderController extends Controller
                 ->where('order_num_order', (int) $order->num_order)
                 ->get(['product_id', 'quantity']);
 
+            // Fallback: si la orden usa JSON legacy en lugar de order_items
             if ($items->isEmpty() && is_array($order->products) && $order->products !== []) {
                 $items = collect($order->products)->map(function ($row) {
                     return (object) [
                         'product_id' => (int) ($row['product_id'] ?? 0),
-                        'quantity' => (int) ($row['quantity'] ?? 0),
+                        'quantity'   => (int) ($row['quantity']   ?? 0),
                     ];
                 })->filter(fn ($r) => $r->product_id > 0 && $r->quantity > 0);
             }
 
             foreach ($items as $it) {
-                Product::query()
-                    ->where('product_id', (int) $it->product_id)
-                    ->increment('stock_current', (int) $it->quantity);
+                $productId = (int) $it->product_id;
+                $quantity  = (int) $it->quantity;
+
+                if ($productId < 1 || $quantity < 1) {
+                    continue;
+                }
+
+                $product = Product::find($productId);
+
+                if (! $product) {
+                    // Producto eliminado: log de advertencia, no interrumpir el flujo
+                    \Illuminate\Support\Facades\Log::warning(
+                        "SupplierOrderController::updateState — producto #{$productId} no encontrado al procesar orden #{$order->num_order}"
+                    );
+                    continue;
+                }
+
+                $inventoryService->recordSupplierEntry(
+                    product:  $product,
+                    quantity: $quantity,
+                    orderId:  $order->num_order,
+                );
             }
         }
 

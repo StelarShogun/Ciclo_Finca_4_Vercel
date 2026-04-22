@@ -278,4 +278,10 @@ class Product extends Model implements HasMedia
             }
         });
     }
+
+    public function inventoryMovements(): HasMany
+    {
+        return $this->hasMany(InventoryMovement::class, 'product_id', 'product_id')
+                    ->orderBy('created_at', 'asc');
+    }
 }
