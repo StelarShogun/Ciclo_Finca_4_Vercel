@@ -10,7 +10,9 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\Admin\AdminInventoryExportQuery;
 use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
+use App\Services\Admin\RegistryExcelExport;
 use App\Services\ProductClassificationAssignmentService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Database\Eloquent\Builder;
@@ -551,6 +553,47 @@ class ProductController extends Controller
             ]);
 
             return $pdf->download(ReportPdfFilename::make('inventario'));
+        }
+
+        if ($format === 'excel') {
+            $maxRows = AdminPdfExportLimits::INVENTORY_MAX_ROWS;
+            $totalMatching = (clone $baseQuery)->count();
+
+            $excelFilterLines = $filterLines;
+            if ($totalMatching > $maxRows) {
+                $excelFilterLines[] = 'Nota: el Excel incluye como máximo '.$maxRows.' productos ('.$totalMatching.' coinciden con los filtros).';
+            }
+
+            $rows = (clone $baseQuery)
+                ->with($withRelations)
+                ->limit($maxRows)
+                ->get();
+
+            $headers = ['ID', 'Nombre', 'Descripción', 'Categoría', 'Proveedor', 'Precio compra', 'Precio venta', 'Stock actual', 'Stock mínimo', 'Estado', 'Creado'];
+            $dataRows = $rows->map(function ($p) {
+                return [
+                    (string) $p->product_id,
+                    $p->name,
+                    $p->description ?? '',
+                    optional($p->category)->name ?? '',
+                    optional($p->supplier)->name ?? '',
+                    number_format((float) $p->purchase_price, 2, '.', ''),
+                    number_format((float) $p->sale_price, 2, '.', ''),
+                    (string) $p->stock_current,
+                    (string) $p->stock_minimum,
+                    $p->status,
+                    $p->created_at ? $p->created_at->format('Y-m-d H:i:s') : '',
+                ];
+            })->values()->all();
+
+            return app(RegistryExcelExport::class)->download(
+                'Inventario de productos',
+                'Catálogo de inventario — Ciclo Finca 4',
+                $headers,
+                $dataRows,
+                $excelFilterLines,
+                ReportExcelFilename::make('inventario'),
+            );
         }
 
         // Default to CSV export (streaming por chunks: no cargar todo el inventario en memoria).

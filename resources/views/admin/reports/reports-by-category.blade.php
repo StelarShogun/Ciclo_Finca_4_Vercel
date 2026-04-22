@@ -1,10 +1,13 @@
-@extends('admin.layouts.sales')
-
+@extends('admin.layouts.admin-shell')
 @section('Titulo pagina', 'Ventas por Categoría')
 
 @push('styles')
     @vite(['resources/css/admin/sales/sales.css'])
 @endpush
+
+@section('aside')
+    @include('admin.parts.aside')
+@endsection
 
 @section('contenido')
 <div class="sales-container">
