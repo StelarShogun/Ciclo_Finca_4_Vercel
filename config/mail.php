@@ -11,10 +11,26 @@ $normalizeMailScheme = static function (?string $scheme, $port): ?string {
     // People often set MAIL_SCHEME=tls because older Laravel used MAIL_ENCRYPTION=tls.
     return match ($scheme) {
         'smtp', 'smtps' => $scheme,
+        // Common typos seen in dashboards:
+        'smpt' => 'smtp',
         'tls', 'starttls' => 'smtp',
         'ssl' => ((int) $port === 465) ? 'smtps' : 'smtp',
         default => $scheme,
     };
+};
+
+$normalizeMailUrl = static function (?string $url): ?string {
+    if ($url === null) {
+        return null;
+    }
+
+    $url = trim($url);
+    if ($url === '') {
+        return null;
+    }
+
+    // Fix common SMTP scheme typos inside MAIL_URL (Symfony parses the scheme from the URL).
+    return preg_replace('#^smpt://#i', 'smtp://', $url) ?? $url;
 };
 
 return [
@@ -59,7 +75,7 @@ return [
             // Treat empty strings as unset: Render often creates keys with blank values,
             // which would otherwise make Laravel parse an empty MAIL_URL and break transport resolution.
             'scheme' => $normalizeMailScheme(env('MAIL_SCHEME') ?: null, env('MAIL_PORT', 2525)),
-            'url' => env('MAIL_URL') ?: null,
+            'url' => $normalizeMailUrl(env('MAIL_URL') ?: null),
             'host' => env('MAIL_HOST', '127.0.0.1'),
             'port' => env('MAIL_PORT', 2525),
             'username' => env('MAIL_USERNAME'),
