@@ -162,7 +162,7 @@
             <table class="sales-table">
                 <thead>
                     <tr>
-                        <th>Factura</th>
+                        <th>Número de factura</th>
                         <th>Cliente</th>
                         <th>Fecha</th>
                         <th>Estado</th>
