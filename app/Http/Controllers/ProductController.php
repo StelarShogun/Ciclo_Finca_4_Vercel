@@ -938,11 +938,17 @@ class ProductController extends Controller
         if ($request->filled('stock_status')) {
             switch ($request->stock_status) {
                 case 'in-stock':
-                    $query->where('stock_current', '>', Product::CLIENT_LOW_STOCK_THRESHOLD);
+                    // "En stock" = por encima del mínimo definido para el producto.
+                    // Opción B: productos con stock_minimum = 0 no se incluyen aquí.
+                    $query->where('stock_minimum', '>', 0)
+                        ->whereColumn('stock_current', '>', 'stock_minimum');
                     break;
                 case 'low':
-                    $query->where('stock_current', '>', 0)
-                        ->where('stock_current', '<=', Product::CLIENT_LOW_STOCK_THRESHOLD);
+                    // "Stock bajo" = stock positivo pero por debajo o igual al mínimo del producto.
+                    // Opción B: productos con stock_minimum = 0 no se incluyen aquí.
+                    $query->where('stock_minimum', '>', 0)
+                        ->where('stock_current', '>', 0)
+                        ->whereColumn('stock_current', '<=', 'stock_minimum');
                     break;
                 case 'out':
                     $query->where('stock_current', 0);

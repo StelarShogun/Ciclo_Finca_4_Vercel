@@ -19,6 +19,12 @@ class Product extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
+    /**
+     * Umbral de stock “bajo” usado en filtros admin.
+     * (El aviso de stock bajo para clientes se basa en stock_minimum.)
+     */
+    public const CLIENT_LOW_STOCK_THRESHOLD = 10;
+
     protected $table = 'products';
 
     protected $primaryKey = 'product_id';
