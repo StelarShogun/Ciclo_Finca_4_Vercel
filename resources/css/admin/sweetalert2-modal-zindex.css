@@ -9,3 +9,57 @@
 .swal2-popup {
   z-index: 1;
 }
+
+/* SweetAlert2 v11 — diálogos CF4 (botones planos, pills, sombra suave) */
+.swal2-container .cf4-swal-popup {
+  border-radius: 18px;
+  padding: 1.35rem 1.25rem 1.1rem;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+}
+
+.swal2-container .cf4-swal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.swal2-container .cf4-swal-html {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #334155;
+}
+
+.swal2-container .cf4-swal-actions {
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+.swal2-container .cf4-swal-btn {
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  padding: 0.55rem 1.35rem !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.swal2-container .cf4-swal-btn-primary {
+  background: linear-gradient(135deg, #15803d, #166534) !important;
+  color: #fff !important;
+}
+
+.swal2-container .cf4-swal-btn-muted {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+.swal2-container .cf4-swal-btn-danger {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  color: #fff !important;
+}
+
+.swal2-container .cf4-swal-btn-info {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  color: #fff !important;
+}

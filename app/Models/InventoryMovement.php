@@ -25,13 +25,13 @@ class InventoryMovement extends Model
 
     // Attribute casting for enum, numeric, and timestamp fields.
     protected $casts = [
-        'type'         => MovementType::class,
-        'quantity'     => 'integer',
+        'type' => MovementType::class,
+        'quantity' => 'integer',
         'stock_before' => 'integer',
-        'stock_after'  => 'integer',
+        'stock_after' => 'integer',
         'reference_id' => 'integer',
-        'created_at'   => 'datetime',
-        'updated_at'   => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     // Product associated with this inventory movement.
@@ -66,13 +66,14 @@ class InventoryMovement extends Model
     public function originLabel(): string
     {
         return match ($this->origin) {
-            'sale_admin'        => 'Venta (admin)',
-            'sale_web'          => 'Venta web',
-            'return'            => 'Devolución / Cancelación',
-            'provider'          => 'Entrada de proveedor',
+            'sale_admin' => 'Venta (admin)',
+            'sale_web' => 'Venta web',
+            'return' => 'Devolución de venta o cancelación',
+            'provider' => 'Entrada de proveedor',
             'manual_adjustment' => 'Ajuste manual',
-            'damage'            => 'Daño / Merma',
-            default             => ucwords(str_replace('_', ' ', $this->origin)),
+            'damage' => 'Daño / Merma',
+            'refund' => 'Entrada manual (reembolso / nota de crédito)',
+            default => ucwords(str_replace('_', ' ', $this->origin)),
         };
     }
 

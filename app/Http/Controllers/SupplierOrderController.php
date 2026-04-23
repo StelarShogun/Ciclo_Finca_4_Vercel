@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdminUser;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -9,6 +10,7 @@ use App\Models\Supplier;
 use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class SupplierOrderController extends Controller
@@ -97,7 +99,7 @@ class SupplierOrderController extends Controller
             [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
         }
 
-        $query = Order::with(['supplier', 'orderItems'])->orderBy('orders.date', 'desc');
+        $query = Order::with(['supplier', 'orderItems', 'confirmedBy'])->orderBy('orders.date', 'desc');
 
         if ($state) {
             $query->where('state', $state);
@@ -156,7 +158,7 @@ class SupplierOrderController extends Controller
 
     public function detail($id)
     {
-        $order = Order::with(['supplier', 'orderItems'])->findOrFail($id);
+        $order = Order::with(['supplier', 'orderItems', 'confirmedBy'])->findOrFail($id);
 
         return view('admin.orders.detail_supplier', compact('order'));
     }
@@ -257,7 +259,7 @@ class SupplierOrderController extends Controller
 
     public function show($id)
     {
-        $order = Order::with(['supplier', 'orderItems'])->findOrFail($id);
+        $order = Order::with(['supplier', 'orderItems', 'confirmedBy'])->findOrFail($id);
 
         $productsPayload = $order->orderItems->map(fn ($line) => [
             'name' => $line->name,
@@ -284,6 +286,8 @@ class SupplierOrderController extends Controller
                 'estimated_delivery_date' => $order->estimated_delivery_date?->format('d/m/Y'),
                 'state' => $order->state,
                 'total' => (float) $order->total,
+                'confirmed_at' => $order->confirmed_at?->format('d/m/Y H:i'),
+                'confirmed_by_label' => $this->adminDisplayName($order->confirmedBy),
             ],
         ]);
     }
@@ -299,9 +303,9 @@ class SupplierOrderController extends Controller
         // Define the allowed state transitions for supplier orders.
         $transitions = [
             // CF4-15: draft goes straight to confirmed (no "send" step).
-            'draft'     => ['confirmed', 'cancelled'],
+            'draft' => ['confirmed', 'cancelled'],
             // Backward compatibility for existing historical orders.
-            'pending'   => ['confirmed', 'cancelled'],
+            'pending' => ['confirmed', 'cancelled'],
             'confirmed' => ['delivered', 'cancelled'],
         ];
 
@@ -340,14 +344,14 @@ class SupplierOrderController extends Controller
                 $items = collect($order->products)->map(function ($row) {
                     return (object) [
                         'product_id' => (int) ($row['product_id'] ?? 0),
-                        'quantity'   => (int) ($row['quantity']   ?? 0),
+                        'quantity' => (int) ($row['quantity'] ?? 0),
                     ];
                 })->filter(fn ($r) => $r->product_id > 0 && $r->quantity > 0);
             }
 
             foreach ($items as $it) {
                 $productId = (int) $it->product_id;
-                $quantity  = (int) $it->quantity;
+                $quantity = (int) $it->quantity;
 
                 if ($productId < 1 || $quantity < 1) {
                     continue;
@@ -357,16 +361,17 @@ class SupplierOrderController extends Controller
 
                 if (! $product) {
                     // Log missing products without interrupting the delivery flow.
-                    \Illuminate\Support\Facades\Log::warning(
+                    Log::warning(
                         "SupplierOrderController::updateState — producto #{$productId} no encontrado al procesar orden #{$order->num_order}"
                     );
+
                     continue;
                 }
 
                 $inventoryService->recordSupplierEntry(
-                    product:  $product,
+                    product: $product,
                     quantity: $quantity,
-                    orderId:  $order->num_order,
+                    orderId: $order->num_order,
                 );
             }
         }
@@ -374,9 +379,17 @@ class SupplierOrderController extends Controller
         $order->state = $new;
         $order->save();
 
+        $order->refresh();
+        $order->load('confirmedBy');
+
         return response()->json([
             'success' => true,
             'message' => 'Estado actualizado correctamente.',
+            'order' => [
+                'state' => $order->state,
+                'confirmed_at' => $order->confirmed_at?->format('d/m/Y H:i'),
+                'confirmed_by_label' => $this->adminDisplayName($order->confirmedBy),
+            ],
         ]);
     }
 
@@ -400,6 +413,27 @@ class SupplierOrderController extends Controller
                 'products_count' => $supplier->products_count,
             ],
         ]);
+    }
+
+    private function adminDisplayName(?AdminUser $admin): ?string
+    {
+        if (! $admin) {
+            return null;
+        }
+
+        $full = trim(implode(' ', array_filter([
+            $admin->name,
+            $admin->first_surname,
+            $admin->second_surname,
+        ])));
+
+        if ($full !== '') {
+            return $full;
+        }
+
+        $email = trim((string) ($admin->gmail ?? ''));
+
+        return $email !== '' ? $email : null;
     }
 
     private function generatePoNumber(): string

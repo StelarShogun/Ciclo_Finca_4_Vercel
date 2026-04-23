@@ -20,16 +20,17 @@ class InventoryMovementService
         'provider',
         'manual_adjustment',
         'damage',
+        'refund',
     ];
 
     // Records an inventory movement and updates product stock atomically.
     public function record(
-        Product      $product,
+        Product $product,
         MovementType $type,
-        string       $origin,
-        int          $quantity,
-        ?int         $referenceId = null,
-        ?int         $userId      = null,
+        string $origin,
+        int $quantity,
+        ?int $referenceId = null,
+        ?int $userId = null,
     ): InventoryMovement {
         // Reject invalid movement quantities.
         if ($quantity < 1) {
@@ -39,7 +40,7 @@ class InventoryMovementService
         // Reject unsupported movement origins.
         if (! in_array($origin, self::VALID_ORIGINS, true)) {
             throw new \RuntimeException(
-                "Origin '{$origin}' no es válido. Valores permitidos: " . implode(', ', self::VALID_ORIGINS)
+                "Origin '{$origin}' no es válido. Valores permitidos: ".implode(', ', self::VALID_ORIGINS)
             );
         }
 
@@ -51,17 +52,17 @@ class InventoryMovementService
             // Lock the product row to prevent concurrent stock updates.
             /** @var Product $freshProduct */
             $freshProduct = Product::lockForUpdate()->findOrFail($product->product_id);
-            $stockBefore  = (int) $freshProduct->stock_current;
+            $stockBefore = (int) $freshProduct->stock_current;
 
             // Calculate the resulting stock based on movement type.
             $stockAfter = match ($type) {
                 MovementType::ENTRADA,
                 MovementType::DEVOLUCION => $stockBefore + $quantity,
 
-                MovementType::SALIDA     => $stockBefore - $quantity,
+                MovementType::SALIDA => $stockBefore - $quantity,
 
                 // For adjustments, quantity represents the final stock value.
-                MovementType::AJUSTE     => $quantity,
+                MovementType::AJUSTE => $quantity,
             };
 
             // Prevent negative stock values.
@@ -79,13 +80,13 @@ class InventoryMovementService
 
             // Store the movement in the audit log.
             $movement = InventoryMovement::create([
-                'product_id'   => $freshProduct->product_id,
-                'user_id'      => $resolvedUserId,
-                'type'         => $type->value,
-                'origin'       => $origin,
-                'quantity'     => $quantity,
+                'product_id' => $freshProduct->product_id,
+                'user_id' => $resolvedUserId,
+                'type' => $type->value,
+                'origin' => $origin,
+                'quantity' => $quantity,
                 'stock_before' => $stockBefore,
-                'stock_after'  => $stockAfter,
+                'stock_after' => $stockAfter,
                 'reference_id' => $referenceId,
             ]);
 
@@ -99,14 +100,14 @@ class InventoryMovementService
     // Records an admin sale as an inventory خروج.
     public function recordSale(
         Product $product,
-        int     $quantity,
-        int     $saleId,
+        int $quantity,
+        int $saleId,
     ): InventoryMovement {
         return $this->record(
-            product:     $product,
-            type:        MovementType::SALIDA,
-            origin:      'sale_admin',
-            quantity:    $quantity,
+            product: $product,
+            type: MovementType::SALIDA,
+            origin: 'sale_admin',
+            quantity: $quantity,
             referenceId: $saleId,
         );
     }
@@ -114,30 +115,30 @@ class InventoryMovementService
     // Records a web checkout sale without an associated admin user.
     public function recordWebCartSale(
         Product $product,
-        int     $quantity,
-        int     $saleId,
+        int $quantity,
+        int $saleId,
     ): InventoryMovement {
         return $this->record(
-            product:     $product,
-            type:        MovementType::SALIDA,
-            origin:      'sale_web',
-            quantity:    $quantity,
+            product: $product,
+            type: MovementType::SALIDA,
+            origin: 'sale_web',
+            quantity: $quantity,
             referenceId: $saleId,
-            userId:      null,
+            userId: null,
         );
     }
 
     // Records returned stock from a refund or cancellation.
     public function recordRefund(
         Product $product,
-        int     $quantity,
-        int     $saleId,
+        int $quantity,
+        int $saleId,
     ): InventoryMovement {
         return $this->record(
-            product:     $product,
-            type:        MovementType::DEVOLUCION,
-            origin:      'return',
-            quantity:    $quantity,
+            product: $product,
+            type: MovementType::DEVOLUCION,
+            origin: 'return',
+            quantity: $quantity,
             referenceId: $saleId,
         );
     }
@@ -145,14 +146,14 @@ class InventoryMovementService
     // Records stock received from a supplier order.
     public function recordSupplierEntry(
         Product $product,
-        int     $quantity,
-        int     $orderId,
+        int $quantity,
+        int $orderId,
     ): InventoryMovement {
         return $this->record(
-            product:     $product,
-            type:        MovementType::ENTRADA,
-            origin:      'provider',
-            quantity:    $quantity,
+            product: $product,
+            type: MovementType::ENTRADA,
+            origin: 'provider',
+            quantity: $quantity,
             referenceId: $orderId,
         );
     }
@@ -160,13 +161,13 @@ class InventoryMovementService
     // Records a manual stock increase.
     public function recordManualEntry(
         Product $product,
-        int     $quantity,
-        string  $reason,
+        int $quantity,
+        string $reason,
     ): InventoryMovement {
         return $this->record(
-            product:  $product,
-            type:     MovementType::ENTRADA,
-            origin:   $reason,
+            product: $product,
+            type: MovementType::ENTRADA,
+            origin: $reason,
             quantity: $quantity,
         );
     }
@@ -174,13 +175,13 @@ class InventoryMovementService
     // Records a manual stock decrease.
     public function recordManualExit(
         Product $product,
-        int     $quantity,
-        string  $reason,
+        int $quantity,
+        string $reason,
     ): InventoryMovement {
         return $this->record(
-            product:  $product,
-            type:     MovementType::SALIDA,
-            origin:   $reason,
+            product: $product,
+            type: MovementType::SALIDA,
+            origin: $reason,
             quantity: $quantity,
         );
     }

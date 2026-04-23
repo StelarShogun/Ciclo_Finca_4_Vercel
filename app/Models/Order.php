@@ -38,4 +38,10 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class, 'order_num_order', 'num_order');
     }
+
+    /** Admin que confirmó el pedido con el proveedor (CF4-15). */
+    public function confirmedBy(): BelongsTo
+    {
+        return $this->belongsTo(AdminUser::class, 'confirmed_by', 'user_id');
+    }
 }

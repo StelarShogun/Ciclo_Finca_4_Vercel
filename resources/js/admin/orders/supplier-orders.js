@@ -3,6 +3,46 @@ function getCSRFToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
 }
 
+/** SweetAlert2 v11 — diálogos sin `buttonsStyling` heredado, botones redondeados. */
+function cf4SwalDialogDefaults() {
+    return {
+        buttonsStyling: false,
+        reverseButtons: true,
+        focusCancel: true,
+        allowOutsideClick: false,
+    };
+}
+
+function cf4SwalConfirmBase(confirmButtonClass) {
+    return {
+        ...cf4SwalDialogDefaults(),
+        showCancelButton: true,
+        cancelButtonText: 'Volver',
+        customClass: {
+            popup: 'cf4-swal-popup',
+            confirmButton: confirmButtonClass,
+            cancelButton: 'cf4-swal-btn cf4-swal-btn-muted',
+            actions: 'cf4-swal-actions',
+            title: 'cf4-swal-title',
+            htmlContainer: 'cf4-swal-html',
+        },
+    };
+}
+
+function cf4SwalToastFire(icon, title, text) {
+    return Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon,
+        title,
+        text: text || undefined,
+        showConfirmButton: false,
+        timer: icon === 'success' ? 3600 : 5200,
+        timerProgressBar: true,
+        showCloseButton: true,
+    });
+}
+
 /* ---- Date range validation ---- */
 document.addEventListener('DOMContentLoaded', () => {
     const form     = document.getElementById('supplier-orders-filters-form');
@@ -30,11 +70,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault();
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({
+                        ...cf4SwalDialogDefaults(),
                         icon: 'warning',
                         title: 'Rango de fechas inválido',
                         text: 'La fecha "Hasta" no puede ser anterior a la fecha "Desde".',
+                        showCancelButton: false,
                         confirmButtonText: 'Entendido',
-                        confirmButtonColor: '#2e7d32',
+                        customClass: {
+                            popup: 'cf4-swal-popup',
+                            confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
+                            title: 'cf4-swal-title',
+                        },
                     });
                 } else {
                     alert('La fecha "Hasta" no puede ser anterior a la fecha "Desde".');
@@ -45,12 +91,47 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ---- Modal helpers ---- */
-function closeViewOrderModal()    { document.getElementById('view-order-modal')?.classList.remove('active'); }
+function closeViewOrderModal() {
+    document.getElementById('view-order-modal')?.classList.remove('active');
+    activeOrderIdInModal = null;
+}
 function closeViewSupplierModal() { document.getElementById('view-supplier-modal')?.classList.remove('active'); }
 
 const STATE_LABELS = { draft: 'Borrador', pending: 'Pendiente', confirmed: 'Confirmado', delivered: 'Entregado', cancelled: 'Cancelado' };
 
 let activeOrderIdInModal = null;
+
+/** Estado mostrado en listado (`tr`) o en página de detalle (`data-supplier-order-state`). */
+function supplierOrderStateSnapshot(id) {
+    const sid = String(id);
+    const tr = document.querySelector(`tr[data-order-id="${sid}"]`);
+    if (tr) {
+        return tr.getAttribute('data-order-state');
+    }
+    const root = document.querySelector(`.cf4-supplier-orders-module[data-supplier-order-num="${sid}"]`);
+    if (root) {
+        return root.getAttribute('data-supplier-order-state');
+    }
+    return null;
+}
+
+function setSupplierOrderStateSnapshot(id, state) {
+    const sid = String(id);
+    const tr = document.querySelector(`tr[data-order-id="${sid}"]`);
+    if (tr) {
+        tr.setAttribute('data-order-state', state);
+    }
+    const root = document.querySelector(`.cf4-supplier-orders-module[data-supplier-order-num="${sid}"]`);
+    if (root) {
+        root.setAttribute('data-supplier-order-state', state);
+    }
+}
+
+/** Nº de pedido si la URL es `/supplier-orders/{id}/detail`, si no `null`. */
+function supplierOrderDetailPageOrderId() {
+    const m = window.location.pathname.match(/^\/supplier-orders\/(\d+)\/detail$/);
+    return m ? m[1] : null;
+}
 
 function renderActionButtonsHtml(id, state, variant = 'icon') {
     const btn = (cls, title, icon, label, handler) => {
@@ -82,9 +163,10 @@ function renderActionButtonsHtml(id, state, variant = 'icon') {
 }
 
 function updateRowState(id, nextState) {
+    setSupplierOrderStateSnapshot(id, nextState);
+
     const tr = document.querySelector(`tr[data-order-id="${id}"]`);
     if (!tr) return;
-    tr.setAttribute('data-order-state', nextState);
 
     const pill = tr.querySelector('[data-role="order-state-pill"]');
     if (pill) {
@@ -98,18 +180,32 @@ function updateRowState(id, nextState) {
     }
 }
 
-function updateModalState(nextState) {
-    if (!activeOrderIdInModal) return;
-    const badge = document.querySelector('#view-order-body [data-role="modal-state-badge"]');
-    if (badge) {
-        badge.className = `status-badge ${nextState}`;
-        badge.textContent = STATE_LABELS[nextState] || nextState;
-    }
+function updateRowConfirmation(id, confirmedAt, confirmedByLabel) {
+    const tr = document.querySelector(`tr[data-order-id="${id}"]`);
+    if (!tr) return;
+    const cell = tr.querySelector('[data-role="order-conf-cell"]');
+    if (!cell) return;
 
-    const actions = document.querySelector('#view-order-body [data-role="modal-actions"]');
-    if (actions) {
-        actions.innerHTML = renderActionButtonsHtml(activeOrderIdInModal, nextState, 'text');
+    if (confirmedAt) {
+        const user = confirmedByLabel
+            ? `<span class="order-conf-user" title="${confirmedByLabel.replace(/"/g, '&quot;')}">${escapeHtml(confirmedByLabel.length > 28 ? confirmedByLabel.slice(0, 25) + '…' : confirmedByLabel)}</span>`
+            : '';
+        cell.innerHTML = `
+            <div class="order-conf-stack">
+                <span class="order-conf-date">${escapeHtml(confirmedAt)}</span>
+                ${user}
+            </div>`;
+    } else {
+        cell.innerHTML = '<span class="text-muted">—</span>';
     }
+}
+
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 }
 
 /* ---- View order details ---- */
@@ -152,6 +248,17 @@ function viewOrder(id) {
                 </tr>`;
         }).join('');
 
+        const confirmAuditHtml = order.confirmed_at
+            ? `
+                <div class="detail-section order-confirm-audit">
+                    <h4><i class="fas fa-user-check"></i> Confirmación con proveedor</h4>
+                    <div class="detail-grid">
+                        <div class="detail-item"><label>Fecha:</label><span>${order.confirmed_at}</span></div>
+                        <div class="detail-item"><label>Registró:</label><span>${order.confirmed_by_label || '—'}</span></div>
+                    </div>
+                </div>`
+            : '';
+
         body.innerHTML = `
             <div class="sale-details">
                 <div class="detail-section">
@@ -170,6 +277,7 @@ function viewOrder(id) {
                         </a>
                     </div>
                 </div>
+                ${confirmAuditHtml}
                 ${productsHtml ? `
                 <div class="detail-section">
                     <h4><i class="fas fa-box"></i> Productos pedidos</h4>
@@ -252,22 +360,21 @@ function viewSupplier(id) {
 }
 
 /* ---- State change helpers ---- */
-function _orderAction(id, state, confirmText, successMsg) {
+function _orderAction(id, state, confirmCfg, successMsg) {
     Swal.fire({
-        title: confirmText.title,
-        text:  confirmText.text,
-        icon:  confirmText.icon,
-        showCancelButton: true,
-        confirmButtonColor: confirmText.color,
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: confirmText.confirm,
-        cancelButtonText: 'Cancelar',
+        ...cf4SwalConfirmBase(confirmCfg.confirmClass),
+        title: confirmCfg.title,
+        html: confirmCfg.html,
+        icon: confirmCfg.icon,
+        confirmButtonText: confirmCfg.confirm,
     }).then(r => {
         if (!r.isConfirmed) return;
 
         const disableButtons = (disabled) => {
             document
-                .querySelectorAll(`tr[data-order-id="${id}"] .action-btn, #view-order-body [data-role="modal-actions"] .btn`)
+                .querySelectorAll(
+                    `tr[data-order-id="${id}"] .action-btn, #view-order-body [data-role="modal-actions"] .btn, .sales-actions[data-supplier-order-actions="${id}"] button`
+                )
                 .forEach((el) => {
                     if (el instanceof HTMLButtonElement) el.disabled = disabled;
                 });
@@ -286,78 +393,103 @@ function _orderAction(id, state, confirmText, successMsg) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                Swal.fire({
-                    title: 'Listo',
-                    text:  data.message || successMsg,
-                    icon:  'success',
-                    confirmButtonColor: '#2e7d32',
-                    confirmButtonText: 'Entendido',
-                }).then(() => {
-                    updateRowState(String(id), state);
-                    if (activeOrderIdInModal === String(id)) {
-                        updateModalState(state);
-                    }
-                    disableButtons(false);
-                });
+                updateRowState(String(id), state);
+                if (data.order?.confirmed_at) {
+                    updateRowConfirmation(String(id), data.order.confirmed_at, data.order.confirmed_by_label);
+                }
+                if (activeOrderIdInModal === String(id)) {
+                    viewOrder(id);
+                }
+                disableButtons(false);
+
+                const detailOrderId = supplierOrderDetailPageOrderId();
+                if (detailOrderId !== null && detailOrderId === String(id)) {
+                    cf4SwalToastFire('success', 'Listo', data.message || successMsg);
+                    window.setTimeout(() => {
+                        window.location.reload();
+                    }, 650);
+                    return;
+                }
+
+                cf4SwalToastFire('success', 'Listo', data.message || successMsg);
             } else {
                 disableButtons(false);
-                Swal.fire({ title: 'Error', text: data.message || 'No se pudo actualizar.', icon: 'error' });
+                Swal.fire({
+                    ...cf4SwalDialogDefaults(),
+                    title: 'No se pudo completar',
+                    text: data.message || 'No se pudo actualizar.',
+                    icon: 'error',
+                    showCancelButton: false,
+                    confirmButtonText: 'Cerrar',
+                    customClass: {
+                        popup: 'cf4-swal-popup',
+                        confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
+                        title: 'cf4-swal-title',
+                    },
+                });
             }
         })
         .catch(() => {
             disableButtons(false);
-            Swal.fire({ title: 'Error', text: 'Error de conexión.', icon: 'error' });
+            Swal.fire({
+                ...cf4SwalDialogDefaults(),
+                title: 'Error de conexión',
+                text: 'Revisa tu red e inténtalo de nuevo.',
+                icon: 'error',
+                showCancelButton: false,
+                confirmButtonText: 'Cerrar',
+                customClass: {
+                    popup: 'cf4-swal-popup',
+                    confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
+                    title: 'cf4-swal-title',
+                },
+            });
         });
     });
 }
 
-function submitDraftOrder(id) {
-    _orderAction(id, 'pending', {
-        title: '¿Enviar borrador?',
-        text: 'El pedido pasará a estado pendiente ante el proveedor.',
-        icon: 'question',
-        color: '#2e7d32',
-        confirm: 'Sí, enviar',
-    }, 'Pedido enviado a pendiente.');
-}
-
 function confirmOrder(id) {
+    const st = supplierOrderStateSnapshot(id);
+    if (st !== null && st !== 'draft' && st !== 'pending') {
+        return;
+    }
+
     _orderAction(id, 'confirmed', {
-        title:   '¿Confirmar pedido?',
-        text:    'El pedido pasará a estado confirmado con el proveedor.',
-        icon:    'question',
-        color:   '#2e7d32',
+        title: '¿Confirmar este pedido?',
+        html: '<p>El pedido pasará a estado <strong>confirmado</strong> con el proveedor. Luego podrás marcarlo como <strong>entregado</strong> al recibir la mercancía.</p>',
+        icon: 'question',
         confirm: 'Sí, confirmar',
+        confirmClass: 'cf4-swal-btn cf4-swal-btn-primary',
     }, 'Pedido confirmado correctamente.');
 }
 
 function deliverOrder(id) {
+    const st = supplierOrderStateSnapshot(id);
+    if (st !== null && st !== 'confirmed') {
+        return;
+    }
+
     _orderAction(id, 'delivered', {
-        title:   '¿Marcar como entregado?',
-        text:    'Se registrará la recepción de la mercancía.',
-        icon:    'question',
-        color:   '#0277bd',
+        title: '¿Marcar como entregado?',
+        html: '<p>Se registrará la <strong>recepción de la mercancía</strong> y se actualizará el inventario según las líneas del pedido.</p>',
+        icon: 'question',
         confirm: 'Sí, marcar entregado',
+        confirmClass: 'cf4-swal-btn cf4-swal-btn-info',
     }, 'Pedido marcado como entregado.');
 }
 
-function sendOrder(id) {
-    _orderAction(id, 'pending', {
-        title:   '¿Enviar pedido?',
-        text:    'El pedido dejará de ser borrador y pasará a estado pendiente.',
-        icon:    'question',
-        color:   '#2e7d32',
-        confirm: 'Sí, enviar',
-    }, 'Pedido enviado. Ahora está pendiente.');
-}
-
 function cancelOrder(id) {
+    const st = supplierOrderStateSnapshot(id);
+    if (st !== null && (st === 'cancelled' || st === 'delivered')) {
+        return;
+    }
+
     _orderAction(id, 'cancelled', {
-        title:   '¿Cancelar pedido?',
-        text:    'El pedido se marcará como cancelado.',
-        icon:    'warning',
-        color:   '#d33',
+        title: '¿Cancelar este pedido?',
+        html: '<p>El pedido quedará como <strong>cancelado</strong>. Esta acción debe usarse cuando ya no aplica la compra.</p>',
+        icon: 'warning',
         confirm: 'Sí, cancelar',
+        confirmClass: 'cf4-swal-btn cf4-swal-btn-danger',
     }, 'Pedido cancelado.');
 }
 
@@ -367,9 +499,7 @@ Object.assign(window, {
     closeViewSupplierModal,
     viewOrder,
     viewSupplier,
-    submitDraftOrder,
     confirmOrder,
     deliverOrder,
-    sendOrder,
     cancelOrder,
 });

@@ -22,15 +22,28 @@
         $label = $stateLabels[$order->state] ?? ucfirst((string) $order->state);
         $po = $order->po_number ?: ('#'.$order->num_order);
         $supplierName = $order->supplier?->name ?? '—';
+        $confirmedByName = null;
+        if ($order->confirmedBy) {
+            $confirmedByName = trim(implode(' ', array_filter([
+                $order->confirmedBy->name,
+                $order->confirmedBy->first_surname,
+                $order->confirmedBy->second_surname,
+            ])));
+            if ($confirmedByName === '') {
+                $confirmedByName = $order->confirmedBy->gmail ?: null;
+            }
+        }
     @endphp
 
-    <div class="sales-container cf4-orders-module cf4-supplier-orders-module">
+    <div class="sales-container cf4-orders-module cf4-supplier-orders-module"
+         data-supplier-order-num="{{ $order->num_order }}"
+         data-supplier-order-state="{{ $order->state }}">
         <header class="sales-header">
             <div>
                 <h1>Pedido {{ $po }}</h1>
                 <p>Detalle del pedido de compra al proveedor.</p>
             </div>
-            <div class="sales-actions">
+            <div class="sales-actions" data-supplier-order-actions="{{ $order->num_order }}">
                 <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i>
                     Volver
@@ -91,6 +104,16 @@
                     <div class="kv-row"><span>Estado</span><strong><span class="order-status-pill {{ $order->state }}">{{ $label }}</span></strong></div>
                 </div>
             </section>
+
+            @if($order->confirmed_at)
+                <section class="detail-card cf4-supplier-order-audit">
+                    <h2><i class="fas fa-user-check"></i> Confirmación con proveedor</h2>
+                    <div class="kv">
+                        <div class="kv-row"><span>Fecha y hora</span><strong>{{ $order->confirmed_at->format('d/m/Y H:i') }}</strong></div>
+                        <div class="kv-row"><span>Registró</span><strong>{{ $confirmedByName ?? '—' }}</strong></div>
+                    </div>
+                </section>
+            @endif
 
             <section class="detail-card detail-card-wide">
                 <h2><i class="fas fa-box"></i> Productos</h2>
