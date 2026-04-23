@@ -441,4 +441,52 @@ class ClientPageController extends Controller
             return response()->json(['success' => false, 'message' => 'Error al procesar el pedido: '.$e->getMessage()], 500);
         }
     }
+
+    public function invoices(Request $request)
+    {
+        $client = Auth::guard('clients')->user();
+        $tab = $request->query('tab', 'facturas');
+
+        if ($tab === 'historial') {
+            $orders = Sale::with(['saleItems.product'])
+                ->where('client_id', $client->user_id)
+                ->where('status', 'completed')
+                ->orderByDesc('sale_date')
+                ->get();
+        } else {
+            $tab = 'facturas';
+            $orders = Sale::with(['saleItems.product'])
+                ->where('client_id', $client->user_id)
+                ->where('status', 'pending')
+                ->orderByDesc('sale_date')
+                ->get();
+        }
+
+        $cartCount = $this->getCartCount();
+        $invoiceCount = Sale::where('client_id', $client->user_id)
+            ->where('status', 'pending')
+            ->count();
+
+        return view('client.Invoices', compact('orders', 'cartCount', 'invoiceCount', 'tab'));
+    }
+
+    public function invoicesHeartbeat()
+    {
+        $client = Auth::guard('clients')->user();
+
+        $count = Sale::where('client_id', $client->user_id)
+            ->where('status', 'pending')
+            ->count();
+
+        return response()->json(['count' => $count]);
+    }
+
+    private function getCartTotal(): float
+    {
+        return array_reduce(
+            Session::get('cart', []),
+            fn ($carry, $item) => $carry + $item['price'] * $item['quantity'],
+            0
+        );
+    }
 }
