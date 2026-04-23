@@ -18,12 +18,15 @@ class Order extends Model
         'estimated_delivery_date',
         'date',
         'state',
+        'confirmed_at',
+        'confirmed_by',
         'total',
     ];
 
     protected $casts = [
         'date' => 'datetime',
         'estimated_delivery_date' => 'date',
+        'confirmed_at' => 'datetime',
     ];
 
     public function supplier(): BelongsTo

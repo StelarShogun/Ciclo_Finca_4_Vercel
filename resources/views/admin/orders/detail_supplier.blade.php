@@ -38,10 +38,10 @@
 
                 @if($order->state === 'draft')
                     <button type="button" class="btn btn-primary"
-                            onclick="sendOrder('{{ $order->num_order }}')"
-                            title="Enviar pedido (pasar a Pendiente)">
-                        <i class="fas fa-paper-plane"></i>
-                        Enviar
+                            onclick="confirmOrder('{{ $order->num_order }}')"
+                            title="Confirmar pedido">
+                        <i class="fas fa-check"></i>
+                        Confirmar
                     </button>
                     <button type="button" class="btn btn-secondary"
                             onclick="cancelOrder('{{ $order->num_order }}')"

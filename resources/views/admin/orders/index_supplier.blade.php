@@ -192,9 +192,9 @@
                                         </button>
                                         @if($order->state === 'draft')
                                             <button class="action-btn success" type="button"
-                                                    onclick="submitDraftOrder('{{ $order->num_order }}')"
-                                                    title="Enviar a pendiente">
-                                                <i class="fas fa-paper-plane"></i>
+                                                    onclick="confirmOrder('{{ $order->num_order }}')"
+                                                    title="Confirmar pedido">
+                                                <i class="fas fa-check"></i>
                                             </button>
                                             <button class="action-btn danger" type="button"
                                                     onclick="cancelOrder('{{ $order->num_order }}')"

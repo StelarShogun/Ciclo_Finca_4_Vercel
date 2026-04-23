@@ -70,7 +70,7 @@ function renderActionButtonsHtml(id, state, variant = 'icon') {
             : '';
 
     if (state === 'draft') {
-        return `${viewBtn}${btn(variant === 'icon' ? 'success' : 'btn-primary', 'Enviar pedido (pasar a Pendiente)', 'fa-paper-plane', 'Enviar', 'sendOrder')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar pedido', 'fa-times', 'Cancelar', 'cancelOrder')}`;
+        return `${viewBtn}${btn(variant === 'icon' ? 'success' : 'btn-primary', 'Confirmar pedido', 'fa-check', 'Confirmar', 'confirmOrder')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar pedido', 'fa-times', 'Cancelar', 'cancelOrder')}`;
     }
     if (state === 'pending') {
         return `${viewBtn}${btn(variant === 'icon' ? 'success' : 'btn-primary', 'Confirmar pedido', 'fa-check', 'Confirmar', 'confirmOrder')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar pedido', 'fa-times', 'Cancelar', 'cancelOrder')}`;

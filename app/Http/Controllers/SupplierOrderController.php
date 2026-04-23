@@ -298,7 +298,9 @@ class SupplierOrderController extends Controller
 
         // Define the allowed state transitions for supplier orders.
         $transitions = [
-            'draft'     => ['pending', 'cancelled'],
+            // CF4-15: draft goes straight to confirmed (no "send" step).
+            'draft'     => ['confirmed', 'cancelled'],
+            // Backward compatibility for existing historical orders.
             'pending'   => ['confirmed', 'cancelled'],
             'confirmed' => ['delivered', 'cancelled'],
         ];
@@ -310,6 +312,22 @@ class SupplierOrderController extends Controller
                 'success' => false,
                 'message' => 'Transición de estado no permitida.',
             ], 422);
+        }
+
+        if ($new === 'confirmed') {
+            $adminId = auth('admin')->id();
+            $updates = [];
+
+            if (! $order->confirmed_at) {
+                $updates['confirmed_at'] = now();
+            }
+            if (! $order->confirmed_by && $adminId) {
+                $updates['confirmed_by'] = (int) $adminId;
+            }
+
+            if ($updates !== []) {
+                $order->fill($updates);
+            }
         }
 
         if ($new === 'delivered') {
@@ -353,7 +371,8 @@ class SupplierOrderController extends Controller
             }
         }
 
-        $order->update(['state' => $new]);
+        $order->state = $new;
+        $order->save();
 
         return response()->json([
             'success' => true,
