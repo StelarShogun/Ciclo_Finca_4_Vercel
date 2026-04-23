@@ -79,9 +79,6 @@
         <div class="filters-section">
             <div class="filters-header">
                 <h2 class="filters-title">Filtros de Búsqueda</h2>
-                <a href="{{ route('sales.reports.byCategory') }}" class="btn btn-secondary">
-                    <i class="fas fa-chart-pie"></i> Ver por Categoría
-                </a>
             </div>
             <form method="GET" action="{{ route('sales.index') }}" id="filters-form">
                 <div class="filters-grid">
@@ -129,7 +126,7 @@
 
                     <div class="filter-group">
                         <label for="search-sale">Buscar</label>
-                        <input type="text" id="search-sale" name="search" placeholder="Buscar por cliente..."
+                        <input type="text" id="search-sale" name="search" placeholder="Buscar por cliente o factura..."
                             value="{{ request('search') }}">
                     </div>
 
@@ -264,7 +261,11 @@
                             <td colspan="8" class="text-center">
                                 <div class="table-empty-state">
                                     <i class="fas fa-shopping-cart table-empty-icon"></i>
-                                    <p>No hay ventas registradas</p>
+                                    @if(request('search'))
+                                        <p>No se encontraron resultados para <strong>{{ request('search') }}</strong></p>
+                                    @else
+                                        <p>No hay ventas registradas</p>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -365,7 +366,7 @@
                         <i class="fas fa-plus"></i> Agregar Producto
                     </button>
 
-                    {{-- Order totals: subtotal, discount, IVA, and final total --}}
+                    {{-- Order totals: subtotal, discount, final total --}}
                     <div class="sale-totals">
                         <div class="total-row">
                             <span>Subtotal:</span>
@@ -375,18 +376,6 @@
                             <span>Descuento:</span>
                             <input type="number" id="discount" name="discount" value="0" step="0.01"
                                 min="0">
-                        </div>
-                        <div class="total-row">
-                            <span>IVA (%):</span>
-                            <span class="iva-select-group">
-                                <select id="iva_percentage" name="iva_percentage" class="iva-select">
-                                    @for ($p = 0; $p <= 13; $p++)
-                                        <option value="{{ $p }}" {{ $p == 0 ? 'selected' : '' }}>
-                                            {{ $p }}%</option>
-                                    @endfor
-                                </select>
-                                <span id="iva">₡0.00</span>
-                            </span>
                         </div>
                         <div class="total-row total-final">
                             <span>Total:</span>

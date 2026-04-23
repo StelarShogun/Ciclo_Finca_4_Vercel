@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ClientUserSeeder::class,
             OrderSeeder::class,
             SalesPerformanceDemoSeeder::class,
+            ClientPurchaseHistoryDemoSeeder::class,
         ]);
     }
 }

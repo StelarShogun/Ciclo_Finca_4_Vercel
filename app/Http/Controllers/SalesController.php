@@ -6,7 +6,9 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
+use App\Services\Admin\RegistryExcelExport;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -175,7 +177,6 @@ class SalesController extends Controller
             'payment_method' => 'required|in:cash,sinpe,transfer',
             'payment_reference' => 'nullable|string|max:255',
             'discount' => 'nullable|numeric|min:0',
-            'iva_percentage' => 'nullable|numeric|min:0|max:13',
             'notes' => 'nullable|string|max:500',
         ], [
             'items.required' => 'At least one item is required.',
@@ -227,11 +228,9 @@ class SalesController extends Controller
                 ], 422);
             }
 
-            $ivaPercent = (float) ($request->input('iva_percentage', 0));
-            $ivaPercent = max(0.0, min(13.0, $ivaPercent));
             $taxableBase = $this->roundMoney($subtotal - $discount);
-            $iva = $this->roundMoney($taxableBase * ($ivaPercent / 100));
-            $total = $this->roundMoney($taxableBase + $iva);
+            $iva = 0.0;
+            $total = $taxableBase;
 
             $orderSource = $clientId ? 'web_cart' : 'walk_in';
             $sale = Sale::create([
@@ -491,6 +490,10 @@ class SalesController extends Controller
                 return $this->exportSalesPdf($request, $base);
             }
 
+            if ($format === 'excel') {
+                return $this->exportSalesExcel($request, $base);
+            }
+
             $filename = 'sales_' . now()->format('Y-m-d_H-i-s') . '.csv';
             $headers = [
                 'Content-Type' => 'text/csv; charset=UTF-8',
@@ -568,6 +571,61 @@ class SalesController extends Controller
                 'message' => 'Error exporting sales: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    private function exportSalesExcel(Request $request, Builder $base): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $maxRows     = AdminPdfExportLimits::SALES_MAX_ROWS;
+        $totalMatching = (clone $base)->count();
+
+        $filterLines = $this->salesExportFilterLines($request);
+        if ($totalMatching > $maxRows) {
+            $filterLines[] = 'Nota: el Excel incluye como máximo '.$maxRows.' filas ('.$totalMatching.' ventas coinciden con los filtros).';
+        }
+
+        $rows = (clone $base)
+            ->with(['client', 'saleItems.product'])
+            ->orderBy('sale_date', 'desc')
+            ->limit($maxRows)
+            ->get();
+
+        $headers = ['ID Venta', 'Factura', 'Cliente', 'Email', 'Fecha', 'Estado', 'Método pago', 'Subtotal (₡)', 'IVA (₡)', 'Descuento (₡)', 'Total (₡)', 'Ítems', 'Notas'];
+
+        $dataRows = $rows->map(function (Sale $sale): array {
+            $customer = $sale->client
+                ? trim($sale->client->name.' '.($sale->client->first_surname ?? '').' '.($sale->client->second_surname ?? ''))
+                : ($sale->buyer_name ?: 'Walk-in / Sin datos');
+            $email = $sale->client ? $sale->client->gmail : ($sale->buyer_email ?: '');
+            $items = $sale->saleItems->map(function (SaleItem $item): string {
+                return ($item->product !== null ? $item->product->name : '?').' (×'.$item->quantity.')';
+            })->implode(', ');
+            $saleDate = $sale->sale_date;
+
+            return [
+                (string) $sale->sale_id,
+                (string) ($sale->invoice_number ?? ''),
+                $customer,
+                $email,
+                $saleDate !== null ? $saleDate->format('d/m/Y H:i') : '',
+                ucfirst((string) $sale->status),
+                ucfirst((string) $sale->payment_method),
+                number_format((float) $sale->subtotal, 2, '.', ''),
+                number_format((float) $sale->iva, 2, '.', ''),
+                number_format((float) $sale->discount, 2, '.', ''),
+                number_format((float) $sale->total, 2, '.', ''),
+                $items,
+                (string) ($sale->notes ?? ''),
+            ];
+        })->values()->all();
+
+        return app(RegistryExcelExport::class)->download(
+            'Ventas',
+            'Listado de ventas — Ciclo Finca 4',
+            $headers,
+            $dataRows,
+            $filterLines,
+            ReportExcelFilename::make('ventas'),
+        );
     }
 
     private function exportSalesPdf(Request $request, Builder $base)
@@ -668,7 +726,7 @@ class SalesController extends Controller
             if ($request->filled('end_date')) {
                 $query->whereDate('sale_date', '<=', $request->end_date);
             }
-        } else {
+        } elseif (! $request->filled('search')) {
             $dateRange = $request->get('date_range');
             if ($dateRange) {
                 switch ($dateRange) {
@@ -799,95 +857,5 @@ class SalesController extends Controller
     private function roundMoney(float $amount): float
     {
         return round($amount, 2);
-    }
-
-    public function byCategory(Request $request)
-    {
-        $dateRange = $request->input('date_range', 'month');
-        $dateFrom  = $request->input('date_from');
-        $dateTo    = $request->input('date_to');
-
-        if ($dateRange === 'custom') {
-            $request->validate([
-                'date_from' => 'required|date',
-                'date_to'   => 'required|date|after_or_equal:date_from',
-            ], [
-                'date_from.required'      => 'La fecha de inicio es obligatoria.',
-                'date_from.date'          => 'La fecha de inicio no es válida.',
-                'date_to.required'        => 'La fecha de fin es obligatoria.',
-                'date_to.date'            => 'La fecha de fin no es válida.',
-                'date_to.after_or_equal'  => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
-            ]);
-        }
-
-        [$from, $to] = $this->resolveDateRange($dateRange, $dateFrom, $dateTo);
-
-        $rows = SaleItem::query()
-            ->join('sales',      'sale_items.sale_id',    '=', 'sales.sale_id')
-            ->join('products',   'sale_items.product_id', '=', 'products.product_id')
-            ->join('categories', 'products.category_id',  '=', 'categories.category_id')
-            ->where('sales.status', 'completed')
-            ->whereBetween('sales.sale_date', [$from, $to])
-            ->groupBy('categories.category_id', 'categories.name')
-            ->selectRaw('
-                categories.category_id,
-                categories.name          AS category_name,
-                SUM(sale_items.quantity) AS total_units,
-                SUM(sale_items.total)    AS total_revenue
-            ')
-            ->orderByDesc('total_revenue')
-            ->get();
-
-        $grandTotal = $rows->sum('total_revenue');
-
-        $rows->transform(function ($row) use ($grandTotal) {
-            $row->percentage = $grandTotal > 0
-                ? round(($row->total_revenue / $grandTotal) * 100, 1)
-                : 0;
-            return $row;
-        });
-
-        $chartData = $rows->map(function ($r) {
-            return [
-                'label'   => $r->category_name,
-                'value'   => $r->total_revenue,
-                'percent' => $r->percentage,
-            ];
-        })->values()->toArray();
-
-        return view('admin.sales.reports-by-category', compact(
-            'rows', 'grandTotal', 'from', 'to', 'dateRange', 'chartData'
-        ));
-    }
-
-    private function resolveDateRange(string $range, ?string $dateFrom, ?string $dateTo): array
-    {
-        switch ($range) {
-            case 'today':
-                return [
-                    now()->startOfDay()->toDateTimeString(),
-                    now()->endOfDay()->toDateTimeString(),
-                ];
-            case 'week':
-                return [
-                    now()->startOfWeek()->startOfDay()->toDateTimeString(),
-                    now()->endOfWeek()->endOfDay()->toDateTimeString(),
-                ];
-            case 'month':
-                return [
-                    now()->startOfMonth()->startOfDay()->toDateTimeString(),
-                    now()->endOfMonth()->endOfDay()->toDateTimeString(),
-                ];
-            case 'custom':
-                return [
-                    $dateFrom ? Carbon::parse($dateFrom)->startOfDay()->toDateTimeString() : now()->startOfDay()->toDateTimeString(),
-                    $dateTo   ? Carbon::parse($dateTo)->endOfDay()->toDateTimeString()     : now()->endOfDay()->toDateTimeString(),
-                ];
-            default:
-                return [
-                    now()->startOfMonth()->startOfDay()->toDateTimeString(),
-                    now()->endOfMonth()->endOfDay()->toDateTimeString(),
-                ];
-        }
     }
 }
