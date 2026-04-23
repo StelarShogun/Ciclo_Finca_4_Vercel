@@ -36,9 +36,9 @@ class StoreProductRequest extends FormRequest
             'stock_minimum' => 'required|integer|min:0',
             'status' => 'required|in:active,inactive,out_of_stock,discontinued',
             'is_featured' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp,avif|max:10240',
             'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg,webp,avif|max:10240',
             'classification_value_ids' => 'nullable|array',
             'classification_value_ids.*' => ['integer', Rule::exists('classification_values', 'id')->whereNull('deleted_at')],
         ];
@@ -46,16 +46,30 @@ class StoreProductRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if (! $this->has('classification_value_ids') || ! is_array($this->input('classification_value_ids'))) {
-            $this->merge(['classification_value_ids' => []]);
+        $merge = ['is_featured' => $this->boolean('is_featured')];
 
-            return;
+        if (! $this->has('classification_value_ids') || ! is_array($this->input('classification_value_ids'))) {
+            $merge['classification_value_ids'] = [];
+        } else {
+            $filtered = array_values(array_filter(
+                $this->input('classification_value_ids', []),
+                fn ($v) => $v !== null && $v !== '' && $v !== false
+            ));
+            $merge['classification_value_ids'] = array_map('intval', $filtered);
         }
-        $filtered = array_values(array_filter(
-            $this->input('classification_value_ids', []),
-            fn ($v) => $v !== null && $v !== '' && $v !== false
-        ));
-        $this->merge(['classification_value_ids' => array_map('intval', $filtered)]);
+
+        // When webkitdirectory is used, the folder may contain non-image files.
+        // Filter them out before validation so the image/* rule only sees valid files.
+        if ($this->hasFile('images')) {
+            $validMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp', 'image/avif'];
+            $images = array_values(array_filter(
+                (array) $this->file('images'),
+                fn ($f) => $f && $f->isValid() && in_array($f->getMimeType(), $validMimes, true)
+            ));
+            $this->files->set('images', $images);
+        }
+
+        $this->merge($merge);
     }
 
     public function withValidator($validator): void
@@ -103,13 +117,13 @@ class StoreProductRequest extends FormRequest
             'unique' => 'Ya existe un producto con este nombre en esta categoría.',
             'array' => 'El campo :attribute debe ser una lista válida.',
             'image' => 'El campo :attribute debe ser una imagen válida.',
-            'mimes' => 'El campo :attribute solo admite: jpeg, png, jpg, gif o svg.',
+            'mimes' => 'El campo :attribute solo admite: jpeg, png, jpg, gif, svg, webp o avif.',
 
             'sale_price.gt' => 'El precio de venta debe ser mayor que el precio de compra.',
             'stock_current.gte' => 'El stock actual debe ser mayor o igual al stock mínimo.',
 
             'images.*.image' => 'Cada imagen adicional debe ser un archivo de imagen válido.',
-            'images.*.mimes' => 'Cada imagen adicional debe ser jpeg, png, jpg, gif o svg.',
+            'images.*.mimes' => 'Cada imagen adicional debe ser jpeg, png, jpg, gif, svg, webp o avif.',
             'images.*.max' => 'Cada imagen adicional no puede superar :max kilobytes.',
         ];
     }
@@ -131,12 +145,5 @@ class StoreProductRequest extends FormRequest
             'images' => 'imágenes adicionales',
             'images.*' => 'imagen adicional',
         ];
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'is_featured' => $this->boolean('is_featured'),
-        ]);
     }
 }

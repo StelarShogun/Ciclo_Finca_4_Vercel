@@ -88,7 +88,7 @@ function calculateProductTotal(row) {
     calculateTotals();
 }
 
-// Recalculate all totals (subtotal, discount, VAT, final total)
+// Recalculate all totals (subtotal, discount, final total)
 function calculateTotals() {
     let subtotal = 0;
     document.querySelectorAll('input[name*="[total]"]').forEach(i => {
@@ -97,15 +97,11 @@ function calculateTotals() {
 
     const discountRaw = roundMoney(parseFloat(document.getElementById('discount')?.value) || 0);
     const discountApplied = roundMoney(Math.min(Math.max(0, discountRaw), subtotal));
-    const ivaPercent = parseFloat(document.getElementById('iva_percentage')?.value) || 0;
-    const pct = Math.min(13, Math.max(0, ivaPercent));
     const taxableBase = roundMoney(subtotal - discountApplied);
-    const iva = roundMoney(taxableBase * (pct / 100));
-    const total = roundMoney(taxableBase + iva);
+    const total = taxableBase;
 
     const el = id => document.getElementById(id);
     if (el('subtotal')) el('subtotal').textContent = '₡' + subtotal.toFixed(2);
-    if (el('iva'))      el('iva').textContent      = '₡' + iva.toFixed(2);
     if (el('total'))    el('total').textContent    = '₡' + total.toFixed(2);
 
     const totalsBox = document.querySelector('.sale-totals');
@@ -215,7 +211,6 @@ function viewSale(id) {
                     <div class="totals-summary">
                         <div class="total-item"><span>Subtotal:</span><span>₡${parseFloat(sale.subtotal || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span></div>
                         ${(sale.discount || 0) > 0 ? `<div class="total-item"><span>Descuento:</span><span>-₡${parseFloat(sale.discount).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span></div>` : ''}
-                        <div class="total-item"><span>IVA:</span><span>₡${parseFloat(sale.iva || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span></div>
                         <div class="total-item total-final"><span><strong>Total:</strong></span><span><strong>₡${parseFloat(sale.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></span></div>
                     </div>
                 </div>
@@ -260,30 +255,32 @@ function _saleAction(url, successMsg) {
 }
 
 // Mark sale as completed
-function completeSale(id) {
+function completeSale(id, invoiceNumber) {
+    const invoiceLabel = invoiceNumber || ('#' + id);
     Swal.fire({
-        title: '¿Confirmar pedido?',
-        text: 'El pedido pasará a confirmado y quedará registrado como venta con su factura.',
+        title: `¿Confirmar encargo con factura: ${invoiceLabel}?`,
+        text: 'El encargo pasará a confirmado y quedará registrado como venta con su factura.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#2e7d32',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Sí, confirmar',
         cancelButtonText: 'Cancelar'
-    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/complete`, 'Pedido confirmado correctamente.'));
+    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/complete`, 'Encargo confirmado correctamente.'));
 }
 
-function cancelSale(id) {
+function cancelSale(id, invoiceNumber) {
+    const invoiceLabel = invoiceNumber || ('#' + id);
     Swal.fire({
-        title: '¿Rechazar pedido?',
-        text: 'Se cancelará el pedido y se devolverá el stock al inventario.',
+        title: `¿Rechazar encargo con factura: ${invoiceLabel}?`,
+        text: 'Se cancelará el encargo y se devolverá el stock al inventario.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Sí, rechazar',
         cancelButtonText: 'No'
-    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/cancel`, 'Pedido rechazado.'));
+    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/cancel`, `Encargo: ${invoiceLabel} eliminado.`));
 }
 
 function refundSale(id) {
@@ -418,8 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.name?.includes('[quantity]')) {
             calculateProductTotal(e.target.closest('.product-row'));
         }
-        // Discount or VAT change: recalc totals
-        if (['discount', 'iva_percentage'].includes(e.target.id)) {
+        if (e.target.id === 'discount') {
             calculateTotals();
         }
     });

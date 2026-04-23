@@ -48,6 +48,70 @@ document.addEventListener('DOMContentLoaded', () => {
 function closeViewOrderModal()    { document.getElementById('view-order-modal')?.classList.remove('active'); }
 function closeViewSupplierModal() { document.getElementById('view-supplier-modal')?.classList.remove('active'); }
 
+const STATE_LABELS = { draft: 'Borrador', pending: 'Pendiente', confirmed: 'Confirmado', delivered: 'Entregado', cancelled: 'Cancelado' };
+
+let activeOrderIdInModal = null;
+
+function renderActionButtonsHtml(id, state, variant = 'icon') {
+    const btn = (cls, title, icon, label, handler) => {
+        if (variant === 'text') {
+            return `<button type="button" class="btn ${cls}" onclick="${handler}('${id}')" title="${title}">
+                <i class="fas ${icon}"></i> ${label}
+            </button>`;
+        }
+        return `<button class="action-btn ${cls}" type="button" onclick="${handler}('${id}')" title="${title}">
+            <i class="fas ${icon}"></i>
+        </button>`;
+    };
+
+    const viewBtn =
+        variant === 'icon'
+            ? `<button class="action-btn secondary" type="button" onclick="viewOrder('${id}')" title="Ver detalles"><i class="fas fa-eye"></i></button>`
+            : '';
+
+    if (state === 'draft') {
+        return `${viewBtn}${btn(variant === 'icon' ? 'success' : 'btn-primary', 'Enviar pedido (pasar a Pendiente)', 'fa-paper-plane', 'Enviar', 'sendOrder')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar pedido', 'fa-times', 'Cancelar', 'cancelOrder')}`;
+    }
+    if (state === 'pending') {
+        return `${viewBtn}${btn(variant === 'icon' ? 'success' : 'btn-primary', 'Confirmar pedido', 'fa-check', 'Confirmar', 'confirmOrder')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar pedido', 'fa-times', 'Cancelar', 'cancelOrder')}`;
+    }
+    if (state === 'confirmed') {
+        return `${viewBtn}${btn(variant === 'icon' ? 'view' : 'btn-primary', 'Marcar como entregado', 'fa-truck', 'Entregado', 'deliverOrder')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar pedido', 'fa-times', 'Cancelar', 'cancelOrder')}`;
+    }
+    return `${viewBtn}`;
+}
+
+function updateRowState(id, nextState) {
+    const tr = document.querySelector(`tr[data-order-id="${id}"]`);
+    if (!tr) return;
+    tr.setAttribute('data-order-state', nextState);
+
+    const pill = tr.querySelector('[data-role="order-state-pill"]');
+    if (pill) {
+        pill.className = `order-status-pill ${nextState}`;
+        pill.textContent = STATE_LABELS[nextState] || nextState;
+    }
+
+    const actions = tr.querySelector('[data-role="order-actions"]');
+    if (actions) {
+        actions.innerHTML = renderActionButtonsHtml(id, nextState, 'icon');
+    }
+}
+
+function updateModalState(nextState) {
+    if (!activeOrderIdInModal) return;
+    const badge = document.querySelector('#view-order-body [data-role="modal-state-badge"]');
+    if (badge) {
+        badge.className = `status-badge ${nextState}`;
+        badge.textContent = STATE_LABELS[nextState] || nextState;
+    }
+
+    const actions = document.querySelector('#view-order-body [data-role="modal-actions"]');
+    if (actions) {
+        actions.innerHTML = renderActionButtonsHtml(activeOrderIdInModal, nextState, 'text');
+    }
+}
+
 /* ---- View order details ---- */
 function viewOrder(id) {
     const modal = document.getElementById('view-order-modal');
@@ -60,6 +124,7 @@ function viewOrder(id) {
             <p>Cargando detalles…</p>
         </div>`;
     modal.classList.add('active');
+    activeOrderIdInModal = String(id);
 
     fetch(`/supplier-orders/${id}`, {
         headers: { 'X-CSRF-TOKEN': getCSRFToken(), 'Accept': 'application/json' }
@@ -72,8 +137,8 @@ function viewOrder(id) {
         }
 
         const order        = data.order;
-        const stateLabels  = { pending: 'Pendiente', confirmed: 'Confirmado', delivered: 'Entregado', cancelled: 'Cancelado' };
         const supplierName = order.supplier?.name ?? '—';
+        const detailUrl = `/supplier-orders/${order.num_order}/detail`;
 
         const productsHtml = (order.products || []).map(item => {
             const up  = parseFloat(item.unit_price || 0);
@@ -92,10 +157,17 @@ function viewOrder(id) {
                 <div class="detail-section">
                     <h4><i class="fas fa-info-circle"></i> Información general</h4>
                     <div class="detail-grid">
-                        <div class="detail-item"><label>Nº Pedido:</label><span><strong>#${order.num_order}</strong></span></div>
+                        <div class="detail-item"><label>Nº Pedido:</label><span><strong>${order.po_number || ('#' + order.num_order)}</strong></span></div>
                         <div class="detail-item"><label>Proveedor:</label><span>${supplierName}</span></div>
                         <div class="detail-item"><label>Fecha:</label><span>${order.date}</span></div>
-                        <div class="detail-item"><label>Estado:</label><span class="status-badge ${order.state}">${stateLabels[order.state] || order.state}</span></div>
+                        <div class="detail-item"><label>Entrega estimada:</label><span>${order.estimated_delivery_date || '—'}</span></div>
+                        <div class="detail-item"><label>Estado:</label><span class="status-badge ${order.state}" data-role="modal-state-badge">${STATE_LABELS[order.state] || order.state}</span></div>
+                    </div>
+                    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;" data-role="modal-actions">
+                        ${renderActionButtonsHtml(order.num_order, order.state, 'text')}
+                        <a class="btn btn-secondary" href="${detailUrl}" title="Ver página de detalle">
+                            <i class="fas fa-external-link-alt"></i> Ir a detalle
+                        </a>
                     </div>
                 </div>
                 ${productsHtml ? `
@@ -192,6 +264,16 @@ function _orderAction(id, state, confirmText, successMsg) {
         cancelButtonText: 'Cancelar',
     }).then(r => {
         if (!r.isConfirmed) return;
+
+        const disableButtons = (disabled) => {
+            document
+                .querySelectorAll(`tr[data-order-id="${id}"] .action-btn, #view-order-body [data-role="modal-actions"] .btn`)
+                .forEach((el) => {
+                    if (el instanceof HTMLButtonElement) el.disabled = disabled;
+                });
+        };
+
+        disableButtons(true);
         fetch(`/supplier-orders/${id}/state`, {
             method: 'PATCH',
             headers: {
@@ -210,13 +292,33 @@ function _orderAction(id, state, confirmText, successMsg) {
                     icon:  'success',
                     confirmButtonColor: '#2e7d32',
                     confirmButtonText: 'Entendido',
-                }).then(() => location.reload());
+                }).then(() => {
+                    updateRowState(String(id), state);
+                    if (activeOrderIdInModal === String(id)) {
+                        updateModalState(state);
+                    }
+                    disableButtons(false);
+                });
             } else {
+                disableButtons(false);
                 Swal.fire({ title: 'Error', text: data.message || 'No se pudo actualizar.', icon: 'error' });
             }
         })
-        .catch(() => Swal.fire({ title: 'Error', text: 'Error de conexión.', icon: 'error' }));
+        .catch(() => {
+            disableButtons(false);
+            Swal.fire({ title: 'Error', text: 'Error de conexión.', icon: 'error' });
+        });
     });
+}
+
+function submitDraftOrder(id) {
+    _orderAction(id, 'pending', {
+        title: '¿Enviar borrador?',
+        text: 'El pedido pasará a estado pendiente ante el proveedor.',
+        icon: 'question',
+        color: '#2e7d32',
+        confirm: 'Sí, enviar',
+    }, 'Pedido enviado a pendiente.');
 }
 
 function confirmOrder(id) {
@@ -239,6 +341,16 @@ function deliverOrder(id) {
     }, 'Pedido marcado como entregado.');
 }
 
+function sendOrder(id) {
+    _orderAction(id, 'pending', {
+        title:   '¿Enviar pedido?',
+        text:    'El pedido dejará de ser borrador y pasará a estado pendiente.',
+        icon:    'question',
+        color:   '#2e7d32',
+        confirm: 'Sí, enviar',
+    }, 'Pedido enviado. Ahora está pendiente.');
+}
+
 function cancelOrder(id) {
     _orderAction(id, 'cancelled', {
         title:   '¿Cancelar pedido?',
@@ -255,7 +367,9 @@ Object.assign(window, {
     closeViewSupplierModal,
     viewOrder,
     viewSupplier,
+    submitDraftOrder,
     confirmOrder,
     deliverOrder,
+    sendOrder,
     cancelOrder,
 });

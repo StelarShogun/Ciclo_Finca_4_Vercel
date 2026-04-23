@@ -597,6 +597,54 @@ function smoothScrollTop() {
     const newSubcategory = qs('#new-subcategory');
     const newFinalCategory = qs('#new-category');
 
+    // --- Gallery input validation (webkitdirectory may pick non-image files) ---
+    const VALID_IMAGE_TYPES = ['image/jpeg','image/png','image/gif','image/svg+xml','image/webp','image/avif'];
+
+    const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB por imagen (igual al límite del servidor)
+
+    function validateGalleryInput(inputEl, hintEl) {
+        if (!inputEl || !inputEl.files || inputEl.files.length === 0) return true;
+        const images = Array.from(inputEl.files).filter(f => VALID_IMAGE_TYPES.includes(f.type));
+        if (images.length === 0) {
+            Swal.fire({
+                title: 'Sin imágenes válidas',
+                text: 'La carpeta seleccionada no contiene imágenes (jpeg, png, webp, gif, svg, avif). Seleccioná una carpeta con imágenes.',
+                icon: 'warning',
+                confirmButtonText: 'Entendido',
+            });
+            inputEl.value = '';
+            if (hintEl) hintEl.textContent = 'Ningún archivo seleccionado';
+            return false;
+        }
+        const oversized = images.filter(f => f.size > MAX_IMAGE_SIZE_BYTES);
+        if (oversized.length > 0) {
+            Swal.fire({
+                title: 'Error',
+                text: 'Ha excedido la capacidad de imágenes que puedes cargar. Cada imagen no puede superar 10 MB.',
+                icon: 'error',
+                confirmButtonText: 'Entendido',
+            });
+            inputEl.value = '';
+            if (hintEl) hintEl.textContent = 'Ningún archivo seleccionado';
+            return false;
+        }
+        if (hintEl) hintEl.textContent = images.length + ' imagen' + (images.length > 1 ? 'es' : '') + ' seleccionada' + (images.length > 1 ? 's' : '');
+        return true;
+    }
+
+    const newImagesInput  = qs('#new-images');
+    const editImagesInput = qs('#edit-images');
+
+    newImagesInput?.addEventListener('change', function () {
+        const hint = this.closest('.form-group')?.querySelector('small');
+        validateGalleryInput(this, hint);
+    });
+
+    editImagesInput?.addEventListener('change', function () {
+        const hint = this.closest('.form-group')?.querySelector('small');
+        validateGalleryInput(this, hint);
+    });
+
     if (openNewProductModalBtn) {
         openNewProductModalBtn.addEventListener('click', () => {
             if (newProductForm) {
@@ -652,8 +700,21 @@ function smoothScrollTop() {
             }
             qs('#new-brand-combobox')?.classList.remove('error');
 
+            // Validate gallery: if a folder was selected, ensure it has at least one image
+            if (newImagesInput?.files?.length > 0) {
+                const hint = newImagesInput.closest('.form-group')?.querySelector('small');
+                if (!validateGalleryInput(newImagesInput, hint)) return;
+            }
+
             setButtonLoading(saveNewProductBtn, true);
             const formData = new FormData(newProductForm);
+            // Rebuild images[] with only valid image files (webkitdirectory may include non-images)
+            formData.delete('images[]');
+            if (newImagesInput?.files?.length > 0) {
+                Array.from(newImagesInput.files)
+                    .filter(f => VALID_IMAGE_TYPES.includes(f.type))
+                    .forEach(f => formData.append('images[]', f));
+            }
             formData.set('is_featured', qs('#new-featured')?.checked ? '1' : '0');
 
             smartFetch(newProductForm.action, {
@@ -664,6 +725,9 @@ function smoothScrollTop() {
                 }
             })
             .then(response => {
+                if (response.status === 413) {
+                    throw Object.assign(new Error('PAYLOAD_TOO_LARGE'), { isSizeError: true });
+                }
                 return response.json();
             })
             .then(data => {
@@ -672,13 +736,14 @@ function smoothScrollTop() {
                 if (data.success) {
                     newProductModal.classList.remove('active');
                     Swal.fire({
-                        title: 'Éxito',
+                        title: 'Producto creado',
                         text: data.message,
                         icon: 'success',
-                        confirmButtonText: 'Entendido'
-                    }).then(() => {
-                        location.reload();
-                    });
+                        timer: 1500,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                    }).then(() => { location.reload(); });
+                    location.reload();
                 } else if (data.errors) {
                     // Remove previous error messages
                     qsa('.error-message', newProductForm).forEach(el => el.remove());
@@ -722,7 +787,9 @@ function smoothScrollTop() {
                 console.error('Error:', error);
                 Swal.fire({
                     title: 'Error',
-                    text: 'Ocurrió un error inesperado. Por favor, revisa los logs.',
+                    text: error.isSizeError
+                        ? 'Ha excedido la capacidad de imágenes que puedes cargar.'
+                        : 'Ocurrió un error inesperado. Por favor, revisa los logs.',
                     icon: 'error',
                     confirmButtonText: 'Entendido'
                 });
@@ -887,8 +954,21 @@ function smoothScrollTop() {
             }
             qs('#edit-brand-combobox')?.classList.remove('error');
 
+            // Validate gallery: if a folder was selected, ensure it has at least one image
+            if (editImagesInput?.files?.length > 0) {
+                const hint = editImagesInput.closest('.form-group')?.querySelector('small');
+                if (!validateGalleryInput(editImagesInput, hint)) return;
+            }
+
             setButtonLoading(saveEditBtn, true);
             const formData = new FormData(editProductForm);
+            // Rebuild images[] with only valid image files
+            formData.delete('images[]');
+            if (editImagesInput?.files?.length > 0) {
+                Array.from(editImagesInput.files)
+                    .filter(f => VALID_IMAGE_TYPES.includes(f.type))
+                    .forEach(f => formData.append('images[]', f));
+            }
             formData.append('_method', 'PUT');
             formData.set('is_featured', qs('#edit-featured')?.checked ? '1' : '0');
 
@@ -900,6 +980,9 @@ function smoothScrollTop() {
                 }
             })
             .then(response => {
+                if (response.status === 413) {
+                    throw Object.assign(new Error('PAYLOAD_TOO_LARGE'), { isSizeError: true });
+                }
                 return response.json();
             })
             .then(data => {
@@ -908,13 +991,14 @@ function smoothScrollTop() {
                 if (data.success) {
                     editModal.classList.remove('active');
                     Swal.fire({
-                        title: 'Éxito',
+                        title: 'Producto actualizado',
                         text: data.message,
                         icon: 'success',
-                        confirmButtonText: 'Entendido'
-                    }).then(() => {
-                        location.reload();
-                    });
+                        timer: 1500,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                    }).then(() => { location.reload(); });
+                    location.reload();
                 } else if (data.errors) {
                     qsa('.error-message', editProductForm).forEach(el => el.remove());
 
@@ -957,7 +1041,9 @@ function smoothScrollTop() {
                 console.error('Error:', error);
                 Swal.fire({
                     title: 'Error',
-                    text: 'Ocurrió un error inesperado. Por favor, revisa los logs.',
+                    text: error.isSizeError
+                        ? 'Ha excedido la capacidad de imágenes que puedes cargar.'
+                        : 'Ocurrió un error inesperado. Por favor, revisa los logs.',
                     icon: 'error',
                     confirmButtonText: 'Entendido'
                 });
@@ -971,6 +1057,49 @@ function smoothScrollTop() {
     const closeViewProductModalBtn = qs('#close-view-product-modal');
     const cancelViewProductBtn = qs('#cancel-view-product');
     const viewProductBody = qs('#view-product-body');
+
+    function initAdminViewCarousel() {
+        var track = document.getElementById('admin-carousel-track');
+        if (!track) return;
+        var slides = track.querySelectorAll('.carousel-slide');
+        var total  = slides.length;
+        if (total <= 1) return;
+        var prevBtn  = document.getElementById('admin-carousel-prev');
+        var nextBtn  = document.getElementById('admin-carousel-next');
+        var dotsWrap = document.getElementById('admin-carousel-dots');
+        var dots     = dotsWrap ? Array.from(dotsWrap.querySelectorAll('.carousel-dot')) : [];
+        var current  = 0;
+
+        function goTo(index) {
+            current = Math.max(0, Math.min(total - 1, index));
+            track.style.transform = 'translateX(-' + (current * 100) + '%)';
+            dots.forEach(function (d, i) { d.classList.toggle('active', i === current); });
+            if (prevBtn) prevBtn.disabled = current === 0;
+            if (nextBtn) nextBtn.disabled = current === total - 1;
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', function () { goTo(current - 1); });
+        if (nextBtn) nextBtn.addEventListener('click', function () { goTo(current + 1); });
+        dots.forEach(function (d, i) { d.addEventListener('click', function () { goTo(i); }); });
+
+        var startX = null;
+        track.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
+        track.addEventListener('touchend', function (e) {
+            if (startX === null) return;
+            var diff = startX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 40) goTo(diff > 0 ? current + 1 : current - 1);
+            startX = null;
+        }, { passive: true });
+
+        // Keyboard arrow navigation (active while modal is open)
+        function onKeyDown(e) {
+            if (e.key === 'ArrowLeft')  goTo(current - 1);
+            if (e.key === 'ArrowRight') goTo(current + 1);
+        }
+        document.addEventListener('keydown', onKeyDown);
+
+        goTo(0);
+    }
 
     viewDetailsBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -992,11 +1121,40 @@ function smoothScrollTop() {
                 setModalLoading(viewProductModal, false);
                 if(data.success){
                     const product = data.data;
+                    // Build image carousel slides from MediaLibrary URLs, fallback to legacy field
+                    const allImages = [];
+                    if (product.media_main) allImages.push(product.media_main);
+                    if (Array.isArray(product.media_gallery)) allImages.push(...product.media_gallery);
+                    if (!allImages.length && product.image) allImages.push('/assets/images/products/' + product.image);
+
+                    let imageHtml;
+                    if (!allImages.length) {
+                        imageHtml = '<p>No hay imagen</p>';
+                    } else if (allImages.length === 1) {
+                        imageHtml = `<img src="${allImages[0]}" alt="${product.name}" style="max-width:100%;height:auto;border-radius:var(--border-radius);margin-top:10px;">`;
+                    } else {
+                        const slides = allImages.map(url =>
+                            `<div class="carousel-slide"><img src="${url}" alt="${product.name}"></div>`
+                        ).join('');
+                        const dots = allImages.map((_, i) =>
+                            `<button class="carousel-dot${i === 0 ? ' active' : ''}" aria-label="Imagen ${i + 1}"></button>`
+                        ).join('');
+                        imageHtml = `
+                            <div class="admin-product-carousel" style="margin-top:10px;">
+                                <div class="carousel-viewport">
+                                    <div class="carousel-track" id="admin-carousel-track">${slides}</div>
+                                </div>
+                                <button class="carousel-btn carousel-btn--prev" id="admin-carousel-prev" disabled aria-label="Anterior">&#8249;</button>
+                                <button class="carousel-btn carousel-btn--next" id="admin-carousel-next" aria-label="Siguiente">&#8250;</button>
+                                <div class="carousel-dots" id="admin-carousel-dots">${dots}</div>
+                            </div>`;
+                    }
+
                     viewProductBody.innerHTML = `
                         <div class="product-details-grid">
                             <div class="product-details-item">
                                 <label><i class="fas fa-image icon"></i> Imagen:</label>
-                                ${product.image ? `<img src="/assets/images/products/${product.image}" alt="${product.name}" style="max-width: 100%; height: auto; border-radius: var(--border-radius); margin-top: 10px;">` : '<p>No hay imagen</p>'}
+                                ${imageHtml}
                             </div>
                             <div class="product-details-item">
                                 <label><i class="fas fa-tag icon"></i> Nombre:</label>
@@ -1040,6 +1198,7 @@ function smoothScrollTop() {
                             </div>
                         </div>
                     `;
+                    initAdminViewCarousel();
                     viewProductModal.classList.add('active');
                 } else {
                     Swal.fire({
@@ -1473,18 +1632,6 @@ function smoothScrollTop() {
 
 // Initial loading spinner and filter form behavior
 document.addEventListener('DOMContentLoaded', () => {
-    const exportModal = document.getElementById('export-modal');
-    const exportBtn = document.getElementById('export-btn');
-    if (exportBtn && exportModal) {
-        exportBtn.addEventListener('click', () => exportModal.classList.add('active'));
-        document.getElementById('close-export-modal')?.addEventListener('click', () => {
-            exportModal.classList.remove('active');
-        });
-        exportModal.querySelector('.modal-backdrop')?.addEventListener('click', () => {
-            exportModal.classList.remove('active');
-        });
-    }
-
     const productSection = document.querySelector('.products-section');
     const loadingSpinner = document.querySelector('.loading-spinner-overlay');
     const filterForm = document.querySelector('.filter-form');
@@ -1523,3 +1670,293 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+// ============================================================
+//  STOCK ADJUSTMENT MODULE — merged from stock-adjust.js
+// ============================================================
+/**
+ * stock-adjust.js
+ *
+ * Handles the manual stock-adjustment modal for the inventory page.
+ *
+ * Usage (in inventory.js or via @vite):
+ *   import './stock-adjust.js';
+ *
+ * Or load as a standalone <script> AFTER the DOM is ready.
+ *
+ * Routes expected:
+ *   POST /inventory/add-manual/{id}
+ *   POST /inventory/remove-manual/{id}
+ *
+ * Both endpoints accept JSON body: { quantity, reason }
+ * and return: { success, message, stock_current?, errors? }
+ */
+
+(function () {
+    'use strict';
+
+    // ── DOM references (resolved after DOMContentLoaded) ──────────────────
+    let modal, backdrop, modalTitle, modalTitleIcon;
+    let productIdInput, productNameEl, productStockEl;
+    let qtyInput, reasonSelect;
+    let qtyError, reasonError, alertBanner, alertMsg;
+    let confirmBtn, confirmBtnText, confirmBtnSpinner;
+    let cancelBtn, closeBtn;
+
+    // Current state
+    let currentAction = 'add'; // 'add' | 'remove'
+    let currentProductId = null;
+
+    // ── Bootstrap ─────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        modal              = document.getElementById('stock-adjust-modal');
+        if (!modal) return; // Modal not present on this page
+
+        backdrop           = modal.querySelector('.stock-modal-backdrop');
+        modalTitle         = document.getElementById('stock-modal-title');
+        modalTitleIcon     = document.getElementById('stock-modal-title-icon');
+        productIdInput     = document.getElementById('stock-modal-product-id');
+        productNameEl      = document.getElementById('stock-modal-product-name');
+        productStockEl     = document.getElementById('stock-modal-product-stock');
+        qtyInput           = document.getElementById('stock-modal-qty');
+        reasonSelect       = document.getElementById('stock-modal-reason');
+        qtyError           = document.getElementById('stock-modal-qty-error');
+        reasonError        = document.getElementById('stock-modal-reason-error');
+        alertBanner        = document.getElementById('stock-modal-alert');
+        alertMsg           = document.getElementById('stock-modal-alert-msg');
+        confirmBtn         = document.getElementById('stock-modal-confirm-btn');
+        confirmBtnText     = document.getElementById('stock-modal-confirm-text');
+        confirmBtnSpinner  = document.getElementById('stock-modal-confirm-spinner');
+        cancelBtn          = document.getElementById('stock-modal-cancel-btn');
+        closeBtn           = document.getElementById('stock-modal-close-btn');
+
+        // ── Event delegation: open modal from table rows and cards ────────
+        document.body.addEventListener('click', (e) => {
+            // "Add" button in table/card actions
+            const addBtn = e.target.closest('[data-stock-action="add"]');
+            if (addBtn) {
+                e.preventDefault();
+                openModal('add', addBtn);
+                return;
+            }
+
+            // "Remove" button in table/card actions
+            const removeBtn = e.target.closest('[data-stock-action="remove"]');
+            if (removeBtn) {
+                e.preventDefault();
+                openModal('remove', removeBtn);
+                return;
+            }
+
+        });
+
+        // ── Close triggers ────────────────────────────────────────────────
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+        backdrop.addEventListener('click', closeModal);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('is-open')) {
+                closeModal();
+            }
+        });
+
+        // ── Confirm ───────────────────────────────────────────────────────
+        confirmBtn.addEventListener('click', submitAdjustment);
+    });
+
+    // ── Open modal ────────────────────────────────────────────────────────
+    function openModal(action, triggerEl) {
+        currentAction    = action;
+        currentProductId = triggerEl.dataset.productId;
+
+        const name  = triggerEl.dataset.productName  || 'Producto';
+        const stock = triggerEl.dataset.productStock !== undefined
+            ? triggerEl.dataset.productStock
+            : '—';
+
+        // Populate info strip
+        productIdInput.value  = currentProductId;
+        productNameEl.textContent  = name;
+        productStockEl.textContent = stock;
+
+        // Title & icon
+        if (action === 'add') {
+            modalTitleIcon.className = 'fas fa-plus-circle modal-icon-add';
+            modalTitle.textContent   = 'Agregar Stock';
+            confirmBtn.className     = 'stock-btn stock-btn-confirm-add';
+            confirmBtnText.textContent = 'Confirmar adición';
+        } else {
+            modalTitleIcon.className = 'fas fa-minus-circle modal-icon-remove';
+            modalTitle.textContent   = 'Retirar Stock';
+            confirmBtn.className     = 'stock-btn stock-btn-confirm-remove';
+            confirmBtnText.textContent = 'Confirmar retiro';
+        }
+
+        // Reset form state
+        resetForm();
+
+        modal.classList.add('is-open');
+        qtyInput.focus();
+    }
+
+    // ── Close modal ───────────────────────────────────────────────────────
+    function closeModal() {
+        modal.classList.remove('is-open');
+        resetForm();
+        currentProductId = null;
+    }
+
+    // ── Reset ─────────────────────────────────────────────────────────────
+    function resetForm() {
+        qtyInput.value         = '';
+        reasonSelect.value     = '';
+        qtyInput.classList.remove('is-invalid');
+        reasonSelect.classList.remove('is-invalid');
+        qtyError.classList.remove('visible');
+        qtyError.textContent   = '';
+        reasonError.classList.remove('visible');
+        reasonError.textContent = '';
+        hideAlert();
+        setLoading(false);
+    }
+
+    // ── Client-side validation ─────────────────────────────────────────────
+    function validate() {
+        let valid = true;
+
+        const qty = parseFloat(qtyInput.value);
+        if (!qtyInput.value || isNaN(qty) || qty < 1 || !Number.isInteger(qty)) {
+            qtyInput.classList.add('is-invalid');
+            qtyError.textContent = 'Ingresa una cantidad entera mayor a 0.';
+            qtyError.classList.add('visible');
+            valid = false;
+        } else {
+            qtyInput.classList.remove('is-invalid');
+            qtyError.classList.remove('visible');
+        }
+
+        const validReasons = ['manual_adjustment', 'damage', 'refund'];
+        if (!reasonSelect.value || !validReasons.includes(reasonSelect.value)) {
+            reasonSelect.classList.add('is-invalid');
+            reasonError.textContent = 'Selecciona un motivo válido.';
+            reasonError.classList.add('visible');
+            valid = false;
+        } else {
+            reasonSelect.classList.remove('is-invalid');
+            reasonError.classList.remove('visible');
+        }
+
+        return valid;
+    }
+
+    // ── Submit ────────────────────────────────────────────────────────────
+    async function submitAdjustment() {
+        hideAlert();
+        if (!validate()) return;
+
+        // ── SweetAlert2 confirmation ──────────────────────────────────────
+        const qty         = parseInt(qtyInput.value, 10);
+        const productName = productNameEl.textContent || 'este producto';
+        const isAdd       = currentAction === 'add';
+
+        const { isConfirmed } = await Swal.fire({
+            title: isAdd ? '¿Agregar stock?' : '¿Retirar stock?',
+            html: isAdd
+                ? `Se agregarán <strong>${qty}</strong> unidad(es) a <strong>${productName}</strong>.`
+                : `Se retirarán <strong>${qty}</strong> unidad(es) de <strong>${productName}</strong>.`,
+            icon: isAdd ? 'question' : 'warning',
+            showCancelButton: true,
+            confirmButtonText: isAdd ? 'Sí, agregar' : 'Sí, retirar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: isAdd ? '#16a34a' : '#dc2626',
+            cancelButtonColor: '#6b7280',
+            reverseButtons: true,
+            focusCancel: true,
+        });
+
+        if (!isConfirmed) return;
+        // ─────────────────────────────────────────────────────────────────
+
+        const endpoint = currentAction === 'add'
+            ? `/inventory/add-manual/${currentProductId}`
+            : `/inventory/remove-manual/${currentProductId}`;
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+        setLoading(true);
+
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept':       'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify({
+                    quantity: parseInt(qtyInput.value, 10),
+                    reason:   reasonSelect.value,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                closeModal();
+                await Swal.fire({
+                    title: '¡Listo!',
+                    text: data.message || 'Stock actualizado correctamente.',
+                    icon: 'success',
+                    timer: 1800,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                });
+                window.location.reload();
+            } else {
+                // Server-side validation errors
+                const firstError = data.message
+                    || (data.errors ? Object.values(data.errors).flat()[0] : null)
+                    || 'No se pudo actualizar el stock.';
+
+                // Highlight specific fields if the server returned field errors
+                if (data.errors) {
+                    if (data.errors.quantity) {
+                        qtyInput.classList.add('is-invalid');
+                        qtyError.textContent = data.errors.quantity[0];
+                        qtyError.classList.add('visible');
+                    }
+                    if (data.errors.reason) {
+                        reasonSelect.classList.add('is-invalid');
+                        reasonError.textContent = data.errors.reason[0];
+                        reasonError.classList.add('visible');
+                    }
+                }
+
+                showAlert('error', firstError);
+                setLoading(false);
+            }
+        } catch (err) {
+            console.error('stock-adjust fetch error', err);
+            showAlert('error', 'Error de conexión. Verifica tu red e inténtalo de nuevo.');
+            setLoading(false);
+        }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+    function setLoading(loading) {
+        confirmBtn.disabled          = loading;
+        cancelBtn.disabled           = loading;
+        closeBtn.disabled            = loading;
+        confirmBtnSpinner.style.display = loading ? 'inline-block' : 'none';
+    }
+
+    function showAlert(type, message) {
+        alertBanner.className = `stock-modal-alert visible alert-${type}`;
+        alertMsg.textContent  = message;
+    }
+
+    function hideAlert() {
+        alertBanner.className = 'stock-modal-alert';
+        alertMsg.textContent  = '';
+    }
+})();

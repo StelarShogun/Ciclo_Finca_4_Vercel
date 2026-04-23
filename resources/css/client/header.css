@@ -203,6 +203,42 @@
   right: -5px;
 }
 
+/* Invoice button — identical to cart-btn */
+.cf4-invoices-btn {
+  position: relative;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--transition);
+  text-decoration: none;
+}
+
+.cf4-invoices-btn:hover,
+.cf4-invoices-btn.active { background: var(--color-primary-dark); color: white; text-decoration: none; }
+
+.cf4-invoice-count {
+  background: var(--color-accent);
+  color: white;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  position: absolute;
+  top: -5px;
+  right: -5px;
+}
+
 /* User dropdown */
 .user-menu-wrap { position: relative; }
 
