@@ -13,6 +13,7 @@ return new class extends Migration
             $table->unsignedBigInteger('num_order');
             $table->unsignedBigInteger('user_id');
             $table->string('state', 32);
+            $table->string('reason', 500)->nullable();
             $table->timestamp('changed_at')->useCurrent();
 
             $table->foreign('num_order')

@@ -15,6 +15,7 @@ class OrderStateTimeline extends Model
         'num_order',
         'user_id',
         'state',
+        'reason',
         'changed_at',
     ];
 

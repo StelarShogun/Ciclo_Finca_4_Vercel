@@ -169,6 +169,9 @@
                                         &nbsp;·&nbsp;
                                         <i class="fas fa-calendar-alt"></i> {{ $entry->changed_at->format('d/m/Y H:i') }}
                                     </span>
+                                    @if($entry->reason)
+                                        <span class="tl-reason"><i class="fas fa-comment-alt"></i> {{ $entry->reason }}</span>
+                                    @endif
                                 </div>
                             </li>
                         @endforeach

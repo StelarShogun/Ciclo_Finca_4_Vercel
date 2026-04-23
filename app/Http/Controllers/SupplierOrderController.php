@@ -289,6 +289,7 @@ class SupplierOrderController extends Controller
                     'user_name'  => $t->admin
                         ? trim($t->admin->name.' '.($t->admin->first_surname ?? ''))
                         : 'Sistema',
+                    'reason'     => $t->reason,
                 ])->values()->all(),
             ],
         ]);
@@ -299,7 +300,8 @@ class SupplierOrderController extends Controller
         $order = Order::findOrFail($id);
 
         $request->validate([
-            'state' => 'required|in:draft,pending,confirmed,delivered,cancelled',
+            'state'  => 'required|in:draft,pending,confirmed,delivered,cancelled',
+            'reason' => 'nullable|string|max:500',
         ]);
 
         // Define the allowed state transitions for supplier orders.
@@ -369,6 +371,7 @@ class SupplierOrderController extends Controller
             'num_order'  => (int) $order->num_order,
             'user_id'    => (int) auth('admin')->id(),
             'state'      => $new,
+            'reason'     => $new === 'cancelled' ? ($request->input('reason') ?? null) : null,
             'changed_at' => now(),
         ]);
 
