@@ -54,6 +54,7 @@ class SalesController extends Controller
     {
         $since = (int) $request->query('since', 0);
 
+        // Limit heartbeat checks to active web orders
         $baseQuery = Sale::query()
             ->whereIn('status', ['pending', 'completed'])
             ->where(function ($q) {
@@ -134,6 +135,7 @@ class SalesController extends Controller
 
     public function store(Request $request, InventoryMovementService $inventoryService)
     {
+        // Support both legacy Spanish keys and normalized request fields
         $items        = $request->items ?? $request->productos ?? [];
         $buyerName    = $request->buyer_name ?: null;
         $buyerEmail   = $request->buyer_email ?: null;
@@ -152,6 +154,7 @@ class SalesController extends Controller
             'notes'             => $notes,
         ]);
 
+        // Normalize item keys before validation
         $normalizedItems = collect($request->items)->map(function ($item) {
             $item['product_id'] = $item['product_id'] ?? $item['producto_id'] ?? null;
             $item['quantity']   = $item['quantity'] ?? $item['cantidad'] ?? 1;
@@ -198,6 +201,7 @@ class SalesController extends Controller
                     ], 400);
                 }
 
+                // Recalculate monetary values from validated product data
                 $quantity  = (int) $item['quantity'];
                 $unitPrice = $this->roundMoney((float) $item['precio_unitario']);
                 $lineTotal = $this->roundMoney($quantity * $unitPrice);
@@ -226,6 +230,7 @@ class SalesController extends Controller
                 ], 422);
             }
 
+            // Clamp tax percentage to the supported range
             $ivaPercent  = (float) ($request->input('iva_percentage', 0));
             $ivaPercent  = max(0.0, min(13.0, $ivaPercent));
             $taxableBase = $this->roundMoney($subtotal - $discount);
@@ -260,6 +265,7 @@ class SalesController extends Controller
                     'total'      => $line['total'],
                 ]);
 
+                // Register the inventory output for each sold line
                 $inventoryService->recordSale(
                     product:  $line['product'],
                     quantity: $line['quantity'],
@@ -308,6 +314,7 @@ class SalesController extends Controller
     {
         $sale = Sale::findOrFail($id);
 
+        // Only pending orders can be cancelled through this endpoint
         if ($sale->status !== 'pending') {
             return response()->json([
                 'success' => false,
@@ -323,20 +330,7 @@ class SalesController extends Controller
         ]);
     }
 
-    /**
-     * Confirma un pedido pendiente (pending → completed).
-     *
-     * MOVIMIENTO AUDITADO: SALIDA / origen según order_source del pedido.
-     *
-     * Los pedidos web (web_cart) ya descontaron stock en checkout(). Al confirmar
-     * un pedido pendiente solo se cambia su estado; el stock ya fue registrado.
-     * Por ese motivo este método NO registra un segundo movimiento: hacerlo
-     * duplicaría la salida y corrompería el historial.
-     *
-     * El movimiento original fue registrado con origin='web_cart' por
-     * ClientPageController::checkout() y puede consultarse en el historial
-     * del producto filtrado por reference_id = sale_id.
-     */
+    // Complete a pending order without duplicating stock output movements
     public function complete($id)
     {
         try {
@@ -370,6 +364,7 @@ class SalesController extends Controller
                 ], 400);
             }
 
+            // Generate an invoice number only when it is missing
             $invoiceNumber = $sale->invoice_number;
             if (empty($invoiceNumber)) {
                 $invoiceNumber = (new Sale)->generateInvoiceNumber();
@@ -399,13 +394,7 @@ class SalesController extends Controller
         }
     }
 
-    /**
-     * Cancela/rechaza un pedido pendiente (pending → cancelled).
-     *
-     * MOVIMIENTO AUDITADO: DEVOLUCION / origen 'return'.
-     * El stock que fue descontado en checkout() se devuelve aquí íntegramente.
-     * Solo aplica a pedidos pending (el stock ya fue comprometido).
-     */
+    // Cancel a pending order and restore committed stock
     public function cancel(int $id, InventoryMovementService $inventoryService)
     {
         try {
@@ -454,12 +443,7 @@ class SalesController extends Controller
         }
     }
 
-    /**
-     * Reembolsa una venta completada (completed → refunded).
-     *
-     * MOVIMIENTO AUDITADO: DEVOLUCION / origen 'return'.
-     * Devuelve el stock de cada línea de la venta.
-     */
+    // Refund a completed sale and return stock to inventory
     public function refund(int $id, InventoryMovementService $inventoryService)
     {
         $sale = Sale::with('saleItems.product')->findOrFail($id);
@@ -502,6 +486,7 @@ class SalesController extends Controller
     {
         $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
 
+        // Restrict invoice rendering to confirmed sales
         if ($sale->status !== 'completed') {
             abort(403, 'La factura solo está disponible para ventas confirmadas.');
         }
@@ -533,6 +518,7 @@ class SalesController extends Controller
 
             $chunkSize = AdminPdfExportLimits::SALES_CSV_CHUNK;
 
+            // Stream CSV rows in chunks to reduce memory usage
             $callback = function () use ($base, $chunkSize): void {
                 $file = fopen('php://output', 'w');
                 if ($file === false) {
@@ -659,6 +645,7 @@ class SalesController extends Controller
             $filterLines[] = 'Nota: el PDF incluye como máximo '.$maxRows.' filas ('.$totalMatching.' ventas coinciden con los filtros).';
         }
 
+        // Compute aggregate values for the PDF summary
         $aggregate = (clone $base)
             ->selectRaw('COUNT(*) as agg_count')
             ->selectRaw('COALESCE(SUM(total), 0) as agg_sum_total')
@@ -692,7 +679,7 @@ class SalesController extends Controller
         return $pdf->download(ReportPdfFilename::make('ventas'));
     }
 
-    /** @return array<int, string> */
+    // Build human-readable filter lines for export metadata
     private function salesExportFilterLines(Request $request): array
     {
         $lines  = [];
@@ -720,7 +707,7 @@ class SalesController extends Controller
         return $lines;
     }
 
-    /** @param Builder<Sale> $query */
+    // Apply status, date, payment, and search filters to the admin sales list
     private function applySalesAdminListFilters(Builder $query, Request $request): void
     {
         $query->notExpired();
@@ -778,6 +765,7 @@ class SalesController extends Controller
         }
     }
 
+    // Restrict results to the requested sales status scope
     private function applyVentasStatusScope($query, ?string $statusParam): void
     {
         $closed = ['completed', 'cancelled', 'refunded'];
@@ -842,6 +830,7 @@ class SalesController extends Controller
         return $today - $yesterday;
     }
 
+    // Map legacy Spanish payment values to internal English keys
     private function mapPaymentMethodToEnglish($value)
     {
         if (empty($value)) {
@@ -852,6 +841,7 @@ class SalesController extends Controller
         return $map[strtolower($value)] ?? $value;
     }
 
+    // Round all currency calculations to two decimals
     private function roundMoney(float $amount): float
     {
         return round($amount, 2);
@@ -896,6 +886,7 @@ class SalesController extends Controller
 
         $grandTotal = $rows->sum('total_revenue');
 
+        // Derive the revenue share for each category row
         $rows->transform(function ($row) use ($grandTotal) {
             $row->percentage = $grandTotal > 0
                 ? round(($row->total_revenue / $grandTotal) * 100, 1)
@@ -917,6 +908,7 @@ class SalesController extends Controller
         ));
     }
 
+    // Resolve preset and custom report date ranges
     private function resolveDateRange(string $range, ?string $dateFrom, ?string $dateTo): array
     {
         switch ($range) {

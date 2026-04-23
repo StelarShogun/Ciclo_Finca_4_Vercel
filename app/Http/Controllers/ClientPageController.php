@@ -17,7 +17,7 @@ class ClientPageController extends Controller
 {
     public function home()
     {
-        // Featured products: active, in stock, latest first
+        // Load featured products that are active, in stock, and recently created.
         $featuredProducts = Product::with(['category'])
             ->activeInClientStore()
             ->where('is_featured', true)
@@ -57,6 +57,7 @@ class ClientPageController extends Controller
         if ($request->filled('category_id')) {
             $selectedCategory = Category::find($request->category_id);
             if ($selectedCategory) {
+                // Include child categories when a parent category is selected.
                 if (is_null($selectedCategory->parent_category_id)) {
                     $childIds = Category::where('parent_category_id', $selectedCategory->category_id)->pluck('category_id');
                     $query->where(function ($q) use ($selectedCategory, $childIds) {
@@ -78,6 +79,7 @@ class ClientPageController extends Controller
         $minPrice = $request->filled('min_price') ? $request->input('min_price') : null;
         $maxPrice = $request->filled('max_price') ? $request->input('max_price') : null;
 
+        // Reject invalid price ranges before applying filters.
         if (is_numeric($minPrice) && is_numeric($maxPrice) && (float) $minPrice > (float) $maxPrice) {
             return redirect()->route('clients.catalog', $request->except('min_price', 'max_price', 'page'))
                 ->withInput()
@@ -118,9 +120,7 @@ class ClientPageController extends Controller
         ));
     }
 
-    /**
-     * @return Collection<int, array{product: Product, spotlight: 'featured'|'novelty'}>
-     */
+    // Returns spotlight rows using featured products first, then recent products.
     private function catalogSpotlightProductRows(): Collection
     {
         $maxTotal = 12;
@@ -153,6 +153,7 @@ class ClientPageController extends Controller
     {
         $product = Product::with(['category', 'supplier', 'classificationValues.dimension'])->findOrFail($id);
 
+        // Redirect to the canonical product URL when the slug does not match.
         $canonicalSlug = $product->clientPublicSlug();
         if ($slug !== $canonicalSlug) {
             return redirect()->route('clients.product', [
@@ -204,6 +205,7 @@ class ClientPageController extends Controller
             }
         }
 
+        // Increase quantity when the product already exists in the cart.
         if ($existingIndex !== null) {
             $newQuantity = ($cart[$existingIndex]['quantity'] ?? 0) + $request->quantity;
 
@@ -287,6 +289,7 @@ class ClientPageController extends Controller
         foreach ($cart as $item) {
             $product = Product::find($item['product_id']);
 
+            // Rebuild cart rows using the latest product availability.
             if ($product && $product->isPurchasableByClient()) {
                 $qty = min((int) $item['quantity'], $product->stock_current);
                 if ($qty < 1) {
@@ -336,14 +339,9 @@ class ClientPageController extends Controller
         ]);
     }
 
-    /**
-     * Checkout del carrito web.
-     *
-     * MOVIMIENTO AUDITADO: SALIDA / origin = 'sale_web'
-     * Se usa InventoryMovementService::recordWebCartSale() para que cada línea
-     * del pedido quede auditada con el origen correcto.
-     * Como no existe un admin autenticado en este flujo, user_id queda null.
-     */
+    // Creates a pending web order and records stock خروج with origin 'sale_web'.
+    // Inventory movements are stored through recordWebCartSale().
+    // user_id remains null because no admin is authenticated in this flow.
     public function checkout(Request $request, InventoryMovementService $inventoryService)
     {
         $cart = Session::get('cart', []);
@@ -414,7 +412,7 @@ class ClientPageController extends Controller
                     'total'         => $item['total'],
                 ]);
 
-                // origin = 'sale_web': pedido desde la tienda web, sin admin autenticado.
+                // Record the web sale movement without an authenticated admin user.
                 $inventoryService->recordWebCartSale(
                     product:  $item['product'],
                     quantity: (int) $item['quantity'],
@@ -437,70 +435,5 @@ class ClientPageController extends Controller
 
             return response()->json(['success' => false, 'message' => 'Error al procesar el pedido: '.$e->getMessage()], 500);
         }
-    }
-
-    private function getCartCount(): int
-    {
-        return count(Session::get('cart', []));
-    }
-
-    private function getCartTotal(): float
-    {
-        return array_reduce(
-            Session::get('cart', []),
-            fn ($carry, $item) => $carry + $item['price'] * $item['quantity'],
-            0
-        );
-    }
-
-    public function clearCart()
-    {
-        Session::forget('cart');
-
-        return response()->json([
-            'success'    => true,
-            'message'    => 'Carrito vaciado exitosamente',
-            'cart_count' => 0,
-            'cart_total' => 0,
-        ]);
-    }
-
-    public function invoices(Request $request)
-    {
-        $client = Auth::guard('clients')->user();
-        $tab = $request->query('tab', 'facturas');
-
-        if ($tab === 'historial') {
-            $orders = Sale::with(['saleItems.product'])
-                ->where('client_id', $client->user_id)
-                ->where('status', 'completed')
-                ->orderByDesc('sale_date')
-                ->get();
-        } else {
-            $tab = 'facturas';
-            $orders = Sale::with(['saleItems.product'])
-                ->where('client_id', $client->user_id)
-                ->where('status', 'pending')
-                ->orderByDesc('sale_date')
-                ->get();
-        }
-
-        $cartCount = $this->getCartCount();
-        $invoiceCount = Sale::where('client_id', $client->user_id)
-            ->where('status', 'pending')
-            ->count();
-
-        return view('client.Invoices', compact('orders', 'cartCount', 'invoiceCount', 'tab'));
-    }
-
-    public function invoicesHeartbeat()
-    {
-        $client = Auth::guard('clients')->user();
-
-        $count = Sale::where('client_id', $client->user_id)
-            ->where('status', 'pending')
-            ->count();
-
-        return response()->json(['count' => $count]);
     }
 }

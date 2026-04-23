@@ -5,14 +5,13 @@
 
 /* ════════════════════════════════════════════════════════════════════════════
    reports-hub.css
-   Estilos unificados para el módulo de reportes:
-     · Hub principal (reports-hub)
-     · Índice de movimientos de inventario (inv-index)
-     · Detalle de movimientos de inventario (inventory-movements)
+   Unified styles for the reports module:
+     · Main hub (reports-hub)
+     · Inventory movements index (inv-index)
+     · Inventory movements detail (inventory-movements)
    ════════════════════════════════════════════════════════════════════════════ */
 
-
-/* ── Layout raíz (admin) ─────────────────────────────────────────────────── */
+/* ── Root layout (admin) ─────────────────────────────────────────────────── */
 
 .admin-layout {
     display: flex;
@@ -31,9 +30,8 @@
     min-width: 0;
 }
 
-
 /* ══════════════════════════════════════════════════════════════════════════
-   1. REPORTS HUB — página de entrada con tarjetas de reportes
+   1. REPORTS HUB — landing page with report cards
    ══════════════════════════════════════════════════════════════════════════ */
 
 .reports-hub-header h1 {
@@ -125,9 +123,8 @@
     font-size: 1.1rem;
 }
 
-
 /* ══════════════════════════════════════════════════════════════════════════
-   2. BREADCRUMB — token compartido por todos los sub-reportes
+   2. BREADCRUMB — shared token used by all sub-reports
    ══════════════════════════════════════════════════════════════════════════ */
 
 .reports-breadcrumb {
@@ -148,12 +145,12 @@
 
 .reports-breadcrumb .sep { opacity: 0.4; }
 
-
 /* ══════════════════════════════════════════════════════════════════════════
-   3. INVENTORY MOVEMENTS INDEX — lista/grid de productos
+   3. INVENTORY MOVEMENTS INDEX — product list/grid
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Layout raíz ──────────────────────────────────────────────────────────── */
+/* ── Root layout ──────────────────────────────────────────────────────────── */
+
 .inv-index-report {
     padding: 1.5rem 2rem 3rem;
     max-width: 1100px;
@@ -165,6 +162,7 @@
 }
 
 /* ── Header ───────────────────────────────────────────────────────────────── */
+
 .inv-index-header {
     margin-bottom: 1.75rem;
     padding-bottom: 1.5rem;
@@ -200,7 +198,8 @@
     line-height: 1.55;
 }
 
-/* ── Buscador ─────────────────────────────────────────────────────────────── */
+/* ── Search ──────────────────────────────────────────────────────────────── */
+
 .inv-index-search-form {
     display: flex;
     gap: 0.5rem;
@@ -273,7 +272,8 @@
 
 .inv-index-search-btn:hover { background: var(--color-primary-dark, #1d4ed8); }
 
-/* ── Tarjeta contenedora de tabla (reutiliza patrón de orders.css) ───────── */
+/* ── Table container card (reuses the orders.css pattern) ───────────────── */
+
 .inv-index-report .orders-table-card {
     background: #fff;
     border: 1px solid rgba(0, 0, 0, 0.08);
@@ -282,7 +282,8 @@
     overflow: hidden;
 }
 
-/* ── Toolbar / barra de búsqueda ──────────────────────────────────────────── */
+/* ── Toolbar / search bar ────────────────────────────────────────────────── */
+
 .inv-index-report .orders-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -356,7 +357,8 @@
     margin-left: auto;
 }
 
-/* ── Botones de acción en la toolbar del índice ───────────────────────────── */
+/* ── Index toolbar action buttons ────────────────────────────────────────── */
+
 .inv-index-report .orders-toolbar-actions .btn {
     display: inline-flex;
     align-items: center;
@@ -369,489 +371,7 @@
     cursor: pointer;
     white-space: nowrap;
     border: 1px solid transparent;
-    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
-    text-decoration: none;
-}
-
-.inv-index-report .orders-toolbar-actions .btn i {
-    font-size: 0.8rem;
-}
-
-.inv-index-report .orders-toolbar-actions .btn-primary {
-    background: var(--color-primary, #2e7d32);
-    color: #fff;
-    border-color: var(--color-primary, #2e7d32);
-    box-shadow: 0 1px 4px rgba(46, 125, 50, 0.25);
-}
-
-.inv-index-report .orders-toolbar-actions .btn-primary:hover {
-    background: var(--color-primary-dark, #1b5e20);
-    border-color: var(--color-primary-dark, #1b5e20);
-    box-shadow: 0 3px 8px rgba(46, 125, 50, 0.3);
-    transform: translateY(-1px);
-}
-
-.inv-index-report .orders-toolbar-actions .btn-primary:active {
-    transform: translateY(0);
-    box-shadow: none;
-}
-
-.inv-index-report .orders-toolbar-actions .btn-secondary {
-    background: #fff;
-    color: var(--color-text-muted, #6b7280);
-    border-color: var(--color-border, #d1d5db);
-}
-
-.inv-index-report .orders-toolbar-actions .btn-secondary:hover {
-    background: var(--color-surface-alt, #f3f4f6);
-    border-color: var(--color-text-muted, #9ca3af);
-    color: var(--color-text, #374151);
-}
-
-.inv-index-report .orders-toolbar-actions .btn-sm {
-    padding: 0.45rem 0.85rem;
-    font-size: 0.8125rem;
-    border-radius: 8px;
-}
-
-/* ── Tabla principal ──────────────────────────────────────────────────────── */
-.inv-index-report .sales-table-container {
-    padding: 0;
-    border: none;
-    box-shadow: none;
-    background: transparent;
-    overflow-x: auto;
-}
-
-.inv-index-report .sales-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 0;
-    font-size: 0.875rem;
-}
-
-.inv-index-report .sales-table thead th {
-    padding: 0.65rem 0.85rem;
-    background: rgba(0, 0, 0, 0.03);
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    font-weight: 600;
-    color: var(--color-muted, #6b7280);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    text-align: left;
-    white-space: nowrap;
-}
-
-.inv-index-report .sales-table thead th.text-end { text-align: right; }
-
-.inv-index-report .sales-table tbody tr {
-    transition: background 0.12s ease;
-}
-
-.inv-index-report .sales-table tbody tr:hover {
-    background: rgba(0, 0, 0, 0.025);
-}
-
-.inv-index-report .sales-table tbody td {
-    padding: 0.65rem 0.85rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    vertical-align: middle;
-    color: var(--color-text, #111827);
-}
-
-.inv-index-report .sales-table tbody tr:last-child td { border-bottom: none; }
-
-.inv-index-report .sales-table tbody td.text-end { text-align: right; }
-
-/* ── PO / SKU número ──────────────────────────────────────────────────────── */
-.inv-index-report .po-number {
-    white-space: nowrap;
-    font-size: 0.92rem;
-    letter-spacing: 0.01em;
-}
-
-/* ── Pills de estado de stock ─────────────────────────────────────────────── */
-.inv-index-report .order-status-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.65rem;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-}
-
-.inv-index-report .order-status-pill.success {
-    background: var(--color-success-bg, #dcfce7);
-    color: var(--color-success, #166534);
-}
-
-.inv-index-report .order-status-pill.warning {
-    background: var(--color-warning-bg, #fef9c3);
-    color: var(--color-warning, #854d0e);
-}
-
-.inv-index-report .order-status-pill.danger {
-    background: var(--color-danger-bg, #fee2e2);
-    color: var(--color-danger, #991b1b);
-}
-
-/* ── Contenedor de acciones ───────────────────────────────────────────────── */
-.inv-index-report .actions-container {
-    display: flex;
-    align-items: center;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-    gap: 0.4rem;
-}
-
-.inv-index-report .actions-container .action-btn {
-    flex: 0 0 auto;
-}
-
-/* ── Estado vacío ─────────────────────────────────────────────────────────── */
-.inv-index-report .orders-empty {
-    text-align: center;
-    padding: 3rem 1.5rem;
-    color: var(--color-muted, #9ca3af);
-}
-
-.inv-index-report .orders-empty .orders-empty-icon {
-    font-size: 3rem;
-    margin-bottom: 0.75rem;
-    opacity: 0.5;
-}
-
-/* ── Paginación ───────────────────────────────────────────────────────────── */
-.inv-index-report .orders-pagination-wrap {
-    padding: 1rem 1.25rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-    background: rgba(0, 0, 0, 0.015);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-}
-
-/* Etiqueta "Mostrando X–Y de Z productos" — hermano del componente x-pagination */
-.inv-index-pagination-info {
-    font-size: 0.8125rem;
-    color: var(--color-text-muted, #6b7280);
-    white-space: nowrap;
-}
-
-/* ── Label de resultados ──────────────────────────────────────────────────── */
-.inv-index-results-label {
-    font-size: 0.8125rem;
-    color: var(--color-text-muted, #6b7280);
-    margin: 0 0 1rem;
-}
-
-.inv-index-results-label strong { color: var(--color-text, #111827); }
-
-/* ── Estado vacío ─────────────────────────────────────────────────────────── */
-.inv-index-empty {
-    text-align: center;
-    padding: 4rem 1rem;
-    color: var(--color-text-muted, #9ca3af);
-}
-
-.inv-index-empty i {
-    font-size: 2.25rem;
-    margin-bottom: 0.75rem;
-    opacity: 0.3;
-    display: block;
-}
-
-.inv-index-empty p { font-size: 0.9375rem; margin: 0; }
-
-/* ── Grid de productos ────────────────────────────────────────────────────── */
-.inv-index-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 0.75rem;
-}
-
-@media (max-width: 480px) {
-    .inv-index-grid { grid-template-columns: 1fr; }
-}
-
-/* ── Tarjeta de producto ──────────────────────────────────────────────────── */
-.inv-product-card {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding: 1rem 1rem 1rem 0.9rem;
-    background: #fff;
-    border: 1px solid var(--color-border, #e5e7eb);
-    border-radius: 10px;
-    text-decoration: none;
-    color: inherit;
-    position: relative;
-    transition: border-color 0.15s, box-shadow 0.15s, transform 0.12s;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-    overflow: hidden;
-}
-
-.inv-product-card::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--color-border, #e5e7eb);
-    border-radius: 10px 0 0 10px;
-    transition: background 0.15s;
-}
-
-.inv-product-card:hover {
-    border-color: var(--color-primary, #2563eb);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
-    transform: translateY(-1px);
-}
-
-.inv-product-card:hover::before {
-    background: var(--color-primary, #2563eb);
-}
-
-/* Dot de stock */
-.inv-product-stock-dot {
-    position: absolute;
-    top: 0.75rem;
-    right: 2.2rem;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.inv-product-stock-dot--success   { background: #16a34a; }
-.inv-product-stock-dot--warning   { background: #ca8a04; }
-.inv-product-stock-dot--danger    { background: #dc2626; }
-.inv-product-stock-dot--secondary { background: #9ca3af; }
-
-/* Cuerpo de la tarjeta */
-.inv-product-card-body {
-    flex: 1;
-    min-width: 0;
-}
-
-.inv-product-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    margin-bottom: 0.3rem;
-}
-
-.inv-product-sku {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--color-text-muted, #6b7280);
-    background: var(--color-surface-alt, #f3f4f6);
-    padding: 0.1rem 0.45rem;
-    border-radius: 999px;
-}
-
-.inv-product-category {
-    font-size: 0.75rem;
-    color: var(--color-text-muted, #9ca3af);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.inv-product-name {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--color-text, #111827);
-    margin: 0 0 0.25rem;
-    line-height: 1.3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.inv-product-supplier {
-    font-size: 0.78rem;
-    color: var(--color-text-muted, #9ca3af);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-.inv-product-supplier i { font-size: 0.7rem; }
-
-/* Stock actual */
-.inv-product-stock {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    flex-shrink: 0;
-    gap: 0.05rem;
-    margin-right: 0.25rem;
-}
-
-.inv-product-stock-value {
-    font-size: 1.1rem;
-    font-weight: 700;
-    line-height: 1;
-}
-
-.inv-product-stock-value--success   { color: #16a34a; }
-.inv-product-stock-value--warning   { color: #ca8a04; }
-.inv-product-stock-value--danger    { color: #dc2626; }
-.inv-product-stock-value--secondary { color: var(--color-text-muted, #6b7280); }
-
-.inv-product-stock-label {
-    font-size: 0.7rem;
-    color: var(--color-text-muted, #9ca3af);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-/* Flecha */
-.inv-product-card-arrow {
-    font-size: 0.7rem;
-    color: var(--color-text-muted, #d1d5db);
-    flex-shrink: 0;
-    transition: color 0.15s, transform 0.15s;
-}
-
-.inv-product-card:hover .inv-product-card-arrow {
-    color: var(--color-primary, #2563eb);
-    transform: translateX(2px);
-}
-
-/* ── Paginación del índice ────────────────────────────────────────────────── */
-.inv-index-pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--color-border, #f3f4f6);
-}
-
-.inv-index-pagination-info {
-    font-size: 0.8125rem;
-    color: var(--color-text-muted, #9ca3af);
-}
-
-
-/* ══════════════════════════════════════════════════════════════════════════
-   4. INVENTORY MOVEMENTS DETAIL — vista de movimientos de un producto
-   ══════════════════════════════════════════════════════════════════════════ */
-
-/* ── Layout raíz ─────────────────────────────────────────────────────────── */
-.inventory-movements-report {
-    padding: 1.5rem 2rem 3rem;
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-@media (max-width: 768px) {
-    .inventory-movements-report { padding: 1rem 1rem 3rem; }
-}
-
-/* ── Header ──────────────────────────────────────────────────────────────── */
-.inventory-movements-header {
-    margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--color-border, #e5e7eb);
-}
-
-.inventory-movements-header-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 0.5rem;
-}
-
-.inventory-movements-sku {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--color-text-muted, #6b7280);
-    background: var(--color-surface-alt, #f3f4f6);
-    border: 1px solid var(--color-border, #e5e7eb);
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-}
-
-.inventory-movements-category {
-    font-size: 0.8rem;
-    color: var(--color-text-muted, #9ca3af);
-    background: transparent;
-    padding: 0.2rem 0.5rem;
-    border: 1px solid var(--color-border, #e5e7eb);
-    border-radius: 999px;
-}
-
-.inventory-movements-header h1 {
-    font-size: 1.65rem;
-    font-weight: 700;
-    margin: 0 0 0.45rem;
-    color: var(--color-text, #111827);
-    line-height: 1.2;
-}
-
-.inventory-movements-lead {
-    font-size: 0.9375rem;
-    color: var(--color-text-muted, #6b7280);
-    margin: 0;
-    max-width: 680px;
-    line-height: 1.55;
-}
-
-/* Badges de stock inline en el lead */
-.stock-badge {
-    font-size: inherit;
-    font-weight: 700;
-}
-
-.stock-badge--success   { color: #16a34a; }
-.stock-badge--warning   { color: #ca8a04; }
-.stock-badge--danger    { color: #dc2626; }
-.stock-badge--secondary { color: var(--color-text-muted, #6b7280); }
-
-/* ── Layout dos columnas ─────────────────────────────────────────────────── */
-.inv-mov-layout {
-    display: grid;
-    grid-template-columns: 220px 1fr;
-    gap: 2rem;
-    align-items: start;
-}
-
-@media (max-width: 768px) {
-    .inv-mov-layout { grid-template-columns: 1fr; }
-}
-
-/* ── Aside: filtros ──────────────────────────────────────────────────────── */
-.inv-mov-filters {
-    position: sticky;
-    top: 1.5rem;
-    background: #fff;
-    border: 1px solid var(--color-border, #e5e7eb);
-    border-radius: 14px;
-    padding: 1.25rem 1rem;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-}
-
-.inv-mov-filters-title {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--color-text-muted, #9ca3af);
-    margin: 0 0 0.5rem;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transfor[... ELLIPSIZATION ...]margin: 0 0 0.5rem;
 }
 
 .inv-mov-filters-title--spaced {
@@ -860,7 +380,8 @@
     border-top: 1px solid var(--color-border, #f3f4f6);
 }
 
-/* Toggle de botones */
+/* Button toggle */
+
 .inv-mov-toggle-wrap { width: 100%; }
 
 .inv-mov-toggle {
@@ -892,7 +413,8 @@
     font-weight: 600;
 }
 
-/* Inputs de fecha */
+/* Date inputs */
+
 .inv-mov-date-block { margin-bottom: 0.65rem; }
 
 .inv-mov-date-label {
@@ -937,7 +459,8 @@
     flex-shrink: 0;
 }
 
-/* Botones de acción del aside */
+/* Aside action buttons */
+
 .inv-mov-apply-btn {
     width: 100%;
     margin-top: 0.75rem;
@@ -980,7 +503,8 @@
     color: var(--color-text, #374151);
 }
 
-/* ── Main: estados ───────────────────────────────────────────────────────── */
+/* ── Main: states ────────────────────────────────────────────────────────── */
+
 .inventory-movements-error {
     background: #fef2f2;
     border: 1px solid #fca5a5;
@@ -1033,7 +557,8 @@
     margin: 0 auto;
 }
 
-/* ── Tarjetas de métricas ────────────────────────────────────────────────── */
+/* ── Metric cards ────────────────────────────────────────────────────────── */
+
 .inv-metrics-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1073,7 +598,7 @@
 }
 
 .inv-metric-card--entrada::before { background: #16a34a; }
-.inv-metric-card--salida::before  { background: #dc2626; }
+.inv-metric-card--salida  { background: #dc2626; }
 
 .inv-metric-icon {
     font-size: 1rem;
@@ -1125,7 +650,8 @@
     margin: 0;
 }
 
-/* ── Tabla de movimientos ────────────────────────────────────────────────── */
+/* ── Movements table ─────────────────────────────────────────────────────── */
+
 .inv-table-section {
     background: #fff;
     border: 1px solid var(--color-border, #e5e7eb);
@@ -1207,7 +733,8 @@
 .inv-table tbody tr:last-child td { border-bottom: none; }
 .inv-table tbody tr:hover td { background: var(--color-surface-alt, #f9fafb); }
 
-/* Badges de tipo de movimiento */
+/* Movement type badges */
+
 .inv-type-badge {
     display: inline-block;
     font-size: 0.72rem;
@@ -1233,7 +760,8 @@
 .inv-notes-cell { font-size: 0.8125rem; color: var(--color-text-muted, #6b7280); max-width: 180px; }
 .inv-admin-cell { font-size: 0.8125rem; }
 
-/* ── Paginación del detalle (envuelve el mismo .pagination.is-compact que x-pagination) ── */
+/* ── Detail pagination (wraps the same .pagination.is-compact as x-pagination) ── */
+
 .inv-pagination {
     padding: 0.85rem 1.25rem;
     border-top: 1px solid var(--color-border, #e5e7eb);

@@ -6,44 +6,17 @@ use App\Models\InventoryMovement;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
-/**
- * InventoryMovementController — solo lectura.
- *
- * Este controller NUNCA modifica stock ni registra movimientos.
- * Su única responsabilidad es exponer el historial de auditoría al administrador.
- *
- * Rutas sugeridas (agregar en routes/web.php bajo el middleware 'admin'):
- *
- *   Route::get('/inventory/movements',
- *       [InventoryMovementController::class, 'index'])
- *       ->name('admin.inventory.movements.index');
- *
- *   Route::get('/inventory/movements/{product}',
- *       [InventoryMovementController::class, 'show'])
- *       ->name('admin.inventory.movements.show');
- *
- *   Route::get('/inventory/movements/{product}/json',
- *       [InventoryMovementController::class, 'json'])
- *       ->name('admin.inventory.movements.json');
- *
- * NOTA: el endpoint /json es el que consume inventory-movements.js.
- * Su respuesta incluye tanto los movimientos paginados como el resumen
- * de métricas (total_entradas / total_salidas) para las tarjetas de la vista.
- */
+// Read-only controller for inventory movement history.
 class InventoryMovementController extends Controller
 {
-    /**
-     * GET /inventory/movements
-     *
-     * Lista todos los productos con acceso rápido a su historial.
-     * Vista de entrada para que el administrador elija el producto a auditar.
-     */
+    // Lists products with quick access to their movement history.
     public function index(Request $request)
     {
         $query = Product::query()
             ->with(['category', 'supplier'])
             ->orderByDesc('product_id');
 
+        // Applies product search by name or formatted SKU.
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -57,19 +30,12 @@ class InventoryMovementController extends Controller
         return view('admin.reports.movements.index', compact('products'));
     }
 
-    /**
-     * GET /inventory/movements/{product}
-     *
-     * Renderiza la vista SPA-like de movimientos de un producto.
-     * La vista carga los datos mediante JS (fetch → /json), por lo que
-     * este método solo necesita proveer el producto y los valores únicos
-     * de tipo/origen para poblar los filtros del aside antes del primer fetch.
-     */
+    // Renders the movement history view for a specific product.
     public function show(Request $request, int $productId)
     {
         $product = Product::with(['category', 'supplier'])->findOrFail($productId);
 
-        // Valores únicos para los botones de filtro del aside (renderizados en Blade)
+        // Loads distinct filter values for the sidebar.
         $availableTypes   = InventoryMovement::where('product_id', $productId)
                                 ->distinct()->pluck('type')->sort()->values();
         $availableOrigins = InventoryMovement::where('product_id', $productId)
@@ -82,15 +48,7 @@ class InventoryMovementController extends Controller
         ));
     }
 
-    /**
-     * GET /inventory/movements/{product}/json
-     *
-     * Endpoint JSON consumido por inventory-movements.js.
-     * Devuelve los movimientos paginados + resumen de métricas para las tarjetas.
-     *
-     * El resumen respeta los filtros activos para que las tarjetas reflejen
-     * siempre el subconjunto visible, no el total histórico del producto.
-     */
+    // Returns paginated movement data and summary metrics as JSON.
     public function json(Request $request, int $productId)
     {
         $product = Product::findOrFail($productId);
@@ -102,8 +60,7 @@ class InventoryMovementController extends Controller
         $perPage   = min((int) $request->get('per_page', 30), 100);
         $movements = $query->paginate($perPage)->withQueryString();
 
-        // ── Resumen de métricas (sobre el conjunto filtrado) ─────────────
-        // Reutilizamos el mismo base query (sin paginación) para el summary.
+        // Reuses the filtered base query to calculate summary metrics.
         $summaryBase = $this->buildBaseQuery($productId, $request);
 
         $summary = [
@@ -134,14 +91,12 @@ class InventoryMovementController extends Controller
         ]);
     }
 
-    /**
-     * Construye el query base de movimientos con los filtros del request aplicados.
-     * Usado tanto para la paginación como para el resumen de métricas.
-     */
+    // Builds the filtered base query for movements.
     private function buildBaseQuery(int $productId, Request $request): \Illuminate\Database\Eloquent\Builder
     {
         $q = InventoryMovement::where('product_id', $productId);
 
+        // Applies optional filters from the request.
         if ($request->filled('type')) {
             $q->where('type', $request->type);
         }
@@ -158,10 +113,7 @@ class InventoryMovementController extends Controller
         return $q;
     }
 
-    /**
-     * Formatea un InventoryMovement para la respuesta JSON.
-     * Usado por json().
-     */
+    // Formats a movement record for the JSON response.
     private function formatMovement(InventoryMovement $m): array
     {
         return [
@@ -184,4 +136,5 @@ class InventoryMovementController extends Controller
             'created_at'       => $m->created_at->toISOString(),
             'created_at_human' => $m->created_at->format('d/m/Y H:i:s'),
         ];
-    }}
+    }
+}

@@ -49,7 +49,7 @@ class ProductController extends Controller
                 $classificationIds = $data['classification_value_ids'] ?? [];
                 unset($data['classification_value_ids']);
 
-                // File fields are handled by MediaLibrary after the product is created
+                // File inputs are processed after the product is created
                 unset($data['image'], $data['images']);
 
                 $product = Product::create($data);
@@ -59,7 +59,7 @@ class ProductController extends Controller
                 return $product;
             });
 
-            // Save images to public/images/{product_name}/ then register with MediaLibrary
+            // Store uploaded files locally before registering them in MediaLibrary
             $folderPath = public_path('images/'.$product->name);
             if (! is_dir($folderPath)) {
                 mkdir($folderPath, 0755, true);
@@ -191,7 +191,7 @@ class ProductController extends Controller
                 $classificationIds = $syncClassifications ? ($data['classification_value_ids'] ?? []) : null;
                 unset($data['classification_value_ids']);
 
-                // File fields are handled by MediaLibrary after the product is updated
+                // File inputs are processed after the product is updated
                 unset($data['image'], $data['images']);
 
                 $p->update($data);
@@ -204,18 +204,18 @@ class ProductController extends Controller
                 return $p;
             });
 
-            // Save images to public/images/{product_name}/ then register with MediaLibrary
+            // Store uploaded files locally before registering them in MediaLibrary
             $folderPath = public_path('images/'.$product->name);
             if (! is_dir($folderPath)) {
                 mkdir($folderPath, 0755, true);
             }
             $slug = Str::slug($product->name, '_');
 
-            // Replace main image when a new one is uploaded (singleFile handles deletion of the old one)
+            // Replace the main image when a new file is uploaded
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $ext = $file->extension() ?: $file->getClientOriginalExtension();
-                // Remove any existing main file for this product
+                // Remove the previous main image file from disk
                 foreach (glob($folderPath.'/'.$slug.'_main.*') ?: [] as $old) {
                     @unlink($old);
                 }
@@ -228,7 +228,7 @@ class ProductController extends Controller
 
             // Replace the entire gallery when new files are provided
             if ($request->hasFile('images')) {
-                // Remove existing numbered gallery files from the folder
+                // Remove existing gallery files from disk
                 foreach (glob($folderPath.'/'.$slug.'_[0-9]*.{jpg,jpeg,png,webp,gif,avif}', GLOB_BRACE) ?: [] as $old) {
                     @unlink($old);
                 }
@@ -291,7 +291,7 @@ class ProductController extends Controller
         try {
             DB::transaction(function () use ($id) {
                 $p = Product::findOrFail($id);
-                // Soft-delete by marking inactive rather than removing the record
+                // Deactivate the product instead of deleting the record
                 $p->update(['status' => 'inactive']);
             });
 
@@ -348,17 +348,14 @@ class ProductController extends Controller
         return view('products.create');
     }
 
-    /**
-     * Promote a gallery image to the main_image collection (replaces the current main image).
-     * POST /products/{id}/gallery/{mediaId}/promote
-     */
+    // Promote a gallery image to the main image collection
     public function promoteToMain(int $id, int $mediaId)
     {
         try {
             $product = Product::findOrFail($id);
             $mediaItem = $product->media()->where('id', $mediaId)->firstOrFail();
 
-            // Copy the file preserving the gallery item, then set as single main image
+            // Copy the gallery file and register it as the main image
             $product->addMedia($mediaItem->getPath())
                 ->preservingOriginal()
                 ->toMediaCollection('main_image');
@@ -376,10 +373,7 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * Remove a single image from the gallery collection.
-     * DELETE /products/{id}/gallery/{mediaId}
-     */
+    // Remove a single image from the gallery collection
     public function removeGalleryImage(int $id, int $mediaId)
     {
         try {
@@ -413,7 +407,7 @@ class ProductController extends Controller
         $perPage = $request->get('per_page', 10);
         $paginator = $query->paginate($perPage);
 
-        // Normalize raw Eloquent models into a consistent shape expected by the view
+        // Normalize products into the structure expected by the view
         $products = collect($paginator->items())->map(function (Product $product) {
             return (object) [
                 'product_id' => $product->product_id,
@@ -431,7 +425,7 @@ class ProductController extends Controller
             ];
         });
 
-        // Raíces deduplicadas por nombre (filtro "Categoría") + árbol para selects dependientes en JS
+        // Load deduplicated root categories and the dependent subcategory tree
         $categories = Category::query()
             ->selectRaw('MIN(category_id) as category_id, name')
             ->whereNull('parent_category_id')
@@ -597,7 +591,7 @@ class ProductController extends Controller
             );
         }
 
-        // Default to CSV export (streaming por chunks: no cargar todo el inventario en memoria).
+        // Stream CSV exports in chunks to avoid loading the full dataset into memory
         $filename = 'products_'.date('Ymd_His').'.csv';
         $chunk = AdminPdfExportLimits::INVENTORY_CSV_CHUNK;
 
@@ -606,7 +600,7 @@ class ProductController extends Controller
             if ($out === false) {
                 return;
             }
-            fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for correct Excel rendering
+            fwrite($out, "\xEF\xBB\xBF"); // Add the UTF-8 BOM for Excel compatibility
             fputcsv($out, ['ID', 'Name', 'Description', 'Image', 'Category', 'Supplier', 'Purchase Price', 'Sale Price', 'Stock', 'Minimum', 'Status', 'Created']);
             (clone $baseQuery)
                 ->with($withRelations)
@@ -678,7 +672,7 @@ class ProductController extends Controller
             return 'json';
         }
 
-        // Fall back to content sniffing when the extension is ambiguous
+        // Inspect the file content when the extension is ambiguous
         $content = file_get_contents($file->getPathname());
         $trimmedContent = trim($content);
 
@@ -709,7 +703,7 @@ class ProductController extends Controller
                 throw new \Exception('El archivo XML está vacío o no se pudo leer correctamente.');
             }
 
-            // Capture libxml errors internally instead of emitting PHP warnings
+            // Capture libxml parsing errors instead of emitting PHP warnings
             libxml_use_internal_errors(true);
             $xml = new \SimpleXMLElement($xmlContent);
             $xmlErrors = libxml_get_errors();
@@ -718,6 +712,7 @@ class ProductController extends Controller
                 $errorMessages = array_map(function ($error) {
                     return trim($error->message);
                 }, $xmlErrors);
+
                 throw new \Exception('Error al parsear XML: '.implode(', ', $errorMessages));
             }
 
@@ -761,7 +756,7 @@ class ProductController extends Controller
                 }
             }
 
-            // Roll back the entire import if any record failed to keep the dataset consistent
+            // Roll back the full import if any record fails
             if (! empty($errores)) {
                 DB::rollBack();
             } else {
@@ -780,7 +775,7 @@ class ProductController extends Controller
     private function importCsv($file)
     {
         $csvData = array_map('str_getcsv', file($file->getPathname()));
-        // First row is treated as the header to build associative arrays per product
+        // Use the first row as the CSV header
         $headers = array_shift($csvData);
         $importados = 0;
         $errores = [];
@@ -865,7 +860,7 @@ class ProductController extends Controller
                 'sale_price' => $data['precio_venta'],
                 'stock_current' => $data['stock_actual'],
                 'stock_minimum' => $data['stock_minimo'],
-                // Translate Spanish status values from imported files to internal English enums
+                // Map legacy imported status labels to internal enum values
                 'status' => $this->mapLegacyStatus($data['estado'] ?? 'activo'),
             ]);
 
@@ -879,7 +874,7 @@ class ProductController extends Controller
 
     private function mapLegacyStatus(string $status): string
     {
-        // Maps Spanish status labels used in import files to the internal English enum values
+        // Map legacy Spanish status labels to internal English values
         return match (strtolower($status)) {
             'activo' => 'active',
             'inactivo' => 'inactive',
@@ -904,7 +899,7 @@ class ProductController extends Controller
                     $formattedErrors[] = $error;
                 }
             }
-            // Cap the displayed error list at 5 to keep the flash message readable
+            // Limit the displayed errors to keep the flash message readable
             $mensaje .= implode('; ', array_slice($formattedErrors, 0, 5));
             if (count($formattedErrors) > 5) {
                 $mensaje .= ' y '.(count($formattedErrors) - 5).' más...';
@@ -914,9 +909,7 @@ class ProductController extends Controller
         return redirect()->route('inventory')->with('status', $mensaje);
     }
 
-    /**
-     * @return Builder<Product>
-     */
+    // Build the filtered inventory query
     private function inventoryProductsFilteredQuery(Request $request): Builder
     {
         $query = Product::query();
@@ -967,9 +960,7 @@ class ProductController extends Controller
         return $query;
     }
 
-    /**
-     * @return array{0: string, 1: string}
-     */
+    // Validate the inventory sort column and direction
     private function validatedInventorySort(mixed $sort, mixed $order): array
     {
         $allowed = ['product_id', 'name', 'stock_current', 'sale_price', 'status', 'category_id'];
@@ -979,9 +970,7 @@ class ProductController extends Controller
         return [$col, $dir];
     }
 
-    /**
-     * @return array<int, string>
-     */
+    // Build human-readable export filter lines
     private function inventoryExportFilterLines(Request $request): array
     {
         $lines = [];
@@ -1022,13 +1011,7 @@ class ProductController extends Controller
         return $lines;
     }
 
-    /**
-     * POST /inventory/add-manual/{id}
-     * Manually add stock to a product and register an audited inventory movement.
-     *
-     * Delegates to InventoryMovementService::recordManualEntry(), which handles
-     * lockForUpdate() and DB::transaction() internally.
-     */
+    // Add manual stock and register the inventory movement
     public function addManualStock(Request $request, int $id, InventoryMovementService $inventoryService)
     {
         $validReasons = ['manual_adjustment', 'damage', 'return'];
@@ -1084,13 +1067,7 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * POST /inventory/remove-manual/{id}
-     * Manually remove stock from a product and register an audited inventory movement.
-     *
-     * Delegates to InventoryMovementService::recordManualExit(), which validates sufficient
-     * stock and handles lockForUpdate() and DB::transaction() internally.
-     */
+    // Remove manual stock and register the inventory movement
     public function removeManualStock(Request $request, int $id, InventoryMovementService $inventoryService)
     {
         $validReasons = ['manual_adjustment', 'damage', 'return'];

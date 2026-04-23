@@ -23,7 +23,7 @@ class SupplierOrderController extends Controller
         $terms = preg_split('/\s+/', $trimmed) ?: [];
         $terms = array_values(array_filter(array_map('trim', $terms)));
 
-        // Boolean mode: require all terms, allow prefix matching.
+        // Build a boolean full-text query that requires all terms and allows prefix matches.
         // Example: "grasa ceram" => "+grasa* +ceram*"
         return collect($terms)
             ->map(function ($t) {
@@ -67,6 +67,7 @@ class SupplierOrderController extends Controller
             ->limit(20)
             ->get()
             ->map(function (Product $p) {
+                // Prefer purchase price and fall back to sale price when needed.
                 $unit = (float) ($p->purchase_price ?: $p->sale_price);
                 if ($unit <= 0) {
                     $unit = (float) $p->sale_price;
@@ -91,7 +92,7 @@ class SupplierOrderController extends Controller
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
 
-        // Swap silently if hasta < desde
+        // Normalize the range when the end date is earlier than the start date.
         if ($dateFrom && $dateTo && $dateTo < $dateFrom) {
             [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
         }
@@ -113,7 +114,7 @@ class SupplierOrderController extends Controller
         if ($search) {
             $search = trim($search);
 
-            // High-performance search: join suppliers + order_items instead of JSON / subquery.
+            // Join related tables to support supplier and line-item search efficiently.
             $driver = DB::connection()->getDriverName();
             $bool = $driver === 'mysql' ? $this->fullTextBooleanQuery($search) : '';
 
@@ -203,12 +204,14 @@ class SupplierOrderController extends Controller
                         'items' => ['Uno de los productos seleccionados no existe o no pertenece al proveedor.'],
                     ]);
                 }
+
                 if ($qty < 1) {
                     throw ValidationException::withMessages([
                         'items' => ['No es posible agregar un producto con cantidad 0 o negativa.'],
                     ]);
                 }
 
+                // Prefer purchase price and fall back to sale price when needed.
                 $unit = (float) ($product->purchase_price ?: $product->sale_price);
                 if ($unit <= 0) {
                     $unit = (float) $product->sale_price;
@@ -293,6 +296,7 @@ class SupplierOrderController extends Controller
             'state' => 'required|in:draft,pending,confirmed,delivered,cancelled',
         ]);
 
+        // Define the allowed state transitions for supplier orders.
         $transitions = [
             'draft'     => ['pending', 'cancelled'],
             'pending'   => ['confirmed', 'cancelled'],
@@ -313,7 +317,7 @@ class SupplierOrderController extends Controller
                 ->where('order_num_order', (int) $order->num_order)
                 ->get(['product_id', 'quantity']);
 
-            // Fallback: si la orden usa JSON legacy en lugar de order_items
+            // Fall back to legacy JSON items when order_items is empty.
             if ($items->isEmpty() && is_array($order->products) && $order->products !== []) {
                 $items = collect($order->products)->map(function ($row) {
                     return (object) [
@@ -334,7 +338,7 @@ class SupplierOrderController extends Controller
                 $product = Product::find($productId);
 
                 if (! $product) {
-                    // Producto eliminado: log de advertencia, no interrumpir el flujo
+                    // Log missing products without interrupting the delivery flow.
                     \Illuminate\Support\Facades\Log::warning(
                         "SupplierOrderController::updateState — producto #{$productId} no encontrado al procesar orden #{$order->num_order}"
                     );
@@ -383,7 +387,7 @@ class SupplierOrderController extends Controller
     {
         $year = (string) now()->format('Y');
 
-        // Lock the orders table sectionally by forcing a max() read inside the transaction.
+        // Lock the matching purchase order range to generate the next sequential number safely.
         $last = Order::query()
             ->whereNotNull('po_number')
             ->where('po_number', 'like', 'PO-'.$year.'-%')

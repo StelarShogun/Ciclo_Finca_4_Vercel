@@ -2,36 +2,22 @@
 
 namespace App\Enums;
 
-/**
- * Tipos de movimiento de inventario (dirección del movimiento).
- *
- * Usado por InventoryMovementService para determinar cómo calcular
- * el stock resultante y para mostrar etiquetas legibles en la vista.
- */
+// Defines the supported inventory movement types.
 enum MovementType: string
 {
-    /** Incrementa el stock: compras de proveedor, ajustes positivos. */
+    // Increases stock, such as supplier entries or positive adjustments.
     case ENTRADA = 'entrada';
 
-    /** Decrementa el stock: ventas, ajustes negativos, daños. */
+    // Decreases stock, such as sales, negative adjustments, or damage.
     case SALIDA = 'salida';
 
-    /**
-     * Fija el stock a un valor absoluto.
-     * La quantity en este caso representa el nuevo stock total, no una diferencia.
-     */
+    // Sets stock to an absolute value instead of applying a delta.
     case AJUSTE = 'ajuste';
 
-    /**
-     * Incrementa el stock por devolución de un cliente.
-     * Semánticamente distinto de ENTRADA aunque ambos suman stock,
-     * para que los reportes puedan diferenciarlos.
-     */
+    // Increases stock from a customer return.
     case DEVOLUCION = 'devolucion';
 
-    // ── Helpers de presentación ─────────────────────────────────────────────
-
-    /** Etiqueta legible en español para vistas y exports. */
+    // Returns the display label for the movement type.
     public function label(): string
     {
         return match ($this) {
@@ -42,7 +28,7 @@ enum MovementType: string
         };
     }
 
-    /** Clase CSS Bootstrap para el badge de tipo en la vista. */
+    // Returns the Bootstrap badge class for the movement type.
     public function badgeClass(): string
     {
         return match ($this) {
@@ -53,7 +39,7 @@ enum MovementType: string
         };
     }
 
-    /** Icono Font Awesome sugerido (fa-solid). */
+    // Returns the suggested Font Awesome icon for the movement type.
     public function icon(): string
     {
         return match ($this) {

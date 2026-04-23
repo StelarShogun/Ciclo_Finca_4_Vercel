@@ -9,49 +9,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
-/**
- * InventoryMovementService — puerta única de registro de movimientos de stock.
- *
- * ╔══════════════════════════════════════════════════════════════════╗
- * ║  REGLA DE ORO                                                    ║
- * ║  Todo cambio a products.stock_current debe pasar por este        ║
- * ║  service. Nunca usar increment/decrement/update directamente     ║
- * ║  en los controllers para modificar el stock.                     ║
- * ╚══════════════════════════════════════════════════════════════════╝
- *
- * ┌─────────────────────────────────────────────────────────────────────────────┐
- * │  MAPA COMPLETO DE MOVIMIENTOS DEL SISTEMA                                   │
- * ├──────────────────────┬──────────────┬────────────────────┬──────────────────┤
- * │  Evento              │  type        │  origin            │  Origen código   │
- * ├──────────────────────┼──────────────┼────────────────────┼──────────────────┤
- * │  Venta admin         │  SALIDA      │  sale_admin        │  SalesController::store()             │
- * │  Pedido web (cart)   │  SALIDA      │  sale_web          │  ClientPageController::checkout()     │
- * │  Cancelación pedido  │  DEVOLUCION  │  return            │  SalesController::cancel()            │
- * │  Reembolso venta     │  DEVOLUCION  │  return            │  SalesController::refund()            │
- * │  Recepción proveedor │  ENTRADA     │  provider          │  SupplierOrderController::updateState()│
- * │  Ajuste manual +     │  ENTRADA     │  manual_adjustment │  ProductController::addManualStock()  │
- * │  Ajuste manual +     │  ENTRADA     │  damage            │  ProductController::addManualStock()  │
- * │  Ajuste manual +     │  ENTRADA     │  return            │  ProductController::addManualStock()  │
- * │  Ajuste manual −     │  SALIDA      │  manual_adjustment │  ProductController::removeManualStock()│
- * │  Ajuste manual −     │  SALIDA      │  damage            │  ProductController::removeManualStock()│
- * │  Ajuste manual −     │  SALIDA      │  return            │  ProductController::removeManualStock()│
- * └──────────────────────┴──────────────┴────────────────────┴──────────────────┘
- *
- * Valores válidos para origin:
- *   - 'sale_admin'        Venta registrada por un administrador (mostrador).
- *   - 'sale_web'          Pedido colocado desde la tienda web por un cliente.
- *   - 'return'            Devolución o cancelación de venta (stock que vuelve).
- *   - 'provider'          Recepción de mercancía de una orden de proveedor.
- *   - 'manual_adjustment' Ajuste manual de inventario sin causa específica.
- *   - 'damage'            Merma o daño físico de producto.
- *
- * El método record() es atómico: actualiza el stock del producto y
- * registra el movimiento en la misma DB::transaction. Si cualquiera
- * de las dos operaciones falla, ninguna persiste.
- */
+// Single entry point for inventory stock movement logging.
 class InventoryMovementService
 {
-    /** Valores permitidos para el campo origin. */
+    // Allowed values for the origin field.
     public const VALID_ORIGINS = [
         'sale_admin',
         'sale_web',
@@ -61,24 +22,7 @@ class InventoryMovementService
         'damage',
     ];
 
-    // ── Método principal ────────────────────────────────────────────────────
-
-    /**
-     * Registra un movimiento de inventario y actualiza el stock del producto.
-     *
-     * @param  Product      $product      Instancia del producto a modificar.
-     * @param  MovementType $type         Tipo de movimiento (dirección).
-     * @param  string       $origin       Origen del movimiento. Debe ser uno de VALID_ORIGINS.
-     * @param  int          $quantity     Cantidad afectada. Siempre positiva.
-     *                                    Para AJUSTE es el nuevo valor absoluto del stock.
-     * @param  int|null     $referenceId  ID del documento origen (sale_id, num_order…).
-     * @param  int|null     $userId       ID del AdminUser. Si es null se lee del guard 'admin'.
-     *                                    Los movimientos automáticos (sale_web, jobs) pasan null
-     *                                    explícito; user_id quedará null en el log.
-     *
-     * @throws ValidationException  Si la salida o ajuste dejaría el stock negativo.
-     * @throws \RuntimeException    Si quantity < 1 o origin no es válido.
-     */
+    // Records an inventory movement and updates product stock atomically.
     public function record(
         Product      $product,
         MovementType $type,
@@ -87,43 +31,40 @@ class InventoryMovementService
         ?int         $referenceId = null,
         ?int         $userId      = null,
     ): InventoryMovement {
+        // Reject invalid movement quantities.
         if ($quantity < 1) {
             throw new \RuntimeException('La cantidad del movimiento debe ser al menos 1.');
         }
 
+        // Reject unsupported movement origins.
         if (! in_array($origin, self::VALID_ORIGINS, true)) {
             throw new \RuntimeException(
                 "Origin '{$origin}' no es válido. Valores permitidos: " . implode(', ', self::VALID_ORIGINS)
             );
         }
 
-        /**
-         * El único guard de administradores en este proyecto es 'admin',
-         * que autentica instancias de AdminUser (tabla admins, PK user_id).
-         * Si no hay admin autenticado (flujos automáticos / cliente web),
-         * el campo user_id quedará null en el registro, lo cual es correcto.
-         */
+        // Resolve the admin user when the flow is authenticated.
         $resolvedUserId = $userId ?? Auth::guard('admin')->id();
 
         return DB::transaction(function () use ($product, $type, $origin, $quantity, $referenceId, $resolvedUserId) {
 
-            // 1. Bloquear la fila del producto para evitar condiciones de carrera
+            // Lock the product row to prevent concurrent stock updates.
             /** @var Product $freshProduct */
             $freshProduct = Product::lockForUpdate()->findOrFail($product->product_id);
             $stockBefore  = (int) $freshProduct->stock_current;
 
-            // 2. Calcular el stock resultante según el tipo de movimiento
+            // Calculate the resulting stock based on movement type.
             $stockAfter = match ($type) {
                 MovementType::ENTRADA,
                 MovementType::DEVOLUCION => $stockBefore + $quantity,
 
                 MovementType::SALIDA     => $stockBefore - $quantity,
 
-                // AJUSTE: quantity es el nuevo valor absoluto del stock
+                // For adjustments, quantity represents the final stock value.
                 MovementType::AJUSTE     => $quantity,
             };
 
-            // 3. Validar que el stock no quede negativo
+            // Prevent negative stock values.
             if ($stockAfter < 0) {
                 throw ValidationException::withMessages([
                     'quantity' => [
@@ -132,11 +73,11 @@ class InventoryMovementService
                 ]);
             }
 
-            // 4. Persistir el nuevo stock en el producto
+            // Persist the updated stock value.
             $freshProduct->stock_current = $stockAfter;
             $freshProduct->save();
 
-            // 5. Registrar el movimiento en la tabla de auditoría
+            // Store the movement in the audit log.
             $movement = InventoryMovement::create([
                 'product_id'   => $freshProduct->product_id,
                 'user_id'      => $resolvedUserId,
@@ -148,21 +89,14 @@ class InventoryMovementService
                 'reference_id' => $referenceId,
             ]);
 
-            // 6. Sincronizar la instancia recibida para evitar datos stale
+            // Sync the provided product instance with the updated stock.
             $product->stock_current = $stockAfter;
 
             return $movement;
         });
     }
 
-    // ── Métodos de conveniencia (semántica de negocio) ─────────────────────
-
-    /**
-     * Registra una SALIDA por venta realizada por un administrador (mostrador).
-     * Llamado por SalesController::store().
-     *
-     * origin = 'sale_admin'
-     */
+    // Records an admin sale as an inventory خروج.
     public function recordSale(
         Product $product,
         int     $quantity,
@@ -177,13 +111,7 @@ class InventoryMovementService
         );
     }
 
-    /**
-     * Registra una SALIDA por pedido colocado desde la tienda web (carrito cliente).
-     * Llamado por ClientPageController::checkout().
-     *
-     * origin = 'sale_web'
-     * userId = null — no hay admin autenticado en el flujo cliente.
-     */
+    // Records a web checkout sale without an associated admin user.
     public function recordWebCartSale(
         Product $product,
         int     $quantity,
@@ -199,12 +127,7 @@ class InventoryMovementService
         );
     }
 
-    /**
-     * Registra una DEVOLUCIÓN (stock que vuelve al almacén por cancelación o reembolso).
-     * Llamado por SalesController::refund() y SalesController::cancel().
-     *
-     * origin = 'return'
-     */
+    // Records returned stock from a refund or cancellation.
     public function recordRefund(
         Product $product,
         int     $quantity,
@@ -219,12 +142,7 @@ class InventoryMovementService
         );
     }
 
-    /**
-     * Registra una ENTRADA por recepción de orden de proveedor.
-     * Llamado por SupplierOrderController::updateState() al pasar a 'delivered'.
-     *
-     * origin = 'provider'
-     */
+    // Records stock received from a supplier order.
     public function recordSupplierEntry(
         Product $product,
         int     $quantity,
@@ -239,12 +157,7 @@ class InventoryMovementService
         );
     }
 
-    /**
-     * Registra una ENTRADA manual de stock.
-     * Llamado por ProductController::addManualStock().
-     *
-     * origin = 'manual_adjustment' | 'damage' | 'return'
-     */
+    // Records a manual stock increase.
     public function recordManualEntry(
         Product $product,
         int     $quantity,
@@ -258,12 +171,7 @@ class InventoryMovementService
         );
     }
 
-    /**
-     * Registra una SALIDA manual de stock.
-     * Llamado por ProductController::removeManualStock().
-     *
-     * origin = 'manual_adjustment' | 'damage' | 'return'
-     */
+    // Records a manual stock decrease.
     public function recordManualExit(
         Product $product,
         int     $quantity,

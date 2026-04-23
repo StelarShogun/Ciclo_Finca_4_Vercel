@@ -1,4 +1,3 @@
-{{-- resources/views/admin/reports/movements/index.blade.php --}}
 @extends('admin.layouts.admin-shell')
 
 @section('Titulo pagina', 'Movimientos de inventario - Reportes')
@@ -14,14 +13,14 @@
 @section('contenido')
 <div class="inv-index-report">
 
-    {{-- ── Breadcrumb ─────────────────────────────────────────────────── --}}
+    {{-- Reports breadcrumb --}}
     <nav class="reports-breadcrumb">
         <a href="{{ route('admin.reports.index') }}">Reportes</a>
         <span class="sep">/</span>
         <span>Movimientos de inventario</span>
     </nav>
 
-    {{-- ── Header ─────────────────────────────────────────────────────── --}}
+    {{-- Page header --}}
     <header class="inv-index-header">
         <h1>Movimientos de inventario</h1>
         <p class="inv-index-lead">
@@ -30,10 +29,10 @@
         </p>
     </header>
 
-    {{-- ── Tabla de productos ─────────────────────────────────────────── --}}
+    {{-- Products table card --}}
     <div class="orders-table-card">
 
-        {{-- Barra de búsqueda / filtros --}}
+        {{-- Search toolbar --}}
         <form method="GET" action="{{ route('admin.inventory.movements.index') }}"
               class="orders-toolbar" role="search">
             <div class="filter-group orders-search-wrap">
@@ -63,7 +62,7 @@
             </div>
         </form>
 
-        {{-- Contador de resultados --}}
+        {{-- Search results summary --}}
         @if(request()->filled('search'))
             <p class="inv-index-results-label" style="padding: 0 0 0.75rem;">
                 @if($products->total() > 0)
@@ -75,7 +74,7 @@
             </p>
         @endif
 
-        {{-- Tabla --}}
+        {{-- Products table --}}
         <div class="sales-table-container">
             <table class="sales-table">
                 <thead>
@@ -166,7 +165,7 @@
             </table>
         </div>
 
-        {{-- Paginación — mismo componente y estructura que pedidos a proveedores --}}
+        {{-- Shared pagination component --}}
         @if($products->hasPages())
             <div class="orders-pagination-wrap">
                 <small class="inv-index-pagination-info">

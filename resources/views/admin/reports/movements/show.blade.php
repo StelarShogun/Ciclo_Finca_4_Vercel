@@ -1,18 +1,6 @@
-{{-- resources/views/admin/reports/movements/show.blade.php --}}
-{{--
-  Vista: historial de movimientos de inventario de un producto.
-  Estructura y convenciones alineadas con sales-performance.blade.php:
-    - Breadcrumb de navegación
-    - Header con título y subtítulo lead
-    - Layout de dos columnas: filtros (aside) + resultados (main)
-    - Métricas en tarjetas comparables
-    - Estado vacío y estado de carga coherentes
---}}
-
 @extends('admin.layouts.admin-shell')
 
 @section('Titulo pagina', 'Movimientos — ' . $product->name . ' - Reportes')
-
 
 @push('vite-body')
     @vite(['resources/js/admin/reports/inventory-movements.js'])
@@ -21,8 +9,6 @@
 @push('styles')
     @vite(['resources/css/admin/reports/reports-hub.css'])
 @endpush
-
-
 
 @section('aside')
     @include('admin.parts.aside')
@@ -47,7 +33,7 @@
         data-initial-to="{{ e($currentTo) }}"
     >
 
-        {{-- ── Breadcrumb ─────────────────────────────────────────────── --}}
+        {{-- Reports breadcrumb --}}
         <nav class="reports-breadcrumb">
             <a href="{{ route('admin.reports.index') }}">Reportes</a>
             <span class="sep">/</span>
@@ -56,7 +42,7 @@
             <span>{{ $product->name }}</span>
         </nav>
 
-        {{-- ── Header ─────────────────────────────────────────────────── --}}
+        {{-- Product header --}}
         <header class="inventory-movements-header">
             <div class="inventory-movements-header-meta">
                 <span class="inventory-movements-sku">{{ \App\Models\Product::skuFromId($product->product_id) }}</span>
@@ -76,21 +62,23 @@
 
         <div class="inv-mov-layout">
 
-            {{-- ── Filtros (aside) ────────────────────────────────────── --}}
+            {{-- Filter sidebar --}}
             <aside class="inv-mov-filters" aria-label="Filtros de movimientos">
 
+                {{-- Movement type filter --}}
                 <p class="inv-mov-filters-title">Tipo</p>
                 <div class="inv-mov-toggle-wrap">
                     <div class="inv-mov-toggle" role="group" aria-label="Tipo de movimiento">
                         <button type="button" class="inv-mov-btn" data-filter="type" data-value="">Todos</button>
-                       @foreach($availableTypes as $t)
-    <button type="button" class="inv-mov-btn" data-filter="type" data-value="{{ $t->value }}">
-        {{ $t->label() }}
-    </button>
-@endforeach
+                        @foreach($availableTypes as $t)
+                            <button type="button" class="inv-mov-btn" data-filter="type" data-value="{{ $t->value }}">
+                                {{ $t->label() }}
+                            </button>
+                        @endforeach
                     </div>
                 </div>
 
+                {{-- Movement origin filter --}}
                 <p class="inv-mov-filters-title inv-mov-filters-title--spaced">Origen</p>
                 <div class="inv-mov-toggle-wrap">
                     <div class="inv-mov-toggle" role="group" aria-label="Origen del movimiento">
@@ -103,6 +91,7 @@
                     </div>
                 </div>
 
+                {{-- Date range filter --}}
                 <p class="inv-mov-filters-title inv-mov-filters-title--spaced">Rango de fechas</p>
                 <div class="inv-mov-date-block">
                     <span class="inv-mov-date-label">Desde</span>
@@ -141,24 +130,26 @@
 
             </aside>
 
-            {{-- ── Contenido principal ────────────────────────────────── --}}
+            {{-- Main content --}}
             <div class="inv-mov-main">
 
+                {{-- Request error container --}}
                 <div id="inventory-movements-error" class="inventory-movements-error" role="alert" hidden></div>
 
                 <section id="inv-mov-results" class="inv-mov-results" aria-live="polite">
 
+                    {{-- Loading state --}}
                     <div id="inventory-movements-loading" hidden></div>
 
                     <div id="inventory-movements-content" class="inventory-movements-content" hidden>
 
-                        {{-- Estado vacío --}}
+                        {{-- Empty state --}}
                         <div id="inv-empty-state" class="inv-empty-state" hidden>
                             <i class="fas fa-inbox" aria-hidden="true"></i>
                             <p><strong>No hay movimientos registrados</strong> con los filtros aplicados. Probá otro rango u otros criterios.</p>
                         </div>
 
-                        {{-- Tarjetas de resumen --}}
+                        {{-- Summary metrics --}}
                         <div class="inv-metrics-grid">
                             <article class="inv-metric-card">
                                 <div class="inv-metric-icon" aria-hidden="true"><i class="fas fa-arrows-up-down"></i></div>
@@ -180,7 +171,7 @@
                             </article>
                         </div>
 
-                        {{-- Tabla de movimientos --}}
+                        {{-- Movements table --}}
                         <section class="inv-table-section" aria-labelledby="inv-table-heading">
                             <h2 id="inv-table-heading" class="inv-table-heading">
                                 Detalle de movimientos
@@ -201,12 +192,12 @@
                                         </tr>
                                     </thead>
                                     <tbody id="inv-table-body">
-                                        {{-- Filas inyectadas por JS --}}
+                                        {{-- Rows are injected by JavaScript --}}
                                     </tbody>
                                 </table>
                             </div>
 
-                            {{-- Paginación — mismo componente que x-pagination, renderizado por JS --}}
+                            {{-- JS-rendered pagination --}}
                             <div class="inv-pagination" id="inv-pagination" hidden>
                                 <div id="inv-pagination-controls"></div>
                             </div>

@@ -2,11 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const root = document.getElementById('inventory-movements-root');
     if (!root) return;
 
-    // ── Configuración desde el DOM ───────────────────────────────────────
+    // Read endpoint configuration from data attributes.
     const MOVEMENTS_URL = root.dataset.movementsUrl;
     const PAGE_URL      = root.dataset.pageUrl;
 
-    // Estado reactivo
+    // Store the current filter and pagination state.
     const state = {
         type:     root.dataset.initialType   || '',
         origin:   root.dataset.initialOrigin || '',
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lastPage: 1,
     };
 
-    // ── Referencias DOM ──────────────────────────────────────────────────
+    // Cache frequently used DOM elements.
     const elError    = document.getElementById('inventory-movements-error');
     const elLoading  = document.getElementById('inventory-movements-loading');
     const elContent  = document.getElementById('inventory-movements-content');
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const elPaginationControls = document.getElementById('inv-pagination-controls');
     const elPageInfo          = document.getElementById('inv-page-info');
 
-    // Inputs de fecha
+    // Cache date input fields.
     const elFromD = document.getElementById('inv-from-d');
     const elFromM = document.getElementById('inv-from-m');
     const elFromY = document.getElementById('inv-from-y');
@@ -41,8 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const elToM   = document.getElementById('inv-to-m');
     const elToY   = document.getElementById('inv-to-y');
 
-    // ── Helpers ──────────────────────────────────────────────────────────
-
+    // Toggle element visibility.
     function show(el)  { el.hidden = false; }
     function hide(el)  { el.hidden = true; }
     function setError(msg) {
@@ -50,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else { hide(elError); }
     }
 
+    // Build the current page URL for browser history updates.
     function buildPageUrl() {
         const params = new URLSearchParams();
         if (state.type)     params.set('type', state.type);
@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return PAGE_URL + (qs ? '?' + qs : '');
     }
 
+    // Build the API URL based on the current state.
     function buildApiUrl() {
         const params = new URLSearchParams();
         if (state.type)     params.set('type', state.type);
@@ -72,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return MOVEMENTS_URL + '?' + params.toString();
     }
 
+    // Convert separate day, month, and year inputs into an ISO date.
     function parseDateParts(d, m, y) {
         const dv = d.value.padStart(2, '0');
         const mv = m.value.padStart(2, '0');
@@ -80,6 +82,51 @@ document.addEventListener('DOMContentLoaded', () => {
         return '';
     }
 
+    // Validate individual date fields before parsing them.
+    // Returns an error message string or null.
+    function validateDateFields(dEl, mEl, yEl, label) {
+        const dRaw = dEl.value.trim();
+        const mRaw = mEl.value.trim();
+        const yRaw = yEl.value.trim();
+
+        // Treat an empty date as omitted and valid.
+        if (!dRaw && !mRaw && !yRaw) return null;
+
+        // Reject partially completed dates.
+        if (!dRaw || !mRaw || !yRaw) {
+            return `La fecha de ${label} está incompleta. Ingresá día, mes y año.`;
+        }
+
+        const d = parseInt(dRaw, 10);
+        const m = parseInt(mRaw, 10);
+        const y = parseInt(yRaw, 10);
+
+        // Restrict the year to a valid four-digit range.
+        const currentYear = new Date().getFullYear();
+        if (isNaN(y) || yRaw.length !== 4 || y < 2000 || y > currentYear) {
+            return `El año de la fecha de ${label} debe estar entre 2000 y ${currentYear}.`;
+        }
+
+        // Validate the calendar month range.
+        if (isNaN(m) || m < 1 || m > 12) {
+            return `El mes de la fecha de ${label} debe estar entre 01 y 12.`;
+        }
+
+        // Validate the base day range before checking the exact month.
+        if (isNaN(d) || d < 1 || d > 31) {
+            return `El día de la fecha de ${label} debe estar entre 01 y 31.`;
+        }
+
+        // Resolve the last valid day for the given month and year.
+        const maxDay = new Date(y, m, 0).getDate();
+        if (d > maxDay) {
+            return `El mes ${String(m).padStart(2,'0')}/${y} solo tiene ${maxDay} días.`;
+        }
+
+        return null;
+    }
+
+    // Populate split date inputs from an ISO date.
     function fillDateParts(isoDate, d, m, y) {
         if (!isoDate) return;
         const [yv, mv, dv] = isoDate.split('-');
@@ -88,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         y.value = yv || '';
     }
 
+    // Map movement types to badge classes.
     function typeBadgeClass(type) {
         const map = {
             entrada:    'inv-type-badge--entrada',
@@ -98,12 +146,55 @@ document.addEventListener('DOMContentLoaded', () => {
         return map[type] || 'inv-type-badge--default';
     }
 
+    // Translate backend type labels to Spanish display values.
+    const TYPE_LABEL_ES = {
+        'entrada':          'Entrada',
+        'salida':           'Salida',
+        'devolucion':       'Devolución',
+        'ajuste':           'Ajuste',
+        'damage':           'Daño',
+        'damaged':          'Daño',
+        'manual adjustment':'Ajuste manual',
+        'adjustment':       'Ajuste',
+        'return':           'Devolución',
+        'in':               'Entrada',
+        'out':              'Salida',
+    };
+
+    // Normalize translated type labels for the UI.
+    function translateTypeLabel(label) {
+        if (!label) return label;
+        const key = String(label).toLowerCase().trim();
+        return TYPE_LABEL_ES[key] ?? label;
+    }
+
+    // Validate the parsed ISO date range.
+    function validateDateRange(from, to) {
+        const today = new Date();
+        today.setHours(23, 59, 59, 999); // Use the end of the current day as the upper bound.
+
+        if (from) {
+            const dFrom = new Date(from);
+            if (dFrom > today) return 'La fecha de inicio no puede ser mayor a la fecha actual.';
+        }
+        if (to) {
+            const dTo = new Date(to);
+            if (dTo > today) return 'La fecha de fin no puede ser mayor a la fecha actual.';
+        }
+        if (from && to) {
+            const dFrom = new Date(from);
+            const dTo   = new Date(to);
+            if (dFrom > dTo) return 'La fecha de inicio debe ser anterior a la fecha de fin.';
+        }
+        return null;
+    }
+
+    // Format numeric values for the local locale.
     function fmt(n) {
         return Number(n).toLocaleString('es-CR');
     }
 
-    // ── Render ───────────────────────────────────────────────────────────
-
+    // Render summary metrics.
     function renderMetrics(data) {
         elTotal.textContent    = fmt(data.meta.total);
         elEntradas.textContent = '+' + fmt(data.summary?.total_entradas ?? 0);
@@ -111,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elTableCount.textContent = fmt(data.meta.total);
     }
 
+    // Render a single movement row.
     function renderRow(m) {
         const tr = document.createElement('tr');
         const isNegative = m.type === 'salida';
@@ -120,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="inv-date-time">${formatTime(m.created_at)}</div>
             </td>
             <td>
-                <span class="inv-type-badge ${typeBadgeClass(m.type)}">${escHtml(m.type_label)}</span>
+                <span class="inv-type-badge ${typeBadgeClass(m.type)}">${escHtml(translateTypeLabel(m.type_label))}</span>
             </td>
             <td>
                 <span>${escHtml(m.origin_label)}</span>
@@ -138,11 +230,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return tr;
     }
 
+    // Render the movements table body.
     function renderTable(movements) {
         elTableBody.innerHTML = '';
         movements.forEach(m => elTableBody.appendChild(renderRow(m)));
     }
 
+    // Render pagination controls from the API metadata.
     function renderPagination(meta) {
         state.lastPage = meta.last_page;
 
@@ -156,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const SVG_PREV = `<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
         const SVG_NEXT = `<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-        // Mismo HTML que x-pagination, envuelto en .pagination.is-compact
+        // Mirror the shared compact pagination markup.
         elPaginationControls.innerHTML = `
             <div class="pagination is-compact" role="navigation" aria-label="Paginación movimientos">
                 <div class="results-info" aria-live="polite">
@@ -182,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        // Limpiar el <small> externo (info ya está dentro del componente)
+        // Clear the external helper text because the component already renders it.
         if (elPageInfo) elPageInfo.textContent = '';
 
         elPaginationControls.querySelector('[aria-label="Previous"]')
@@ -214,15 +308,19 @@ document.addEventListener('DOMContentLoaded', () => {
         show(elPagination);
     }
 
-    // ── Formato de fecha/hora ─────────────────────────────────────────────
+    // Format an ISO timestamp as a local date.
     function formatDate(iso) {
         const d = new Date(iso);
         return d.toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
+
+    // Format an ISO timestamp as a local time.
     function formatTime(iso) {
         const d = new Date(iso);
         return d.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
+
+    // Escape HTML-sensitive characters before rendering.
     function escHtml(str) {
         return String(str)
             .replace(/&/g, '&amp;')
@@ -231,8 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/"/g, '&quot;');
     }
 
-    // ── Fetch ────────────────────────────────────────────────────────────
-
+    // Fetch and render movement data.
     async function loadMovements() {
         setError(null);
         hide(elContent);
@@ -275,8 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ── Manejo de filtros ─────────────────────────────────────────────────
-
+    // Sync active button state for a filter group.
     function syncToggle(filterAttr, value) {
         document.querySelectorAll(`.inv-mov-btn[data-filter="${filterAttr}"]`).forEach(btn => {
             const isActive = btn.dataset.value === value;
@@ -297,8 +393,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('inv-apply-dates')?.addEventListener('click', () => {
-        state.dateFrom = parseDateParts(elFromD, elFromM, elFromY);
-        state.dateTo   = parseDateParts(elToD,   elToM,   elToY);
+        // Validate each date field before building ISO values.
+        const fieldErrorFrom = validateDateFields(elFromD, elFromM, elFromY, 'inicio');
+        if (fieldErrorFrom) { setError(fieldErrorFrom); return; }
+
+        const fieldErrorTo = validateDateFields(elToD, elToM, elToY, 'fin');
+        if (fieldErrorTo) { setError(fieldErrorTo); return; }
+
+        // Build ISO date strings after field validation succeeds.
+        const from = parseDateParts(elFromD, elFromM, elFromY);
+        const to   = parseDateParts(elToD,   elToM,   elToY);
+
+        // Validate the final date range.
+        const rangeError = validateDateRange(from, to);
+        if (rangeError) { setError(rangeError); return; }
+
+        setError(null);
+        state.dateFrom = from;
+        state.dateTo   = to;
         state.page     = 1;
         loadMovements();
     });
@@ -316,6 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadMovements();
     });
 
+    // Move focus to the next input when the current one is complete.
     function wireAutoAdvance(inputs) {
         inputs.forEach((input, i) => {
             input.addEventListener('input', () => {
@@ -328,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
     wireAutoAdvance([elFromD, elFromM, elFromY]);
     wireAutoAdvance([elToD, elToM, elToY]);
 
-    // ── Init ─────────────────────────────────────────────────────────────
+    // Initialize UI state from the server-provided defaults.
     syncToggle('type',   state.type);
     syncToggle('origin', state.origin);
     fillDateParts(state.dateFrom, elFromD, elFromM, elFromY);
