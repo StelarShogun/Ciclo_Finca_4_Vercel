@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -22,7 +23,7 @@ class SupplierOrderController extends Controller
         $terms = preg_split('/\s+/', $trimmed) ?: [];
         $terms = array_values(array_filter(array_map('trim', $terms)));
 
-        // Boolean mode: require all terms, allow prefix matching.
+        // Build a boolean full-text query that requires all terms and allows prefix matches.
         // Example: "grasa ceram" => "+grasa* +ceram*"
         return collect($terms)
             ->map(function ($t) {
@@ -56,6 +57,7 @@ class SupplierOrderController extends Controller
             ->limit(20)
             ->get()
             ->map(function (Product $p) {
+                // Prefer purchase price and fall back to sale price when needed.
                 $unit = (float) ($p->purchase_price ?: $p->sale_price);
                 if ($unit <= 0) {
                     $unit = (float) $p->sale_price;
@@ -80,7 +82,7 @@ class SupplierOrderController extends Controller
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
 
-        // Swap silently if hasta < desde
+        // Normalize the range when the end date is earlier than the start date.
         if ($dateFrom && $dateTo && $dateTo < $dateFrom) {
             [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
         }
@@ -102,7 +104,7 @@ class SupplierOrderController extends Controller
         if ($search) {
             $search = trim($search);
 
-            // High-performance search: join suppliers + order_items instead of JSON / subquery.
+            // Join related tables to support supplier and line-item search efficiently.
             $driver = DB::connection()->getDriverName();
             $bool = $driver === 'mysql' ? $this->fullTextBooleanQuery($search) : '';
 
@@ -193,12 +195,14 @@ class SupplierOrderController extends Controller
                         'items' => ['Uno de los productos seleccionados no existe o no pertenece al proveedor.'],
                     ]);
                 }
+
                 if ($qty < 1) {
                     throw ValidationException::withMessages([
                         'items' => ['No es posible agregar un producto con cantidad 0 o negativa.'],
                     ]);
                 }
 
+                // Prefer purchase price and fall back to sale price when needed.
                 $unit = (float) ($product->purchase_price ?: $product->sale_price);
                 if ($unit <= 0) {
                     $unit = (float) $product->sale_price;
@@ -275,7 +279,7 @@ class SupplierOrderController extends Controller
         ]);
     }
 
-    public function updateState(Request $request, $id)
+    public function updateState(Request $request, int $id, InventoryMovementService $inventoryService)
     {
         $order = Order::findOrFail($id);
 
@@ -283,9 +287,10 @@ class SupplierOrderController extends Controller
             'state' => 'required|in:draft,pending,confirmed,delivered,cancelled',
         ]);
 
+        // Define the allowed state transitions for supplier orders.
         $transitions = [
-            'draft' => ['pending', 'cancelled'],
-            'pending' => ['confirmed', 'cancelled'],
+            'draft'     => ['pending', 'cancelled'],
+            'pending'   => ['confirmed', 'cancelled'],
             'confirmed' => ['delivered', 'cancelled'],
         ];
 
@@ -303,19 +308,39 @@ class SupplierOrderController extends Controller
                 ->where('order_num_order', (int) $order->num_order)
                 ->get(['product_id', 'quantity']);
 
+            // Fall back to legacy JSON items when order_items is empty.
             if ($items->isEmpty() && is_array($order->products) && $order->products !== []) {
                 $items = collect($order->products)->map(function ($row) {
                     return (object) [
                         'product_id' => (int) ($row['product_id'] ?? 0),
-                        'quantity' => (int) ($row['quantity'] ?? 0),
+                        'quantity'   => (int) ($row['quantity']   ?? 0),
                     ];
                 })->filter(fn ($r) => $r->product_id > 0 && $r->quantity > 0);
             }
 
             foreach ($items as $it) {
-                Product::query()
-                    ->where('product_id', (int) $it->product_id)
-                    ->increment('stock_current', (int) $it->quantity);
+                $productId = (int) $it->product_id;
+                $quantity  = (int) $it->quantity;
+
+                if ($productId < 1 || $quantity < 1) {
+                    continue;
+                }
+
+                $product = Product::find($productId);
+
+                if (! $product) {
+                    // Log missing products without interrupting the delivery flow.
+                    \Illuminate\Support\Facades\Log::warning(
+                        "SupplierOrderController::updateState — producto #{$productId} no encontrado al procesar orden #{$order->num_order}"
+                    );
+                    continue;
+                }
+
+                $inventoryService->recordSupplierEntry(
+                    product:  $product,
+                    quantity: $quantity,
+                    orderId:  $order->num_order,
+                );
             }
         }
 
@@ -357,7 +382,7 @@ class SupplierOrderController extends Controller
     {
         $year = (string) now()->format('Y');
 
-        // Lock the orders table sectionally by forcing a max() read inside the transaction.
+        // Lock the matching purchase order range to generate the next sequential number safely.
         $last = Order::query()
             ->whereNotNull('po_number')
             ->where('po_number', 'like', 'PO-'.$year.'-%')
