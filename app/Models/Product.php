@@ -14,11 +14,7 @@ use Illuminate\Validation\ValidationException;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-/**
- * @property-read Category|null $category
- * @property-read Collection<int, Brand> $brands
- * @property-read Collection<int, ClassificationValue> $classificationValues
- */
+// Product model with media support and inventory-related helpers.
 class Product extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
@@ -27,7 +23,7 @@ class Product extends Model implements HasMedia
 
     protected $primaryKey = 'product_id';
 
-    /** Route parameter `{product}` resolves by `product_id` (not `id`). */
+    // Resolves route model binding using product_id.
     public function getRouteKeyName(): string
     {
         return 'product_id';
@@ -39,12 +35,14 @@ class Product extends Model implements HasMedia
 
     const UPDATED_AT = 'updated_at';
 
+    // Mass-assignable product attributes.
     protected $fillable = [
         'category_id', 'supplier_id', 'name', 'description', 'image', 'images',
         'sale_price', 'purchase_price', 'stock_current', 'stock_minimum', 'status',
         'is_featured',
     ];
 
+    // Casts numeric, boolean, array, and datetime attributes.
     protected $casts = [
         'sale_price' => 'decimal:2',
         'purchase_price' => 'decimal:2',
@@ -60,15 +58,13 @@ class Product extends Model implements HasMedia
 
     public const MSG_CLIENT_STOCK_INSUFICIENTE = 'Stock insuficiente';
 
-    /**
-     * SKU de catálogo derivado del ID (no existe columna dedicada).
-     * Debe coincidir con SQL: CONCAT('BK-', LPAD(product_id, 3, '0')).
-     */
+    // Builds the catalog SKU from the product ID.
     public static function skuFromId(int $productId): string
     {
         return 'BK-'.str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
     }
 
+    // Normalizes localized and canonical status values.
     public static function canonicalStatus(?string $raw): string
     {
         $s = strtolower(trim((string) $raw));
@@ -83,11 +79,13 @@ class Product extends Model implements HasMedia
         };
     }
 
+    // Returns the normalized product status.
     public function effectiveStatus(): string
     {
         return self::canonicalStatus($this->attributes['status'] ?? null);
     }
 
+    // Limits the query to products visible in the client store.
     public function scopeActiveInClientStore(Builder $query): Builder
     {
         $ok = ['active', 'activo'];
@@ -99,6 +97,7 @@ class Product extends Model implements HasMedia
         );
     }
 
+    // Registers media collections for the main image and gallery.
     public function registerMediaCollections(): void
     {
         $disk = config('media-library.disk_name', 'public');
@@ -111,6 +110,7 @@ class Product extends Model implements HasMedia
              ->useDisk($disk);
     }
 
+    // Returns the main and extra images, falling back to the default asset.
     public function getDisplayImages(): array
     {
         $main = $this->image ?? 'default.png';
@@ -120,27 +120,31 @@ class Product extends Model implements HasMedia
         return array_filter($all) ?: ['default.png'];
     }
 
+    // Product category relationship.
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id', 'category_id');
     }
 
+    // Product supplier relationship.
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class, 'supplier_id', 'supplier_id');
     }
 
+    // Sale items associated with this product.
     public function saleItems(): HasMany
     {
         return $this->hasMany(SaleItem::class, 'product_id', 'product_id');
     }
 
+    // Brands associated with this product.
     public function brands(): BelongsToMany
     {
         return $this->belongsToMany(Brand::class, 'products_brand', 'product_id', 'brand_id', 'product_id', 'id');
     }
 
-    /** CF4-84: Assigned classification values (one row per dimension per product via pivot). */
+    // Classification values assigned through the pivot table.
     public function classificationValues(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -153,7 +157,7 @@ class Product extends Model implements HasMedia
         )->withPivot('classification_dimension_id');
     }
 
-    /** CF4-62 / CF4-50: Etiqueta corta para listados del cliente (umbral = stock mínimo por producto). */
+    // Returns the stock label shown in client listings.
     public function clientCatalogStockLabel(): string
     {
         $st = $this->effectiveStatus();
@@ -173,6 +177,7 @@ class Product extends Model implements HasMedia
         return 'Disponible';
     }
 
+    // Returns the availability label used in the admin panel.
     public function adminAvailabilityLabel(): string
     {
         $st = $this->effectiveStatus();
@@ -196,6 +201,7 @@ class Product extends Model implements HasMedia
         return 'No disponible';
     }
 
+    // Indicates whether the client UI should show a low-stock warning.
     public function clientShowsLowStockWarning(): bool
     {
         return $this->effectiveStatus() === 'active'
@@ -204,11 +210,13 @@ class Product extends Model implements HasMedia
             && $this->stock_current <= (int) $this->stock_minimum;
     }
 
+    // Indicates whether the product can be purchased by the client.
     public function isPurchasableByClient(): bool
     {
         return $this->effectiveStatus() === 'active' && $this->stock_current > 0;
     }
 
+    // Builds the public slug used in client routes.
     public function clientPublicSlug(): string
     {
         $s = Str::slug((string) ($this->name ?? 'producto'));
@@ -216,6 +224,7 @@ class Product extends Model implements HasMedia
         return $s !== '' ? $s : 'producto';
     }
 
+    // Returns the public product URL for the client storefront.
     public function clientProductUrl(): string
     {
         return route('clients.product', [
@@ -224,6 +233,7 @@ class Product extends Model implements HasMedia
         ]);
     }
 
+    // Limits the query to products at or below the minimum stock threshold.
     public function scopeLowStockAlert(Builder $query): Builder
     {
         return $query->activeInClientStore()
@@ -232,7 +242,7 @@ class Product extends Model implements HasMedia
             ->whereColumn('stock_current', '<=', 'stock_minimum');
     }
 
-    /** Badge en inventario admin: danger = sin stock, warning = en o bajo el mínimo, success = por encima del mínimo. */
+    // Returns the admin badge class based on current stock.
     public function adminInventoryStockBadgeClass(): string
     {
         if ($this->stock_current <= 0) {
@@ -246,9 +256,7 @@ class Product extends Model implements HasMedia
         return 'success';
     }
 
-    /**
-     * Para exportes PDF: 'high' = stock OK, 'medium' = bajo respecto al mínimo, 'low' = agotado.
-     */
+    // Maps stock values to export tiers used in PDF reports.
     public static function adminStockExportTier(int $stockCurrent, int $stockMinimum): string
     {
         if ($stockCurrent <= 0) {
@@ -261,6 +269,7 @@ class Product extends Model implements HasMedia
         return 'high';
     }
 
+    // Validates stock and pricing rules before saving the model.
     protected static function booted(): void
     {
         static::saving(function ($p) {
@@ -277,5 +286,12 @@ class Product extends Model implements HasMedia
                 ]);
             }
         });
+    }
+
+    // Inventory movement history for this product.
+    public function inventoryMovements(): HasMany
+    {
+        return $this->hasMany(InventoryMovement::class, 'product_id', 'product_id')
+                    ->orderBy('created_at', 'asc');
     }
 }
