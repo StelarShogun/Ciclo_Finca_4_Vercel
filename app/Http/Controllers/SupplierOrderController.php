@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderStateTimeline;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\InventoryMovementService;
@@ -146,7 +147,7 @@ class SupplierOrderController extends Controller
 
     public function detail($id)
     {
-        $order = Order::with(['supplier', 'orderItems'])->findOrFail($id);
+        $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin'])->findOrFail($id);
 
         return view('admin.orders.detail_supplier', compact('order'));
     }
@@ -242,13 +243,20 @@ class SupplierOrderController extends Controller
                 ]);
             }
 
+            OrderStateTimeline::create([
+                'num_order'  => (int) $order->num_order,
+                'user_id'    => (int) auth('admin')->id(),
+                'state'      => 'draft',
+                'changed_at' => now(),
+            ]);
+
             return redirect()->route('admin.supplier-orders.detail', $order->num_order);
         });
     }
 
     public function show($id)
     {
-        $order = Order::with(['supplier', 'orderItems'])->findOrFail($id);
+        $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin'])->findOrFail($id);
 
         $productsPayload = $order->orderItems->map(fn ($line) => [
             'name' => $line->name,
@@ -275,6 +283,13 @@ class SupplierOrderController extends Controller
                 'estimated_delivery_date' => $order->estimated_delivery_date?->format('d/m/Y'),
                 'state' => $order->state,
                 'total' => (float) $order->total,
+                'timeline' => $order->stateTimeline->map(fn ($t) => [
+                    'state'      => $t->state,
+                    'changed_at' => $t->changed_at->format('d/m/Y H:i'),
+                    'user_name'  => $t->admin
+                        ? trim($t->admin->name.' '.($t->admin->first_surname ?? ''))
+                        : 'Sistema',
+                ])->values()->all(),
             ],
         ]);
     }
@@ -348,6 +363,13 @@ class SupplierOrderController extends Controller
             'state' => $new,
             'date' => $new === 'confirmed' ? now() : $order->date,
             'delivered_at' => $new === 'delivered' ? now() : $order->delivered_at,
+        ]);
+
+        OrderStateTimeline::create([
+            'num_order'  => (int) $order->num_order,
+            'user_id'    => (int) auth('admin')->id(),
+            'state'      => $new,
+            'changed_at' => now(),
         ]);
 
         return response()->json([

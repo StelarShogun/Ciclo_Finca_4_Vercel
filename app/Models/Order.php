@@ -37,4 +37,10 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class, 'order_num_order', 'num_order');
     }
+
+    public function stateTimeline(): HasMany
+    {
+        return $this->hasMany(OrderStateTimeline::class, 'num_order', 'num_order')
+            ->orderBy('changed_at');
+    }
 }

@@ -152,6 +152,31 @@ function viewOrder(id) {
                 </tr>`;
         }).join('');
 
+        const TL_CONFIG = {
+            draft:     { label: 'Borrador',   icon: 'fa-pencil-alt', color: '#64748b' },
+            pending:   { label: 'Pendiente',  icon: 'fa-clock',      color: '#f59e0b' },
+            confirmed: { label: 'Confirmado', icon: 'fa-check',      color: '#3b82f6' },
+            delivered: { label: 'Entregado',  icon: 'fa-truck',      color: '#22c55e' },
+            cancelled: { label: 'Cancelado',  icon: 'fa-times',      color: '#ef4444' },
+        };
+        const timelineHtml = (order.timeline || []).map(t => {
+            const cfg = TL_CONFIG[t.state] || { label: t.state, icon: 'fa-circle', color: '#94a3b8' };
+            return `
+                <li class="tl-item">
+                    <div class="tl-dot" style="background:${cfg.color};">
+                        <i class="fas ${cfg.icon}"></i>
+                    </div>
+                    <div class="tl-body">
+                        <span class="tl-state" style="color:${cfg.color};">${cfg.label}</span>
+                        <span class="tl-meta">
+                            <i class="fas fa-user-circle"></i> ${t.user_name}
+                            &nbsp;·&nbsp;
+                            <i class="fas fa-calendar-alt"></i> ${t.changed_at}
+                        </span>
+                    </div>
+                </li>`;
+        }).join('');
+
         body.innerHTML = `
             <div class="sale-details">
                 <div class="detail-section">
@@ -194,6 +219,11 @@ function viewOrder(id) {
                         </div>
                     </div>
                 </div>
+                ${timelineHtml ? `
+                <div class="detail-section">
+                    <h4><i class="fas fa-history"></i> Historial de estados</h4>
+                    <ol class="order-timeline" style="margin-top:8px;">${timelineHtml}</ol>
+                </div>` : ''}
             </div>`;
     })
     .catch(() => {

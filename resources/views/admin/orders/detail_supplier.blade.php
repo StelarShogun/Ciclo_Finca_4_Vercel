@@ -135,6 +135,46 @@
                     <strong>₡{{ number_format((float) $order->total, 2, ',', '.') }}</strong>
                 </div>
             </section>
+
+            <section class="detail-card detail-card-wide">
+                <h2><i class="fas fa-history"></i> Historial de estados</h2>
+                @if($order->stateTimeline->isEmpty())
+                    <p class="empty-cell" style="text-align:left; padding:0.5rem 0;">Sin registros de historial.</p>
+                @else
+                    @php
+                        $tlLabels = [
+                            'draft'     => ['label' => 'Borrador',   'icon' => 'fa-pencil-alt', 'color' => '#64748b'],
+                            'pending'   => ['label' => 'Pendiente',  'icon' => 'fa-clock',      'color' => '#f59e0b'],
+                            'confirmed' => ['label' => 'Confirmado', 'icon' => 'fa-check',      'color' => '#3b82f6'],
+                            'delivered' => ['label' => 'Entregado',  'icon' => 'fa-truck',      'color' => '#22c55e'],
+                            'cancelled' => ['label' => 'Cancelado',  'icon' => 'fa-times',      'color' => '#ef4444'],
+                        ];
+                    @endphp
+                    <ol class="order-timeline">
+                        @foreach($order->stateTimeline as $entry)
+                            @php
+                                $tl = $tlLabels[$entry->state] ?? ['label' => ucfirst($entry->state), 'icon' => 'fa-circle', 'color' => '#94a3b8'];
+                                $adminName = $entry->admin
+                                    ? trim($entry->admin->name.' '.($entry->admin->first_surname ?? ''))
+                                    : 'Sistema';
+                            @endphp
+                            <li class="tl-item">
+                                <div class="tl-dot" style="background:{{ $tl['color'] }};">
+                                    <i class="fas {{ $tl['icon'] }}"></i>
+                                </div>
+                                <div class="tl-body">
+                                    <span class="tl-state" style="color:{{ $tl['color'] }};">{{ $tl['label'] }}</span>
+                                    <span class="tl-meta">
+                                        <i class="fas fa-user-circle"></i> {{ $adminName }}
+                                        &nbsp;·&nbsp;
+                                        <i class="fas fa-calendar-alt"></i> {{ $entry->changed_at->format('d/m/Y H:i') }}
+                                    </span>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ol>
+                @endif
+            </section>
         </div>
     </div>
 @endsection
