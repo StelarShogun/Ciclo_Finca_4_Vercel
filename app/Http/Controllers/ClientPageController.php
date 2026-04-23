@@ -239,6 +239,11 @@ class ClientPageController extends Controller
         ]);
     }
 
+    private function getCartCount(): int
+    {
+        return count(Session::get('cart', []));
+    }
+
     public function updateCart(Request $request)
     {
         $request->validate([
