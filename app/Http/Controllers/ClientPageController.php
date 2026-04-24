@@ -236,6 +236,7 @@ class ClientPageController extends Controller
             'success'    => true,
             'message'    => 'Producto agregado al carrito',
             'cart_count' => $this->getCartCount(),
+            'cart_total' => $this->getCartTotal(),
         ]);
     }
 

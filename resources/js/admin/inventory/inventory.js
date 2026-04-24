@@ -1694,6 +1694,38 @@ document.addEventListener('DOMContentLoaded', () => {
 (function () {
     'use strict';
 
+    function cf4SwalStockBase() {
+        return {
+            buttonsStyling: false,
+            reverseButtons: true,
+            focusCancel: true,
+            allowOutsideClick: false,
+            customClass: {
+                popup: 'cf4-swal-popup',
+                confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
+                cancelButton: 'cf4-swal-btn cf4-swal-btn-muted',
+                actions: 'cf4-swal-actions',
+                title: 'cf4-swal-title',
+                htmlContainer: 'cf4-swal-html',
+            },
+        };
+    }
+
+    function cf4SwalStockToast(icon, title, text) {
+        if (typeof Swal === 'undefined') return Promise.resolve();
+        return Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon,
+            title,
+            text: text || undefined,
+            showConfirmButton: false,
+            timer: icon === 'success' ? 3600 : 5200,
+            timerProgressBar: true,
+            showCloseButton: true,
+        });
+    }
+
     // ── DOM references (resolved after DOMContentLoaded) ──────────────────
     let modal, backdrop, modalTitle, modalTitleIcon;
     let productIdInput, productNameEl, productStockEl;
@@ -1859,19 +1891,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const productName = productNameEl.textContent || 'este producto';
         const isAdd       = currentAction === 'add';
 
+        const confirmBtnClass = isAdd
+            ? 'cf4-swal-btn cf4-swal-btn-primary'
+            : 'cf4-swal-btn cf4-swal-btn-danger';
+
+        const swalBase = cf4SwalStockBase();
         const { isConfirmed } = await Swal.fire({
-            title: isAdd ? '¿Agregar stock?' : '¿Retirar stock?',
+            ...swalBase,
+            customClass: {
+                ...swalBase.customClass,
+                confirmButton: confirmBtnClass,
+            },
+            title: isAdd ? '¿Agregar stock al inventario?' : '¿Retirar stock del inventario?',
             html: isAdd
-                ? `Se agregarán <strong>${qty}</strong> unidad(es) a <strong>${productName}</strong>.`
-                : `Se retirarán <strong>${qty}</strong> unidad(es) de <strong>${productName}</strong>.`,
+                ? `<p>Se agregarán <strong>${qty}</strong> unidad(es) a <strong>${productName}</strong>.</p>`
+                : `<p>Se retirarán <strong>${qty}</strong> unidad(es) de <strong>${productName}</strong>.</p>`,
             icon: isAdd ? 'question' : 'warning',
             showCancelButton: true,
             confirmButtonText: isAdd ? 'Sí, agregar' : 'Sí, retirar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: isAdd ? '#16a34a' : '#dc2626',
-            cancelButtonColor: '#6b7280',
-            reverseButtons: true,
-            focusCancel: true,
+            cancelButtonText: 'Volver',
         });
 
         if (!isConfirmed) return;
@@ -1903,14 +1941,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (res.ok && data.success) {
                 closeModal();
-                await Swal.fire({
-                    title: '¡Listo!',
-                    text: data.message || 'Stock actualizado correctamente.',
-                    icon: 'success',
-                    timer: 1800,
-                    timerProgressBar: true,
-                    showConfirmButton: false,
-                });
+                await cf4SwalStockToast('success', 'Stock actualizado', data.message || 'Los cambios ya están registrados.');
                 window.location.reload();
             } else {
                 // Server-side validation errors

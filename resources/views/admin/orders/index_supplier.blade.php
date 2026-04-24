@@ -118,6 +118,7 @@
                             <th>Fecha de pedido</th>
                             <th>Fecha de entrega</th>
                             <th>Estado</th>
+                            <th>Confirmación</th>
                             <th>Total</th>
                             <th>Acciones</th>
                         </tr>
@@ -182,6 +183,30 @@
                                     @php $label = $stateLabels[$order->state] ?? ucfirst($order->state); @endphp
                                     <span class="order-status-pill {{ $order->state }}" data-role="order-state-pill">{{ $label }}</span>
                                 </td>
+                                <td class="order-conf-cell" data-role="order-conf-cell">
+                                    @if($order->confirmed_at)
+                                        @php
+                                            $confUser = null;
+                                            if ($order->confirmedBy) {
+                                                $confUser = trim(implode(' ', array_filter([
+                                                    $order->confirmedBy->name,
+                                                    $order->confirmedBy->first_surname,
+                                                ])));
+                                                if ($confUser === '') {
+                                                    $confUser = $order->confirmedBy->gmail;
+                                                }
+                                            }
+                                        @endphp
+                                        <div class="order-conf-stack">
+                                            <span class="order-conf-date">{{ $order->confirmed_at->format('d/m/Y H:i') }}</span>
+                                            @if($confUser)
+                                                <span class="order-conf-user" title="{{ $confUser }}">{{ \Illuminate\Support\Str::limit($confUser, 28) }}</span>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
                                 <td><strong>₡{{ number_format($order->total, 0, ',', '.') }}</strong></td>
                                 <td>
                                     <div class="actions-container" data-role="order-actions">
@@ -192,9 +217,9 @@
                                         </button>
                                         @if($order->state === 'draft')
                                             <button class="action-btn success" type="button"
-                                                    onclick="submitDraftOrder('{{ $order->num_order }}')"
-                                                    title="Enviar a pendiente">
-                                                <i class="fas fa-paper-plane"></i>
+                                                    onclick="confirmOrder('{{ $order->num_order }}')"
+                                                    title="Confirmar pedido">
+                                                <i class="fas fa-check"></i>
                                             </button>
                                             <button class="action-btn danger" type="button"
                                                     onclick="cancelOrder('{{ $order->num_order }}')"
@@ -229,7 +254,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8">
+                                <td colspan="9">
                                     <div class="orders-empty">
                                         <div class="orders-empty-icon"><i class="fas fa-inbox"></i></div>
                                         <p style="margin:0; font-size:1rem;">No hay pedidos que coincidan con los filtros.</p>

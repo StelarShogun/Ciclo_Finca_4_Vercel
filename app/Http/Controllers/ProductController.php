@@ -10,13 +10,14 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\Admin\AdminInventoryExportQuery;
 use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\RegistryExcelExport;
 use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
-use App\Services\Admin\RegistryExcelExport;
 use App\Services\InventoryMovementService;
 use App\Services\ProductClassificationAssignmentService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -938,11 +939,17 @@ class ProductController extends Controller
         if ($request->filled('stock_status')) {
             switch ($request->stock_status) {
                 case 'in-stock':
-                    $query->where('stock_current', '>', Product::CLIENT_LOW_STOCK_THRESHOLD);
+                    // "En stock" = por encima del mínimo definido para el producto.
+                    // Opción B: productos con stock_minimum = 0 no se incluyen aquí.
+                    $query->where('stock_minimum', '>', 0)
+                        ->whereColumn('stock_current', '>', 'stock_minimum');
                     break;
                 case 'low':
-                    $query->where('stock_current', '>', 0)
-                        ->where('stock_current', '<=', Product::CLIENT_LOW_STOCK_THRESHOLD);
+                    // "Stock bajo" = stock positivo pero por debajo o igual al mínimo del producto.
+                    // Opción B: productos con stock_minimum = 0 no se incluyen aquí.
+                    $query->where('stock_minimum', '>', 0)
+                        ->where('stock_current', '>', 0)
+                        ->whereColumn('stock_current', '<=', 'stock_minimum');
                     break;
                 case 'out':
                     $query->where('stock_current', 0);
@@ -1014,17 +1021,17 @@ class ProductController extends Controller
     // Add manual stock and register the inventory movement
     public function addManualStock(Request $request, int $id, InventoryMovementService $inventoryService)
     {
-        $validReasons = ['manual_adjustment', 'damage', 'return'];
+        $validReasons = ['manual_adjustment', 'damage', 'refund'];
 
         try {
             $validated = $request->validate([
                 'quantity' => ['required', 'numeric', 'min:1'],
-                'reason'   => ['required', 'string', 'in:' . implode(',', $validReasons)],
+                'reason' => ['required', 'string', 'in:'.implode(',', $validReasons)],
             ]);
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'errors'  => $e->errors(),
+                'errors' => $e->errors(),
                 'message' => 'Datos inválidos.',
             ], 422);
         }
@@ -1033,18 +1040,18 @@ class ProductController extends Controller
             $product = Product::findOrFail($id);
 
             $inventoryService->recordManualEntry(
-                product:  $product,
+                product: $product,
                 quantity: (int) $validated['quantity'],
-                reason:   $validated['reason'],
+                reason: $validated['reason'],
             );
 
             return response()->json([
-                'success'       => true,
-                'message'       => "Se agregaron {$validated['quantity']} unidades correctamente.",
+                'success' => true,
+                'message' => "Se agregaron {$validated['quantity']} unidades correctamente.",
                 'stock_current' => $product->stock_current,
             ]);
 
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             return response()->json([
                 'success' => false,
                 'message' => 'Producto no encontrado.',
@@ -1053,7 +1060,7 @@ class ProductController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'errors'  => $e->errors(),
+                'errors' => $e->errors(),
                 'message' => collect($e->errors())->flatten()->first(),
             ], 422);
 
@@ -1070,17 +1077,17 @@ class ProductController extends Controller
     // Remove manual stock and register the inventory movement
     public function removeManualStock(Request $request, int $id, InventoryMovementService $inventoryService)
     {
-        $validReasons = ['manual_adjustment', 'damage', 'return'];
+        $validReasons = ['manual_adjustment', 'damage', 'refund'];
 
         try {
             $validated = $request->validate([
                 'quantity' => ['required', 'numeric', 'min:1'],
-                'reason'   => ['required', 'string', 'in:' . implode(',', $validReasons)],
+                'reason' => ['required', 'string', 'in:'.implode(',', $validReasons)],
             ]);
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'errors'  => $e->errors(),
+                'errors' => $e->errors(),
                 'message' => 'Datos inválidos.',
             ], 422);
         }
@@ -1089,18 +1096,18 @@ class ProductController extends Controller
             $product = Product::findOrFail($id);
 
             $inventoryService->recordManualExit(
-                product:  $product,
+                product: $product,
                 quantity: (int) $validated['quantity'],
-                reason:   $validated['reason'],
+                reason: $validated['reason'],
             );
 
             return response()->json([
-                'success'       => true,
-                'message'       => "Se eliminaron {$validated['quantity']} unidades correctamente.",
+                'success' => true,
+                'message' => "Se eliminaron {$validated['quantity']} unidades correctamente.",
                 'stock_current' => $product->stock_current,
             ]);
 
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             return response()->json([
                 'success' => false,
                 'message' => 'Producto no encontrado.',
@@ -1109,7 +1116,7 @@ class ProductController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'errors'  => $e->errors(),
+                'errors' => $e->errors(),
                 'message' => collect($e->errors())->flatten()->first(),
             ], 422);
 

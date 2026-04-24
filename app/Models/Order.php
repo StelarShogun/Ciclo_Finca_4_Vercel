@@ -18,6 +18,8 @@ class Order extends Model
         'estimated_delivery_date',
         'date',
         'state',
+        'confirmed_at',
+        'confirmed_by',
         'total',
         'delivered_at',
     ];
@@ -26,6 +28,7 @@ class Order extends Model
         'date' => 'datetime',
         'estimated_delivery_date' => 'date',
         'delivered_at' => 'datetime',
+        'confirmed_at' => 'datetime',
     ];
 
     public function supplier(): BelongsTo
@@ -42,5 +45,11 @@ class Order extends Model
     {
         return $this->hasMany(OrderStateTimeline::class, 'num_order', 'num_order')
             ->orderBy('changed_at');
+    }
+
+    /** Admin que confirmó el pedido con el proveedor (CF4-15). */
+    public function confirmedBy(): BelongsTo
+    {
+        return $this->belongsTo(AdminUser::class, 'confirmed_by', 'user_id');
     }
 }
