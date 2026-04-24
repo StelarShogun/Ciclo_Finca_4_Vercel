@@ -19,12 +19,38 @@ class Order extends Model
         'date',
         'state',
         'total',
+        'received_at',
     ];
 
     protected $casts = [
-        'date' => 'datetime',
+        'date'                    => 'datetime',
         'estimated_delivery_date' => 'date',
+        'received_at'             => 'datetime',
     ];
+
+    /**
+     * Valid state transitions.
+     * draft → pending → confirmed → delivered
+     *                             → cancelled (desde draft, pending, confirmed)
+     */
+    public const TRANSITIONS = [
+        'draft'     => ['pending', 'cancelled'],
+        'pending'   => ['confirmed', 'cancelled'],
+        'confirmed' => ['delivered', 'cancelled'],
+    ];
+
+    public const STATE_LABELS = [
+        'draft'     => 'Borrador',
+        'pending'   => 'Pendiente',
+        'confirmed' => 'Confirmado',
+        'delivered' => 'Entregado',
+        'cancelled' => 'Cancelado',
+    ];
+
+    public function canTransitionTo(string $newState): bool
+    {
+        return in_array($newState, self::TRANSITIONS[$this->state] ?? [], true);
+    }
 
     public function supplier(): BelongsTo
     {

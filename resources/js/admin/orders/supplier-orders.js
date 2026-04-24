@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateTo   = document.getElementById('date_to');
 
     if (dateFrom && dateTo) {
-        // Keep min of dateTo in sync with dateFrom
         dateFrom.addEventListener('change', () => {
             dateTo.min = dateFrom.value || '';
             if (dateTo.value && dateTo.value < dateFrom.value) {
@@ -18,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Restore min on page load if dateFrom already has a value
         if (dateFrom.value) dateTo.min = dateFrom.value;
     }
 
@@ -48,7 +46,15 @@ document.addEventListener('DOMContentLoaded', () => {
 function closeViewOrderModal()    { document.getElementById('view-order-modal')?.classList.remove('active'); }
 function closeViewSupplierModal() { document.getElementById('view-supplier-modal')?.classList.remove('active'); }
 
-const STATE_LABELS = { draft: 'Borrador', pending: 'Pendiente', confirmed: 'Confirmado', delivered: 'Entregado', cancelled: 'Cancelado' };
+const STATE_LABELS = {
+    draft:            'Borrador',
+    pending:          'Pendiente',
+    confirmed:        'Confirmado',
+    in_transit:       'En tránsito',
+    partial_received: 'Recepción parcial',
+    delivered:        'Entregado',
+    cancelled:        'Cancelado',
+};
 
 let activeOrderIdInModal = null;
 
@@ -70,13 +76,21 @@ function renderActionButtonsHtml(id, state, variant = 'icon') {
             : '';
 
     if (state === 'draft') {
-        return `${viewBtn}${btn(variant === 'icon' ? 'success' : 'btn-primary', 'Enviar pedido (pasar a Pendiente)', 'fa-paper-plane', 'Enviar', 'sendOrder')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar pedido', 'fa-times', 'Cancelar', 'cancelOrder')}`;
+        return `${viewBtn}${btn(variant === 'icon' ? 'success' : 'btn-primary', 'Enviar pedido', 'fa-paper-plane', 'Enviar', 'sendOrder')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar', 'fa-times', 'Cancelar', 'cancelOrder')}`;
     }
     if (state === 'pending') {
-        return `${viewBtn}${btn(variant === 'icon' ? 'success' : 'btn-primary', 'Confirmar pedido', 'fa-check', 'Confirmar', 'confirmOrder')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar pedido', 'fa-times', 'Cancelar', 'cancelOrder')}`;
+        return `${viewBtn}${btn(variant === 'icon' ? 'success' : 'btn-primary', 'Confirmar pedido', 'fa-check', 'Confirmar', 'confirmOrder')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar', 'fa-times', 'Cancelar', 'cancelOrder')}`;
     }
     if (state === 'confirmed') {
-        return `${viewBtn}${btn(variant === 'icon' ? 'view' : 'btn-primary', 'Marcar como entregado', 'fa-truck', 'Entregado', 'deliverOrder')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar pedido', 'fa-times', 'Cancelar', 'cancelOrder')}`;
+        return `${viewBtn}${btn(variant === 'icon' ? 'view' : 'btn-primary', 'Marcar en tránsito', 'fa-shipping-fast', 'En tránsito', 'markInTransit')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar', 'fa-times', 'Cancelar', 'cancelOrder')}`;
+    }
+    // in_transit y partial_received: el botón de recepción solo funciona en la página de detalle
+    if (state === 'in_transit' || state === 'partial_received') {
+        const detailUrl = `/supplier-orders/${id}/detail`;
+        if (variant === 'icon') {
+            return `${viewBtn}<a class="action-btn view" href="${detailUrl}" title="Registrar recepción"><i class="fas fa-clipboard-check"></i></a>`;
+        }
+        return `<a class="btn btn-primary" href="${detailUrl}" title="Registrar recepción"><i class="fas fa-clipboard-check"></i> Registrar recepción</a>`;
     }
     return `${viewBtn}`;
 }
@@ -88,7 +102,7 @@ function updateRowState(id, nextState) {
 
     const pill = tr.querySelector('[data-role="order-state-pill"]');
     if (pill) {
-        pill.className = `order-status-pill ${nextState}`;
+        pill.className   = `order-status-pill ${nextState}`;
         pill.textContent = STATE_LABELS[nextState] || nextState;
     }
 
@@ -102,7 +116,7 @@ function updateModalState(nextState) {
     if (!activeOrderIdInModal) return;
     const badge = document.querySelector('#view-order-body [data-role="modal-state-badge"]');
     if (badge) {
-        badge.className = `status-badge ${nextState}`;
+        badge.className  = `status-badge ${nextState}`;
         badge.textContent = STATE_LABELS[nextState] || nextState;
     }
 
@@ -138,19 +152,26 @@ function viewOrder(id) {
 
         const order        = data.order;
         const supplierName = order.supplier?.name ?? '—';
-        const detailUrl = `/supplier-orders/${order.num_order}/detail`;
+        const detailUrl    = `/supplier-orders/${order.num_order}/detail`;
 
         const productsHtml = (order.products || []).map(item => {
             const up  = parseFloat(item.unit_price || 0);
             const tot = parseFloat(item.total || 0);
+            const recvCol = (item.received_quantity !== null && item.received_quantity !== undefined)
+                ? `<td class="text-center">${item.received_quantity}</td>`
+                : '';
             return `
                 <tr>
                     <td>${item.name || 'N/A'}</td>
                     <td class="text-center">${item.quantity}</td>
+                    ${recvCol}
                     <td class="text-right">₡${up.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</td>
                     <td class="text-right"><strong>₡${tot.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></td>
                 </tr>`;
         }).join('');
+
+        const showRecvCol = order.products?.some(p => p.received_quantity !== null && p.received_quantity !== undefined);
+        const recvHeader  = showRecvCol ? '<th class="text-center">Recibido</th>' : '';
 
         body.innerHTML = `
             <div class="sale-details">
@@ -161,6 +182,7 @@ function viewOrder(id) {
                         <div class="detail-item"><label>Proveedor:</label><span>${supplierName}</span></div>
                         <div class="detail-item"><label>Fecha:</label><span>${order.date}</span></div>
                         <div class="detail-item"><label>Entrega estimada:</label><span>${order.estimated_delivery_date || '—'}</span></div>
+                        ${order.received_at ? `<div class="detail-item"><label>Fecha recepción:</label><span>${order.received_at}</span></div>` : ''}
                         <div class="detail-item"><label>Estado:</label><span class="status-badge ${order.state}" data-role="modal-state-badge">${STATE_LABELS[order.state] || order.state}</span></div>
                     </div>
                     <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;" data-role="modal-actions">
@@ -177,23 +199,21 @@ function viewOrder(id) {
                         <thead>
                             <tr>
                                 <th>Producto</th>
-                                <th class="text-center">Cantidad</th>
+                                <th class="text-center">Pedido</th>
+                                ${recvHeader}
                                 <th class="text-right">Precio unit.</th>
                                 <th class="text-right">Total</th>
                             </tr>
                         </thead>
                         <tbody>${productsHtml}</tbody>
                     </table>
-                </div>` : ''}
-                <div class="detail-section">
-                    <h4><i class="fas fa-calculator"></i> Total del pedido</h4>
-                    <div class="totals-summary">
+                    <div class="sale-totals">
                         <div class="total-item total-final">
                             <span><strong>Total:</strong></span>
                             <span><strong>₡${parseFloat(order.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></span>
                         </div>
                     </div>
-                </div>
+                </div>` : ''}
             </div>`;
     })
     .catch(() => {
@@ -277,9 +297,9 @@ function _orderAction(id, state, confirmText, successMsg) {
         fetch(`/supplier-orders/${id}/state`, {
             method: 'PATCH',
             headers: {
-                'X-CSRF-TOKEN': getCSRFToken(),
-                'Accept':       'application/json',
-                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN':  getCSRFToken(),
+                'Accept':        'application/json',
+                'Content-Type':  'application/json',
             },
             body: JSON.stringify({ state }),
         })
@@ -311,14 +331,14 @@ function _orderAction(id, state, confirmText, successMsg) {
     });
 }
 
-function submitDraftOrder(id) {
+function sendOrder(id) {
     _orderAction(id, 'pending', {
-        title: '¿Enviar borrador?',
-        text: 'El pedido pasará a estado pendiente ante el proveedor.',
-        icon: 'question',
-        color: '#2e7d32',
+        title:   '¿Enviar pedido?',
+        text:    'El pedido dejará de ser borrador y pasará a estado pendiente.',
+        icon:    'question',
+        color:   '#2e7d32',
         confirm: 'Sí, enviar',
-    }, 'Pedido enviado a pendiente.');
+    }, 'Pedido enviado. Ahora está pendiente.');
 }
 
 function confirmOrder(id) {
@@ -331,24 +351,14 @@ function confirmOrder(id) {
     }, 'Pedido confirmado correctamente.');
 }
 
-function deliverOrder(id) {
-    _orderAction(id, 'delivered', {
-        title:   '¿Marcar como entregado?',
-        text:    'Se registrará la recepción de la mercancía.',
+function markInTransit(id) {
+    _orderAction(id, 'in_transit', {
+        title:   '¿Marcar en tránsito?',
+        text:    'El pedido se marcará como en tránsito. Podrás registrar la recepción cuando llegue.',
         icon:    'question',
         color:   '#0277bd',
-        confirm: 'Sí, marcar entregado',
-    }, 'Pedido marcado como entregado.');
-}
-
-function sendOrder(id) {
-    _orderAction(id, 'pending', {
-        title:   '¿Enviar pedido?',
-        text:    'El pedido dejará de ser borrador y pasará a estado pendiente.',
-        icon:    'question',
-        color:   '#2e7d32',
-        confirm: 'Sí, enviar',
-    }, 'Pedido enviado. Ahora está pendiente.');
+        confirm: 'Sí, marcar en tránsito',
+    }, 'Pedido marcado como en tránsito.');
 }
 
 function cancelOrder(id) {
@@ -361,6 +371,21 @@ function cancelOrder(id) {
     }, 'Pedido cancelado.');
 }
 
+// deliverOrder se mantiene por compatibilidad pero ya no se usa directamente en el flujo normal
+function deliverOrder(id) {
+    _orderAction(id, 'delivered', {
+        title:   '¿Marcar como entregado?',
+        text:    'Se registrará la recepción de la mercancía.',
+        icon:    'question',
+        color:   '#0277bd',
+        confirm: 'Sí, marcar entregado',
+    }, 'Pedido marcado como entregado.');
+}
+
+function submitDraftOrder(id) {
+    sendOrder(id);
+}
+
 // Expose functions on window (required by Vite/ESM)
 Object.assign(window, {
     closeViewOrderModal,
@@ -368,8 +393,9 @@ Object.assign(window, {
     viewOrder,
     viewSupplier,
     submitDraftOrder,
-    confirmOrder,
-    deliverOrder,
     sendOrder,
+    confirmOrder,
+    markInTransit,
+    deliverOrder,
     cancelOrder,
 });

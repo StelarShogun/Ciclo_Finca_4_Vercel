@@ -141,21 +141,20 @@
                                                 onclick="viewSupplier('{{ $order->supplier->supplier_id }}')"
                                                 title="Ver datos del proveedor">
                                             {{ $order->supplier->name }}
-                                            <i class="fas fa-external-link-alt" style="font-size:0.72rem;"></i>
+                                            <i class="fas fa-external-link-alt" style="font-size:.75rem; opacity:.6;"></i>
                                         </button>
                                     @else
-                                        <span class="text-muted">Sin proveedor</span>
+                                        <span class="text-muted">—</span>
                                     @endif
                                 </td>
                                 <td>
-                                    @if($order->orderItems && $order->orderItems->count() > 0)
-                                        <div style="display:flex; flex-direction:column; gap:6px;">
-                                            @foreach($order->orderItems as $item)
-                                                <div>{{ $item->quantity }} × {{ $item->name }}</div>
-                                            @endforeach
-                                        </div>
-                                    @else
+                                    @forelse($order->orderItems->take(3) as $item)
+                                        <div>{{ (int)$item->quantity }} × {{ $item->name }}</div>
+                                    @empty
                                         <span class="text-muted">Sin productos</span>
+                                    @endforelse
+                                    @if($order->orderItems->count() > 3)
+                                        <div style="opacity:.65; font-size:.85rem;">+{{ $order->orderItems->count() - 3 }} más</div>
                                     @endif
                                 </td>
                                 <td>{{ $order->date->format('d/m/Y H:i') }}</td>
@@ -213,11 +212,11 @@
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         @elseif($order->state === 'confirmed')
-                                            <button class="action-btn view" type="button"
-                                                    onclick="deliverOrder('{{ $order->num_order }}')"
-                                                    title="Marcar como entregado">
+                                            <a class="action-btn view"
+                                               href="{{ route('admin.supplier-orders.detail', $order->num_order) }}"
+                                               title="Registrar recepción de mercancía">
                                                 <i class="fas fa-truck"></i>
-                                            </button>
+                                            </a>
                                             <button class="action-btn danger" type="button"
                                                     onclick="cancelOrder('{{ $order->num_order }}')"
                                                     title="Cancelar pedido">

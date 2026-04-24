@@ -220,6 +220,8 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::patch('/supplier-orders/{id}/state', [SupplierOrderController::class, 'updateState'])->name('admin.supplier-orders.update-state');
     Route::get('/supplier/details/{id}', [SupplierOrderController::class, 'supplierDetails'])->name('admin.supplier-orders.supplier');
 
+    Route::post('/supplier-orders/{id}/receive', [SupplierOrderController::class, 'receiveOrder'])->name('admin.supplier-orders.receive');
+
     // Client Management (admin view)
     Route::get('/clientes', [AdminClientController::class, 'index'])->name('admin.clients.index');
     Route::patch('/clientes/{id}/ban', [AdminClientController::class, 'ban'])->name('admin.clients.ban');
