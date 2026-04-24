@@ -205,7 +205,6 @@
                                         @endif
                                     </td>
                                     <td>
-                                        {{-- Stock badge: según stock mínimo por producto (CF4-50) --}}
                                         <span class="stock-badge {{ $product->adminInventoryStockBadgeClass() }}">
                                             {{ $product->stock_current }}
                                         </span>
@@ -837,7 +836,7 @@
                         <option value="" disabled selected>Selecciona un motivo…</option>
                         <option value="manual_adjustment">Ajuste Manual</option>
                         <option value="damage">Daño</option>
-                        <option value="refund">Reembolso</option>
+                        <option value="refund">Entrada por reembolso / nota de crédito</option>
                     </select>
                     <span class="stock-field-error" id="stock-modal-reason-error"></span>
                 </div>

@@ -155,8 +155,10 @@ document.addEventListener('DOMContentLoaded', () => {
         'damage':           'Daño',
         'damaged':          'Daño',
         'manual adjustment':'Ajuste manual',
+        'manual_adjustment':'Ajuste manual',
         'adjustment':       'Ajuste',
-        'return':           'Devolución',
+        'refund':           'Entrada manual (reembolso)',
+        'return':           'Devolución de venta',
         'in':               'Entrada',
         'out':              'Salida',
     };

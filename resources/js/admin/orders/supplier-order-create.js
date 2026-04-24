@@ -313,8 +313,14 @@ function init() {
                         missing.length === 1
                             ? `${missing[0]} es obligatorio.`
                             : `${missing.slice(0, -1).join(', ')} y ${missing[missing.length - 1]} son obligatorios.`,
+                    buttonsStyling: false,
+                    showCancelButton: false,
                     confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#2e7d32',
+                    customClass: {
+                        popup: 'cf4-swal-popup',
+                        confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
+                        title: 'cf4-swal-title',
+                    },
                 });
             }
         }

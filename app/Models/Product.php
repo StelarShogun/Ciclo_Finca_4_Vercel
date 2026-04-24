@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -103,11 +102,11 @@ class Product extends Model implements HasMedia
         $disk = config('media-library.disk_name', 'public');
 
         $this->addMediaCollection('main_image')
-             ->useDisk($disk)
-             ->singleFile();
+            ->useDisk($disk)
+            ->singleFile();
 
         $this->addMediaCollection('gallery')
-             ->useDisk($disk);
+            ->useDisk($disk);
     }
 
     // Returns the main and extra images, falling back to the default asset.
@@ -292,6 +291,6 @@ class Product extends Model implements HasMedia
     public function inventoryMovements(): HasMany
     {
         return $this->hasMany(InventoryMovement::class, 'product_id', 'product_id')
-                    ->orderBy('created_at', 'asc');
+            ->orderBy('created_at', 'asc');
     }
 }
