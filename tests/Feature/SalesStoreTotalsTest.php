@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
- * Totales de nueva venta (mostrador): subtotal, descuento, IVA y total coherentes con redondeo a 2 decimales.
+ * Totales de nueva venta (mostrador): subtotal, descuento y total coherentes con redondeo a 2 decimales.
  */
 class SalesStoreTotalsTest extends TestCase
 {
@@ -65,14 +65,14 @@ class SalesStoreTotalsTest extends TestCase
         return $admin;
     }
 
-    public function test_store_computes_iva_on_taxable_base_after_discount(): void
+    public function test_store_computes_total_on_taxable_base_after_discount_without_iva(): void
     {
         $this->actingAsAdminPair();
 
         $product = Product::create([
             'category_id' => null,
             'supplier_id' => null,
-            'name' => 'Producto IVA test',
+            'name' => 'Producto totales test',
             'description' => null,
             'image' => 'default.png',
             'sale_price' => 100,
@@ -85,7 +85,6 @@ class SalesStoreTotalsTest extends TestCase
         $payload = [
             'payment_method' => 'cash',
             'discount' => 10,
-            'iva_percentage' => 13,
             'items' => [
                 [
                     'product_id' => $product->product_id,
@@ -104,8 +103,8 @@ class SalesStoreTotalsTest extends TestCase
         $this->assertEquals('200.00', (string) $sale->subtotal);
         $this->assertEquals('10.00', (string) $sale->discount);
         $this->assertEquals(190.0, round((float) $sale->subtotal - (float) $sale->discount, 2));
-        $this->assertEquals('24.70', (string) $sale->iva);
-        $this->assertEquals('214.70', (string) $sale->total);
+        $this->assertEquals('0.00', (string) $sale->iva);
+        $this->assertEquals('190.00', (string) $sale->total);
 
         $item = SaleItem::where('sale_id', $sale->sale_id)->first();
         $this->assertEquals('200.00', (string) $item->total);
@@ -131,7 +130,6 @@ class SalesStoreTotalsTest extends TestCase
         $res = $this->postJson(route('sales.store'), [
             'payment_method' => 'cash',
             'discount' => 150,
-            'iva_percentage' => 0,
             'items' => [
                 [
                     'product_id' => $product->product_id,

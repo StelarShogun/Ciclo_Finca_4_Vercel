@@ -38,13 +38,14 @@
                     <button class="btn btn-primary" id="open-new-product-modal">
                         <i class="fas fa-plus"></i> Nuevo Producto
                     </button>
+                    <a class="btn btn-secondary" href="{{ route('admin.reports.exports') }}{{ $inventoryExportsQuery }}" title="Abre el centro de exportación; las descargas de inventario respetan los filtros aplicados en esta pantalla">
+                        <i class="fas fa-file-export"></i>
+                        Exportar datos
+                    </a>
                     <a class="btn btn-secondary" href="{{ route('categories.subcategories.create') }}">
                         <i class="fas fa-sitemap"></i>
                         Crear Subcategoría
                     </a>
-                    <button class="btn btn-secondary" id="export-btn">
-                        <i class="fas fa-download"></i> Exportar
-                    </button>
                     <button class="btn btn-secondary" id="import-btn">
                         <i class="fas fa-upload"></i> Importar
                     </button>
@@ -174,8 +175,8 @@
                                 <tr>
                                     <td class="product-cell">
                                         <div class="product-thumb-wrap product-thumb-wrap--table">
-                                            {{-- Falls back to default image if none is set --}}
-                                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
+                                            {{-- MediaLibrary image with legacy fallback --}}
+                                            <img src="{{ $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
                                                  alt="{{ $product->name }}">
                                             <button type="button"
                                                     class="featured-star-btn {{ $product->is_featured ? 'is-featured' : '' }}"
@@ -204,8 +205,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        {{-- Stock badge: success >10, warning >0, danger =0 --}}
-                                        <span class="stock-badge {{ $product->stock_current > \App\Models\Product::CLIENT_LOW_STOCK_THRESHOLD ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger') }}">
+                                        <span class="stock-badge {{ $product->adminInventoryStockBadgeClass() }}">
                                             {{ $product->stock_current }}
                                         </span>
                                     </td>
@@ -236,6 +236,22 @@
                                                     title="Edit product">
                                                 <i class="fas fa-edit"></i>
                                             </button>
+                                            <button class="action-btn stock-adjust"
+                                                    data-stock-action="add"
+                                                    data-product-id="{{ $product->product_id }}"
+                                                    data-product-name="{{ $product->name }}"
+                                                    data-product-stock="{{ $product->stock_current }}"
+                                                    title="Add stock">
+                                                <i class="fas fa-plus-circle" style="color:#16a34a;"></i>
+                                            </button>
+                                            <button class="action-btn stock-adjust"
+                                                    data-stock-action="remove"
+                                                    data-product-id="{{ $product->product_id }}"
+                                                    data-product-name="{{ $product->name }}"
+                                                    data-product-stock="{{ $product->stock_current }}"
+                                                    title="Remove stock">
+                                                <i class="fas fa-minus-circle" style="color:#dc2626;"></i>
+                                            </button>
                                             <button class="action-btn delete"
                                                     data-action="delete"
                                                     data-product-id="{{ $product->product_id }}"
@@ -259,7 +275,7 @@
                             <div class="product-card">
                                 <div class="product-card-header">
                                     <div class="product-thumb-wrap product-thumb-wrap--card">
-                                        <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
+                                        <img src="{{ $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
                                              alt="{{ $product->name }}" class="product-card-image">
                                         <button type="button"
                                                 class="featured-star-btn {{ $product->is_featured ? 'is-featured' : '' }}"
@@ -294,7 +310,7 @@
                                     <div class="product-card-detail">
                                         <span class="product-card-detail-label">Stock</span>
                                         <span class="product-card-detail-value">
-                                            <span class="stock-badge {{ $product->stock_current > \App\Models\Product::CLIENT_LOW_STOCK_THRESHOLD ? 'success' : ($product->stock_current > 0 ? 'warning' : 'danger') }}">
+                                            <span class="stock-badge {{ $product->adminInventoryStockBadgeClass() }}">
                                                 {{ $product->stock_current }}
                                             </span>
                                         </span>
@@ -336,6 +352,24 @@
                                                 title="Edit product">
                                             <i class="fas fa-edit"></i>
                                         </button>
+                                        {{-- Add stock (green plus) --}}
+                                        <button class="action-btn stock-adjust"
+                                                data-stock-action="add"
+                                                data-product-id="{{ $product->product_id }}"
+                                                data-product-name="{{ $product->name }}"
+                                                data-product-stock="{{ $product->stock_current }}"
+                                                title="Add stock">
+                                            <i class="fas fa-plus-circle" style="color:#16a34a;"></i>
+                                        </button>
+                                        {{-- Remove stock (red minus) --}}
+                                        <button class="action-btn stock-adjust"
+                                                data-stock-action="remove"
+                                                data-product-id="{{ $product->product_id }}"
+                                                data-product-name="{{ $product->name }}"
+                                                data-product-stock="{{ $product->stock_current }}"
+                                                title="Remove stock">
+                                            <i class="fas fa-minus-circle" style="color:#dc2626;"></i>
+                                        </button>
                                         <button class="action-btn delete"
                                                 data-action="delete"
                                                 data-product-id="{{ $product->product_id }}"
@@ -344,6 +378,7 @@
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
+
                                 </div>
                             </div>
                         @endforeach
@@ -388,9 +423,9 @@
                     {{-- Multiple images rendered as a carousel on the product page --}}
                     <div class="form-group">
                         <label for="new-images">Imágenes adicionales (carrusel)</label>
-                        <input type="file" id="new-images" name="images[]" accept="image/*" multiple>
+                        <input type="file" id="new-images" name="images[]" accept="image/*" multiple webkitdirectory>
                         <small class="form-text text-muted">
-                            Opcional. Varias imágenes se mostrarán en un carrusel en la ficha del producto.
+                            Opcional. Selecciona una carpeta o varios archivos. Las imágenes se mostrarán en un carrusel en la ficha del producto.
                         </small>
                     </div>
                     <div class="form-row">
@@ -525,8 +560,8 @@
                     {{-- Uploading new images replaces the existing carousel set --}}
                     <div class="form-group">
                         <label for="edit-images">Imágenes adicionales (carrusel)</label>
-                        <input type="file" id="edit-images" name="images[]" accept="image/*" multiple>
-                        <small class="form-text text-muted">Opcional. Al subir nuevas, reemplazan las actuales del carrusel.</small>
+                        <input type="file" id="edit-images" name="images[]" accept="image/*" multiple webkitdirectory>
+                        <small class="form-text text-muted">Opcional. Selecciona una carpeta o varios archivos. Al subir nuevas, reemplazan las actuales del carrusel.</small>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -615,68 +650,6 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="cancel-edit">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="save-edit">Guardar Cambios</button>
-            </div>
-        </div>
-    </div>
-
-    {{-- ==================== MODAL: EXPORT ==================== --}}
-    <div class="edit-modal" id="export-modal">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content modal-auto-size">
-            <div class="modal-header">
-                <h3><i class="fas fa-download"></i> Exportar Productos</h3>
-                <button class="modal-close" id="close-export-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="export-options">
-
-                    <div class="export-option">
-                        <div class="export-icon"><i class="fas fa-file-code"></i></div>
-                        <div class="export-info">
-                            <h4>XML</h4>
-                            <p>Formato estructurado para intercambio de datos</p>
-                        </div>
-                        <a href="{{ route('products.export', 'xml') }}" class="btn btn-primary">
-                            <i class="fas fa-download"></i> Exportar XML
-                        </a>
-                    </div>
-
-                    <div class="export-option">
-                        <div class="export-icon"><i class="fas fa-file-csv"></i></div>
-                        <div class="export-info">
-                            <h4>CSV</h4>
-                            <p>Formato de hoja de cálculo compatible con Excel</p>
-                        </div>
-                        <a href="{{ route('products.export', 'csv') }}" class="btn btn-primary">
-                            <i class="fas fa-download"></i> Exportar CSV
-                        </a>
-                    </div>
-
-                    <div class="export-option">
-                        <div class="export-icon"><i class="fas fa-file-alt"></i></div>
-                        <div class="export-info">
-                            <h4>JSON</h4>
-                            <p>Formato ligero para aplicaciones web</p>
-                        </div>
-                        <a href="{{ route('products.export', 'json') }}" class="btn btn-primary">
-                            <i class="fas fa-download"></i> Exportar JSON
-                        </a>
-                    </div>
-
-                    <div class="export-option">
-                        <div class="export-icon"><i class="fas fa-file-pdf"></i></div>
-                        <div class="export-info">
-                            <h4>PDF</h4>
-                            <p>Documento profesional para impresión</p>
-                        </div>
-                        <a href="{{ route('products.export', 'pdf') }}" class="btn btn-primary">
-                            <i class="fas fa-download"></i> Exportar PDF
-                        </a>
-                    </div>
-
-                </div>
             </div>
         </div>
     </div>
@@ -818,9 +791,92 @@
         window.inventoryBrands = @json($brands->map(fn($b) => ['id' => $b->id, 'name' => $b->name]) ?? []);
     </script>
 
+    {{-- ==================== MODAL: STOCK ADJUSTMENT ==================== --}}
+    <div class="edit-modal" id="stock-adjust-modal" role="dialog" aria-modal="true"
+         aria-labelledby="stock-modal-title">
+        <div class="stock-modal-backdrop"></div>
+
+        <div class="stock-modal-box">
+
+            {{-- Header --}}
+            <div class="stock-modal-header">
+                <h3>
+                    <i id="stock-modal-title-icon" class="fas fa-plus-circle modal-icon-add"></i>
+                    <span id="stock-modal-title">Agregar Stock</span>
+                </h3>
+                <button class="stock-modal-close" id="stock-modal-close-btn"
+                        aria-label="Cerrar modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            {{-- Product info strip --}}
+            <div class="stock-modal-product-info">
+                <div>
+                    <div class="product-name" id="stock-modal-product-name">—</div>
+                    <div class="product-stock">
+                        Stock actual:
+                        <span class="stock-pill" id="stock-modal-product-stock">—</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Body --}}
+            <div class="stock-modal-body">
+
+                {{-- Hidden product ID --}}
+                <input type="hidden" id="stock-modal-product-id" value="">
+
+                {{-- Alert banner --}}
+                <div class="stock-modal-alert" id="stock-modal-alert" role="alert">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="stock-modal-alert-msg"></span>
+                </div>
+
+                {{-- Quantity --}}
+                <div class="stock-form-group">
+                    <label for="stock-modal-qty">Cantidad *</label>
+                    <input type="number"
+                           id="stock-modal-qty"
+                           min="1"
+                           step="1"
+                           placeholder="Ej: 10">
+                    <span class="stock-field-error" id="stock-modal-qty-error"></span>
+                </div>
+
+                {{-- Reason --}}
+                <div class="stock-form-group">
+                    <label for="stock-modal-reason">Motivo *</label>
+                    <select id="stock-modal-reason">
+                        <option value="" disabled selected>Selecciona un motivo…</option>
+                        <option value="manual_adjustment">Ajuste Manual</option>
+                        <option value="damage">Daño</option>
+                        <option value="refund">Entrada por reembolso / nota de crédito</option>
+                    </select>
+                    <span class="stock-field-error" id="stock-modal-reason-error"></span>
+                </div>
+
+            </div>
+
+            {{-- Footer --}}
+            <div class="stock-modal-footer">
+                <button type="button" class="stock-btn stock-btn-cancel"
+                        id="stock-modal-cancel-btn">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="stock-btn stock-btn-confirm-add"
+                        id="stock-modal-confirm-btn">
+                    <span class="spinner-border-sm" id="stock-modal-confirm-spinner"
+                          style="display:none;" aria-hidden="true"></span>
+                    <span id="stock-modal-confirm-text">Confirmar</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     {{-- Scripts: SweetAlert2 loaded before inventory.js --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @vite(['resources/js/admin/inventory/inventory.js'])
-
 </body>
 </html>

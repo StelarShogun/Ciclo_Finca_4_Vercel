@@ -218,7 +218,11 @@ class ClientUserController extends Controller
                         }
                     );
                 } catch (\Exception $e) {
-                    // El correo falló pero igual redirigimos; el usuario puede reenviar
+                    Log::error('Mail send failed: login verification code', [
+                        'client_id' => $client->user_id ?? null,
+                        'email' => $client->gmail ?? null,
+                        'exception' => $e,
+                    ]);
                 }
 
                 session([
@@ -334,6 +338,11 @@ class ClientUserController extends Controller
                 }
             );
         } catch (\Exception $e) {
+            Log::error('Mail send failed: registration verification code', [
+                'client_id' => $client->user_id ?? null,
+                'email' => $client->gmail ?? null,
+                'exception' => $e,
+            ]);
             $mailWarning = 'No se pudo enviar el correo automáticamente. Por favor, usa la opción «Reenviar código» para intentarlo de nuevo.';
         }
 
@@ -438,6 +447,11 @@ class ClientUserController extends Controller
                 }
             );
         } catch (\Exception $e) {
+            Log::error('Mail send failed: resend verification code', [
+                'client_id' => $client->user_id ?? null,
+                'email' => $client->gmail ?? null,
+                'exception' => $e,
+            ]);
             $mailWarning = 'No se pudo enviar el correo. Por favor, intenta reenviar el código nuevamente.';
         }
 
@@ -531,7 +545,11 @@ class ClientUserController extends Controller
                 }
             );
         } catch (\Exception $e) {
-            Log::error('Recovery mail failed: '.$e->getMessage());
+            Log::error('Mail send failed: password recovery verification code', [
+                'client_id' => $client->user_id ?? null,
+                'email' => $client->gmail ?? null,
+                'exception' => $e,
+            ]);
         }
 
         if ($request->ajax() || $request->wantsJson()) {

@@ -136,7 +136,7 @@
   flex-shrink: 0;
 }
 
-/* ===== TAMA√ëOS ESPEC√çFICOS POR MODAL ===== */
+/* ===== TAMA√ˇOS ESPEC√ˇFICOS POR MODAL ===== */
 /* Modales de productos */
 #new-product-modal .modal-content,
 #edit-modal .modal-content {
@@ -168,12 +168,6 @@
 /* Ajustar padding del body del modal de importaci√≥n para mejor distribuci√≥n */
 #import-modal .modal-body {
   padding: 1.5rem 2rem;
-}
-
-#export-modal .modal-content {
-  min-width: 500px;
-  width: fit-content !important;
-  max-width: min(90vw, 700px) !important;
 }
 
 /* Modales de ventas */

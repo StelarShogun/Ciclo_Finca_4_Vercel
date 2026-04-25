@@ -27,6 +27,130 @@ class Dashboard {
         });
     }
 
+    /** Etiquetas del eje Y más compactas cuando los montos son muy grandes */
+    formatSalesYTick(value) {
+        const v = Number(value);
+        if (!Number.isFinite(v)) {
+            return '';
+        }
+        const abs = Math.abs(v);
+        if (abs >= 1_000_000_000) {
+            return '₡' + (v / 1_000_000_000).toLocaleString('es-ES', { maximumFractionDigits: 1 }) + ' MM';
+        }
+        if (abs >= 1_000_000) {
+            return '₡' + (v / 1_000_000).toLocaleString('es-ES', { maximumFractionDigits: 1 }) + ' M';
+        }
+        if (abs >= 10_000) {
+            return '₡' + (v / 1_000).toLocaleString('es-ES', { maximumFractionDigits: 1 }) + ' k';
+        }
+        return '₡' + Math.round(v).toLocaleString('es-ES');
+    }
+
+    /**
+     * Ajusta tensión, marcas del eje X y rango del eje Y para que la línea se lea bien
+     * con pocos o muchos días y con ventas muy parecidas entre sí.
+     */
+    syncSalesChartPresentation(chart) {
+        if (!chart?.options?.scales || !chart.data?.datasets?.[0]) {
+            return;
+        }
+
+        const labels = chart.data.labels || [];
+        const values = chart.data.datasets[0].data.map(v => Number(v) || 0);
+        const n = labels.length;
+        const ds = chart.data.datasets[0];
+        const y = chart.options.scales.y;
+        const x = chart.options.scales.x;
+
+        delete y.max;
+        delete y.min;
+        delete y.suggestedMax;
+        delete y.suggestedMin;
+
+        ds.tension = n > 48 ? 0.1 : n > 22 ? 0.22 : 0.34;
+        ds.borderWidth = n > 40 ? 2.5 : 3;
+
+        const maxV = values.length ? Math.max(...values) : 0;
+        const minV = values.length ? Math.min(...values) : 0;
+        const range = maxV - minV;
+
+        if (!values.length || maxV <= 0) {
+            y.beginAtZero = true;
+            y.grace = '8%';
+        } else if (range === 0 && maxV > 0) {
+            y.beginAtZero = false;
+            y.min = Math.max(0, maxV * 0.88);
+            y.max = maxV * 1.12;
+            y.grace = '0%';
+        } else if (minV >= 0 && range / maxV < 0.22) {
+            y.beginAtZero = false;
+            const pad = Math.max(range * 0.55, maxV * 0.04);
+            y.min = Math.max(0, minV - pad);
+            y.suggestedMax = maxV + pad;
+            y.grace = '6%';
+        } else {
+            y.beginAtZero = true;
+            y.grace = '10%';
+        }
+
+        x.offset = true;
+        x.ticks.maxRotation = n > 12 ? 48 : 0;
+        x.ticks.minRotation = n > 18 ? 28 : 0;
+        x.ticks.autoSkipPadding = n > 25 ? 10 : 5;
+        x.ticks.maxTicksLimit = Math.min(22, Math.max(6, n));
+    }
+
+    buildSalesChartOptions() {
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: { left: 0, right: 8, top: 8, bottom: 4 }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#2e7d32',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: (context) => {
+                            return 'Ventas: ₡' + context.parsed.y.toLocaleString('es-ES');
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false, drawBorder: false },
+                    ticks: {
+                        color: '#6c757d',
+                        font: { size: 11, weight: '500' },
+                        maxRotation: 0,
+                        minRotation: 0,
+                        autoSkip: true,
+                        autoSkipPadding: 6,
+                        maxTicksLimit: 14
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grace: '10%',
+                    grid: { color: '#f1f3f4', drawBorder: false },
+                    ticks: {
+                        color: '#6c757d',
+                        font: { size: 11, weight: '500' },
+                        maxTicksLimit: 9,
+                        callback: (value) => this.formatSalesYTick(value)
+                    }
+                }
+            },
+            interaction: { intersect: false, mode: 'index' }
+        };
+    }
+
     // Initialize dashboard components
     init() {
         this.updateCurrentTime();
@@ -72,91 +196,135 @@ class Dashboard {
             this.salesChart = new Chart(ctx, {
                 type: 'line',
                 data: salesData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: '#ffffff',
-                            bodyColor: '#ffffff',
-                            borderColor: '#2e7d32',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Ventas: ₡' + context.parsed.y.toLocaleString('es-ES');
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: {
-                                color: '#6c757d',
-                                font: { size: 12, weight: '500' }
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#f1f3f4', drawBorder: false },
-                            ticks: {
-                                color: '#6c757d',
-                                font: { size: 12, weight: '500' },
-                                callback: function(value) {
-                                    return '₡' + value.toLocaleString('es-ES');
-                                }
-                            }
-                        }
-                    },
-                    interaction: { intersect: false, mode: 'index' }
-                }
+                options: this.buildSalesChartOptions()
             });
+            this.syncSalesChartPresentation(this.salesChart);
+            this.salesChart.update();
         }).catch(error => {
             console.error('Error al cargar datos de ventas:', error);
             // Show fallback empty chart on error
+            const emptySales = {
+                labels: ['Sin datos'],
+                datasets: [{
+                    label: 'Ventas (₡)',
+                    data: [0],
+                    borderColor: '#e0e0e0',
+                    backgroundColor: 'rgba(224, 224, 224, 0.12)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.25,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            };
             this.salesChart = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: ['Sin datos'],
-                    datasets: [{
-                        label: 'Ventas (₡)',
-                        data: [0],
-                        borderColor: '#e0e0e0',
-                        backgroundColor: 'rgba(224, 224, 224, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: {
-                                color: '#6c757d',
-                                font: { size: 12, weight: '500' }
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#f1f3f4', drawBorder: false },
-                            ticks: {
-                                color: '#6c757d',
-                                font: { size: 12, weight: '500' },
-                                callback: function(value) {
-                                    return '₡' + value.toLocaleString('es-ES');
-                                }
-                            }
-                        }
-                    }
+                data: emptySales,
+                options: this.buildSalesChartOptions()
+            });
+            this.syncSalesChartPresentation(this.salesChart);
+            this.salesChart.update();
+        });
+    }
+
+    /** Sincroniza el aspecto de la leyenda HTML con segmentos ocultos del donut (misma idea que la leyenda nativa). */
+    syncCategoryLegendHiddenStyles() {
+        const el = document.getElementById('category-chart-legend');
+        const chart = this.categoryChart;
+        if (!el || !chart) return;
+
+        const meta = chart.getDatasetMeta(0);
+        el.querySelectorAll('.category-chart-legend-item[data-legend-index]').forEach(row => {
+            const i = Number(row.dataset.legendIndex);
+            const hidden = typeof chart.getDataVisibility === 'function'
+                ? !chart.getDataVisibility(i)
+                : !!(meta.data[i] && meta.data[i].hidden);
+            row.classList.toggle('category-chart-legend-item--hidden', hidden);
+        });
+    }
+
+    /** Clic en nombre/categoría: oculta o muestra ese trozo del donut (API Chart.js). */
+    toggleCategoryLegendSegment(index) {
+        const chart = this.categoryChart;
+        if (!chart) return;
+
+        if (typeof chart.toggleDataVisibility === 'function') {
+            chart.toggleDataVisibility(index);
+            chart.update();
+        } else {
+            const meta = chart.getDatasetMeta(0);
+            if (meta?.data[index]) {
+                meta.data[index].hidden = !meta.data[index].hidden;
+            }
+            chart.update();
+        }
+
+        this.syncCategoryLegendHiddenStyles();
+    }
+
+    /** Leyenda HTML con scroll aparte del canvas (Chart.js dibuja la leyenda en el mismo canvas). */
+    renderCategoryHtmlLegend(chartData) {
+        const el = document.getElementById('category-chart-legend');
+        if (!el) return;
+
+        const labels = chartData.labels || [];
+        const dataset = chartData.datasets?.[0];
+        const values = dataset?.data || [];
+        const colorsRaw = dataset?.backgroundColor;
+        const colors = Array.isArray(colorsRaw)
+            ? colorsRaw
+            : (colorsRaw ? [colorsRaw] : []);
+
+        el.replaceChildren();
+
+        if (!labels.length) {
+            const empty = document.createElement('p');
+            empty.className = 'category-chart-legend-empty';
+            empty.style.margin = '0';
+            empty.style.fontSize = '0.85rem';
+            empty.style.color = 'var(--color-muted)';
+            empty.textContent = 'Sin categorías';
+            el.appendChild(empty);
+            return;
+        }
+
+        labels.forEach((label, i) => {
+            const row = document.createElement('div');
+            row.className = 'category-chart-legend-item';
+            row.setAttribute('role', 'listitem');
+            row.dataset.legendIndex = String(i);
+            row.tabIndex = 0;
+            row.setAttribute('aria-label', `Mostrar u ocultar categoría: ${label != null ? String(label) : ''}`);
+
+            const swatch = document.createElement('span');
+            swatch.className = 'category-chart-legend-swatch';
+            swatch.setAttribute('aria-hidden', 'true');
+            swatch.style.background = colors[i % Math.max(colors.length, 1)] || '#cccccc';
+
+            const name = document.createElement('span');
+            name.className = 'category-chart-legend-name';
+            name.textContent = label != null ? String(label) : '';
+
+            const val = document.createElement('span');
+            val.className = 'category-chart-legend-value';
+            val.textContent = String(values[i] ?? 0);
+
+            row.appendChild(swatch);
+            row.appendChild(name);
+            row.appendChild(val);
+
+            row.addEventListener('click', () => this.toggleCategoryLegendSegment(i));
+            row.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.toggleCategoryLegendSegment(i);
                 }
             });
+
+            el.appendChild(row);
         });
+
+        this.syncCategoryLegendHiddenStyles();
     }
 
     // Create doughnut chart for category distribution
@@ -166,6 +334,11 @@ class Dashboard {
 
         // Fetch real category data from server
         this.loadCategoryData().then(categoryData => {
+            // Si antes se usó barras horizontales, el wrapper pudo quedar con altura inline enorme.
+            if (ctx.parentNode) {
+                ctx.parentNode.style.height = '';
+            }
+
             this.categoryChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: categoryData,
@@ -174,13 +347,7 @@ class Dashboard {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true,
-                                font: { size: 12, weight: '500' },
-                                color: '#6c757d'
-                            }
+                            display: false
                         },
                         tooltip: {
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -190,47 +357,58 @@ class Dashboard {
                             borderWidth: 1,
                             callbacks: {
                                 label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                    return context.label + ': ' + percentage + '%';
+                                    const chart = context.chart;
+                                    const ds = context.dataset;
+                                    const meta = chart.getDatasetMeta(context.datasetIndex);
+                                    let visibleTotal = 0;
+                                    meta.data.forEach((arc, j) => {
+                                        if (!arc.hidden) {
+                                            visibleTotal += Number(ds.data[j]) || 0;
+                                        }
+                                    });
+                                    const value = typeof context.parsed === 'number'
+                                        ? context.parsed
+                                        : (context.raw ?? 0);
+                                    const percentage = visibleTotal > 0
+                                        ? ((value / visibleTotal) * 100).toFixed(1)
+                                        : '0.0';
+                                    return `${context.label}: ${value} productos (${percentage}%)`;
                                 }
                             }
                         }
                     },
-                    cutout: '60%'
+                    cutout: '58%'
                 }
             });
+            this.renderCategoryHtmlLegend(categoryData);
         }).catch(error => {
             console.error('Error al cargar datos de categorías:', error);
             // Show fallback empty chart on error
+            const fallbackData = {
+                labels: ['Sin datos'],
+                datasets: [{
+                    label: 'Productos',
+                    data: [1],
+                    backgroundColor: ['#e0e0e0'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            };
             this.categoryChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: ['Sin datos'],
-                    datasets: [{
-                        data: [1],
-                        backgroundColor: ['#e0e0e0'],
-                        borderColor: '#ffffff',
-                        borderWidth: 2
-                    }]
-                },
+                data: fallbackData,
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true,
-                                font: { size: 12, weight: '500' },
-                                color: '#6c757d'
-                            }
+                            display: false
                         }
                     },
                     cutout: '60%'
                 }
             });
+            this.renderCategoryHtmlLegend(fallbackData);
         });
     }
 
@@ -259,15 +437,24 @@ class Dashboard {
                         label: 'Ventas (₡)',
                         data: values,
                         borderColor: '#2e7d32',
-                        backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                        backgroundColor: 'rgba(46, 125, 50, 0.12)',
                         borderWidth: 3,
                         fill: true,
-                        tension: 0.4,
+                        tension: 0.34,
                         pointBackgroundColor: '#2e7d32',
                         pointBorderColor: '#ffffff',
                         pointBorderWidth: 2,
-                        pointRadius: 6,
-                        pointHoverRadius: 8
+                        pointRadius: (ctx) => {
+                            const len = ctx.chart.data.labels.length;
+                            if (len <= 8) return 5;
+                            if (len <= 22) return 4;
+                            if (len <= 55) return 2;
+                            return 0;
+                        },
+                        pointHoverRadius: (ctx) => {
+                            const len = ctx.chart.data.labels.length;
+                            return len <= 22 ? 7 : 4;
+                        }
                     }]
                 };
             } else {
@@ -293,18 +480,25 @@ class Dashboard {
             if (!response.ok) throw new Error('Error al cargar datos de categorías');
 
             const data = await response.json();
-            
+
             if (data.success && data.categories) {
-                // Format data for Chart.js doughnut chart
-                const labels = data.categories.map(cat => cat.categoria);
-                const values = data.categories.map(cat => cat.total);
-                
-                // Generate dynamic colors for each category
+                // Ordenamos las categorías por total descendente pero mostramos todas,
+                // el scroll del contenedor se encarga de manejar cantidades grandes.
+                const sorted = [...data.categories].sort((a, b) => (b.total || 0) - (a.total || 0));
+
+                const labels = sorted.map(cat => {
+                    const name = cat.categoria ?? cat.name ?? cat.category;
+                    return name != null && String(name).trim() !== '' ? String(name) : 'Sin categoría';
+                });
+                const values = sorted.map(cat => cat.total || 0);
+
+                // Generate dynamic colors for each category (incluyendo "Otras categorías" si existe)
                 const colors = this.generateColors(values.length);
-                
+
                 return {
-                    labels: labels,
+                    labels,
                     datasets: [{
+                        label: 'Productos por categoría',
                         data: values,
                         backgroundColor: colors,
                         borderColor: '#ffffff',
@@ -342,11 +536,6 @@ class Dashboard {
             refreshBtn.addEventListener('click', () => this.refreshDashboard());
         }
 
-        const exportBtn = document.getElementById('export-report');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', () => this.exportReport());
-        }
-
         // Period selection buttons for charts
         const chartBtns = document.querySelectorAll('.chart-btn');
         chartBtns.forEach(btn => {
@@ -378,41 +567,6 @@ class Dashboard {
                 refreshBtn.disabled = false;
             }
         }
-    }
-
-    // Export current dashboard as a printable report
-    exportReport() {
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <html>
-                <head>
-                    <title>Reporte Dashboard - ${new Date().toLocaleDateString('es-ES')}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        .header { text-align: center; margin-bottom: 30px; }
-                        .section { margin-bottom: 20px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background-color: #f2f2f2; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>Reporte del Dashboard</h1>
-                        <p>Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}</p>
-                    </div>
-                    <div class="section">
-                        <h2>Resumen de KPIs</h2>
-                        <p>Total Productos: ${document.getElementById('total-products')?.textContent || 'N/A'}</p>
-                        <p>Ventas Hoy: ${document.getElementById('today-sales')?.textContent || 'N/A'}</p>
-                        <p>Proveedores: ${document.getElementById('total-suppliers')?.textContent || 'N/A'}</p>
-                        <p>Stock Bajo: ${document.getElementById('low-stock')?.textContent || 'N/A'}</p>
-                    </div>
-                </body>
-            </html>
-        `);
-        printWindow.document.close();
-        printWindow.print();
     }
 
     // Handle chart period change (daily/weekly/monthly)
@@ -448,9 +602,10 @@ class Dashboard {
             if (data.success && data.sales) {
                 const labels = this.formatSalesChartLabels(data.sales);
                 const values = data.sales.map(sale => parseFloat(sale.total) || 0);
-                
+
                 this.salesChart.data.labels = labels;
                 this.salesChart.data.datasets[0].data = values;
+                this.syncSalesChartPresentation(this.salesChart);
                 this.salesChart.update('active');
             }
         } catch (error) {
@@ -629,11 +784,5 @@ document.addEventListener('DOMContentLoaded', () => {
 window.refreshDashboard = () => {
     if (window.dashboardInstance) {
         window.dashboardInstance.refreshDashboard();
-    }
-};
-
-window.exportReport = () => {
-    if (window.dashboardInstance) {
-        window.dashboardInstance.exportReport();
     }
 };
