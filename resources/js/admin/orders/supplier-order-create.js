@@ -50,8 +50,9 @@ function init() {
     const supplierPreview = document.getElementById('supplier-preview');
     const dateInput = document.getElementById('estimated_delivery_date');
     const searchInput = document.getElementById('product-search');
+    const comboboxWrapper = document.getElementById('product-combobox');
+    const comboboxDropdown = document.getElementById('product-search-dropdown');
     const tbody = document.getElementById('items-body');
-    const addRandom = document.getElementById('add-random-line');
     const summaryLines = document.getElementById('summary-lines');
     const summaryTotal = document.getElementById('summary-total');
     const itemsErrors = document.getElementById('items-errors');
@@ -64,7 +65,7 @@ function init() {
     let lines = [];
 
     /** @type {Array<{product_id:number,name:string,sku:string,unit_price:number}>} */
-    let productResults = [];
+    let allProducts = [];
 
     function renderSupplierPreview() {
         const id = Number(supplierSelect.value || 0);
@@ -141,93 +142,74 @@ function init() {
         renderLines();
     }
 
+    function openCombobox() {
+        if (!comboboxWrapper || !comboboxDropdown || searchInput.disabled) return;
+        comboboxWrapper.classList.add('open');
+        comboboxDropdown.classList.add('open');
+    }
+
+    function closeCombobox() {
+        if (!comboboxWrapper || !comboboxDropdown) return;
+        comboboxWrapper.classList.remove('open');
+        comboboxDropdown.classList.remove('open');
+    }
+
     function renderSearchDropdown(list) {
-        let dd = document.getElementById('product-search-dropdown');
-        if (!dd) {
-            dd = document.createElement('div');
-            dd.id = 'product-search-dropdown';
-            dd.style.position = 'absolute';
-            dd.style.zIndex = '1200';
-            dd.style.left = '0';
-            dd.style.right = '0';
-            dd.style.top = 'calc(100% + 6px)';
-            dd.style.background = '#fff';
-            dd.style.border = '1px solid rgba(0,0,0,0.12)';
-            dd.style.borderRadius = '12px';
-            dd.style.boxShadow = '0 10px 30px rgba(0,0,0,0.08)';
-            dd.style.maxHeight = '260px';
-            dd.style.overflowY = 'auto';
-            dd.style.padding = '6px';
-            searchInput.parentElement.style.position = 'relative';
-            searchInput.parentElement.appendChild(dd);
-        }
+        if (!comboboxDropdown) return;
         if (!list.length) {
-            dd.innerHTML = `<div style="padding:10px;color:#5f6368;">Sin resultados</div>`;
-            dd.hidden = false;
+            comboboxDropdown.innerHTML = `<div class="product-combobox-no-result">Sin resultados</div>`;
+            openCombobox();
             return;
         }
-        dd.innerHTML = list
-            .map(
-                (p, i) => `
-            <button type="button" class="dd-item" data-idx="${i}"
-              style="width:100%;text-align:left;border:none;background:transparent;padding:10px;border-radius:10px;cursor:pointer;">
-              <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
-                <div>
-                  <div style="font-weight:700;">${esc(p.name)}</div>
-                  <div style="opacity:.75;font-size:.85rem;"><code>${esc(p.sku)}</code></div>
+        comboboxDropdown.innerHTML = list
+            .map((p, i) => `
+            <div class="product-combobox-option" data-idx="${i}">
+                <div class="product-combobox-option-info">
+                    <div class="product-combobox-option-name">${esc(p.name)}</div>
+                    <div class="product-combobox-option-meta">
+                        <code>${esc(p.sku)}</code>
+                        <span>${esc(formatColones(p.unit_price))}</span>
+                    </div>
                 </div>
-                <div style="white-space:nowrap;font-weight:700;color:#0f172a;">${esc(formatColones(p.unit_price))}</div>
-              </div>
-            </button>`
-            )
-            .join('');
-        dd.hidden = false;
-
-        dd.querySelectorAll('.dd-item').forEach((btn) => {
-            btn.addEventListener('click', () => {
+                <button type="button" class="product-combobox-add-btn" data-idx="${i}" title="Agregar">
+                    <i class="fas fa-plus"></i> Agregar
+                </button>
+            </div>`).join('');
+        openCombobox();
+        comboboxDropdown.querySelectorAll('.product-combobox-add-btn').forEach((btn) => {
+            btn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
                 const idx = Number(btn.getAttribute('data-idx'));
-                const p = productResults[idx];
+                const p = list[idx];
                 if (p) addProductToLines(p);
-                dd.hidden = true;
                 searchInput.value = '';
+                const filtered = allProducts;
+                renderSearchDropdown(filtered);
                 searchInput.focus();
             });
         });
     }
 
-    let timer = null;
+    searchInput.addEventListener('focus', () => {
+        const q = searchInput.value.trim().toLowerCase();
+        const filtered = q
+            ? allProducts.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
+            : allProducts;
+        renderSearchDropdown(filtered);
+    });
+
     searchInput.addEventListener('input', () => {
-        window.clearTimeout(timer);
-        const q = searchInput.value.trim();
-        if (q.length < 2) return;
-
-        const supplierId = Number(supplierSelect.value || 0);
-        if (!supplierId) {
-            showItemsError('Selecciona un proveedor para poder buscar productos.');
-            return;
-        }
-
-        timer = window.setTimeout(async () => {
-            try {
-                const data = await fetchProducts(q, supplierId);
-                productResults = Array.isArray(data.products) ? data.products : [];
-                renderSearchDropdown(productResults);
-            } catch (err) {
-                const msg = err instanceof Error ? err.message : 'No se pudo buscar productos.';
-                // eslint-disable-next-line no-console
-                console.warn('Product search failed', err);
-                showItemsError(msg);
-                productResults = [];
-                renderSearchDropdown([]);
-            }
-        }, 200);
+        const q = searchInput.value.trim().toLowerCase();
+        const filtered = q
+            ? allProducts.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
+            : allProducts;
+        renderSearchDropdown(filtered);
     });
 
     document.addEventListener('click', (e) => {
-        const dd = document.getElementById('product-search-dropdown');
-        if (!dd) return;
-        if (dd.contains(e.target) || searchInput.contains(e.target)) return;
-        dd.hidden = true;
+        if (!comboboxWrapper) return;
+        if (comboboxWrapper.contains(e.target)) return;
+        closeCombobox();
     });
 
     tbody.addEventListener('click', (e) => {
@@ -252,34 +234,34 @@ function init() {
         renderLines();
     });
 
-    if (addRandom) {
-        addRandom.addEventListener('click', () => {
-            // Adds an empty line that forces user to search and pick a product
-            showItemsError('Busca un producto y selecciónalo para agregarlo.');
-            searchInput.focus();
-        });
-    }
-
-    function updateSearchAvailability() {
+    async function loadSupplierProducts() {
         const supplierId = Number(supplierSelect.value || 0);
-        const disabled = !supplierId;
-        searchInput.disabled = disabled;
-        searchInput.placeholder = disabled
-            ? 'Selecciona un proveedor para buscar productos…'
-            : 'Busca por nombre o SKU (BK-001)…';
-        if (disabled) {
-            const dd = document.getElementById('product-search-dropdown');
-            if (dd) dd.hidden = true;
+        if (!supplierId) {
+            allProducts = [];
+            searchInput.disabled = true;
+            searchInput.placeholder = 'Selecciona un proveedor primero…';
+            closeCombobox();
+            return;
+        }
+        searchInput.disabled = false;
+        searchInput.placeholder = 'Busca por nombre o SKU (BK-001)…';
+        try {
+            const data = await fetchProducts('', supplierId);
+            allProducts = Array.isArray(data.products) ? data.products : [];
+        } catch {
+            allProducts = [];
         }
     }
 
-    supplierSelect.addEventListener('change', () => {
+    supplierSelect.addEventListener('change', async () => {
         renderSupplierPreview();
-        updateSearchAvailability();
+        allProducts = [];
+        closeCombobox();
         showItemsError('');
+        await loadSupplierProducts();
     });
     renderSupplierPreview();
-    updateSearchAvailability();
+    loadSupplierProducts();
 
     form.addEventListener('submit', (e) => {
         const supplierOk = !!supplierSelect.value;

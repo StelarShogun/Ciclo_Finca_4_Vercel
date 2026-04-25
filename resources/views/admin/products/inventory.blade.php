@@ -236,7 +236,22 @@
                                                     title="Edit product">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-
+                                            <button class="action-btn stock-adjust"
+                                                    data-stock-action="add"
+                                                    data-product-id="{{ $product->product_id }}"
+                                                    data-product-name="{{ $product->name }}"
+                                                    data-product-stock="{{ $product->stock_current }}"
+                                                    title="Add stock">
+                                                <i class="fas fa-plus-circle" style="color:#16a34a;"></i>
+                                            </button>
+                                            <button class="action-btn stock-adjust"
+                                                    data-stock-action="remove"
+                                                    data-product-id="{{ $product->product_id }}"
+                                                    data-product-name="{{ $product->name }}"
+                                                    data-product-stock="{{ $product->stock_current }}"
+                                                    title="Remove stock">
+                                                <i class="fas fa-minus-circle" style="color:#dc2626;"></i>
+                                            </button>
                                             <button class="action-btn delete"
                                                     data-action="delete"
                                                     data-product-id="{{ $product->product_id }}"

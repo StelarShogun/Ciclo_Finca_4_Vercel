@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AdminUser;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderStateTimeline;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\InventoryMovementService;
@@ -46,24 +47,14 @@ class SupplierOrderController extends Controller
         $q = trim((string) $request->query('q', ''));
         $supplierId = (int) $request->query('supplier_id', 0);
 
-        if ($supplierId < 1) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Debes seleccionar un proveedor para buscar productos.',
-                'products' => [],
-            ], 422);
-        }
-
-        if ($q === '' || mb_strlen($q) < 2) {
-            return response()->json(['success' => true, 'products' => []]);
-        }
-
         $products = Product::query()
             ->select(['product_id', 'name', 'purchase_price', 'sale_price'])
-            ->where('supplier_id', $supplierId)
-            ->where(function ($query) use ($q) {
-                $query->where('name', 'like', '%'.$q.'%')
-                    ->orWhereRaw("CONCAT('BK-', LPAD(product_id, 3, '0')) LIKE ?", ['%'.$q.'%']);
+            ->when($supplierId > 0, fn ($q) => $q->where('supplier_id', $supplierId))
+            ->when($q !== '' && mb_strlen($q) >= 2, function ($query) use ($q) {
+                $query->where(function ($inner) use ($q) {
+                    $inner->where('name', 'like', '%'.$q.'%')
+                        ->orWhereRaw("CONCAT('BK-', LPAD(product_id, 3, '0')) LIKE ?", ['%'.$q.'%']);
+                });
             })
             ->orderBy('name')
             ->limit(20)
@@ -158,7 +149,7 @@ class SupplierOrderController extends Controller
 
     public function detail($id)
     {
-        $order = Order::with(['supplier', 'orderItems', 'confirmedBy'])->findOrFail($id);
+        $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin', 'confirmedBy'])->findOrFail($id);
 
         return view('admin.orders.detail_supplier', compact('order'));
     }
@@ -167,7 +158,7 @@ class SupplierOrderController extends Controller
     {
         $validated = $request->validate([
             'supplier_id' => ['required', 'integer', 'exists:suppliers,supplier_id'],
-            'estimated_delivery_date' => ['required', 'date'],
+            'estimated_delivery_date' => ['required', 'date', 'after:today'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,product_id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -176,6 +167,7 @@ class SupplierOrderController extends Controller
             'supplier_id.exists' => 'El proveedor seleccionado no existe.',
             'estimated_delivery_date.required' => 'La fecha estimada de entrega es obligatoria.',
             'estimated_delivery_date.date' => 'La fecha estimada no tiene un formato válido.',
+            'estimated_delivery_date.after' => 'La fecha estimada debe ser posterior al día de hoy.',
             'items.required' => 'Debes agregar al menos un producto.',
             'items.min' => 'Debes agregar al menos un producto.',
             'items.*.product_id.required' => 'Selecciona un producto válido.',
@@ -236,7 +228,7 @@ class SupplierOrderController extends Controller
             $order = Order::create([
                 'po_number' => $po,
                 'supplier_id' => (int) $validated['supplier_id'],
-                'date' => now(),
+                'date' => null,
                 'estimated_delivery_date' => $validated['estimated_delivery_date'],
                 'state' => 'draft',
                 'total' => $total,
@@ -253,13 +245,20 @@ class SupplierOrderController extends Controller
                 ]);
             }
 
+            OrderStateTimeline::create([
+                'num_order'  => (int) $order->num_order,
+                'user_id'    => (int) auth('admin')->id(),
+                'state'      => 'draft',
+                'changed_at' => now(),
+            ]);
+
             return redirect()->route('admin.supplier-orders.detail', $order->num_order);
         });
     }
 
     public function show($id)
     {
-        $order = Order::with(['supplier', 'orderItems', 'confirmedBy'])->findOrFail($id);
+        $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin', 'confirmedBy'])->findOrFail($id);
 
         $productsPayload = $order->orderItems->map(fn ($line) => [
             'name' => $line->name,
@@ -286,6 +285,14 @@ class SupplierOrderController extends Controller
                 'estimated_delivery_date' => $order->estimated_delivery_date?->format('d/m/Y'),
                 'state' => $order->state,
                 'total' => (float) $order->total,
+                'timeline' => $order->stateTimeline->map(fn ($t) => [
+                    'state'      => $t->state,
+                    'changed_at' => $t->changed_at->format('d/m/Y H:i'),
+                    'user_name'  => $t->admin
+                        ? trim($t->admin->name.' '.($t->admin->first_surname ?? ''))
+                        : 'Sistema',
+                    'reason'     => $t->reason,
+                ])->values()->all(),
                 'confirmed_at' => $order->confirmed_at?->format('d/m/Y H:i'),
                 'confirmed_by_label' => $this->adminDisplayName($order->confirmedBy),
             ],
@@ -297,7 +304,8 @@ class SupplierOrderController extends Controller
         $order = Order::findOrFail($id);
 
         $request->validate([
-            'state' => 'required|in:draft,pending,confirmed,delivered,cancelled',
+            'state'  => 'required|in:draft,pending,confirmed,delivered,cancelled',
+            'reason' => 'nullable|string|max:500',
         ]);
 
         // Define the allowed state transitions for supplier orders.
@@ -376,8 +384,19 @@ class SupplierOrderController extends Controller
             }
         }
 
-        $order->state = $new;
-        $order->save();
+        $order->update([
+            'state' => $new,
+            'date' => $new === 'confirmed' ? now() : $order->date,
+            'delivered_at' => $new === 'delivered' ? now() : $order->delivered_at,
+        ]);
+
+        OrderStateTimeline::create([
+            'num_order'  => (int) $order->num_order,
+            'user_id'    => (int) auth('admin')->id(),
+            'state'      => $new,
+            'reason'     => $new === 'cancelled' ? ($request->input('reason') ?? null) : null,
+            'changed_at' => now(),
+        ]);
 
         $order->refresh();
         $order->load('confirmedBy');

@@ -21,11 +21,13 @@ class Order extends Model
         'confirmed_at',
         'confirmed_by',
         'total',
+        'delivered_at',
     ];
 
     protected $casts = [
         'date' => 'datetime',
         'estimated_delivery_date' => 'date',
+        'delivered_at' => 'datetime',
         'confirmed_at' => 'datetime',
     ];
 
@@ -37,6 +39,12 @@ class Order extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class, 'order_num_order', 'num_order');
+    }
+
+    public function stateTimeline(): HasMany
+    {
+        return $this->hasMany(OrderStateTimeline::class, 'num_order', 'num_order')
+            ->orderBy('changed_at');
     }
 
     /** Admin que confirmó el pedido con el proveedor (CF4-15). */

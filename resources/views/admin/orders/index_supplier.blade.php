@@ -115,8 +115,8 @@
                             <th>Nº Pedido (PO)</th>
                             <th>Proveedor</th>
                             <th>Productos</th>
-                            <th>Fecha</th>
-                            <th>Entrega</th>
+                            <th>Fecha de pedido</th>
+                            <th>Fecha de entrega</th>
                             <th>Estado</th>
                             <th>Confirmación</th>
                             <th>Total</th>
@@ -159,7 +159,7 @@
                                         <span class="text-muted">Sin productos</span>
                                     @endif
                                 </td>
-                                <td>{{ $order->date->format('d/m/Y H:i') }}</td>
+                                <td>{{ $order->date?->format('d/m/Y H:i') ?? '—' }}</td>
                                 <td>
                                     @php
                                         $edd = $order->estimated_delivery_date;

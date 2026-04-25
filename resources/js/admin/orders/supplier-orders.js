@@ -248,6 +248,35 @@ function viewOrder(id) {
                 </tr>`;
         }).join('');
 
+        const TL_CONFIG = {
+            draft:     { label: 'Borrador',   icon: 'fa-pencil-alt', color: '#64748b' },
+            pending:   { label: 'Pendiente',  icon: 'fa-clock',      color: '#f59e0b' },
+            confirmed: { label: 'Confirmado', icon: 'fa-check',      color: '#3b82f6' },
+            delivered: { label: 'Entregado',  icon: 'fa-truck',      color: '#22c55e' },
+            cancelled: { label: 'Cancelado',  icon: 'fa-times',      color: '#ef4444' },
+        };
+        const timelineHtml = (order.timeline || []).map(t => {
+            const cfg = TL_CONFIG[t.state] || { label: t.state, icon: 'fa-circle', color: '#94a3b8' };
+            const reasonHtml = t.reason
+                ? `<span class="tl-reason"><i class="fas fa-comment-alt"></i> ${t.reason}</span>`
+                : '';
+            return `
+                <li class="tl-item">
+                    <div class="tl-dot" style="background:${cfg.color};">
+                        <i class="fas ${cfg.icon}"></i>
+                    </div>
+                    <div class="tl-body">
+                        <span class="tl-state" style="color:${cfg.color};">${cfg.label}</span>
+                        <span class="tl-meta">
+                            <i class="fas fa-user-circle"></i> ${t.user_name}
+                            &nbsp;·&nbsp;
+                            <i class="fas fa-calendar-alt"></i> ${t.changed_at}
+                        </span>
+                        ${reasonHtml}
+                    </div>
+                </li>`;
+        }).join('');
+
         const confirmAuditHtml = order.confirmed_at
             ? `
                 <div class="detail-section order-confirm-audit">
@@ -302,6 +331,11 @@ function viewOrder(id) {
                         </div>
                     </div>
                 </div>
+                ${timelineHtml ? `
+                <div class="detail-section">
+                    <h4><i class="fas fa-history"></i> Historial de estados</h4>
+                    <ol class="order-timeline" style="margin-top:8px;">${timelineHtml}</ol>
+                </div>` : ''}
             </div>`;
     })
     .catch(() => {
@@ -393,25 +427,23 @@ function _orderAction(id, state, confirmCfg, successMsg) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                updateRowState(String(id), state);
-                if (data.order?.confirmed_at) {
-                    updateRowConfirmation(String(id), data.order.confirmed_at, data.order.confirmed_by_label);
-                }
-                if (activeOrderIdInModal === String(id)) {
-                    viewOrder(id);
-                }
-                disableButtons(false);
-
-                const detailOrderId = supplierOrderDetailPageOrderId();
-                if (detailOrderId !== null && detailOrderId === String(id)) {
-                    cf4SwalToastFire('success', 'Listo', data.message || successMsg);
-                    window.setTimeout(() => {
+                Swal.fire({
+                    title: 'Listo',
+                    text:  data.message || successMsg,
+                    icon:  'success',
+                    confirmButtonColor: '#2e7d32',
+                    confirmButtonText: 'Entendido',
+                }).then(() => {
+                    if (state === 'confirmed' || state === 'delivered') {
                         window.location.reload();
-                    }, 650);
-                    return;
-                }
-
-                cf4SwalToastFire('success', 'Listo', data.message || successMsg);
+                    } else {
+                        updateRowState(String(id), state);
+                        if (activeOrderIdInModal === String(id)) {
+                            updateModalState(state);
+                        }
+                        disableButtons(false);
+                    }
+                });
             } else {
                 disableButtons(false);
                 Swal.fire({
@@ -479,18 +511,101 @@ function deliverOrder(id) {
 }
 
 function cancelOrder(id) {
-    const st = supplierOrderStateSnapshot(id);
-    if (st !== null && (st === 'cancelled' || st === 'delivered')) {
-        return;
-    }
-
-    _orderAction(id, 'cancelled', {
-        title: '¿Cancelar este pedido?',
-        html: '<p>El pedido quedará como <strong>cancelado</strong>. Esta acción debe usarse cuando ya no aplica la compra.</p>',
+    Swal.fire({
+        title: '¿Cancelar pedido?',
+        html: `
+            <p style="margin:0 0 12px; color:#4b5563;">El pedido se marcará como cancelado.</p>
+            <textarea id="swal-cancel-reason"
+                placeholder="Motivo de la cancelación…"
+                style="width:100%; min-height:80px; resize:vertical; padding:8px 10px;
+                       border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem;
+                       font-family:inherit; outline:none; box-sizing:border-box;"
+            ></textarea>
+            <div id="swal-cancel-hint"
+                 style="font-size:0.76rem; color:#9ca3af; margin-top:5px; text-align:left; transition:color .15s;">
+                Escribe al menos 4 caracteres para continuar.
+            </div>`,
         icon: 'warning',
-        confirm: 'Sí, cancelar',
-        confirmClass: 'cf4-swal-btn cf4-swal-btn-danger',
-    }, 'Pedido cancelado.');
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'Cancelar',
+        didOpen: () => {
+            const confirmBtn = Swal.getConfirmButton();
+            const textarea   = document.getElementById('swal-cancel-reason');
+            const hint       = document.getElementById('swal-cancel-hint');
+
+            confirmBtn.disabled      = true;
+            confirmBtn.style.opacity = '0.45';
+            confirmBtn.style.cursor  = 'not-allowed';
+
+            textarea.addEventListener('input', () => {
+                const ok = textarea.value.trim().length >= 4;
+                confirmBtn.disabled      = !ok;
+                confirmBtn.style.opacity = ok ? '1' : '0.45';
+                confirmBtn.style.cursor  = ok ? '' : 'not-allowed';
+                hint.style.color         = ok ? '#22c55e' : '#9ca3af';
+                hint.textContent         = ok ? '✓ Motivo válido.' : 'Escribe al menos 4 caracteres para continuar.';
+            });
+        },
+        preConfirm: () => {
+            const reason = document.getElementById('swal-cancel-reason').value.trim();
+            if (reason.length < 4) {
+                Swal.showValidationMessage('El motivo debe tener al menos 4 caracteres.');
+                return false;
+            }
+            return reason;
+        },
+    }).then(r => {
+        if (!r.isConfirmed) return;
+
+        const reason = r.value;
+
+        const disableButtons = (disabled) => {
+            document
+                .querySelectorAll(`tr[data-order-id="${id}"] .action-btn, #view-order-body [data-role="modal-actions"] .btn`)
+                .forEach((el) => {
+                    if (el instanceof HTMLButtonElement) el.disabled = disabled;
+                });
+        };
+
+        disableButtons(true);
+        fetch(`/supplier-orders/${id}/state`, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': getCSRFToken(),
+                'Accept':       'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ state: 'cancelled', reason }),
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    title: 'Pedido cancelado',
+                    text:  data.message || 'El pedido fue cancelado correctamente.',
+                    icon:  'success',
+                    confirmButtonColor: '#2e7d32',
+                    confirmButtonText: 'Entendido',
+                }).then(() => {
+                    updateRowState(String(id), 'cancelled');
+                    if (activeOrderIdInModal === String(id)) {
+                        updateModalState('cancelled');
+                    }
+                    disableButtons(false);
+                });
+            } else {
+                disableButtons(false);
+                Swal.fire({ title: 'Error', text: data.message || 'No se pudo cancelar.', icon: 'error' });
+            }
+        })
+        .catch(() => {
+            disableButtons(false);
+            Swal.fire({ title: 'Error', text: 'Error de conexión.', icon: 'error' });
+        });
+    });
 }
 
 // Expose functions on window (required by Vite/ESM)
