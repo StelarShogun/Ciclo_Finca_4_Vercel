@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ClientPurchaseHistoryController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\ReportsRegistryExportController;
 use App\Http\Controllers\AdminClientController;
@@ -147,6 +148,7 @@ Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
     Route::get('/reports/client-purchases/{client}/orders', [ClientPurchaseHistoryController::class, 'clientOrders'])
         ->whereNumber('client')
         ->name('admin.reports.client-purchases.orders');
+    Route::get('/reports/audit-log', [AuditLogController::class, 'index'])->name('admin.reports.audit-log');
 
     // Inventory routes.
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');

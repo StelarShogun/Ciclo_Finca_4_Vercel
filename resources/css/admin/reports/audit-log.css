@@ -1,0 +1,151 @@
+.audit-log-page {
+    padding: 1.5rem;
+}
+
+.reports-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.8rem;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.reports-breadcrumb a {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+.audit-log-header h1 {
+    margin: 0 0 0.35rem;
+    color: #111827;
+}
+
+.audit-log-header p {
+    margin: 0;
+    color: #4b5563;
+}
+
+.audit-log-filters {
+    margin-top: 1rem;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.audit-log-filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 0.85rem;
+}
+
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.filter-field input,
+.filter-field select {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.92rem;
+}
+
+.filter-actions {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.55rem;
+}
+
+.btn-filter-apply,
+.btn-filter-clear {
+    border: none;
+    border-radius: 8px;
+    padding: 0.58rem 0.9rem;
+    text-decoration: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.btn-filter-apply {
+    background: #1f8a4c;
+    color: #ffffff;
+}
+
+.btn-filter-clear {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.audit-log-results {
+    margin-top: 1rem;
+}
+
+.table-wrap {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+}
+
+.audit-log-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 920px;
+}
+
+.audit-log-table th,
+.audit-log-table td {
+    border-bottom: 1px solid #f1f5f9;
+    padding: 0.7rem;
+    text-align: left;
+    vertical-align: top;
+    font-size: 0.9rem;
+}
+
+.audit-log-table th {
+    background: #f8fafc;
+    color: #111827;
+}
+
+.muted {
+    color: #6b7280;
+    font-size: 0.82rem;
+}
+
+.module-pill {
+    display: inline-block;
+    background: #eef2ff;
+    color: #3730a3;
+    border-radius: 999px;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.78rem;
+}
+
+.audit-empty-state {
+    text-align: center;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 2rem 1rem;
+}
+
+.audit-empty-state i {
+    font-size: 1.5rem;
+    color: #64748b;
+}
+
+.audit-empty-state h2 {
+    margin: 0.55rem 0 0.35rem;
+    font-size: 1.15rem;
+}
+
+.audit-empty-state p {
+    margin: 0;
+    color: #475569;
+}

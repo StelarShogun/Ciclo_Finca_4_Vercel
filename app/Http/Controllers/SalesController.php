@@ -277,7 +277,7 @@ class SalesController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Sale created successfully.',
+                'message' => 'Venta creada correctamente.',
                 'sale'    => $sale->load(['client', 'sellerAdmin', 'saleItems.product']),
             ]);
         } catch (\Exception $e) {
@@ -285,7 +285,7 @@ class SalesController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating sale: ' . $e->getMessage(),
+                'message' => 'Error al crear la venta: ' . $e->getMessage(),
             ], 500);
         }
     }
