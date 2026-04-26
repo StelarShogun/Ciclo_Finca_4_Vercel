@@ -46,6 +46,7 @@ const adminAssets = [
     "resources/css/admin/reports/product-sales.css",
     "resources/css/admin/reports/sales-performance.css",
     "resources/css/admin/reports/client-purchase-history.css",
+    "resources/css/admin/reports/audit-log.css",
 ];
 
 // =======================
