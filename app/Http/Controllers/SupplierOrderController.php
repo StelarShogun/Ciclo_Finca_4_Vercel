@@ -8,6 +8,7 @@ use App\Models\OrderItem;
 use App\Models\OrderStateTimeline;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -252,6 +253,18 @@ class SupplierOrderController extends Controller
                 'changed_at' => now(),
             ]);
 
+            $this->logAuditAction(
+                'supplier_order_create',
+                'Pedido a proveedor creado en estado draft.',
+                [
+                    'order_id' => (int) $order->num_order,
+                    'po_number' => (string) ($order->po_number ?? ''),
+                    'supplier_id' => (int) $order->supplier_id,
+                    'items_count' => count($lines),
+                    'total' => (float) $order->total,
+                ]
+            );
+
             return redirect()->route('admin.supplier-orders.detail', $order->num_order);
         });
     }
@@ -302,6 +315,7 @@ class SupplierOrderController extends Controller
     public function updateState(Request $request, int $id, InventoryMovementService $inventoryService)
     {
         $order = Order::findOrFail($id);
+        $previousState = (string) $order->state;
 
         $request->validate([
             'state'  => 'required|in:draft,pending,confirmed,delivered,cancelled',
@@ -401,6 +415,18 @@ class SupplierOrderController extends Controller
         $order->refresh();
         $order->load('confirmedBy');
 
+        $this->logAuditAction(
+            'supplier_order_state_update',
+            'Estado de pedido a proveedor actualizado.',
+            [
+                'order_id' => (int) $order->num_order,
+                'po_number' => (string) ($order->po_number ?? ''),
+                'from_state' => $previousState,
+                'to_state' => (string) $order->state,
+                'reason' => (string) ($request->input('reason') ?? ''),
+            ]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Estado actualizado correctamente.',
@@ -473,5 +499,17 @@ class SupplierOrderController extends Controller
         }
 
         return 'PO-'.$year.'-'.str_pad((string) $nextSeq, 4, '0', STR_PAD_LEFT);
+    }
+
+    private function logAuditAction(string $actionType, string $description, array $meta = []): void
+    {
+        try {
+            app(AuditLogger::class)->logAdminAction($actionType, 'supplier_orders', $description, $meta);
+        } catch (\Throwable $e) {
+            Log::warning('Supplier order audit log write failed', [
+                'action_type' => $actionType,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

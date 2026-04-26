@@ -105,7 +105,7 @@ Route::post('/admin/login', [AdminUserController::class, 'login'])->name('admin.
 Route::post('/admin/logout', [AdminUserController::class, 'logout'])->name('admin.logout');
 
 // Admin-only routes.
-Route::middleware(['admin.only', 'prevent.direct'])->group(function () {
+Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->group(function () {
 
     // Dashboard routes.
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
