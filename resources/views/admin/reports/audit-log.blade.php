@@ -1,9 +1,13 @@
+@php
+    use App\Http\Controllers\Admin\AuditLogController;
+@endphp
+
 @extends('admin.layouts.admin-shell')
 
 @section('Titulo pagina', 'Bitácora de auditoría - Reportes')
 
 @push('styles')
-    @vite(['resources/css/admin/reports/audit-log.css'])
+    @vite(['resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/audit-log.css'])
 @endpush
 
 @section('aside')
@@ -36,7 +40,7 @@
                         <option value="">Todas</option>
                         @foreach ($actionTypes as $type)
                             <option value="{{ $type }}" {{ $filters['action_type'] === $type ? 'selected' : '' }}>
-                                {{ $type }}
+                                {{ $actionTypeLabels[$type] ?? AuditLogController::actionTypeLabel($type) }}
                             </option>
                         @endforeach
                     </select>
@@ -48,7 +52,7 @@
                         <option value="">Todos</option>
                         @foreach ($modules as $item)
                             <option value="{{ $item }}" {{ $filters['module'] === $item ? 'selected' : '' }}>
-                                {{ $item }}
+                                {{ $moduleLabels[$item] ?? AuditLogController::moduleLabel($item) }}
                             </option>
                         @endforeach
                     </select>
@@ -101,8 +105,8 @@
                         <tbody>
                             @foreach ($logs as $log)
                                 <tr>
-                                    <td>{{ optional($log->created_at)->format('d/m/Y H:i:s') }}</td>
-                                    <td>
+                                    <td data-label="Fecha y hora">{{ optional($log->created_at)->format('d/m/Y H:i:s') }}</td>
+                                    <td data-label="Usuario">
                                         @if ($log->adminUser)
                                             {{ $log->adminUser->name }} {{ $log->adminUser->first_surname }}
                                             <div class="muted">{{ $log->adminUser->gmail }}</div>
@@ -110,9 +114,9 @@
                                             {{ $log->admin_email_snapshot ?? 'Sistema' }}
                                         @endif
                                     </td>
-                                    <td><code>{{ $log->action_type }}</code></td>
-                                    <td><span class="module-pill">{{ $log->module }}</span></td>
-                                    <td>{{ $log->description }}</td>
+                                    <td data-label="Tipo de acción"><code>{{ $actionTypeLabels[$log->action_type] ?? AuditLogController::actionTypeLabel($log->action_type) }}</code></td>
+                                    <td data-label="Módulo"><span class="module-pill">{{ $moduleLabels[$log->module] ?? AuditLogController::moduleLabel($log->module) }}</span></td>
+                                    <td data-label="Descripción">{{ $log->description }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

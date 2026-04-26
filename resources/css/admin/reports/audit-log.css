@@ -1,5 +1,12 @@
+@import "../variables-reset.css";
+@import "../utilities.css";
+@import "../sidebar.css";
+@import "../components/pagination.css";
+
 .audit-log-page {
-    padding: 1.5rem;
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 0.5rem 0 2rem;
 }
 
 .reports-breadcrumb {
@@ -17,21 +24,24 @@
 }
 
 .audit-log-header h1 {
-    margin: 0 0 0.35rem;
-    color: #111827;
+    margin: 0 0 0.45rem;
+    color: var(--color-text, #111827);
+    font-size: 1.7rem;
 }
 
 .audit-log-header p {
     margin: 0;
-    color: #4b5563;
+    color: var(--color-text-muted, #6b7280);
+    max-width: 700px;
 }
 
 .audit-log-filters {
     margin-top: 1rem;
     background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 1rem;
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: 14px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    padding: 1rem 1.05rem;
 }
 
 .audit-log-filters-grid {
@@ -44,16 +54,25 @@
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
-    color: #374151;
-    font-size: 0.9rem;
+    color: var(--color-text, #374151);
+    font-size: 0.88rem;
 }
 
 .filter-field input,
 .filter-field select {
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
+    border: 1px solid var(--color-border, #d1d5db);
+    border-radius: 10px;
     padding: 0.55rem 0.65rem;
-    font-size: 0.92rem;
+    font-size: 0.9rem;
+    min-height: 40px;
+    font-family: inherit;
+}
+
+.filter-field input:focus,
+.filter-field select:focus {
+    outline: none;
+    border-color: var(--color-primary, #2e7d32);
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.14);
 }
 
 .filter-actions {
@@ -64,22 +83,42 @@
 
 .btn-filter-apply,
 .btn-filter-clear {
-    border: none;
-    border-radius: 8px;
+    border: 1px solid transparent;
+    border-radius: 10px;
     padding: 0.58rem 0.9rem;
     text-decoration: none;
     font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
 }
 
 .btn-filter-apply {
-    background: #1f8a4c;
+    background: var(--color-primary, #1f8a4c);
+    border-color: var(--color-primary, #1f8a4c);
     color: #ffffff;
 }
 
+.btn-filter-apply:hover {
+    background: var(--color-primary-dark, #166534);
+    border-color: var(--color-primary-dark, #166534);
+    transform: translateY(-1px);
+}
+
 .btn-filter-clear {
+    background: #f3f4f6;
+    border-color: var(--color-border, #d1d5db);
+    color: var(--color-text, #374151);
+}
+
+.btn-filter-clear:hover {
     background: #e5e7eb;
-    color: #111827;
+    border-color: #c7cdd6;
 }
 
 .audit-log-results {
@@ -88,9 +127,10 @@
 
 .table-wrap {
     overflow-x: auto;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    border: 1px solid var(--color-border, #e5e7eb);
     background: #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 .audit-log-table {
@@ -101,16 +141,25 @@
 
 .audit-log-table th,
 .audit-log-table td {
-    border-bottom: 1px solid #f1f5f9;
-    padding: 0.7rem;
+    border-bottom: 1px solid #eef2f7;
+    padding: 0.72rem 0.78rem;
     text-align: left;
     vertical-align: top;
-    font-size: 0.9rem;
+    font-size: 0.86rem;
 }
 
 .audit-log-table th {
     background: #f8fafc;
-    color: #111827;
+    color: var(--color-text-muted, #5f6368);
+    font-size: 0.77rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.audit-log-table tbody tr:hover td {
+    background: #fbfcfe;
 }
 
 .muted {
@@ -120,17 +169,18 @@
 
 .module-pill {
     display: inline-block;
-    background: #eef2ff;
-    color: #3730a3;
+    background: #ecfdf3;
+    color: #166534;
     border-radius: 999px;
-    padding: 0.2rem 0.55rem;
-    font-size: 0.78rem;
+    padding: 0.22rem 0.58rem;
+    font-size: 0.75rem;
+    border: 1px solid #cdeed9;
 }
 
 .audit-empty-state {
     text-align: center;
-    border: 1px dashed #cbd5e1;
-    border-radius: 12px;
+    border: 1px dashed #d3dbe7;
+    border-radius: 14px;
     background: #f8fafc;
     padding: 2rem 1rem;
 }
@@ -148,4 +198,116 @@
 .audit-empty-state p {
     margin: 0;
     color: #475569;
+}
+
+@media (max-width: 1200px) {
+    .audit-log-page {
+        padding: 0.25rem 0 1.5rem;
+    }
+}
+
+@media (max-width: 900px) {
+    .audit-log-filters-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .filter-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 640px) {
+    .audit-log-page {
+        padding: 0.2rem 0 1rem;
+    }
+
+    .reports-breadcrumb {
+        margin-bottom: 0.9rem;
+    }
+
+    .audit-log-header h1 {
+        font-size: 1.35rem;
+    }
+
+    .audit-log-filters {
+        padding: 0.9rem;
+        border-radius: 12px;
+    }
+
+    .audit-log-filters-grid {
+        grid-template-columns: 1fr;
+        gap: 0.65rem;
+    }
+
+    .filter-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.45rem;
+    }
+
+    .btn-filter-apply,
+    .btn-filter-clear {
+        width: 100%;
+    }
+
+    .table-wrap {
+        border: none;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .audit-log-table {
+        min-width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.75rem;
+    }
+
+    .audit-log-table thead {
+        display: none;
+    }
+
+    .audit-log-table tbody {
+        display: block;
+    }
+
+    .audit-log-table tbody tr {
+        display: block;
+        background: #fff;
+        border: 1px solid var(--color-border, #e5e7eb);
+        border-radius: 12px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+        padding: 0.15rem 0;
+    }
+
+    .audit-log-table tbody td {
+        display: grid;
+        grid-template-columns: minmax(92px, 38%) 1fr;
+        gap: 0.6rem;
+        align-items: start;
+        border-bottom: 1px solid #eff2f6;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.84rem;
+        white-space: normal;
+    }
+
+    .audit-log-table tbody td:last-child {
+        border-bottom: none;
+    }
+
+    .audit-log-table tbody td::before {
+        content: attr(data-label);
+        font-size: 0.73rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--color-text-muted, #6b7280);
+        font-weight: 700;
+        line-height: 1.3;
+    }
+
+    .audit-log-table tbody td code {
+        display: inline-block;
+        white-space: normal;
+        word-break: break-word;
+    }
 }

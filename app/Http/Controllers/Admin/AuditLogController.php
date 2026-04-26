@@ -9,6 +9,44 @@ use Illuminate\Http\Request;
 
 class AuditLogController extends Controller
 {
+    /**
+     * Etiquetas legibles para mostrar tipos de acción en español.
+     *
+     * @var array<string, string>
+     */
+    private const ACTION_TYPE_LABELS = [
+        'admin_login' => 'Inicio de sesión',
+        'admin_login_failed' => 'Intento fallido de inicio de sesión',
+        'admin_logout' => 'Cierre de sesión',
+        'module_access' => 'Acceso a módulo',
+        'sale_create' => 'Venta creada',
+        'sale_update_status' => 'Estado de venta actualizado',
+        'sale_complete' => 'Venta completada',
+        'sale_cancel' => 'Venta cancelada',
+        'sale_refund' => 'Reembolso de venta',
+        'client_ban' => 'Cliente bloqueado',
+        'client_unban' => 'Cliente desbloqueado',
+        'client_order_settings_update' => 'Configuración de pedidos actualizada',
+        'supplier_order_create' => 'Pedido a proveedor creado',
+        'supplier_order_state_update' => 'Estado de pedido a proveedor actualizado',
+    ];
+
+    /**
+     * Etiquetas legibles para mostrar módulos en español.
+     *
+     * @var array<string, string>
+     */
+    private const MODULE_LABELS = [
+        'auth' => 'Autenticación',
+        'dashboard' => 'Panel principal',
+        'reports' => 'Reportes',
+        'sales' => 'Ventas',
+        'orders' => 'Pedidos de clientes',
+        'supplier_orders' => 'Pedidos a proveedores',
+        'clients' => 'Clientes',
+        'products' => 'Inventario y productos',
+    ];
+
     public function index(Request $request)
     {
         $user = $this->normalizeText($request->query('user'));
@@ -55,6 +93,8 @@ class AuditLogController extends Controller
             'logs' => $logs,
             'actionTypes' => $actionTypes,
             'modules' => $modules,
+            'actionTypeLabels' => self::ACTION_TYPE_LABELS,
+            'moduleLabels' => self::MODULE_LABELS,
             'filters' => [
                 'user' => $user,
                 'action_type' => $actionType,
@@ -64,6 +104,16 @@ class AuditLogController extends Controller
                 'dir' => $dir,
             ],
         ]);
+    }
+
+    public static function actionTypeLabel(string $value): string
+    {
+        return self::ACTION_TYPE_LABELS[$value] ?? self::humanizeToken($value);
+    }
+
+    public static function moduleLabel(string $value): string
+    {
+        return self::MODULE_LABELS[$value] ?? self::humanizeToken($value);
     }
 
     private function normalizeText(mixed $value): string
@@ -91,5 +141,15 @@ class AuditLogController extends Controller
     private function normalizeDir(mixed $value): string
     {
         return is_string($value) && strtolower($value) === 'asc' ? 'asc' : 'desc';
+    }
+
+    private static function humanizeToken(string $value): string
+    {
+        $normalized = trim(str_replace(['_', '-'], ' ', $value));
+        if ($normalized === '') {
+            return 'Sin etiqueta';
+        }
+
+        return mb_convert_case($normalized, MB_CASE_TITLE, 'UTF-8');
     }
 }
