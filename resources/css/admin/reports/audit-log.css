@@ -68,6 +68,20 @@
     font-family: inherit;
 }
 
+.filter-field select {
+    background-color: #f8fff9;
+}
+
+.filter-field select option {
+    background: #ecfdf3;
+    color: #14532d;
+}
+
+.filter-field select option:checked {
+    background: #c7f0d5;
+    color: #14532d;
+}
+
 .filter-field input:focus,
 .filter-field select:focus {
     outline: none;
@@ -95,6 +109,8 @@
     align-items: center;
     justify-content: center;
     min-height: 40px;
+    min-width: 116px;
+    white-space: nowrap;
     transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
 }
 
@@ -169,12 +185,12 @@
 
 .module-pill {
     display: inline-block;
-    background: #ecfdf3;
+    background: #f0fdf4;
     color: #166534;
     border-radius: 999px;
     padding: 0.22rem 0.58rem;
     font-size: 0.75rem;
-    border: 1px solid #cdeed9;
+    border: 1px solid #bbf7d0;
 }
 
 .audit-empty-state {
