@@ -14,11 +14,12 @@
 
     @php
         $stateLabels = [
-            'draft'     => 'Borrador',
-            'pending'   => 'Pendiente',
-            'confirmed' => 'Confirmado',
-            'delivered' => 'Entregado',
-            'cancelled' => 'Cancelado',
+            'draft'            => 'Borrador',
+            'pending'          => 'Pendiente',
+            'confirmed'        => 'Confirmado',
+            'partial_received' => 'Recepción parcial',
+            'delivered'        => 'Entregado',
+            'cancelled'        => 'Cancelado',
         ];
     @endphp
 
@@ -51,11 +52,12 @@
                     <label for="supplier-orders-state">Estado</label>
                     <select id="supplier-orders-state" name="state">
                         <option value="">Todos</option>
-                        <option value="draft"     {{ request('state') === 'draft'     ? 'selected' : '' }}>Borrador</option>
-                        <option value="pending"   {{ request('state') === 'pending'   ? 'selected' : '' }}>Pendiente</option>
-                        <option value="confirmed" {{ request('state') === 'confirmed' ? 'selected' : '' }}>Confirmado</option>
-                        <option value="delivered" {{ request('state') === 'delivered' ? 'selected' : '' }}>Entregado</option>
-                        <option value="cancelled" {{ request('state') === 'cancelled' ? 'selected' : '' }}>Cancelado</option>
+                        <option value="draft"            {{ request('state') === 'draft'            ? 'selected' : '' }}>Borrador</option>
+                        <option value="pending"          {{ request('state') === 'pending'          ? 'selected' : '' }}>Pendiente</option>
+                        <option value="confirmed"        {{ request('state') === 'confirmed'        ? 'selected' : '' }}>Confirmado</option>
+                        <option value="partial_received" {{ request('state') === 'partial_received' ? 'selected' : '' }}>Recepción parcial</option>
+                        <option value="delivered"        {{ request('state') === 'delivered'        ? 'selected' : '' }}>Entregado</option>
+                        <option value="cancelled"        {{ request('state') === 'cancelled'        ? 'selected' : '' }}>Cancelado</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -102,6 +104,7 @@
                         {!! $pill('draft', 'Borrador') !!}
                         {!! $pill('pending', 'Pendiente') !!}
                         {!! $pill('confirmed', 'Confirmado') !!}
+                        {!! $pill('partial_received', 'Recepción parcial') !!}
                         {!! $pill('delivered', 'Entregado') !!}
                         {!! $pill('cancelled', 'Cancelado') !!}
                     </div>
@@ -116,7 +119,8 @@
                             <th>Proveedor</th>
                             <th>Productos</th>
                             <th>Fecha de pedido</th>
-                            <th>Fecha de entrega</th>
+                            <th>Entrega estimada</th>
+                            <th>Entrega real</th>
                             <th>Estado</th>
                             <th>Confirmación</th>
                             <th>Total</th>
@@ -179,6 +183,16 @@
                                     @endif
                                 </td>
                                 <td>
+                                    @php
+                                        $realDeliveredAt = $order->delivered_at ?? $order->received_at;
+                                    @endphp
+                                    @if($realDeliveredAt)
+                                        <span title="Entrega/recepción registrada">{{ $realDeliveredAt->format('d/m/Y H:i') }}</span>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                <td>
                                     @php $label = $stateLabels[$order->state] ?? ucfirst($order->state); @endphp
                                     <span class="order-status-pill {{ $order->state }}" data-role="order-state-pill">{{ $label }}</span>
                                 </td>
@@ -206,7 +220,47 @@
                                         <span class="text-muted">—</span>
                                     @endif
                                 </td>
-                                <td><strong>₡{{ number_format($order->total, 0, ',', '.') }}</strong></td>
+                                <td>
+                                    @php
+                                        $initialTotal = (float) ($order->total ?? 0);
+
+                                        $hasReceivedData = $order->orderItems->contains(fn ($it) => $it->received_quantity !== null);
+                                        $hasShorts = false;
+                                        $receivedTotal = 0.0;
+                                        $shortsTotal = 0.0;
+
+                                        if ($hasReceivedData) {
+                                            $initialFromLines = $order->orderItems->reduce(
+                                                fn ($carry, $it) => $carry + (float) ($it->total ?? 0),
+                                                0.0
+                                            );
+                                            if ($initialFromLines > 0) {
+                                                $initialTotal = $initialFromLines;
+                                            }
+
+                                            $receivedTotal = $order->orderItems->reduce(function ($carry, $it) {
+                                                $unit = (float) ($it->unit_price ?? 0);
+                                                $qty  = (int) ($it->received_quantity ?? 0);
+                                                return $carry + round($unit * $qty, 2);
+                                            }, 0.0);
+
+                                            $hasShorts = $order->orderItems->contains(
+                                                fn ($it) => (int) ($it->received_quantity ?? 0) < (int) ($it->quantity ?? 0)
+                                            );
+                                            $shortsTotal = max($initialTotal - $receivedTotal, 0.0);
+                                        }
+                                    @endphp
+
+                                    @if($hasReceivedData && $hasShorts)
+                                        <div><strong>₡{{ number_format($receivedTotal, 0, ',', '.') }}</strong></div>
+                                        <div class="text-muted" style="font-size:.85rem;">Pedido: ₡{{ number_format($initialTotal, 0, ',', '.') }}</div>
+                                        @if($shortsTotal > 0)
+                                            <div class="text-muted" style="font-size:.85rem;">Faltante: ₡{{ number_format($shortsTotal, 0, ',', '.') }}</div>
+                                        @endif
+                                    @else
+                                        <strong>₡{{ number_format($initialTotal, 0, ',', '.') }}</strong>
+                                    @endif
+                                </td>
                                 <td>
                                     <div class="actions-container" data-role="order-actions">
                                         <button class="action-btn secondary" type="button"
@@ -247,13 +301,24 @@
                                                     title="Cancelar pedido">
                                                 <i class="fas fa-times"></i>
                                             </button>
+                                        @elseif($order->state === 'partial_received')
+                                            <a class="action-btn view"
+                                               href="{{ route('admin.supplier-orders.detail', $order->num_order) }}"
+                                               title="Completar recepción de mercancía">
+                                                <i class="fas fa-clipboard-check"></i>
+                                            </a>
+                                            <button class="action-btn danger" type="button"
+                                                    onclick="cancelOrder('{{ $order->num_order }}')"
+                                                    title="Cancelar pedido">
+                                                <i class="fas fa-times"></i>
+                                            </button>
                                         @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9">
+                                <td colspan="10">
                                     <div class="orders-empty">
                                         <div class="orders-empty-icon"><i class="fas fa-inbox"></i></div>
                                         <p style="margin:0; font-size:1rem;">No hay pedidos que coincidan con los filtros.</p>

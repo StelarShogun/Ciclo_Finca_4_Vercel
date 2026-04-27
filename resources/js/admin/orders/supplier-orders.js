@@ -96,11 +96,12 @@ function closeViewOrderModal() {
 function closeViewSupplierModal() { document.getElementById('view-supplier-modal')?.classList.remove('active'); }
 
 const STATE_LABELS = {
-    draft:     'Borrador',
-    pending:   'Pendiente',
-    confirmed: 'Confirmado',
-    delivered: 'Entregado',
-    cancelled: 'Cancelado',
+    draft:            'Borrador',
+    pending:          'Pendiente',
+    confirmed:        'Confirmado',
+    partial_received: 'Recepción parcial',
+    delivered:        'Entregado',
+    cancelled:        'Cancelado',
 };
 
 let activeOrderIdInModal = null;
@@ -132,6 +133,13 @@ function supplierOrderDetailPageOrderId() {
     return m ? m[1] : null;
 }
 
+/**
+ * Renderiza los botones de acción para una fila del listado o el modal de vista rápida.
+ *
+ * El botón "Cerrar con faltantes" solo aparece en la variante 'text' (modal / detalle)
+ * porque en el listado no hay espacio para el flujo completo con textarea de motivo;
+ * desde el listado se redirige a la página de detalle.
+ */
 function renderActionButtonsHtml(id, state, variant = 'icon') {
     const btn = (cls, title, icon, label, handler) => {
         if (variant === 'text') {
@@ -149,12 +157,12 @@ function renderActionButtonsHtml(id, state, variant = 'icon') {
             ? `<button class="action-btn secondary" type="button" onclick="viewOrder('${id}')" title="Ver detalles"><i class="fas fa-eye"></i></button>`
             : '';
 
-    // draft va directo a confirmed; no existe paso intermedio "pending" para pedidos nuevos.
+    // draft → confirmed; no existe paso intermedio "pending" para pedidos nuevos.
     if (state === 'draft') {
         return `${viewBtn}${btn(variant === 'icon' ? 'success' : 'btn-primary', 'Confirmar pedido', 'fa-check', 'Confirmar', 'confirmOrder')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar pedido', 'fa-times', 'Cancelar', 'cancelOrder')}`;
     }
 
-    // Compatibilidad con pedidos históricos que aún estén en estado pending.
+    // Compatibilidad con pedidos históricos en estado pending.
     if (state === 'pending') {
         return `${viewBtn}${btn(variant === 'icon' ? 'success' : 'btn-primary', 'Confirmar pedido', 'fa-check', 'Confirmar', 'confirmOrder')}${btn(variant === 'icon' ? 'danger' : 'btn-secondary', 'Cancelar', 'fa-times', 'Cancelar', 'cancelOrder')}`;
     }
@@ -163,12 +171,31 @@ function renderActionButtonsHtml(id, state, variant = 'icon') {
     if (state === 'confirmed') {
         const detailUrl = `/supplier-orders/${id}/detail`;
         if (variant === 'text') {
-            return `${viewBtn}${btn('btn-primary', 'Registrar recepción de mercancía', 'fa-clipboard-check', 'Registrar recepción', '')}`.replace(
-                `onclick="('${id}')"`,
-                `onclick="window.location.href='${detailUrl}'"`,
-            );
+            return `${viewBtn}
+                <a class="btn btn-primary" href="${detailUrl}" title="Registrar recepción de mercancía">
+                    <i class="fas fa-clipboard-check"></i> Registrar recepción
+                </a>
+                ${btn('btn-secondary', 'Cancelar pedido', 'fa-times', 'Cancelar', 'cancelOrder')}`;
         }
         return `${viewBtn}<a class="action-btn view" href="${detailUrl}" title="Registrar recepción"><i class="fas fa-clipboard-check"></i></a>${btn('danger', 'Cancelar', 'fa-times', 'Cancelar', 'cancelOrder')}`;
+    }
+
+    // partial_received: completar recepción o cerrar con faltantes (ambas desde la página de detalle).
+    if (state === 'partial_received') {
+        const detailUrl = `/supplier-orders/${id}/detail`;
+        if (variant === 'text') {
+            // En variante texto (modal de vista rápida) se ofrece ir a detalle para ambas acciones,
+            // ya que "Cerrar con faltantes" requiere el textarea de motivo que solo existe en el detalle.
+            return `${viewBtn}
+                <a class="btn btn-primary" href="${detailUrl}" title="Completar recepción de mercancía">
+                    <i class="fas fa-clipboard-check"></i> Completar recepción
+                </a>
+                <a class="btn btn-warning" href="${detailUrl}" title="Cerrar pedido con faltantes del proveedor">
+                    <i class="fas fa-exclamation-triangle"></i> Cerrar con faltantes
+                </a>
+                ${btn('btn-secondary', 'Cancelar pedido', 'fa-times', 'Cancelar', 'cancelOrder')}`;
+        }
+        return `${viewBtn}<a class="action-btn view" href="${detailUrl}" title="Completar recepción / cerrar con faltantes"><i class="fas fa-clipboard-check"></i></a>${btn('danger', 'Cancelar', 'fa-times', 'Cancelar', 'cancelOrder')}`;
     }
 
     return `${viewBtn}`;
@@ -262,8 +289,11 @@ function viewOrder(id) {
         const productsHtml = (order.products || []).map(item => {
             const up      = parseFloat(item.unit_price || 0);
             const tot     = parseFloat(item.total || 0);
+            const recvQty = (item.received_quantity !== null && item.received_quantity !== undefined)
+                ? parseInt(item.received_quantity, 10)
+                : 0;
             const recvCol = (item.received_quantity !== null && item.received_quantity !== undefined)
-                ? `<td class="text-center">${item.received_quantity}</td>`
+                ? `<td class="text-center">${recvQty}</td>`
                 : '';
             return `
                 <tr>
@@ -279,17 +309,24 @@ function viewOrder(id) {
         const recvHeader  = showRecvCol ? '<th class="text-center">Recibido</th>' : '';
 
         const TL_CONFIG = {
-            draft:     { label: 'Borrador',   icon: 'fa-pencil-alt', color: '#64748b' },
-            pending:   { label: 'Pendiente',  icon: 'fa-clock',      color: '#f59e0b' },
-            confirmed: { label: 'Confirmado', icon: 'fa-check',      color: '#3b82f6' },
-            delivered: { label: 'Entregado',  icon: 'fa-truck',      color: '#22c55e' },
-            cancelled: { label: 'Cancelado',  icon: 'fa-times',      color: '#ef4444' },
+            draft:            { label: 'Borrador',          icon: 'fa-pencil-alt',      color: '#64748b' },
+            pending:          { label: 'Pendiente',         icon: 'fa-clock',            color: '#f59e0b' },
+            confirmed:        { label: 'Confirmado',        icon: 'fa-check',            color: '#3b82f6' },
+            partial_received: { label: 'Recepción parcial', icon: 'fa-clipboard-check',  color: '#f97316' },
+            delivered:        { label: 'Entregado',         icon: 'fa-truck',            color: '#22c55e' },
+            cancelled:        { label: 'Cancelado',         icon: 'fa-times',            color: '#ef4444' },
         };
 
         const timelineHtml = (order.timeline || []).map(t => {
-            const cfg       = TL_CONFIG[t.state] || { label: t.state, icon: 'fa-circle', color: '#94a3b8' };
-            const reasonHtml = t.reason
-                ? `<span class="tl-reason"><i class="fas fa-comment-alt"></i> ${t.reason}</span>`
+            const isClosePartial = t.state === 'delivered' && (t.reason || '').startsWith('[Cierre con faltantes]');
+            const cfg            = isClosePartial
+                ? { label: 'Cerrado con faltantes', icon: 'fa-exclamation-triangle', color: '#f59e0b' }
+                : (TL_CONFIG[t.state] || { label: t.state, icon: 'fa-circle', color: '#94a3b8' });
+            const displayReason  = isClosePartial
+                ? t.reason.replace(/^\[Cierre con faltantes\]\s*/, '')
+                : t.reason;
+            const reasonHtml = displayReason
+                ? `<span class="tl-reason"><i class="fas fa-comment-alt"></i> ${escapeHtml(displayReason)}</span>`
                 : '';
             return `
                 <li class="tl-item">
@@ -299,7 +336,7 @@ function viewOrder(id) {
                     <div class="tl-body">
                         <span class="tl-state" style="color:${cfg.color};">${cfg.label}</span>
                         <span class="tl-meta">
-                            <i class="fas fa-user-circle"></i> ${t.user_name}
+                            <i class="fas fa-user-circle"></i> ${escapeHtml(t.user_name)}
                             &nbsp;·&nbsp;
                             <i class="fas fa-calendar-alt"></i> ${t.changed_at}
                         </span>
@@ -314,9 +351,33 @@ function viewOrder(id) {
                     <h4><i class="fas fa-user-check"></i> Confirmación con proveedor</h4>
                     <div class="detail-grid">
                         <div class="detail-item"><label>Fecha:</label><span>${order.confirmed_at}</span></div>
-                        <div class="detail-item"><label>Registró:</label><span>${order.confirmed_by_label || '—'}</span></div>
+                        <div class="detail-item"><label>Registró:</label><span>${escapeHtml(order.confirmed_by_label || '—')}</span></div>
                     </div>
                 </div>`
+            : '';
+
+        const initialTotalFromLines = (order.products || []).reduce((acc, p) => acc + parseFloat(p.total || 0), 0);
+        const initialTotal = initialTotalFromLines > 0
+            ? initialTotalFromLines
+            : parseFloat(order.total || 0);
+
+        const receivedTotal = showRecvCol
+            ? (order.products || []).reduce((acc, p) => {
+                const unit = parseFloat(p.unit_price || 0);
+                const qty  = parseInt(p.received_quantity ?? 0, 10) || 0;
+                return acc + Math.round((unit * qty + Number.EPSILON) * 100) / 100;
+            }, 0)
+            : null;
+
+        const shortsTotal = (showRecvCol && receivedTotal !== null)
+            ? Math.max(initialTotal - receivedTotal, 0)
+            : 0;
+
+        const closedWithShortsBadge = order.closed_with_shorts
+            ? `<div class="detail-item" style="color:#b45309;">
+                   <label>Observación:</label>
+                   <span><i class="fas fa-exclamation-triangle"></i> Cerrado con faltantes del proveedor</span>
+               </div>`
             : '';
 
         body.innerHTML = `
@@ -324,12 +385,13 @@ function viewOrder(id) {
                 <div class="detail-section">
                     <h4><i class="fas fa-info-circle"></i> Información general</h4>
                     <div class="detail-grid">
-                        <div class="detail-item"><label>Nº Pedido:</label><span><strong>${order.po_number || ('#' + order.num_order)}</strong></span></div>
-                        <div class="detail-item"><label>Proveedor:</label><span>${supplierName}</span></div>
+                        <div class="detail-item"><label>Nº Pedido:</label><span><strong>${escapeHtml(order.po_number || ('#' + order.num_order))}</strong></span></div>
+                        <div class="detail-item"><label>Proveedor:</label><span>${escapeHtml(supplierName)}</span></div>
                         <div class="detail-item"><label>Fecha:</label><span>${order.date}</span></div>
                         <div class="detail-item"><label>Entrega estimada:</label><span>${order.estimated_delivery_date || '—'}</span></div>
                         ${order.received_at ? `<div class="detail-item"><label>Fecha recepción:</label><span>${order.received_at}</span></div>` : ''}
                         <div class="detail-item"><label>Estado:</label><span class="status-badge ${order.state}" data-role="modal-state-badge">${STATE_LABELS[order.state] || order.state}</span></div>
+                        ${closedWithShortsBadge}
                     </div>
                     <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;" data-role="modal-actions">
                         ${renderActionButtonsHtml(order.num_order, order.state, 'text')}
@@ -355,10 +417,25 @@ function viewOrder(id) {
                         <tbody>${productsHtml}</tbody>
                     </table>
                     <div class="sale-totals">
-                        <div class="total-item total-final">
-                            <span><strong>Total:</strong></span>
-                            <span><strong>₡${parseFloat(order.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></span>
-                        </div>
+                        ${(showRecvCol && shortsTotal > 0.009) ? `
+                            <div class="total-item">
+                                <span><strong>Total pedido:</strong></span>
+                                <span><strong>₡${initialTotal.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></span>
+                            </div>
+                            <div class="total-item">
+                                <span><strong>Total recibido:</strong></span>
+                                <span><strong>₡${receivedTotal.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></span>
+                            </div>
+                            <div class="total-item total-final">
+                                <span><strong>Faltante:</strong></span>
+                                <span><strong>₡${shortsTotal.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></span>
+                            </div>
+                        ` : `
+                            <div class="total-item total-final">
+                                <span><strong>Total:</strong></span>
+                                <span><strong>₡${initialTotal.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></span>
+                            </div>
+                        `}
                     </div>
                 </div>` : ''}
                 ${timelineHtml ? `
@@ -405,14 +482,14 @@ function viewSupplier(id) {
                 <div class="detail-section">
                     <h4><i class="fas fa-truck"></i> Datos del proveedor</h4>
                     <div class="detail-grid">
-                        <div class="detail-item"><label>Nombre:</label><span><strong>${s.name}</strong></span></div>
-                        <div class="detail-item"><label>Contacto:</label><span>${s.primary_contact || '—'}</span></div>
-                        <div class="detail-item"><label>Teléfono:</label><span>${s.phone || '—'}</span></div>
-                        <div class="detail-item"><label>Correo:</label><span>${s.email || '—'}</span></div>
-                        <div class="detail-item"><label>Dirección:</label><span>${s.address || '—'}</span></div>
+                        <div class="detail-item"><label>Nombre:</label><span><strong>${escapeHtml(s.name)}</strong></span></div>
+                        <div class="detail-item"><label>Contacto:</label><span>${escapeHtml(s.primary_contact || '—')}</span></div>
+                        <div class="detail-item"><label>Teléfono:</label><span>${escapeHtml(s.phone || '—')}</span></div>
+                        <div class="detail-item"><label>Correo:</label><span>${escapeHtml(s.email || '—')}</span></div>
+                        <div class="detail-item"><label>Dirección:</label><span>${escapeHtml(s.address || '—')}</span></div>
                         <div class="detail-item"><label>Tiempo de entrega:</label><span>${s.delivery_time} día(s)</span></div>
                         <div class="detail-item"><label>Evaluación:</label><span title="${s.rating}/5">${stars} (${s.rating})</span></div>
-                        <div class="detail-item"><label>Estado:</label><span class="status-badge ${s.status}">${statusLabel[s.status] || s.status}</span></div>
+                        <div class="detail-item"><label>Estado:</label><span class="status-badge ${s.status}">${escapeHtml(statusLabel[s.status] || s.status)}</span></div>
                         <div class="detail-item"><label>Productos activos:</label><span>${s.products_count}</span></div>
                     </div>
                 </div>
@@ -525,6 +602,8 @@ function confirmOrder(id) {
 
 function deliverOrder(id) {
     const st = supplierOrderStateSnapshot(id);
+    // deliverOrder solo aplica desde confirmed (flujo directo/legacy).
+    // Desde partial_received se usa closePartialOrder().
     if (st !== null && st !== 'confirmed') return;
 
     _orderAction(id, 'delivered', {

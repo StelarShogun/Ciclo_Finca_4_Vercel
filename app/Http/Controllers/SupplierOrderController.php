@@ -279,6 +279,7 @@ class SupplierOrderController extends Controller
                 'date'                    => $order->date?->format('d/m/Y H:i'),
                 'estimated_delivery_date' => $order->estimated_delivery_date?->format('d/m/Y'),
                 'received_at'             => $order->received_at?->format('d/m/Y H:i'),
+                'closed_with_shorts'      => (bool) $order->closed_with_shorts,
                 'state'                   => $order->state,
                 'total'                   => (float) $order->total,
                 'timeline'                => $order->stateTimeline->map(fn ($t) => [
@@ -295,16 +296,33 @@ class SupplierOrderController extends Controller
         ]);
     }
 
+    /**
+     * PATCH /supplier-orders/{id}/state
+     *
+     * Gestiona transiciones de estado explícitas (confirmar, cancelar, entregar).
+     * El estado "partial_received" lo asigna receiveOrder() automáticamente;
+     * no se acepta como destino aquí para evitar que se salte la recepción real.
+     *
+     * El valor "close_partial" NO es un estado persistido; es una señal de la UI
+     * para que este método lo intercepte y delege a closePartial().
+     */
     public function updateState(Request $request, int $id, InventoryMovementService $inventoryService)
     {
         $order = Order::findOrFail($id);
 
         $request->validate([
-            'state'  => 'required|in:draft,pending,confirmed,delivered,cancelled',
-            'reason' => 'nullable|string|max:500',
+            'state'  => ['required', 'string', 'in:draft,pending,confirmed,delivered,cancelled,close_partial'],
+            'reason' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $new = $request->state;
+        $requested = $request->state;
+
+        // "close_partial" es una acción especial: delegar a closePartial().
+        if ($requested === 'close_partial') {
+            return $this->closePartial($request, $id);
+        }
+
+        $new = $requested;
 
         if (! $order->canTransitionTo($new)) {
             return response()->json([
@@ -313,6 +331,7 @@ class SupplierOrderController extends Controller
             ], 422);
         }
 
+        // ── confirmed ───────────────────────────────────────────────────────────
         if ($new === 'confirmed') {
             $adminId = auth('admin')->id();
             $updates = [];
@@ -329,45 +348,53 @@ class SupplierOrderController extends Controller
             }
         }
 
+        // ── delivered (transición directa, sin recepción previa por línea) ─────
+        // Solo aplica cuando el estado origen es confirmed (flujo legacy/rápido).
+        // Cuando el origen es partial_received se usa closePartial() en su lugar,
+        // ya que el stock parcial ya fue ingresado por receiveOrder().
         if ($new === 'delivered') {
-            $items = OrderItem::query()
-                ->where('order_num_order', (int) $order->num_order)
-                ->get(['product_id', 'quantity']);
+            if ($order->state === 'confirmed') {
+                // Flujo directo: ingresar el total pedido al inventario.
+                $items = OrderItem::query()
+                    ->where('order_num_order', (int) $order->num_order)
+                    ->get(['product_id', 'quantity']);
 
-            // Fall back to legacy JSON items when order_items is empty.
-            if ($items->isEmpty() && is_array($order->products) && $order->products !== []) {
-                $items = collect($order->products)->map(function ($row) {
-                    return (object) [
-                        'product_id' => (int) ($row['product_id'] ?? 0),
-                        'quantity'   => (int) ($row['quantity'] ?? 0),
-                    ];
-                })->filter(fn ($r) => $r->product_id > 0 && $r->quantity > 0);
-            }
-
-            foreach ($items as $it) {
-                $productId = (int) $it->product_id;
-                $quantity  = (int) $it->quantity;
-
-                if ($productId < 1 || $quantity < 1) {
-                    continue;
+                // Compatibilidad con órdenes históricas sin order_items normalizados.
+                if ($items->isEmpty() && is_array($order->products) && $order->products !== []) {
+                    $items = collect($order->products)->map(function ($row) {
+                        return (object) [
+                            'product_id' => (int) ($row['product_id'] ?? 0),
+                            'quantity'   => (int) ($row['quantity'] ?? 0),
+                        ];
+                    })->filter(fn ($r) => $r->product_id > 0 && $r->quantity > 0);
                 }
 
-                $product = Product::find($productId);
+                foreach ($items as $it) {
+                    $productId = (int) $it->product_id;
+                    $quantity  = (int) $it->quantity;
 
-                if (! $product) {
-                    // Log missing products without interrupting the delivery flow.
-                    Log::warning(
-                        "SupplierOrderController::updateState — producto #{$productId} no encontrado al procesar orden #{$order->num_order}"
+                    if ($productId < 1 || $quantity < 1) {
+                        continue;
+                    }
+
+                    $product = Product::find($productId);
+
+                    if (! $product) {
+                        Log::warning(
+                            "SupplierOrderController::updateState — producto #{$productId} no encontrado al procesar orden #{$order->num_order}"
+                        );
+                        continue;
+                    }
+
+                    $inventoryService->recordSupplierEntry(
+                        product: $product,
+                        quantity: $quantity,
+                        orderId: $order->num_order,
                     );
-                    continue;
                 }
-
-                $inventoryService->recordSupplierEntry(
-                    product: $product,
-                    quantity: $quantity,
-                    orderId: $order->num_order,
-                );
             }
+            // Si el origen fuera partial_received llegaríamos aquí solo como
+            // fallback, pero el flujo normal pasa por closePartial().
         }
 
         $order->update([
@@ -399,19 +426,97 @@ class SupplierOrderController extends Controller
     }
 
     /**
+     * POST /supplier-orders/{id}/close-partial
+     *
+     * Cierra manualmente un pedido en estado `partial_received` marcándolo como
+     * `delivered` con `closed_with_shorts = true`.
+     *
+     * Reglas de negocio:
+     * - Solo disponible desde el estado `partial_received`.
+     * - NO mueve stock: el stock ya fue ingresado en las llamadas previas a receiveOrder().
+     * - Requiere un motivo (reason) de al menos 4 caracteres para auditoría.
+     * - Registra en la timeline que el cierre fue con faltantes del proveedor.
+     */
+    public function closePartial(Request $request, int $id)
+    {
+        $order = Order::with('orderItems')->findOrFail($id);
+
+        if ($order->state !== 'partial_received') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo se puede cerrar con faltantes un pedido en estado Recepción parcial.',
+            ], 422);
+        }
+
+        $request->validate([
+            'reason' => ['required', 'string', 'min:4', 'max:500'],
+        ], [
+            'reason.required' => 'Debes indicar un motivo para cerrar el pedido con faltantes.',
+            'reason.min'      => 'El motivo debe tener al menos 4 caracteres.',
+            'reason.max'      => 'El motivo no puede superar los 500 caracteres.',
+        ]);
+
+        // Verificar que realmente hay faltantes; si todo está recibido el flujo
+        // normal de receiveOrder() ya debió haberlo marcado como delivered.
+        $hasShorts = $order->orderItems->contains(
+            fn ($item) => (int) ($item->received_quantity ?? 0) < (int) $item->quantity
+        );
+
+        if (! $hasShorts) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Todos los productos están completamente recibidos. El pedido debería marcarse como Entregado de forma normal.',
+            ], 422);
+        }
+
+        return DB::transaction(function () use ($order, $request) {
+            $reason = trim($request->input('reason'));
+
+            $order->update([
+                'state'              => 'delivered',
+                'delivered_at'       => now(),
+                'closed_with_shorts' => true,
+            ]);
+
+            OrderStateTimeline::create([
+                'num_order'  => (int) $order->num_order,
+                'user_id'    => (int) auth('admin')->id(),
+                'state'      => 'delivered',
+                'reason'     => '[Cierre con faltantes] ' . $reason,
+                'changed_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pedido cerrado con faltantes. Se registró que el proveedor no entregó la totalidad de los productos.',
+                'order'   => [
+                    'state'              => 'delivered',
+                    'closed_with_shorts' => true,
+                    'delivered_at'       => $order->fresh()->delivered_at?->format('d/m/Y H:i'),
+                ],
+            ]);
+        });
+    }
+
+    /**
      * POST /supplier-orders/{id}/receive
      *
-     * Registra la recepción de un pedido confirmado y actualiza el stock.
-     * Solo disponible cuando el pedido está en estado `confirmed`.
+     * Registra la recepción de mercancía (total o parcial) y actualiza el stock.
+     * Disponible desde los estados `confirmed` y `partial_received`.
+     *
+     * - Si todas las líneas se reciben completas → estado `delivered`.
+     * - Si alguna línea queda por debajo de lo pedido → estado `partial_received`.
+     * - Solo mueve el delta de stock (recvQty − previousReceivedQty) para evitar
+     *   duplicar entradas cuando se registra una segunda recepción parcial.
      */
     public function receiveOrder(Request $request, $id)
     {
         $order = Order::with('orderItems')->findOrFail($id);
 
-        if ($order->state !== 'confirmed') {
+        if (! in_array($order->state, ['confirmed', 'partial_received'], true)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Solo se puede registrar la recepción cuando el pedido está Confirmado.',
+                'message' => 'Solo se puede registrar la recepción cuando el pedido está Confirmado o en Recepción parcial.',
             ], 422);
         }
 
@@ -461,6 +566,8 @@ class SupplierOrderController extends Controller
         }
 
         return DB::transaction(function () use ($order, $receivedPayload) {
+            /** @var \App\Services\InventoryMovementService $inventoryService */
+            $inventoryService = app(InventoryMovementService::class);
 
             foreach ($order->orderItems as $item) {
                 $recvQty     = (int) ($receivedPayload[$item->id] ?? 0);
@@ -469,38 +576,62 @@ class SupplierOrderController extends Controller
 
                 $item->update(['received_quantity' => $recvQty]);
 
+                // Solo registrar movimiento de inventario por el delta positivo,
+                // evitando duplicar stock cuando se actualiza una recepción parcial.
                 if ($delta > 0 && $item->product_id) {
-                    $affected = Product::query()
-                        ->where('product_id', (int) $item->product_id)
-                        ->increment('stock_current', $delta);
+                    $product = Product::find((int) $item->product_id);
 
-                    if ($affected === 0) {
+                    if (! $product) {
                         Log::warning('receiveOrder: producto no encontrado para incrementar stock', [
                             'order_id'   => $order->num_order,
                             'item_id'    => $item->id,
                             'product_id' => $item->product_id,
                             'delta'      => $delta,
                         ]);
-                    } else {
-                        Log::info('receiveOrder: stock incrementado', [
-                            'order_id'   => $order->num_order,
-                            'item_id'    => $item->id,
-                            'product_id' => $item->product_id,
-                            'delta'      => $delta,
-                        ]);
+                        continue;
                     }
+
+                    $inventoryService->recordSupplierEntry(
+                        product: $product,
+                        quantity: $delta,
+                        orderId: $order->num_order,
+                    );
                 }
             }
 
+            // Determinar si la recepción quedó completa o parcial.
+            $order->refresh();
+            $isPartial = $order->orderItems->contains(
+                fn ($item) => (int) ($item->received_quantity ?? 0) < (int) $item->quantity
+            );
+            $newState = $isPartial ? 'partial_received' : 'delivered';
+
             $order->update([
-                'state'       => 'delivered',
+                'state'       => $newState,
                 'received_at' => now(),
+                // Si la recepción queda completa, registrar la fecha real de entrega.
+                // Si queda parcial, delivered_at debe permanecer null.
+                'delivered_at' => $isPartial ? null : now(),
+                // Si ahora quedó completo limpiar el flag de cierre parcial previo (si existía).
+                'closed_with_shorts' => $isPartial ? $order->closed_with_shorts : false,
             ]);
+
+            OrderStateTimeline::create([
+                'num_order'  => (int) $order->num_order,
+                'user_id'    => (int) auth('admin')->id(),
+                'state'      => $newState,
+                'reason'     => null,
+                'changed_at' => now(),
+            ]);
+
+            $message = $isPartial
+                ? 'Recepción parcial registrada. Uno o más productos tienen cantidad menor a la pedida.'
+                : 'Recepción total registrada. El pedido ahora está Entregado.';
 
             return response()->json([
                 'success'     => true,
-                'state'       => 'delivered',
-                'message'     => 'Recepción registrada. El pedido ahora está Entregado.',
+                'state'       => $newState,
+                'message'     => $message,
                 'received_at' => $order->fresh()->received_at?->format('d/m/Y H:i'),
             ]);
         });

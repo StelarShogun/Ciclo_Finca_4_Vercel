@@ -21,8 +21,9 @@ class Order extends Model
         'confirmed_at',
         'confirmed_by',
         'total',
-        'received_at',   // Usado por receiveOrder() — recepción granular con cantidades por línea.
-        'delivered_at',  // Usado por updateState('delivered') — transición directa vía InventoryMovementService.
+        'received_at',        // Usado por receiveOrder() — recepción granular con cantidades por línea.
+        'delivered_at',       // Usado por updateState('delivered') — transición directa vía InventoryMovementService.
+        'closed_with_shorts', // true cuando el pedido se cerró manualmente desde partial_received con faltantes.
     ];
 
     protected $casts = [
@@ -31,32 +32,48 @@ class Order extends Model
         'received_at'             => 'datetime',
         'delivered_at'            => 'datetime',
         'confirmed_at'            => 'datetime',
+        'closed_with_shorts'      => 'boolean',
     ];
 
     /**
-     * Valid state transitions.
+     * Transiciones de estado válidas.
      *
-     * El flujo principal es: draft → confirmed → delivered / cancelled.
-     * El estado "pending" se conserva únicamente como origen para compatibilidad
-     * con órdenes históricas que aún lo tengan asignado.
+     * Flujo principal: draft → confirmed → (recepción vía receiveOrder) → delivered / cancelled.
+     * - partial_received → delivered: cierre manual desde receiveOrder cuando todo es completo,
+     *   o desde closePartial() cuando el admin decide cerrar aun con faltantes.
+     * - "pending" se conserva solo como origen para compatibilidad con pedidos históricos.
+     *
+     * Nota: "close_partial" NO es un estado; es una acción que transfiere de
+     * partial_received a delivered marcando closed_with_shorts = true.
+     * Se lista aquí para que canTransitionTo() lo acepte como destino lógico
+     * y el controller lo interceda antes de persistir el estado real.
      */
     public const TRANSITIONS = [
-        'draft'     => ['confirmed', 'cancelled'],
-        'pending'   => ['confirmed', 'cancelled'],
-        'confirmed' => ['delivered', 'cancelled'],
+        'draft'            => ['confirmed', 'cancelled'],
+        'pending'          => ['confirmed', 'cancelled'],
+        'confirmed'        => ['partial_received', 'delivered', 'cancelled'],
+        'partial_received' => ['delivered', 'cancelled'],
     ];
 
     public const STATE_LABELS = [
-        'draft'     => 'Borrador',
-        'pending'   => 'Pendiente',
-        'confirmed' => 'Confirmado',
-        'delivered' => 'Entregado',
-        'cancelled' => 'Cancelado',
+        'draft'            => 'Borrador',
+        'pending'          => 'Pendiente',
+        'confirmed'        => 'Confirmado',
+        'partial_received' => 'Recepción parcial',
+        'delivered'        => 'Entregado',
+        'cancelled'        => 'Cancelado',
     ];
 
+    /**
+     * Verifica si el pedido puede transicionar al estado dado.
+     * "close_partial" se resuelve internamente como "delivered" en el controller;
+     * aquí lo mapeamos para que la validación de modelo lo acepte.
+     */
     public function canTransitionTo(string $newState): bool
     {
-        return in_array($newState, self::TRANSITIONS[$this->state] ?? [], true);
+        $target = $newState === 'close_partial' ? 'delivered' : $newState;
+
+        return in_array($target, self::TRANSITIONS[$this->state] ?? [], true);
     }
 
     public function supplier(): BelongsTo
