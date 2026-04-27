@@ -64,7 +64,7 @@
 
                     <div class="form-group">
                         <label for="estimated_delivery_date">Fecha estimada</label>
-                        <input type="date" id="estimated_delivery_date" name="estimated_delivery_date" value="{{ old('estimated_delivery_date') }}" required>
+                        <input type="date" id="estimated_delivery_date" name="estimated_delivery_date" value="{{ old('estimated_delivery_date') }}" min="{{ now()->addDay()->toDateString() }}" required>
                         @error('estimated_delivery_date')
                             <p class="field-error">{{ $message }}</p>
                         @enderror
@@ -79,13 +79,12 @@
                     </div>
 
                     <div class="items-toolbar">
-                        <div class="items-search">
-                            <i class="fas fa-search" aria-hidden="true"></i>
-                            <input id="product-search" type="text" placeholder="Selecciona un proveedor para buscar productos…" autocomplete="off" disabled>
+                        <div class="product-combobox" id="product-combobox">
+                            <input id="product-search" type="text" class="product-combobox-input"
+                                   placeholder="Selecciona un proveedor primero…" autocomplete="off" disabled>
+                            <span class="product-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                            <div class="product-combobox-dropdown" id="product-search-dropdown"></div>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-sm" id="add-random-line">
-                            <i class="fas fa-plus"></i> Agregar línea
-                        </button>
                     </div>
 
                     <div class="items-table-wrap">

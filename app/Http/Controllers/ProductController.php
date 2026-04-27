@@ -10,10 +10,15 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\Admin\AdminInventoryExportQuery;
 use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\RegistryExcelExport;
+use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
+use App\Services\AuditLogger;
+use App\Services\InventoryMovementService;
 use App\Services\ProductClassificationAssignmentService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -39,6 +44,8 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request)
     {
         try {
+            $auditContext = null;
+
             $product = DB::transaction(function () use ($request) {
                 $data = $request->validated();
                 $brandId = $data['brand_id'];
@@ -46,7 +53,7 @@ class ProductController extends Controller
                 $classificationIds = $data['classification_value_ids'] ?? [];
                 unset($data['classification_value_ids']);
 
-                // File fields are handled by MediaLibrary after the product is created
+                // File inputs are processed after the product is created
                 unset($data['image'], $data['images']);
 
                 $product = Product::create($data);
@@ -56,7 +63,15 @@ class ProductController extends Controller
                 return $product;
             });
 
-            // Save images to public/images/{product_name}/ then register with MediaLibrary
+            $auditContext = [
+                'product_id' => (int) $product->product_id,
+                'name' => $product->name,
+                'category_id' => (int) $product->category_id,
+                'supplier_id' => (int) $product->supplier_id,
+                'status' => (string) $product->status,
+            ];
+
+            // Store uploaded files locally before registering them in MediaLibrary
             $folderPath = public_path('images/'.$product->name);
             if (! is_dir($folderPath)) {
                 mkdir($folderPath, 0755, true);
@@ -88,6 +103,8 @@ class ProductController extends Controller
                     $i++;
                 }
             }
+
+            $this->logAudit('product_create', 'Producto creado.', $auditContext ?? []);
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -161,6 +178,16 @@ class ProductController extends Controller
             $product->is_featured = ! $product->is_featured;
             $product->save();
 
+            $this->logAudit(
+                'product_toggle_featured',
+                $product->is_featured ? 'Producto marcado como destacado.' : 'Producto removido de destacados.',
+                [
+                    'product_id' => $product->product_id,
+                    'name' => $product->name,
+                    'is_featured' => (bool) $product->is_featured,
+                ]
+            );
+
             return response()->json([
                 'success' => true,
                 'is_featured' => (bool) $product->is_featured,
@@ -179,8 +206,22 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, $id)
     {
         try {
+            $auditContext = null;
+
             $product = DB::transaction(function () use ($request, $id) {
                 $p = Product::findOrFail($id);
+                $before = [
+                    'name' => $p->name,
+                    'description' => $p->description,
+                    'category_id' => (int) $p->category_id,
+                    'supplier_id' => (int) $p->supplier_id,
+                    'purchase_price' => (float) $p->purchase_price,
+                    'sale_price' => (float) $p->sale_price,
+                    'stock_current' => (int) $p->stock_current,
+                    'stock_minimum' => (int) $p->stock_minimum,
+                    'status' => (string) $p->status,
+                    'is_featured' => (bool) $p->is_featured,
+                ];
                 $data = $request->validated();
                 $brandId = $data['brand_id'];
                 unset($data['brand_id']);
@@ -188,7 +229,7 @@ class ProductController extends Controller
                 $classificationIds = $syncClassifications ? ($data['classification_value_ids'] ?? []) : null;
                 unset($data['classification_value_ids']);
 
-                // File fields are handled by MediaLibrary after the product is updated
+                // File inputs are processed after the product is updated
                 unset($data['image'], $data['images']);
 
                 $p->update($data);
@@ -198,21 +239,50 @@ class ProductController extends Controller
                     app(ProductClassificationAssignmentService::class)->syncForProduct($p, $classificationIds ?? []);
                 }
 
-                return $p;
+                $after = [
+                    'name' => $p->name,
+                    'description' => $p->description,
+                    'category_id' => (int) $p->category_id,
+                    'supplier_id' => (int) $p->supplier_id,
+                    'purchase_price' => (float) $p->purchase_price,
+                    'sale_price' => (float) $p->sale_price,
+                    'stock_current' => (int) $p->stock_current,
+                    'stock_minimum' => (int) $p->stock_minimum,
+                    'status' => (string) $p->status,
+                    'is_featured' => (bool) $p->is_featured,
+                ];
+
+                return [$p, $before, $after];
             });
 
-            // Save images to public/images/{product_name}/ then register with MediaLibrary
+            [$product, $before, $after] = $product;
+            $changed = [];
+            foreach ($after as $field => $value) {
+                if (($before[$field] ?? null) !== $value) {
+                    $changed[$field] = [
+                        'from' => $before[$field] ?? null,
+                        'to' => $value,
+                    ];
+                }
+            }
+
+            $auditContext = [
+                'product_id' => (int) $product->product_id,
+                'changes' => $changed,
+            ];
+
+            // Store uploaded files locally before registering them in MediaLibrary
             $folderPath = public_path('images/'.$product->name);
             if (! is_dir($folderPath)) {
                 mkdir($folderPath, 0755, true);
             }
             $slug = Str::slug($product->name, '_');
 
-            // Replace main image when a new one is uploaded (singleFile handles deletion of the old one)
+            // Replace the main image when a new file is uploaded
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $ext = $file->extension() ?: $file->getClientOriginalExtension();
-                // Remove any existing main file for this product
+                // Remove the previous main image file from disk
                 foreach (glob($folderPath.'/'.$slug.'_main.*') ?: [] as $old) {
                     @unlink($old);
                 }
@@ -225,7 +295,7 @@ class ProductController extends Controller
 
             // Replace the entire gallery when new files are provided
             if ($request->hasFile('images')) {
-                // Remove existing numbered gallery files from the folder
+                // Remove existing gallery files from disk
                 foreach (glob($folderPath.'/'.$slug.'_[0-9]*.{jpg,jpeg,png,webp,gif,avif}', GLOB_BRACE) ?: [] as $old) {
                     @unlink($old);
                 }
@@ -244,6 +314,12 @@ class ProductController extends Controller
                     $i++;
                 }
             }
+
+            $this->logAudit(
+                'product_update',
+                'Producto actualizado.',
+                $auditContext ?? ['product_id' => (int) $id]
+            );
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -286,11 +362,18 @@ class ProductController extends Controller
     public function destroy($id)
     {
         try {
-            DB::transaction(function () use ($id) {
+            $productName = null;
+            DB::transaction(function () use ($id, &$productName) {
                 $p = Product::findOrFail($id);
-                // Soft-delete by marking inactive rather than removing the record
+                $productName = $p->name;
+                // Deactivate the product instead of deleting the record
                 $p->update(['status' => 'inactive']);
             });
+
+            $this->logAudit('product_delete', 'Producto desactivado.', [
+                'product_id' => (int) $id,
+                'name' => $productName,
+            ]);
 
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
@@ -315,10 +398,17 @@ class ProductController extends Controller
     public function forceDelete($id)
     {
         try {
-            DB::transaction(function () use ($id) {
+            $productName = null;
+            DB::transaction(function () use ($id, &$productName) {
                 $p = Product::findOrFail($id);
+                $productName = $p->name;
                 $p->delete();
             });
+
+            $this->logAudit('product_force_delete', 'Producto eliminado permanentemente.', [
+                'product_id' => (int) $id,
+                'name' => $productName,
+            ]);
 
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
@@ -345,17 +435,14 @@ class ProductController extends Controller
         return view('products.create');
     }
 
-    /**
-     * Promote a gallery image to the main_image collection (replaces the current main image).
-     * POST /products/{id}/gallery/{mediaId}/promote
-     */
+    // Promote a gallery image to the main image collection
     public function promoteToMain(int $id, int $mediaId)
     {
         try {
             $product = Product::findOrFail($id);
             $mediaItem = $product->media()->where('id', $mediaId)->firstOrFail();
 
-            // Copy the file preserving the gallery item, then set as single main image
+            // Copy the gallery file and register it as the main image
             $product->addMedia($mediaItem->getPath())
                 ->preservingOriginal()
                 ->toMediaCollection('main_image');
@@ -373,10 +460,7 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * Remove a single image from the gallery collection.
-     * DELETE /products/{id}/gallery/{mediaId}
-     */
+    // Remove a single image from the gallery collection
     public function removeGalleryImage(int $id, int $mediaId)
     {
         try {
@@ -410,7 +494,7 @@ class ProductController extends Controller
         $perPage = $request->get('per_page', 10);
         $paginator = $query->paginate($perPage);
 
-        // Normalize raw Eloquent models into a consistent shape expected by the view
+        // Normalize products into the structure expected by the view
         $products = collect($paginator->items())->map(function (Product $product) {
             return (object) [
                 'product_id' => $product->product_id,
@@ -428,7 +512,7 @@ class ProductController extends Controller
             ];
         });
 
-        // Raíces deduplicadas por nombre (filtro "Categoría") + árbol para selects dependientes en JS
+        // Load deduplicated root categories and the dependent subcategory tree
         $categories = Category::query()
             ->selectRaw('MIN(category_id) as category_id, name')
             ->whereNull('parent_category_id')
@@ -553,7 +637,48 @@ class ProductController extends Controller
             return $pdf->download(ReportPdfFilename::make('inventario'));
         }
 
-        // Default to CSV export (streaming por chunks: no cargar todo el inventario en memoria).
+        if ($format === 'excel') {
+            $maxRows = AdminPdfExportLimits::INVENTORY_MAX_ROWS;
+            $totalMatching = (clone $baseQuery)->count();
+
+            $excelFilterLines = $filterLines;
+            if ($totalMatching > $maxRows) {
+                $excelFilterLines[] = 'Nota: el Excel incluye como máximo '.$maxRows.' productos ('.$totalMatching.' coinciden con los filtros).';
+            }
+
+            $rows = (clone $baseQuery)
+                ->with($withRelations)
+                ->limit($maxRows)
+                ->get();
+
+            $headers = ['ID', 'Nombre', 'Descripción', 'Categoría', 'Proveedor', 'Precio compra', 'Precio venta', 'Stock actual', 'Stock mínimo', 'Estado', 'Creado'];
+            $dataRows = $rows->map(function ($p) {
+                return [
+                    (string) $p->product_id,
+                    $p->name,
+                    $p->description ?? '',
+                    optional($p->category)->name ?? '',
+                    optional($p->supplier)->name ?? '',
+                    number_format((float) $p->purchase_price, 2, '.', ''),
+                    number_format((float) $p->sale_price, 2, '.', ''),
+                    (string) $p->stock_current,
+                    (string) $p->stock_minimum,
+                    $p->status,
+                    $p->created_at ? $p->created_at->format('Y-m-d H:i:s') : '',
+                ];
+            })->values()->all();
+
+            return app(RegistryExcelExport::class)->download(
+                'Inventario de productos',
+                'Catálogo de inventario — Ciclo Finca 4',
+                $headers,
+                $dataRows,
+                $excelFilterLines,
+                ReportExcelFilename::make('inventario'),
+            );
+        }
+
+        // Stream CSV exports in chunks to avoid loading the full dataset into memory
         $filename = 'products_'.date('Ymd_His').'.csv';
         $chunk = AdminPdfExportLimits::INVENTORY_CSV_CHUNK;
 
@@ -562,7 +687,7 @@ class ProductController extends Controller
             if ($out === false) {
                 return;
             }
-            fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for correct Excel rendering
+            fwrite($out, "\xEF\xBB\xBF"); // Add the UTF-8 BOM for Excel compatibility
             fputcsv($out, ['ID', 'Name', 'Description', 'Image', 'Category', 'Supplier', 'Purchase Price', 'Sale Price', 'Stock', 'Minimum', 'Status', 'Created']);
             (clone $baseQuery)
                 ->with($withRelations)
@@ -634,7 +759,7 @@ class ProductController extends Controller
             return 'json';
         }
 
-        // Fall back to content sniffing when the extension is ambiguous
+        // Inspect the file content when the extension is ambiguous
         $content = file_get_contents($file->getPathname());
         $trimmedContent = trim($content);
 
@@ -665,7 +790,7 @@ class ProductController extends Controller
                 throw new \Exception('El archivo XML está vacío o no se pudo leer correctamente.');
             }
 
-            // Capture libxml errors internally instead of emitting PHP warnings
+            // Capture libxml parsing errors instead of emitting PHP warnings
             libxml_use_internal_errors(true);
             $xml = new \SimpleXMLElement($xmlContent);
             $xmlErrors = libxml_get_errors();
@@ -674,6 +799,7 @@ class ProductController extends Controller
                 $errorMessages = array_map(function ($error) {
                     return trim($error->message);
                 }, $xmlErrors);
+
                 throw new \Exception('Error al parsear XML: '.implode(', ', $errorMessages));
             }
 
@@ -717,12 +843,22 @@ class ProductController extends Controller
                 }
             }
 
-            // Roll back the entire import if any record failed to keep the dataset consistent
+            // Roll back the full import if any record fails
             if (! empty($errores)) {
                 DB::rollBack();
             } else {
                 DB::commit();
             }
+
+            $this->logAudit(
+                'products_import',
+                'Importación de productos procesada (XML).',
+                [
+                    'format' => 'xml',
+                    'imported' => $importados,
+                    'errors_count' => count($errores),
+                ]
+            );
 
             return $this->handleImportResult($importados, $errores);
 
@@ -736,7 +872,7 @@ class ProductController extends Controller
     private function importCsv($file)
     {
         $csvData = array_map('str_getcsv', file($file->getPathname()));
-        // First row is treated as the header to build associative arrays per product
+        // Use the first row as the CSV header
         $headers = array_shift($csvData);
         $importados = 0;
         $errores = [];
@@ -763,6 +899,16 @@ class ProductController extends Controller
         } else {
             DB::commit();
         }
+
+        $this->logAudit(
+            'products_import',
+            'Importación de productos procesada (CSV).',
+            [
+                'format' => 'csv',
+                'imported' => $importados,
+                'errors_count' => count($errores),
+            ]
+        );
 
         return $this->handleImportResult($importados, $errores);
     }
@@ -796,7 +942,29 @@ class ProductController extends Controller
             DB::commit();
         }
 
+        $this->logAudit(
+            'products_import',
+            'Importación de productos procesada (JSON).',
+            [
+                'format' => 'json',
+                'imported' => $importados,
+                'errors_count' => count($errores),
+            ]
+        );
+
         return $this->handleImportResult($importados, $errores);
+    }
+
+    private function logAudit(string $actionType, string $description, array $meta = []): void
+    {
+        try {
+            app(AuditLogger::class)->logAdminAction($actionType, 'products', $description, $meta);
+        } catch (\Throwable $e) {
+            Log::warning('Audit log write failed', [
+                'action_type' => $actionType,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function createProductFromData($data)
@@ -821,7 +989,7 @@ class ProductController extends Controller
                 'sale_price' => $data['precio_venta'],
                 'stock_current' => $data['stock_actual'],
                 'stock_minimum' => $data['stock_minimo'],
-                // Translate Spanish status values from imported files to internal English enums
+                // Map legacy imported status labels to internal enum values
                 'status' => $this->mapLegacyStatus($data['estado'] ?? 'activo'),
             ]);
 
@@ -835,7 +1003,7 @@ class ProductController extends Controller
 
     private function mapLegacyStatus(string $status): string
     {
-        // Maps Spanish status labels used in import files to the internal English enum values
+        // Map legacy Spanish status labels to internal English values
         return match (strtolower($status)) {
             'activo' => 'active',
             'inactivo' => 'inactive',
@@ -860,7 +1028,7 @@ class ProductController extends Controller
                     $formattedErrors[] = $error;
                 }
             }
-            // Cap the displayed error list at 5 to keep the flash message readable
+            // Limit the displayed errors to keep the flash message readable
             $mensaje .= implode('; ', array_slice($formattedErrors, 0, 5));
             if (count($formattedErrors) > 5) {
                 $mensaje .= ' y '.(count($formattedErrors) - 5).' más...';
@@ -870,9 +1038,7 @@ class ProductController extends Controller
         return redirect()->route('inventory')->with('status', $mensaje);
     }
 
-    /**
-     * @return Builder<Product>
-     */
+    // Build the filtered inventory query
     private function inventoryProductsFilteredQuery(Request $request): Builder
     {
         $query = Product::query();
@@ -901,11 +1067,17 @@ class ProductController extends Controller
         if ($request->filled('stock_status')) {
             switch ($request->stock_status) {
                 case 'in-stock':
-                    $query->where('stock_current', '>', Product::CLIENT_LOW_STOCK_THRESHOLD);
+                    // "En stock" = por encima del mínimo definido para el producto.
+                    // Opción B: productos con stock_minimum = 0 no se incluyen aquí.
+                    $query->where('stock_minimum', '>', 0)
+                        ->whereColumn('stock_current', '>', 'stock_minimum');
                     break;
                 case 'low':
-                    $query->where('stock_current', '>', 0)
-                        ->where('stock_current', '<=', Product::CLIENT_LOW_STOCK_THRESHOLD);
+                    // "Stock bajo" = stock positivo pero por debajo o igual al mínimo del producto.
+                    // Opción B: productos con stock_minimum = 0 no se incluyen aquí.
+                    $query->where('stock_minimum', '>', 0)
+                        ->where('stock_current', '>', 0)
+                        ->whereColumn('stock_current', '<=', 'stock_minimum');
                     break;
                 case 'out':
                     $query->where('stock_current', 0);
@@ -923,9 +1095,7 @@ class ProductController extends Controller
         return $query;
     }
 
-    /**
-     * @return array{0: string, 1: string}
-     */
+    // Validate the inventory sort column and direction
     private function validatedInventorySort(mixed $sort, mixed $order): array
     {
         $allowed = ['product_id', 'name', 'stock_current', 'sale_price', 'status', 'category_id'];
@@ -935,9 +1105,7 @@ class ProductController extends Controller
         return [$col, $dir];
     }
 
-    /**
-     * @return array<int, string>
-     */
+    // Build human-readable export filter lines
     private function inventoryExportFilterLines(Request $request): array
     {
         $lines = [];
@@ -978,131 +1146,115 @@ class ProductController extends Controller
         return $lines;
     }
 
-     /**
-     * POST /inventory/add-manual/{id}
-     * Manually add stock to a product.
-     */
-    public function addManualStock(Request $request, int $id)
+    // Add manual stock and register the inventory movement
+    public function addManualStock(Request $request, int $id, InventoryMovementService $inventoryService)
     {
         $validReasons = ['manual_adjustment', 'damage', 'refund'];
- 
+
         try {
             $validated = $request->validate([
                 'quantity' => ['required', 'numeric', 'min:1'],
-                'reason'   => ['required', 'string', 'in:' . implode(',', $validReasons)],
+                'reason' => ['required', 'string', 'in:'.implode(',', $validReasons)],
             ]);
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'errors'  => $e->errors(),
+                'errors' => $e->errors(),
                 'message' => 'Datos inválidos.',
             ], 422);
         }
- 
+
         try {
-            $product = DB::transaction(function () use ($id, $validated) {
-                /** @var \App\Models\Product $product */
-                $product = \App\Models\Product::lockForUpdate()->findOrFail($id);
- 
-                $product->stock_current += (int) $validated['quantity'];
-                $product->save();
- 
-                return $product;
-            });
- 
+            $product = Product::findOrFail($id);
+
+            $inventoryService->recordManualEntry(
+                product: $product,
+                quantity: (int) $validated['quantity'],
+                reason: $validated['reason'],
+            );
+
             return response()->json([
-                'success'       => true,
-                'message'       => "Se agregaron {$validated['quantity']} unidades correctamente.",
+                'success' => true,
+                'message' => "Se agregaron {$validated['quantity']} unidades correctamente.",
                 'stock_current' => $product->stock_current,
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+
+        } catch (ModelNotFoundException) {
             return response()->json([
                 'success' => false,
                 'message' => 'Producto no encontrado.',
             ], 404);
-        } catch (ValidationException $e) {
-            // Triggered by the Product model's booted() saving hook
-            return response()->json([
-                'success' => false,
-                'errors'  => $e->errors(),
-                'message' => 'No se pudo actualizar el stock: ' . collect($e->errors())->flatten()->first(),
-            ], 422);
-        } catch (\Throwable $e) {
-            Log::error('addManualStock error', ['product_id' => $id, 'error' => $e->getMessage()]);
- 
-            return response()->json([
-                'success' => false,
-                'message' => 'Error interno al actualizar el stock. Inténtalo de nuevo.',
-            ], 500);
-        }
-    }
- 
-    /**
-     * POST /inventory/remove-manual/{id}
-     * Manually remove stock from a product.
-     */
-    public function removeManualStock(Request $request, int $id)
-    {
-        $validReasons = ['manual_adjustment', 'damage', 'refund'];
- 
-        try {
-            $validated = $request->validate([
-                'quantity' => ['required', 'numeric', 'min:1'],
-                'reason'   => ['required', 'string', 'in:' . implode(',', $validReasons)],
-            ]);
+
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'errors'  => $e->errors(),
-                'message' => 'Datos inválidos.',
-            ], 422);
-        }
- 
-        try {
-            $product = DB::transaction(function () use ($id, $validated) {
-                /** @var \App\Models\Product $product */
-                $product = \App\Models\Product::lockForUpdate()->findOrFail($id);
- 
-                $qty = (int) $validated['quantity'];
- 
-                if ($qty > $product->stock_current) {
-                    throw ValidationException::withMessages([
-                        'quantity' => [
-                            "La cantidad ({$qty}) supera el stock disponible ({$product->stock_current}).",
-                        ],
-                    ]);
-                }
- 
-                $product->stock_current -= $qty;
-                $product->save();
- 
-                return $product;
-            });
- 
-            return response()->json([
-                'success'       => true,
-                'message'       => "Se eliminaron {$validated['quantity']} unidades correctamente.",
-                'stock_current' => $product->stock_current,
-            ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Producto no encontrado.',
-            ], 404);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'errors'  => $e->errors(),
+                'errors' => $e->errors(),
                 'message' => collect($e->errors())->flatten()->first(),
             ], 422);
+
         } catch (\Throwable $e) {
-            Log::error('removeManualStock error', ['product_id' => $id, 'error' => $e->getMessage()]);
- 
+            Log::error('addManualStock error', ['product_id' => $id, 'error' => $e->getMessage()]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error interno al actualizar el stock. Inténtalo de nuevo.',
             ], 500);
         }
     }
-    
+
+    // Remove manual stock and register the inventory movement
+    public function removeManualStock(Request $request, int $id, InventoryMovementService $inventoryService)
+    {
+        $validReasons = ['manual_adjustment', 'damage', 'refund'];
+
+        try {
+            $validated = $request->validate([
+                'quantity' => ['required', 'numeric', 'min:1'],
+                'reason' => ['required', 'string', 'in:'.implode(',', $validReasons)],
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(),
+                'message' => 'Datos inválidos.',
+            ], 422);
+        }
+
+        try {
+            $product = Product::findOrFail($id);
+
+            $inventoryService->recordManualExit(
+                product: $product,
+                quantity: (int) $validated['quantity'],
+                reason: $validated['reason'],
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => "Se eliminaron {$validated['quantity']} unidades correctamente.",
+                'stock_current' => $product->stock_current,
+            ]);
+
+        } catch (ModelNotFoundException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Producto no encontrado.',
+            ], 404);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(),
+                'message' => collect($e->errors())->flatten()->first(),
+            ], 422);
+
+        } catch (\Throwable $e) {
+            Log::error('removeManualStock error', ['product_id' => $id, 'error' => $e->getMessage()]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno al actualizar el stock. Inténtalo de nuevo.',
+            ], 500);
+        }
+    }
 }

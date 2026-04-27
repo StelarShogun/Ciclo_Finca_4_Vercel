@@ -79,9 +79,6 @@
         <div class="filters-section">
             <div class="filters-header">
                 <h2 class="filters-title">Filtros de Búsqueda</h2>
-                <a href="{{ route('sales.reports.byCategory') }}" class="btn btn-secondary">
-                    <i class="fas fa-chart-pie"></i> Ver por Categoría
-                </a>
             </div>
             <form method="GET" action="{{ route('sales.index') }}" id="filters-form">
                 <div class="filters-grid">
@@ -162,7 +159,7 @@
             <table class="sales-table">
                 <thead>
                     <tr>
-                        <th>Factura</th>
+                        <th>Número de factura</th>
                         <th>Cliente</th>
                         <th>Fecha</th>
                         <th>Estado</th>
