@@ -116,7 +116,7 @@
                                     </td>
                                     <td data-label="Tipo de acción"><code>{{ $actionTypeLabels[$log->action_type] ?? AuditLogController::actionTypeLabel($log->action_type) }}</code></td>
                                     <td data-label="Módulo"><span class="module-pill">{{ $moduleLabels[$log->module] ?? AuditLogController::moduleLabel($log->module) }}</span></td>
-                                    <td data-label="Descripción">{{ $log->description }}</td>
+                                    <td data-label="Descripción">{{ AuditLogController::descriptionLabel($log->description) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
