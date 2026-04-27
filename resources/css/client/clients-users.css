@@ -1153,3 +1153,254 @@ body.guest-layout {
     /* Nav links más compactos */
     .nav-link { padding: 8px 14px; font-size: 0.88rem; }
 }
+
+/* ===================================================================
+   13. INVOICES — Mis Facturas (client invoice list)
+   =================================================================== */
+
+/* ── Header invoice button — identical style to .cart-btn ── */
+.cf4-invoices-btn {
+    position: relative;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.cf4-invoices-btn:hover,
+.cf4-invoices-btn.active {
+    background: var(--color-primary-dark);
+    color: white;
+    text-decoration: none;
+}
+
+/* ── Pending invoice count badge (mirrors .cart-count) ── */
+.cf4-invoice-count {
+    background: var(--color-accent);
+    color: white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+}
+
+/* ── Page header banner ── */
+.cf4-invoices-header {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: white;
+    padding: 40px 0;
+    margin-bottom: 32px;
+    text-align: center;
+}
+
+.cf4-invoices-header-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.cf4-invoices-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.cf4-invoices-header p {
+    margin: 0;
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+/* ── Page wrapper ── */
+.cf4-invoices-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+}
+
+/* ── Card container ── */
+.cf4-invoices-card {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+/* ── Table container (reuse admin pattern) ── */
+.cf4-invoices-card .sales-table-container {
+    padding: 0;
+    overflow-x: auto;
+}
+
+.cf4-invoices-card .sales-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.cf4-invoices-card .sales-table thead th {
+    background: rgba(0, 0, 0, 0.03);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-weight: 600;
+    color: var(--color-muted);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 12px 16px;
+    white-space: nowrap;
+}
+
+.cf4-invoices-card .sales-table tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    vertical-align: middle;
+    color: var(--text-primary);
+    font-size: 0.92rem;
+}
+
+.cf4-invoices-card .sales-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.cf4-invoices-card .sales-table tbody tr:hover {
+    background: rgba(0, 0, 0, 0.025);
+}
+
+/* ── Invoice number sub-line ── */
+.cf4-invoice-number {
+    font-size: 0.83rem;
+    color: var(--color-muted);
+    margin-top: 2px;
+}
+
+/* ── Items list ── */
+.cf4-invoice-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* ── Muted text ── */
+.cf4-invoice-muted {
+    color: var(--color-muted);
+    font-size: 0.88rem;
+}
+
+/* ── Status pill ── */
+.cf4-invoice-status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.cf4-invoice-status-pill.pending {
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
+}
+
+.cf4-invoice-status-pill.confirmed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* ── Tab selector in header ── */
+.cf4-invoices-tab-selector {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.cf4-select-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.cf4-select-icon {
+    position: absolute;
+    left: 16px;
+    color: var(--color-primary, #2d6a4f);
+    pointer-events: none;
+    z-index: 1;
+    font-size: 0.85rem;
+}
+
+.cf4-select {
+    appearance: none;
+    background: #fff;
+    border: none;
+    color: var(--color-primary, #2d6a4f);
+    padding: 9px 44px 9px 38px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath stroke='%232d6a4f' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round' d='M1 1l4.5 4.5L10 1'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+}
+
+.cf4-select option {
+    background: #fff;
+    color: var(--color-primary, #2d6a4f);
+}
+
+/* ── Empty state ── */
+.cf4-invoices-empty {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--color-muted);
+}
+
+.cf4-invoices-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.45;
+}
+
+.cf4-invoices-empty p {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+}
+
+/* ── Pagination wrap ── */
+.cf4-invoices-pagination-wrap {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    background: rgba(0, 0, 0, 0.015);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .cf4-invoices-header { padding: 28px 0; }
+    .cf4-invoices-header h1 { font-size: 1.5rem; }
+    .cf4-invoices-wrapper { padding: 0 16px 40px; }
+    .cf4-invoices-card .sales-table { font-size: 0.85rem; }
+    .cf4-invoices-card .sales-table thead th,
+    .cf4-invoices-card .sales-table tbody td { padding: 10px 12px; }
+}

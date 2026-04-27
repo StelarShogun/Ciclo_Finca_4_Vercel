@@ -53,6 +53,12 @@ class Client extends Authenticatable
         return $this->hasMany(CartItem::class, 'client_id', 'user_id');
     }
 
+    /** Ventas asociadas al usuario cliente (CF4-33 y reportes). */
+    public function sales(): HasMany
+    {
+        return $this->hasMany(Sale::class, 'client_id', 'user_id');
+    }
+
     // Normalizes provider: null values are treated as 'local' to prevent incorrect UI rendering.
     public function getProviderAttribute($value): string
     {

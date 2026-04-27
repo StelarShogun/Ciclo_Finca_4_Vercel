@@ -11,14 +11,21 @@ const adminAssets = [
     "resources/js/admin/dashboard/dashboard.js",
     "resources/js/admin/inventory/inventory.js",
     "resources/js/admin/sales/sales.js",
+    'resources/js/admin/sales/reports-by-category.js',
     "resources/js/admin/orders/orders.js",
     "resources/js/admin/orders/supplier-orders.js",
+    "resources/js/admin/orders/supplier-order-create.js",
     "resources/js/admin/suppliers/suppliers.js",
     "resources/js/admin/login/login.js",
     "resources/js/admin/users/clients.js",
     "resources/js/admin/brand/brand.js",
     "resources/js/admin/product-classifications/edit.js",
     "resources/js/admin/classifications/catalog.js",
+    "resources/js/admin/reports/product-sales.js",
+    "resources/js/admin/reports/sales-performance.js",
+    "resources/js/admin/reports/inventory-movements.js",        
+    "resources/js/admin/reports/client-purchase-history.js",  
+    "resources/js/admin/reports/client-purchase-client-show.js", 
 
     // CSS
     "resources/css/admin/products/inventory.css",
@@ -26,12 +33,20 @@ const adminAssets = [
     "resources/css/admin/sales/sales.css",
     "resources/css/admin/sales/invoice-document.css",
     "resources/css/admin/orders/orders.css",
+    "resources/css/admin/orders/supplier-order-create.css",
+    "resources/css/admin/orders/supplier-order-detail.css",
     "resources/css/admin/suppliers/suppliers.css",
     "resources/css/admin/dashboard/dashboard.css",
     "resources/css/admin/dashboard/dashboard-pdf.css",
     "resources/css/admin/users/clients.css",
     "resources/css/admin/brands/brand.css",
     "resources/css/admin/login/login.css",
+    "resources/css/admin/reports/reports-hub.css",
+    "resources/css/admin/reports/exports.css",
+    "resources/css/admin/reports/product-sales.css",
+    "resources/css/admin/reports/sales-performance.css",
+    "resources/css/admin/reports/client-purchase-history.css",
+    "resources/css/admin/reports/audit-log.css",
 ];
 
 // =======================
@@ -59,11 +74,11 @@ export default defineConfig({
         }),
     ],
     server: {
-        host: "0.0.0.0", // Para Docker
+        host: "0.0.0.0",
         port: vitePort,
         strictPort: true,
         hmr: {
-            host: "localhost", // Navegador accede desde tu máquina
+            host: "localhost",
         },
     },
 });

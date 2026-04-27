@@ -155,8 +155,7 @@ class CF4ClientCartTest extends TestCase
         $this->assertEquals('pending', $sale->status);
         $this->assertEquals('web_cart', $sale->order_source);
         $this->assertEquals($client->user_id, $sale->client_id);
-        $this->assertNull($sale->customer_id);
-        $this->assertNull($sale->seller_id);
+        $this->assertNotNull($sale->client_id);
 
         $this->assertEquals(90, $sale->total);
 

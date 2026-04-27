@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Rules\Recaptcha;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,7 +14,7 @@ class AdminUserController extends Controller
         return view('admin.login.login');
     }
 
-    public function login(Request $request)
+    public function login(Request $request, AuditLogger $auditLogger)
     {
         $request->validate([
             'g-recaptcha-response' => ['required', new Recaptcha],
@@ -29,16 +30,51 @@ class AdminUserController extends Controller
             $user->last_access = now();
             $user->save();
 
+            $auditLogger->logAdminAction(
+                'admin_login',
+                'auth',
+                'Admin user logged in.',
+                [
+                    'ip' => $request->ip(),
+                    'user_agent' => (string) $request->userAgent(),
+                ],
+                $user
+            );
+
             return redirect()->route('dashboard');
         }
+
+        $auditLogger->logAdminAction(
+            'admin_login_failed',
+            'auth',
+            'Admin login failed.',
+            [
+                'attempted_gmail' => (string) $request->input('gmail'),
+                'ip' => $request->ip(),
+                'user_agent' => (string) $request->userAgent(),
+            ]
+        );
 
         return redirect()->back()->withInput($request->only('gmail'))->withErrors([
             'gmail' => 'Usuario no existe o credenciales inválidas',
         ]);
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request, AuditLogger $auditLogger)
     {
+        $admin = Auth::guard('admin')->user();
+
+        $auditLogger->logAdminAction(
+            'admin_logout',
+            'auth',
+            'Admin user logged out.',
+            [
+                'ip' => $request->ip(),
+                'user_agent' => (string) $request->userAgent(),
+            ],
+            $admin
+        );
+
         Auth::guard('admin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
