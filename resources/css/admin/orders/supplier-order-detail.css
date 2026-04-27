@@ -84,3 +84,78 @@
   padding: 1rem !important;
 }
 
+/* ── Order state timeline ── */
+.order-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.order-timeline::before {
+  content: '';
+  position: absolute;
+  left: 17px;
+  top: 24px;
+  bottom: 8px;
+  width: 2px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.tl-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 10px 0;
+  position: relative;
+}
+
+.tl-dot {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.8rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 1;
+  position: relative;
+}
+
+.tl-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 6px;
+}
+
+.tl-state {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.tl-meta {
+  font-size: 0.8rem;
+  color: var(--color-muted, #6b7280);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.tl-reason {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-style: italic;
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 2px;
+}
+

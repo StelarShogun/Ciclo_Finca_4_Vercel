@@ -205,7 +205,6 @@
                                         @endif
                                     </td>
                                     <td>
-                                        {{-- Stock badge: según stock mínimo por producto (CF4-50) --}}
                                         <span class="stock-badge {{ $product->adminInventoryStockBadgeClass() }}">
                                             {{ $product->stock_current }}
                                         </span>
@@ -237,7 +236,22 @@
                                                     title="Edit product">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-
+                                            <button class="action-btn stock-adjust"
+                                                    data-stock-action="add"
+                                                    data-product-id="{{ $product->product_id }}"
+                                                    data-product-name="{{ $product->name }}"
+                                                    data-product-stock="{{ $product->stock_current }}"
+                                                    title="Add stock">
+                                                <i class="fas fa-plus-circle" style="color:#16a34a;"></i>
+                                            </button>
+                                            <button class="action-btn stock-adjust"
+                                                    data-stock-action="remove"
+                                                    data-product-id="{{ $product->product_id }}"
+                                                    data-product-name="{{ $product->name }}"
+                                                    data-product-stock="{{ $product->stock_current }}"
+                                                    title="Remove stock">
+                                                <i class="fas fa-minus-circle" style="color:#dc2626;"></i>
+                                            </button>
                                             <button class="action-btn delete"
                                                     data-action="delete"
                                                     data-product-id="{{ $product->product_id }}"
@@ -837,7 +851,7 @@
                         <option value="" disabled selected>Selecciona un motivo…</option>
                         <option value="manual_adjustment">Ajuste Manual</option>
                         <option value="damage">Daño</option>
-                        <option value="refund">Reembolso</option>
+                        <option value="refund">Entrada por reembolso / nota de crédito</option>
                     </select>
                     <span class="stock-field-error" id="stock-modal-reason-error"></span>
                 </div>
