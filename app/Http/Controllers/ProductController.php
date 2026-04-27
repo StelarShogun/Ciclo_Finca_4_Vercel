@@ -13,6 +13,7 @@ use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\RegistryExcelExport;
 use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
+use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\ProductClassificationAssignmentService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
@@ -43,6 +44,8 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request)
     {
         try {
+            $auditContext = null;
+
             $product = DB::transaction(function () use ($request) {
                 $data = $request->validated();
                 $brandId = $data['brand_id'];
@@ -59,6 +62,14 @@ class ProductController extends Controller
 
                 return $product;
             });
+
+            $auditContext = [
+                'product_id' => (int) $product->product_id,
+                'name' => $product->name,
+                'category_id' => (int) $product->category_id,
+                'supplier_id' => (int) $product->supplier_id,
+                'status' => (string) $product->status,
+            ];
 
             // Store uploaded files locally before registering them in MediaLibrary
             $folderPath = public_path('images/'.$product->name);
@@ -92,6 +103,8 @@ class ProductController extends Controller
                     $i++;
                 }
             }
+
+            $this->logAudit('product_create', 'Producto creado.', $auditContext ?? []);
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -167,7 +180,7 @@ class ProductController extends Controller
 
             $this->logAudit(
                 'product_toggle_featured',
-                $product->is_featured ? 'Product marked as featured.' : 'Product removed from featured.',
+                $product->is_featured ? 'Producto marcado como destacado.' : 'Producto removido de destacados.',
                 [
                     'product_id' => $product->product_id,
                     'name' => $product->name,
@@ -193,8 +206,22 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, $id)
     {
         try {
+            $auditContext = null;
+
             $product = DB::transaction(function () use ($request, $id) {
                 $p = Product::findOrFail($id);
+                $before = [
+                    'name' => $p->name,
+                    'description' => $p->description,
+                    'category_id' => (int) $p->category_id,
+                    'supplier_id' => (int) $p->supplier_id,
+                    'purchase_price' => (float) $p->purchase_price,
+                    'sale_price' => (float) $p->sale_price,
+                    'stock_current' => (int) $p->stock_current,
+                    'stock_minimum' => (int) $p->stock_minimum,
+                    'status' => (string) $p->status,
+                    'is_featured' => (bool) $p->is_featured,
+                ];
                 $data = $request->validated();
                 $brandId = $data['brand_id'];
                 unset($data['brand_id']);
@@ -212,8 +239,37 @@ class ProductController extends Controller
                     app(ProductClassificationAssignmentService::class)->syncForProduct($p, $classificationIds ?? []);
                 }
 
-                return $p;
+                $after = [
+                    'name' => $p->name,
+                    'description' => $p->description,
+                    'category_id' => (int) $p->category_id,
+                    'supplier_id' => (int) $p->supplier_id,
+                    'purchase_price' => (float) $p->purchase_price,
+                    'sale_price' => (float) $p->sale_price,
+                    'stock_current' => (int) $p->stock_current,
+                    'stock_minimum' => (int) $p->stock_minimum,
+                    'status' => (string) $p->status,
+                    'is_featured' => (bool) $p->is_featured,
+                ];
+
+                return [$p, $before, $after];
             });
+
+            [$product, $before, $after] = $product;
+            $changed = [];
+            foreach ($after as $field => $value) {
+                if (($before[$field] ?? null) !== $value) {
+                    $changed[$field] = [
+                        'from' => $before[$field] ?? null,
+                        'to' => $value,
+                    ];
+                }
+            }
+
+            $auditContext = [
+                'product_id' => (int) $product->product_id,
+                'changes' => $changed,
+            ];
 
             // Store uploaded files locally before registering them in MediaLibrary
             $folderPath = public_path('images/'.$product->name);
@@ -259,6 +315,12 @@ class ProductController extends Controller
                 }
             }
 
+            $this->logAudit(
+                'product_update',
+                'Producto actualizado.',
+                $auditContext ?? ['product_id' => (int) $id]
+            );
+
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
@@ -303,11 +365,12 @@ class ProductController extends Controller
             $productName = null;
             DB::transaction(function () use ($id, &$productName) {
                 $p = Product::findOrFail($id);
+                $productName = $p->name;
                 // Deactivate the product instead of deleting the record
                 $p->update(['status' => 'inactive']);
             });
 
-            $this->logAudit('product_delete', 'Product deactivated.', [
+            $this->logAudit('product_delete', 'Producto desactivado.', [
                 'product_id' => (int) $id,
                 'name' => $productName,
             ]);
@@ -342,7 +405,7 @@ class ProductController extends Controller
                 $p->delete();
             });
 
-            $this->logAudit('product_force_delete', 'Product permanently deleted.', [
+            $this->logAudit('product_force_delete', 'Producto eliminado permanentemente.', [
                 'product_id' => (int) $id,
                 'name' => $productName,
             ]);
@@ -789,7 +852,7 @@ class ProductController extends Controller
 
             $this->logAudit(
                 'products_import',
-                'Products import processed (XML).',
+                'Importación de productos procesada (XML).',
                 [
                     'format' => 'xml',
                     'imported' => $importados,
@@ -839,7 +902,7 @@ class ProductController extends Controller
 
         $this->logAudit(
             'products_import',
-            'Products import processed (CSV).',
+            'Importación de productos procesada (CSV).',
             [
                 'format' => 'csv',
                 'imported' => $importados,
@@ -881,7 +944,7 @@ class ProductController extends Controller
 
         $this->logAudit(
             'products_import',
-            'Products import processed (JSON).',
+            'Importación de productos procesada (JSON).',
             [
                 'format' => 'json',
                 'imported' => $importados,

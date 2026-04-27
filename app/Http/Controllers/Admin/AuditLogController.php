@@ -29,6 +29,12 @@ class AuditLogController extends Controller
         'client_order_settings_update' => 'Configuración de pedidos actualizada',
         'supplier_order_create' => 'Pedido a proveedor creado',
         'supplier_order_state_update' => 'Estado de pedido a proveedor actualizado',
+        'product_create' => 'Producto creado',
+        'product_update' => 'Producto actualizado',
+        'product_delete' => 'Producto desactivado',
+        'product_force_delete' => 'Producto eliminado permanentemente',
+        'product_toggle_featured' => 'Producto destacado actualizado',
+        'products_import' => 'Importación de productos',
     ];
 
     /**
@@ -45,6 +51,27 @@ class AuditLogController extends Controller
         'supplier_orders' => 'Pedidos a proveedores',
         'clients' => 'Clientes',
         'products' => 'Inventario y productos',
+    ];
+
+    /**
+     * Descripciones legadas para mostrar textos de auditoría en español.
+     *
+     * @var array<string, string>
+     */
+    private const DESCRIPTION_LABELS = [
+        'Admin user logged in.' => 'Administrador inició sesión.',
+        'Admin login failed.' => 'Intento fallido de inicio de sesión de administrador.',
+        'Admin user logged out.' => 'Administrador cerró sesión.',
+        'Acceso a módulo sensible desde el panel.' => 'Acceso a módulo sensible desde el panel.',
+        'Product marked as featured.' => 'Producto marcado como destacado.',
+        'Product removed from featured.' => 'Producto removido de destacados.',
+        'Product created.' => 'Producto creado.',
+        'Product updated.' => 'Producto actualizado.',
+        'Product deactivated.' => 'Producto desactivado.',
+        'Product permanently deleted.' => 'Producto eliminado permanentemente.',
+        'Products import processed (XML).' => 'Importación de productos procesada (XML).',
+        'Products import processed (CSV).' => 'Importación de productos procesada (CSV).',
+        'Products import processed (JSON).' => 'Importación de productos procesada (JSON).',
     ];
 
     public function index(Request $request)
@@ -114,6 +141,16 @@ class AuditLogController extends Controller
     public static function moduleLabel(string $value): string
     {
         return self::MODULE_LABELS[$value] ?? self::humanizeToken($value);
+    }
+
+    public static function descriptionLabel(?string $value): string
+    {
+        $description = trim((string) $value);
+        if ($description === '') {
+            return 'Sin descripción';
+        }
+
+        return self::DESCRIPTION_LABELS[$description] ?? $description;
     }
 
     private function normalizeText(mixed $value): string
