@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminOnly;
+use App\Http\Middleware\LogSensitiveAdminModuleAccess;
 use App\Http\Middleware\PreventDirectAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin.only' => AdminOnly::class,
             'prevent.direct' => PreventDirectAccess::class,
+            'audit.sensitive.module' => LogSensitiveAdminModuleAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

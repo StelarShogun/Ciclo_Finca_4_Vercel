@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Services\AuditLogger;
+use Illuminate\Support\Facades\Log;
 
 class AdminClientController extends Controller
 {
@@ -17,6 +19,15 @@ class AdminClientController extends Controller
     {
         $client = Client::findOrFail($id);
         $client->update(['active' => false]);
+        $this->logAuditAction(
+            'client_ban',
+            'Cliente bloqueado por administración.',
+            [
+                'client_id' => (int) $client->user_id,
+                'client_email' => (string) ($client->gmail ?? ''),
+                'active' => false,
+            ]
+        );
 
         return response()->json(['success' => true]);
     }
@@ -25,7 +36,28 @@ class AdminClientController extends Controller
     {
         $client = Client::findOrFail($id);
         $client->update(['active' => true]);
+        $this->logAuditAction(
+            'client_unban',
+            'Cliente desbloqueado por administración.',
+            [
+                'client_id' => (int) $client->user_id,
+                'client_email' => (string) ($client->gmail ?? ''),
+                'active' => true,
+            ]
+        );
 
         return response()->json(['success' => true]);
+    }
+
+    private function logAuditAction(string $actionType, string $description, array $meta = []): void
+    {
+        try {
+            app(AuditLogger::class)->logAdminAction($actionType, 'clients', $description, $meta);
+        } catch (\Throwable $e) {
+            Log::warning('Client audit log write failed', [
+                'action_type' => $actionType,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

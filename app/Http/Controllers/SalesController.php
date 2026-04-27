@@ -9,6 +9,7 @@ use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
 use App\Services\InventoryMovementService;
+use App\Services\AuditLogger;
 use App\Services\Admin\RegistryExcelExport;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
@@ -275,9 +276,21 @@ class SalesController extends Controller
 
             DB::commit();
 
+            $this->logAuditAction(
+                'sale_create',
+                'Venta creada desde panel administrativo.',
+                [
+                    'sale_id' => (int) $sale->sale_id,
+                    'invoice_number' => (string) $sale->invoice_number,
+                    'status' => (string) $sale->status,
+                    'total' => (float) $sale->total,
+                    'items_count' => count($preparedLines),
+                ]
+            );
+
             return response()->json([
                 'success' => true,
-                'message' => 'Sale created successfully.',
+                'message' => 'Venta creada correctamente.',
                 'sale'    => $sale->load(['client', 'sellerAdmin', 'saleItems.product']),
             ]);
         } catch (\Exception $e) {
@@ -285,7 +298,7 @@ class SalesController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating sale: ' . $e->getMessage(),
+                'message' => 'Error al crear la venta: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -293,6 +306,7 @@ class SalesController extends Controller
     public function update(Request $request, $id)
     {
         $sale = Sale::findOrFail($id);
+        $previousStatus = (string) $sale->status;
 
         $request->validate([
             'status' => 'required|in:pending,completed,cancelled,refunded',
@@ -303,6 +317,17 @@ class SalesController extends Controller
             'status' => $request->status,
             'notes'  => $request->notes,
         ]);
+
+        $this->logAuditAction(
+            'sale_update_status',
+            'Estado de venta actualizado.',
+            [
+                'sale_id' => (int) $sale->sale_id,
+                'invoice_number' => (string) ($sale->invoice_number ?? ''),
+                'from_status' => $previousStatus,
+                'to_status' => (string) $sale->status,
+            ]
+        );
 
         return response()->json([
             'success' => true,
@@ -323,6 +348,17 @@ class SalesController extends Controller
         }
 
         $sale->update(['status' => 'cancelled']);
+
+        $this->logAuditAction(
+            'sale_cancel',
+            'Venta cancelada desde endpoint de eliminación.',
+            [
+                'sale_id' => (int) $sale->sale_id,
+                'invoice_number' => (string) ($sale->invoice_number ?? ''),
+                'from_status' => 'pending',
+                'to_status' => 'cancelled',
+            ]
+        );
 
         return response()->json([
             'success' => true,
@@ -377,6 +413,17 @@ class SalesController extends Controller
 
             $sale->refresh();
 
+            $this->logAuditAction(
+                'sale_complete',
+                'Pedido confirmado como venta completada.',
+                [
+                    'sale_id' => (int) $sale->sale_id,
+                    'invoice_number' => (string) $sale->invoice_number,
+                    'from_status' => 'pending',
+                    'to_status' => 'completed',
+                ]
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Pedido confirmado correctamente. La venta quedó registrada con su factura.',
@@ -430,6 +477,17 @@ class SalesController extends Controller
                 }
             });
 
+            $this->logAuditAction(
+                'sale_cancel',
+                'Pedido cancelado y stock liberado.',
+                [
+                    'sale_id' => (int) $sale->sale_id,
+                    'invoice_number' => (string) ($sale->invoice_number ?? ''),
+                    'from_status' => 'pending',
+                    'to_status' => 'cancelled',
+                ]
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Pedido rechazado. El stock de los productos fue liberado.',
@@ -468,6 +526,17 @@ class SalesController extends Controller
 
             $sale->update(['status' => 'refunded']);
         });
+
+        $this->logAuditAction(
+            'sale_refund',
+            'Venta reembolsada y stock restaurado.',
+            [
+                'sale_id' => (int) $sale->sale_id,
+                'invoice_number' => (string) ($sale->invoice_number ?? ''),
+                'from_status' => 'completed',
+                'to_status' => 'refunded',
+            ]
+        );
 
         return response()->json([
             'success' => true,
@@ -845,6 +914,18 @@ class SalesController extends Controller
     private function roundMoney(float $amount): float
     {
         return round($amount, 2);
+    }
+
+    private function logAuditAction(string $actionType, string $description, array $meta = []): void
+    {
+        try {
+            app(AuditLogger::class)->logAdminAction($actionType, 'sales', $description, $meta);
+        } catch (\Throwable $e) {
+            \Log::warning('Sales audit log write failed', [
+                'action_type' => $actionType,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     public function byCategory(Request $request)

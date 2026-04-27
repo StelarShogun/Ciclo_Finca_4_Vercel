@@ -58,6 +58,14 @@
                 </div>
                 <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
             </a>
+            <a href="{{ route('admin.reports.audit-log') }}" class="report-card">
+                <div class="report-card-icon"><i class="fas fa-user-shield"></i></div>
+                <div class="report-card-body">
+                    <h2>Bitácora de auditoría</h2>
+                    <p>Consultá acciones administrativas por usuario, tipo de evento, módulo afectado y fecha para detectar irregularidades.</p>
+                </div>
+                <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
+            </a>
             <a href="{{ route('sales.reports.byCategory') }}" class="report-card">
                 <div class="report-card-icon"><i class="fas fa-chart-pie"></i></div>
                 <div class="report-card-body">
