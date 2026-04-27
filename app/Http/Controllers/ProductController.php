@@ -13,6 +13,7 @@ use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\RegistryExcelExport;
 use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
+use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\ProductClassificationAssignmentService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
@@ -43,6 +44,8 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request)
     {
         try {
+            $auditContext = null;
+
             $product = DB::transaction(function () use ($request) {
                 $data = $request->validated();
                 $brandId = $data['brand_id'];
@@ -59,6 +62,14 @@ class ProductController extends Controller
 
                 return $product;
             });
+
+            $auditContext = [
+                'product_id' => (int) $product->product_id,
+                'name' => $product->name,
+                'category_id' => (int) $product->category_id,
+                'supplier_id' => (int) $product->supplier_id,
+                'status' => (string) $product->status,
+            ];
 
             // Store uploaded files locally before registering them in MediaLibrary
             $folderPath = public_path('images/'.$product->name);
@@ -92,6 +103,8 @@ class ProductController extends Controller
                     $i++;
                 }
             }
+
+            $this->logAudit('product_create', 'Producto creado.', $auditContext ?? []);
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -165,6 +178,16 @@ class ProductController extends Controller
             $product->is_featured = ! $product->is_featured;
             $product->save();
 
+            $this->logAudit(
+                'product_toggle_featured',
+                $product->is_featured ? 'Producto marcado como destacado.' : 'Producto removido de destacados.',
+                [
+                    'product_id' => $product->product_id,
+                    'name' => $product->name,
+                    'is_featured' => (bool) $product->is_featured,
+                ]
+            );
+
             return response()->json([
                 'success' => true,
                 'is_featured' => (bool) $product->is_featured,
@@ -183,8 +206,22 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, $id)
     {
         try {
+            $auditContext = null;
+
             $product = DB::transaction(function () use ($request, $id) {
                 $p = Product::findOrFail($id);
+                $before = [
+                    'name' => $p->name,
+                    'description' => $p->description,
+                    'category_id' => (int) $p->category_id,
+                    'supplier_id' => (int) $p->supplier_id,
+                    'purchase_price' => (float) $p->purchase_price,
+                    'sale_price' => (float) $p->sale_price,
+                    'stock_current' => (int) $p->stock_current,
+                    'stock_minimum' => (int) $p->stock_minimum,
+                    'status' => (string) $p->status,
+                    'is_featured' => (bool) $p->is_featured,
+                ];
                 $data = $request->validated();
                 $brandId = $data['brand_id'];
                 unset($data['brand_id']);
@@ -202,8 +239,37 @@ class ProductController extends Controller
                     app(ProductClassificationAssignmentService::class)->syncForProduct($p, $classificationIds ?? []);
                 }
 
-                return $p;
+                $after = [
+                    'name' => $p->name,
+                    'description' => $p->description,
+                    'category_id' => (int) $p->category_id,
+                    'supplier_id' => (int) $p->supplier_id,
+                    'purchase_price' => (float) $p->purchase_price,
+                    'sale_price' => (float) $p->sale_price,
+                    'stock_current' => (int) $p->stock_current,
+                    'stock_minimum' => (int) $p->stock_minimum,
+                    'status' => (string) $p->status,
+                    'is_featured' => (bool) $p->is_featured,
+                ];
+
+                return [$p, $before, $after];
             });
+
+            [$product, $before, $after] = $product;
+            $changed = [];
+            foreach ($after as $field => $value) {
+                if (($before[$field] ?? null) !== $value) {
+                    $changed[$field] = [
+                        'from' => $before[$field] ?? null,
+                        'to' => $value,
+                    ];
+                }
+            }
+
+            $auditContext = [
+                'product_id' => (int) $product->product_id,
+                'changes' => $changed,
+            ];
 
             // Store uploaded files locally before registering them in MediaLibrary
             $folderPath = public_path('images/'.$product->name);
@@ -249,6 +315,12 @@ class ProductController extends Controller
                 }
             }
 
+            $this->logAudit(
+                'product_update',
+                'Producto actualizado.',
+                $auditContext ?? ['product_id' => (int) $id]
+            );
+
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
@@ -290,11 +362,18 @@ class ProductController extends Controller
     public function destroy($id)
     {
         try {
-            DB::transaction(function () use ($id) {
+            $productName = null;
+            DB::transaction(function () use ($id, &$productName) {
                 $p = Product::findOrFail($id);
+                $productName = $p->name;
                 // Deactivate the product instead of deleting the record
                 $p->update(['status' => 'inactive']);
             });
+
+            $this->logAudit('product_delete', 'Producto desactivado.', [
+                'product_id' => (int) $id,
+                'name' => $productName,
+            ]);
 
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
@@ -319,10 +398,17 @@ class ProductController extends Controller
     public function forceDelete($id)
     {
         try {
-            DB::transaction(function () use ($id) {
+            $productName = null;
+            DB::transaction(function () use ($id, &$productName) {
                 $p = Product::findOrFail($id);
+                $productName = $p->name;
                 $p->delete();
             });
+
+            $this->logAudit('product_force_delete', 'Producto eliminado permanentemente.', [
+                'product_id' => (int) $id,
+                'name' => $productName,
+            ]);
 
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
@@ -764,6 +850,16 @@ class ProductController extends Controller
                 DB::commit();
             }
 
+            $this->logAudit(
+                'products_import',
+                'Importación de productos procesada (XML).',
+                [
+                    'format' => 'xml',
+                    'imported' => $importados,
+                    'errors_count' => count($errores),
+                ]
+            );
+
             return $this->handleImportResult($importados, $errores);
 
         } catch (\Exception $e) {
@@ -804,6 +900,16 @@ class ProductController extends Controller
             DB::commit();
         }
 
+        $this->logAudit(
+            'products_import',
+            'Importación de productos procesada (CSV).',
+            [
+                'format' => 'csv',
+                'imported' => $importados,
+                'errors_count' => count($errores),
+            ]
+        );
+
         return $this->handleImportResult($importados, $errores);
     }
 
@@ -836,7 +942,29 @@ class ProductController extends Controller
             DB::commit();
         }
 
+        $this->logAudit(
+            'products_import',
+            'Importación de productos procesada (JSON).',
+            [
+                'format' => 'json',
+                'imported' => $importados,
+                'errors_count' => count($errores),
+            ]
+        );
+
         return $this->handleImportResult($importados, $errores);
+    }
+
+    private function logAudit(string $actionType, string $description, array $meta = []): void
+    {
+        try {
+            app(AuditLogger::class)->logAdminAction($actionType, 'products', $description, $meta);
+        } catch (\Throwable $e) {
+            Log::warning('Audit log write failed', [
+                'action_type' => $actionType,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function createProductFromData($data)
