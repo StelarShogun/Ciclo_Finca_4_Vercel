@@ -20,6 +20,7 @@ class SupplierOrderController extends Controller
     private function fullTextBooleanQuery(string $raw): string
     {
         $trimmed = trim($raw);
+
         if ($trimmed === '') {
             return '';
         }
@@ -27,17 +28,16 @@ class SupplierOrderController extends Controller
         $terms = preg_split('/\s+/', $trimmed) ?: [];
         $terms = array_values(array_filter(array_map('trim', $terms)));
 
-        // Build a boolean full-text query that requires all terms and allows prefix matches.
-        // Example: "grasa ceram" => "+grasa* +ceram*"
         return collect($terms)
-            ->map(function ($t) {
-                $t = preg_replace('/[^\pL\pN_]+/u', ' ', $t);
-                $t = trim((string) $t);
-                if ($t === '') {
+            ->map(function ($term) {
+                $term = preg_replace('/[^\pL\pN_]+/u', ' ', $term);
+                $term = trim((string) $term);
+
+                if ($term === '') {
                     return null;
                 }
 
-                return '+'.$t.'*';
+                return '+' . $term . '*';
             })
             ->filter()
             ->implode(' ');
@@ -50,33 +50,36 @@ class SupplierOrderController extends Controller
 
         $products = Product::query()
             ->select(['product_id', 'name', 'purchase_price', 'sale_price'])
-            ->when($supplierId > 0, fn ($q) => $q->where('supplier_id', $supplierId))
+            ->when($supplierId > 0, fn ($query) => $query->where('supplier_id', $supplierId))
             ->when($q !== '' && mb_strlen($q) >= 2, function ($query) use ($q) {
                 $query->where(function ($inner) use ($q) {
-                    $inner->where('name', 'like', '%'.$q.'%')
-                        ->orWhereRaw("CONCAT('BK-', LPAD(product_id, 3, '0')) LIKE ?", ['%'.$q.'%']);
+                    $inner->where('name', 'like', '%' . $q . '%')
+                        ->orWhereRaw("CONCAT('BK-', LPAD(product_id, 3, '0')) LIKE ?", ['%' . $q . '%']);
                 });
             })
             ->orderBy('name')
             ->limit(20)
             ->get()
-            ->map(function (Product $p) {
-                // Prefer purchase price and fall back to sale price when needed.
-                $unit = (float) ($p->purchase_price ?: $p->sale_price);
-                if ($unit <= 0) {
-                    $unit = (float) $p->sale_price;
+            ->map(function (Product $product) {
+                $unitPrice = (float) ($product->purchase_price ?: $product->sale_price);
+
+                if ($unitPrice <= 0) {
+                    $unitPrice = (float) $product->sale_price;
                 }
 
                 return [
-                    'product_id' => (int) $p->product_id,
-                    'name' => (string) $p->name,
-                    'sku' => Product::skuFromId((int) $p->product_id),
-                    'unit_price' => round($unit, 2),
+                    'product_id' => (int) $product->product_id,
+                    'name'       => (string) $product->name,
+                    'sku'        => Product::skuFromId((int) $product->product_id),
+                    'unit_price' => round($unitPrice, 2),
                 ];
             })
             ->values();
 
-        return response()->json(['success' => true, 'products' => $products]);
+        return response()->json([
+            'success'  => true,
+            'products' => $products,
+        ]);
     }
 
     public function index(Request $request)
@@ -86,12 +89,12 @@ class SupplierOrderController extends Controller
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
 
-        // Normalize the range when the end date is earlier than the start date.
         if ($dateFrom && $dateTo && $dateTo < $dateFrom) {
             [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
         }
 
-        $query = Order::with(['supplier', 'orderItems', 'confirmedBy'])->orderBy('orders.date', 'desc');
+        $query = Order::with(['supplier', 'orderItems', 'confirmedBy'])
+            ->orderBy('orders.date', 'desc');
 
         if ($state) {
             $query->where('state', $state);
@@ -107,27 +110,22 @@ class SupplierOrderController extends Controller
 
         if ($search) {
             $search = trim($search);
-
-            // Join related tables to support supplier and line-item search efficiently.
             $driver = DB::connection()->getDriverName();
-            $bool = $driver === 'mysql' ? $this->fullTextBooleanQuery($search) : '';
+            $booleanQuery = $driver === 'mysql' ? $this->fullTextBooleanQuery($search) : '';
 
             $query
                 ->leftJoin('suppliers as s', 's.supplier_id', '=', 'orders.supplier_id')
                 ->leftJoin('order_items as oi', 'oi.order_num_order', '=', 'orders.num_order')
                 ->select('orders.*')
                 ->distinct()
-                ->where(function ($q) use ($search, $driver, $bool) {
+                ->where(function ($q) use ($search, $driver, $booleanQuery) {
                     $q->where('orders.num_order', 'like', "%{$search}%")
                         ->orWhere('orders.po_number', 'like', "%{$search}%")
                         ->orWhere('s.name', 'like', "%{$search}%");
 
-                    if ($driver === 'mysql' && $bool !== '') {
-                        $q->orWhereRaw('MATCH(s.`name`) AGAINST (? IN BOOLEAN MODE)', [$bool]);
-                    }
-
-                    if ($driver === 'mysql' && $bool !== '') {
-                        $q->orWhereRaw('MATCH(oi.`name`) AGAINST (? IN BOOLEAN MODE)', [$bool]);
+                    if ($driver === 'mysql' && $booleanQuery !== '') {
+                        $q->orWhereRaw('MATCH(s.`name`) AGAINST (? IN BOOLEAN MODE)', [$booleanQuery]);
+                        $q->orWhereRaw('MATCH(oi.`name`) AGAINST (? IN BOOLEAN MODE)', [$booleanQuery]);
                     } else {
                         $q->orWhere('oi.name', 'like', "%{$search}%");
                     }
@@ -150,7 +148,8 @@ class SupplierOrderController extends Controller
 
     public function detail($id)
     {
-        $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin', 'confirmedBy'])->findOrFail($id);
+        $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin', 'confirmedBy'])
+            ->findOrFail($id);
 
         return view('admin.orders.detail_supplier', compact('order'));
     }
@@ -158,23 +157,23 @@ class SupplierOrderController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'supplier_id' => ['required', 'integer', 'exists:suppliers,supplier_id'],
+            'supplier_id'             => ['required', 'integer', 'exists:suppliers,supplier_id'],
             'estimated_delivery_date' => ['required', 'date', 'after:today'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,product_id'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items'                   => ['required', 'array', 'min:1'],
+            'items.*.product_id'      => ['required', 'integer', 'exists:products,product_id'],
+            'items.*.quantity'        => ['required', 'integer', 'min:1'],
         ], [
-            'supplier_id.required' => 'El proveedor es obligatorio.',
-            'supplier_id.exists' => 'El proveedor seleccionado no existe.',
+            'supplier_id.required'             => 'El proveedor es obligatorio.',
+            'supplier_id.exists'               => 'El proveedor seleccionado no existe.',
             'estimated_delivery_date.required' => 'La fecha estimada de entrega es obligatoria.',
-            'estimated_delivery_date.date' => 'La fecha estimada no tiene un formato válido.',
-            'estimated_delivery_date.after' => 'La fecha estimada debe ser posterior al día de hoy.',
-            'items.required' => 'Debes agregar al menos un producto.',
-            'items.min' => 'Debes agregar al menos un producto.',
-            'items.*.product_id.required' => 'Selecciona un producto válido.',
-            'items.*.product_id.exists' => 'El producto seleccionado no existe.',
-            'items.*.quantity.required' => 'La cantidad es obligatoria.',
-            'items.*.quantity.min' => 'La cantidad debe ser mayor a 0.',
+            'estimated_delivery_date.date'     => 'La fecha estimada no tiene un formato válido.',
+            'estimated_delivery_date.after'    => 'La fecha estimada debe ser posterior al día de hoy.',
+            'items.required'                   => 'Debes agregar al menos un producto.',
+            'items.min'                        => 'Debes agregar al menos un producto.',
+            'items.*.product_id.required'      => 'Selecciona un producto válido.',
+            'items.*.product_id.exists'        => 'El producto seleccionado no existe.',
+            'items.*.quantity.required'        => 'La cantidad es obligatoria.',
+            'items.*.quantity.min'             => 'La cantidad debe ser mayor a 0.',
         ]);
 
         $items = $validated['items'];
@@ -190,9 +189,9 @@ class SupplierOrderController extends Controller
             $total = 0.0;
 
             foreach ($items as $row) {
-                $pid = (int) $row['product_id'];
-                $qty = (int) $row['quantity'];
-                $product = $products->get($pid);
+                $productId = (int) $row['product_id'];
+                $quantity = (int) $row['quantity'];
+                $product = $products->get($productId);
 
                 if (! $product) {
                     throw ValidationException::withMessages([
@@ -200,50 +199,43 @@ class SupplierOrderController extends Controller
                     ]);
                 }
 
-                if ($qty < 1) {
+                if ($quantity < 1) {
                     throw ValidationException::withMessages([
                         'items' => ['No es posible agregar un producto con cantidad 0 o negativa.'],
                     ]);
                 }
 
-                // Prefer purchase price and fall back to sale price when needed.
-                $unit = (float) ($product->purchase_price ?: $product->sale_price);
-                if ($unit <= 0) {
-                    $unit = (float) $product->sale_price;
+                $unitPrice = (float) ($product->purchase_price ?: $product->sale_price);
+
+                if ($unitPrice <= 0) {
+                    $unitPrice = (float) $product->sale_price;
                 }
 
-                $lineTotal = round($unit * $qty, 2);
-                $total = round($total + $lineTotal, 2);
+                $lineTotal = round($unitPrice * $quantity, 2);
+                $total += $lineTotal;
 
                 $lines[] = [
-                    'product_id' => $product->product_id,
-                    'name' => $product->name,
-                    'quantity' => $qty,
-                    'unit_price' => round($unit, 2),
-                    'total' => $lineTotal,
+                    'product_id' => $productId,
+                    'name'       => $product->name,
+                    'quantity'   => $quantity,
+                    'unit_price' => $unitPrice,
+                    'total'      => $lineTotal,
                 ];
             }
 
-            $po = $this->generatePoNumber();
-
             $order = Order::create([
-                'po_number' => $po,
-                'supplier_id' => (int) $validated['supplier_id'],
-                'date' => null,
+                'po_number'               => $this->generatePoNumber(),
+                'supplier_id'             => (int) $validated['supplier_id'],
                 'estimated_delivery_date' => $validated['estimated_delivery_date'],
-                'state' => 'draft',
-                'total' => $total,
+                'date'                    => now(),
+                'state'                   => 'draft',
+                'total'                   => round($total, 2),
             ]);
 
             foreach ($lines as $line) {
-                OrderItem::create([
-                    'order_num_order' => (int) $order->num_order,
-                    'product_id' => (int) $line['product_id'],
-                    'name' => (string) $line['name'],
-                    'quantity' => (int) $line['quantity'],
-                    'unit_price' => (float) $line['unit_price'],
-                    'total' => (float) $line['total'],
-                ]);
+                OrderItem::create(array_merge($line, [
+                    'order_num_order' => $order->num_order,
+                ]));
             }
 
             OrderStateTimeline::create([
@@ -257,56 +249,67 @@ class SupplierOrderController extends Controller
                 'supplier_order_create',
                 'Pedido a proveedor creado en estado draft.',
                 [
-                    'order_id' => (int) $order->num_order,
-                    'po_number' => (string) ($order->po_number ?? ''),
+                    'order_id'    => (int) $order->num_order,
+                    'po_number'   => (string) ($order->po_number ?? ''),
                     'supplier_id' => (int) $order->supplier_id,
                     'items_count' => count($lines),
-                    'total' => (float) $order->total,
+                    'total'       => (float) $order->total,
                 ]
             );
 
-            return redirect()->route('admin.supplier-orders.detail', $order->num_order);
+            return redirect()
+                ->route('admin.supplier-orders.detail', $order->num_order)
+                ->with('status', 'Pedido creado correctamente.');
         });
     }
 
     public function show($id)
     {
-        $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin', 'confirmedBy'])->findOrFail($id);
+        $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin', 'confirmedBy'])
+            ->findOrFail($id);
 
-        $productsPayload = $order->orderItems->map(fn ($line) => [
-            'name' => $line->name,
-            'quantity' => (int) $line->quantity,
-            'unit_price' => (float) $line->unit_price,
-            'total' => (float) $line->total,
-            'product_id' => (int) $line->product_id,
-        ])->values()->all();
+        $productsPayload = $order->orderItems
+            ->map(fn ($item) => [
+                'id'                => $item->id,
+                'name'              => $item->name,
+                'quantity'          => (int) $item->quantity,
+                'received_quantity' => $item->received_quantity !== null ? (int) $item->received_quantity : null,
+                'unit_price'        => (float) $item->unit_price,
+                'total'             => (float) $item->total,
+            ])
+            ->values();
 
         return response()->json([
             'success' => true,
-            'order' => [
-                'num_order' => $order->num_order,
-                'po_number' => $order->po_number,
-                'supplier' => $order->supplier ? [
-                    'supplier_id' => $order->supplier->supplier_id,
-                    'name' => $order->supplier->name,
+            'order'   => [
+                'num_order'               => $order->num_order,
+                'po_number'               => $order->po_number,
+                'supplier'                => $order->supplier ? [
+                    'supplier_id'     => $order->supplier->supplier_id,
+                    'name'            => $order->supplier->name,
                     'primary_contact' => $order->supplier->primary_contact,
-                    'email' => $order->supplier->email,
-                    'phone' => $order->supplier->phone,
+                    'email'           => $order->supplier->email,
+                    'phone'           => $order->supplier->phone,
                 ] : null,
-                'products' => $productsPayload,
-                'date' => $order->date?->format('d/m/Y H:i'),
+                'products'                => $productsPayload,
+                'date'                    => $order->date?->format('d/m/Y H:i'),
                 'estimated_delivery_date' => $order->estimated_delivery_date?->format('d/m/Y'),
-                'state' => $order->state,
-                'total' => (float) $order->total,
-                'timeline' => $order->stateTimeline->map(fn ($t) => [
-                    'state'      => $t->state,
-                    'changed_at' => $t->changed_at->format('d/m/Y H:i'),
-                    'user_name'  => $t->admin
-                        ? trim($t->admin->name.' '.($t->admin->first_surname ?? ''))
-                        : 'Sistema',
-                    'reason'     => $t->reason,
-                ])->values()->all(),
-                'confirmed_at' => $order->confirmed_at?->format('d/m/Y H:i'),
+                'received_at'             => $order->received_at?->format('d/m/Y H:i'),
+                'closed_with_shorts'      => (bool) $order->closed_with_shorts,
+                'state'                   => $order->state,
+                'total'                   => (float) $order->total,
+                'timeline'                => $order->stateTimeline
+                    ->map(fn ($timeline) => [
+                        'state'      => $timeline->state,
+                        'changed_at' => $timeline->changed_at->format('d/m/Y H:i'),
+                        'user_name'  => $timeline->admin
+                            ? trim($timeline->admin->name . ' ' . ($timeline->admin->first_surname ?? ''))
+                            : 'Sistema',
+                        'reason'     => $timeline->reason,
+                    ])
+                    ->values()
+                    ->all(),
+                'confirmed_at'       => $order->confirmed_at?->format('d/m/Y H:i'),
                 'confirmed_by_label' => $this->adminDisplayName($order->confirmedBy),
             ],
         ]);
@@ -317,36 +320,33 @@ class SupplierOrderController extends Controller
         $order = Order::findOrFail($id);
         $previousState = (string) $order->state;
 
-        $request->validate([
-            'state'  => 'required|in:draft,pending,confirmed,delivered,cancelled',
-            'reason' => 'nullable|string|max:500',
+        $validated = $request->validate([
+            'state'  => ['required', 'string', 'in:draft,pending,confirmed,delivered,cancelled,close_partial'],
+            'reason' => ['nullable', 'string', 'max:500'],
         ]);
 
-        // Define the allowed state transitions for supplier orders.
-        $transitions = [
-            // CF4-15: draft goes straight to confirmed (no "send" step).
-            'draft' => ['confirmed', 'cancelled'],
-            // Backward compatibility for existing historical orders.
-            'pending' => ['confirmed', 'cancelled'],
-            'confirmed' => ['delivered', 'cancelled'],
-        ];
+        $requestedState = $validated['state'];
 
-        $new = $request->state;
+        // Route partial closure through the dedicated flow to keep shortages auditable.
+        if ($requestedState === 'close_partial' || ($requestedState === 'delivered' && $order->state === 'partial_received')) {
+            return $this->closePartial($request, $id);
+        }
 
-        if (! isset($transitions[$order->state]) || ! in_array($new, $transitions[$order->state], true)) {
+        if (! $order->canTransitionTo($requestedState)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Transición de estado no permitida.',
             ], 422);
         }
 
-        if ($new === 'confirmed') {
+        if ($requestedState === 'confirmed') {
             $adminId = auth('admin')->id();
             $updates = [];
 
             if (! $order->confirmed_at) {
                 $updates['confirmed_at'] = now();
             }
+
             if (! $order->confirmed_by && $adminId) {
                 $updates['confirmed_by'] = (int) $adminId;
             }
@@ -356,59 +356,79 @@ class SupplierOrderController extends Controller
             }
         }
 
-        if ($new === 'delivered') {
+        if ($requestedState === 'delivered' && $order->state === 'confirmed') {
             $items = OrderItem::query()
                 ->where('order_num_order', (int) $order->num_order)
-                ->get(['product_id', 'quantity']);
+                ->get();
 
-            // Fall back to legacy JSON items when order_items is empty.
             if ($items->isEmpty() && is_array($order->products) && $order->products !== []) {
-                $items = collect($order->products)->map(function ($row) {
-                    return (object) [
-                        'product_id' => (int) ($row['product_id'] ?? 0),
-                        'quantity' => (int) ($row['quantity'] ?? 0),
-                    ];
-                })->filter(fn ($r) => $r->product_id > 0 && $r->quantity > 0);
+                $items = collect($order->products)
+                    ->map(function ($row) {
+                        return (object) [
+                            'product_id'        => (int) ($row['product_id'] ?? 0),
+                            'quantity'          => (int) ($row['quantity'] ?? 0),
+                            'received_quantity' => 0,
+                        ];
+                    })
+                    ->filter(fn ($row) => $row->product_id > 0 && $row->quantity > 0);
             }
 
-            foreach ($items as $it) {
-                $productId = (int) $it->product_id;
-                $quantity = (int) $it->quantity;
+            foreach ($items as $item) {
+                $productId = (int) $item->product_id;
+                $quantity = (int) $item->quantity;
+                $previousReceived = (int) ($item->received_quantity ?? 0);
+                $delta = max(0, $quantity - $previousReceived);
 
                 if ($productId < 1 || $quantity < 1) {
                     continue;
                 }
 
-                $product = Product::find($productId);
+                if ($delta > 0) {
+                    $product = Product::find($productId);
 
-                if (! $product) {
-                    // Log missing products without interrupting the delivery flow.
-                    Log::warning(
-                        "SupplierOrderController::updateState — producto #{$productId} no encontrado al procesar orden #{$order->num_order}"
+                    if (! $product) {
+                        Log::warning('Supplier order delivery skipped missing product.', [
+                            'order_id'   => $order->num_order,
+                            'product_id' => $productId,
+                            'quantity'   => $quantity,
+                        ]);
+
+                        continue;
+                    }
+
+                    $inventoryService->recordSupplierEntry(
+                        product: $product,
+                        quantity: $delta,
+                        orderId: $order->num_order,
                     );
-
-                    continue;
                 }
 
-                $inventoryService->recordSupplierEntry(
-                    product: $product,
-                    quantity: $quantity,
-                    orderId: $order->num_order,
-                );
+                if ($item instanceof OrderItem) {
+                    $item->update([
+                        'received_quantity' => $quantity,
+                    ]);
+                }
             }
         }
 
-        $order->update([
-            'state' => $new,
-            'date' => $new === 'confirmed' ? now() : $order->date,
-            'delivered_at' => $new === 'delivered' ? now() : $order->delivered_at,
-        ]);
+        $updates = [
+            'state'        => $requestedState,
+            'date'         => $requestedState === 'confirmed' ? now() : $order->date,
+            'delivered_at' => $requestedState === 'delivered' ? now() : $order->delivered_at,
+        ];
+
+        if ($requestedState === 'delivered') {
+            $updates['received_at'] = $order->received_at ?? now();
+            $updates['closed_with_shorts'] = false;
+        }
+
+        $order->update($updates);
 
         OrderStateTimeline::create([
             'num_order'  => (int) $order->num_order,
             'user_id'    => (int) auth('admin')->id(),
-            'state'      => $new,
-            'reason'     => $new === 'cancelled' ? ($request->input('reason') ?? null) : null,
+            'state'      => $requestedState,
+            'reason'     => $requestedState === 'cancelled' ? ($request->input('reason') ?? null) : null,
             'changed_at' => now(),
         ]);
 
@@ -419,42 +439,283 @@ class SupplierOrderController extends Controller
             'supplier_order_state_update',
             'Estado de pedido a proveedor actualizado.',
             [
-                'order_id' => (int) $order->num_order,
-                'po_number' => (string) ($order->po_number ?? ''),
+                'order_id'   => (int) $order->num_order,
+                'po_number'  => (string) ($order->po_number ?? ''),
                 'from_state' => $previousState,
-                'to_state' => (string) $order->state,
-                'reason' => (string) ($request->input('reason') ?? ''),
+                'to_state'   => (string) $order->state,
+                'reason'     => (string) ($request->input('reason') ?? ''),
             ]
         );
 
         return response()->json([
             'success' => true,
             'message' => 'Estado actualizado correctamente.',
-            'order' => [
-                'state' => $order->state,
-                'confirmed_at' => $order->confirmed_at?->format('d/m/Y H:i'),
+            'order'   => [
+                'state'              => $order->state,
+                'confirmed_at'       => $order->confirmed_at?->format('d/m/Y H:i'),
                 'confirmed_by_label' => $this->adminDisplayName($order->confirmedBy),
             ],
         ]);
     }
 
+    public function closePartial(Request $request, int $id)
+    {
+        $order = Order::with('orderItems')->findOrFail($id);
+        $previousState = (string) $order->state;
+
+        if ($order->state !== 'partial_received') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo se puede cerrar con faltantes un pedido en estado Recepción parcial.',
+            ], 422);
+        }
+
+        $request->validate([
+            'reason' => ['required', 'string', 'min:4', 'max:500'],
+        ], [
+            'reason.required' => 'Debes indicar un motivo para cerrar el pedido con faltantes.',
+            'reason.min'      => 'El motivo debe tener al menos 4 caracteres.',
+            'reason.max'      => 'El motivo no puede superar los 500 caracteres.',
+        ]);
+
+        $shortages = $order->orderItems
+            ->filter(fn ($item) => (int) ($item->received_quantity ?? 0) < (int) $item->quantity)
+            ->map(fn ($item) => [
+                'order_item_id'     => (int) $item->id,
+                'product_id'        => $item->product_id ? (int) $item->product_id : null,
+                'name'              => (string) $item->name,
+                'ordered_quantity'  => (int) $item->quantity,
+                'received_quantity' => (int) ($item->received_quantity ?? 0),
+                'missing_quantity'  => (int) $item->quantity - (int) ($item->received_quantity ?? 0),
+            ])
+            ->values();
+
+        if ($shortages->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Todos los productos están completamente recibidos. El pedido debería marcarse como Entregado de forma normal.',
+            ], 422);
+        }
+
+        return DB::transaction(function () use ($order, $request, $previousState, $shortages) {
+            $reason = trim((string) $request->input('reason'));
+
+            $order->update([
+                'state'              => 'delivered',
+                'delivered_at'       => now(),
+                'closed_with_shorts' => true,
+            ]);
+
+            OrderStateTimeline::create([
+                'num_order'  => (int) $order->num_order,
+                'user_id'    => (int) auth('admin')->id(),
+                'state'      => 'delivered',
+                'reason'     => '[Cierre con faltantes] ' . $reason,
+                'changed_at' => now(),
+            ]);
+
+            $order->refresh();
+
+            $this->logAuditAction(
+                'supplier_order_close_partial',
+                'Pedido a proveedor cerrado manualmente con faltantes.',
+                [
+                    'order_id'        => (int) $order->num_order,
+                    'po_number'       => (string) ($order->po_number ?? ''),
+                    'from_state'      => $previousState,
+                    'to_state'        => (string) $order->state,
+                    'reason'          => $reason,
+                    'shortages_count' => $shortages->count(),
+                    'shortages'       => $shortages->all(),
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pedido cerrado con faltantes. Se registró que el proveedor no entregó la totalidad de los productos.',
+                'order'   => [
+                    'state'              => 'delivered',
+                    'closed_with_shorts' => true,
+                    'delivered_at'       => $order->delivered_at?->format('d/m/Y H:i'),
+                ],
+            ]);
+        });
+    }
+
+    public function receiveOrder(Request $request, $id)
+    {
+        $order = Order::with('orderItems')->findOrFail($id);
+        $previousState = (string) $order->state;
+
+        if (! in_array($order->state, ['confirmed', 'partial_received'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo se puede registrar la recepción cuando el pedido está Confirmado o en Recepción parcial.',
+            ], 422);
+        }
+
+        $request->validate([
+            'items'                     => ['required', 'array', 'min:1'],
+            'items.*.order_item_id'     => ['required', 'integer'],
+            'items.*.received_quantity' => ['required', 'integer', 'min:0'],
+        ], [
+            'items.required'                     => 'Debes enviar las líneas del pedido.',
+            'items.*.order_item_id.required'     => 'Cada línea debe tener un identificador.',
+            'items.*.received_quantity.required' => 'La cantidad recibida es obligatoria.',
+            'items.*.received_quantity.min'      => 'La cantidad recibida no puede ser negativa.',
+        ]);
+
+        $itemsById = $order->orderItems->keyBy('id');
+        $receivedPayload = [];
+
+        foreach ($request->items as $row) {
+            $itemId = (int) $row['order_item_id'];
+            $receivedQuantity = (int) $row['received_quantity'];
+            $item = $itemsById->get($itemId);
+
+            if (! $item) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "La línea #{$itemId} no pertenece a este pedido.",
+                ], 422);
+            }
+
+            if ($receivedQuantity > (int) $item->quantity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "La cantidad recibida de \"{$item->name}\" ({$receivedQuantity}) supera la cantidad pedida ({$item->quantity}).",
+                ], 422);
+            }
+
+            $previousReceived = (int) ($item->received_quantity ?? 0);
+
+            if ($receivedQuantity < $previousReceived) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "La cantidad recibida de \"{$item->name}\" no puede ser menor a la cantidad ya registrada ({$previousReceived}).",
+                ], 422);
+            }
+
+            $receivedPayload[$itemId] = $receivedQuantity;
+        }
+
+        $missingItems = $order->orderItems->pluck('id')->diff(array_keys($receivedPayload));
+
+        if ($missingItems->isNotEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Debes indicar la cantidad recibida para todos los productos del pedido.',
+            ], 422);
+        }
+
+        return DB::transaction(function () use ($order, $receivedPayload, $previousState) {
+            $inventoryService = app(InventoryMovementService::class);
+            $totalDelta = 0;
+
+            foreach ($order->orderItems as $item) {
+                $receivedQuantity = (int) ($receivedPayload[$item->id] ?? 0);
+                $previousQuantity = (int) ($item->received_quantity ?? 0);
+                $delta = $receivedQuantity - $previousQuantity;
+
+                $item->update([
+                    'received_quantity' => $receivedQuantity,
+                ]);
+
+                if ($delta <= 0 || ! $item->product_id) {
+                    continue;
+                }
+
+                $product = Product::find((int) $item->product_id);
+
+                if (! $product) {
+                    Log::warning('Supplier order reception skipped missing product.', [
+                        'order_id'   => $order->num_order,
+                        'item_id'    => $item->id,
+                        'product_id' => $item->product_id,
+                        'delta'      => $delta,
+                    ]);
+
+                    continue;
+                }
+
+                $inventoryService->recordSupplierEntry(
+                    product: $product,
+                    quantity: $delta,
+                    orderId: $order->num_order,
+                );
+
+                $totalDelta += $delta;
+            }
+
+            $order->refresh();
+            $order->load('orderItems');
+
+            $isPartial = $order->orderItems->contains(
+                fn ($item) => (int) ($item->received_quantity ?? 0) < (int) $item->quantity
+            );
+
+            $newState = $isPartial ? 'partial_received' : 'delivered';
+
+            $order->update([
+                'state'              => $newState,
+                'received_at'        => now(),
+                'delivered_at'       => $isPartial ? null : now(),
+                'closed_with_shorts' => $isPartial ? (bool) $order->closed_with_shorts : false,
+            ]);
+
+            OrderStateTimeline::create([
+                'num_order'  => (int) $order->num_order,
+                'user_id'    => (int) auth('admin')->id(),
+                'state'      => $newState,
+                'reason'     => null,
+                'changed_at' => now(),
+            ]);
+
+            $this->logAuditAction(
+                'supplier_order_receive',
+                $isPartial
+                    ? 'Recepción parcial de pedido a proveedor registrada.'
+                    : 'Recepción total de pedido a proveedor registrada.',
+                [
+                    'order_id'    => (int) $order->num_order,
+                    'po_number'   => (string) ($order->po_number ?? ''),
+                    'from_state'  => $previousState,
+                    'to_state'    => $newState,
+                    'total_delta' => $totalDelta,
+                    'is_partial'  => $isPartial,
+                ]
+            );
+
+            $message = $isPartial
+                ? 'Recepción parcial registrada. Uno o más productos tienen cantidad menor a la pedida.'
+                : 'Recepción total registrada. El pedido ahora está Entregado.';
+
+            return response()->json([
+                'success'     => true,
+                'state'       => $newState,
+                'message'     => $message,
+                'received_at' => $order->fresh()->received_at?->format('d/m/Y H:i'),
+            ]);
+        });
+    }
+
     public function supplierDetails($id)
     {
-        $supplier = Supplier::withCount(['products' => fn ($q) => $q->where('status', 'active')])
+        $supplier = Supplier::withCount(['products' => fn ($query) => $query->where('status', 'active')])
             ->findOrFail($id);
 
         return response()->json([
-            'success' => true,
+            'success'  => true,
             'supplier' => [
-                'supplier_id' => $supplier->supplier_id,
-                'name' => $supplier->name,
-                'primary_contact' => $supplier->primary_contact,
-                'phone' => $supplier->phone,
-                'email' => $supplier->email,
-                'address' => $supplier->address,
-                'delivery_time' => $supplier->delivery_time,
-                'rating' => $supplier->rating,
-                'status' => $supplier->status,
+                'supplier_id'    => $supplier->supplier_id,
+                'name'           => $supplier->name,
+                'primary_contact'=> $supplier->primary_contact,
+                'phone'          => $supplier->phone,
+                'email'          => $supplier->email,
+                'address'        => $supplier->address,
+                'delivery_time'  => $supplier->delivery_time,
+                'rating'         => $supplier->rating,
+                'status'         => $supplier->status,
                 'products_count' => $supplier->products_count,
             ],
         ]);
@@ -466,14 +727,14 @@ class SupplierOrderController extends Controller
             return null;
         }
 
-        $full = trim(implode(' ', array_filter([
+        $fullName = trim(implode(' ', array_filter([
             $admin->name,
             $admin->first_surname,
             $admin->second_surname,
         ])));
 
-        if ($full !== '') {
-            return $full;
+        if ($fullName !== '') {
+            return $fullName;
         }
 
         $email = trim((string) ($admin->gmail ?? ''));
@@ -485,30 +746,30 @@ class SupplierOrderController extends Controller
     {
         $year = (string) now()->format('Y');
 
-        // Lock the matching purchase order range to generate the next sequential number safely.
-        $last = Order::query()
+        $lastPoNumber = Order::query()
             ->whereNotNull('po_number')
-            ->where('po_number', 'like', 'PO-'.$year.'-%')
+            ->where('po_number', 'like', 'PO-' . $year . '-%')
             ->lockForUpdate()
             ->orderByDesc('num_order')
             ->value('po_number');
 
-        $nextSeq = 1;
-        if (is_string($last) && preg_match('/^PO-'.preg_quote($year, '/').'-([0-9]{4})$/', $last, $m)) {
-            $nextSeq = ((int) $m[1]) + 1;
+        $nextSequence = 1;
+
+        if (is_string($lastPoNumber) && preg_match('/^PO-' . preg_quote($year, '/') . '-([0-9]{4})$/', $lastPoNumber, $matches)) {
+            $nextSequence = ((int) $matches[1]) + 1;
         }
 
-        return 'PO-'.$year.'-'.str_pad((string) $nextSeq, 4, '0', STR_PAD_LEFT);
+        return 'PO-' . $year . '-' . str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
     }
 
     private function logAuditAction(string $actionType, string $description, array $meta = []): void
     {
         try {
             app(AuditLogger::class)->logAdminAction($actionType, 'supplier_orders', $description, $meta);
-        } catch (\Throwable $e) {
-            Log::warning('Supplier order audit log write failed', [
+        } catch (\Throwable $exception) {
+            Log::warning('Supplier order audit log write failed.', [
                 'action_type' => $actionType,
-                'error' => $e->getMessage(),
+                'error'       => $exception->getMessage(),
             ]);
         }
     }
