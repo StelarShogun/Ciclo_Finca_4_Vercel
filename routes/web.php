@@ -226,6 +226,8 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/admin/products/search', [SupplierOrderController::class, 'searchProducts'])->name('admin.products.search');
     Route::get('/supplier-orders/{id}', [SupplierOrderController::class, 'show'])->name('admin.supplier-orders.show');
     Route::patch('/supplier-orders/{id}/state', [SupplierOrderController::class, 'updateState'])->name('admin.supplier-orders.update-state');
+    Route::post('/supplier-orders/{id}/receive', [SupplierOrderController::class, 'receiveOrder'])->name('admin.supplier-orders.receive');
+    Route::post('/supplier-orders/{id}/close-partial', [SupplierOrderController::class, 'closePartial'])->name('admin.supplier-orders.close-partial'); // ← NUEVO
     Route::get('/supplier/details/{id}', [SupplierOrderController::class, 'supplierDetails'])->name('admin.supplier-orders.supplier');
 
     // Admin client management routes.
