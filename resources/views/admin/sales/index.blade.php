@@ -101,7 +101,8 @@
                     <div class="filter-group">
                         <label for="date-range">Rango de Fecha</label>
                         <select id="date-range" name="date_range">
-                            <option value="today" {{ request('date_range') == 'today' ? 'selected' : '' }}>Hoy</option>
+                            <option value="today" {{ request('date_range', 'today') == 'today' ? 'selected' : '' }}>Hoy
+                            </option>
                             <option value="week" {{ request('date_range') == 'week' ? 'selected' : '' }}>Esta semana
                             </option>
                             <option value="month" {{ request('date_range') == 'month' ? 'selected' : '' }}>Este mes
@@ -109,6 +110,20 @@
                             <option value="custom" {{ request('date_range') == 'custom' ? 'selected' : '' }}>Personalizado
                             </option>
                         </select>
+                    </div>
+
+                    {{-- Custom date range inputs — shown only when "custom" is selected.
+                         Values are persisted from the request so they survive filter submission. --}}
+                    <div class="filter-group filter-group--date-from" id="custom-date-from-group"
+                        style="{{ request('date_range') == 'custom' ? '' : 'display:none;' }}">
+                        <label for="date-from">Fecha inicial</label>
+                        <input type="date" id="date-from" name="date_from" value="{{ request('date_from') }}">
+                    </div>
+
+                    <div class="filter-group filter-group--date-to" id="custom-date-to-group"
+                        style="{{ request('date_range') == 'custom' ? '' : 'display:none;' }}">
+                        <label for="date-to">Fecha final</label>
+                        <input type="date" id="date-to" name="date_to" value="{{ request('date_to') }}">
                     </div>
 
                     <div class="filter-group">
@@ -131,7 +146,7 @@
                     </div>
 
                     <div class="filter-group filter-buttons">
-                        <button type="submit" class="btn btn-primary filter-btn">
+                        <button type="submit" class="btn btn-primary filter-btn" id="apply-filters-btn">
                             <i class="fas fa-search"></i> Aplicar Filtros
                         </button>
                         <a href="{{ route('sales.index') }}" class="btn btn-primary filter-btn">
@@ -139,6 +154,12 @@
                         </a>
                     </div>
 
+                </div>
+
+                {{-- CA-04: Inline validation error shown by JS before form submission --}}
+                <div id="date-range-error" class="alert alert-danger" style="display:none; margin-top: 0.5rem;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="date-range-error-msg">El rango de fechas no es válido.</span>
                 </div>
             </form>
         </div>
@@ -153,6 +174,13 @@
                 'refunded' => 'Reembolsado',
             ];
             $paymentLabels = ['cash' => 'Efectivo', 'sinpe' => 'SINPE Móvil', 'transfer' => 'Transferencia'];
+
+            $isCustomRange = request('date_range') == 'custom';
+            $hasDateFrom = request('date_from');
+            $hasDateTo = request('date_to');
+            $isDateFiltered =
+                in_array(request('date_range'), ['today', 'week', 'month']) ||
+                ($isCustomRange && ($hasDateFrom || $hasDateTo));
         @endphp
 
         <div class="sales-table-container">
@@ -261,11 +289,7 @@
                             <td colspan="8" class="text-center">
                                 <div class="table-empty-state">
                                     <i class="fas fa-shopping-cart table-empty-icon"></i>
-                                    @if(request('search'))
-                                        <p>No se encontraron resultados para <strong>{{ request('search') }}</strong></p>
-                                    @else
-                                        <p>No hay ventas registradas</p>
-                                    @endif
+                                    <p>No hay ventas para los filtros seleccionados.</p>
                                 </div>
                             </td>
                         </tr>

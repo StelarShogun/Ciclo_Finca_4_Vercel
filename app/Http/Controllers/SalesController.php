@@ -781,43 +781,43 @@ class SalesController extends Controller
     {
         $query->notExpired();
 
-        $statusFilter = $request->query('status');
-        $this->applyVentasStatusScope($query, $statusFilter);
+        // Status filter
+        $this->applyVentasStatusScope($query, $request->query('status'));
 
-        if ($request->filled('start_date') || $request->filled('end_date')) {
-            if ($request->filled('start_date')) {
-                $query->whereDate('sale_date', '>=', $request->start_date);
-            }
-            if ($request->filled('end_date')) {
-                $query->whereDate('sale_date', '<=', $request->end_date);
-            }
-        } elseif (! $request->filled('search')) {
-            $dateRange = $request->get('date_range');
-            if ($dateRange) {
-                switch ($dateRange) {
-                    case 'today':
-                        $query->whereDate('sale_date', Carbon::today());
-                        break;
-                    case 'week':
-                        $query->whereBetween('sale_date', [
-                            Carbon::now()->startOfWeek(),
-                            Carbon::now()->endOfWeek(),
-                        ]);
-                        break;
-                    case 'month':
-                        $query->whereMonth('sale_date', Carbon::now()->month)
-                            ->whereYear('sale_date', Carbon::now()->year);
-                        break;
-                    case 'custom':
-                        break;
+        // Date filter
+        switch ($request->get('date_range', 'today')) {
+            case 'today':
+                $query->whereDate('sale_date', Carbon::today());
+                break;
+
+            case 'week':
+                $query->whereBetween('sale_date', [
+                    Carbon::now()->startOfWeek(),
+                    Carbon::now()->endOfWeek(),
+                ]);
+                break;
+
+            case 'month':
+                $query->whereMonth('sale_date', Carbon::now()->month)
+                    ->whereYear('sale_date', Carbon::now()->year);
+                break;
+
+            case 'custom':
+                if ($request->filled('date_from')) {
+                    $query->where('sale_date', '>=', Carbon::parse($request->date_from)->startOfDay());
                 }
-            }
+                if ($request->filled('date_to')) {
+                    $query->where('sale_date', '<=', Carbon::parse($request->date_to)->endOfDay());
+                }
+                break;
         }
 
+        // Payment method filter
         if ($request->filled('payment_method')) {
             $query->where('payment_method', $request->payment_method);
         }
 
+        // Search filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {

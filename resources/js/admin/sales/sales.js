@@ -101,14 +101,84 @@ function calculateTotals() {
     const total = taxableBase;
 
     const el = id => document.getElementById(id);
-    if (el('subtotal')) el('subtotal').textContent = '₡' + subtotal.toFixed(2);
-    if (el('total'))    el('total').textContent    = '₡' + total.toFixed(2);
+    if (el('subtotal')) el('subtotal').textContent = 'CRC' + subtotal.toFixed(2);
+    if (el('total'))    el('total').textContent    = 'CRC' + total.toFixed(2);
 
     const totalsBox = document.querySelector('.sale-totals');
     if (totalsBox) {
         totalsBox.classList.toggle('sale-totals--discount-over', subtotal > 0 && discountRaw > subtotal);
     }
 }
+
+// Show or hide custom date range fields based on the selected option
+function toggleCustomDateFields(value) {
+    const fromGroup = document.getElementById('custom-date-from-group');
+    const toGroup   = document.getElementById('custom-date-to-group');
+    if (!fromGroup || !toGroup) return;
+
+    const show = value === 'custom';
+    fromGroup.style.display = show ? '' : 'none';
+    toGroup.style.display   = show ? '' : 'none';
+
+    // When hiding, clear the inputs so stale values are not sent with other filter modes
+    if (!show) {
+        const fromInput = document.getElementById('date-from');
+        const toInput   = document.getElementById('date-to');
+        if (fromInput) fromInput.value = '';
+        if (toInput)   toInput.value   = '';
+    }
+}
+
+// Validate that the custom date range is correct before submitting the filters form 
+function validateDateRange() {
+    const rangeSelect = document.getElementById('date-range');
+    if (!rangeSelect || rangeSelect.value !== 'custom') return true;
+
+    const fromVal = document.getElementById('date-from')?.value ?? '';
+    const toVal   = document.getElementById('date-to')?.value ?? '';
+
+    const errorBox = document.getElementById('date-range-error');
+    const errorMsg = document.getElementById('date-range-error-msg');
+
+    const today   = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const minDate = '2020-01-01';
+
+    // Validate min date (2020-01-01)
+    if ((fromVal && fromVal < minDate) || (toVal && toVal < minDate)) {
+        if (errorBox && errorMsg) {
+            errorMsg.textContent = 'Las fechas no pueden ser anteriores al 1 de enero de 2020.';
+            errorBox.style.display = '';
+        }
+        errorBox?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+    }
+
+    // Validate max date (today)
+    if ((fromVal && fromVal > today) || (toVal && toVal > today)) {
+        if (errorBox && errorMsg) {
+            errorMsg.textContent = 'Las fechas no pueden ser posteriores al día de hoy.';
+            errorBox.style.display = '';
+        }
+        errorBox?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+    }
+
+    // Validate range order
+    if (fromVal && toVal && fromVal > toVal) {
+        if (errorBox && errorMsg) {
+            errorMsg.textContent = 'La fecha inicial no puede ser mayor que la fecha final. Por favor corrija el rango.';
+            errorBox.style.display = '';
+        }
+        errorBox?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+    }
+
+    // Clear any previous error
+    if (errorBox) errorBox.style.display = 'none';
+    return true;
+}
+
+// ==================== END CUSTOM DATE RANGE ====================
 
 // Fetch and display full sale details in a modal
 function viewSale(id) {
@@ -119,11 +189,11 @@ function viewSale(id) {
     body.innerHTML = `
         <div class="loading-spinner">
             <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--color-primary);"></i>
-            <p>Cargando detalles…</p>
+            <p>Cargando detalles...</p>
         </div>`;
     modal.classList.add('active');
 
-    fetch(`/sales/${id}`, {
+    fetch('/sales/' + id, {
         headers: { 'X-CSRF-TOKEN': getCSRFToken(), 'Accept': 'application/json' }
     })
     .then(r => r.json())
@@ -137,16 +207,16 @@ function viewSale(id) {
         const fecha         = new Date(sale.sale_date).toLocaleString('es-CR');
         const items         = sale.sale_items || sale.saleItems || [];
         const statusLabels  = { pending: 'Pendiente', completed: 'Confirmado', cancelled: 'Rechazado', refunded: 'Reembolsado' };
-        const paymentLabels = { cash: 'Efectivo', sinpe: 'SINPE móvil', transfer: 'Transferencia' };
+        const paymentLabels = { cash: 'Efectivo', sinpe: 'SINPE movil', transfer: 'Transferencia' };
 
         let customerName = 'Mostrador / sin datos';
         if (sale.client) {
             customerName = [sale.client.name, sale.client.first_surname, sale.client.second_surname]
                 .filter(Boolean).join(' ');
-            if (sale.client.gmail) customerName += ` (${sale.client.gmail})`;
+            if (sale.client.gmail) customerName += ' (' + sale.client.gmail + ')';
         } else if (sale.buyer?.name) {
             customerName = sale.buyer.name;
-            if (sale.buyer.email) customerName += ` (${sale.buyer.email})`;
+            if (sale.buyer.email) customerName += ' (' + sale.buyer.email + ')';
         }
 
         // Generate HTML for products table
@@ -154,71 +224,64 @@ function viewSale(id) {
             const prod = item.product || {};
             const up   = parseFloat(item.unit_price || 0);
             const tot  = parseFloat(item.total || 0);
-            return `
-                <tr>
-                    <td>${prod.name || 'N/A'}</td>
-                    <td class="text-center">${item.quantity}</td>
-                    <td class="text-right">₡${up.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</td>
-                    <td class="text-right"><strong>₡${tot.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></td>
-                </tr>`;
+            return '<tr>'
+                + '<td>' + (prod.name || 'N/A') + '</td>'
+                + '<td class="text-center">' + item.quantity + '</td>'
+                + '<td class="text-right">CRC' + up.toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</td>'
+                + '<td class="text-right"><strong>CRC' + tot.toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</strong></td>'
+                + '</tr>';
         }).join('');
 
         // Expiration badge with warning tooltip
         const daysLeft    = sale.days_remaining_until_expiration;
-        const expiryBadge = (typeof daysLeft !== 'undefined' && daysLeft <= 0)
-            ? '<span class="expiry-badge expiry-expired">Expirado</span>'
-            : (sale.is_expiry_warning
-                ? `<span class="expiry-badge expiry-warning">
-                       <span class="expiry-warning-trigger" tabindex="0" role="button">
-                           <i class="fas fa-exclamation-triangle"></i>
-                           <span class="expiry-tooltip-label">¡Atención! Este pedido se eliminará automáticamente en ${daysLeft} día(s).</span>
-                       </span>
-                       ${daysLeft} día(s)
-                   </span>`
-                : (typeof daysLeft !== 'undefined' ? `${daysLeft} día(s)` : '—'));
+        let expiryBadge;
+        if (typeof daysLeft !== 'undefined' && daysLeft <= 0) {
+            expiryBadge = '<span class="expiry-badge expiry-expired">Expirado</span>';
+        } else if (sale.is_expiry_warning) {
+            expiryBadge = '<span class="expiry-badge expiry-warning">'
+                + '<span class="expiry-warning-trigger" tabindex="0" role="button">'
+                + '<i class="fas fa-exclamation-triangle"></i>'
+                + '<span class="expiry-tooltip-label">Atencion! Este pedido se eliminara automaticamente en ' + daysLeft + ' dia(s).</span>'
+                + '</span>' + daysLeft + ' dia(s)</span>';
+        } else {
+            expiryBadge = (typeof daysLeft !== 'undefined') ? daysLeft + ' dia(s)' : '-';
+        }
 
-        body.innerHTML = `
-            <div class="sale-details">
-                <div class="detail-section">
-                    <h4><i class="fas fa-info-circle"></i> Información general</h4>
-                    <div class="detail-grid">
-                        <div class="detail-item"><label>Factura:</label><span><strong>${sale.invoice_number || '#' + sale.sale_id}</strong></span></div>
-                        <div class="detail-item"><label>Fecha:</label><span>${fecha}</span></div>
-                        <div class="detail-item"><label>Cliente:</label><span>${customerName}</span></div>
-                        <div class="detail-item"><label>Estado:</label><span class="status-badge ${sale.status}">${statusLabels[sale.status] || sale.status}</span></div>
-                        <div class="detail-item"><label>Método de pago:</label><span>${paymentLabels[sale.payment_method] || sale.payment_method}</span></div>
-                        <div class="detail-item"><label>Días restantes:</label><span>${expiryBadge}</span></div>
-                        ${sale.payment_reference ? `<div class="detail-item"><label>Referencia:</label><span>${sale.payment_reference}</span></div>` : ''}
-                    </div>
-                </div>
-                ${productsHtml ? `
-                <div class="detail-section">
-                    <h4><i class="fas fa-shopping-cart"></i> Productos</h4>
-                    <table class="sale-products-table">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th class="text-center">Cantidad</th>
-                                <th class="text-right">Precio unit.</th>
-                                <th class="text-right">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>${productsHtml}</tbody>
-                    </table>
-                </div>` : ''}
-                <div class="detail-section">
-                    <h4><i class="fas fa-calculator"></i> Totales</h4>
-                    <div class="totals-summary">
-                        <div class="total-item"><span>Subtotal:</span><span>₡${parseFloat(sale.subtotal || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span></div>
-                        ${(sale.discount || 0) > 0 ? `<div class="total-item"><span>Descuento:</span><span>-₡${parseFloat(sale.discount).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span></div>` : ''}
-                        <div class="total-item total-final"><span><strong>Total:</strong></span><span><strong>₡${parseFloat(sale.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></span></div>
-                    </div>
-                </div>
-                ${sale.notes ? `<div class="detail-section"><h4><i class="fas fa-sticky-note"></i> Notas</h4><p class="sale-notes">${sale.notes}</p></div>` : ''}
-            </div>`;
+        const discountRow = (sale.discount || 0) > 0
+            ? '<div class="total-item"><span>Descuento:</span><span>-CRC' + parseFloat(sale.discount).toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</span></div>'
+            : '';
+
+        const refRow = sale.payment_reference
+            ? '<div class="detail-item"><label>Referencia:</label><span>' + sale.payment_reference + '</span></div>'
+            : '';
+
+        body.innerHTML = '<div class="sale-details">'
+            + '<div class="detail-section">'
+            + '<h4><i class="fas fa-info-circle"></i> Informacion general</h4>'
+            + '<div class="detail-grid">'
+            + '<div class="detail-item"><label>Factura:</label><span><strong>' + (sale.invoice_number || '#' + sale.sale_id) + '</strong></span></div>'
+            + '<div class="detail-item"><label>Fecha:</label><span>' + fecha + '</span></div>'
+            + '<div class="detail-item"><label>Cliente:</label><span>' + customerName + '</span></div>'
+            + '<div class="detail-item"><label>Estado:</label><span class="status-badge ' + sale.status + '">' + (statusLabels[sale.status] || sale.status) + '</span></div>'
+            + '<div class="detail-item"><label>Metodo de pago:</label><span>' + (paymentLabels[sale.payment_method] || sale.payment_method) + '</span></div>'
+            + '<div class="detail-item"><label>Dias restantes:</label><span>' + expiryBadge + '</span></div>'
+            + refRow
+            + '</div></div>'
+            + (productsHtml ? '<div class="detail-section"><h4><i class="fas fa-shopping-cart"></i> Productos</h4>'
+                + '<table class="sale-products-table"><thead><tr>'
+                + '<th>Producto</th><th class="text-center">Cantidad</th><th class="text-right">Precio unit.</th><th class="text-right">Total</th>'
+                + '</tr></thead><tbody>' + productsHtml + '</tbody></table></div>' : '')
+            + '<div class="detail-section"><h4><i class="fas fa-calculator"></i> Totales</h4>'
+            + '<div class="totals-summary">'
+            + '<div class="total-item"><span>Subtotal:</span><span>CRC' + parseFloat(sale.subtotal || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</span></div>'
+            + discountRow
+            + '<div class="total-item total-final"><span><strong>Total:</strong></span><span><strong>CRC' + parseFloat(sale.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</strong></span></div>'
+            + '</div></div>'
+            + (sale.notes ? '<div class="detail-section"><h4><i class="fas fa-sticky-note"></i> Notas</h4><p class="sale-notes">' + sale.notes + '</p></div>' : '')
+            + '</div>';
     })
     .catch(() => {
-        body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Error de conexión al cargar los detalles</div>';
+        body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Error de conexion al cargar los detalles</div>';
     });
 }
 
@@ -245,62 +308,62 @@ function _saleAction(url, successMsg) {
         } else {
             Swal.fire({
                 title: 'No se pudo completar',
-                text: data.message || 'Ocurrió un error',
+                text: data.message || 'Ocurrio un error',
                 icon: 'error',
                 confirmButtonText: 'Cerrar'
             });
         }
     })
-    .catch(() => Swal.fire({ title: 'Error', text: 'Error de conexión', icon: 'error' }));
+    .catch(() => Swal.fire({ title: 'Error', text: 'Error de conexion', icon: 'error' }));
 }
 
 // Mark sale as completed
 function completeSale(id, invoiceNumber) {
     const invoiceLabel = invoiceNumber || ('#' + id);
     Swal.fire({
-        title: `¿Confirmar encargo con factura: ${invoiceLabel}?`,
-        text: 'El encargo pasará a confirmado y quedará registrado como venta con su factura.',
+        title: 'Confirmar encargo con factura: ' + invoiceLabel + '?',
+        text: 'El encargo pasara a confirmado y quedara registrado como venta con su factura.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#2e7d32',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, confirmar',
+        confirmButtonText: 'Si, confirmar',
         cancelButtonText: 'Cancelar'
-    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/complete`, 'Encargo confirmado correctamente.'));
+    }).then(r => r.isConfirmed && _saleAction('/sales/' + id + '/complete', 'Encargo confirmado correctamente.'));
 }
 
 function cancelSale(id, invoiceNumber) {
     const invoiceLabel = invoiceNumber || ('#' + id);
     Swal.fire({
-        title: `¿Rechazar encargo con factura: ${invoiceLabel}?`,
-        text: 'Se cancelará el encargo y se devolverá el stock al inventario.',
+        title: 'Rechazar encargo con factura: ' + invoiceLabel + '?',
+        text: 'Se cancelara el encargo y se devolvera el stock al inventario.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, rechazar',
+        confirmButtonText: 'Si, rechazar',
         cancelButtonText: 'No'
-    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/cancel`, `Encargo: ${invoiceLabel} eliminado.`));
+    }).then(r => r.isConfirmed && _saleAction('/sales/' + id + '/cancel', 'Encargo: ' + invoiceLabel + ' eliminado.'));
 }
 
 function refundSale(id) {
     Swal.fire({
-        title: '¿Reembolsar venta?',
-        text: 'La venta pasará a estado reembolsado.',
+        title: 'Reembolsar venta?',
+        text: 'La venta pasara a estado reembolsado.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#f57c00',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, reembolsar',
+        confirmButtonText: 'Si, reembolsar',
         cancelButtonText: 'Cancelar'
-    }).then(r => r.isConfirmed && _saleAction(`/sales/${id}/refund`, 'Reembolso procesado.'));
+    }).then(r => r.isConfirmed && _saleAction('/sales/' + id + '/refund', 'Reembolso procesado.'));
 }
 
 function printSale(id) {
-    window.open(`/sales/${id}/print`, '_blank');
+    window.open('/sales/' + id + '/print', '_blank');
 }
 
-//Expose public functions on window (required by Vite/ESM) 
+// Expose public functions on window (required by Vite/ESM)
 Object.assign(window, {
     openNewSaleModal,
     closeNewSaleModal,
@@ -314,15 +377,38 @@ Object.assign(window, {
     printSale,
 });
 
-// DOMContentLoaded 
+// DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Auto-print (
+    // Auto-print
     if (meta('auto-print') === '1') {
         window.print();
     }
 
-    // Heartbeat: reload if new purchases arrive 
+
+    const dateRangeSelect = document.getElementById('date-range');
+    if (dateRangeSelect) {
+        
+        toggleCustomDateFields(dateRangeSelect.value);
+
+        dateRangeSelect.addEventListener('change', function () {
+            toggleCustomDateFields(this.value);
+            // Clear validation error when the user changes mode
+            const errorBox = document.getElementById('date-range-error');
+            if (errorBox) errorBox.style.display = 'none';
+        });
+    }
+
+    const filtersForm = document.getElementById('filters-form');
+    if (filtersForm) {
+        filtersForm.addEventListener('submit', function (e) {
+            if (!validateDateRange()) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    // Heartbeat: reload if new purchases arrive
     const latestEl = document.getElementById('cf4-latest-purchase-sale-id');
     if (latestEl) {
         let latestPurchaseSaleId = parseInt(latestEl.dataset.value, 10) || 0;
@@ -332,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const heartbeatUrl = ROUTES.heartbeat;
             if (!heartbeatUrl) return;
             try {
-                const res  = await fetch(`${heartbeatUrl}?since=${latestPurchaseSaleId}`, {
+                const res  = await fetch(heartbeatUrl + '?since=' + latestPurchaseSaleId, {
                     headers: { 'Accept': 'application/json' }
                 });
                 const data = await res.json();
@@ -344,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(heartbeatCheck, 20000);
     }
 
-    // New sale form submission 
+    // New sale form submission
     const form = document.getElementById('new-sale-form');
     if (form) {
         form.addEventListener('submit', function (e) {
@@ -359,8 +445,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const disc = roundMoney(parseFloat(document.getElementById('discount')?.value) || 0);
             if (disc > sub) {
                 Swal.fire({
-                    title: 'Descuento inválido',
-                    text: 'El descuento no puede ser mayor que el subtotal (₡' + sub.toFixed(2) + ').',
+                    title: 'Descuento invalido',
+                    text: 'El descuento no puede ser mayor que el subtotal (CRC' + sub.toFixed(2) + ').',
                     icon: 'warning',
                     confirmButtonText: 'Corregir'
                 });
@@ -378,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     closeNewSaleModal();
                     Swal.fire({
                         title: 'Venta creada',
-                        text: data.message || 'La venta se registró correctamente.',
+                        text: data.message || 'La venta se registro correctamente.',
                         icon: 'success',
                         confirmButtonText: 'Entendido'
                     }).then(() => location.reload());
@@ -393,14 +479,14 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(() => Swal.fire({
                 title: 'Error',
-                text: 'Error de conexión',
+                text: 'Error de conexion',
                 icon: 'error',
                 confirmButtonText: 'Cerrar'
             }));
         });
     }
 
-    // Event delegation for dynamic product rows 
+    // Event delegation for dynamic product rows
     document.addEventListener('change', function (e) {
         // Product selection: set unit price from data attribute
         if (e.target.classList.contains('product-select')) {
