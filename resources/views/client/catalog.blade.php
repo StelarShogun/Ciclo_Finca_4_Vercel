@@ -19,6 +19,80 @@
         @php
             $activeCategoryId = (int) (request('category_id') ?: 0);
         @endphp
+
+        <nav class="catalog-category-sidebar"
+             id="catalog-category-sidebar"
+             aria-label="Navegación por categorías"
+             data-catalog-sidebar-hover-root
+             data-close-delay-ms="150">
+            <div class="catalog-category-sidebar-head">
+                <button id="catalog-category-sidebar-toggle"
+                        class="catalog-category-sidebar-brand"
+                        type="button"
+                        aria-expanded="false"
+                        aria-label="Expandir menú de categorías">
+                    <i class="fas fa-bars" aria-hidden="true"></i>
+                </button>
+                <span class="catalog-category-sidebar-head-label">Categorías</span>
+            </div>
+            <a href="{{ route('clients.catalog', $catalogParams) }}"
+               class="catalog-category-sidebar-all catalog-category-item {{ $activeCategoryId === 0 ? 'is-active' : '' }}"
+               data-category-id="0"
+               title="Todos los productos"
+               aria-label="Todos los productos">
+                <span class="catalog-category-item-icon" aria-hidden="true"><i class="fas fa-th-large"></i></span>
+                <span class="catalog-category-item-label"></span>
+            </a>
+            @foreach($categories as $cat)
+                @php
+                    $isParentActive = $activeCategoryId === (int) $cat->category_id;
+                    $isChildActive = $cat->childCategories->contains('category_id', $activeCategoryId);
+                    $navRow = collect($catalogCategoryNav)->firstWhere('id', (int) $cat->category_id);
+                    $iconClass = $navRow['icon'] ?? 'fas fa-layer-group';
+                @endphp
+                <div class="catalog-category-sidebar-item {{ ($isParentActive || $isChildActive) ? 'has-active' : '' }}"
+                     data-parent-id="{{ $cat->category_id }}"
+                     data-has-children="{{ $cat->childCategories->isNotEmpty() ? '1' : '0' }}">
+                    <div class="catalog-category-sidebar-item-row">
+                        <a href="{{ route('clients.catalog', array_merge($catalogParams, ['category_id' => $cat->category_id])) }}"
+                           class="catalog-category-item catalog-category-sidebar-link {{ $isParentActive && ! $isChildActive ? 'is-active' : '' }}"
+                           data-category-id="{{ $cat->category_id }}"
+                           title="{{ $cat->name }}"
+                           aria-label="{{ $cat->name }}">
+                            <span class="catalog-category-item-icon" aria-hidden="true"><i class="{{ $iconClass }}"></i></span>
+                            <span class="catalog-category-item-label">{{ $cat->name }}</span>
+                        </a>
+                        @if($cat->childCategories->isNotEmpty())
+                            <button type="button"
+                                    class="catalog-category-mobile-expand"
+                                    aria-expanded="false"
+                                    aria-controls="catalog-sidebar-subs-{{ $cat->category_id }}"
+                                    aria-label="Mostrar subcategorías de {{ $cat->name }}">
+                                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                            </button>
+                        @endif
+                    </div>
+                    @if($cat->childCategories->isNotEmpty())
+                        <div class="catalog-category-flyout"
+                             id="catalog-sidebar-subs-{{ $cat->category_id }}"
+                             role="region"
+                             aria-label="Subcategorías de {{ $cat->name }}"
+                             aria-hidden="true">
+                            <div class="catalog-category-flyout-title">{{ $cat->name }}</div>
+                            <ul class="catalog-category-flyout-list">
+                                @foreach($cat->childCategories as $ch)
+                                    <li>
+                                        <a href="{{ route('clients.catalog', array_merge($catalogParams, ['category_id' => $ch->category_id])) }}"
+                                           class="catalog-category-subitem {{ $activeCategoryId === (int) $ch->category_id ? 'is-active' : '' }}"
+                                           data-category-id="{{ $ch->category_id }}">{{ $ch->name }}</a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        </nav>
         <div class="catalog-layout">
             {{-- Mobile: filter toggle (solo filtros; categorías en panel principal) --}}
             <button class="btn btn-outline-secondary catalog-filter-toggle" id="catalog-filter-toggle" type="button"
@@ -109,73 +183,6 @@
             </aside>
 
             <main class="catalog-content">
-                <div class="catalog-content-with-sidebar" data-catalog-content-with-sidebar>
-                    <nav class="catalog-category-sidebar"
-                         id="catalog-category-sidebar"
-                         aria-label="Navegación por categorías"
-                         data-catalog-sidebar-hover-root
-                         data-close-delay-ms="150">
-                        <div class="catalog-category-sidebar-head">
-                            <span class="catalog-category-sidebar-brand" title="Categorías">
-                                <i class="fas fa-bars" aria-hidden="true"></i>
-                            </span>
-                            <span class="catalog-category-sidebar-head-label">Categorías</span>
-                        </div>
-                        <a href="{{ route('clients.catalog', $catalogParams) }}"
-                           class="catalog-category-sidebar-all catalog-category-item {{ $activeCategoryId === 0 ? 'is-active' : '' }}"
-                           data-category-id="0">
-                            <span class="catalog-category-item-icon" aria-hidden="true"><i class="fas fa-th-large"></i></span>
-                            <span class="catalog-category-item-label">Todos los productos</span>
-                        </a>
-                        @foreach($categories as $cat)
-                            @php
-                                $isParentActive = $activeCategoryId === (int) $cat->category_id;
-                                $isChildActive = $cat->childCategories->contains('category_id', $activeCategoryId);
-                                $navRow = collect($catalogCategoryNav)->firstWhere('id', (int) $cat->category_id);
-                                $iconClass = $navRow['icon'] ?? 'fas fa-layer-group';
-                            @endphp
-                            <div class="catalog-category-sidebar-item {{ ($isParentActive || $isChildActive) ? 'has-active' : '' }}"
-                                 data-parent-id="{{ $cat->category_id }}"
-                                 data-has-children="{{ $cat->childCategories->isNotEmpty() ? '1' : '0' }}">
-                                <div class="catalog-category-sidebar-item-row">
-                                    <a href="{{ route('clients.catalog', array_merge($catalogParams, ['category_id' => $cat->category_id])) }}"
-                                       class="catalog-category-item catalog-category-sidebar-link {{ $isParentActive && ! $isChildActive ? 'is-active' : '' }}"
-                                       data-category-id="{{ $cat->category_id }}">
-                                        <span class="catalog-category-item-icon" aria-hidden="true"><i class="{{ $iconClass }}"></i></span>
-                                        <span class="catalog-category-item-label">{{ $cat->name }}</span>
-                                    </a>
-                                    @if($cat->childCategories->isNotEmpty())
-                                        <button type="button"
-                                                class="catalog-category-mobile-expand"
-                                                aria-expanded="false"
-                                                aria-controls="catalog-sidebar-subs-{{ $cat->category_id }}"
-                                                aria-label="Mostrar subcategorías de {{ $cat->name }}">
-                                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
-                                        </button>
-                                    @endif
-                                </div>
-                                @if($cat->childCategories->isNotEmpty())
-                                    <div class="catalog-category-flyout" id="catalog-sidebar-subs-{{ $cat->category_id }}" role="region" aria-label="Subcategorías de {{ $cat->name }}" aria-hidden="true">
-                                        <a href="{{ route('clients.catalog', array_merge($catalogParams, ['category_id' => $cat->category_id])) }}"
-                                           class="catalog-category-flyout-all">
-                                            Ver todo en {{ $cat->name }}
-                                        </a>
-                                        <ul class="catalog-category-flyout-list">
-                                            @foreach($cat->childCategories as $ch)
-                                                <li>
-                                                    <a href="{{ route('clients.catalog', array_merge($catalogParams, ['category_id' => $ch->category_id])) }}"
-                                                       class="catalog-category-subitem {{ $activeCategoryId === (int) $ch->category_id ? 'is-active' : '' }}"
-                                                       data-category-id="{{ $ch->category_id }}">{{ $ch->name }}</a>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
-                    </nav>
-
-                    <div class="catalog-content-inner">
                 <div class="catalog-category-toolbar">
                     <button type="button"
                             id="catalog-category-trigger"
@@ -467,8 +474,6 @@
                         @endif
                     @endif
                 </div>
-                    </div>{{-- .catalog-content-inner --}}
-                </div>{{-- .catalog-content-with-sidebar --}}
             </main>
         </div>
     </div>

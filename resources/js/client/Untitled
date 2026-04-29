@@ -891,7 +891,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function isDesktop() {
-            return window.matchMedia && window.matchMedia('(min-width: 1024px)').matches;
+            return window.matchMedia && window.matchMedia('(min-width: 1025px)').matches;
         }
 
         function parseDelayMs(el, fallback) {
@@ -1167,21 +1167,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (btn) btn.setAttribute('aria-expanded', 'false');
                 });
             });
-
-            /* Toggle persistente del rail (expandido ↔ contraído) */
-            var railToggle = document.getElementById('catalog-category-sidebar-toggle');
-            if (railToggle) {
-                railToggle.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    var expanded = sidebar.classList.toggle('is-expanded');
-                    railToggle.setAttribute('aria-expanded', String(expanded));
-                    railToggle.setAttribute(
-                        'aria-label',
-                        expanded ? 'Contraer menú de categorías' : 'Expandir menú de categorías'
-                    );
-                });
-            }
         }
     })();
 

@@ -40,7 +40,8 @@ class ClientPageController extends Controller
 
     public function catalog(Request $request)
     {
-        $query = Product::with(['category']);
+        // Base del catálogo cliente: solo productos visibles/publicables para el cliente.
+        $query = Product::with(['category'])->activeInClientStore();
 
         if ($request->filled('search')) {
             $searchTerm = $request->search;
@@ -55,7 +56,7 @@ class ClientPageController extends Controller
         $parentCategoryForSubcats = null;
 
         if ($request->filled('category_id')) {
-            $selectedCategory = Category::find($request->category_id);
+            $selectedCategory = Category::find((int) $request->category_id);
             if ($selectedCategory) {
                 // Include child categories when a parent category is selected.
                 if (is_null($selectedCategory->parent_category_id)) {
