@@ -40,7 +40,8 @@ class ClientPageController extends Controller
 
     public function catalog(Request $request)
     {
-        $query = Product::with(['category']);
+        // Base del catálogo cliente: solo productos visibles/publicables para el cliente.
+        $query = Product::with(['category'])->activeInClientStore();
 
         if ($request->filled('search')) {
             $searchTerm = $request->search;
@@ -55,7 +56,7 @@ class ClientPageController extends Controller
         $parentCategoryForSubcats = null;
 
         if ($request->filled('category_id')) {
-            $selectedCategory = Category::find($request->category_id);
+            $selectedCategory = Category::find((int) $request->category_id);
             if ($selectedCategory) {
                 // Include child categories when a parent category is selected.
                 if (is_null($selectedCategory->parent_category_id)) {
@@ -107,17 +108,83 @@ class ClientPageController extends Controller
         $products = $query->paginate($perPage)->withQueryString();
 
         $categories = Category::whereNull('parent_category_id')
+            ->with(['childCategories' => function ($q) {
+                $q->orderBy('name');
+            }])
             ->orderBy('name')
             ->get();
 
         $cartCount = $this->getCartCount();
         $catalogSpotlight = $this->catalogSpotlightProductRows();
 
+        $catalogParams = $request->except('category_id', 'page');
+        $catalogCategoryNav = $this->buildCatalogCategoryNav($categories, $catalogParams);
+        $emptyCategoryNoProducts = $request->filled('category_id')
+            && $selectedCategory
+            && $products->total() === 0;
+
         return view('client.catalog', compact(
             'products', 'categories', 'cartCount',
             'selectedCategory', 'subcategories', 'parentCategoryForSubcats',
-            'catalogSpotlight'
+            'catalogSpotlight',
+            'catalogParams',
+            'catalogCategoryNav',
+            'emptyCategoryNoProducts'
         ));
+    }
+
+    /**
+     * Árbol de categorías para el catálogo cliente (JSON + sidebar/panel). Sin columna extra en BD.
+     *
+     * @param  Collection<int, Category>  $rootCategories
+     * @return array<int, array{id: int, name: string, icon: string, url_parent: string, children: array<int, array{id: int, name: string, url: string}>}>
+     */
+    private function buildCatalogCategoryNav($rootCategories, array $catalogParams): array
+    {
+        return $rootCategories->map(function (Category $c) use ($catalogParams) {
+            return [
+                'id' => (int) $c->category_id,
+                'name' => $c->name,
+                'icon' => $this->clientCatalogCategoryIconClass($c->name),
+                'url_parent' => route('clients.catalog', array_merge($catalogParams, ['category_id' => $c->category_id])),
+                'children' => $c->childCategories->map(function (Category $ch) use ($catalogParams) {
+                    return [
+                        'id' => (int) $ch->category_id,
+                        'name' => $ch->name,
+                        'url' => route('clients.catalog', array_merge($catalogParams, ['category_id' => $ch->category_id])),
+                    ];
+                })->values()->all(),
+            ];
+        })->values()->all();
+    }
+
+    /** Clases Font Awesome (fas fa-*) por heurística de nombre — sin icono en BD. */
+    private function clientCatalogCategoryIconClass(?string $name): string
+    {
+        $n = mb_strtolower(trim((string) $name), 'UTF-8');
+        $pairs = [
+            'bicicleta' => 'fas fa-bicycle',
+            'bici' => 'fas fa-bicycle',
+            'accesorio' => 'fas fa-box-open',
+            'componente' => 'fas fa-cogs',
+            'herramienta' => 'fas fa-wrench',
+            'nutrición' => 'fas fa-apple-alt',
+            'nutricion' => 'fas fa-apple-alt',
+            'ropa' => 'fas fa-tshirt',
+            'seguridad' => 'fas fa-shield-alt',
+            'repuesto' => 'fas fa-cog',
+            'llanta' => 'fas fa-circle',
+            'casco' => 'fas fa-hard-hat',
+            'luz' => 'fas fa-lightbulb',
+            'electr' => 'fas fa-bolt',
+        ];
+        foreach ($pairs as $needle => $icon) {
+            if ($needle !== '' && str_contains($n, $needle)) {
+                return $icon;
+            }
+        }
+
+        return 'fas fa-layer-group';
     }
 
     // Returns spotlight rows using featured products first, then recent products.
@@ -223,18 +290,18 @@ class ClientPageController extends Controller
             $mediaUrl = $product->getFirstMediaUrl('main_image');
             $cart[] = [
                 'product_id' => $product->product_id,
-                'name'       => $product->name,
-                'price'      => $product->sale_price,
-                'quantity'   => $request->quantity,
-                'image'      => $mediaUrl,
+                'name' => $product->name,
+                'price' => $product->sale_price,
+                'quantity' => $request->quantity,
+                'image' => $mediaUrl,
             ];
         }
 
         Session::put('cart', $cart);
 
         return response()->json([
-            'success'    => true,
-            'message'    => 'Producto agregado al carrito',
+            'success' => true,
+            'message' => 'Producto agregado al carrito',
             'cart_count' => $this->getCartCount(),
             'cart_total' => $this->getCartTotal(),
         ]);
@@ -279,14 +346,14 @@ class ClientPageController extends Controller
         Session::put('cart', $cart);
 
         return response()->json([
-            'success'    => true,
-            'message'    => 'Carrito actualizado',
+            'success' => true,
+            'message' => 'Carrito actualizado',
             'cart_count' => $this->getCartCount(),
             'cart_total' => $this->getCartTotal(),
         ]);
     }
 
-        public function cart()
+    public function cart()
     {
         $cart = Session::get('cart', []);
         $cartItems = [];
@@ -310,7 +377,7 @@ class ClientPageController extends Controller
                     'product_id' => $product->product_id,
                     'name' => $product->name,
                     'price' => $item['price'],
-                    'image_url' => $mediaUrl ?: asset('assets/images/products/' . ($product->image ?? 'default.png')),
+                    'image_url' => $mediaUrl ?: asset('assets/images/products/'.($product->image ?? 'default.png')),
                     'quantity' => $qty,
                     'stock_available' => $product->stock_current,
                     'subtotal' => $subtotal,
@@ -338,8 +405,8 @@ class ClientPageController extends Controller
         Session::put('cart', $cart);
 
         return response()->json([
-            'success'    => true,
-            'message'    => 'Producto eliminado del carrito',
+            'success' => true,
+            'message' => 'Producto eliminado del carrito',
             'cart_count' => $this->getCartCount(),
             'cart_total' => $this->getCartTotal(),
         ]);
@@ -385,10 +452,10 @@ class ClientPageController extends Controller
                 $subtotal += $itemTotal;
 
                 $validatedItems[] = [
-                    'product'  => $product,
+                    'product' => $product,
                     'quantity' => $item['quantity'],
-                    'price'    => $item['price'],
-                    'total'    => $itemTotal,
+                    'price' => $item['price'],
+                    'total' => $itemTotal,
                 ];
             }
 
@@ -396,33 +463,33 @@ class ClientPageController extends Controller
 
             $sale = Sale::create([
                 'invoice_number' => (new Sale)->generateInvoiceNumber(),
-                'client_id'      => $client?->user_id,
-                'sale_date'      => now(),
+                'client_id' => $client?->user_id,
+                'sale_date' => now(),
                 'payment_method' => 'cash',
-                'status'         => 'pending',
-                'order_source'   => 'web_cart',
-                'subtotal'       => $subtotal,
-                'iva'            => 0,
-                'discount'       => 0,
-                'total'          => $subtotal,
-                'notes'          => 'Order placed from the online store',
+                'status' => 'pending',
+                'order_source' => 'web_cart',
+                'subtotal' => $subtotal,
+                'iva' => 0,
+                'discount' => 0,
+                'total' => $subtotal,
+                'notes' => 'Order placed from the online store',
             ]);
 
             foreach ($validatedItems as $item) {
                 SaleItem::create([
-                    'sale_id'       => $sale->sale_id,
-                    'product_id'    => $item['product']->product_id,
-                    'quantity'      => $item['quantity'],
-                    'unit_price'    => $item['price'],
+                    'sale_id' => $sale->sale_id,
+                    'product_id' => $item['product']->product_id,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['price'],
                     'unit_discount' => 0,
-                    'total'         => $item['total'],
+                    'total' => $item['total'],
                 ]);
 
                 // Record the web sale movement without an authenticated admin user.
                 $inventoryService->recordWebCartSale(
-                    product:  $item['product'],
+                    product: $item['product'],
                     quantity: (int) $item['quantity'],
-                    saleId:   $sale->sale_id,
+                    saleId: $sale->sale_id,
                 );
             }
 
@@ -430,9 +497,9 @@ class ClientPageController extends Controller
             DB::commit();
 
             return response()->json([
-                'success'        => true,
-                'message'        => 'Pedido creado exitosamente',
-                'sale_id'        => $sale->sale_id,
+                'success' => true,
+                'message' => 'Pedido creado exitosamente',
+                'sale_id' => $sale->sale_id,
                 'invoice_number' => $sale->invoice_number,
             ]);
 
