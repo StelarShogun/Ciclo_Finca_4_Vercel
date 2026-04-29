@@ -309,7 +309,8 @@ Route::get('/recovery/verify', [ClientUserController::class, 'showRecoveryVerify
 Route::post('/recovery/verify', [ClientUserController::class, 'verifyRecoveryAndReset'])->name('clients.recovery.verify');
 
 // Logs out the client while preserving the admin session when both are active.
-Route::post('/logout', function (Request $request) {
+Route::post('/logout', function () {
+    $request = request();
     Auth::guard('clients')->logout();
 
     if (Auth::guard('admin')->check()) {
