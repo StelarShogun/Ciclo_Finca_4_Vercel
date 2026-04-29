@@ -29,7 +29,7 @@ class CF4116SalesDateRangeFilterTest extends TestCase
         return AdminUser::where('gmail', 'admin@cicloperez.com')->firstOrFail();
     }
 
-    /** El filtro por rango de fechas se aplica y devuelve la vista sin errores. */
+    /** Applies date range filter and returns the view without errors. */
     public function test_date_range_filter_applies_without_errors(): void
     {
         $resp = $this->actingAs($this->getAdmin(), 'admin')
@@ -42,7 +42,7 @@ class CF4116SalesDateRangeFilterTest extends TestCase
         $resp->assertViewHas('sales');
     }
 
-    /** Un rango inválido donde la fecha inicial es mayor que la final es rechazado con error de validación. */
+    /** Rejects an invalid range where start date is after end date with a validation error. */
     public function test_invalid_date_range_is_rejected(): void
     {
         $resp = $this->actingAs($this->getAdmin(), 'admin')
@@ -55,7 +55,7 @@ class CF4116SalesDateRangeFilterTest extends TestCase
         $resp->assertSessionHasErrors(['date_to']);
     }
 
-    /** Un rango válido sin ventas registradas devuelve la vista sin errores. */
+    /** Returns a successful response with no sales data when the range has no matching records. */
     public function test_date_range_with_no_results_returns_ok(): void
     {
         $resp = $this->actingAs($this->getAdmin(), 'admin')
@@ -68,7 +68,7 @@ class CF4116SalesDateRangeFilterTest extends TestCase
         $resp->assertViewHas('sales');
     }
 
-    /** Las fechas seleccionadas se preservan en los enlaces del paginador al aplicar el filtro. */
+    /** Ensures paginator links include the active date filter parameters. */
     public function test_selected_dates_are_preserved_after_filter_is_applied(): void
     {
         $startDate = Carbon::today()->subDays(2)->toDateString();
@@ -88,7 +88,7 @@ class CF4116SalesDateRangeFilterTest extends TestCase
         });
     }
 
-    /** El filtro de fechas combinado con otros filtros activos se aplica sin errores. */
+    /** Date filter combined with additional filters (payment method, status) applies without errors. */
     public function test_date_range_combined_with_other_filters_applies_without_errors(): void
     {
         $resp = $this->actingAs($this->getAdmin(), 'admin')
