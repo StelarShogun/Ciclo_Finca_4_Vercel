@@ -21,6 +21,7 @@ class InventoryMovement extends Model
         'stock_before',
         'stock_after',
         'reference_id',
+        'notes',
     ];
 
     // Attribute casting for enum, numeric, and timestamp fields.

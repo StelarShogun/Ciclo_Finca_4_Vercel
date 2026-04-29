@@ -189,6 +189,7 @@
                                             <th class="text-end">Stock antes</th>
                                             <th class="text-end">Stock después</th>
                                             <th>Administrador</th>
+                                            <th>Motivo</th>
                                         </tr>
                                     </thead>
                                     <tbody id="inv-table-body">
