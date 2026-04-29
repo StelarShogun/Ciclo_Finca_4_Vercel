@@ -1,0 +1,11 @@
+---
+description: Git commit messages and pull request text must be written in English.
+alwaysApply: true
+---
+
+# Git and pull requests — English only
+
+- Write **all commit messages** (subject and body) in **English**: clear, imperative mood for the subject where conventional commits are used (e.g. `feat: add admin catalog preview`).
+- Write **all pull request titles and descriptions** in **English** (summary, testing steps, checklist notes, reviewer comments intended for the PR thread).
+- Jira / internal ticket IDs (e.g. CF4-88) may appear alongside English text.
+- UI copy, user-facing strings, and team chat may follow other language preferences; this rule applies specifically to **Git history and GitHub/GitLab PR artifacts**.

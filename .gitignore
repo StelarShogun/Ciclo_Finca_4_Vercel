@@ -91,7 +91,7 @@ vendor/composer/autoload_static.php
 vendor/composer/autoload_real.php
 vendor/composer/autoload_classmap.php
 
-# Cursor IDE: ignorar todo bajo .cursor salvo skills versionadas (docfork/db-skills).
-/.cursor/*
-!/.cursor/skills/
-!/.cursor/skills/**
+# =========================
+# CURSOR IDE
+# =========================
+.cursor/skills/
