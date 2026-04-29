@@ -1,0 +1,105 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\AdminUser;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
+use Tests\TestCase;
+
+class CF4116SalesDateRangeFilterTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        try {
+            parent::setUp();
+        } catch (\Throwable $e) {
+            $this->markTestSkipped('Base de datos no disponible: ' . $e->getMessage());
+        }
+        if (Schema::getConnection()->getDriverName() !== 'mysql') {
+            $this->markTestSkipped('SalesDateRangeFilterTest requiere MySQL.');
+        }
+        if (! Schema::hasTable('sales')) {
+            $this->markTestSkipped('Falta la tabla requerida (sales).');
+        }
+    }
+
+    private function getAdmin(): AdminUser
+    {
+        return AdminUser::where('gmail', 'admin@cicloperez.com')->firstOrFail();
+    }
+
+    /** El filtro por rango de fechas se aplica y devuelve la vista sin errores. */
+    public function test_date_range_filter_applies_without_errors(): void
+    {
+        $resp = $this->actingAs($this->getAdmin(), 'admin')
+            ->get(route('sales.index', [
+                'start_date' => Carbon::today()->subDays(2)->toDateString(),
+                'end_date'   => Carbon::today()->subDay()->toDateString(),
+            ]));
+
+        $resp->assertOk();
+        $resp->assertViewHas('sales');
+    }
+
+    /** Un rango inválido donde la fecha inicial es mayor que la final es rechazado con error de validación. */
+    public function test_invalid_date_range_is_rejected(): void
+    {
+        $resp = $this->actingAs($this->getAdmin(), 'admin')
+            ->get(route('sales.reports.byCategory', [
+                'date_range' => 'custom',
+                'date_from'  => Carbon::today()->toDateString(),
+                'date_to'    => Carbon::today()->subDays(5)->toDateString(),
+            ]));
+
+        $resp->assertSessionHasErrors(['date_to']);
+    }
+
+    /** Un rango válido sin ventas registradas devuelve la vista sin errores. */
+    public function test_date_range_with_no_results_returns_ok(): void
+    {
+        $resp = $this->actingAs($this->getAdmin(), 'admin')
+            ->get(route('sales.index', [
+                'start_date' => Carbon::today()->addDay()->toDateString(),
+                'end_date'   => Carbon::today()->addDays(2)->toDateString(),
+            ]));
+
+        $resp->assertOk();
+        $resp->assertViewHas('sales');
+    }
+
+    /** Las fechas seleccionadas se preservan en los enlaces del paginador al aplicar el filtro. */
+    public function test_selected_dates_are_preserved_after_filter_is_applied(): void
+    {
+        $startDate = Carbon::today()->subDays(2)->toDateString();
+        $endDate   = Carbon::today()->subDay()->toDateString();
+
+        $resp = $this->actingAs($this->getAdmin(), 'admin')
+            ->get(route('sales.index', [
+                'start_date' => $startDate,
+                'end_date'   => $endDate,
+            ]));
+
+        $resp->assertOk();
+        $resp->assertViewHas('sales', function ($paginator) use ($startDate, $endDate) {
+            $url = $paginator->url(1);
+            return str_contains($url, 'start_date=' . $startDate)
+                && str_contains($url, 'end_date=' . $endDate);
+        });
+    }
+
+    /** El filtro de fechas combinado con otros filtros activos se aplica sin errores. */
+    public function test_date_range_combined_with_other_filters_applies_without_errors(): void
+    {
+        $resp = $this->actingAs($this->getAdmin(), 'admin')
+            ->get(route('sales.index', [
+                'start_date'     => Carbon::today()->subDays(2)->toDateString(),
+                'end_date'       => Carbon::today()->subDay()->toDateString(),
+                'payment_method' => 'cash',
+                'status'         => 'completed',
+            ]));
+
+        $resp->assertOk();
+        $resp->assertViewHas('sales');
+    }
+}
