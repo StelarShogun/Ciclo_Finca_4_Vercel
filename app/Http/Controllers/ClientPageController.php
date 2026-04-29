@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\FavoriteProduct;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -116,6 +117,14 @@ class ClientPageController extends Controller
 
         $cartCount = $this->getCartCount();
         $catalogSpotlight = $this->catalogSpotlightProductRows();
+        $favoriteProductIds = collect();
+
+        if (Auth::guard('clients')->check()) {
+            $favoriteProductIds = FavoriteProduct::query()
+                ->where('user_id', (int) Auth::guard('clients')->id())
+                ->pluck('product_id')
+                ->map(fn ($id) => (int) $id);
+        }
 
         $catalogParams = $request->except('category_id', 'page');
         $catalogCategoryNav = $this->buildCatalogCategoryNav($categories, $catalogParams);
@@ -127,6 +136,7 @@ class ClientPageController extends Controller
             'products', 'categories', 'cartCount',
             'selectedCategory', 'subcategories', 'parentCategoryForSubcats',
             'catalogSpotlight',
+            'favoriteProductIds',
             'catalogParams',
             'catalogCategoryNav',
             'emptyCategoryNoProducts'

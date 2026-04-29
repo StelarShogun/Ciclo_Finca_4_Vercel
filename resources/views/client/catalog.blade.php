@@ -284,9 +284,18 @@
                                         $spotlight = $row['spotlight'];
                                         $catLabel = $product->clientCatalogStockLabel();
                                         $canBuy = $product->isPurchasableByClient();
+                                        $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
                                     @endphp
                                     <article class="product-card product-card--catalog-spotlight" role="listitem">
                                         <div class="product-image">
+                                            <button type="button"
+                                                    class="product-favorite-btn {{ $isFavorite ? 'is-active' : '' }}"
+                                                    data-product-favorite-btn
+                                                    data-product-id="{{ $product->product_id }}"
+                                                    aria-pressed="{{ $isFavorite ? 'true' : 'false' }}"
+                                                    aria-label="{{ $isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos' }}">
+                                                <i class="{{ $isFavorite ? 'fas' : 'far' }} fa-heart" aria-hidden="true"></i>
+                                            </button>
                                             <span @class([
                                                 'spotlight-badge',
                                                 'spotlight-badge--featured' => $spotlight === 'featured',
@@ -376,11 +385,23 @@
                     @if($products->total() > 0)
                         <div class="products-grid">
                             @foreach($products as $product)
-                                @php $catLabel = $product->clientCatalogStockLabel(); $canBuy = $product->isPurchasableByClient(); @endphp
+                                @php
+                                    $catLabel = $product->clientCatalogStockLabel();
+                                    $canBuy = $product->isPurchasableByClient();
+                                    $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
+                                @endphp
                                 <div class="product-card">
                                     <div class="product-image">
-                            @php $cardImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')); @endphp
-                                    <a href="{{ $product->clientProductUrl() }}">
+                                        <button type="button"
+                                                class="product-favorite-btn {{ $isFavorite ? 'is-active' : '' }}"
+                                                data-product-favorite-btn
+                                                data-product-id="{{ $product->product_id }}"
+                                                aria-pressed="{{ $isFavorite ? 'true' : 'false' }}"
+                                                aria-label="{{ $isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos' }}">
+                                            <i class="{{ $isFavorite ? 'fas' : 'far' }} fa-heart" aria-hidden="true"></i>
+                                        </button>
+                                        @php $cardImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')); @endphp
+                                        <a href="{{ $product->clientProductUrl() }}">
                                             {{-- Fallback to favicon if product image is missing --}}
                                             <img src="{{ $cardImgUrl }}"
                                                  alt="{{ $product->name }}"
@@ -511,5 +532,23 @@
 @endsection
 
 @push('scripts')
+    @auth('clients')
+        @php
+            $favoriteToggleUrl = \Illuminate\Support\Facades\Route::has('clients.favorites.toggle')
+                ? route('clients.favorites.toggle')
+                : url('/favorites/toggle');
+        @endphp
+        <script>
+            window.catalogFavoriteConfig = {
+                toggleUrl: @json($favoriteToggleUrl),
+            };
+        </script>
+    @else
+        <script>
+            window.catalogFavoriteConfig = {
+                loginUrl: @json(route('login.show')),
+            };
+        </script>
+    @endauth
     @vite(['resources/js/client/clients-page.js'])
 @endpush
