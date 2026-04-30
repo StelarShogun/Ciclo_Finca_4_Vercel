@@ -168,16 +168,30 @@ class ProductController extends Controller
             }
 
             return view('products.show', compact('product'));
-        } catch (\Exception $e) {
+        } catch (ModelNotFoundException $e) {
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Producto no encontrado',
-                    'error' => $e->getMessage(),
                 ], 404);
             }
 
             return redirect()->route('inventory')->with('error', 'Producto no encontrado');
+        } catch (\Throwable $e) {
+            Log::error('Product show failed.', [
+                'product_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo cargar el producto. Inténtalo de nuevo.',
+                    'error' => $e->getMessage(),
+                ], 500);
+            }
+
+            return redirect()->route('inventory')->with('error', 'No se pudo cargar el producto. Inténtalo de nuevo.');
         }
     }
 
