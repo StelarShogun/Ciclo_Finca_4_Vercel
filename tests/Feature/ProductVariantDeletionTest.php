@@ -52,6 +52,56 @@ class ProductVariantDeletionTest extends TestCase
         ]);
     }
 
+    public function test_admin_cannot_attach_variant_that_is_already_linked_to_another_base(): void
+    {
+        $baseA = Product::create([
+            'name' => 'Base A',
+            'sale_price' => 100,
+            'purchase_price' => 50,
+            'stock_current' => 10,
+            'stock_minimum' => 1,
+            'status' => 'active',
+            'is_featured' => false,
+        ]);
+        $baseB = Product::create([
+            'name' => 'Base B',
+            'sale_price' => 100,
+            'purchase_price' => 50,
+            'stock_current' => 10,
+            'stock_minimum' => 1,
+            'status' => 'active',
+            'is_featured' => false,
+        ]);
+        $variant = Product::create([
+            'name' => 'Variante única',
+            'sale_price' => 110,
+            'purchase_price' => 55,
+            'stock_current' => 3,
+            'stock_minimum' => 1,
+            'status' => 'active',
+            'is_featured' => false,
+        ]);
+
+        ProductVariant::create([
+            'base_product_id' => $baseA->product_id,
+            'variant_product_id' => $variant->product_id,
+        ]);
+
+        $this->actingAsAdmin();
+
+        $res = $this->postJson("/products/{$baseB->product_id}/variants", [
+            'variant_product_id' => $variant->product_id,
+        ]);
+
+        $res->assertStatus(422);
+        $res->assertJson(['success' => false]);
+
+        $this->assertDatabaseMissing('product_variants', [
+            'base_product_id' => $baseB->product_id,
+            'variant_product_id' => $variant->product_id,
+        ]);
+    }
+
     public function test_admin_can_fetch_product_show_json_after_variants_change(): void
     {
         $base = Product::create([

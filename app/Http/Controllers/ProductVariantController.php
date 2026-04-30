@@ -6,7 +6,6 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,6 +41,17 @@ class ProductVariantController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Esa variante ya está asociada a este producto base.',
+            ], 422);
+        }
+
+        $linkedElsewhere = ProductVariant::query()
+            ->where('variant_product_id', $variantId)
+            ->exists();
+
+        if ($linkedElsewhere) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Esta variante ya está asociada a otro producto base.',
             ], 422);
         }
 
@@ -130,19 +140,10 @@ class ProductVariantController extends Controller
 
     private function activeSupplierOrderStates(): array
     {
-        $defined = [];
-        $connection = Order::query()->getConnection();
-        $driver = $connection->getDriverName();
-
-        if ($driver === 'sqlite') {
-            // SQLite doesn't support native ENUMs; treat as free-form.
-            $defined = ['draft', 'pending', 'confirmed', 'partial_received'];
-        } else {
-            // Best-effort: try to include known states; if schema evolved, include partial_received too.
-            $defined = ['draft', 'pending', 'confirmed', 'partial_received'];
-        }
-
-        return $defined;
+        // Block deletion for supplier orders that are still active/in-progress.
+        // Canonical states in the codebase include: draft, pending, confirmed, delivered, cancelled, close_partial.
+        // Also include partial_received as it is used during receiving flows.
+        return ['draft', 'pending', 'confirmed', 'partial_received', 'close_partial'];
     }
 }
 

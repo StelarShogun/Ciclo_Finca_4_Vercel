@@ -184,11 +184,16 @@ class ProductController extends Controller
             ]);
 
             if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
+                $payload = [
                     'success' => false,
                     'message' => 'No se pudo cargar el producto. Inténtalo de nuevo.',
-                    'error' => $e->getMessage(),
-                ], 500);
+                ];
+
+                if (config('app.debug')) {
+                    $payload['error'] = $e->getMessage();
+                }
+
+                return response()->json($payload, 500);
             }
 
             return redirect()->route('inventory')->with('error', 'No se pudo cargar el producto. Inténtalo de nuevo.');

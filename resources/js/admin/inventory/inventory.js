@@ -34,6 +34,20 @@ function jsonHeaders() {
     };
 }
 
+function escapeHtml(raw) {
+    return String(raw)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function escapeHtmlAttr(raw) {
+    // For attributes; same escaping as HTML content.
+    return escapeHtml(raw);
+}
+
 async function safeParseJsonResponse(response) {
     const contentType = response.headers.get('content-type') || '';
 
@@ -86,14 +100,14 @@ function renderVariantsListHtml({ baseProductId, variants }) {
             return `
                 <div class="variant-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6;">
                     <div style="min-width:0;">
-                        <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
-                        <div class="text-muted" style="font-size:12px;">ID ${variantId} · ${price} · Stock ${stock} · ${status}</div>
+                        <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(name)}</div>
+                        <div class="text-muted" style="font-size:12px;">ID ${escapeHtml(variantId)} · ${escapeHtml(price)} · Stock ${escapeHtml(stock)} · ${escapeHtml(status)}</div>
                     </div>
                     <button type="button"
                             class="btn btn-secondary js-delete-variant"
                             data-base-product-id="${String(baseProductId)}"
                             data-variant-product-id="${variantId}"
-                            data-variant-name="${name.replace(/\"/g, '&quot;')}">
+                            data-variant-name="${escapeHtmlAttr(name)}">
                         <i class="fas fa-trash"></i> Eliminar
                     </button>
                 </div>
@@ -1476,7 +1490,7 @@ function smoothScrollTop() {
         if (!baseId || !variantId) return;
 
         Swal.fire({
-            title: `¿Eliminar la variante "${variantName}"?`,
+            titleText: `¿Eliminar la variante "${variantName}"?`,
             text: 'Esta acción solo elimina la variante seleccionada. El producto base permanecerá activo.',
             icon: 'warning',
             showCancelButton: true,
