@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class SalesController extends Controller
 {
@@ -291,6 +292,8 @@ class SalesController extends Controller
                 ]
             );
 
+            $this->sendProductReviewReminderEmail($sale);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Venta creada correctamente.',
@@ -323,6 +326,7 @@ class SalesController extends Controller
 
         if ($sale->status === 'completed') {
             $this->ensureReviewPlaceholdersForCompletedSale($sale);
+            $this->sendProductReviewReminderEmail($sale);
         }
 
         $this->logAuditAction(
@@ -423,6 +427,7 @@ class SalesController extends Controller
             });
 
             $sale->refresh();
+            $this->sendProductReviewReminderEmail($sale);
 
             $this->logAuditAction(
                 'sale_complete',
@@ -950,6 +955,46 @@ class SalesController extends Controller
                     'stars' => null,
                 ]
             );
+        }
+    }
+
+    // Notify the client to rate products after order confirmation.
+    private function sendProductReviewReminderEmail(Sale $sale): void
+    {
+        if ((string) $sale->status !== 'completed') {
+            return;
+        }
+
+        $client = $sale->client ?: $sale->loadMissing('client')->client;
+        if (! $client || empty($client->gmail)) {
+            return;
+        }
+
+        $clientName = trim((string) $client->name) !== '' ? (string) $client->name : 'cliente';
+        $productCount = SaleItem::query()
+            ->where('sale_id', $sale->sale_id)
+            ->distinct('product_id')
+            ->count('product_id');
+
+        $productPhrase = $productCount === 1 ? 'el producto comprado' : 'los productos comprados';
+        $historyUrl = route('clients.invoices', ['tab' => 'historial']);
+        $body = "Estimado {$clientName},\n\n"
+            ."Favor reseñar {$productPhrase}.\n"
+            ."Para esto, acceda a Facturas > Historial de compras:\n{$historyUrl}\n\n"
+            ."Gracias por comprar en Ciclo Finca 4.";
+
+        try {
+            Mail::raw($body, function ($message) use ($client): void {
+                $message->to($client->gmail)
+                    ->subject('Reseña de productos comprados - Ciclo Finca 4');
+            });
+        } catch (\Throwable $e) {
+            \Log::warning('Could not send product review reminder email.', [
+                'sale_id' => $sale->sale_id ?? null,
+                'client_id' => $client->user_id ?? null,
+                'email' => $client->gmail ?? null,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 

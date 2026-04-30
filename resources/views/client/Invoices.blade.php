@@ -175,11 +175,13 @@
         html:
             '<p>Por favor denos una calificación de la satisfacción con el producto.</p>' +
             '<div class="cf4-review-modal-list">' + renderRows() + '</div>' +
-            '<p style="margin-top:0.65rem;font-size:0.86rem;color:#666;">Puedes calificar uno o varios productos y luego presionar Guardar mi reseña.</p>',
+            '<p style="margin-top:0.65rem;font-size:0.86rem;color:#666;">Este mensaje seguirá apareciendo mientras tengas productos sin reseñar.</p>',
         icon: 'info',
         confirmButtonText: 'Guardar mi reseña',
-        showCancelButton: true,
-        cancelButtonText: 'Más tarde',
+        showCancelButton: false,
+        showCloseButton: false,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
         focusConfirm: false,
         didOpen: (modal) => {
             modal.querySelectorAll('.cf4-review-star-btn').forEach((btn) => {
