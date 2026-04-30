@@ -62,7 +62,7 @@ function fillSubcategoryOptions(subSelect, parentId, selectedId = '') {
     if (!subSelect) return;
     const tree = window.inventoryCategoryTree || {};
     const isFilter = subSelect.id === 'subcategory-filter';
-    const emptyLabel = isFilter ? 'Todos los tipos' : 'Solo el rubro general';
+    const emptyLabel = isFilter ? 'Todos los tipos' : 'Solo categoría padre (sin tipo)';
 
     subSelect.innerHTML = '';
     const opt0 = document.createElement('option');
@@ -684,7 +684,7 @@ function smoothScrollTop() {
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({
                         title: 'Categoría',
-                        text: 'Elegí el rubro. El tipo concreto es opcional, pero si lo dejás solo en el rubro general no podrás usar color, talla, etc.',
+                        text: 'Elegí la categoría padre. El tipo concreto es opcional, pero si dejás el producto solo en categoría padre (sin tipo) no podrás usar color, talla, etc.',
                         icon: 'info',
                         confirmButtonText: 'Entendido',
                     });

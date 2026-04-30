@@ -66,6 +66,8 @@ const clientAssets = [
 ];
 
 export default defineConfig({
+    // Keep Vite cache outside node_modules to avoid permission issues on WSL mounts.
+    cacheDir: ".vite-cache",
     plugins: [
         laravel({
             detectTls: false,

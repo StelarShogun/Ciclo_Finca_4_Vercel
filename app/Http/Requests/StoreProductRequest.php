@@ -85,7 +85,7 @@ class StoreProductRequest extends FormRequest
             $categoryId = (int) $this->input('category_id');
             $category = Category::query()->find($categoryId);
             if (! $category || $category->parent_category_id === null) {
-                $validator->errors()->add('classification_value_ids', 'Color, talla, etc. solo aplican cuando el producto tiene un tipo concreto (no solo el rubro).');
+                $validator->errors()->add('classification_value_ids', 'Color, talla, etc. solo aplican cuando el producto tiene un tipo concreto (no solo la categoría padre).');
 
                 return;
             }

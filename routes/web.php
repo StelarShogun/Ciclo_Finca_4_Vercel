@@ -197,6 +197,10 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     // Brand routes.
     Route::resource('brands', BrandController::class)->only(['index', 'store', 'update', 'destroy']);
 
+    // Parent category routes.
+    Route::get('/categories/parents/create', [CategoryController::class, 'createParentCategory'])->name('categories.parents.create');
+    Route::post('/categories/parents', [CategoryController::class, 'storeParentCategory'])->name('categories.parents.store');
+
     // Subcategory routes.
     Route::get('/categories/subcategories/create', [CategoryController::class, 'createSubcategory'])->name('categories.subcategories.create');
     Route::post('/categories/subcategories', [CategoryController::class, 'store'])->name('categories.subcategories.store');
