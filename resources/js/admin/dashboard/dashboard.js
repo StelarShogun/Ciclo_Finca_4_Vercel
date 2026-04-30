@@ -650,7 +650,10 @@ class Dashboard {
 
         const todaySalesEl = document.getElementById('today-sales');
         if (todaySalesEl && data.todaySales !== undefined) {
-            todaySalesEl.textContent = '₡' + data.todaySales.toLocaleString('es-ES');
+            const sales = parseFloat(data.todaySales) || 0;
+            todaySalesEl.textContent = '₡' + Math.round(sales).toLocaleString('es-CR', {
+                maximumFractionDigits: 0
+            });
         }
 
         const totalSuppliersEl = document.getElementById('total-suppliers');
@@ -667,38 +670,45 @@ class Dashboard {
 
     // Animate KPI numbers counting up
     animateKPIs() {
-        const kpiValues = document.querySelectorAll('.kpi-value');
-        kpiValues.forEach(element => {
-            const finalValue = element.textContent;
-            const numericValue = parseInt(finalValue.replace(/[^\d]/g, ''));
-            
-            if (!isNaN(numericValue)) {
-                this.animateNumber(element, 0, numericValue, 1000);
-            }
-        });
-    }
+    const kpiValues = document.querySelectorAll('.kpi-value');
+    kpiValues.forEach(element => {
+        const finalValue = element.textContent;
+
+        // Clean the value to extract only numbers, handling currency and formatting
+        const cleaned = finalValue
+            .replace(/[^\d.,]/g, '')   
+            .replace(/\./g, '')        
+            .replace(',', '.');         
+
+        const numericValue = parseFloat(cleaned) || 0;
+
+        if (numericValue > 0) {
+            this.animateNumber(element, 0, numericValue, 1000);
+        }
+    });
+}
 
     // Helper to animate a number increment
     animateNumber(element, start, end, duration) {
         const startTime = performance.now();
         const isCurrency = element.textContent.includes('₡');
-        
+
         const animate = (currentTime) => {
             const elapsed = currentTime - startTime;
             const progress = Math.min(elapsed / duration, 1);
-            
+
             const current = Math.floor(start + (end - start) * progress);
-            const formatted = isCurrency ? 
-                '₡' + current.toLocaleString('es-ES') : 
-                current.toLocaleString('es-ES');
-            
+            const formatted = isCurrency
+                ? '₡' + Math.round(current).toLocaleString('es-ES', { maximumFractionDigits: 0 })
+                : current.toLocaleString('es-ES', { maximumFractionDigits: 0 });
+
             element.textContent = formatted;
-            
+
             if (progress < 1) {
                 requestAnimationFrame(animate);
             }
         };
-        
+
         requestAnimationFrame(animate);
     }
 
