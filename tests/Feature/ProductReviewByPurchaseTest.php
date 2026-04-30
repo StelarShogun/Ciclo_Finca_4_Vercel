@@ -89,6 +89,67 @@ class ProductReviewByPurchaseTest extends TestCase
         ])->assertStatus(422)->assertJsonValidationErrors(['stars']);
     }
 
+    public function test_client_can_save_multiple_reviews_from_modal_batch(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Batch',
+            'second_surname' => null,
+            'gmail' => 'cliente-review-batch@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $productA = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Producto A',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 100,
+            'purchase_price' => 50,
+            'stock_current' => 10,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+        $productB = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Producto B',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 110,
+            'purchase_price' => 50,
+            'stock_current' => 10,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        $this->createSaleWithItem($client, $productA, 'completed');
+        $this->createSaleWithItem($client, $productB, 'completed');
+
+        $this->actingAs($client, 'clients');
+
+        $response = $this->postJson(route('clients.products.review.batch'), [
+            'reviews' => [
+                ['product_id' => $productA->product_id, 'stars' => 5],
+                ['product_id' => $productB->product_id, 'stars' => 3],
+            ],
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('product_reviews', [
+            'client_id' => $client->user_id,
+            'product_id' => $productA->product_id,
+            'stars' => 5,
+        ]);
+        $this->assertDatabaseHas('product_reviews', [
+            'client_id' => $client->user_id,
+            'product_id' => $productB->product_id,
+            'stars' => 3,
+        ]);
+    }
+
     private function seedClientAndProduct(): array
     {
         $client = Client::create([
@@ -118,8 +179,9 @@ class ProductReviewByPurchaseTest extends TestCase
 
     private function createSaleWithItem(Client $client, Product $product, string $status): void
     {
+        $invoiceNumber = 'CF4-'.str_pad((string) random_int(1000, 9999), 4, '0', STR_PAD_LEFT).'-'.substr((string) microtime(true), -3);
         $sale = Sale::create([
-            'invoice_number' => 'CF4-9999',
+            'invoice_number' => $invoiceNumber,
             'client_id' => $client->user_id,
             'sale_date' => now(),
             'payment_method' => 'cash',

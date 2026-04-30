@@ -374,6 +374,8 @@ Route::middleware(['auth:clients'])->group(function () {
     Route::post('/products/{product}/review', [ProductReviewController::class, 'storeOrUpdate'])
         ->whereNumber('product')
         ->name('clients.products.review.store');
+    Route::post('/products/reviews/batch', [ProductReviewController::class, 'storeBatch'])
+        ->name('clients.products.review.batch');
 
     // Invoice routes.
     Route::get('/invoices', [ClientPageController::class, 'invoices'])->name('clients.invoices');

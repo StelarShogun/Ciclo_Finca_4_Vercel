@@ -27,7 +27,7 @@ class CF4AdminOrdersTest extends TestCase
                 $this->markTestSkipped('CF4-21 pedidos admin requiere MySQL para el esquema en inglés.');
             }
 
-            foreach (['admins', 'client_table', 'products', 'sales', 'sale_items'] as $table) {
+            foreach (['admins', 'client_table', 'products', 'sales', 'sale_items', 'product_reviews'] as $table) {
                 if (! Schema::hasTable($table)) {
                     $this->markTestSkipped('Tabla requerida no existe: '.$table);
                 }
@@ -194,6 +194,11 @@ class CF4AdminOrdersTest extends TestCase
         $complete->assertJsonPath('success', true);
         $complete->assertJsonPath('sale.status', 'completed');
         $this->assertNotEmpty($complete->json('sale.invoice_number'));
+        $this->assertDatabaseHas('product_reviews', [
+            'client_id' => $client->user_id,
+            'product_id' => $product->product_id,
+            'stars' => null,
+        ]);
 
         $again = $this->postJson(route('sales.complete', $sale->sale_id));
         $again->assertStatus(400);

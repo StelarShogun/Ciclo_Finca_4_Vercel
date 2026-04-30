@@ -568,6 +568,7 @@ class ClientPageController extends Controller
     {
         $client = Auth::guard('clients')->user();
         $tab = $request->query('tab', 'facturas');
+        $pendingReviewProducts = collect();
 
         if ($tab === 'historial') {
             $orders = Sale::with(['saleItems.product'])
@@ -575,6 +576,20 @@ class ClientPageController extends Controller
                 ->where('status', 'completed')
                 ->orderByDesc('sale_date')
                 ->get();
+
+            $pendingReviewProducts = ProductReview::query()
+                ->with('product:product_id,name')
+                ->where('client_id', $client->user_id)
+                ->whereNull('stars')
+                ->whereHas('product')
+                ->get()
+                ->map(function (ProductReview $review) {
+                    return [
+                        'product_id' => (int) $review->product_id,
+                        'name' => (string) ($review->product->name ?? 'Producto'),
+                    ];
+                })
+                ->values();
         } else {
             $tab = 'facturas';
             $orders = Sale::with(['saleItems.product'])
@@ -589,7 +604,7 @@ class ClientPageController extends Controller
             ->where('status', 'pending')
             ->count();
 
-        return view('client.Invoices', compact('orders', 'cartCount', 'invoiceCount', 'tab'));
+        return view('client.Invoices', compact('orders', 'cartCount', 'invoiceCount', 'tab', 'pendingReviewProducts'));
     }
 
     public function invoicesHeartbeat()
