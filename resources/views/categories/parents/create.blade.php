@@ -54,15 +54,38 @@
             </div>
         </div>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        (function() {
+        (function () {
+            const PRIMARY = '#2e7d32';
+            const DANGER = '#dc2626';
+
             const form = document.getElementById('create-category-form');
             if (form) {
-                form.addEventListener('submit', function(event) {
-                    const ok = window.confirm('¿Deseás guardar esta categoría?');
-                    if (!ok) {
-                        event.preventDefault();
+                form.addEventListener('submit', function (event) {
+                    if (form.dataset.confirmed === '1') {
+                        return;
                     }
+
+                    event.preventDefault();
+
+                    Swal.fire({
+                        title: '¿Guardar esta categoría?',
+                        text: 'Se creará una nueva categoría padre del catálogo.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: PRIMARY,
+                        cancelButtonColor: DANGER,
+                        confirmButtonText: 'Sí, guardar',
+                        cancelButtonText: 'Cancelar',
+                        reverseButtons: true,
+                        focusCancel: true,
+                    }).then(function (result) {
+                        if (result.isConfirmed) {
+                            form.dataset.confirmed = '1';
+                            form.submit();
+                        }
+                    });
                 });
             }
 
@@ -71,37 +94,22 @@
                 return;
             }
 
-            const toast = document.createElement('div');
-            toast.innerHTML = '<i class="fas fa-check-circle"></i> ' + successMessage;
-            toast.style.position = 'fixed';
-            toast.style.right = '20px';
-            toast.style.top = '20px';
-            toast.style.zIndex = '9999';
-            toast.style.background = '#16a34a';
-            toast.style.color = '#fff';
-            toast.style.padding = '12px 16px';
-            toast.style.borderRadius = '10px';
-            toast.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.18)';
-            toast.style.fontWeight = '600';
-            toast.style.display = 'flex';
-            toast.style.alignItems = 'center';
-            toast.style.gap = '8px';
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(-10px)';
-            toast.style.transition = 'all 220ms ease';
-
-            document.body.appendChild(toast);
-
-            requestAnimationFrame(() => {
-                toast.style.opacity = '1';
-                toast.style.transform = 'translateY(0)';
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: function (toastEl) {
+                    toastEl.addEventListener('mouseenter', Swal.stopTimer);
+                    toastEl.addEventListener('mouseleave', Swal.resumeTimer);
+                },
             });
 
-            window.setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-10px)';
-                window.setTimeout(() => toast.remove(), 240);
-            }, 2800);
+            Toast.fire({
+                icon: 'success',
+                title: successMessage,
+            });
         })();
     </script>
 </body>
