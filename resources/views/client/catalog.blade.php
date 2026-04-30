@@ -151,6 +151,22 @@
                         </div>
 
                         <div class="filter-group">
+                            <label for="brand_id">
+                                <i class="fas fa-tag" aria-hidden="true"></i>
+                                Marca
+                            </label>
+                            <select id="brand_id" name="brand_id" class="form-control">
+                                <option value="">Todas las marcas</option>
+                                @foreach($brands as $brand)
+                                    <option value="{{ $brand->id }}"
+                                        {{ (string) request('brand_id') === (string) $brand->id ? 'selected' : '' }}>
+                                        {{ $brand->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
                             <label for="sort">Ordenar por</label>
                             <select id="sort" name="sort" class="form-control">
                                 <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Más recientes</option>
@@ -368,6 +384,17 @@
                         @else
                             <p class="catalog-breadcrumb">Catálogo</p>
                         @endif
+
+                        @if($selectedBrand)
+                            <a href="{{ route('clients.catalog', array_diff_key(request()->query(), ['brand_id' => ''])) }}"
+                               class="catalog-brand-chip"
+                               title="Quitar filtro de marca">
+                                <i class="fas fa-tag" aria-hidden="true"></i>
+                                {{ $selectedBrand->name }}
+                                <i class="fas fa-times catalog-brand-chip-remove" aria-hidden="true"></i>
+                            </a>
+                        @endif
+
                         <p class="results-count">
                             Mostrando {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }} de {{ $products->total() }} productos
                         </p>
@@ -466,7 +493,9 @@
                             <div class="empty-state">
                                 <i class="fas fa-search"></i>
                                 <h3>No se encontraron productos</h3>
-                                <p>Intenta ajustar tus filtros de búsqueda</p>
+                                <p>
+                                        Intenta ajustar tus filtros de búsqueda
+                                </p>
                                 <a href="{{ route('clients.catalog') }}" class="btn btn-primary">
                                     Ver Todos los Productos
                                 </a>

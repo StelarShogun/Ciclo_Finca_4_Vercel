@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Sale;
@@ -41,7 +42,7 @@ class ClientPageController extends Controller
     public function catalog(Request $request)
     {
         // Base del catálogo cliente: solo productos visibles/publicables para el cliente.
-        $query = Product::with(['category'])->activeInClientStore();
+        $query = Product::with(['category', 'brands'])->activeInClientStore();
 
         if ($request->filled('search')) {
             $searchTerm = $request->search;
@@ -49,6 +50,19 @@ class ClientPageController extends Controller
                 $q->where('name', 'like', '%'.$searchTerm.'%')
                     ->orWhere('description', 'like', '%'.$searchTerm.'%');
             });
+        }
+
+        // Filter by brand when brand_id is present in the request.
+        $selectedBrand = null;
+        if ($request->filled('brand_id')) {
+            $brandId = (int) $request->brand_id;
+            $selectedBrand = Brand::find($brandId);
+            if ($selectedBrand) {
+                $query->whereHas('brands', fn ($q) => $q->where('brands.id', $brandId));
+            } else {
+                // Brand does not exist — force empty result set (CA-03).
+                $query->whereRaw('1 = 0');
+            }
         }
 
         $selectedCategory = null;
@@ -114,6 +128,8 @@ class ClientPageController extends Controller
             ->orderBy('name')
             ->get();
 
+        $brands = Brand::has('products')->orderBy('name')->get();
+
         $cartCount = $this->getCartCount();
         $catalogSpotlight = $this->catalogSpotlightProductRows();
 
@@ -129,7 +145,9 @@ class ClientPageController extends Controller
             'catalogSpotlight',
             'catalogParams',
             'catalogCategoryNav',
-            'emptyCategoryNoProducts'
+            'emptyCategoryNoProducts',
+            'brands',
+            'selectedBrand'
         ));
     }
 
