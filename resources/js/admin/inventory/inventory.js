@@ -430,15 +430,6 @@ function initProductSearchCombobox({ searchInputId, hiddenInputId, dropdownId, w
         onSelected?.(null);
     }
 
-    function escapeHtml(raw) {
-        return String(raw)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
-
     function renderResults(results, { query }) {
         dropdown.innerHTML = '';
         lastResults = results;
@@ -526,7 +517,7 @@ function initProductSearchCombobox({ searchInputId, hiddenInputId, dropdownId, w
             signal: abortController.signal,
         });
 
-        const data = await response.json();
+        const data = await readJsonOrThrow(response, 'No se pudo buscar productos.');
         const products = Array.isArray(data?.products) ? data.products : [];
         const filtered = products.filter((p) => {
             const id = String(p?.product_id ?? '');

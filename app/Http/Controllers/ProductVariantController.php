@@ -7,6 +7,7 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\SaleItem;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -65,10 +66,23 @@ class ProductVariantController extends Controller
             ], 422);
         }
 
-        ProductVariant::create([
-            'base_product_id' => $baseId,
-            'variant_product_id' => $variantId,
-        ]);
+        try {
+            ProductVariant::create([
+                'base_product_id' => $baseId,
+                'variant_product_id' => $variantId,
+            ]);
+        } catch (QueryException $e) {
+            // Handle race conditions against unique constraints (pair uniqueness / single-base-per-variant).
+            $sqlState = (string) ($e->errorInfo[0] ?? '');
+            if ($sqlState === '23000') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Esta variante ya está asociada a un producto base.',
+                ], 422);
+            }
+
+            throw $e;
+        }
 
         return response()->json([
             'success' => true,
@@ -140,10 +154,10 @@ class ProductVariantController extends Controller
 
     private function activeSupplierOrderStates(): array
     {
-        // Block deletion for supplier orders that are still active/in-progress.
-        // Canonical states in the codebase include: draft, pending, confirmed, delivered, cancelled, close_partial.
+        // Block deletion for supplier orders whose persisted states are still active/in-progress.
+        // Persisted order states checked here include: draft, pending, confirmed, delivered, cancelled.
         // Also include partial_received as it is used during receiving flows.
-        return ['draft', 'pending', 'confirmed', 'partial_received', 'close_partial'];
+        return ['draft', 'pending', 'confirmed', 'partial_received'];
     }
 }
 
