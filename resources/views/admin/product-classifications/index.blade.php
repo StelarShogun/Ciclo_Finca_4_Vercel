@@ -35,15 +35,15 @@
             <div class="form-card">
                 <div class="form-body">
                     @if ($products->isEmpty())
-                        <p><strong>No hay nada mal:</strong> solo faltan productos bien ubicados en el catálogo. En <strong>Inventario</strong>, al crear o editar, completá el rubro <em>y</em> el tipo concreto (ej. Bicicletas → MTB). Así podés usar color, talla, etc.</p>
-                        <p style="margin-top: 0.75rem;">Si el producto queda solo en el rubro grande, no entra en esta lista.</p>
+                        <p><strong>No hay nada mal:</strong> solo faltan productos bien ubicados en el catálogo. En <strong>Inventario</strong>, al crear o editar, completá la categoría padre <em>y</em> el tipo concreto (ej. Bicicletas → MTB). Así podés usar color, talla, etc.</p>
+                        <p style="margin-top: 0.75rem;">Si el producto queda solo en la categoría padre (sin tipo concreto), no entra en esta lista.</p>
                     @else
                         <div style="overflow-x: auto;">
                             <table class="table" style="width: 100%; border-collapse: collapse;">
                                 <thead>
                                     <tr style="text-align: left; border-bottom: 2px solid #e5e7eb;">
                                         <th style="padding: 0.75rem;">Producto</th>
-                                        <th style="padding: 0.75rem;">En el catálogo</th>
+                                        <th style="padding: 0.75rem;">Categoría -> Subcategoría</th>
                                         <th style="padding: 0.75rem;">Atributo → valor</th>
                                         <th style="padding: 0.75rem;">Acciones</th>
                                     </tr>
@@ -55,7 +55,7 @@
                                             <td style="padding: 0.75rem;">
                                                 @if ($product->category)
                                                     {{ optional($product->category->parent)->name ?? '—' }}
-                                                    <span class="text-muted">›</span>
+                                                    <span class="text-muted">-></span>
                                                     {{ $product->category->name }}
                                                 @else
                                                     —

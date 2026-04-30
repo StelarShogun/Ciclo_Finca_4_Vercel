@@ -42,6 +42,10 @@
                         <i class="fas fa-file-export"></i>
                         Exportar datos
                     </a>
+                    <a class="btn btn-secondary" href="{{ route('categories.parents.create') }}">
+                        <i class="fas fa-layer-group"></i>
+                        Crear categoría
+                    </a>
                     <a class="btn btn-secondary" href="{{ route('categories.subcategories.create') }}">
                         <i class="fas fa-sitemap"></i>
                         Crear Subcategoría
@@ -71,9 +75,9 @@
                     <div class="filters-grid">
 
                         <div class="filter-group">
-                            <label for="parent-category-filter">Rubro</label>
+                            <label for="parent-category-filter">Categoría padre</label>
                             <select id="parent-category-filter" name="parent_category_id">
-                                <option value="">Todos los rubros</option>
+                                <option value="">Todas las categorías padre</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}"
                                         @selected((string) request('parent_category_id') === (string) $category->category_id)>
@@ -174,6 +178,7 @@
                                 @php $adminAv = $product->adminAvailabilityLabel(); @endphp
                                 <tr>
                                     <td class="product-cell">
+                                        <div class="product-cell-content">
                                         <div class="product-thumb-wrap product-thumb-wrap--table">
                                             {{-- MediaLibrary image with legacy fallback --}}
                                             <img src="{{ $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
@@ -191,6 +196,7 @@
                                         <div class="product-info">
                                             <h4>{{ $product->name }}</h4>
                                             <span class="sku">SKU: {{ 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT) }}</span>
+                                        </div>
                                         </div>
                                     </td>
                                     <td>
@@ -430,9 +436,9 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-parent-category">Rubro *</label>
+                            <label for="new-parent-category">Categoría padre *</label>
                             <select id="new-parent-category" required>
-                                <option value="">Seleccionar rubro</option>
+                                <option value="">Seleccionar categoría padre</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
@@ -441,9 +447,9 @@
                         <div class="form-group">
                             <label for="new-subcategory">Tipo concreto <span class="text-muted">(recomendado)</span></label>
                             <select id="new-subcategory" aria-describedby="new-subcategory-hint">
-                                <option value="">Solo el rubro general</option>
+                                <option value="">Solo categoría padre (sin tipo)</option>
                             </select>
-                            <small id="new-subcategory-hint" class="form-text text-muted">Si dejás solo el rubro (ej. Bicicletas), no vas a poder cargar color, talla, etc. Elegí el tipo (ej. MTB) para usar esas opciones.</small>
+                            <small id="new-subcategory-hint" class="form-text text-muted">Si dejás solo la categoría padre (ej. Bicicletas), no vas a poder cargar color, talla, etc. Elegí el tipo (ej. MTB) para usar esas opciones.</small>
                             <input type="hidden" id="new-category" name="category_id" value="">
                         </div>
                         <div class="form-group">
@@ -565,9 +571,9 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="edit-parent-category">Rubro *</label>
+                            <label for="edit-parent-category">Categoría padre *</label>
                             <select id="edit-parent-category" required>
-                                <option value="">Seleccionar rubro</option>
+                                <option value="">Seleccionar categoría padre</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
@@ -576,7 +582,7 @@
                         <div class="form-group">
                             <label for="edit-subcategory">Tipo concreto <span class="text-muted">(recomendado)</span></label>
                             <select id="edit-subcategory">
-                                <option value="">Solo el rubro general</option>
+                                <option value="">Solo categoría padre (sin tipo)</option>
                             </select>
                             <input type="hidden" id="edit-category" name="category_id" required>
                         </div>

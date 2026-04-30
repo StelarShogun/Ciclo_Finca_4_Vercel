@@ -58,6 +58,10 @@
                             @endforeach
                         </select>
                         <div class="error-message">{{ $errors->first('parent_category_id') }}</div>
+                        <small class="form-text text-muted">
+                            ¿Falta una categoría padre?
+                            <a href="{{ route('categories.parents.create') }}">Crear categoría padre</a>.
+                        </small>
                     </div>
 
                     <div class="form-group optional">
