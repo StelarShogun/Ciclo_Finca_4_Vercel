@@ -651,6 +651,32 @@
                             </span>
                         </label>
                     </div>
+
+                    {{-- CF4-74 — Variantes / presentaciones del producto --}}
+                    <div class="form-group" id="edit-variants-section">
+                        <label>Variantes / presentaciones</label>
+                        <div style="display:flex; gap:10px; align-items:flex-start; margin: 0.35rem 0 0.5rem;">
+                            <div class="brand-combobox" id="edit-variant-combobox" style="flex:1;">
+                                <input
+                                    type="text"
+                                    id="edit-variant-search"
+                                    class="brand-combobox-input"
+                                    placeholder="Buscar producto para agregar como variante (nombre o SKU)…"
+                                    autocomplete="off"
+                                    aria-label="Buscar producto para agregar como variante">
+                                <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                <div class="brand-combobox-dropdown" id="edit-variant-dropdown"></div>
+                            </div>
+                            <input type="hidden" id="edit-variant-product-id" value="">
+                            <button type="button" class="btn btn-primary" id="edit-variant-add-btn" disabled>
+                                <i class="fas fa-plus"></i> Agregar
+                            </button>
+                        </div>
+                        <div id="edit-variants-list" class="form-text text-muted">—</div>
+                        <small class="form-text text-muted">
+                            Eliminá solo una variante sin afectar el producto base. No se permite si la variante tiene pedidos activos o pendientes.
+                        </small>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">

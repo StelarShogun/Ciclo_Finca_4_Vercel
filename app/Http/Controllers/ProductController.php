@@ -141,7 +141,7 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            $product = Product::with(['category.parent', 'supplier', 'brands', 'classificationValues'])->findOrFail($id);
+            $product = Product::with(['category.parent', 'supplier', 'brands', 'classificationValues', 'variants'])->findOrFail($id);
 
             if (request()->wantsJson() || request()->ajax()) {
                 $productData = $product->toArray();
@@ -150,6 +150,16 @@ class ProductController extends Controller
                 $productData['classification_value_ids'] = $product->classificationValues->pluck('id')->values()->all();
                 $productData['media_main'] = $product->getFirstMediaUrl('main_image');
                 $productData['media_gallery'] = $product->getMedia('gallery')->map(fn ($m) => $m->getUrl())->values()->toArray();
+                $productData['variants'] = $product->variants
+                    ->map(fn (Product $v) => [
+                        'product_id' => (int) $v->product_id,
+                        'name' => (string) $v->name,
+                        'status' => (string) $v->status,
+                        'stock_current' => (int) $v->stock_current,
+                        'sale_price' => (string) $v->sale_price,
+                    ])
+                    ->values()
+                    ->all();
 
                 return response()->json([
                     'success' => true,
@@ -158,16 +168,35 @@ class ProductController extends Controller
             }
 
             return view('products.show', compact('product'));
-        } catch (\Exception $e) {
+        } catch (ModelNotFoundException $e) {
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Producto no encontrado',
-                    'error' => $e->getMessage(),
                 ], 404);
             }
 
             return redirect()->route('inventory')->with('error', 'Producto no encontrado');
+        } catch (\Throwable $e) {
+            Log::error('Product show failed.', [
+                'product_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            if (request()->wantsJson() || request()->ajax()) {
+                $payload = [
+                    'success' => false,
+                    'message' => 'No se pudo cargar el producto. Inténtalo de nuevo.',
+                ];
+
+                if (config('app.debug')) {
+                    $payload['error'] = $e->getMessage();
+                }
+
+                return response()->json($payload, 500);
+            }
+
+            return redirect()->route('inventory')->with('error', 'No se pudo cargar el producto. Inténtalo de nuevo.');
         }
     }
 

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Spatie\MediaLibrary\HasMedia;
@@ -292,5 +293,22 @@ class Product extends Model implements HasMedia
     {
         return $this->hasMany(InventoryMovement::class, 'product_id', 'product_id')
             ->orderBy('created_at', 'asc');
+    }
+
+    public function variantLinks(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class, 'base_product_id', 'product_id');
+    }
+
+    public function variants(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Product::class,
+            ProductVariant::class,
+            'base_product_id',
+            'product_id',
+            'product_id',
+            'variant_product_id'
+        );
     }
 }

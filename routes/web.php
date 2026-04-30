@@ -16,6 +16,7 @@ use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProductClassificationController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductVariantController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierOrderController;
@@ -173,6 +174,15 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/product-classifications', [ProductClassificationController::class, 'index'])->name('admin.product-classifications.index');
     Route::get('/products/{product}/classifications/edit', [ProductClassificationController::class, 'edit'])->name('admin.products.classifications.edit');
     Route::put('/products/{product}/classifications', [ProductClassificationController::class, 'update'])->name('admin.products.classifications.update');
+
+    // Product variant management routes (CF4-74).
+    Route::post('/products/{product}/variants', [ProductVariantController::class, 'store'])
+        ->whereNumber('product')
+        ->name('admin.products.variants.store');
+    Route::delete('/products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])
+        ->whereNumber('product')
+        ->whereNumber('variant')
+        ->name('admin.products.variants.destroy');
 
     // Featured product toggle route.
     Route::post('/products/{id}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
