@@ -357,33 +357,27 @@ class SupplierOrderController extends Controller
         }
 
         if ($requestedState === 'delivered' && $order->state === 'confirmed') {
+            // CA-05: Only register inventory movements through this path when the order
+            // was NEVER processed by receiveOrder (received_quantity is null on all items).
+            // If receiveOrder already ran (even partially), movements were already recorded
+            // there, so we skip them here to avoid duplicates.
             $items = OrderItem::query()
                 ->where('order_num_order', (int) $order->num_order)
                 ->get();
 
-            if ($items->isEmpty() && is_array($order->products) && $order->products !== []) {
-                $items = collect($order->products)
-                    ->map(function ($row) {
-                        return (object) [
-                            'product_id'        => (int) ($row['product_id'] ?? 0),
-                            'quantity'          => (int) ($row['quantity'] ?? 0),
-                            'received_quantity' => 0,
-                        ];
-                    })
-                    ->filter(fn ($row) => $row->product_id > 0 && $row->quantity > 0);
-            }
+            $alreadyProcessedViaReceive = $items->contains(
+                fn ($item) => $item->received_quantity !== null
+            );
 
-            foreach ($items as $item) {
-                $productId = (int) $item->product_id;
-                $quantity = (int) $item->quantity;
-                $previousReceived = (int) ($item->received_quantity ?? 0);
-                $delta = max(0, $quantity - $previousReceived);
+            if (! $alreadyProcessedViaReceive) {
+                foreach ($items as $item) {
+                    $productId = (int) $item->product_id;
+                    $quantity  = (int) $item->quantity;
 
-                if ($productId < 1 || $quantity < 1) {
-                    continue;
-                }
+                    if ($productId < 1 || $quantity < 1) {
+                        continue;
+                    }
 
-                if ($delta > 0) {
                     $product = Product::find($productId);
 
                     if (! $product) {
@@ -398,15 +392,21 @@ class SupplierOrderController extends Controller
 
                     $inventoryService->recordSupplierEntry(
                         product: $product,
-                        quantity: $delta,
+                        quantity: $quantity,
                         orderId: $order->num_order,
                     );
-                }
 
-                if ($item instanceof OrderItem) {
-                    $item->update([
-                        'received_quantity' => $quantity,
-                    ]);
+                    $item->update(['received_quantity' => $quantity]);
+                }
+            } else {
+                // receiveOrder already handled movements; just mark remaining items as fully received.
+                foreach ($items as $item) {
+                    $quantity  = (int) $item->quantity;
+                    $received  = (int) ($item->received_quantity ?? 0);
+
+                    if ($received < $quantity) {
+                        $item->update(['received_quantity' => $quantity]);
+                    }
                 }
             }
         }
