@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Services\InventoryMovementService;
@@ -255,7 +256,42 @@ class ClientPageController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        return view('client.product', compact('product', 'relatedProducts', 'cartCount'));
+        $clientCanReview = false;
+        $clientReview = null;
+        if (Auth::guard('clients')->check()) {
+            $clientId = (int) Auth::guard('clients')->id();
+            $clientCanReview = SaleItem::query()
+                ->where('product_id', $product->product_id)
+                ->whereHas('sale', function ($q) use ($clientId) {
+                    $q->where('client_id', $clientId)
+                        ->where('status', 'completed');
+                })
+                ->exists();
+
+            $clientReview = ProductReview::query()
+                ->where('product_id', $product->product_id)
+                ->where('client_id', $clientId)
+                ->first();
+        }
+
+        $productReviews = ProductReview::query()
+            ->with('client:user_id,name,first_surname')
+            ->where('product_id', $product->product_id)
+            ->whereNotNull('stars')
+            ->latest()
+            ->get();
+
+        $averageStars = $productReviews->avg('stars');
+
+        return view('client.product', compact(
+            'product',
+            'relatedProducts',
+            'cartCount',
+            'clientCanReview',
+            'clientReview',
+            'productReviews',
+            'averageStars'
+        ));
     }
 
     public function addToCart(Request $request)

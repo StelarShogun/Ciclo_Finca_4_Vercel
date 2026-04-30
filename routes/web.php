@@ -16,6 +16,7 @@ use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProductClassificationController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\ProductVariantController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SupplierController;
@@ -368,6 +369,11 @@ Route::middleware(['auth:clients'])->group(function () {
     Route::delete('/cart/remove/{id}', [ClientPageController::class, 'removeFromCart'])->name('clients.cart.remove');
     Route::delete('/cart/clear', [ClientPageController::class, 'clearCart'])->name('clients.cart.clear');
     Route::post('/cart/checkout', [ClientPageController::class, 'checkout'])->name('clients.cart.checkout');
+
+    // Product reviews.
+    Route::post('/products/{product}/review', [ProductReviewController::class, 'storeOrUpdate'])
+        ->whereNumber('product')
+        ->name('clients.products.review.store');
 
     // Invoice routes.
     Route::get('/invoices', [ClientPageController::class, 'invoices'])->name('clients.invoices');

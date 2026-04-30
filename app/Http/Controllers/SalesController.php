@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Services\Admin\AdminPdfExportLimits;
@@ -274,6 +275,8 @@ class SalesController extends Controller
                 );
             }
 
+            $this->ensureReviewPlaceholdersForCompletedSale($sale);
+
             DB::commit();
 
             $this->logAuditAction(
@@ -317,6 +320,10 @@ class SalesController extends Controller
             'status' => $request->status,
             'notes'  => $request->notes,
         ]);
+
+        if ($sale->status === 'completed') {
+            $this->ensureReviewPlaceholdersForCompletedSale($sale);
+        }
 
         $this->logAuditAction(
             'sale_update_status',
@@ -406,10 +413,14 @@ class SalesController extends Controller
                 $invoiceNumber = (new Sale)->generateInvoiceNumber();
             }
 
-            $sale->update([
-                'status'         => 'completed',
-                'invoice_number' => $invoiceNumber,
-            ]);
+            DB::transaction(function () use ($sale, $invoiceNumber) {
+                $sale->update([
+                    'status'         => 'completed',
+                    'invoice_number' => $invoiceNumber,
+                ]);
+
+                $this->ensureReviewPlaceholdersForCompletedSale($sale);
+            });
 
             $sale->refresh();
 
@@ -914,6 +925,32 @@ class SalesController extends Controller
     private function roundMoney(float $amount): float
     {
         return round($amount, 2);
+    }
+
+    // Create nullable review rows for each purchased product when the sale is completed.
+    private function ensureReviewPlaceholdersForCompletedSale(Sale $sale): void
+    {
+        if ($sale->status !== 'completed' || empty($sale->client_id)) {
+            return;
+        }
+
+        $productIds = SaleItem::query()
+            ->where('sale_id', $sale->sale_id)
+            ->pluck('product_id')
+            ->unique()
+            ->values();
+
+        foreach ($productIds as $productId) {
+            ProductReview::query()->firstOrCreate(
+                [
+                    'client_id' => (int) $sale->client_id,
+                    'product_id' => (int) $productId,
+                ],
+                [
+                    'stars' => null,
+                ]
+            );
+        }
     }
 
     private function logAuditAction(string $actionType, string $description, array $meta = []): void
