@@ -42,6 +42,7 @@
                             <th>Fecha</th>
                             <th>Estado</th>
                             <th>Total</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -73,10 +74,15 @@
                                     @endif
                                 </td>
                                 <td><strong>&#8353;{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
+                                <td>
+                                    <a href="{{ route('clients.invoices.show', $sale) }}" class="btn btn-secondary btn-sm" aria-label="Ver detalle del pedido #{{ $sale->sale_id }}">
+                                        <i class="fas fa-eye"></i> Ver detalle
+                                    </a>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5">
+                                <td colspan="6">
                                     <div class="cf4-invoices-empty">
                                         <div class="cf4-invoices-empty-icon"><i class="fas fa-file-invoice"></i></div>
                                         <p>{{ $tab === 'historial' ? 'No has realizado ninguna compra aún.' : 'No tienes facturas pendientes.' }}</p>
