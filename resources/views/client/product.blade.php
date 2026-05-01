@@ -162,6 +162,70 @@
             </div>
         </div>
 
+        <section class="related-products" style="margin-top: 2rem;">
+            <h2 class="section-title">Reseñas del producto</h2>
+
+            @if(session('status'))
+                <div class="alert alert-success" style="margin-bottom:1rem;">{{ session('status') }}</div>
+            @endif
+
+            @if($errors->has('review'))
+                <div class="alert alert-danger" style="margin-bottom:1rem;">{{ $errors->first('review') }}</div>
+            @endif
+
+            @auth('clients')
+                @if($clientCanReview)
+                    <form method="POST" action="{{ route('clients.products.review.store', ['product' => $product->product_id]) }}" style="margin-bottom:1rem;">
+                        @csrf
+                        <label for="stars"><strong>Tu reseña (1 a 5 estrellas)</strong></label>
+                        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-top:0.5rem;">
+                            <select id="stars" name="stars" class="form-control" style="max-width:220px;">
+                                <option value="">Selecciona una calificación</option>
+                                @for($star = 1; $star <= 5; $star++)
+                                    <option value="{{ $star }}" @selected((int) old('stars', $clientReview->stars ?? 0) === $star)>
+                                        {{ $star }} estrella{{ $star > 1 ? 's' : '' }}
+                                    </option>
+                                @endfor
+                            </select>
+                            <button type="submit" class="btn btn-primary">
+                                {{ $clientReview ? 'Actualizar reseña' : 'Guardar reseña' }}
+                            </button>
+                        </div>
+                        @error('stars')
+                            <small style="color:#d9534f;display:block;margin-top:0.5rem;">{{ $message }}</small>
+                        @enderror
+                    </form>
+                @else
+                    <p style="margin-bottom:1rem;">Podrás reseñar este producto cuando tengas una compra completada del mismo.</p>
+                @endif
+            @else
+                <p style="margin-bottom:1rem;">
+                    <a href="{{ route('login.show') }}">Inicia sesión</a> para reseñar productos que hayas comprado.
+                </p>
+            @endauth
+
+            @if($productReviews->isNotEmpty())
+                <p style="margin-bottom:1rem;">
+                    Calificación promedio: <strong>{{ number_format((float) $averageStars, 1) }}</strong>/5
+                    ({{ $productReviews->count() }} reseña{{ $productReviews->count() > 1 ? 's' : '' }})
+                </p>
+                <div>
+                    @foreach($productReviews as $review)
+                        <article style="padding:0.8rem 0;border-top:1px solid #e9ecef;">
+                            <strong>{{ trim(($review->client->name ?? 'Cliente').' '.($review->client->first_surname ?? '')) }}</strong>
+                            <div style="margin-top:0.2rem;">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <span aria-hidden="true">{{ $i <= (int) $review->stars ? '★' : '☆' }}</span>
+                                @endfor
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            @else
+                <p>Aún no hay reseñas para este producto.</p>
+            @endif
+        </section>
+
         <!-- Related products from the same category -->
         @if($relatedProducts->count() > 0)
             <section class="related-products">
