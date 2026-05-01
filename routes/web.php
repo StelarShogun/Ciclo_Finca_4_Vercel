@@ -14,6 +14,7 @@ use App\Http\Controllers\ClassificationCatalogController;
 use App\Http\Controllers\ClientPageController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FavoriteProductController;
 use App\Http\Controllers\ProductClassificationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductVariantController;
@@ -322,7 +323,8 @@ Route::get('/recovery/verify', [ClientUserController::class, 'showRecoveryVerify
 Route::post('/recovery/verify', [ClientUserController::class, 'verifyRecoveryAndReset'])->name('clients.recovery.verify');
 
 // Logs out the client while preserving the admin session when both are active.
-Route::post('/logout', function (Request $request) {
+Route::post('/logout', function () {
+    $request = request();
     Auth::guard('clients')->logout();
 
     if (Auth::guard('admin')->check()) {
@@ -377,4 +379,8 @@ Route::middleware(['auth:clients'])->group(function () {
     Route::get('/profile', [ClientUserController::class, 'show'])->name('clients.profile');
     Route::put('/profile', [ClientUserController::class, 'update'])->name('clients.profile.update');
     Route::put('/profile/password', [ClientUserController::class, 'updatePassword'])->name('clients.profile.password');
+
+    // Favorite products routes.
+    Route::get('/favorites', [FavoriteProductController::class, 'index'])->name('clients.favorites.index');
+    Route::post('/favorites/toggle', [FavoriteProductController::class, 'toggle'])->name('clients.favorites.toggle');
 });
