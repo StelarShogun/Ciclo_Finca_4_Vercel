@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Client;
 use App\Models\FavoriteProduct;
 use App\Models\Product;
 use App\Models\ProductReview;
@@ -98,7 +99,7 @@ class ClientPageController extends Controller
 
         // Reject invalid price ranges before applying filters.
         if (is_numeric($minPrice) && is_numeric($maxPrice) && (float) $minPrice > (float) $maxPrice) {
-            return redirect()->route('clients.catalog', $request->except('min_price', 'max_price', 'page'))
+            return redirect()->route('clients.catalog', $request->except(['min_price', 'max_price', 'page']))
                 ->withInput()
                 ->withErrors(['price_range' => 'El precio mínimo debe ser menor o igual al precio máximo.']);
         }
@@ -143,7 +144,7 @@ class ClientPageController extends Controller
                 ->map(fn ($id) => (int) $id);
         }
 
-        $catalogParams = $request->except('category_id', 'page');
+        $catalogParams = $request->except(['category_id', 'page']);
         $catalogCategoryNav = $this->buildCatalogCategoryNav($categories, $catalogParams);
         $emptyCategoryNoProducts = $request->filled('category_id')
             && $selectedCategory
@@ -245,7 +246,7 @@ class ClientPageController extends Controller
             ->concat($novelties->map(fn (Product $p) => ['product' => $p, 'spotlight' => 'novelty']));
     }
 
-    public function product($id, ?string $slug = null)
+    public function product(int $id, ?string $slug = null)
     {
         $product = Product::with(['category', 'supplier', 'classificationValues.dimension'])->findOrFail($id);
 
@@ -456,7 +457,7 @@ class ClientPageController extends Controller
         return view('client.cart', compact('cartItems', 'total', 'cartCount'));
     }
 
-    public function removeFromCart($id)
+    public function removeFromCart(int $id)
     {
         $cart = Session::get('cart', []);
 
@@ -523,6 +524,7 @@ class ClientPageController extends Controller
                 ];
             }
 
+            /** @var Client|null $client */
             $client = Auth::guard('clients')->user();
 
             $sale = Sale::create([
@@ -576,6 +578,7 @@ class ClientPageController extends Controller
 
     public function invoices(Request $request)
     {
+        /** @var Client $client */
         $client = Auth::guard('clients')->user();
         $tab = $request->query('tab', 'facturas');
         $pendingReviewProducts = collect();
@@ -619,6 +622,7 @@ class ClientPageController extends Controller
 
     public function invoicesHeartbeat()
     {
+        /** @var Client $client */
         $client = Auth::guard('clients')->user();
 
         $count = Sale::where('client_id', $client->user_id)
@@ -626,6 +630,19 @@ class ClientPageController extends Controller
             ->count();
 
         return response()->json(['count' => $count]);
+    }
+
+    public function notifications()
+    {
+        /** @var Client $client */
+        $client = Auth::guard('clients')->user();
+        $cartCount = $this->getCartCount();
+
+        $notifications = $client->notifications()
+            ->latest()
+            ->paginate(20);
+
+        return view('client.notifications', compact('notifications', 'cartCount'));
     }
 
     public function showInvoice(Sale $sale)
