@@ -1,9 +1,12 @@
 /**
  * Smoke / light load against the app root.
- * Requires k6 on PATH: https://grafana.com/docs/k6/latest/set-up/install-k6/
  *
  *   npm run k6:home
+ * Uses native `k6` if installed, otherwise Docker (`grafana/k6`). On Linux,
+ * Docker uses host networking so http://localhost:8080 targets your machine.
+ *
  *   BASE_URL=http://127.0.0.1:8000 npm run k6:home
+ * Install k6 only: https://grafana.com/docs/k6/latest/set-up/install-k6/
  */
 import http from 'k6/http';
 import { check, sleep } from 'k6';

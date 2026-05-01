@@ -6,7 +6,7 @@
         "build": "vite build",
         "dev": "vite",
         "serve:php": "serve.cmd",
-        "k6:home": "k6 run scripts/k6/homepage.js"
+        "k6:home": "bash scripts/k6/run-homepage.sh"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
