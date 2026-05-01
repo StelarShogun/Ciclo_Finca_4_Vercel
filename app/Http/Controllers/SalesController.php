@@ -723,8 +723,10 @@ class SalesController extends Controller
         if ($request->filled('date_range')) {
             $lines[] = 'Rango: '.$request->date_range;
         }
-        if ($request->filled('start_date') || $request->filled('end_date')) {
-            $lines[] = 'Fechas: '.($request->start_date ?: '…').' — '.($request->end_date ?: '…');
+        $from = $request->date_from ?: $request->start_date;
+        $to = $request->date_to ?: $request->end_date;
+        if (($from !== null && $from !== '') || ($to !== null && $to !== '')) {
+            $lines[] = 'Fechas: '.($from ?: '…').' — '.($to ?: '…');
         }
         if ($request->filled('payment_method')) {
             $lines[] = 'Método de pago: '.$request->payment_method;

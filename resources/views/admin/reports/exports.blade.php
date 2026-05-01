@@ -160,7 +160,7 @@
                         'excel' => route('sales.export'),
                     ],
                     'staticParams' => [],
-                    'initialValues' => array_merge(['status' => 'completed'], request()->only(['status', 'date_range', 'start_date', 'end_date', 'payment_method', 'search'])),
+                    'initialValues' => array_merge(['status' => 'completed', 'date_range' => 'month'], request()->only(['status', 'date_range', 'date_from', 'date_to', 'payment_method', 'search'])),
                     'filters' => [
                         [
                             'name' => 'status',
@@ -178,15 +178,14 @@
                             'label' => 'Rango de fecha',
                             'type' => 'select',
                             'options' => [
-                                ['value' => '', 'label' => 'Sin filtro'],
                                 ['value' => 'today', 'label' => 'Hoy'],
                                 ['value' => 'week', 'label' => 'Esta semana'],
                                 ['value' => 'month', 'label' => 'Este mes'],
-                                ['value' => 'range', 'label' => 'Por fechas'],
+                                ['value' => 'custom', 'label' => 'Por fechas'],
                             ],
                         ],
-                        ['name' => 'start_date', 'label' => 'Desde', 'type' => 'date'],
-                        ['name' => 'end_date', 'label' => 'Hasta', 'type' => 'date'],
+                        ['name' => 'date_from', 'label' => 'Desde', 'type' => 'date'],
+                        ['name' => 'date_to', 'label' => 'Hasta', 'type' => 'date'],
                         ['name' => 'payment_method', 'label' => 'Método de pago', 'type' => 'text', 'placeholder' => 'efectivo, tarjeta, ...'],
                         ['name' => 'search', 'label' => 'Buscar', 'type' => 'text', 'placeholder' => 'Factura, cliente, ...'],
                     ],
@@ -359,7 +358,9 @@
     @endphp
 
     <div class="reports-hub reports-exports">
-        <script type="application/json" id="cf4-export-config">{!! json_encode($exportsConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+        <script type="application/json" id="cf4-export-config">
+            @json($exportsConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
+        </script>
 
         <nav class="reports-breadcrumb">
             <a href="{{ route('admin.reports.index') }}">Reportes</a>

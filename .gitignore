@@ -17,6 +17,7 @@
 # =========================
 /public/build
 /public/hot
+.vite-cache/
 
 # =========================
 # STORAGE (ARCHIVOS GENERADOS)
