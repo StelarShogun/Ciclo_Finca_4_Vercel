@@ -63,29 +63,11 @@
   align-items: start;
 }
 
-/* Tablet: PDF arriba a todo ancho; inventario+ventas | listados */
-@media (min-width: 720px) and (max-width: 1023px) {
+/* Tablet / Escritorio: dos columnas equilibradas */
+@media (min-width: 720px) {
   .reports-exports-layout {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.25rem 1.35rem;
-  }
-
-  .exports-section--pdf {
-    grid-column: 1 / -1;
-  }
-}
-
-/* Escritorio: tres columnas equilibradas */
-@media (min-width: 1024px) {
-  .reports-exports-layout {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
     gap: 1.35rem 1.5rem;
-  }
-
-  .exports-section--pdf,
-  .reports-exports-stack,
-  .exports-section--registry {
-    grid-column: auto;
   }
 }
 
@@ -212,6 +194,177 @@
 
 .exports-chip.exports-chip--excel .fa-file-excel {
   font-size: 0.85em;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Modal universal de exportación
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.cf4-export-modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(560px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 3rem);
+  overflow-y: auto;
+  border: none;
+  border-radius: 14px;
+  padding: 0;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.25);
+}
+
+.cf4-export-modal::backdrop {
+  background: rgba(17, 24, 39, 0.5);
+}
+
+.cf4-export-modal__inner {
+  padding: 0;
+  margin: 0;
+}
+
+.cf4-export-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem 0.9rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.cf4-export-modal__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text, #111827);
+}
+
+.cf4-export-modal__subtitle {
+  margin: 0.3rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-muted, #6b7280);
+  line-height: 1.45;
+}
+
+.cf4-export-modal__close {
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-muted, #6b7280);
+}
+
+.cf4-export-modal__close:hover {
+  color: var(--color-text, #111827);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.cf4-export-modal__body {
+  padding: 1rem 1.25rem 0.5rem;
+}
+
+.cf4-export-modal__scope {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 0.6rem;
+  margin: 0 0 0.95rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cf4-export-modal__radio {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: var(--color-text, #111827);
+  font-weight: 600;
+  background: #fff;
+}
+
+.cf4-export-modal__radio input {
+  margin: 0;
+}
+
+.cf4-export-modal__filters {
+  display: block;
+}
+
+.cf4-export-modal__field {
+  margin-bottom: 0.85rem;
+}
+
+.cf4-export-modal__label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text, #111827);
+  margin-bottom: 0.35rem;
+}
+
+.cf4-export-modal__control {
+  width: 100%;
+  min-height: 2.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  outline: none;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.cf4-export-modal__control:focus {
+  border-color: var(--color-primary, #2e7d32);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.14);
+}
+
+.cf4-export-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0.95rem 1.25rem 1.1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.cf4-export-modal__btn {
+  min-height: 2.6rem;
+  padding: 0.55rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.cf4-export-modal__btn--ghost {
+  background: #fff;
+  color: var(--color-text, #111827);
+}
+
+.cf4-export-modal__btn--ghost:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.cf4-export-modal__btn--primary {
+  background: var(--color-primary, #2e7d32);
+  color: #fff;
+  border-color: var(--color-primary, #2e7d32);
+}
+
+.cf4-export-modal__btn--primary:hover {
+  background: #246528;
+  border-color: #246528;
 }
 
 /* ── Excel button (usado dentro de exports-button-row) ──────────────────────── */
