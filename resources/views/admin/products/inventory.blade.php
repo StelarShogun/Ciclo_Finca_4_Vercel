@@ -879,12 +879,12 @@
                 {{-- Reason --}}
                 <div class="stock-form-group">
                     <label for="stock-modal-reason">Motivo *</label>
-                    <select id="stock-modal-reason">
-                        <option value="" disabled selected>Selecciona un motivo…</option>
-                        <option value="manual_adjustment">Ajuste Manual</option>
-                        <option value="damage">Daño</option>
-                        <option value="refund">Entrada por reembolso / nota de crédito</option>
-                    </select>
+                    <input type="text"
+                           id="stock-modal-reason"
+                           class="stock-form-control"
+                           placeholder="Describe el motivo del ajuste…"
+                           maxlength="500"
+                           autocomplete="off">
                     <span class="stock-field-error" id="stock-modal-reason-error"></span>
                 </div>
 

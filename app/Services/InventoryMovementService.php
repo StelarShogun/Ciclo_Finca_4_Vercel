@@ -19,8 +19,6 @@ class InventoryMovementService
         'return',
         'provider',
         'manual_adjustment',
-        'damage',
-        'refund',
     ];
 
     // Default human-readable reasons mapped by origin.
@@ -31,8 +29,6 @@ class InventoryMovementService
         'return'            => 'Devolución de cliente',
         'provider'          => 'Recepción de pedido de proveedor',
         'manual_adjustment' => 'Ajuste manual de inventario',
-        'damage'            => 'Producto dañado o pérdida',
-        'refund'            => 'Reembolso / cancelación',
     ];
 
     // Records an inventory movement and updates product stock atomically.
@@ -68,7 +64,7 @@ class InventoryMovementService
             // Lock the product row to prevent concurrent stock updates.
             /** @var Product $freshProduct */
             $freshProduct = Product::lockForUpdate()->findOrFail($product->product_id);
-            $stockBefore = (int) $freshProduct->stock_current;
+            $stockBefore  = (int) $freshProduct->stock_current;
 
             // Calculate the resulting stock based on movement type.
             $stockAfter = match ($type) {
@@ -115,53 +111,42 @@ class InventoryMovementService
     }
 
     // Records an admin sale as an inventory exit.
+    // Reason is assigned automatically from ORIGIN_REASONS.
     public function recordSale(
         Product $product,
         int $quantity,
         int $saleId,
     ): InventoryMovement {
         return $this->record(
-            product: $product,
-            type: MovementType::SALIDA,
-            origin: 'sale_admin',
-            quantity: $quantity,
+            product:     $product,
+            type:        MovementType::SALIDA,
+            origin:      'sale_admin',
+            quantity:    $quantity,
             referenceId: $saleId,
         );
     }
 
     // Records a web checkout sale without an associated admin user.
+    // Reason is assigned automatically from ORIGIN_REASONS.
     public function recordWebCartSale(
         Product $product,
         int $quantity,
         int $saleId,
     ): InventoryMovement {
         return $this->record(
-            product: $product,
-            type: MovementType::SALIDA,
-            origin: 'sale_web',
-            quantity: $quantity,
+            product:     $product,
+            type:        MovementType::SALIDA,
+            origin:      'sale_web',
+            quantity:    $quantity,
             referenceId: $saleId,
-            userId: null,
+            userId:      null,
         );
     }
 
-    // Records returned stock from a refund or cancellation.
-    public function recordRefund(
-        Product $product,
-        int $quantity,
-        int $saleId,
-    ): InventoryMovement {
-        return $this->record(
-            product: $product,
-            type: MovementType::DEVOLUCION,
-            origin: 'return',
-            quantity: $quantity,
-            referenceId: $saleId,
-        );
-    }
-
-    // Records a sale return initiated by an admin, carrying the explicit
-    // reason entered in the return form (CA-02, CA-04).
+    // Records a sale return initiated by an admin.
+    // The reason entered in the return form is mandatory and stored
+    // in inventory_movements.reason so every return is fully traceable.
+    // Used by: returnSale(), cancel(), refund() in SalesController.
     public function recordSaleReturn(
         Product $product,
         int $quantity,
@@ -169,57 +154,59 @@ class InventoryMovementService
         string $reason,
     ): InventoryMovement {
         return $this->record(
-            product: $product,
-            type: MovementType::DEVOLUCION,
-            origin: 'return',
-            quantity: $quantity,
+            product:     $product,
+            type:        MovementType::DEVOLUCION,
+            origin:      'return',
+            quantity:    $quantity,
             referenceId: $saleId,
-            reason: $reason,
+            reason:      $reason,
         );
     }
 
     // Records stock received from a supplier order.
-    // Reason is automatically set to "Recepción de pedido de proveedor".
+    // Reason is assigned automatically from ORIGIN_REASONS.
     public function recordSupplierEntry(
         Product $product,
         int $quantity,
         int $orderId,
     ): InventoryMovement {
         return $this->record(
-            product: $product,
-            type: MovementType::ENTRADA,
-            origin: 'provider',
-            quantity: $quantity,
+            product:     $product,
+            type:        MovementType::ENTRADA,
+            origin:      'provider',
+            quantity:    $quantity,
             referenceId: $orderId,
-            reason: self::ORIGIN_REASONS['provider'],
+            reason:      self::ORIGIN_REASONS['provider'],
         );
     }
 
-    // Records a manual stock increase.
+    // Records a manual stock increase with a mandatory free-text reason.
     public function recordManualEntry(
         Product $product,
         int $quantity,
         string $reason,
     ): InventoryMovement {
         return $this->record(
-            product: $product,
-            type: MovementType::ENTRADA,
-            origin: $reason,
+            product:  $product,
+            type:     MovementType::ENTRADA,
+            origin:   'manual_adjustment',
             quantity: $quantity,
+            reason:   $reason,
         );
     }
 
-    // Records a manual stock decrease.
+    // Records a manual stock decrease with a mandatory free-text reason.
     public function recordManualExit(
         Product $product,
         int $quantity,
         string $reason,
     ): InventoryMovement {
         return $this->record(
-            product: $product,
-            type: MovementType::SALIDA,
-            origin: $reason,
+            product:  $product,
+            type:     MovementType::SALIDA,
+            origin:   'manual_adjustment',
             quantity: $quantity,
+            reason:   $reason,
         );
     }
 }

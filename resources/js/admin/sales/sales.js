@@ -54,7 +54,6 @@ function confirmReturn() {
     const reason   = (textarea?.value ?? '').trim();
     const errorMsg = document.getElementById('return-reason-error');
 
-    // CA-02 – Block submission when reason is missing or too short.
     if (reason.length < 3) {
         if (errorMsg) errorMsg.style.display = '';
         textarea?.focus();
@@ -76,7 +75,7 @@ function confirmReturn() {
             'Accept':       'application/json',
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ return_reason: reason }),
+        body: JSON.stringify({ reason: reason }),
     })
     .then(r => r.json())
     .then(data => {
@@ -307,7 +306,7 @@ function viewSale(id) {
             pending:   'Pendiente',
             completed: 'Confirmado',
             cancelled: 'Rechazado',
-            refunded:  'Reembolsado',
+            refunded:  'Reembolsado (histórico)',
             returned:  'Devuelta',
         };
         const paymentLabels = { cash: 'Efectivo', sinpe: 'SINPE movil', transfer: 'Transferencia' };
@@ -358,15 +357,13 @@ function viewSale(id) {
             ? '<div class="detail-item"><label>Referencia:</label><span>' + sale.payment_reference + '</span></div>'
             : '';
 
-        // CA-03 – Return metadata block: shown when the sale has been returned.
         let returnSection = '';
-        if (sale.status === 'returned' && sale.return_reason) {
-            const returnedAt  = sale.returned_at  ? new Date(sale.returned_at).toLocaleString('es-CR') : '—';
-            const returnedBy  = sale.returned_by  ? sale.returned_by.name : 'Administrador';
+        if (sale.status === 'returned') {
+            const returnedAt = sale.returned_at ? new Date(sale.returned_at).toLocaleString('es-CR') : '—';
+            const returnedBy = sale.returned_by ? sale.returned_by.name : 'Administrador';
             returnSection = '<div class="detail-section">'
                 + '<h4><i class="fas fa-rotate-left"></i> Datos de la devolución</h4>'
                 + '<div class="detail-grid">'
-                + '<div class="detail-item"><label>Motivo:</label><span>' + sale.return_reason + '</span></div>'
                 + '<div class="detail-item"><label>Fecha:</label><span>' + returnedAt + '</span></div>'
                 + '<div class="detail-item"><label>Registrado por:</label><span>' + returnedBy + '</span></div>'
                 + '</div></div>';
@@ -453,19 +450,6 @@ function cancelSale(id, invoiceNumber) {
     }).then(r => r.isConfirmed && _saleAction('/sales/' + id + '/cancel', 'Encargo: ' + invoiceLabel + ' eliminado.'));
 }
 
-function refundSale(id) {
-    Swal.fire({
-        title: 'Reembolsar venta?',
-        text: 'La venta pasara a estado reembolsado.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#f57c00',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Si, reembolsar',
-        cancelButtonText: 'Cancelar'
-    }).then(r => r.isConfirmed && _saleAction('/sales/' + id + '/refund', 'Reembolso procesado.'));
-}
-
 function printSale(id) {
     window.open('/sales/' + id + '/print', '_blank');
 }
@@ -480,7 +464,6 @@ Object.assign(window, {
     viewSale,
     completeSale,
     cancelSale,
-    refundSale,
     printSale,
     openReturnModal,
     closeReturnModal,

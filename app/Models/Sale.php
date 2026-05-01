@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Cache;
 /**
  * @property-read Client|null $client
  * @property-read Collection<int, SaleItem> $saleItems
- * @property string|null $return_reason
  * @property int|null    $returned_by
  * @property Carbon|null $returned_at
  */
@@ -22,26 +21,25 @@ class Sale extends Model
 
     protected $primaryKey = 'sale_id';
 
-    protected $fillable = [
-        'invoice_number',
-        'client_id',
-        'seller_admin_id',
-        'subtotal',
-        'iva',
-        'discount',
-        'total',
-        'payment_method',
-        'payment_reference',
-        'status',
-        'notes',
-        'sale_date',
-        'buyer_name',
-        'buyer_email',
-        'order_source',
-        'return_reason',
-        'returned_by',
-        'returned_at',
-    ];
+protected $fillable = [
+    'invoice_number',
+    'client_id',
+    'seller_admin_id',
+    'subtotal',
+    'iva',
+    'discount',
+    'total',
+    'payment_method',
+    'payment_reference',
+    'status',
+    'notes',
+    'sale_date',
+    'buyer_name',
+    'buyer_email',
+    'order_source',
+    'returned_by',
+    'returned_at',
+];
 
     protected $casts = [
         'subtotal'    => 'decimal:2',
@@ -102,10 +100,10 @@ class Sale extends Model
     {
         $maxNum = self::where('invoice_number', 'like', 'CF4-%')
             ->get(['invoice_number'])
-            ->map(fn ($s) => (int) substr($s->invoice_number, 4))
+            ->map(fn($s) => (int) substr($s->invoice_number, 4))
             ->max() ?? 0;
 
-        return 'CF4-'.str_pad((string) ($maxNum + 1), 4, '0', STR_PAD_LEFT);
+        return 'CF4-' . str_pad((string) ($maxNum + 1), 4, '0', STR_PAD_LEFT);
     }
 
     public function calculateTotal()

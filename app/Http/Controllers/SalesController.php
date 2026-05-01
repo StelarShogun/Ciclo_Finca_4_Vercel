@@ -23,9 +23,9 @@ class SalesController extends Controller
     public function index(Request $request)
     {
         $statusFilter = $request->query('status');
-        $salesStatusUi = in_array($statusFilter, ['cancelled', 'refunded', 'returned', 'all'], true)
-            ? $statusFilter
-            : 'completed';
+        $salesStatusUi = in_array($statusFilter, ['cancelled', 'returned', 'all'], true)
+    ? $statusFilter
+    : 'completed';
 
         $query = Sale::with(['client', 'sellerAdmin', 'saleItems.product']);
         $this->applySalesAdminListFilters($query, $request);
@@ -96,8 +96,6 @@ class SalesController extends Controller
                     'notes'                           => $sale->notes,
                     'order_source'                    => $sale->order_source,
                     'can_be_returned'                 => $sale->canBeReturned(),
-                    // Return metadata shown inside the sale detail modal (CA-03).
-                    'return_reason'                   => $sale->return_reason,
                     'returned_at'                     => $sale->returned_at?->toISOString(),
                     'returned_by'                     => $sale->returnedBy ? [
                         'user_id' => $sale->returnedBy->user_id,
@@ -315,7 +313,7 @@ class SalesController extends Controller
         $previousStatus = (string) $sale->status;
 
         $request->validate([
-            'status' => 'required|in:pending,completed,cancelled,refunded,returned',
+            'status' => 'required|in:pending,completed,cancelled,returned',
             'notes'  => 'nullable|string|max:500',
         ]);
 
@@ -454,18 +452,18 @@ class SalesController extends Controller
             }
 
             DB::transaction(function () use ($sale, $inventoryService) {
-                $sale->update(['status' => 'cancelled']);
+    $sale->update(['status' => 'cancelled']);
 
-                foreach ($sale->saleItems as $item) {
-                    if ($item->product) {
-                        $inventoryService->recordRefund(
-                            product:  $item->product,
-                            quantity: (int) $item->quantity,
-                            saleId:   $sale->sale_id,
-                        );
-                    }
-                }
-            });
+    foreach ($sale->saleItems as $item) {
+        if ($item->product) {
+            $inventoryService->recordManualEntry(
+    product:  $item->product,
+    quantity: (int) $item->quantity,
+    reason:   'Cancelación de pedido #' . $sale->sale_id,
+);
+        }
+    }
+});
 
             $this->logAuditAction(
                 'sale_cancel',
@@ -491,131 +489,81 @@ class SalesController extends Controller
         }
     }
 
-    public function refund(int $id, InventoryMovementService $inventoryService)
-    {
-        $sale = Sale::with('saleItems.product')->findOrFail($id);
+    public function returnSale(int $id, Request $request, InventoryMovementService $inventoryService)
+{
+    // Validar 'reason' en lugar de 'return_reason'
+    $request->validate([
+        'reason' => 'required|string|min:3|max:500',
+    ], [
+        'reason.required' => 'Debe ingresar un motivo de devolución.',
+        'reason.min'      => 'El motivo debe tener al menos 3 caracteres.',
+        'reason.max'      => 'El motivo no puede superar los 500 caracteres.',
+    ]);
 
-        if ($sale->status !== 'completed') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only completed sales can be refunded.',
-            ], 400);
-        }
+    $sale = Sale::with('saleItems.product')->findOrFail($id);
 
-        DB::transaction(function () use ($sale, $inventoryService) {
+    if (! $sale->canBeReturned()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Solo las ventas confirmadas pueden registrar una devolución.',
+        ], 400);
+    }
+
+    try {
+        DB::transaction(function () use ($sale, $request, $inventoryService) {
+            $adminId = Auth::guard('admin')->id();
+            $reason  = trim($request->reason);
+
+            // CA-03 — Ya no se guarda return_reason en sales.
+            // Solo se actualizan los metadatos de auditoría.
+            $sale->update([
+                'status'      => 'returned',
+                'returned_by' => $adminId,
+                'returned_at' => now(),
+            ]);
+
+            // CA-04 — El motivo viaja al movimiento de inventario.
             foreach ($sale->saleItems as $item) {
                 if ($item->product) {
-                    $inventoryService->recordRefund(
+                    $inventoryService->recordSaleReturn(
                         product:  $item->product,
                         quantity: (int) $item->quantity,
                         saleId:   $sale->sale_id,
+                        reason:   $reason,
                     );
                 }
             }
-
-            $sale->update(['status' => 'refunded']);
         });
 
         $this->logAuditAction(
-            'sale_refund',
-            'Venta reembolsada y stock restaurado.',
+            'sale_return',
+            'Devolución registrada sobre venta completada.',
             [
                 'sale_id'        => (int) $sale->sale_id,
                 'invoice_number' => (string) ($sale->invoice_number ?? ''),
                 'from_status'    => 'completed',
-                'to_status'      => 'refunded',
+                'to_status'      => 'returned',
+                'reason'         => trim($request->reason), // ← antes return_reason
             ]
         );
 
         return response()->json([
             'success' => true,
-            'message' => 'Refund processed successfully.',
-        ]);
-    }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // CA-01 / CA-02 / CA-03 / CA-04 – Sale return with mandatory reason
-    // ──────────────────────────────────────────────────────────────────────────
-    // Registers a return on a completed sale, changes its status to "returned",
-    // persists the mandatory reason and audit metadata, and re-enters all
-    // product units back into inventory via the shared InventoryMovementService.
-    public function returnSale(int $id, Request $request, InventoryMovementService $inventoryService)
-    {
-        // CA-02 – Validate that a non-empty reason was provided.
-        $request->validate([
-            'return_reason' => 'required|string|min:3|max:500',
-        ], [
-            'return_reason.required' => 'Debe ingresar un motivo de devolución.',
-            'return_reason.min'      => 'El motivo debe tener al menos 3 caracteres.',
-            'return_reason.max'      => 'El motivo no puede superar los 500 caracteres.',
+            'message' => 'Devolución registrada correctamente. El stock fue reintegrado al inventario.',
         ]);
 
-        $sale = Sale::with('saleItems.product')->findOrFail($id);
-
-        // CA-01 – Only completed sales can be returned.
-        if (! $sale->canBeReturned()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Solo las ventas confirmadas pueden registrar una devolución.',
-            ], 400);
-        }
-
-        try {
-            DB::transaction(function () use ($sale, $request, $inventoryService) {
-                $adminId      = Auth::guard('admin')->id();
-                $returnReason = trim($request->return_reason);
-
-                // CA-03 – Change status and store return metadata atomically.
-                $sale->update([
-                    'status'        => 'returned',
-                    'return_reason' => $returnReason,
-                    'returned_by'   => $adminId,
-                    'returned_at'   => now(),
-                ]);
-
-                // CA-04 – Re-enter all sold units back into inventory with the
-                //         admin-supplied reason so every movement is traceable.
-                foreach ($sale->saleItems as $item) {
-                    if ($item->product) {
-                        $inventoryService->recordSaleReturn(
-                            product:  $item->product,
-                            quantity: (int) $item->quantity,
-                            saleId:   $sale->sale_id,
-                            reason:   $returnReason,
-                        );
-                    }
-                }
-            });
-
-            $this->logAuditAction(
-                'sale_return',
-                'Devolución registrada sobre venta completada.',
-                [
-                    'sale_id'        => (int) $sale->sale_id,
-                    'invoice_number' => (string) ($sale->invoice_number ?? ''),
-                    'from_status'    => 'completed',
-                    'to_status'      => 'returned',
-                    'return_reason'  => trim($request->return_reason),
-                ]
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Devolución registrada correctamente. El stock fue reintegrado al inventario.',
-            ]);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->errors()['quantity'][0] ?? 'Error de validación de stock.',
-            ], 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al registrar la devolución: ' . $e->getMessage(),
-            ], 500);
-        }
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->errors()['quantity'][0] ?? 'Error de validación de stock.',
+        ], 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al registrar la devolución: ' . $e->getMessage(),
+        ], 500);
     }
+}
 
     public function print($id)
     {
@@ -823,7 +771,7 @@ class SalesController extends Controller
         $lines  = [];
         $status = $request->query('status');
 
-        if (in_array($status, ['cancelled', 'refunded', 'returned', 'all'], true)) {
+        if (in_array($status, ['cancelled', 'returned', 'all'], true)) {
             $lines[] = 'Estado: '.$status;
         } else {
             $lines[] = 'Estado: confirmadas (completadas)';
@@ -897,7 +845,7 @@ class SalesController extends Controller
 
     private function applyVentasStatusScope($query, ?string $statusParam): void
     {
-        $closed = ['completed', 'cancelled', 'refunded', 'returned'];
+        $closed = ['completed', 'cancelled', 'returned'];
 
         if ($statusParam === 'all') {
             $query->whereIn('status', $closed);
@@ -911,7 +859,7 @@ class SalesController extends Controller
             return;
         }
 
-        $query->where('status', 'completed');
+        $query->whereIn('status', ['completed', 'returned']);
     }
 
     private function calculateDailySales()
@@ -946,20 +894,20 @@ class SalesController extends Controller
         return round((($today - $yesterday) / $yesterday) * 100, 1);
     }
 
-    private function calculateRefunds()
-    {
-        return Sale::whereDate('sale_date', Carbon::today())
-            ->whereIn('status', ['refunded', 'returned'])
-            ->count();
-    }
+private function calculateRefunds(): int
+{
+    return Sale::whereDate('sale_date', Carbon::today())
+        ->where('status', 'returned')
+        ->count();
+}
 
-    private function calculateRefundsTrend()
-    {
-        $today     = Sale::whereDate('sale_date', Carbon::today())->whereIn('status', ['refunded', 'returned'])->count();
-        $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->whereIn('status', ['refunded', 'returned'])->count();
+private function calculateRefundsTrend(): int
+{
+    $today     = Sale::whereDate('sale_date', Carbon::today())->where('status', 'returned')->count();
+    $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->where('status', 'returned')->count();
 
-        return $today - $yesterday;
-    }
+    return $today - $yesterday;
+}
 
     private function mapPaymentMethodToEnglish($value)
     {

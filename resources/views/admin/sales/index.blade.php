@@ -93,8 +93,6 @@
                                 Devuelta</option>
                             <option value="cancelled" {{ ($salesStatusUi ?? '') === 'cancelled' ? 'selected' : '' }}>
                                 Cancelada / rechazada</option>
-                            <option value="refunded" {{ ($salesStatusUi ?? '') === 'refunded' ? 'selected' : '' }}>
-                                Reembolsada</option>
                             <option value="all" {{ ($salesStatusUi ?? '') === 'all' ? 'selected' : '' }}>Todas las
                                 cerradas</option>
                         </select>
@@ -170,7 +168,6 @@
                 'pending'   => 'Pendiente',
                 'completed' => 'Confirmada',
                 'cancelled' => 'Rechazado',
-                'refunded'  => 'Reembolsado',
                 'returned'  => 'Devuelta',
             ];
             $paymentLabels = ['cash' => 'Efectivo', 'sinpe' => 'SINPE Móvil', 'transfer' => 'Transferencia'];

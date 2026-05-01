@@ -223,7 +223,6 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::resource('sales', SalesController::class);
     Route::post('/sales/{id}/complete', [SalesController::class, 'complete'])->name('sales.complete');
     Route::post('/sales/{id}/cancel', [SalesController::class, 'cancel'])->name('sales.cancel');
-    Route::post('/sales/{id}/refund', [SalesController::class, 'refund'])->name('sales.refund');
 
     // CA-01 / CA-02 / CA-03 / CA-04 – Return a completed sale with mandatory reason.
     Route::post('/sales/{id}/return', [SalesController::class, 'returnSale'])->name('sales.return');
