@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Services\OrderCancellationNotifier;
 
 class SalesController extends Controller
 {
@@ -76,7 +78,7 @@ class SalesController extends Controller
         ]);
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         try {
             $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
@@ -303,7 +305,7 @@ class SalesController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $sale = Sale::findOrFail($id);
         $previousStatus = (string) $sale->status;
@@ -335,7 +337,7 @@ class SalesController extends Controller
         ]);
     }
 
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $sale = Sale::findOrFail($id);
 
@@ -367,7 +369,7 @@ class SalesController extends Controller
     }
 
     // Complete a pending order without duplicating stock output movements
-    public function complete($id)
+    public function complete(int $id)
     {
         try {
             $sale = Sale::findOrFail($id);
@@ -442,10 +444,12 @@ class SalesController extends Controller
     }
 
     // Cancel a pending order and restore committed stock
-    public function cancel(int $id, InventoryMovementService $inventoryService)
+    public function cancel(int $id, InventoryMovementService $inventoryService, OrderCancellationNotifier $notifier)
     {
         try {
             $sale = Sale::with('saleItems.product')->findOrFail($id);
+            $cancelledAt = now();
+            $reason = 'Cancelado por administración';
 
             if ($sale->status === 'cancelled') {
                 return response()->json(['success' => false, 'message' => 'Este pedido ya está cancelado o rechazado.'], 400);
@@ -463,8 +467,18 @@ class SalesController extends Controller
                 return response()->json(['success' => false, 'message' => 'Solo los pedidos pendientes pueden rechazarse o cancelarse.'], 400);
             }
 
-            DB::transaction(function () use ($sale, $inventoryService) {
-                $sale->update(['status' => 'cancelled']);
+            DB::transaction(function () use ($sale, $inventoryService, $cancelledAt, $reason) {
+                $existingNotes = trim((string) ($sale->notes ?? ''));
+                $adminNote = sprintf(
+                    '[%s] %s.',
+                    $cancelledAt->format('Y-m-d H:i:s'),
+                    $reason
+                );
+
+                $sale->update([
+                    'status' => 'cancelled',
+                    'notes' => $existingNotes !== '' ? $existingNotes.PHP_EOL.$adminNote : $adminNote,
+                ]);
 
                 foreach ($sale->saleItems as $item) {
                     if ($item->product) {
@@ -476,6 +490,15 @@ class SalesController extends Controller
                     }
                 }
             });
+
+            try {
+                $notifier->notify($sale, $reason, $cancelledAt);
+            } catch (\Throwable $e) {
+                Log::warning('Manual cancellation notification failed.', [
+                    'sale_id' => $sale->sale_id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             $this->logAuditAction(
                 'sale_cancel',
@@ -544,14 +567,14 @@ class SalesController extends Controller
         ]);
     }
 
-    public function print($id)
+    public function print(int $id)
     {
         $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
 
         return view('admin.sales.print', compact('sale'));
     }
 
-    public function invoice($id)
+    public function invoice(int $id)
     {
         $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
 
@@ -835,7 +858,7 @@ class SalesController extends Controller
     }
 
     // Restrict results to the requested sales status scope
-    private function applyVentasStatusScope($query, ?string $statusParam): void
+    private function applyVentasStatusScope(Builder $query, ?string $statusParam): void
     {
         $closed = ['completed', 'cancelled', 'refunded'];
 
@@ -900,7 +923,7 @@ class SalesController extends Controller
     }
 
     // Map legacy Spanish payment values to internal English keys
-    private function mapPaymentMethodToEnglish($value)
+    private function mapPaymentMethodToEnglish(mixed $value): mixed
     {
         if (empty($value)) {
             return $value;
@@ -921,7 +944,7 @@ class SalesController extends Controller
         try {
             app(AuditLogger::class)->logAdminAction($actionType, 'sales', $description, $meta);
         } catch (\Throwable $e) {
-            \Log::warning('Sales audit log write failed', [
+            Log::warning('Sales audit log write failed', [
                 'action_type' => $actionType,
                 'error' => $e->getMessage(),
             ]);
