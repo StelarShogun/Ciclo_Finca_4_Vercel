@@ -129,7 +129,7 @@ class InventoryMovementController extends Controller
             'stock_before' => $m->stock_before,
             'stock_after'  => $m->stock_after,
             'reference_id' => $m->reference_id,
-            'notes'        => $m->notes,
+            'reason'       => $m->reason,
             'admin'        => $m->adminUser ? [
                 'id'   => $m->adminUser->user_id,
                 'name' => $m->adminName(),

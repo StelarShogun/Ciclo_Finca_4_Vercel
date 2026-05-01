@@ -21,7 +21,7 @@ class InventoryMovement extends Model
         'stock_before',
         'stock_after',
         'reference_id',
-        'notes',
+        'reason',
     ];
 
     // Attribute casting for enum, numeric, and timestamp fields.
@@ -68,13 +68,13 @@ class InventoryMovement extends Model
     {
         return match ($this->origin) {
             'sale_admin' => 'Venta (admin)',
-            'sale_web' => 'Venta web',
-            'return' => 'Devolución de venta o cancelación',
-            'provider' => 'Entrada de proveedor',
+            'sale_web'   => 'Venta web',
+            'return'     => 'Devolución de venta o cancelación',
+            'provider'   => 'Entrada de proveedor',
             'manual_adjustment' => 'Ajuste manual',
-            'damage' => 'Daño / Merma',
-            'refund' => 'Entrada manual (reembolso / nota de crédito)',
-            default => ucwords(str_replace('_', ' ', $this->origin)),
+            'damage'     => 'Daño / Merma',
+            'refund'     => 'Entrada manual (reembolso / nota de crédito)',
+            default      => ucwords(str_replace('_', ' ', $this->origin)),
         };
     }
 

@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Cache;
 /**
  * @property-read Client|null $client
  * @property-read Collection<int, SaleItem> $saleItems
+ * @property string|null $return_reason
+ * @property int|null    $returned_by
+ * @property Carbon|null $returned_at
  */
 class Sale extends Model
 {
@@ -35,16 +38,20 @@ class Sale extends Model
         'buyer_name',
         'buyer_email',
         'order_source',
+        'return_reason',
+        'returned_by',
+        'returned_at',
     ];
 
     protected $casts = [
-        'subtotal' => 'decimal:2',
-        'iva' => 'decimal:2',
-        'discount' => 'decimal:2',
-        'total' => 'decimal:2',
+        'subtotal'    => 'decimal:2',
+        'iva'         => 'decimal:2',
+        'discount'    => 'decimal:2',
+        'total'       => 'decimal:2',
+        'returned_at' => 'datetime',
     ];
 
-    // Converts sale_date from UTC to the application timezone for consistent display
+    // Converts sale_date from UTC to the application timezone for consistent display.
     public function getSaleDateAttribute($value)
     {
         if (! $value) {
@@ -67,6 +74,12 @@ class Sale extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class, 'client_id', 'user_id');
+    }
+
+    // Admin user who registered the return (CA-03).
+    public function returnedBy(): BelongsTo
+    {
+        return $this->belongsTo(AdminUser::class, 'returned_by', 'user_id');
     }
 
     public function scopePending($query)
@@ -105,6 +118,12 @@ class Sale extends Model
         return in_array($this->status, ['pending', 'completed']);
     }
 
+    // Returns true only when the sale is in a state that allows a return (CA-01).
+    public function canBeReturned(): bool
+    {
+        return $this->status === 'completed';
+    }
+
     public static function getOrderExpirationDays(): int
     {
         return Cache::remember(AppSetting::cacheKeyOrderExpirationDays(), 3600, function () {
@@ -139,7 +158,7 @@ class Sale extends Model
     {
         $days = $this->days_remaining_until_expiration;
 
-        // Triggers when at or below the alert threshold but not yet expired
+        // Triggers when at or below the alert threshold but not yet expired.
         return $days <= (int) config('sales.expiry_alert_days', 2) && $days > 0;
     }
 

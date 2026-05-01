@@ -4,6 +4,7 @@ const meta   = name => document.querySelector(`meta[name="${name}"]`)?.content ?
 const ROUTES = {
     get store()     { return meta('sales-route-store');     },
     get heartbeat() { return meta('sales-route-heartbeat'); },
+    get returnBase(){ return meta('sales-route-return');    },
 };
 
 // Retrieve CSRF token from meta tag
@@ -15,6 +16,106 @@ function getCSRFToken() {
 function openNewSaleModal()   { document.getElementById('new-sale-modal')?.classList.add('active'); }
 function closeNewSaleModal()  { document.getElementById('new-sale-modal')?.classList.remove('active'); }
 function closeViewSaleModal() { document.getElementById('view-sale-modal')?.classList.remove('active'); }
+
+// ==================== RETURN MODAL (CA-01 / CA-02 / CA-03 / CA-04) ====================
+
+// Internal state for the return modal
+let _returnSaleId = null;
+
+// Opens the return modal for a completed sale (CA-01).
+function openReturnModal(saleId, invoiceLabel) {
+    _returnSaleId = saleId;
+
+    const label = document.getElementById('return-sale-label');
+    if (label) {
+        label.textContent = `Venta: ${invoiceLabel}. Complete el motivo para continuar.`;
+    }
+
+    // Reset textarea and error state each time the modal opens.
+    const textarea = document.getElementById('return-reason-input');
+    if (textarea) textarea.value = '';
+
+    const errorMsg = document.getElementById('return-reason-error');
+    if (errorMsg) errorMsg.style.display = 'none';
+
+    document.getElementById('return-sale-modal')?.classList.add('active');
+}
+
+function closeReturnModal() {
+    _returnSaleId = null;
+    document.getElementById('return-sale-modal')?.classList.remove('active');
+}
+
+// Validates the return reason and submits the return request (CA-02 / CA-03 / CA-04).
+function confirmReturn() {
+    if (! _returnSaleId) return;
+
+    const textarea = document.getElementById('return-reason-input');
+    const reason   = (textarea?.value ?? '').trim();
+    const errorMsg = document.getElementById('return-reason-error');
+
+    // CA-02 – Block submission when reason is missing or too short.
+    if (reason.length < 3) {
+        if (errorMsg) errorMsg.style.display = '';
+        textarea?.focus();
+        return;
+    }
+
+    if (errorMsg) errorMsg.style.display = 'none';
+
+    const btn = document.getElementById('confirm-return-btn');
+    if (btn) {
+        btn.disabled    = true;
+        btn.innerHTML   = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+    }
+
+    fetch(`${ROUTES.returnBase}/${_returnSaleId}/return`, {
+        method:  'POST',
+        headers: {
+            'X-CSRF-TOKEN': getCSRFToken(),
+            'Accept':       'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ return_reason: reason }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        closeReturnModal();
+
+        if (data.success) {
+            Swal.fire({
+                title:             'Devolución registrada',
+                text:              data.message || 'La devolución fue procesada correctamente.',
+                icon:              'success',
+                confirmButtonText: 'Entendido',
+            }).then(() => location.reload());
+        } else {
+            Swal.fire({
+                title:             'Error',
+                text:              data.message || 'No se pudo registrar la devolución.',
+                icon:              'error',
+                confirmButtonText: 'Cerrar',
+            });
+        }
+    })
+    .catch(() => {
+        closeReturnModal();
+        Swal.fire({
+            title:             'Error de conexión',
+            text:              'No se pudo conectar con el servidor. Intente nuevamente.',
+            icon:              'error',
+            confirmButtonText: 'Cerrar',
+        });
+    })
+    .finally(() => {
+        if (btn) {
+            btn.disabled  = false;
+            btn.innerHTML = '<i class="fas fa-rotate-left"></i> Confirmar devolución';
+        }
+    });
+}
+
+// ==================== END RETURN MODAL ====================
 
 // Counter for dynamic product rows
 let productIndex = 1;
@@ -95,10 +196,10 @@ function calculateTotals() {
         subtotal = roundMoney(subtotal + (parseFloat(i.value) || 0));
     });
 
-    const discountRaw = roundMoney(parseFloat(document.getElementById('discount')?.value) || 0);
+    const discountRaw     = roundMoney(parseFloat(document.getElementById('discount')?.value) || 0);
     const discountApplied = roundMoney(Math.min(Math.max(0, discountRaw), subtotal));
-    const taxableBase = roundMoney(subtotal - discountApplied);
-    const total = taxableBase;
+    const taxableBase     = roundMoney(subtotal - discountApplied);
+    const total           = taxableBase;
 
     const el = id => document.getElementById(id);
     if (el('subtotal')) el('subtotal').textContent = 'CRC' + subtotal.toFixed(2);
@@ -120,7 +221,6 @@ function toggleCustomDateFields(value) {
     fromGroup.style.display = show ? '' : 'none';
     toGroup.style.display   = show ? '' : 'none';
 
-    // When hiding, clear the inputs so stale values are not sent with other filter modes
     if (!show) {
         const fromInput = document.getElementById('date-from');
         const toInput   = document.getElementById('date-to');
@@ -129,7 +229,7 @@ function toggleCustomDateFields(value) {
     }
 }
 
-// Validate that the custom date range is correct before submitting the filters form 
+// Validate that the custom date range is correct before submitting the filters form
 function validateDateRange() {
     const rangeSelect = document.getElementById('date-range');
     if (!rangeSelect || rangeSelect.value !== 'custom') return true;
@@ -140,10 +240,9 @@ function validateDateRange() {
     const errorBox = document.getElementById('date-range-error');
     const errorMsg = document.getElementById('date-range-error-msg');
 
-    const today   = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const today   = new Date().toISOString().split('T')[0];
     const minDate = '2020-01-01';
 
-    // Validate min date (2020-01-01)
     if ((fromVal && fromVal < minDate) || (toVal && toVal < minDate)) {
         if (errorBox && errorMsg) {
             errorMsg.textContent = 'Las fechas no pueden ser anteriores al 1 de enero de 2020.';
@@ -153,7 +252,6 @@ function validateDateRange() {
         return false;
     }
 
-    // Validate max date (today)
     if ((fromVal && fromVal > today) || (toVal && toVal > today)) {
         if (errorBox && errorMsg) {
             errorMsg.textContent = 'Las fechas no pueden ser posteriores al día de hoy.';
@@ -163,7 +261,6 @@ function validateDateRange() {
         return false;
     }
 
-    // Validate range order
     if (fromVal && toVal && fromVal > toVal) {
         if (errorBox && errorMsg) {
             errorMsg.textContent = 'La fecha inicial no puede ser mayor que la fecha final. Por favor corrija el rango.';
@@ -173,14 +270,14 @@ function validateDateRange() {
         return false;
     }
 
-    // Clear any previous error
     if (errorBox) errorBox.style.display = 'none';
     return true;
 }
 
 // ==================== END CUSTOM DATE RANGE ====================
 
-// Fetch and display full sale details in a modal
+// Fetch and display full sale details in a modal.
+// Also renders the return metadata block when status is "returned" (CA-03).
 function viewSale(id) {
     const modal = document.getElementById('view-sale-modal');
     const body  = document.getElementById('view-sale-body');
@@ -206,7 +303,13 @@ function viewSale(id) {
         const sale          = data.sale;
         const fecha         = new Date(sale.sale_date).toLocaleString('es-CR');
         const items         = sale.sale_items || sale.saleItems || [];
-        const statusLabels  = { pending: 'Pendiente', completed: 'Confirmado', cancelled: 'Rechazado', refunded: 'Reembolsado' };
+        const statusLabels  = {
+            pending:   'Pendiente',
+            completed: 'Confirmado',
+            cancelled: 'Rechazado',
+            refunded:  'Reembolsado',
+            returned:  'Devuelta',
+        };
         const paymentLabels = { cash: 'Efectivo', sinpe: 'SINPE movil', transfer: 'Transferencia' };
 
         let customerName = 'Mostrador / sin datos';
@@ -255,6 +358,20 @@ function viewSale(id) {
             ? '<div class="detail-item"><label>Referencia:</label><span>' + sale.payment_reference + '</span></div>'
             : '';
 
+        // CA-03 – Return metadata block: shown when the sale has been returned.
+        let returnSection = '';
+        if (sale.status === 'returned' && sale.return_reason) {
+            const returnedAt  = sale.returned_at  ? new Date(sale.returned_at).toLocaleString('es-CR') : '—';
+            const returnedBy  = sale.returned_by  ? sale.returned_by.name : 'Administrador';
+            returnSection = '<div class="detail-section">'
+                + '<h4><i class="fas fa-rotate-left"></i> Datos de la devolución</h4>'
+                + '<div class="detail-grid">'
+                + '<div class="detail-item"><label>Motivo:</label><span>' + sale.return_reason + '</span></div>'
+                + '<div class="detail-item"><label>Fecha:</label><span>' + returnedAt + '</span></div>'
+                + '<div class="detail-item"><label>Registrado por:</label><span>' + returnedBy + '</span></div>'
+                + '</div></div>';
+        }
+
         body.innerHTML = '<div class="sale-details">'
             + '<div class="detail-section">'
             + '<h4><i class="fas fa-info-circle"></i> Informacion general</h4>'
@@ -277,6 +394,7 @@ function viewSale(id) {
             + discountRow
             + '<div class="total-item total-final"><span><strong>Total:</strong></span><span><strong>CRC' + parseFloat(sale.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</strong></span></div>'
             + '</div></div>'
+            + returnSection
             + (sale.notes ? '<div class="detail-section"><h4><i class="fas fa-sticky-note"></i> Notas</h4><p class="sale-notes">' + sale.notes + '</p></div>' : '')
             + '</div>';
     })
@@ -298,26 +416,15 @@ function _saleAction(url, successMsg) {
             if (data.sale && data.sale.invoice_number) {
                 text += '\n\nFactura: ' + data.sale.invoice_number;
             }
-            Swal.fire({
-                title: 'Listo',
-                text,
-                icon: 'success',
-                confirmButtonColor: '#2e7d32',
-                confirmButtonText: 'Entendido'
-            }).then(() => location.reload());
+            Swal.fire({ title: 'Listo', text, icon: 'success', confirmButtonText: 'Entendido' })
+                .then(() => location.reload());
         } else {
-            Swal.fire({
-                title: 'No se pudo completar',
-                text: data.message || 'Ocurrio un error',
-                icon: 'error',
-                confirmButtonText: 'Cerrar'
-            });
+            Swal.fire({ title: 'Error', text: data.message || 'No se pudo completar la acción.', icon: 'error', confirmButtonText: 'Cerrar' });
         }
     })
-    .catch(() => Swal.fire({ title: 'Error', text: 'Error de conexion', icon: 'error' }));
+    .catch(() => Swal.fire({ title: 'Error de conexión', text: 'Intente nuevamente.', icon: 'error', confirmButtonText: 'Cerrar' }));
 }
 
-// Mark sale as completed
 function completeSale(id, invoiceNumber) {
     const invoiceLabel = invoiceNumber || ('#' + id);
     Swal.fire({
@@ -375,6 +482,9 @@ Object.assign(window, {
     cancelSale,
     refundSale,
     printSale,
+    openReturnModal,
+    closeReturnModal,
+    confirmReturn,
 });
 
 // DOMContentLoaded
@@ -385,15 +495,12 @@ document.addEventListener('DOMContentLoaded', () => {
         window.print();
     }
 
-
     const dateRangeSelect = document.getElementById('date-range');
     if (dateRangeSelect) {
-        
         toggleCustomDateFields(dateRangeSelect.value);
 
         dateRangeSelect.addEventListener('change', function () {
             toggleCustomDateFields(this.value);
-            // Clear validation error when the user changes mode
             const errorBox = document.getElementById('date-range-error');
             if (errorBox) errorBox.style.display = 'none';
         });
@@ -488,7 +595,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event delegation for dynamic product rows
     document.addEventListener('change', function (e) {
-        // Product selection: set unit price from data attribute
         if (e.target.classList.contains('product-select')) {
             const opt = e.target.selectedOptions[0];
             if (opt?.dataset?.precio) {
@@ -497,7 +603,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 calculateProductTotal(row);
             }
         }
-        // Quantity change: recalc product total
         if (e.target.name?.includes('[quantity]')) {
             calculateProductTotal(e.target.closest('.product-row'));
         }
@@ -509,6 +614,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('input', function (e) {
         if (e.target.id === 'discount') {
             calculateTotals();
+        }
+        // Live-clear the return reason error as the user types
+        if (e.target.id === 'return-reason-input') {
+            const errorMsg = document.getElementById('return-reason-error');
+            if (errorMsg && e.target.value.trim().length >= 3) {
+                errorMsg.style.display = 'none';
+            }
         }
     });
 

@@ -23,8 +23,9 @@ class InventoryMovementService
         'refund',
     ];
 
-    // Human-readable notes mapped by origin (CA-03).
-    public const ORIGIN_NOTES = [
+    // Default human-readable reasons mapped by origin.
+    // Used when no explicit reason is provided by the caller.
+    public const ORIGIN_REASONS = [
         'sale_admin'        => 'Venta por administrador',
         'sale_web'          => 'Venta por tienda web',
         'return'            => 'Devolución de cliente',
@@ -42,7 +43,7 @@ class InventoryMovementService
         int $quantity,
         ?int $referenceId = null,
         ?int $userId = null,
-        ?string $notes = null,
+        ?string $reason = null,
     ): InventoryMovement {
         // Reject invalid movement quantities.
         if ($quantity < 1) {
@@ -59,10 +60,10 @@ class InventoryMovementService
         // Resolve the admin user when the flow is authenticated.
         $resolvedUserId = $userId ?? Auth::guard('admin')->id();
 
-        // Use the standardized note for the origin if none provided (CA-03).
-        $resolvedNotes = $notes ?? self::ORIGIN_NOTES[$origin] ?? null;
+        // Use the standardized reason for the origin if none provided.
+        $resolvedReason = $reason ?? self::ORIGIN_REASONS[$origin] ?? null;
 
-        return DB::transaction(function () use ($product, $type, $origin, $quantity, $referenceId, $resolvedUserId, $resolvedNotes) {
+        return DB::transaction(function () use ($product, $type, $origin, $quantity, $referenceId, $resolvedUserId, $resolvedReason) {
 
             // Lock the product row to prevent concurrent stock updates.
             /** @var Product $freshProduct */
@@ -103,7 +104,7 @@ class InventoryMovementService
                 'stock_before' => $stockBefore,
                 'stock_after'  => $stockAfter,
                 'reference_id' => $referenceId,
-                'notes'        => $resolvedNotes,
+                'reason'       => $resolvedReason,
             ]);
 
             // Sync the provided product instance with the updated stock.
@@ -159,8 +160,26 @@ class InventoryMovementService
         );
     }
 
-    // Records stock received from a supplier order (CA-01, CA-02, CA-03).
-    // Notes are automatically set to "Recepción de pedido de proveedor".
+    // Records a sale return initiated by an admin, carrying the explicit
+    // reason entered in the return form (CA-02, CA-04).
+    public function recordSaleReturn(
+        Product $product,
+        int $quantity,
+        int $saleId,
+        string $reason,
+    ): InventoryMovement {
+        return $this->record(
+            product: $product,
+            type: MovementType::DEVOLUCION,
+            origin: 'return',
+            quantity: $quantity,
+            referenceId: $saleId,
+            reason: $reason,
+        );
+    }
+
+    // Records stock received from a supplier order.
+    // Reason is automatically set to "Recepción de pedido de proveedor".
     public function recordSupplierEntry(
         Product $product,
         int $quantity,
@@ -172,7 +191,7 @@ class InventoryMovementService
             origin: 'provider',
             quantity: $quantity,
             referenceId: $orderId,
-            notes: self::ORIGIN_NOTES['provider'], // "Recepción de pedido de proveedor"
+            reason: self::ORIGIN_REASONS['provider'],
         );
     }
 
