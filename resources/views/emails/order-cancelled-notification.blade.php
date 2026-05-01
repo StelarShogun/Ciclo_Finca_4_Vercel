@@ -5,44 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedido cancelado - Ciclo Finca 4</title>
 </head>
-<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;color:#1f2937;">
+<body style="margin:0;padding:0;background-color:#f2f4f7;font-family:Arial,Helvetica,sans-serif;">
     @php
-        $configuredAppUrl = rtrim((string) config('app.url', ''), '/');
-        $baseUrl = $configuredAppUrl !== '' && !str_contains($configuredAppUrl, 'localhost')
-            ? $configuredAppUrl
-            : 'https://ciclo-finca-4-app-main.onrender.com';
-        $logoUrl = $baseUrl.'/assets/images/brand/logo-ciclo-finca-icon.png';
         $mailContact = (string) config('mail.from.address', 'ciclo.finca4@gmail.com');
+        $configuredUrl = (string) config('app.url', '');
+        $siteUrl = $configuredUrl !== '' && !str_contains($configuredUrl, 'localhost')
+            ? $configuredUrl
+            : 'https://ciclo-finca-4-app-main.onrender.com';
     @endphp
 
-    <div style="max-width:620px;margin:20px auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
-        <div style="background:#14532d;padding:20px 24px;text-align:center;">
-            <img src="{{ $logoUrl }}" alt="Ciclo Finca 4" style="height:64px;max-width:100%;object-fit:contain;">
-            <h1 style="margin:10px 0 0 0;font-size:20px;color:#ffffff;">Ciclo Finca 4</h1>
-        </div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f2f4f7;padding:20px 8px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:620px;background:#ffffff;border:1px solid #dfe3e8;border-radius:8px;overflow:hidden;">
+                    <tr>
+                        <td style="background:#14532d;padding:18px 18px;text-align:center;" align="center" valign="middle">
+                            <div style="font-size:28px;line-height:1.2;color:#ffffff;font-weight:700;text-align:center;margin:0 auto;">
+                                Ciclo Finca 4
+                            </div>
+                        </td>
+                    </tr>
 
-        <div style="padding:24px;">
-            <p style="margin:0 0 14px 0;font-size:16px;"><strong>Hola, {{ $clientName }}.</strong></p>
-            <p style="margin:0 0 18px 0;font-size:16px;line-height:1.5;">
-                Te informamos que tu pedido fue cancelado.
-            </p>
+                    <tr>
+                        <td style="padding:22px 28px;color:#1f2937;">
+                            <p style="margin:0 0 14px 0;font-size:20px;line-height:1.4;"><strong>Hola, {{ $clientName }}.</strong></p>
+                            <p style="margin:0 0 18px 0;font-size:18px;line-height:1.6;">
+                                Te informamos que tu pedido fue cancelado.
+                            </p>
 
-            <div style="background:#f9fafb;border:1px solid #d1d5db;border-radius:8px;padding:14px 16px;margin:0 0 18px 0;">
-                <p style="margin:0 0 8px 0;"><strong>Pedido:</strong> #{{ $sale->sale_id }}</p>
-                <p style="margin:0 0 8px 0;"><strong>Motivo:</strong> {{ $reason }}</p>
-                <p style="margin:0;"><strong>Fecha y hora de cancelación:</strong> {{ $cancelledAt->format('d/m/Y H:i') }}</p>
-            </div>
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid #d1d5db;border-radius:8px;background:#f9fafb;">
+                                <tr>
+                                    <td style="padding:14px 16px;font-size:18px;line-height:1.6;color:#1f2937;">
+                                        <div style="margin-bottom:8px;"><strong>Pedido:</strong> #{{ $sale->sale_id }}</div>
+                                        <div style="margin-bottom:8px;"><strong>Motivo:</strong> {{ $reason }}</div>
+                                        <div><strong>Fecha y hora de cancelación:</strong> {{ $cancelledAt->format('d/m/Y H:i') }}</div>
+                                    </td>
+                                </tr>
+                            </table>
 
-            <p style="margin:0 0 18px 0;font-size:15px;line-height:1.5;">
-                Si tienes dudas, puedes contactarnos para brindarte más información.
-            </p>
-        </div>
+                            <p style="margin:18px 0 0 0;font-size:18px;line-height:1.6;">
+                                Si tienes dudas, puedes contactarnos para brindarte más información.
+                            </p>
+                        </td>
+                    </tr>
 
-        <div style="background:#f3f4f6;border-top:1px solid #e5e7eb;padding:16px 24px;font-size:13px;color:#374151;">
-            <p style="margin:0 0 6px 0;"><strong>Contactos Ciclo Finca 4</strong></p>
-            <p style="margin:0 0 4px 0;">Correo: {{ $mailContact }}</p>
-            <p style="margin:0;">Sitio web: {{ $baseUrl }}</p>
-        </div>
-    </div>
+                    <tr>
+                        <td style="background:#f3f4f6;border-top:1px solid #dfe3e8;padding:14px 28px;color:#374151;">
+                            <p style="margin:0 0 8px 0;font-size:16px;"><strong>Contactos Ciclo Finca 4</strong></p>
+                            <p style="margin:0 0 6px 0;font-size:16px;">Correo: <a href="mailto:{{ $mailContact }}" style="color:#14532d;">{{ $mailContact }}</a></p>
+                            <p style="margin:0;font-size:16px;">Sitio web: <a href="{{ $siteUrl }}" style="color:#14532d;">{{ $siteUrl }}</a></p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
