@@ -305,7 +305,6 @@
     {{-- Route URLs exposed via meta tags; read by sales.js (avoids inline JS) --}}
     <meta name="sales-route-store"     content="{{ route('sales.store') }}">
     <meta name="sales-route-heartbeat" content="{{ route('sales.history.heartbeat') }}">
-    {{-- CA-02 / CA-03 / CA-04 – Return route template; {id} replaced by JS --}}
     <meta name="sales-route-return"    content="{{ url('/sales') }}">
 
     {{-- ==================== MODAL: NEW SALE ==================== --}}
@@ -448,7 +447,7 @@
         </div>
     </div>
 
-    {{-- ==================== MODAL: RETURN SALE (CA-01 / CA-02) ==================== --}}
+    {{-- ==================== MODAL: RETURN SALE ==================== --}}
     {{-- Shown only for completed sales; requires a mandatory reason before confirming. --}}
     <div id="return-sale-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 480px;">

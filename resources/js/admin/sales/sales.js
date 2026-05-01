@@ -17,8 +17,6 @@ function openNewSaleModal()   { document.getElementById('new-sale-modal')?.class
 function closeNewSaleModal()  { document.getElementById('new-sale-modal')?.classList.remove('active'); }
 function closeViewSaleModal() { document.getElementById('view-sale-modal')?.classList.remove('active'); }
 
-// ==================== RETURN MODAL (CA-01 / CA-02 / CA-03 / CA-04) ====================
-
 // Internal state for the return modal
 let _returnSaleId = null;
 
@@ -46,7 +44,6 @@ function closeReturnModal() {
     document.getElementById('return-sale-modal')?.classList.remove('active');
 }
 
-// Validates the return reason and submits the return request (CA-02 / CA-03 / CA-04).
 function confirmReturn() {
     if (! _returnSaleId) return;
 
@@ -381,10 +378,13 @@ function viewSale(id) {
             + '<div class="detail-item"><label>Dias restantes:</label><span>' + expiryBadge + '</span></div>'
             + refRow
             + '</div></div>'
-            + (productsHtml ? '<div class="detail-section"><h4><i class="fas fa-shopping-cart"></i> Productos</h4>'
-                + '<table class="sale-products-table"><thead><tr>'
-                + '<th>Producto</th><th class="text-center">Cantidad</th><th class="text-right">Precio unit.</th><th class="text-right">Total</th>'
-                + '</tr></thead><tbody>' + productsHtml + '</tbody></table></div>' : '')
+            + '<div class="detail-section"><h4><i class="fas fa-shopping-cart"></i> Productos</h4>'
+            + (productsHtml
+                ? '<table class="sale-products-table"><thead><tr>'
+                    + '<th>Producto</th><th class="text-center">Cantidad</th><th class="text-right">Precio unit.</th><th class="text-right">Total</th>'
+                    + '</tr></thead><tbody>' + productsHtml + '</tbody></table>'
+                : '<p class="text-muted">Sin productos registrados.</p>')
+            + '</div>'
             + '<div class="detail-section"><h4><i class="fas fa-calculator"></i> Totales</h4>'
             + '<div class="totals-summary">'
             + '<div class="total-item"><span>Subtotal:</span><span>CRC' + parseFloat(sale.subtotal || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</span></div>'

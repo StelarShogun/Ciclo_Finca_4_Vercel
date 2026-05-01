@@ -1469,7 +1469,6 @@ function smoothScrollTop() {
         });
     }
 
-    // CF4-74 — Delete a single variant from the base product
     document.body.addEventListener('click', (e) => {
         const btn = e.target.closest('.js-delete-variant');
         if (!btn) return;
@@ -2152,26 +2151,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-// ============================================================
-//  STOCK ADJUSTMENT MODULE — merged from stock-adjust.js
-// ============================================================
-/**
- * stock-adjust.js
- *
- * Handles the manual stock-adjustment modal for the inventory page.
- *
- * Usage (in inventory.js or via @vite):
- *   import './stock-adjust.js';
- *
- * Or load as a standalone <script> AFTER the DOM is ready.
- *
- * Routes expected:
- *   POST /inventory/add-manual/{id}
- *   POST /inventory/remove-manual/{id}
- *
- * Both endpoints accept JSON body: { quantity, reason }
- * and return: { success, message, stock_current?, errors? }
- */
 
 (function () {
     'use strict';
