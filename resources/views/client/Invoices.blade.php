@@ -22,6 +22,19 @@
             padding: 0;
         }
         .cf4-review-star-btn.is-active { color: #f5b301; }
+
+        /* Lista Mis Facturas: alinear como tabla tipo documento (todo a la izquierda; Acciones centrado) */
+        .cf4-invoices-card .sales-table.cf4-invoices-list-table thead th,
+        .cf4-invoices-card .sales-table.cf4-invoices-list-table tbody td {
+            text-align: left;
+            vertical-align: top;
+        }
+        .cf4-invoices-card .sales-table.cf4-invoices-list-table thead th.cf4-invoices-th-actions,
+        .cf4-invoices-card .sales-table.cf4-invoices-list-table tbody td.cf4-invoices-td-actions {
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
     </style>
 @endpush
 
@@ -50,23 +63,24 @@
 
         <div class="cf4-invoices-card">
             <div class="sales-table-container">
-                <table class="sales-table cf4-purchases-table">
+                <table class="sales-table cf4-purchases-table cf4-invoices-list-table">
                     <thead>
                         <tr>
-                            <th>Pedido / Factura</th>
+                            <th>Factura</th>
                             <th>Productos</th>
                             <th>Fecha</th>
-                            <th>Estado</th>
-                            <th>Total</th>
+                            <th>{{ $tab === 'historial' ? 'Total pagado' : 'Total' }}</th>
+                            <th class="cf4-invoices-th-actions">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($orders as $sale)
                             <tr>
                                 <td>
-                                    <strong>#{{ $sale->sale_id }}</strong>
                                     @if($sale->invoice_number)
-                                        <div class="cf4-invoice-number">{{ $sale->invoice_number }}</div>
+                                        <strong>{{ $sale->invoice_number }}</strong>
+                                    @else
+                                        <span class="cf4-invoice-muted">Sin número asignado</span>
                                     @endif
                                 </td>
                                 <td>
@@ -81,14 +95,12 @@
                                     @endif
                                 </td>
                                 <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
-                                <td>
-                                    @if($tab === 'historial')
-                                        <span class="cf4-invoice-status-pill confirmed">Confirmada</span>
-                                    @else
-                                        <span class="cf4-invoice-status-pill pending">Pendiente</span>
-                                    @endif
-                                </td>
                                 <td><strong>&#8353;{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
+                                <td class="cf4-invoices-td-actions">
+                                    <a href="{{ route('clients.invoices.show', $sale) }}" class="btn btn-primary btn-sm" aria-label="Ver detalle{{ $sale->invoice_number ? ' de '.$sale->invoice_number : '' }}">
+                                        <i class="fas fa-eye"></i> Ver detalle
+                                    </a>
+                                </td>
                             </tr>
                         @empty
                             <tr>

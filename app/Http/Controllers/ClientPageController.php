@@ -628,6 +628,25 @@ class ClientPageController extends Controller
         return response()->json(['count' => $count]);
     }
 
+    public function showInvoice(Sale $sale)
+    {
+        $client = Auth::guard('clients')->user();
+
+        // Do not reveal whether another client's order exists.
+        if ((int) $sale->client_id !== (int) $client->user_id) {
+            abort(404);
+        }
+
+        $sale->load(['saleItems.product']);
+
+        $cartCount = $this->getCartCount();
+        $invoiceCount = Sale::where('client_id', $client->user_id)
+            ->where('status', 'pending')
+            ->count();
+
+        return view('client.invoice-detail', compact('sale', 'cartCount', 'invoiceCount'));
+    }
+
     private function getCartTotal(): float
     {
         return array_reduce(
