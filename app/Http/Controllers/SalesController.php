@@ -6,18 +6,20 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
 use App\Services\InventoryMovementService;
 use App\Services\AuditLogger;
 use App\Services\Admin\RegistryExcelExport;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Services\OrderCancellationNotifier;
 use Illuminate\Support\Facades\Mail;
 
 class SalesController extends Controller
@@ -78,7 +80,7 @@ class SalesController extends Controller
         ]);
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         try {
             $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
@@ -309,7 +311,7 @@ class SalesController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $sale = Sale::findOrFail($id);
         $previousStatus = (string) $sale->status;
@@ -346,7 +348,7 @@ class SalesController extends Controller
         ]);
     }
 
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $sale = Sale::findOrFail($id);
 
@@ -378,7 +380,7 @@ class SalesController extends Controller
     }
 
     // Complete a pending order without duplicating stock output movements
-    public function complete($id)
+    public function complete(int $id)
     {
         try {
             $sale = Sale::findOrFail($id);
@@ -458,10 +460,12 @@ class SalesController extends Controller
     }
 
     // Cancel a pending order and restore committed stock
-    public function cancel(int $id, InventoryMovementService $inventoryService)
+    public function cancel(int $id, InventoryMovementService $inventoryService, OrderCancellationNotifier $notifier)
     {
         try {
             $sale = Sale::with('saleItems.product')->findOrFail($id);
+            $cancelledAt = now();
+            $reason = 'Cancelado por administración';
 
             if ($sale->status === 'cancelled') {
                 return response()->json(['success' => false, 'message' => 'Este pedido ya está cancelado o rechazado.'], 400);
@@ -479,8 +483,18 @@ class SalesController extends Controller
                 return response()->json(['success' => false, 'message' => 'Solo los pedidos pendientes pueden rechazarse o cancelarse.'], 400);
             }
 
-            DB::transaction(function () use ($sale, $inventoryService) {
-                $sale->update(['status' => 'cancelled']);
+            DB::transaction(function () use ($sale, $inventoryService, $cancelledAt, $reason) {
+                $existingNotes = trim((string) ($sale->notes ?? ''));
+                $adminNote = sprintf(
+                    '[%s] %s.',
+                    $cancelledAt->format('Y-m-d H:i:s'),
+                    $reason
+                );
+
+                $sale->update([
+                    'status' => 'cancelled',
+                    'notes' => $existingNotes !== '' ? $existingNotes.PHP_EOL.$adminNote : $adminNote,
+                ]);
 
                 foreach ($sale->saleItems as $item) {
                     if ($item->product) {
@@ -492,6 +506,15 @@ class SalesController extends Controller
                     }
                 }
             });
+
+            try {
+                $notifier->notify($sale, $reason, $cancelledAt);
+            } catch (\Throwable $e) {
+                Log::warning('Manual cancellation notification failed.', [
+                    'sale_id' => $sale->sale_id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             $this->logAuditAction(
                 'sale_cancel',
@@ -560,14 +583,14 @@ class SalesController extends Controller
         ]);
     }
 
-    public function print($id)
+    public function print(int $id)
     {
         $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
 
         return view('admin.sales.print', compact('sale'));
     }
 
-    public function invoice($id)
+    public function invoice(int $id)
     {
         $sale = Sale::with(['client', 'sellerAdmin', 'saleItems.product'])->findOrFail($id);
 
@@ -582,10 +605,14 @@ class SalesController extends Controller
     public function export(Request $request)
     {
         try {
-            $format = strtolower((string) $request->get('format', 'csv'));
+            $format = strtolower((string) $request->get('format', 'pdf'));
 
             $base = Sale::query();
-            $this->applySalesAdminListFilters($base, $request);
+            if ($request->query('scope') === 'all') {
+                $base->notExpired();
+            } else {
+                $this->applySalesAdminListFilters($base, $request);
+            }
 
             if ($format === 'pdf') {
                 return $this->exportSalesPdf($request, $base);
@@ -595,68 +622,10 @@ class SalesController extends Controller
                 return $this->exportSalesExcel($request, $base);
             }
 
-            $filename = 'sales_' . now()->format('Y-m-d_H-i-s') . '.csv';
-            $headers  = [
-                'Content-Type'        => 'text/csv; charset=UTF-8',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-            ];
-
-            $chunkSize = AdminPdfExportLimits::SALES_CSV_CHUNK;
-
-            // Stream CSV rows in chunks to reduce memory usage
-            $callback = function () use ($base, $chunkSize): void {
-                $file = fopen('php://output', 'w');
-                if ($file === false) {
-                    return;
-                }
-                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-                fputcsv($file, [
-                    'Sale ID', 'Customer', 'Email', 'Date', 'Status',
-                    'Payment', 'Subtotal', 'IVA', 'Discount', 'Total', 'Items', 'Notes',
-                ], ';');
-
-                (clone $base)
-                    ->with(['client', 'sellerAdmin', 'saleItems.product'])
-                    ->orderBy('sale_id')
-                    ->chunkById($chunkSize, function ($sales) use ($file): void {
-                        foreach ($sales as $sale) {
-                            $items = $sale->saleItems->map(function (SaleItem $item): string {
-                                $label = $item->product !== null ? $item->product->name : '?';
-
-                                return $label.' (x'.$item->quantity.')';
-                            })->implode(', ');
-
-                            $customerDisplayName = $sale->client
-                                ? trim($sale->client->name.' '.$sale->client->first_surname.' '.($sale->client->second_surname ?: ''))
-                                : ($sale->buyer_name ?: 'Walk-in / Sin datos');
-
-                            $customerEmail = $sale->client
-                                ? $sale->client->gmail
-                                : ($sale->buyer_email ?: 'N/A');
-
-                            $saleDate = $sale->sale_date;
-
-                            fputcsv($file, [
-                                $sale->sale_id,
-                                $customerDisplayName,
-                                $customerEmail,
-                                $saleDate !== null ? $saleDate->format('d/m/Y H:i') : '',
-                                ucfirst((string) $sale->status),
-                                ucfirst((string) $sale->payment_method),
-                                '₡'.number_format((float) $sale->subtotal, 2, ',', '.'),
-                                '₡'.number_format((float) $sale->iva, 2, ',', '.'),
-                                '₡'.number_format((float) $sale->discount, 2, ',', '.'),
-                                '₡'.number_format((float) $sale->total, 2, ',', '.'),
-                                $items,
-                                $sale->notes ?? '',
-                            ], ';');
-                        }
-                    }, 'sale_id');
-
-                fclose($file);
-            };
-
-            return response()->stream($callback, 200, $headers);
+            return response()->json([
+                'success' => false,
+                'message' => 'Formato no soportado. Use pdf o excel.',
+            ], 400);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -751,7 +720,7 @@ class SalesController extends Controller
         $rows     = (clone $base)->with(['client'])->orderBy('sale_date', 'desc')->limit($maxRows)->get();
         $logoPath = public_path('assets/images/brand/logo-ciclo-finca-icon.png');
 
-        $pdf = PDF::loadView('admin.sales.sales-pdf', [
+        return app(AdminPdfExportService::class)->download('admin.sales.sales-pdf', [
             'sales'        => $rows,
             'totals'       => $totals,
             'pdfTitle'     => 'Reporte de ventas',
@@ -759,9 +728,7 @@ class SalesController extends Controller
             'logoPath'     => is_file($logoPath) ? $logoPath : null,
             'filterLines'  => $filterLines,
             'generatedFor' => 'Administración',
-        ]);
-
-        return $pdf->download(ReportPdfFilename::make('ventas'));
+        ], 'ventas');
     }
 
     // Build human-readable filter lines for export metadata
@@ -779,8 +746,10 @@ class SalesController extends Controller
         if ($request->filled('date_range')) {
             $lines[] = 'Rango: '.$request->date_range;
         }
-        if ($request->filled('start_date') || $request->filled('end_date')) {
-            $lines[] = 'Fechas: '.($request->start_date ?: '…').' — '.($request->end_date ?: '…');
+        $from = $request->date_from ?: $request->start_date;
+        $to = $request->date_to ?: $request->end_date;
+        if (($from !== null && $from !== '') || ($to !== null && $to !== '')) {
+            $lines[] = 'Fechas: '.($from ?: '…').' — '.($to ?: '…');
         }
         if ($request->filled('payment_method')) {
             $lines[] = 'Método de pago: '.$request->payment_method;
@@ -851,7 +820,7 @@ class SalesController extends Controller
     }
 
     // Restrict results to the requested sales status scope
-    private function applyVentasStatusScope($query, ?string $statusParam): void
+    private function applyVentasStatusScope(Builder $query, ?string $statusParam): void
     {
         $closed = ['completed', 'cancelled', 'refunded'];
 
@@ -916,7 +885,7 @@ class SalesController extends Controller
     }
 
     // Map legacy Spanish payment values to internal English keys
-    private function mapPaymentMethodToEnglish($value)
+    private function mapPaymentMethodToEnglish(mixed $value): mixed
     {
         if (empty($value)) {
             return $value;
@@ -1003,7 +972,7 @@ class SalesController extends Controller
         try {
             app(AuditLogger::class)->logAdminAction($actionType, 'sales', $description, $meta);
         } catch (\Throwable $e) {
-            \Log::warning('Sales audit log write failed', [
+            Log::warning('Sales audit log write failed', [
                 'action_type' => $actionType,
                 'error' => $e->getMessage(),
             ]);

@@ -98,6 +98,12 @@
                                     </p>
                                 </div>
                                 <div class="user-dropdown-body">
+                                    <a href="{{ route('clients.notifications') }}"
+                                        class="user-dropdown-item {{ request()->routeIs('clients.notifications') ? 'active' : '' }}"
+                                        role="menuitem">
+                                        <i class="fas fa-bell"></i>
+                                        Notificaciones
+                                    </a>
                                     <a href="{{ route('clients.profile') }}"
                                         class="user-dropdown-item {{ request()->routeIs('clients.profile') ? 'active' : '' }}"
                                         role="menuitem">

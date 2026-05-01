@@ -17,6 +17,7 @@
 # =========================
 /public/build
 /public/hot
+.vite-cache/
 
 # =========================
 # STORAGE (ARCHIVOS GENERADOS)
@@ -95,3 +96,4 @@ vendor/composer/autoload_classmap.php
 # CURSOR IDE
 # =========================
 .cursor/skills/
+.cursor/plans/cf4-112_pdf_service_7ccce6a9.plan.md

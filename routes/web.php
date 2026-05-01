@@ -382,6 +382,10 @@ Route::middleware(['auth:clients'])->group(function () {
     // Invoice routes.
     Route::get('/invoices', [ClientPageController::class, 'invoices'])->name('clients.invoices');
     Route::get('/invoices/heartbeat', [ClientPageController::class, 'invoicesHeartbeat'])->name('clients.invoices.heartbeat');
+    Route::get('/notifications', [ClientPageController::class, 'notifications'])->name('clients.notifications');
+    Route::get('/invoices/{sale}', [ClientPageController::class, 'showInvoice'])
+        ->whereNumber('sale')
+        ->name('clients.invoices.show');
 
     // Profile routes.
     Route::get('/profile', [ClientUserController::class, 'show'])->name('clients.profile');
