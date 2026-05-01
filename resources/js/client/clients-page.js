@@ -79,6 +79,87 @@ function addToCart(productId, quantity) {
         });
 }
 
+/** Syncs favorite button UI state with current value. */
+function setFavoriteButtonState(btn, isFavorite) {
+    if (!btn) return;
+    btn.classList.toggle('is-active', !!isFavorite);
+    btn.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
+    btn.setAttribute('aria-label', isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos');
+    var icon = btn.querySelector('i');
+    if (icon) {
+        icon.classList.toggle('fas', !!isFavorite);
+        icon.classList.toggle('far', !isFavorite);
+        icon.classList.add('fa-heart');
+    }
+}
+
+/** Emits a global event so other UI blocks sync favorites live. */
+function notifyFavoriteChange(productId, isFavorite) {
+    var payload = {
+        product_id: String(productId || ''),
+        is_favorite: !!isFavorite
+    };
+    window.dispatchEvent(new CustomEvent('cf4:favorites:changed', { detail: payload }));
+}
+
+/** Toggle product favorite status via AJAX. */
+function toggleFavoriteProduct(btn) {
+    var cfg = window.catalogFavoriteConfig || {};
+    var productId = btn ? btn.getAttribute('data-product-id') : null;
+    if (!productId) return;
+
+    if (!cfg.toggleUrl) {
+        window.location.href = cfg.loginUrl || '/login';
+        return;
+    }
+
+    btn.disabled = true;
+
+    fetch(cfg.toggleUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': getCsrfToken(),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ product_id: productId })
+    })
+        .then(function (res) {
+            return res.text().then(function (raw) {
+                var payload = {};
+                try {
+                    payload = raw ? JSON.parse(raw) : {};
+                } catch (e) {
+                    payload = { success: false, message: raw || 'Respuesta inválida del servidor.' };
+                }
+                if (!res.ok) {
+                    payload.success = false;
+                }
+                return payload;
+            });
+        })
+        .then(function (data) {
+            if (!data || data.success !== true) {
+                throw new Error((data && data.message) ? data.message : 'No se pudo actualizar favorito');
+            }
+            var isFavorite = !!data.is_favorite;
+            setFavoriteButtonState(btn, isFavorite);
+            notifyFavoriteChange(productId, isFavorite);
+        })
+        .catch(function (err) {
+            console.error('Error toggling favorite:', err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: err && err.message ? err.message : 'No se pudo actualizar tu favorito.'
+            });
+        })
+        .finally(function () {
+            btn.disabled = false;
+        });
+}
+
 // ----------------------------------------------------------------
 // ADD-TO-CART MODAL (catalog & home)
 // ----------------------------------------------------------------
@@ -416,6 +497,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Delegated: open quantity modal or add directly for add-to-cart buttons.
     document.addEventListener('click', function (e) {
+        var favoriteBtn = e.target.closest('[data-product-favorite-btn]');
+        if (favoriteBtn) {
+            e.preventDefault();
+            toggleFavoriteProduct(favoriteBtn);
+            return;
+        }
+
         var addBtn = e.target.closest('.add-to-cart-btn');
         if (addBtn) {
             if (addBtn.dataset.purchasable === '0' || parseInt(addBtn.dataset.productStock, 10) < 1) {
