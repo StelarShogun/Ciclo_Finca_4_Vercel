@@ -20,9 +20,6 @@
                 <p>Administra los proveedores del sistema</p>
             </div>
             <div class="sales-actions">
-                <a href="{{ route('admin.reports.exports').\App\Services\Admin\AdminSuppliersCatalogExportQuery::queryStringFromRequest(request()) }}" class="btn btn-secondary" title="Centro de exportación; CSV/PDF de proveedores respetan nombre y contacto si aplicó filtros">
-                    <i class="fas fa-file-export"></i> Exportar datos
-                </a>
                 <button class="btn btn-primary" id="open-new-supplier-modal">
                     <i class="fas fa-plus"></i> Nuevo Proveedor
                 </button>

@@ -10,11 +10,11 @@ use App\Models\OrderItem;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Supplier;
+use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
 use App\Services\Admin\RegistryExcelExport;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -39,38 +39,35 @@ class ReportsRegistryExportController extends Controller
             abort(404);
         }
 
-        // Validate the requested export format; defaults to CSV.
-        $format = strtolower((string) $request->query('format', 'csv'));
-        if (! in_array($format, ['csv', 'pdf', 'excel'], true)) {
-            abort(400, 'Formato no válido. Use csv, pdf o excel.');
+        // Validate the requested export format; defaults to PDF.
+        $format = strtolower((string) $request->query('format', 'pdf'));
+        if (! in_array($format, ['pdf', 'excel'], true)) {
+            abort(400, 'Formato no válido. Use pdf o excel.');
         }
+
+        $effectiveRequest = $request->query('scope') === 'all' ? new Request() : $request;
 
         // Route each slug/format combination to its dedicated handler.
         return match ($slug) {
             'proveedores' => match ($format) {
-                'pdf'   => $this->suppliersPdf($request),
-                'excel' => $this->suppliersExcel($request),
-                default => $this->suppliersCsv($request),
+                'pdf'   => $this->suppliersPdf($effectiveRequest),
+                'excel' => $this->suppliersExcel($effectiveRequest),
             },
             'marcas' => match ($format) {
-                'pdf'   => $this->brandsPdf($request),
-                'excel' => $this->brandsExcel($request),
-                default => $this->brandsCsv($request),
+                'pdf'   => $this->brandsPdf($effectiveRequest),
+                'excel' => $this->brandsExcel($effectiveRequest),
             },
             'pedidos-proveedores' => match ($format) {
-                'pdf'   => $this->supplierOrdersPdf($request),
-                'excel' => $this->supplierOrdersExcel($request),
-                default => $this->supplierOrdersCsv($request),
+                'pdf'   => $this->supplierOrdersPdf($effectiveRequest),
+                'excel' => $this->supplierOrdersExcel($effectiveRequest),
             },
             'usuarios' => match ($format) {
                 'pdf'   => $this->clientsPdf(),
                 'excel' => $this->clientsExcel(),
-                default => $this->clientsCsv(),
             },
             'pedidos-clientes' => match ($format) {
-                'pdf'   => $this->clientOrdersPdf($request),
-                'excel' => $this->clientOrdersExcel($request),
-                default => $this->clientOrdersCsv($request),
+                'pdf'   => $this->clientOrdersPdf($effectiveRequest),
+                'excel' => $this->clientOrdersExcel($effectiveRequest),
             },
         };
     }
@@ -778,7 +775,7 @@ class ReportsRegistryExportController extends Controller
         array $rows,
         string $filenameSlug
     ): Response {
-        $pdf = PDF::loadView('admin.exports.registry-table-pdf', [
+        return app(AdminPdfExportService::class)->download('admin.exports.registry-table-pdf', [
             'pdfTitle'     => $title,
             'pdfSubtitle'  => $subtitle,
             'logoPath'     => $this->resolvedLogoPath(),
@@ -786,9 +783,7 @@ class ReportsRegistryExportController extends Controller
             'generatedFor' => 'Administración',
             'headers'      => $headers,
             'rows'         => $rows,
-        ]);
-
-        return $pdf->download(ReportPdfFilename::make($filenameSlug));
+        ], $filenameSlug);
     }
 
     // Streams a UTF-8 BOM-prefixed CSV file row by row via a producer callback, avoiding full in-memory buffering.

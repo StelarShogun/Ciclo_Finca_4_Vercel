@@ -40,9 +40,6 @@
                     <i class="fas fa-plus"></i>
                     Nuevo pedido
                 </a>
-                <a href="{{ route('admin.reports.exports').\App\Services\Admin\AdminSupplierOrdersExportQuery::queryStringFromRequest(request()) }}" class="btn btn-secondary btn-sm" title="Centro de exportación; los listados de pedidos a proveedores respetan los filtros aplicados aquí">
-                    <i class="fas fa-file-export"></i> Exportar datos
-                </a>
             </div>
         </header>
 

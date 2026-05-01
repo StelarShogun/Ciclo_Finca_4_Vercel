@@ -6,8 +6,8 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Supplier;
+use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\ReportPdfFilename;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -193,9 +193,11 @@ class DashboardController extends Controller
                     'generatedFor' => 'Administración',
                 ]);
 
-                $pdf = PDF::loadView('admin.exports.dashboard-pdf', $pdfData);
-
-                return $pdf->download(ReportPdfFilename::make('dashboard'));
+                return app(AdminPdfExportService::class)->download(
+                    'admin.exports.dashboard-pdf',
+                    $pdfData,
+                    'dashboard'
+                );
             }
 
             if ($format === 'excel') {

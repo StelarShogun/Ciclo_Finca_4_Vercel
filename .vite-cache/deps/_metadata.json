@@ -1,13 +1,13 @@
 {
-  "hash": "2190554b",
-  "configHash": "fa578e62",
-  "lockfileHash": "011f5062",
-  "browserHash": "51dc00d3",
+  "hash": "484a4a49",
+  "configHash": "adeb823e",
+  "lockfileHash": "db2c0a0b",
+  "browserHash": "4c73b589",
   "optimized": {
     "sweetalert2": {
       "src": "../../node_modules/sweetalert2/dist/sweetalert2.esm.all.js",
       "file": "sweetalert2.js",
-      "fileHash": "d0c714bc",
+      "fileHash": "387dc0b7",
       "needsInterop": false
     }
   },

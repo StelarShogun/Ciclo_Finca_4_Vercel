@@ -22,7 +22,7 @@
                 <div class="report-card-icon"><i class="fas fa-file-export"></i></div>
                 <div class="report-card-body">
                     <h2>Exportar datos</h2>
-                    <p>Descargas centralizadas: PDF y CSV, EXCEL, XML o JSON de inventario y ventas, más proveedores, marcas, pedidos a proveedores, usuarios y encargos.</p>
+                    <p>Descargas centralizadas: PDF, Excel y XML de inventario y ventas, más proveedores, marcas, pedidos a proveedores, usuarios y encargos.</p>
                 </div>
                 <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
             </a>

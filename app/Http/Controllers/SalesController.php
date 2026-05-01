@@ -6,13 +6,13 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\ReportExcelFilename;
 use App\Services\Admin\ReportPdfFilename;
 use App\Services\InventoryMovementService;
 use App\Services\AuditLogger;
 use App\Services\Admin\RegistryExcelExport;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -582,10 +582,14 @@ class SalesController extends Controller
     public function export(Request $request)
     {
         try {
-            $format = strtolower((string) $request->get('format', 'csv'));
+            $format = strtolower((string) $request->get('format', 'pdf'));
 
             $base = Sale::query();
-            $this->applySalesAdminListFilters($base, $request);
+            if ($request->query('scope') === 'all') {
+                $base->notExpired();
+            } else {
+                $this->applySalesAdminListFilters($base, $request);
+            }
 
             if ($format === 'pdf') {
                 return $this->exportSalesPdf($request, $base);
@@ -595,68 +599,10 @@ class SalesController extends Controller
                 return $this->exportSalesExcel($request, $base);
             }
 
-            $filename = 'sales_' . now()->format('Y-m-d_H-i-s') . '.csv';
-            $headers  = [
-                'Content-Type'        => 'text/csv; charset=UTF-8',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-            ];
-
-            $chunkSize = AdminPdfExportLimits::SALES_CSV_CHUNK;
-
-            // Stream CSV rows in chunks to reduce memory usage
-            $callback = function () use ($base, $chunkSize): void {
-                $file = fopen('php://output', 'w');
-                if ($file === false) {
-                    return;
-                }
-                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-                fputcsv($file, [
-                    'Sale ID', 'Customer', 'Email', 'Date', 'Status',
-                    'Payment', 'Subtotal', 'IVA', 'Discount', 'Total', 'Items', 'Notes',
-                ], ';');
-
-                (clone $base)
-                    ->with(['client', 'sellerAdmin', 'saleItems.product'])
-                    ->orderBy('sale_id')
-                    ->chunkById($chunkSize, function ($sales) use ($file): void {
-                        foreach ($sales as $sale) {
-                            $items = $sale->saleItems->map(function (SaleItem $item): string {
-                                $label = $item->product !== null ? $item->product->name : '?';
-
-                                return $label.' (x'.$item->quantity.')';
-                            })->implode(', ');
-
-                            $customerDisplayName = $sale->client
-                                ? trim($sale->client->name.' '.$sale->client->first_surname.' '.($sale->client->second_surname ?: ''))
-                                : ($sale->buyer_name ?: 'Walk-in / Sin datos');
-
-                            $customerEmail = $sale->client
-                                ? $sale->client->gmail
-                                : ($sale->buyer_email ?: 'N/A');
-
-                            $saleDate = $sale->sale_date;
-
-                            fputcsv($file, [
-                                $sale->sale_id,
-                                $customerDisplayName,
-                                $customerEmail,
-                                $saleDate !== null ? $saleDate->format('d/m/Y H:i') : '',
-                                ucfirst((string) $sale->status),
-                                ucfirst((string) $sale->payment_method),
-                                '₡'.number_format((float) $sale->subtotal, 2, ',', '.'),
-                                '₡'.number_format((float) $sale->iva, 2, ',', '.'),
-                                '₡'.number_format((float) $sale->discount, 2, ',', '.'),
-                                '₡'.number_format((float) $sale->total, 2, ',', '.'),
-                                $items,
-                                $sale->notes ?? '',
-                            ], ';');
-                        }
-                    }, 'sale_id');
-
-                fclose($file);
-            };
-
-            return response()->stream($callback, 200, $headers);
+            return response()->json([
+                'success' => false,
+                'message' => 'Formato no soportado. Use pdf o excel.',
+            ], 400);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -751,7 +697,7 @@ class SalesController extends Controller
         $rows     = (clone $base)->with(['client'])->orderBy('sale_date', 'desc')->limit($maxRows)->get();
         $logoPath = public_path('assets/images/brand/logo-ciclo-finca-icon.png');
 
-        $pdf = PDF::loadView('admin.sales.sales-pdf', [
+        return app(AdminPdfExportService::class)->download('admin.sales.sales-pdf', [
             'sales'        => $rows,
             'totals'       => $totals,
             'pdfTitle'     => 'Reporte de ventas',
@@ -759,9 +705,7 @@ class SalesController extends Controller
             'logoPath'     => is_file($logoPath) ? $logoPath : null,
             'filterLines'  => $filterLines,
             'generatedFor' => 'Administración',
-        ]);
-
-        return $pdf->download(ReportPdfFilename::make('ventas'));
+        ], 'ventas');
     }
 
     // Build human-readable filter lines for export metadata
