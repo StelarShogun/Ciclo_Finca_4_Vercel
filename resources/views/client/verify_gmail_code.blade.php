@@ -10,6 +10,9 @@
 @endpush
 
 @section('content')
+@php
+    $isRecoveryFlow = session()->has('pending_recovery_id');
+@endphp
 <div class="login-page-center">
     <div class="login-form-box" style="max-width:420px;width:100%;">
 
@@ -43,7 +46,7 @@
         @endif
 
         {{-- novalidate defers all validation to JS --}}
-        <form id="formVerificar" method="POST" action="{{ route('clients.verify') }}" novalidate>
+        <form id="formVerificar" method="POST" action="{{ $isRecoveryFlow ? route('clients.recovery.verify') : route('clients.verify') }}" novalidate>
             @csrf
 
             <div class="form-group mb-4">
@@ -73,19 +76,21 @@
         </form>
 
         {{-- Separate form to avoid interfering with the verification POST --}}
-        <div style="text-align:center;margin-top:1.5rem;">
-            <p style="color:#5f6368;font-size:0.875rem;margin-bottom:6px;">¿No recibiste el código?</p>
-            <form method="POST" action="{{ route('clients.verify.resend') }}">
-                @csrf
-                <button type="submit" style="background:none;border:none;color:#2d7a2d;font-weight:600;cursor:pointer;font-size:0.875rem;">
-                    Reenviar código
-                </button>
-            </form>
-        </div>
+        @if (! $isRecoveryFlow)
+            <div style="text-align:center;margin-top:1.5rem;">
+                <p style="color:#5f6368;font-size:0.875rem;margin-bottom:6px;">¿No recibiste el código?</p>
+                <form method="POST" action="{{ route('clients.verify.resend') }}">
+                    @csrf
+                    <button type="submit" style="background:none;border:none;color:#2d7a2d;font-weight:600;cursor:pointer;font-size:0.875rem;">
+                        Reenviar código
+                    </button>
+                </form>
+            </div>
+        @endif
 
         <div style="text-align:center;margin-top:1rem;">
-            <a href="{{ route('clients.register.form') }}" style="font-size:0.875rem;color:#5f6368;text-decoration:none;">
-                <i class="fas fa-arrow-left"></i> Volver al registro
+            <a href="{{ $isRecoveryFlow ? route('clients.recovery.form') : route('clients.register.form') }}" style="font-size:0.875rem;color:#5f6368;text-decoration:none;">
+                <i class="fas fa-arrow-left"></i> {{ $isRecoveryFlow ? 'Volver a recuperación' : 'Volver al registro' }}
             </a>
         </div>
 

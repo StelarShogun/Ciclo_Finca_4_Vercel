@@ -1062,7 +1062,7 @@ function sendPassword(form) {
                 showMsg('msg-recovery-email', 'error', 'Solo se aceptan correos @gmail.com.');
                 setInputState(this, 'input-error');
             } else {
-                showMsg('msg-recovery-email', 'success', 'Correo válido.');
+                clearMsg('msg-recovery-email');
                 setInputState(this, 'input-ok');
             }
         });
