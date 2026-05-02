@@ -633,7 +633,8 @@ class ClientUserController extends Controller
             return response()->json(['success' => true, 'message' => 'Contraseña actualizada correctamente.']);
         }
 
-        return redirect()->route('login.show')->with('status', 'Contraseña actualizada. Ya puedes iniciar sesión.');
+        return redirect()->route('login.show')
+            ->with('recovery_success_modal', 'Contraseña actualizada. Ya puedes iniciar sesión.');
     }
 
     /**
