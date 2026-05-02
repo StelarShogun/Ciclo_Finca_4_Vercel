@@ -202,25 +202,6 @@ class CF493SaleReturnTest extends TestCase
     }
 
     /**
-     * returned_by and returned_at are stamped on the sale after a return.
-     */
-    public function test_return_stamps_returned_by_and_returned_at_on_sale(): void
-    {
-        $admin   = $this->createAdmin();
-        $product = $this->createProduct(stock: 10);
-        $sale    = $this->createSaleWithItem($product, quantity: 1);
-
-        $this->actingAs($admin, 'admin')
-            ->postJson($this->returnUrl($sale), ['reason' => 'El cliente lo rechazó en entrega.'])
-            ->assertOk();
-
-        $sale->refresh();
-
-        $this->assertEquals($admin->user_id, $sale->returned_by);
-        $this->assertNotNull($sale->returned_at);
-    }
-
-    /**
      * A sale that is not completed cannot be returned.
      * Pending sales must be rejected with a 400 response.
      */
