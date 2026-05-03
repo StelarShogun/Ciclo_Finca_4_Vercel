@@ -59,8 +59,19 @@ class Client extends Authenticatable
         return $this->hasMany(Sale::class, 'client_id', 'user_id');
     }
 
+    public function routeNotificationForMail(mixed $notification): ?string
+    {
+        return $this->gmail;
+    }
+
+    /** Reseñas de productos emitidas por este cliente. */
+    public function productReviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class, 'client_id', 'user_id');
+    }
+
     // Normalizes provider: null values are treated as 'local' to prevent incorrect UI rendering.
-    public function getProviderAttribute($value): string
+    public function getProviderAttribute(?string $value): string
     {
         return $value ?? 'local';
     }

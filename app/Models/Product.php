@@ -138,6 +138,12 @@ class Product extends Model implements HasMedia
         return $this->hasMany(SaleItem::class, 'product_id', 'product_id');
     }
 
+    // Reviews submitted by clients who bought this product.
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class, 'product_id', 'product_id');
+    }
+
     // Brands associated with this product.
     public function brands(): BelongsToMany
     {

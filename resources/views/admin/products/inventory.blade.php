@@ -38,10 +38,6 @@
                     <button class="btn btn-primary" id="open-new-product-modal">
                         <i class="fas fa-plus"></i> Nuevo Producto
                     </button>
-                    <a class="btn btn-secondary" href="{{ route('admin.reports.exports') }}{{ $inventoryExportsQuery }}" title="Abre el centro de exportación; las descargas de inventario respetan los filtros aplicados en esta pantalla">
-                        <i class="fas fa-file-export"></i>
-                        Exportar datos
-                    </a>
                     <a class="btn btn-secondary" href="{{ route('categories.parents.create') }}">
                         <i class="fas fa-layer-group"></i>
                         Crear categoría

@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\Admin\AdminInventoryExportQuery;
+use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\RegistryExcelExport;
 use App\Services\Admin\ReportExcelFilename;
@@ -16,7 +17,6 @@ use App\Services\Admin\ReportPdfFilename;
 use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\ProductClassificationAssignmentService;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -563,10 +563,11 @@ class ProductController extends Controller
 
     public function export(Request $request, $format = null)
     {
-        $format = strtolower($format ?? $request->get('format', 'csv'));
+        $format = strtolower($format ?? $request->get('format', 'pdf'));
 
-        $baseQuery = $this->inventoryProductsFilteredQuery($request);
-        $filterLines = $this->inventoryExportFilterLines($request);
+        $exportAll = $request->query('scope') === 'all';
+        $baseQuery = $exportAll ? $this->inventoryProductsFilteredQuery(new Request()) : $this->inventoryProductsFilteredQuery($request);
+        $filterLines = $exportAll ? ['Inventario: todo (sin filtros)'] : $this->inventoryExportFilterLines($request);
 
         $withRelations = ['category:category_id,name', 'supplier:supplier_id,name'];
 
@@ -593,30 +594,6 @@ class ProductController extends Controller
                 'Content-Type' => 'application/xml',
                 'Content-Disposition' => "attachment; filename=\"$filename\"",
             ]);
-        }
-
-        if ($format === 'json') {
-            $data = (clone $baseQuery)->with($withRelations)->get();
-            $payload = $data->map(function ($p) {
-                return [
-                    'id' => $p->product_id,
-                    'name' => $p->name,
-                    'description' => $p->description,
-                    'category' => optional($p->category)->name,
-                    'supplier' => optional($p->supplier)->name,
-                    'purchase_price' => $p->purchase_price,
-                    'sale_price' => $p->sale_price,
-                    'stock_current' => $p->stock_current,
-                    'stock_minimum' => $p->stock_minimum,
-                    'status' => $p->status,
-                    'created_at' => $p->created_at,
-                ];
-            });
-            $filename = 'products_'.date('Ymd_His').'.json';
-
-            return response()->streamDownload(function () use ($payload) {
-                echo $payload->toJson(JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-            }, $filename, ['Content-Type' => 'application/json; charset=UTF-8']);
         }
 
         if ($format === 'pdf') {
@@ -651,7 +628,7 @@ class ProductController extends Controller
 
             $logoPath = public_path('assets/images/brand/logo-ciclo-finca-icon.png');
 
-            $pdf = PDF::loadView('admin.products.products-pdf', [
+            return app(AdminPdfExportService::class)->download('admin.products.products-pdf', [
                 'products' => $products,
                 'total' => $products->count(),
                 'totalMatching' => $totalMatching,
@@ -661,9 +638,7 @@ class ProductController extends Controller
                 'logoPath' => is_file($logoPath) ? $logoPath : null,
                 'filterLines' => $pdfFilterLines,
                 'generatedFor' => 'Administración',
-            ]);
-
-            return $pdf->download(ReportPdfFilename::make('inventario'));
+            ], 'inventario');
         }
 
         if ($format === 'excel') {
@@ -707,40 +682,10 @@ class ProductController extends Controller
             );
         }
 
-        // Stream CSV exports in chunks to avoid loading the full dataset into memory
-        $filename = 'products_'.date('Ymd_His').'.csv';
-        $chunk = AdminPdfExportLimits::INVENTORY_CSV_CHUNK;
-
-        return response()->streamDownload(function () use ($baseQuery, $withRelations, $chunk): void {
-            $out = fopen('php://output', 'w');
-            if ($out === false) {
-                return;
-            }
-            fwrite($out, "\xEF\xBB\xBF"); // Add the UTF-8 BOM for Excel compatibility
-            fputcsv($out, ['ID', 'Name', 'Description', 'Image', 'Category', 'Supplier', 'Purchase Price', 'Sale Price', 'Stock', 'Minimum', 'Status', 'Created']);
-            (clone $baseQuery)
-                ->with($withRelations)
-                ->orderBy('product_id')
-                ->chunkById($chunk, function ($products) use ($out): void {
-                    foreach ($products as $p) {
-                        fputcsv($out, [
-                            $p->product_id,
-                            $p->name,
-                            $p->description,
-                            $p->image ?? '',
-                            optional($p->category)->name,
-                            optional($p->supplier)->name,
-                            $p->purchase_price,
-                            $p->sale_price,
-                            $p->stock_current,
-                            $p->stock_minimum,
-                            $p->status,
-                            $p->created_at ? $p->created_at->format('Y-m-d H:i:s') : '',
-                        ]);
-                    }
-                }, 'product_id');
-            fclose($out);
-        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+        return response()->json([
+            'success' => false,
+            'message' => 'Formato no soportado. Use xml, pdf o excel.',
+        ], 400);
     }
 
     public function import(Request $request)

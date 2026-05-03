@@ -41,9 +41,6 @@
                 </p>
             </div>
             <div class="sales-header-actions">
-                <a href="{{ route('admin.reports.exports').\App\Services\Admin\AdminClientOrdersExportQuery::queryStringFromRequest(request()) }}" class="btn btn-secondary btn-sm" title="Centro de exportación; el CSV/PDF de encargos usa los mismos filtros que esta pantalla">
-                    <i class="fas fa-file-export"></i> Exportar datos
-                </a>
                 <button type="button" class="btn btn-secondary btn-sm orders-settings-link" id="btn-open-order-expiration-modal">
                     <i class="fas fa-clock"></i> Plazo de cancelación
                 </button>

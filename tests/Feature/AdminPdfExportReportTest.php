@@ -69,6 +69,7 @@ class AdminPdfExportReportTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Exportar datos y PDF', false);
+        $response->assertSee('cf4-export-config', false);
         $response->assertSee(route('dashboard.export'), false);
         $response->assertSee('Listados administrativos', false);
         $response->assertSee('/reports/exportaciones/descarga/proveedores', false);
@@ -81,8 +82,8 @@ class AdminPdfExportReportTest extends TestCase
         $response = $this->get('/reports/exportaciones?search=bici&stock_status=low');
 
         $response->assertOk();
-        $response->assertSee('search=bici', false);
-        $response->assertSee('stock_status=low', false);
+        $response->assertSee('"search":"bici"', false);
+        $response->assertSee('"stock_status":"low"', false);
     }
 
     public function test_exports_page_propagates_supplier_order_filters_to_registry_links(): void
@@ -92,8 +93,8 @@ class AdminPdfExportReportTest extends TestCase
         $response = $this->get('/reports/exportaciones?state=pending&date_from=2026-01-01');
 
         $response->assertOk();
-        $response->assertSee('state=pending', false);
-        $response->assertSee('date_from=2026-01-01', false);
+        $response->assertSee('"state":"pending"', false);
+        $response->assertSee('"date_from":"2026-01-01"', false);
     }
 
     public function test_exports_page_propagates_client_order_filters_to_registry_links(): void
@@ -103,8 +104,8 @@ class AdminPdfExportReportTest extends TestCase
         $response = $this->get('/reports/exportaciones?status=pending&search=foo');
 
         $response->assertOk();
-        $response->assertSee('status=pending', false);
-        $response->assertSee('search=foo', false);
+        $response->assertSee('"status":"pending"', false);
+        $response->assertSee('"search":"foo"', false);
     }
 
     public function test_registry_proveedores_pdf_respects_name_filter(): void
