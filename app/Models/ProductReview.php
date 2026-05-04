@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Schema;
@@ -32,6 +33,12 @@ class ProductReview extends Model
         return $this->belongsTo(Client::class, 'client_id', 'user_id');
     }
 
+    /** Public ratings shown on the storefront (excludes placeholder rows with null stars). */
+    public function scopePubliclyListed(Builder $query): Builder
+    {
+        return $query->whereNotNull('stars');
+    }
+
     /**
      * Average stars and review count per product (only rows with non-null stars).
      * One review ⇒ avg equals that row’s stars; many reviews ⇒ SQL AVG across all.
@@ -47,7 +54,7 @@ class ProductReview extends Model
         }
 
         $rows = static::query()
-            ->whereNotNull('stars')
+            ->publiclyListed()
             ->whereIn('product_id', $productIds)
             ->groupBy('product_id')
             ->selectRaw('product_id, AVG(stars) as avg_stars, COUNT(*) as review_count')

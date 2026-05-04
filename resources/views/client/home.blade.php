@@ -124,13 +124,11 @@
                             <div class="product-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
                             <h3 class="product-name">{{ $product->name }}</h3>
                             @php $homeRs = $productReviewStats[(int) $product->product_id] ?? null; @endphp
-                            @if($homeRs && ($homeRs['count'] ?? 0) > 0)
-                                @include('client.parts.product-stars-inline', [
-                                    'avgStars' => $homeRs['avg'],
-                                    'reviewCount' => $homeRs['count'],
-                                    'variant' => 'card',
-                                ])
-                            @endif
+                            @include('client.parts.product-stars-inline', [
+                                'avgStars' => (float) data_get($homeRs, 'avg', 0),
+                                'reviewCount' => (int) data_get($homeRs, 'count', 0),
+                                'variant' => 'card',
+                            ])
                             <p @class([
                                 'product-availability-text',
                                 'is-available' => $stockLabel === 'Disponible',

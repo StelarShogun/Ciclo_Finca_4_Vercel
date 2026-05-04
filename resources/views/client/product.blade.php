@@ -82,15 +82,14 @@
                 <div class="product-detail-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
                 <h1 class="product-detail-name">{{ $product->name }}</h1>
 
-                @if($productReviews->isNotEmpty() && $averageStars !== null)
-                    <div class="product-detail-rating-summary">
-                        @include('client.parts.product-stars-inline', [
-                            'avgStars' => $averageStars,
-                            'reviewCount' => $productReviews->count(),
-                            'variant' => 'detail',
-                        ])
-                    </div>
-                @endif
+                <div class="product-detail-rating-summary">
+                    @include('client.parts.product-stars-inline', [
+                        'avgStars' => $averageStars ?? 0,
+                        'reviewCount' => $totalReviewsCount,
+                        'variant' => 'detail',
+                        'emptyLabel' => 'Aún no hay valoraciones disponibles',
+                    ])
+                </div>
 
                 @if($product->description)
                     <div class="product-detail-description">
@@ -214,41 +213,86 @@
                 </p>
             @endauth
 
-            @if($productReviews->isNotEmpty())
+            @php
+                $productRouteParams = ['id' => $product->product_id, 'slug' => $product->clientPublicSlug()];
+                $maxDist = max(max($starDistribution), 1);
+            @endphp
+
+            @if($totalReviewsCount > 0)
                 <p class="product-reviews-section-intro">
                     Calificación promedio: <strong>{{ number_format((float) $averageStars, 1) }}</strong>/5
-                    · {{ $productReviews->count() }} reseña{{ $productReviews->count() === 1 ? '' : 's' }}
-                    (más recientes primero)
+                    · {{ $totalReviewsCount }} valoración{{ $totalReviewsCount === 1 ? '' : 'es' }} con reseña
                 </p>
-                <div class="product-reviews-list-scroll" role="region" aria-label="Lista de reseñas">
-                    @foreach($productReviews as $review)
-                        @php
-                            $c = $review->client;
-                            $author = $c
-                                ? trim(implode(' ', array_filter([$c->name, $c->first_surname, $c->second_surname])))
-                                : '';
-                            if ($author === '') {
-                                $author = 'Cliente';
-                            }
-                            $publishedAt = $review->created_at;
-                        @endphp
-                        <article class="product-review-item">
-                            <div class="product-review-item__head">
-                                <strong class="product-review-item__author">{{ $author }}</strong>
-                                <time class="product-review-item__date" datetime="{{ $publishedAt?->toAtomString() }}">
-                                    {{ $publishedAt?->format('d/m/Y H:i') }}
-                                </time>
+
+                <div class="product-star-distribution" aria-label="Distribución de calificaciones">
+                    @for($level = 5; $level >= 1; $level--)
+                        @php $cnt = (int) ($starDistribution[$level] ?? 0); @endphp
+                        <div class="product-star-distribution__row">
+                            <span class="product-star-distribution__label">{{ $level }} ★</span>
+                            <div class="product-star-distribution__track" role="presentation">
+                                <span class="product-star-distribution__fill" style="width: {{ (int) round(($cnt / $maxDist) * 100) }}%;"></span>
                             </div>
-                            <div class="product-review-item__stars" role="img" aria-label="{{ (int) $review->stars }} de 5 estrellas">
-                                @for($i = 1; $i <= 5; $i++)
-                                    <i class="{{ $i <= (int) $review->stars ? 'fas' : 'far' }} fa-star" aria-hidden="true"></i>
-                                @endfor
-                            </div>
-                        </article>
-                    @endforeach
+                            <span class="product-star-distribution__count">{{ $cnt }}</span>
+                        </div>
+                    @endfor
                 </div>
+
+                <nav class="product-reviews-sort" aria-label="Ordenar reseñas">
+                    <span class="product-reviews-sort__label">Ordenar:</span>
+                    <a href="{{ route('clients.product', array_merge($productRouteParams, ['reviews_sort' => 'recent'])) }}"
+                       @class(['product-reviews-sort__link', 'is-active' => $reviewsSort === 'recent'])>Más recientes</a>
+                    <a href="{{ route('clients.product', array_merge($productRouteParams, ['reviews_sort' => 'stars_high'])) }}"
+                       @class(['product-reviews-sort__link', 'is-active' => $reviewsSort === 'stars_high'])>Mayor calificación</a>
+                    <a href="{{ route('clients.product', array_merge($productRouteParams, ['reviews_sort' => 'stars_low'])) }}"
+                       @class(['product-reviews-sort__link', 'is-active' => $reviewsSort === 'stars_low'])>Menor calificación</a>
+                </nav>
+
+                @if($myHighlightedReview)
+                    <div class="product-reviews-highlight" role="region" aria-label="Tu reseña">
+                        @include('client.parts.product-review-row', [
+                            'review' => $myHighlightedReview,
+                            'verified' => $verifiedPurchaserIds->contains((int) $myHighlightedReview->client_id),
+                            'mine' => true,
+                        ])
+                    </div>
+                @endif
+
+                <div class="product-reviews-list-wrap" role="region" aria-label="Reseñas de otros compradores">
+                    @forelse($productReviewsPaginated as $review)
+                        @include('client.parts.product-review-row', [
+                            'review' => $review,
+                            'verified' => $verifiedPurchaserIds->contains((int) $review->client_id),
+                            'mine' => false,
+                        ])
+                    @empty
+                        @if(! $myHighlightedReview)
+                            <p class="product-reviews-empty-other">Aún no hay valoraciones disponibles.</p>
+                        @endif
+                    @endforelse
+                </div>
+
+                @if($productReviewsPaginated->hasPages())
+                    <nav class="product-reviews-pagination" aria-label="Páginas de reseñas">
+                        <div class="product-reviews-pagination__inner">
+                            @if($productReviewsPaginated->onFirstPage())
+                                <span class="product-reviews-pagination__btn is-disabled" aria-disabled="true">Anterior</span>
+                            @else
+                                <a class="product-reviews-pagination__btn" href="{{ $productReviewsPaginated->previousPageUrl() }}" rel="prev">Anterior</a>
+                            @endif
+                            <span class="product-reviews-pagination__meta">
+                                {{ $productReviewsPaginated->firstItem() }}–{{ $productReviewsPaginated->lastItem() }}
+                                de {{ $productReviewsPaginated->total() }}
+                            </span>
+                            @if(! $productReviewsPaginated->hasMorePages())
+                                <span class="product-reviews-pagination__btn is-disabled" aria-disabled="true">Siguiente</span>
+                            @else
+                                <a class="product-reviews-pagination__btn" href="{{ $productReviewsPaginated->nextPageUrl() }}" rel="next">Siguiente</a>
+                            @endif
+                        </div>
+                    </nav>
+                @endif
             @else
-                <p>Aún no hay reseñas para este producto.</p>
+                <p class="product-reviews-empty">Aún no hay valoraciones disponibles.</p>
             @endif
         </section>
 
@@ -279,13 +323,11 @@
                                     </a>
                                 </h3>
                                 @php $relRs = $productReviewStats[(int) $related->product_id] ?? null; @endphp
-                                @if($relRs && ($relRs['count'] ?? 0) > 0)
-                                    @include('client.parts.product-stars-inline', [
-                                        'avgStars' => $relRs['avg'],
-                                        'reviewCount' => $relRs['count'],
-                                        'variant' => 'related',
-                                    ])
-                                @endif
+                                @include('client.parts.product-stars-inline', [
+                                    'avgStars' => (float) data_get($relRs, 'avg', 0),
+                                    'reviewCount' => (int) data_get($relRs, 'count', 0),
+                                    'variant' => 'related',
+                                ])
                                 <p @class([
                                     'product-availability-text',
                                     'is-available' => $relLabel === 'Disponible',
