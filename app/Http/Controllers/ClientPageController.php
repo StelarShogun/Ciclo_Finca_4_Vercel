@@ -270,7 +270,7 @@ class ClientPageController extends Controller
         if ($slug !== $canonicalSlug) {
             return redirect()->route('clients.product', array_merge(
                 ['id' => $product->product_id, 'slug' => $canonicalSlug],
-                $request->only(['reviews_sort', 'page'])
+                $request->only(['reviews_sort', 'page', 'review_filter'])
             ), 301);
         }
 
@@ -345,6 +345,14 @@ class ClientPageController extends Controller
             $reviewsSort = 'recent';
         }
 
+        $reviewFilter = $request->query('review_filter', 'all');
+        if ($reviewFilter !== 'all' && (! ctype_digit((string) $reviewFilter) || ! in_array((int) $reviewFilter, [1, 2, 3, 4, 5], true))) {
+            $reviewFilter = 'all';
+        }
+
+        $showMyHighlightedReview = $myHighlightedReview !== null
+            && ($reviewFilter === 'all' || (int) $myHighlightedReview->stars === (int) $reviewFilter);
+
         $othersQuery = ProductReview::query()
             ->with(['client:user_id,name,first_surname,second_surname'])
             ->where('product_id', $product->product_id)
@@ -352,6 +360,10 @@ class ClientPageController extends Controller
 
         if ($myHighlightedReview !== null) {
             $othersQuery->where('review_id', '!=', $myHighlightedReview->review_id);
+        }
+
+        if ($reviewFilter !== 'all') {
+            $othersQuery->where('stars', (int) $reviewFilter);
         }
 
         match ($reviewsSort) {
@@ -378,12 +390,14 @@ class ClientPageController extends Controller
             'clientCanReview',
             'clientReview',
             'myHighlightedReview',
+            'showMyHighlightedReview',
             'productReviewsPaginated',
             'totalReviewsCount',
             'averageStars',
             'starDistribution',
             'verifiedPurchaserIds',
             'reviewsSort',
+            'reviewFilter',
             'productReviewStats'
         ));
     }

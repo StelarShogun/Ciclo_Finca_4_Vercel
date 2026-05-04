@@ -72,9 +72,9 @@ class ProductReviewsDisplayTest extends TestCase
 
         $response = $this->get($url);
         $response->assertOk();
-        $response->assertSee('3.0', false);
-        $response->assertSee('2 valoraciones con reseña', false);
-        $response->assertSee('product-star-distribution', false);
+        $response->assertSee('Todas las reseñas (2)', false);
+        $response->assertSee('product-reviews-filter', false);
+        $response->assertSee('Filtrar por calificación', false);
         $response->assertSee('Compra verificada', false);
     }
 
