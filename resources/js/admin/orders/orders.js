@@ -88,3 +88,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+function markReadyToPickup(saleId, label) {
+    if (typeof Swal === 'undefined') return;
+
+    Swal.fire({
+        title: '¿Marcar como listo para recoger?',
+        text: `El pedido ${label} pasará a estado "Listo para recoger". Aún no se registrará movimiento de inventario.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, marcar',
+        cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+        if (! result.isConfirmed) return;
+
+        try {
+            const res = await fetch(`/orders/${saleId}/ready-to-pickup`, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (res.ok) {
+                Swal.fire({ icon: 'success', title: data.message ?? 'Actualizado', timer: 2000, showConfirmButton: false, didClose: () => window.location.reload() });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error', text: data.message ?? 'No se pudo actualizar.' });
+            }
+        } catch {
+            Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar con el servidor.' });
+        }
+    });
+}
+
+// Expose public functions on window (required by Vite/ESM)
+Object.assign(window, {
+    markReadyToPickup,
+});

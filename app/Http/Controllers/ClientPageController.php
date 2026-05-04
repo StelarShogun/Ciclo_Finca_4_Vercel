@@ -10,7 +10,6 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -477,10 +476,9 @@ class ClientPageController extends Controller
         ]);
     }
 
-    // Creates a pending web order and records stock خروج with origin 'sale_web'.
-    // Inventory movements are stored through recordWebCartSale().
-    // user_id remains null because no admin is authenticated in this flow.
-    public function checkout(Request $request, InventoryMovementService $inventoryService)
+    // Creates a pending web order. Inventory movement is deferred until the order
+    // is confirmed (ready_to_pickup → completed) by an administrator.
+    public function checkout(Request $request)
     {
         $cart = Session::get('cart', []);
 
@@ -543,20 +541,15 @@ class ClientPageController extends Controller
 
             foreach ($validatedItems as $item) {
                 SaleItem::create([
-                    'sale_id' => $sale->sale_id,
-                    'product_id' => $item['product']->product_id,
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['price'],
+                    'sale_id'       => $sale->sale_id,
+                    'product_id'    => $item['product']->product_id,
+                    'quantity'      => $item['quantity'],
+                    'unit_price'    => $item['price'],
                     'unit_discount' => 0,
-                    'total' => $item['total'],
+                    'total'         => $item['total'],
                 ]);
-
-                // Record the web sale movement without an authenticated admin user.
-                $inventoryService->recordWebCartSale(
-                    product: $item['product'],
-                    quantity: (int) $item['quantity'],
-                    saleId: $sale->sale_id,
-                );
+                // No inventory movement here — stock is discounted only when
+                // the admin confirms the order (ready_to_pickup → completed).
             }
 
             Session::forget('cart');

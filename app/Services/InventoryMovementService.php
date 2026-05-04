@@ -23,7 +23,7 @@ class InventoryMovementService
         'refund',
     ];
 
-    // Human-readable notes mapped by origin (CA-03).
+    // Human-readable notes mapped by origin 
     public const ORIGIN_NOTES = [
         'sale_admin'        => 'Venta por administrador',
         'sale_web'          => 'Venta por tienda web',
@@ -31,7 +31,6 @@ class InventoryMovementService
         'provider'          => 'Recepción de pedido de proveedor',
         'manual_adjustment' => 'Ajuste manual de inventario',
         'damage'            => 'Producto dañado o pérdida',
-        'refund'            => 'Reembolso / cancelación',
     ];
 
     // Records an inventory movement and updates product stock atomically.

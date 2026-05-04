@@ -18,7 +18,7 @@ class AdminOrderController extends Controller
                 $q->where('order_source', 'web_cart')
                     ->orWhereNull('order_source');
             })
-            ->whereIn('status', ['pending', 'completed', 'cancelled', 'refunded'])
+            ->whereIn('status', ['pending', 'ready_to_pickup', 'completed', 'cancelled', 'refunded'])
             ->notExpired()
             ->with(['client', 'saleItems.product']);
 

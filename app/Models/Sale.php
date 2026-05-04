@@ -35,13 +35,15 @@ class Sale extends Model
         'buyer_name',
         'buyer_email',
         'order_source',
+        'ready_at',
     ];
 
     protected $casts = [
-        'subtotal' => 'decimal:2',
-        'iva' => 'decimal:2',
-        'discount' => 'decimal:2',
-        'total' => 'decimal:2',
+        'subtotal'  => 'decimal:2',
+        'iva'       => 'decimal:2',
+        'discount'  => 'decimal:2',
+        'total'     => 'decimal:2',
+        'ready_at'  => 'datetime',
     ];
 
     // Converts sale_date from UTC to the application timezone for consistent display
@@ -101,9 +103,14 @@ class Sale extends Model
     }
 
     public function canBeCancelled(): bool
-    {
-        return in_array($this->status, ['pending', 'completed']);
-    }
+{
+    return in_array($this->status, ['pending', 'ready_to_pickup', 'completed']);
+}
+
+public function scopeReadyToPickup($query)
+{
+    return $query->where('status', 'ready_to_pickup');
+}
 
     public static function getOrderExpirationDays(): int
     {

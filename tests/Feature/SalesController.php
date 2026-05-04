@@ -61,7 +61,7 @@ class SalesController extends Controller
 
         // Limit heartbeat checks to active web orders
         $baseQuery = Sale::query()
-            ->whereIn('status', ['pending', 'ready_to_pickup', 'completed'])
+            ->whereIn('status', ['pending', 'completed'])
             ->where(function ($q) {
                 $q->where('order_source', 'web_cart')
                     ->orWhereNull('order_source');
@@ -317,7 +317,7 @@ class SalesController extends Controller
         $previousStatus = (string) $sale->status;
 
         $request->validate([
-            'status' => 'required|in:pending,ready_to_pickup,completed,cancelled,refunded',
+            'status' => 'required|in:pending,completed,cancelled,refunded',
             'notes'  => 'nullable|string|max:500',
         ]);
 
@@ -353,7 +353,7 @@ class SalesController extends Controller
         $sale = Sale::findOrFail($id);
 
         // Only pending orders can be cancelled through this endpoint
-        if (! in_array($sale->status, ['pending', 'ready_to_pickup'], true)) {
+        if ($sale->status !== 'pending') {
             return response()->json([
                 'success' => false,
                 'message' => 'Solo los pedidos pendientes pueden cancelarse desde esta acción.',
@@ -380,155 +380,84 @@ class SalesController extends Controller
     }
 
     // Complete a pending order without duplicating stock output movements
-    public function complete(int $id, InventoryMovementService $inventoryService)
-{
-    try {
-        $sale = Sale::with('saleItems.product')->findOrFail($id);
+    public function complete(int $id)
+    {
+        try {
+            $sale = Sale::findOrFail($id);
 
-        if ($sale->status === 'completed') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Este pedido ya está confirmado. No puede confirmarse de nuevo.',
-            ], 400);
-        }
-
-        if ($sale->status === 'cancelled') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Este pedido fue rechazado o cancelado. No puede confirmarse.',
-            ], 400);
-        }
-
-        if ($sale->status === 'refunded') {
-            return response()->json([
-                'success' => false,
-                'message' => 'No se puede confirmar un pedido reembolsado.',
-            ], 400);
-        }
-
-        if ($sale->status === 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' => 'El pedido debe estar en estado "Listo para recoger" antes de confirmarse.',
-            ], 400);
-        }
-
-        if ($sale->status !== 'ready_to_pickup') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Solo los pedidos listos para recoger pueden confirmarse.',
-            ], 400);
-        }
-
-        // Generate an invoice number only when it is missing
-        $invoiceNumber = $sale->invoice_number;
-        if (empty($invoiceNumber)) {
-            $invoiceNumber = (new Sale)->generateInvoiceNumber();
-        }
-
-        DB::transaction(function () use ($sale, $invoiceNumber, $inventoryService) {
-            $sale->update([
-                'status'         => 'completed',
-                'invoice_number' => $invoiceNumber,
-            ]);
-
-            // Inventory output is registered here when the order is confirmed.
-            // Origin is preserved based on how the order was placed.
-            foreach ($sale->saleItems as $item) {
-                if ($item->product) {
-                    if ($sale->order_source === 'web_cart') {
-                        $inventoryService->recordWebCartSale(
-                            product:  $item->product,
-                            quantity: (int) $item->quantity,
-                            saleId:   $sale->sale_id,
-                        );
-                    } else {
-                        $inventoryService->recordSale(
-                            product:  $item->product,
-                            quantity: (int) $item->quantity,
-                            saleId:   $sale->sale_id,
-                        );
-                    }
-                }
+            if ($sale->status === 'completed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este pedido ya está confirmado. No puede confirmarse de nuevo.',
+                ], 400);
             }
 
-            $this->ensureReviewPlaceholdersForCompletedSale($sale);
-        });
+            if ($sale->status === 'cancelled') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este pedido fue rechazado o cancelado. No puede confirmarse.',
+                ], 400);
+            }
 
-        $sale->refresh();
-        $this->sendProductReviewReminderEmail($sale);
+            if ($sale->status === 'refunded') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede confirmar un pedido reembolsado.',
+                ], 400);
+            }
 
-        $this->logAuditAction(
-            'sale_complete',
-            'Pedido confirmado como venta completada.',
-            [
-                'sale_id'        => (int) $sale->sale_id,
-                'invoice_number' => (string) $sale->invoice_number,
-                'from_status'    => 'ready_to_pickup',
-                'to_status'      => 'completed',
-            ]
-        );
+            if ($sale->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo los pedidos pendientes pueden confirmarse.',
+                ], 400);
+            }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Pedido confirmado correctamente. La venta quedó registrada con su factura.',
-            'sale' => [
-                'sale_id'        => $sale->sale_id,
-                'invoice_number' => $sale->invoice_number,
-                'status'         => $sale->status,
-            ],
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Error al confirmar el pedido: ' . $e->getMessage(),
-        ], 500);
-    }
-}
+            // Generate an invoice number only when it is missing
+            $invoiceNumber = $sale->invoice_number;
+            if (empty($invoiceNumber)) {
+                $invoiceNumber = (new Sale)->generateInvoiceNumber();
+            }
 
-public function markReadyToPickup(int $id): \Illuminate\Http\JsonResponse
-{
-    try {
-        $sale = Sale::findOrFail($id);
+            DB::transaction(function () use ($sale, $invoiceNumber) {
+                $sale->update([
+                    'status'         => 'completed',
+                    'invoice_number' => $invoiceNumber,
+                ]);
 
-        if ($sale->status !== 'pending') {
+                $this->ensureReviewPlaceholdersForCompletedSale($sale);
+            });
+
+            $sale->refresh();
+            $this->sendProductReviewReminderEmail($sale);
+
+            $this->logAuditAction(
+                'sale_complete',
+                'Pedido confirmado como venta completada.',
+                [
+                    'sale_id' => (int) $sale->sale_id,
+                    'invoice_number' => (string) $sale->invoice_number,
+                    'from_status' => 'pending',
+                    'to_status' => 'completed',
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pedido confirmado correctamente. La venta quedó registrada con su factura.',
+                'sale' => [
+                    'sale_id'        => $sale->sale_id,
+                    'invoice_number' => $sale->invoice_number,
+                    'status'         => $sale->status,
+                ],
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Solo los pedidos pendientes pueden marcarse como listos para recoger.',
-            ], 400);
+                'message' => 'Error al confirmar el pedido: ' . $e->getMessage(),
+            ], 500);
         }
-
-        $sale->update([
-            'status'   => 'ready_to_pickup',
-            'ready_at' => now(),
-        ]);
-
-        $this->logAuditAction(
-            'sale_ready_to_pickup',
-            'Pedido marcado como listo para recoger.',
-            [
-                'sale_id'        => (int) $sale->sale_id,
-                'invoice_number' => (string) ($sale->invoice_number ?? ''),
-                'from_status'    => 'pending',
-                'to_status'      => 'ready_to_pickup',
-            ]
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Pedido marcado como listo para recoger.',
-            'sale' => [
-                'sale_id' => $sale->sale_id,
-                'status'  => $sale->status,
-            ],
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Error al actualizar el pedido: ' . $e->getMessage(),
-        ], 500);
     }
-}
 
     // Cancel a pending order and restore committed stock
     public function cancel(int $id, InventoryMovementService $inventoryService, OrderCancellationNotifier $notifier)
@@ -550,9 +479,9 @@ public function markReadyToPickup(int $id): \Illuminate\Http\JsonResponse
                 return response()->json(['success' => false, 'message' => 'Este pedido ya fue reembolsado.'], 400);
             }
 
-            if (! in_array($sale->status, ['pending', 'ready_to_pickup'], true)) {
-    return response()->json(['success' => false, 'message' => 'Solo los pedidos pendientes o listos para recoger pueden rechazarse.'], 400);
-}
+            if ($sale->status !== 'pending') {
+                return response()->json(['success' => false, 'message' => 'Solo los pedidos pendientes pueden rechazarse o cancelarse.'], 400);
+            }
 
             DB::transaction(function () use ($sale, $inventoryService, $cancelledAt, $reason) {
                 $existingNotes = trim((string) ($sale->notes ?? ''));
@@ -593,7 +522,7 @@ public function markReadyToPickup(int $id): \Illuminate\Http\JsonResponse
                 [
                     'sale_id' => (int) $sale->sale_id,
                     'invoice_number' => (string) ($sale->invoice_number ?? ''),
-                    'from_status' => $sale->getOriginal('status') ?? $sale->status,
+                    'from_status' => 'pending',
                     'to_status' => 'cancelled',
                 ]
             );
@@ -891,22 +820,24 @@ public function markReadyToPickup(int $id): \Illuminate\Http\JsonResponse
     }
 
     // Restrict results to the requested sales status scope
-private function applyVentasStatusScope(Builder $query, ?string $statusParam, string $defaultStatus = 'completed'): void
-{
-    $valid = ['pending', 'ready_to_pickup', 'completed', 'cancelled', 'refunded'];
+    private function applyVentasStatusScope(Builder $query, ?string $statusParam): void
+    {
+        $closed = ['completed', 'cancelled', 'refunded'];
 
-    if ($statusParam === 'all') {
-        $query->whereIn('status', $valid);
-        return;
+        if ($statusParam === 'all') {
+            $query->whereIn('status', $closed);
+
+            return;
+        }
+
+        if ($statusParam !== null && $statusParam !== '' && in_array($statusParam, $closed, true)) {
+            $query->where('status', $statusParam);
+
+            return;
+        }
+
+        $query->where('status', 'completed');
     }
-
-    if ($statusParam !== null && $statusParam !== '' && in_array($statusParam, $valid, true)) {
-        $query->where('status', $statusParam);
-        return;
-    }
-
-    $query->where('status', $defaultStatus);
-}
 
     private function calculateDailySales()
     {
