@@ -39,12 +39,12 @@ class Sale extends Model
 
     protected $casts = [
         'subtotal' => 'decimal:2',
-        'iva' => 'decimal:2',
+        'iva'      => 'decimal:2',
         'discount' => 'decimal:2',
-        'total' => 'decimal:2',
+        'total'    => 'decimal:2',
     ];
 
-    // Converts sale_date from UTC to the application timezone for consistent display
+    // Converts sale_date from UTC to the application timezone for consistent display.
     public function getSaleDateAttribute($value)
     {
         if (! $value) {
@@ -89,10 +89,10 @@ class Sale extends Model
     {
         $maxNum = self::where('invoice_number', 'like', 'CF4-%')
             ->get(['invoice_number'])
-            ->map(fn ($s) => (int) substr($s->invoice_number, 4))
+            ->map(fn($s) => (int) substr($s->invoice_number, 4))
             ->max() ?? 0;
 
-        return 'CF4-'.str_pad((string) ($maxNum + 1), 4, '0', STR_PAD_LEFT);
+        return 'CF4-' . str_pad((string) ($maxNum + 1), 4, '0', STR_PAD_LEFT);
     }
 
     public function calculateTotal()
@@ -139,7 +139,7 @@ class Sale extends Model
     {
         $days = $this->days_remaining_until_expiration;
 
-        // Triggers when at or below the alert threshold but not yet expired
+        // Triggers when at or below the alert threshold but not yet expired.
         return $days <= (int) config('sales.expiry_alert_days', 2) && $days > 0;
     }
 

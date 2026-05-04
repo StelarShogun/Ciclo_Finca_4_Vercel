@@ -1469,7 +1469,6 @@ function smoothScrollTop() {
         });
     }
 
-    // CF4-74 — Delete a single variant from the base product
     document.body.addEventListener('click', (e) => {
         const btn = e.target.closest('.js-delete-variant');
         if (!btn) return;
@@ -2152,26 +2151,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-// ============================================================
-//  STOCK ADJUSTMENT MODULE — merged from stock-adjust.js
-// ============================================================
-/**
- * stock-adjust.js
- *
- * Handles the manual stock-adjustment modal for the inventory page.
- *
- * Usage (in inventory.js or via @vite):
- *   import './stock-adjust.js';
- *
- * Or load as a standalone <script> AFTER the DOM is ready.
- *
- * Routes expected:
- *   POST /inventory/add-manual/{id}
- *   POST /inventory/remove-manual/{id}
- *
- * Both endpoints accept JSON body: { quantity, reason }
- * and return: { success, message, stock_current?, errors? }
- */
 
 (function () {
     'use strict';
@@ -2211,7 +2190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── DOM references (resolved after DOMContentLoaded) ──────────────────
     let modal, backdrop, modalTitle, modalTitleIcon;
     let productIdInput, productNameEl, productStockEl;
-    let qtyInput, reasonSelect;
+    let qtyInput, reasonInput;
     let qtyError, reasonError, alertBanner, alertMsg;
     let confirmBtn, confirmBtnText, confirmBtnSpinner;
     let cancelBtn, closeBtn;
@@ -2232,7 +2211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         productNameEl      = document.getElementById('stock-modal-product-name');
         productStockEl     = document.getElementById('stock-modal-product-stock');
         qtyInput           = document.getElementById('stock-modal-qty');
-        reasonSelect       = document.getElementById('stock-modal-reason');
+        reasonInput        = document.getElementById('stock-modal-reason');
         qtyError           = document.getElementById('stock-modal-qty-error');
         reasonError        = document.getElementById('stock-modal-reason-error');
         alertBanner        = document.getElementById('stock-modal-alert');
@@ -2323,9 +2302,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Reset ─────────────────────────────────────────────────────────────
     function resetForm() {
         qtyInput.value         = '';
-        reasonSelect.value     = '';
+        reasonInput.value      = '';
         qtyInput.classList.remove('is-invalid');
-        reasonSelect.classList.remove('is-invalid');
+        reasonInput.classList.remove('is-invalid');
         qtyError.classList.remove('visible');
         qtyError.textContent   = '';
         reasonError.classList.remove('visible');
@@ -2349,14 +2328,24 @@ document.addEventListener('DOMContentLoaded', () => {
             qtyError.classList.remove('visible');
         }
 
-        const validReasons = ['manual_adjustment', 'damage', 'refund'];
-        if (!reasonSelect.value || !validReasons.includes(reasonSelect.value)) {
-            reasonSelect.classList.add('is-invalid');
-            reasonError.textContent = 'Selecciona un motivo válido.';
+        const reason = (reasonInput.value || '').trim();
+        if (!reason) {
+            reasonInput.classList.add('is-invalid');
+            reasonError.textContent = 'El motivo es obligatorio.';
+            reasonError.classList.add('visible');
+            valid = false;
+        } else if (reason.length < 3) {
+            reasonInput.classList.add('is-invalid');
+            reasonError.textContent = 'El motivo debe tener al menos 3 caracteres.';
+            reasonError.classList.add('visible');
+            valid = false;
+        } else if (reason.length > 500) {
+            reasonInput.classList.add('is-invalid');
+            reasonError.textContent = 'El motivo no puede superar los 500 caracteres.';
             reasonError.classList.add('visible');
             valid = false;
         } else {
-            reasonSelect.classList.remove('is-invalid');
+            reasonInput.classList.remove('is-invalid');
             reasonError.classList.remove('visible');
         }
 
@@ -2415,7 +2404,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({
                     quantity: parseInt(qtyInput.value, 10),
-                    reason:   reasonSelect.value,
+                    reason:   (reasonInput.value || '').trim(),
                 }),
             });
 
@@ -2439,7 +2428,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         qtyError.classList.add('visible');
                     }
                     if (data.errors.reason) {
-                        reasonSelect.classList.add('is-invalid');
+                        reasonInput.classList.add('is-invalid');
                         reasonError.textContent = data.errors.reason[0];
                         reasonError.classList.add('visible');
                     }

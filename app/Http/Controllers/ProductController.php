@@ -1123,12 +1123,10 @@ class ProductController extends Controller
     // Add manual stock and register the inventory movement
     public function addManualStock(Request $request, int $id, InventoryMovementService $inventoryService)
     {
-        $validReasons = ['manual_adjustment', 'damage', 'refund'];
-
         try {
             $validated = $request->validate([
                 'quantity' => ['required', 'numeric', 'min:1'],
-                'reason' => ['required', 'string', 'in:'.implode(',', $validReasons)],
+                'reason'   => ['required', 'string', 'min:3', 'max:500'],
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -1179,12 +1177,10 @@ class ProductController extends Controller
     // Remove manual stock and register the inventory movement
     public function removeManualStock(Request $request, int $id, InventoryMovementService $inventoryService)
     {
-        $validReasons = ['manual_adjustment', 'damage', 'refund'];
-
         try {
             $validated = $request->validate([
                 'quantity' => ['required', 'numeric', 'min:1'],
-                'reason' => ['required', 'string', 'in:'.implode(',', $validReasons)],
+                'reason'   => ['required', 'string', 'min:3', 'max:500'],
             ]);
         } catch (ValidationException $e) {
             return response()->json([

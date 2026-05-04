@@ -109,8 +109,9 @@ class CF490SupplierOrderInventoryMovementTest extends TestCase
     /** Receiving a confirmed order creates exactly one movement per product line. */
     public function test_receiving_a_confirmed_order_creates_one_movement_per_product(): void
     {
-        $admin = $this->createAdmin();
-        $order = $this->createConfirmedOrderWithProduct(stockBefore: 10, quantity: 5);
+        $admin   = $this->createAdmin();
+        $order   = $this->createConfirmedOrderWithProduct(stockBefore: 10, quantity: 5);
+        $product = $order->orderItems->first()->product;
 
         $this->actingAs($admin, 'admin')
             ->postJson(
@@ -119,7 +120,13 @@ class CF490SupplierOrderInventoryMovementTest extends TestCase
             )->assertOk()
              ->assertJson(['success' => true]);
 
-        $this->assertDatabaseCount('inventory_movements', 1);
+        // Exactly one movement scoped to this order and product.
+        $this->assertSame(
+            1,
+            InventoryMovement::where('reference_id', $order->num_order)
+                ->where('product_id', $product->product_id)
+                ->count()
+        );
     }
 
     /** Each product line in a multi-item order gets its own movement record. */
@@ -202,8 +209,13 @@ class CF490SupplierOrderInventoryMovementTest extends TestCase
         $this->assertEquals(MovementType::ENTRADA, $movement->type);
     }
 
-    /** The movement note matches the standardized supplier reception text. */
-    public function test_movement_note_is_set_to_standardized_supplier_reception_text(): void
+    /**
+     * The movement reason matches the standardized supplier reception text.
+     *
+     * Columna: inventory_movements.reason  (antes llamada notes — corregido)
+     * Constante: InventoryMovementService::ORIGIN_REASONS  (antes ORIGIN_NOTES — corregido)
+     */
+    public function test_movement_reason_is_set_to_standardized_supplier_reception_text(): void
     {
         $admin = $this->createAdmin();
         $order = $this->createConfirmedOrderWithProduct(stockBefore: 10, quantity: 5);
@@ -217,16 +229,20 @@ class CF490SupplierOrderInventoryMovementTest extends TestCase
         $this->assertDatabaseHas('inventory_movements', [
             'reference_id' => $order->num_order,
             'origin'       => 'provider',
-            'notes'        => InventoryMovementService::ORIGIN_NOTES['provider'],
+            'reason'       => InventoryMovementService::ORIGIN_REASONS['provider'],
         ]);
     }
 
-    /** The ORIGIN_NOTES constant holds the expected Spanish reception label. */
-    public function test_origin_notes_constant_returns_expected_supplier_text(): void
+    /**
+     * The ORIGIN_REASONS constant holds the expected Spanish reception label.
+     *
+     * Constante renombrada de ORIGIN_NOTES a ORIGIN_REASONS.
+     */
+    public function test_origin_reasons_constant_returns_expected_supplier_text(): void
     {
         $this->assertEquals(
             'Recepción de pedido de proveedor',
-            InventoryMovementService::ORIGIN_NOTES['provider']
+            InventoryMovementService::ORIGIN_REASONS['provider']
         );
     }
 
@@ -314,7 +330,11 @@ class CF490SupplierOrderInventoryMovementTest extends TestCase
             )->assertOk()
              ->assertJson(['success' => true]);
 
-        $this->assertDatabaseCount('inventory_movements', 1);
+        // One movement created after the first receive.
+        $this->assertSame(
+            1,
+            InventoryMovement::where('reference_id', $order->num_order)->count()
+        );
 
         $order->refresh()->load('orderItems');
 
@@ -325,7 +345,11 @@ class CF490SupplierOrderInventoryMovementTest extends TestCase
             )->assertStatus(422)
              ->assertJson(['success' => false]);
 
-        $this->assertDatabaseCount('inventory_movements', 1);
+        // No additional movement after the rejected second receive.
+        $this->assertSame(
+            1,
+            InventoryMovement::where('reference_id', $order->num_order)->count()
+        );
     }
 
     /** Closing a partially received order does not generate additional inventory movements. */
@@ -340,7 +364,11 @@ class CF490SupplierOrderInventoryMovementTest extends TestCase
                 'items' => [['order_item_id' => $item->id, 'received_quantity' => 2]],
             ])->assertOk();
 
-        $this->assertDatabaseCount('inventory_movements', 1);
+        // One movement after partial receive.
+        $this->assertSame(
+            1,
+            InventoryMovement::where('reference_id', $order->num_order)->count()
+        );
 
         $order->refresh();
         $this->assertEquals('partial_received', $order->state);
@@ -350,6 +378,10 @@ class CF490SupplierOrderInventoryMovementTest extends TestCase
                 'reason' => 'Proveedor no entregó el resto.',
             ])->assertOk();
 
-        $this->assertDatabaseCount('inventory_movements', 1);
+        // Still one movement — closing must not create additional movements.
+        $this->assertSame(
+            1,
+            InventoryMovement::where('reference_id', $order->num_order)->count()
+        );
     }
 }
