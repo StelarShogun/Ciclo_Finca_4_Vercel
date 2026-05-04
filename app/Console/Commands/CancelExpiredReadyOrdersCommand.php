@@ -28,7 +28,7 @@ class CancelExpiredReadyOrdersCommand extends Command
     ): int {
         $isDryRun    = $this->option('dry-run');
         $cutoff      = Carbon::now()->subMinutes(self::READY_EXPIRATION_MINUTES);
-        $reason      = 'Cancelado automáticamente por vencimiento del plazo de recogida.';
+        $reason      = 'Por vencimiento de encargo';
         $cancelledAt = Carbon::now();
 
         $query = Sale::with('saleItems.product')
@@ -74,27 +74,15 @@ class CancelExpiredReadyOrdersCommand extends Command
 
             try {
                 DB::transaction(function () use ($sale, $reason, $cancelledAt, $inventoryService): void {
-                    $existingNotes = trim((string) ($sale->notes ?? ''));
-                    $autoNote = sprintf(
-                        '[%s] %s',
-                        $cancelledAt->format('Y-m-d H:i:s'),
-                        $reason
-                    );
+                    $sale->update(['status' => 'cancelled']);
 
-                    $sale->update([
-                        'status' => 'cancelled',
-                        'notes'  => $existingNotes !== ''
-                            ? $existingNotes . PHP_EOL . $autoNote
-                            : $autoNote,
-                    ]);
-
-                    // Return stock for every item in the order.
                     foreach ($sale->saleItems as $item) {
                         if ($item->product) {
-                            $inventoryService->recordRefund(
+                            $inventoryService->recordOrderCancellation(
                                 product:  $item->product,
                                 quantity: (int) $item->quantity,
                                 saleId:   $sale->sale_id,
+                                reason:   $reason,
                             );
                         }
                     }

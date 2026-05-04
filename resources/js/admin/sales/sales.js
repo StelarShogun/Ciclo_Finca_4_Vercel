@@ -401,10 +401,15 @@ function viewSale(id) {
 }
 
 // Helper to perform a sale state change (complete, cancel, refund)
-function _saleAction(url, successMsg) {
+function _saleAction(url, successMsg, payload = null) {
     fetch(url, {
         method: 'POST',
-        headers: { 'X-CSRF-TOKEN': getCSRFToken(), 'Accept': 'application/json' }
+        headers: {
+            'X-CSRF-TOKEN': getCSRFToken(),
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: payload ? JSON.stringify(payload) : null,
     })
     .then(r => r.json().then(data => ({ data })))
     .then(({ data }) => {
@@ -440,14 +445,31 @@ function cancelSale(id, invoiceNumber) {
     const invoiceLabel = invoiceNumber || ('#' + id);
     Swal.fire({
         title: 'Rechazar encargo con factura: ' + invoiceLabel + '?',
-        text: 'Se cancelara el encargo y se devolvera el stock al inventario.',
+        text: 'Ingrese el motivo de cancelación. El stock reservado se devolverá al inventario.',
+        input: 'textarea',
+        inputPlaceholder: 'Motivo de cancelación',
+        inputAttributes: { maxlength: 500 },
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Si, rechazar',
-        cancelButtonText: 'No'
-    }).then(r => r.isConfirmed && _saleAction('/sales/' + id + '/cancel', 'Encargo: ' + invoiceLabel + ' eliminado.'));
+        confirmButtonText: 'Sí, rechazar',
+        cancelButtonText: 'No',
+        inputValidator: value => {
+            if (! value || value.trim().length < 3) {
+                return 'Debe ingresar un motivo de al menos 3 caracteres.';
+            }
+            return null;
+        },
+    }).then(r => {
+        if (! r.isConfirmed) return;
+
+        _saleAction(
+            '/sales/' + id + '/cancel',
+            'Encargo: ' + invoiceLabel + ' eliminado.',
+            { reason: r.value.trim() }
+        );
+    });
 }
 
 function printSale(id) {

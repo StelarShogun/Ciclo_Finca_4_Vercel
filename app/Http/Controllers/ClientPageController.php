@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -476,9 +477,8 @@ class ClientPageController extends Controller
         ]);
     }
 
-    // Creates a pending web order. Inventory movement is deferred until the order
-    // is confirmed (ready_to_pickup → completed) by an administrator.
-    public function checkout(Request $request)
+    // Creates a pending web order and reserves stock immediately.
+    public function checkout(Request $request, InventoryMovementService $inventoryService)
     {
         $cart = Session::get('cart', []);
 
@@ -548,8 +548,12 @@ class ClientPageController extends Controller
                     'unit_discount' => 0,
                     'total'         => $item['total'],
                 ]);
-                // No inventory movement here — stock is discounted only when
-                // the admin confirms the order (ready_to_pickup → completed).
+
+                $inventoryService->recordWebCartSale(
+                    product:  $item['product'],
+                    quantity: (int) $item['quantity'],
+                    saleId:   $sale->sale_id,
+                );
             }
 
             Session::forget('cart');

@@ -341,9 +341,17 @@ class SalesController extends Controller
         ]);
     }
 
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id, InventoryMovementService $inventoryService)
     {
-        $sale = Sale::findOrFail($id);
+        $request->validate([
+            'reason' => 'required|string|min:3|max:500',
+        ], [
+            'reason.required' => 'Debe ingresar un motivo de cancelación.',
+            'reason.min'      => 'El motivo debe tener al menos 3 caracteres.',
+            'reason.max'      => 'El motivo no puede superar los 500 caracteres.',
+        ]);
+
+        $sale = Sale::with('saleItems.product')->findOrFail($id);
 
         if ($sale->status !== 'pending') {
             return response()->json([
@@ -352,7 +360,22 @@ class SalesController extends Controller
             ], 400);
         }
 
-        $sale->update(['status' => 'cancelled']);
+        $reason = trim((string) $request->input('reason'));
+
+        DB::transaction(function () use ($sale, $inventoryService, $reason): void {
+            $sale->update(['status' => 'cancelled']);
+
+            foreach ($sale->saleItems as $item) {
+                if ($item->product) {
+                    $inventoryService->recordOrderCancellation(
+                        product:  $item->product,
+                        quantity: (int) $item->quantity,
+                        saleId:   $sale->sale_id,
+                        reason:   $reason,
+                    );
+                }
+            }
+        });
 
         $this->logAuditAction(
             'sale_cancel',
@@ -367,12 +390,12 @@ class SalesController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Venta cancelada correctamente.',
+            'message' => 'Venta cancelada correctamente y stock liberado.',
         ]);
     }
 
     // Complete a ready-to-pickup order without duplicating stock output movements
-    public function complete(int $id, InventoryMovementService $inventoryService)
+    public function complete(int $id)
     {
         try {
             $sale = Sale::with('saleItems.product')->findOrFail($id);
@@ -417,29 +440,11 @@ class SalesController extends Controller
                 $invoiceNumber = (new Sale)->generateInvoiceNumber();
             }
 
-            DB::transaction(function () use ($sale, $invoiceNumber, $inventoryService) {
+            DB::transaction(function () use ($sale, $invoiceNumber) {
                 $sale->update([
                     'status'         => 'completed',
                     'invoice_number' => $invoiceNumber,
                 ]);
-
-                foreach ($sale->saleItems as $item) {
-                    if ($item->product) {
-                        if ($sale->order_source === 'web_cart') {
-                            $inventoryService->recordWebCartSale(
-                                product:  $item->product,
-                                quantity: (int) $item->quantity,
-                                saleId:   $sale->sale_id,
-                            );
-                        } else {
-                            $inventoryService->recordSale(
-                                product:  $item->product,
-                                quantity: (int) $item->quantity,
-                                saleId:   $sale->sale_id,
-                            );
-                        }
-                    }
-                }
 
                 $this->ensureReviewPlaceholdersForCompletedSale($sale);
             });
@@ -519,13 +524,21 @@ class SalesController extends Controller
         }
     }
 
-    // Cancel a pending or ready-to-pickup order and restore committed stock
-    public function cancel(int $id, InventoryMovementService $inventoryService, OrderCancellationNotifier $notifier)
+    // Cancel a pending or ready-to-pickup order and restore reserved stock.
+    public function cancel(Request $request, int $id, InventoryMovementService $inventoryService, OrderCancellationNotifier $notifier)
     {
+        $request->validate([
+            'reason' => 'required|string|min:3|max:500',
+        ], [
+            'reason.required' => 'Debe ingresar un motivo de cancelación.',
+            'reason.min'      => 'El motivo debe tener al menos 3 caracteres.',
+            'reason.max'      => 'El motivo no puede superar los 500 caracteres.',
+        ]);
+
         try {
             $sale = Sale::with('saleItems.product')->findOrFail($id);
             $cancelledAt = now();
-            $reason = 'Cancelado por administración';
+            $reason = trim((string) $request->input('reason'));
 
             if ($sale->status === 'cancelled') {
                 return response()->json(['success' => false, 'message' => 'Este pedido ya está cancelado o rechazado.'], 400);
@@ -545,25 +558,16 @@ class SalesController extends Controller
 
             $previousStatus = (string) $sale->status;
 
-            DB::transaction(function () use ($sale, $inventoryService, $cancelledAt, $reason) {
-                $existingNotes = trim((string) ($sale->notes ?? ''));
-                $adminNote = sprintf(
-                    '[%s] %s.',
-                    $cancelledAt->format('Y-m-d H:i:s'),
-                    $reason
-                );
-
-                $sale->update([
-                    'status' => 'cancelled',
-                    'notes' => $existingNotes !== '' ? $existingNotes.PHP_EOL.$adminNote : $adminNote,
-                ]);
+            DB::transaction(function () use ($sale, $inventoryService, $reason): void {
+                $sale->update(['status' => 'cancelled']);
 
                 foreach ($sale->saleItems as $item) {
                     if ($item->product) {
-                        $inventoryService->recordManualEntry(
+                        $inventoryService->recordOrderCancellation(
                             product:  $item->product,
                             quantity: (int) $item->quantity,
-                            reason:   'Cancelación de pedido #' . $sale->sale_id,
+                            saleId:   $sale->sale_id,
+                            reason:   $reason,
                         );
                     }
                 }
