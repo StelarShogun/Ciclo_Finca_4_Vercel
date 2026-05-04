@@ -81,7 +81,17 @@
             <div class="product-detail-info">
                 <div class="product-detail-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
                 <h1 class="product-detail-name">{{ $product->name }}</h1>
-                
+
+                @if($productReviews->isNotEmpty() && $averageStars !== null)
+                    <div class="product-detail-rating-summary">
+                        @include('client.parts.product-stars-inline', [
+                            'avgStars' => $averageStars,
+                            'reviewCount' => $productReviews->count(),
+                            'variant' => 'detail',
+                        ])
+                    </div>
+                @endif
+
                 @if($product->description)
                     <div class="product-detail-description">
                         <p>{{ $product->description }}</p>
@@ -205,17 +215,33 @@
             @endauth
 
             @if($productReviews->isNotEmpty())
-                <p style="margin-bottom:1rem;">
+                <p class="product-reviews-section-intro">
                     Calificación promedio: <strong>{{ number_format((float) $averageStars, 1) }}</strong>/5
-                    ({{ $productReviews->count() }} reseña{{ $productReviews->count() > 1 ? 's' : '' }})
+                    · {{ $productReviews->count() }} reseña{{ $productReviews->count() === 1 ? '' : 's' }}
+                    (más recientes primero)
                 </p>
-                <div>
+                <div class="product-reviews-list-scroll" role="region" aria-label="Lista de reseñas">
                     @foreach($productReviews as $review)
-                        <article style="padding:0.8rem 0;border-top:1px solid #e9ecef;">
-                            <strong>{{ trim(($review->client->name ?? 'Cliente').' '.($review->client->first_surname ?? '')) }}</strong>
-                            <div style="margin-top:0.2rem;">
+                        @php
+                            $c = $review->client;
+                            $author = $c
+                                ? trim(implode(' ', array_filter([$c->name, $c->first_surname, $c->second_surname])))
+                                : '';
+                            if ($author === '') {
+                                $author = 'Cliente';
+                            }
+                            $publishedAt = $review->created_at;
+                        @endphp
+                        <article class="product-review-item">
+                            <div class="product-review-item__head">
+                                <strong class="product-review-item__author">{{ $author }}</strong>
+                                <time class="product-review-item__date" datetime="{{ $publishedAt?->toAtomString() }}">
+                                    {{ $publishedAt?->format('d/m/Y H:i') }}
+                                </time>
+                            </div>
+                            <div class="product-review-item__stars" role="img" aria-label="{{ (int) $review->stars }} de 5 estrellas">
                                 @for($i = 1; $i <= 5; $i++)
-                                    <span aria-hidden="true">{{ $i <= (int) $review->stars ? '★' : '☆' }}</span>
+                                    <i class="{{ $i <= (int) $review->stars ? 'fas' : 'far' }} fa-star" aria-hidden="true"></i>
                                 @endfor
                             </div>
                         </article>
@@ -252,6 +278,14 @@
                                         {{ $related->name }}
                                     </a>
                                 </h3>
+                                @php $relRs = $productReviewStats[(int) $related->product_id] ?? null; @endphp
+                                @if($relRs && ($relRs['count'] ?? 0) > 0)
+                                    @include('client.parts.product-stars-inline', [
+                                        'avgStars' => $relRs['avg'],
+                                        'reviewCount' => $relRs['count'],
+                                        'variant' => 'related',
+                                    ])
+                                @endif
                                 <p @class([
                                     'product-availability-text',
                                     'is-available' => $relLabel === 'Disponible',

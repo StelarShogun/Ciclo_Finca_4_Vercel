@@ -332,6 +332,14 @@
                                             <h3 class="product-name">
                                                 <a href="{{ $product->clientProductUrl() }}">{{ $product->name }}</a>
                                             </h3>
+                                            @php $spotRs = $productReviewStats[(int) $product->product_id] ?? null; @endphp
+                                            @if($spotRs && ($spotRs['count'] ?? 0) > 0)
+                                                @include('client.parts.product-stars-inline', [
+                                                    'avgStars' => $spotRs['avg'],
+                                                    'reviewCount' => $spotRs['count'],
+                                                    'variant' => 'card',
+                                                ])
+                                            @endif
                                             <p @class([
                                                 'product-availability-text',
                                                 'is-available' => $catLabel === 'Disponible',
@@ -443,6 +451,14 @@
                                                 {{ $product->name }}
                                             </a>
                                         </h3>
+                                        @php $cardRs = $productReviewStats[(int) $product->product_id] ?? null; @endphp
+                                        @if($cardRs && ($cardRs['count'] ?? 0) > 0)
+                                            @include('client.parts.product-stars-inline', [
+                                                'avgStars' => $cardRs['avg'],
+                                                'reviewCount' => $cardRs['count'],
+                                                'variant' => 'card',
+                                            ])
+                                        @endif
                                         <p @class([
                                             'product-availability-text',
                                             'is-available' => $catLabel === 'Disponible',

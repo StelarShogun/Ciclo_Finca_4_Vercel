@@ -39,7 +39,11 @@ class ClientPageController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        return view('client.home', compact('featuredProducts', 'categories', 'cartCount'));
+        $productReviewStats = ProductReview::aggregatesForProductIds(
+            $featuredProducts->pluck('product_id')->map(fn ($id) => (int) $id)->all()
+        );
+
+        return view('client.home', compact('featuredProducts', 'categories', 'cartCount', 'productReviewStats'));
     }
 
     public function catalog(Request $request)
@@ -150,6 +154,16 @@ class ClientPageController extends Controller
             && $selectedCategory
             && $products->total() === 0;
 
+        $catalogProductIdsForReviews = $products->getCollection()
+            ->pluck('product_id')
+            ->merge($catalogSpotlight->map(fn (array $row) => (int) $row['product']->product_id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $productReviewStats = ProductReview::aggregatesForProductIds($catalogProductIdsForReviews);
+
         return view('client.catalog', compact(
             'products', 'categories', 'cartCount',
             'selectedCategory', 'subcategories', 'parentCategoryForSubcats',
@@ -159,7 +173,8 @@ class ClientPageController extends Controller
             'catalogCategoryNav',
             'emptyCategoryNoProducts',
             'brands',
-            'selectedBrand'
+            'selectedBrand',
+            'productReviewStats'
         ));
     }
 
@@ -286,13 +301,22 @@ class ClientPageController extends Controller
         }
 
         $productReviews = ProductReview::query()
-            ->with('client:user_id,name,first_surname')
+            ->with(['client:user_id,name,first_surname,second_surname'])
             ->where('product_id', $product->product_id)
             ->whereNotNull('stars')
-            ->latest()
+            ->orderByDesc('created_at')
             ->get();
 
-        $averageStars = $productReviews->avg('stars');
+        $averageStars = $productReviews->isEmpty()
+            ? null
+            : round((float) $productReviews->avg('stars'), 2);
+
+        $productReviewStats = ProductReview::aggregatesForProductIds(
+            array_values(array_unique(array_merge(
+                [(int) $product->product_id],
+                $relatedProducts->pluck('product_id')->map(fn ($id) => (int) $id)->all()
+            )))
+        );
 
         return view('client.product', compact(
             'product',
@@ -301,7 +325,8 @@ class ClientPageController extends Controller
             'clientCanReview',
             'clientReview',
             'productReviews',
-            'averageStars'
+            'averageStars',
+            'productReviewStats'
         ));
     }
 
