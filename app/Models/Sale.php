@@ -9,10 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 
-/**
- * @property-read Client|null $client
- * @property-read Collection<int, SaleItem> $saleItems
- */
+
 class Sale extends Model
 {
     protected $table = 'sales';
@@ -43,10 +40,10 @@ class Sale extends Model
         'iva'       => 'decimal:2',
         'discount'  => 'decimal:2',
         'total'     => 'decimal:2',
-        'ready_at'  => 'datetime',
+        'ready_at'  => 'datetime',  // Integrado desde rama local: complementa el campo ya presente en $fillable.
     ];
 
-    // Converts sale_date from UTC to the application timezone for consistent display
+    // Converts sale_date from UTC to the application timezone for consistent display.
     public function getSaleDateAttribute($value)
     {
         if (! $value) {
@@ -86,31 +83,33 @@ class Sale extends Model
         return $query->whereDate('sale_date', $date);
     }
 
+    // Integrado desde rama local: usado en SalesController (historyHeartbeat).
+    public function scopeReadyToPickup($query)
+    {
+        return $query->where('status', 'ready_to_pickup');
+    }
+
+    // Integrado desde rama local: determina si una venta puede cancelarse según su estado actual.
+    public function canBeCancelled(): bool
+    {
+        return in_array($this->status, ['pending', 'ready_to_pickup', 'completed']);
+    }
+
     // Global sequential invoice number in CF4-NNNN format (e.g. CF4-0001, CF4-0002…)
     public function generateInvoiceNumber(): string
     {
         $maxNum = self::where('invoice_number', 'like', 'CF4-%')
             ->get(['invoice_number'])
-            ->map(fn ($s) => (int) substr($s->invoice_number, 4))
+            ->map(fn($s) => (int) substr($s->invoice_number, 4))
             ->max() ?? 0;
 
-        return 'CF4-'.str_pad((string) ($maxNum + 1), 4, '0', STR_PAD_LEFT);
+        return 'CF4-' . str_pad((string) ($maxNum + 1), 4, '0', STR_PAD_LEFT);
     }
 
     public function calculateTotal()
     {
         return $this->subtotal + $this->iva - $this->discount;
     }
-
-    public function canBeCancelled(): bool
-{
-    return in_array($this->status, ['pending', 'ready_to_pickup', 'completed']);
-}
-
-public function scopeReadyToPickup($query)
-{
-    return $query->where('status', 'ready_to_pickup');
-}
 
     public static function getOrderExpirationDays(): int
     {
@@ -146,7 +145,7 @@ public function scopeReadyToPickup($query)
     {
         $days = $this->days_remaining_until_expiration;
 
-        // Triggers when at or below the alert threshold but not yet expired
+        // Triggers when at or below the alert threshold but not yet expired.
         return $days <= (int) config('sales.expiry_alert_days', 2) && $days > 0;
     }
 
