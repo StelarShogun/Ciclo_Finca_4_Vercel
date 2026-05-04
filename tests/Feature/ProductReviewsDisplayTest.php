@@ -106,7 +106,7 @@ class ProductReviewsDisplayTest extends TestCase
         $posLowName = strpos($html, 'ZZZLowStars');
         $this->assertNotFalse($posHighName);
         $this->assertNotFalse($posLowName);
-        $this->assertLessThan($posHighName, $posLowName, 'AAAHighStars (5★) debe aparecer antes en el documento que ZZZLowStars (2★).');
+        $this->assertTrue($posHighName < $posLowName, 'AAAHighStars (5★) debe aparecer antes en el documento que ZZZLowStars (2★).');
     }
 
     public function test_pagination_appears_when_more_than_ten_other_reviews(): void
