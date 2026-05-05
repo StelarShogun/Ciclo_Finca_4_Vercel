@@ -332,6 +332,12 @@
                                             <h3 class="product-name">
                                                 <a href="{{ $product->clientProductUrl() }}">{{ $product->name }}</a>
                                             </h3>
+                                            @php $spotRs = $productReviewStats[(int) $product->product_id] ?? null; @endphp
+                                            @include('client.parts.product-stars-inline', [
+                                                'avgStars' => (float) data_get($spotRs, 'avg', 0),
+                                                'reviewCount' => (int) data_get($spotRs, 'count', 0),
+                                                'variant' => 'card',
+                                            ])
                                             <p @class([
                                                 'product-availability-text',
                                                 'is-available' => $catLabel === 'Disponible',
@@ -443,6 +449,12 @@
                                                 {{ $product->name }}
                                             </a>
                                         </h3>
+                                        @php $cardRs = $productReviewStats[(int) $product->product_id] ?? null; @endphp
+                                        @include('client.parts.product-stars-inline', [
+                                            'avgStars' => (float) data_get($cardRs, 'avg', 0),
+                                            'reviewCount' => (int) data_get($cardRs, 'count', 0),
+                                            'variant' => 'card',
+                                        ])
                                         <p @class([
                                             'product-availability-text',
                                             'is-available' => $catLabel === 'Disponible',

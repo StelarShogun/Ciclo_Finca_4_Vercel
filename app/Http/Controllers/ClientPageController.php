@@ -39,7 +39,11 @@ class ClientPageController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        return view('client.home', compact('featuredProducts', 'categories', 'cartCount'));
+        $productReviewStats = ProductReview::aggregatesForProductIds(
+            $featuredProducts->pluck('product_id')->map(fn ($id) => (int) $id)->all()
+        );
+
+        return view('client.home', compact('featuredProducts', 'categories', 'cartCount', 'productReviewStats'));
     }
 
     public function catalog(Request $request)
@@ -150,6 +154,16 @@ class ClientPageController extends Controller
             && $selectedCategory
             && $products->total() === 0;
 
+        $catalogProductIdsForReviews = $products->getCollection()
+            ->pluck('product_id')
+            ->merge($catalogSpotlight->map(fn (array $row) => (int) $row['product']->product_id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $productReviewStats = ProductReview::aggregatesForProductIds($catalogProductIdsForReviews);
+
         return view('client.catalog', compact(
             'products', 'categories', 'cartCount',
             'selectedCategory', 'subcategories', 'parentCategoryForSubcats',
@@ -159,7 +173,8 @@ class ClientPageController extends Controller
             'catalogCategoryNav',
             'emptyCategoryNoProducts',
             'brands',
-            'selectedBrand'
+            'selectedBrand',
+            'productReviewStats'
         ));
     }
 
@@ -246,17 +261,17 @@ class ClientPageController extends Controller
             ->concat($novelties->map(fn (Product $p) => ['product' => $p, 'spotlight' => 'novelty']));
     }
 
-    public function product(int $id, ?string $slug = null)
+    public function product(Request $request, int $id, ?string $slug = null)
     {
         $product = Product::with(['category', 'supplier', 'classificationValues.dimension'])->findOrFail($id);
 
         // Redirect to the canonical product URL when the slug does not match.
         $canonicalSlug = $product->clientPublicSlug();
         if ($slug !== $canonicalSlug) {
-            return redirect()->route('clients.product', [
-                'id' => $product->product_id,
-                'slug' => $canonicalSlug,
-            ], 301);
+            return redirect()->route('clients.product', array_merge(
+                ['id' => $product->product_id, 'slug' => $canonicalSlug],
+                $request->only(['reviews_sort', 'page', 'review_filter'])
+            ), 301);
         }
 
         $relatedProducts = Product::with(['category'])
@@ -269,6 +284,7 @@ class ClientPageController extends Controller
 
         $clientCanReview = false;
         $clientReview = null;
+        $myHighlightedReview = null;
         if (Auth::guard('clients')->check()) {
             $clientId = (int) Auth::guard('clients')->id();
             $clientCanReview = SaleItem::query()
@@ -283,16 +299,89 @@ class ClientPageController extends Controller
                 ->where('product_id', $product->product_id)
                 ->where('client_id', $clientId)
                 ->first();
+
+            $myHighlightedReview = ProductReview::query()
+                ->with(['client:user_id,name,first_surname,second_surname'])
+                ->where('product_id', $product->product_id)
+                ->where('client_id', $clientId)
+                ->publiclyListed()
+                ->first();
         }
 
-        $productReviews = ProductReview::query()
-            ->with('client:user_id,name,first_surname')
+        $aggregate = ProductReview::query()
             ->where('product_id', $product->product_id)
-            ->whereNotNull('stars')
-            ->latest()
-            ->get();
+            ->publiclyListed()
+            ->selectRaw('AVG(stars) as avg_stars, COUNT(*) as review_count')
+            ->first();
 
-        $averageStars = $productReviews->avg('stars');
+        $totalReviewsCount = (int) ($aggregate->review_count ?? 0);
+        $averageStars = $totalReviewsCount > 0
+            ? round((float) $aggregate->avg_stars, 2)
+            : null;
+
+        $distributionCounts = ProductReview::query()
+            ->where('product_id', $product->product_id)
+            ->publiclyListed()
+            ->selectRaw('stars, COUNT(*) as c')
+            ->groupBy('stars')
+            ->pluck('c', 'stars');
+
+        $starDistribution = [];
+        for ($s = 1; $s <= 5; $s++) {
+            $starDistribution[$s] = (int) ($distributionCounts[$s] ?? 0);
+        }
+
+        $verifiedPurchaserIds = Sale::query()
+            ->completed()
+            ->whereHas('saleItems', function ($q) use ($product) {
+                $q->where('product_id', $product->product_id);
+            })
+            ->distinct()
+            ->pluck('client_id')
+            ->map(fn ($id) => (int) $id);
+
+        $reviewsSort = $request->query('reviews_sort', 'recent');
+        if (! in_array($reviewsSort, ['recent', 'stars_high', 'stars_low'], true)) {
+            $reviewsSort = 'recent';
+        }
+
+        $reviewFilter = $request->query('review_filter', 'all');
+        if ($reviewFilter !== 'all' && (! ctype_digit((string) $reviewFilter) || ! in_array((int) $reviewFilter, [1, 2, 3, 4, 5], true))) {
+            $reviewFilter = 'all';
+        }
+
+        $showMyHighlightedReview = $myHighlightedReview !== null
+            && ($reviewFilter === 'all' || (int) $myHighlightedReview->stars === (int) $reviewFilter);
+
+        $othersQuery = ProductReview::query()
+            ->with(['client:user_id,name,first_surname,second_surname'])
+            ->where('product_id', $product->product_id)
+            ->publiclyListed();
+
+        if ($myHighlightedReview !== null) {
+            $othersQuery->where('review_id', '!=', $myHighlightedReview->review_id);
+        }
+
+        if ($reviewFilter !== 'all') {
+            $othersQuery->where('stars', (int) $reviewFilter);
+        }
+
+        match ($reviewsSort) {
+            'stars_high' => $othersQuery->orderByDesc('stars')->orderByDesc('created_at'),
+            'stars_low' => $othersQuery->orderBy('stars')->orderByDesc('created_at'),
+            default => $othersQuery->orderByDesc('created_at'),
+        };
+
+        $productReviewsPaginated = $othersQuery
+            ->paginate(10)
+            ->withQueryString();
+
+        $productReviewStats = ProductReview::aggregatesForProductIds(
+            array_values(array_unique(array_merge(
+                [(int) $product->product_id],
+                $relatedProducts->pluck('product_id')->map(fn ($id) => (int) $id)->all()
+            )))
+        );
 
         return view('client.product', compact(
             'product',
@@ -300,8 +389,16 @@ class ClientPageController extends Controller
             'cartCount',
             'clientCanReview',
             'clientReview',
-            'productReviews',
-            'averageStars'
+            'myHighlightedReview',
+            'showMyHighlightedReview',
+            'productReviewsPaginated',
+            'totalReviewsCount',
+            'averageStars',
+            'starDistribution',
+            'verifiedPurchaserIds',
+            'reviewsSort',
+            'reviewFilter',
+            'productReviewStats'
         ));
     }
 
