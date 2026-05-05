@@ -87,7 +87,7 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
 
     private function runCommand(): int
     {
-        return Artisan::call('orders:cancel-expired-ready');
+        return Artisan::call('orders:cancel-expired-ready', ['--minutes' => 2]);
     }
 
     // -------------------------------------------------------------------------
@@ -148,8 +148,8 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
         $this->assertDatabaseHas('inventory_movements', [
             'product_id'   => $product->product_id,
             'reference_id' => $sale->sale_id,
-            'type'         => 'devolucion',
-            'origin'       => 'return',
+            'type'         => 'cancelado',
+            'origin'       => 'cancellation',
             'quantity'     => 3,
         ]);
     }

@@ -88,7 +88,9 @@ class CancelExpiredReadyOrdersCommand extends Command
 
             try {
                 DB::transaction(function () use ($sale, $reason, $cancelledAt, $inventoryService): void {
-                    $sale->update(['status' => 'cancelled']);
+                    $cancellationNote = 'Cancelado automáticamente por vencimiento del plazo de recogida.';
+                    $existingNotes = $sale->notes ? $sale->notes . "\n" : '';
+                    $sale->update(['status' => 'cancelled', 'notes' => $existingNotes . $cancellationNote]);
 
                     foreach ($sale->saleItems as $item) {
                         if ($item->product) {
