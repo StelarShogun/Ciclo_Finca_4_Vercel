@@ -54,8 +54,8 @@ class ClientPageController extends Controller
         if ($request->filled('search')) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'like', '%'.$searchTerm.'%')
-                    ->orWhere('description', 'like', '%'.$searchTerm.'%');
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('description', 'like', '%' . $searchTerm . '%');
             });
         }
 
@@ -65,7 +65,7 @@ class ClientPageController extends Controller
             $brandId = (int) $request->brand_id;
             $selectedBrand = Brand::find($brandId);
             if ($selectedBrand) {
-                $query->whereHas('brands', fn ($q) => $q->where('brands.id', $brandId));
+                $query->whereHas('brands', fn($q) => $q->where('brands.id', $brandId));
             } else {
                 // Brand does not exist — force empty result set (CA-03).
                 $query->whereRaw('1 = 0');
@@ -145,7 +145,7 @@ class ClientPageController extends Controller
             $favoriteProductIds = FavoriteProduct::query()
                 ->where('user_id', (int) Auth::guard('clients')->id())
                 ->pluck('product_id')
-                ->map(fn ($id) => (int) $id);
+                ->map(fn($id) => (int) $id);
         }
 
         $catalogParams = $request->except(['category_id', 'page']);
@@ -165,8 +165,12 @@ class ClientPageController extends Controller
         $productReviewStats = ProductReview::aggregatesForProductIds($catalogProductIdsForReviews);
 
         return view('client.catalog', compact(
-            'products', 'categories', 'cartCount',
-            'selectedCategory', 'subcategories', 'parentCategoryForSubcats',
+            'products',
+            'categories',
+            'cartCount',
+            'selectedCategory',
+            'subcategories',
+            'parentCategoryForSubcats',
             'catalogSpotlight',
             'favoriteProductIds',
             'catalogParams',
@@ -250,15 +254,15 @@ class ClientPageController extends Controller
 
         $novelties = $remaining > 0
             ? Product::with(['category'])
-                ->activeInClientStore()
-                ->whereNotIn('product_id', $featuredIds)
-                ->orderByDesc('created_at')
-                ->limit($remaining)
-                ->get()
+            ->activeInClientStore()
+            ->whereNotIn('product_id', $featuredIds)
+            ->orderByDesc('created_at')
+            ->limit($remaining)
+            ->get()
             : collect();
 
-        return $featured->map(fn (Product $p) => ['product' => $p, 'spotlight' => 'featured'])
-            ->concat($novelties->map(fn (Product $p) => ['product' => $p, 'spotlight' => 'novelty']));
+        return $featured->map(fn(Product $p) => ['product' => $p, 'spotlight' => 'featured'])
+            ->concat($novelties->map(fn(Product $p) => ['product' => $p, 'spotlight' => 'novelty']));
     }
 
     public function product(Request $request, int $id, ?string $slug = null)
@@ -539,7 +543,7 @@ class ClientPageController extends Controller
                     'product_id' => $product->product_id,
                     'name' => $product->name,
                     'price' => $item['price'],
-                    'image_url' => $mediaUrl ?: asset('assets/images/products/'.($product->image ?? 'default.png')),
+                    'image_url' => $mediaUrl ?: asset('assets/images/products/' . ($product->image ?? 'default.png')),
                     'quantity' => $qty,
                     'stock_available' => $product->stock_current,
                     'subtotal' => $subtotal,
@@ -562,7 +566,7 @@ class ClientPageController extends Controller
             return response()->json(['success' => false, 'message' => 'El carrito está vacío', 'cart_count' => 0, 'cart_total' => 0], 400);
         }
 
-        $cart = array_values(array_filter($cart, fn ($item) => $item['product_id'] != $id));
+        $cart = array_values(array_filter($cart, fn($item) => $item['product_id'] != $id));
 
         Session::put('cart', $cart);
 
@@ -574,9 +578,7 @@ class ClientPageController extends Controller
         ]);
     }
 
-    // Creates a pending web order and records stock خروج with origin 'sale_web'.
-    // Inventory movements are stored through recordWebCartSale().
-    // user_id remains null because no admin is authenticated in this flow.
+    // Creates a pending web order and reserves stock immediately.
     public function checkout(Request $request, InventoryMovementService $inventoryService)
     {
         $cart = Session::get('cart', []);
@@ -640,15 +642,14 @@ class ClientPageController extends Controller
 
             foreach ($validatedItems as $item) {
                 SaleItem::create([
-                    'sale_id' => $sale->sale_id,
-                    'product_id' => $item['product']->product_id,
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['price'],
+                    'sale_id'       => $sale->sale_id,
+                    'product_id'    => $item['product']->product_id,
+                    'quantity'      => $item['quantity'],
+                    'unit_price'    => $item['price'],
                     'unit_discount' => 0,
-                    'total' => $item['total'],
+                    'total'         => $item['total'],
                 ]);
 
-                // Record the web sale movement without an authenticated admin user.
                 $inventoryService->recordWebCartSale(
                     product: $item['product'],
                     quantity: (int) $item['quantity'],
@@ -665,11 +666,10 @@ class ClientPageController extends Controller
                 'sale_id' => $sale->sale_id,
                 'invoice_number' => $sale->invoice_number,
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json(['success' => false, 'message' => 'Error al procesar el pedido: '.$e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Error al procesar el pedido: ' . $e->getMessage()], 500);
         }
     }
 
@@ -679,6 +679,9 @@ class ClientPageController extends Controller
         $client = Auth::guard('clients')->user();
         $tab = $request->query('tab', 'facturas');
         $pendingReviewProducts = collect();
+
+        $activeStatuses = $this->activeClientInvoiceStatuses();
+        $cancelledStatuses = $this->cancelledClientInvoiceStatuses();
 
         if ($tab === 'historial') {
             $orders = Sale::with(['saleItems.product'])
@@ -700,21 +703,35 @@ class ClientPageController extends Controller
                     ];
                 })
                 ->values();
-        } else {
-            $tab = 'facturas';
+        } elseif ($tab === 'canceladas') {
             $orders = Sale::with(['saleItems.product'])
                 ->where('client_id', $client->user_id)
-                ->where('status', 'pending')
+                ->whereIn('status', $cancelledStatuses)
+                ->orderByDesc('sale_date')
+                ->get();
+        } else {
+            $tab = 'facturas';
+
+            $orders = Sale::with(['saleItems.product'])
+                ->where('client_id', $client->user_id)
+                ->whereIn('status', $activeStatuses)
                 ->orderByDesc('sale_date')
                 ->get();
         }
 
         $cartCount = $this->getCartCount();
+
         $invoiceCount = Sale::where('client_id', $client->user_id)
-            ->where('status', 'pending')
+            ->whereIn('status', $activeStatuses)
             ->count();
 
-        return view('client.Invoices', compact('orders', 'cartCount', 'invoiceCount', 'tab', 'pendingReviewProducts'));
+        return view('client.Invoices', compact(
+            'orders',
+            'cartCount',
+            'invoiceCount',
+            'tab',
+            'pendingReviewProducts'
+        ));
     }
 
     public function invoicesHeartbeat()
@@ -723,7 +740,7 @@ class ClientPageController extends Controller
         $client = Auth::guard('clients')->user();
 
         $count = Sale::where('client_id', $client->user_id)
-            ->where('status', 'pending')
+            ->whereIn('status', $this->activeClientInvoiceStatuses())
             ->count();
 
         return response()->json(['count' => $count]);
@@ -746,7 +763,6 @@ class ClientPageController extends Controller
     {
         $client = Auth::guard('clients')->user();
 
-        // Do not reveal whether another client's order exists.
         if ((int) $sale->client_id !== (int) $client->user_id) {
             abort(404);
         }
@@ -754,8 +770,9 @@ class ClientPageController extends Controller
         $sale->load(['saleItems.product']);
 
         $cartCount = $this->getCartCount();
+
         $invoiceCount = Sale::where('client_id', $client->user_id)
-            ->where('status', 'pending')
+            ->whereIn('status', $this->activeClientInvoiceStatuses())
             ->count();
 
         return view('client.invoice-detail', compact('sale', 'cartCount', 'invoiceCount'));
@@ -765,8 +782,17 @@ class ClientPageController extends Controller
     {
         return array_reduce(
             Session::get('cart', []),
-            fn ($carry, $item) => $carry + $item['price'] * $item['quantity'],
+            fn($carry, $item) => $carry + $item['price'] * $item['quantity'],
             0
         );
+    }
+
+    private function activeClientInvoiceStatuses(): array
+    {
+        return ['pending', 'ready_to_pickup'];
+    }
+    private function cancelledClientInvoiceStatuses(): array
+    {
+        return ['cancelled', 'canceled'];
     }
 }

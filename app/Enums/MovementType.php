@@ -17,6 +17,9 @@ enum MovementType: string
     // Increases stock from a customer return.
     case DEVOLUCION = 'devolucion';
 
+    // Restores stock when a reserved order is cancelled.
+    case CANCELADO = 'cancelado';
+
     // Returns the display label for the movement type.
     public function label(): string
     {
@@ -25,6 +28,7 @@ enum MovementType: string
             self::SALIDA     => 'Salida',
             self::AJUSTE     => 'Ajuste',
             self::DEVOLUCION => 'Devolución',
+            self::CANCELADO  => 'Cancelado',
         };
     }
 
@@ -36,6 +40,7 @@ enum MovementType: string
             self::SALIDA     => 'danger',
             self::AJUSTE     => 'warning',
             self::DEVOLUCION => 'info',
+            self::CANCELADO  => 'secondary',
         };
     }
 
@@ -47,6 +52,7 @@ enum MovementType: string
             self::SALIDA     => 'fa-arrow-up',
             self::AJUSTE     => 'fa-sliders',
             self::DEVOLUCION => 'fa-rotate-left',
+            self::CANCELADO  => 'fa-ban',
         };
     }
 }

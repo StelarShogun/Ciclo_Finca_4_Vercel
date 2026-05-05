@@ -149,6 +149,11 @@
   color: var(--color-warning);
 }
 
+.cf4-orders-module .order-status-pill.ready_to_pickup {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
 .cf4-orders-module .order-status-pill.draft {
   background: rgba(69, 90, 100, 0.12);
   color: #37474f;
@@ -395,6 +400,8 @@
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
+}
+
 /* Listado: auditoría de confirmación (CF4-15) */
 .cf4-supplier-orders-module .order-conf-cell {
   font-size: 0.82rem;
@@ -419,5 +426,4 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
 }

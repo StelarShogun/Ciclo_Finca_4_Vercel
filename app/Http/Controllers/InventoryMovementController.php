@@ -77,6 +77,7 @@ class InventoryMovementController extends Controller
                 ->whereIn('type', [
                     MovementType::ENTRADA->value,
                     MovementType::DEVOLUCION->value,
+                    MovementType::CANCELADO->value,
                 ])
                 ->sum('quantity'),
             'total_salidas'  => (clone $summaryBase)
@@ -150,7 +151,7 @@ class InventoryMovementController extends Controller
             'stock_before'     => $m->stock_before,
             'stock_after'      => $m->stock_after,
             'reference_id'     => $m->reference_id,
-            'reason'           => $m->reason,   // ← columna renombrada de notes a reason
+            'reason'           => $m->reason,
             'admin'            => $m->adminUser ? [
                 'id'   => $m->adminUser->user_id,
                 'name' => $m->adminName(),

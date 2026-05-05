@@ -230,6 +230,8 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
 
     Route::get('/sales/{id}/print', [SalesController::class, 'print'])->name('sales.print');
     Route::get('/sales/{id}/invoice', [SalesController::class, 'invoice'])->name('sales.invoice');
+    Route::patch('orders/{id}/ready-to-pickup', [SalesController::class, 'markReadyToPickup'])
+    ->name('admin.orders.ready-to-pickup');
 
     // Client order management routes.
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');

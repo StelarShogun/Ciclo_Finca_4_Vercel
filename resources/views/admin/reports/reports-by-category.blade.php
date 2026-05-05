@@ -18,8 +18,8 @@
             <h1>Ventas por Categoría</h1>
             <p>Análisis de participación por línea de producto.</p>
         </div>
-        <a href="{{ route('sales.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Volver a Ventas
+        <a href="{{ route('admin.reports.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a Reportes
         </a>
     </header>
 

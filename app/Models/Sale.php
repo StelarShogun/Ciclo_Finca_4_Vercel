@@ -9,10 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 
-/**
- * @property-read Client|null $client
- * @property-read Collection<int, SaleItem> $saleItems
- */
+
 class Sale extends Model
 {
     protected $table = 'sales';
@@ -35,13 +32,15 @@ class Sale extends Model
         'buyer_name',
         'buyer_email',
         'order_source',
+        'ready_at',
     ];
 
     protected $casts = [
-        'subtotal' => 'decimal:2',
-        'iva'      => 'decimal:2',
-        'discount' => 'decimal:2',
-        'total'    => 'decimal:2',
+        'subtotal'  => 'decimal:2',
+        'iva'       => 'decimal:2',
+        'discount'  => 'decimal:2',
+        'total'     => 'decimal:2',
+        'ready_at'  => 'datetime',  // Integrado desde rama local: complementa el campo ya presente en $fillable.
     ];
 
     // Converts sale_date from UTC to the application timezone for consistent display.
@@ -84,6 +83,18 @@ class Sale extends Model
         return $query->whereDate('sale_date', $date);
     }
 
+    // Integrado desde rama local: usado en SalesController (historyHeartbeat).
+    public function scopeReadyToPickup($query)
+    {
+        return $query->where('status', 'ready_to_pickup');
+    }
+
+    // Integrado desde rama local: determina si una venta puede cancelarse según su estado actual.
+    public function canBeCancelled(): bool
+    {
+        return in_array($this->status, ['pending', 'ready_to_pickup', 'completed']);
+    }
+
     // Global sequential invoice number in CF4-NNNN format (e.g. CF4-0001, CF4-0002…)
     public function generateInvoiceNumber(): string
     {
@@ -100,11 +111,6 @@ class Sale extends Model
         return $this->subtotal + $this->iva - $this->discount;
     }
 
-    public function canBeCancelled(): bool
-    {
-        return in_array($this->status, ['pending', 'completed']);
-    }
-
     public static function getOrderExpirationDays(): int
     {
         return Cache::remember(AppSetting::cacheKeyOrderExpirationDays(), 3600, function () {
@@ -114,6 +120,18 @@ class Sale extends Model
             }
 
             return max(1, (int) config('sales.order_expiration_days', 30));
+        });
+    }
+
+    public static function getReadyToPickupExpirationDays(): int
+    {
+        return Cache::remember(AppSetting::cacheKeyReadyToPickupExpirationDays(), 3600, function () {
+            $fromDb = AppSetting::getStoredReadyToPickupExpirationDays();
+            if ($fromDb !== null && $fromDb > 0) {
+                return $fromDb;
+            }
+
+            return max(1, (int) config('sales.ready_to_pickup_expiration_days', 3));
         });
     }
 

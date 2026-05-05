@@ -17,16 +17,20 @@ class InventoryMovementService
         'sale_admin',
         'sale_web',
         'return',
+        'cancellation',
         'provider',
         'manual_adjustment',
     ];
 
     // Default human-readable reasons mapped by origin.
     // Used when no explicit reason is provided by the caller.
+    // Conservado de rama dev: nombre ORIGIN_REASONS y entradas sin 'damage'
+    // (rama local añadía 'damage' => '…' pero ese origen no existe en VALID_ORIGINS).
     public const ORIGIN_REASONS = [
         'sale_admin'        => 'Venta por administrador',
         'sale_web'          => 'Venta por tienda web',
         'return'            => 'Devolución de cliente',
+        'cancellation'      => 'Cancelación de encargo',
         'provider'          => 'Recepción de pedido de proveedor',
         'manual_adjustment' => 'Ajuste manual de inventario',
     ];
@@ -69,7 +73,8 @@ class InventoryMovementService
             // Calculate the resulting stock based on movement type.
             $stockAfter = match ($type) {
                 MovementType::ENTRADA,
-                MovementType::DEVOLUCION => $stockBefore + $quantity,
+                MovementType::DEVOLUCION,
+                MovementType::CANCELADO => $stockBefore + $quantity,
 
                 MovementType::SALIDA => $stockBefore - $quantity,
 
@@ -146,7 +151,7 @@ class InventoryMovementService
     // Records a sale return initiated by an admin.
     // The reason entered in the return form is mandatory and stored
     // in inventory_movements.reason so every return is fully traceable.
-    // Used by: returnSale(), cancel(), refund() in SalesController.
+    // Used by: returnSale() in SalesController.
     public function recordSaleReturn(
         Product $product,
         int $quantity,
@@ -159,6 +164,31 @@ class InventoryMovementService
             origin:      'return',
             quantity:    $quantity,
             referenceId: $saleId,
+            reason:      $reason,
+        );
+    }
+
+    // Records stock restored by a cancelled web order.
+    public function recordOrderCancellation(
+        Product $product,
+        int $quantity,
+        int $saleId,
+        string $reason,
+        ?int $userId = null,
+    ): InventoryMovement {
+        $reason = trim($reason);
+
+        if ($reason === '') {
+            throw new \RuntimeException('El motivo de cancelación es obligatorio.');
+        }
+
+        return $this->record(
+            product:     $product,
+            type:        MovementType::CANCELADO,
+            origin:      'cancellation',
+            quantity:    $quantity,
+            referenceId: $saleId,
+            userId:      $userId,
             reason:      $reason,
         );
     }

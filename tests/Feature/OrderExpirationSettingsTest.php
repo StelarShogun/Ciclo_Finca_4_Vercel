@@ -48,19 +48,20 @@ class OrderExpirationSettingsTest extends TestCase
     public function test_admin_can_save_order_expiration_days_via_put(): void
     {
         Config::set('sales.order_expiration_days', 30);
+        Config::set('sales.ready_to_pickup_expiration_days', 3);
 
         $admin = $this->createAdmin();
         $this->actingAs($admin, 'admin');
 
         $put = $this->from(route('admin.orders.index'))
             ->put(route('admin.orders.settings.order-expiration.update'), [
-                'order_expiration_days' => 7,
+                'ready_to_pickup_expiration_days' => 7,
             ]);
         $put->assertRedirect(route('admin.orders.index'));
         $put->assertSessionHas('status');
 
         $this->assertDatabaseHas('app_settings', [
-            'key' => AppSetting::KEY_ORDER_EXPIRATION_DAYS,
+            'key' => AppSetting::KEY_READY_TO_PICKUP_EXPIRATION_DAYS,
             'value' => '7',
         ]);
 
@@ -68,45 +69,47 @@ class OrderExpirationSettingsTest extends TestCase
             ->assertStatus(200)
             ->assertSee('value="7"', false);
 
-        $this->assertSame(7, Sale::getOrderExpirationDays());
+        $this->assertSame(7, Sale::getReadyToPickupExpirationDays());
     }
 
     public function test_put_with_accept_json_returns_json_payload(): void
     {
         Config::set('sales.order_expiration_days', 30);
+        Config::set('sales.ready_to_pickup_expiration_days', 3);
 
         $admin = $this->createAdmin();
         $this->actingAs($admin, 'admin');
 
         $response = $this->putJson(route('admin.orders.settings.order-expiration.update'), [
-            'order_expiration_days' => 12,
+            'ready_to_pickup_expiration_days' => 12,
         ]);
 
         $response->assertOk()
-            ->assertJsonPath('order_expiration_days', 12)
-            ->assertJsonStructure(['message', 'order_expiration_days']);
+            ->assertJsonPath('ready_to_pickup_expiration_days', 12)
+            ->assertJsonStructure(['message', 'ready_to_pickup_expiration_days']);
     }
 
     public function test_validation_rejects_zero_and_keeps_previous_value(): void
     {
         Config::set('sales.order_expiration_days', 30);
+        Config::set('sales.ready_to_pickup_expiration_days', 3);
 
         $admin = $this->createAdmin();
         $this->actingAs($admin, 'admin');
 
         $this->put(route('admin.orders.settings.order-expiration.update'), [
-            'order_expiration_days' => 14,
+            'ready_to_pickup_expiration_days' => 14,
         ])->assertSessionHasNoErrors();
 
         $response = $this->from(route('admin.orders.index'))
             ->put(route('admin.orders.settings.order-expiration.update'), [
-                'order_expiration_days' => 0,
+                'ready_to_pickup_expiration_days' => 0,
             ]);
 
-        $response->assertSessionHasErrors('order_expiration_days');
+        $response->assertSessionHasErrors('ready_to_pickup_expiration_days');
 
         $this->assertDatabaseHas('app_settings', [
-            'key' => AppSetting::KEY_ORDER_EXPIRATION_DAYS,
+            'key' => AppSetting::KEY_READY_TO_PICKUP_EXPIRATION_DAYS,
             'value' => '14',
         ]);
     }
@@ -114,28 +117,29 @@ class OrderExpirationSettingsTest extends TestCase
     public function test_validation_rejects_negative_or_non_numeric(): void
     {
         Config::set('sales.order_expiration_days', 30);
+        Config::set('sales.ready_to_pickup_expiration_days', 3);
 
         $admin = $this->createAdmin();
         $this->actingAs($admin, 'admin');
 
         $this->put(route('admin.orders.settings.order-expiration.update'), [
-            'order_expiration_days' => 5,
+            'ready_to_pickup_expiration_days' => 5,
         ])->assertSessionHasNoErrors();
 
         $this->from(route('admin.orders.index'))
             ->put(route('admin.orders.settings.order-expiration.update'), [
-                'order_expiration_days' => -3,
+                'ready_to_pickup_expiration_days' => -3,
             ])
-            ->assertSessionHasErrors('order_expiration_days');
+            ->assertSessionHasErrors('ready_to_pickup_expiration_days');
 
         $this->from(route('admin.orders.index'))
             ->put(route('admin.orders.settings.order-expiration.update'), [
-                'order_expiration_days' => 'not-a-number',
+                'ready_to_pickup_expiration_days' => 'not-a-number',
             ])
-            ->assertSessionHasErrors('order_expiration_days');
+            ->assertSessionHasErrors('ready_to_pickup_expiration_days');
 
         $this->assertDatabaseHas('app_settings', [
-            'key' => AppSetting::KEY_ORDER_EXPIRATION_DAYS,
+            'key' => AppSetting::KEY_READY_TO_PICKUP_EXPIRATION_DAYS,
             'value' => '5',
         ]);
     }
@@ -157,11 +161,11 @@ class OrderExpirationSettingsTest extends TestCase
             ->assertRedirect(route('admin.login'));
 
         $this->put(route('admin.orders.settings.order-expiration.update'), [
-            'order_expiration_days' => 99,
+            'ready_to_pickup_expiration_days' => 99,
         ])->assertRedirect(route('admin.login'));
 
         $this->assertDatabaseMissing('app_settings', [
-            'key' => AppSetting::KEY_ORDER_EXPIRATION_DAYS,
+            'key' => AppSetting::KEY_READY_TO_PICKUP_EXPIRATION_DAYS,
             'value' => '99',
         ]);
     }

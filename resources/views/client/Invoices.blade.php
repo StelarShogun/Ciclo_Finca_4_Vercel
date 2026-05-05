@@ -23,17 +23,54 @@
         }
         .cf4-review-star-btn.is-active { color: #f5b301; }
 
-        /* Lista Mis Facturas: alinear como tabla tipo documento (todo a la izquierda; Acciones centrado) */
         .cf4-invoices-card .sales-table.cf4-invoices-list-table thead th,
         .cf4-invoices-card .sales-table.cf4-invoices-list-table tbody td {
             text-align: left;
             vertical-align: top;
         }
+
         .cf4-invoices-card .sales-table.cf4-invoices-list-table thead th.cf4-invoices-th-actions,
         .cf4-invoices-card .sales-table.cf4-invoices-list-table tbody td.cf4-invoices-td-actions {
             text-align: center;
             vertical-align: middle;
             white-space: nowrap;
+        }
+
+        .cf4-invoice-status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 0.35rem 0.7rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .cf4-invoice-status-pending {
+            background: #fff4d6;
+            color: #8a5a00;
+        }
+
+        .cf4-invoice-status-ready {
+            background: #dff7ea;
+            color: #176b3a;
+        }
+
+        .cf4-invoice-status-cancelled {
+            background: #fde2e2;
+            color: #9f1d1d;
+        }
+
+        .cf4-invoice-status-completed {
+            background: #e7f0ff;
+            color: #1f4f9a;
+        }
+
+        .cf4-invoice-status-default {
+            background: #eeeeee;
+            color: #555555;
         }
     </style>
 @endpush
@@ -43,16 +80,31 @@
     <meta name="cf4-invoice-count" content="{{ $invoiceCount }}">
     <meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
 
+    @php
+        $headerDescription = match ($tab) {
+            'historial' => 'Compras completadas por la tienda.',
+            'canceladas' => 'Pedidos cancelados.',
+            default => 'Pedidos pendientes o listos para recoger.',
+        };
+
+        $selectIcon = match ($tab) {
+            'historial' => 'fas fa-history',
+            'canceladas' => 'fas fa-ban',
+            default => 'fas fa-file-invoice',
+        };
+    @endphp
+
     <div class="cf4-invoices-header">
         <div class="cf4-invoices-header-inner">
             <h1><i class="fas fa-file-invoice"></i> Mis Facturas</h1>
-            <p>{{ $tab === 'historial' ? 'Pedidos confirmados por la tienda.' : 'Pedidos pendientes de confirmación por parte de la tienda.' }}</p>
+            <p>{{ $headerDescription }}</p>
         </div>
         <div class="cf4-invoices-tab-selector">
             <div class="cf4-select-wrapper">
-                <i class="{{ $tab === 'historial' ? 'fas fa-history' : 'fas fa-file-invoice' }} cf4-select-icon"></i>
+                <i class="{{ $selectIcon }} cf4-select-icon"></i>
                 <select id="cf4-invoice-tab" class="cf4-select" onchange="window.location.href = '{{ route('clients.invoices') }}?tab=' + this.value">
-                    <option value="facturas" {{ $tab === 'facturas' ? 'selected' : '' }}>Facturas pendientes</option>
+                    <option value="facturas" {{ $tab === 'facturas' ? 'selected' : '' }}>Pendientes / Por recoger</option>
+                    <option value="canceladas" {{ $tab === 'canceladas' ? 'selected' : '' }}>Canceladas</option>
                     <option value="historial" {{ $tab === 'historial' ? 'selected' : '' }}>Historial de compras</option>
                 </select>
             </div>
@@ -69,12 +121,31 @@
                             <th>Factura</th>
                             <th>Productos</th>
                             <th>Fecha</th>
+                            <th>Estado</th>
                             <th>{{ $tab === 'historial' ? 'Total pagado' : 'Total' }}</th>
                             <th class="cf4-invoices-th-actions">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($orders as $sale)
+                            @php
+                                $statusLabel = match ($sale->status) {
+                                    'pending' => 'Pendiente',
+                                    'ready_to_pickup' => 'Por recoger',
+                                    'cancelled', 'canceled' => 'Cancelada',
+                                    'completed' => 'Completada',
+                                    default => ucfirst(str_replace('_', ' ', (string) $sale->status)),
+                                };
+
+                                $statusClass = match ($sale->status) {
+                                    'pending' => 'cf4-invoice-status-pending',
+                                    'ready_to_pickup' => 'cf4-invoice-status-ready',
+                                    'cancelled', 'canceled' => 'cf4-invoice-status-cancelled',
+                                    'completed' => 'cf4-invoice-status-completed',
+                                    default => 'cf4-invoice-status-default',
+                                };
+                            @endphp
+
                             <tr>
                                 <td>
                                     @if($sale->invoice_number)
@@ -94,7 +165,12 @@
                                         <span class="cf4-invoice-muted">Sin productos</span>
                                     @endif
                                 </td>
-                                <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
+                                <td>{{ $sale->sale_date ? $sale->sale_date->format('d/m/Y H:i') : 'Sin fecha' }}</td>
+                                <td>
+                                    <span class="cf4-invoice-status-badge {{ $statusClass }}">
+                                        {{ $statusLabel }}
+                                    </span>
+                                </td>
                                 <td><strong>&#8353;{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
                                 <td class="cf4-invoices-td-actions">
                                     <a href="{{ route('clients.invoices.show', $sale) }}" class="btn btn-primary btn-sm" aria-label="Ver detalle{{ $sale->invoice_number ? ' de '.$sale->invoice_number : '' }}">
@@ -104,10 +180,18 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5">
+                                <td colspan="6">
                                     <div class="cf4-invoices-empty">
                                         <div class="cf4-invoices-empty-icon"><i class="fas fa-file-invoice"></i></div>
-                                        <p>{{ $tab === 'historial' ? 'No has realizado ninguna compra aún.' : 'No tienes facturas pendientes.' }}</p>
+                                        <p>
+                                            @if($tab === 'historial')
+                                                No has realizado ninguna compra aún.
+                                            @elseif($tab === 'canceladas')
+                                                No tienes facturas canceladas.
+                                            @else
+                                                No tienes facturas pendientes o por recoger.
+                                            @endif
+                                        </p>
                                         <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-sm">
                                             <i class="fas fa-th"></i> Ir al catálogo
                                         </a>
@@ -128,7 +212,7 @@
 <script>
 (function () {
     const metaCount = document.querySelector('meta[name="cf4-invoice-count"]');
-    const metaUrl   = document.querySelector('meta[name="cf4-invoice-heartbeat-url"]');
+    const metaUrl = document.querySelector('meta[name="cf4-invoice-heartbeat-url"]');
     if (!metaCount || !metaUrl) return;
 
     let lastCount = parseInt(metaCount.getAttribute('content'), 10);
