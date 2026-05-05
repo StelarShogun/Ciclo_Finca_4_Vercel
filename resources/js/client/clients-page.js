@@ -796,7 +796,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         Swal.fire({
                             icon: 'success',
                             title: '¡Pedido confirmado!',
-                            text: 'Su pedido fue enviado con éxito. Tiene un lapso de 3 días para retirarlo en nuestro local. El pago se realiza de forma presencial mediante SINPE, efectivo o tarjeta.',
+                            text: 'Su pedido fue enviado con éxito. Cuando el pedido sea procesado, se te enviara un correo de confirmación y podrás retirarlo en nuestro local (Con un maximo de 3 dias antes de su vencimiento). El pago se realiza de forma presencial mediante SINPE, efectivo o tarjeta.',
                             confirmButtonText: 'Entendido'
                         });
                     })

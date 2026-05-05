@@ -18,6 +18,9 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule): void
     {
+        // Recordatorio: en producción configure el scheduler (cron) para ejecutar `php artisan schedule:run`
+        // cada minuto; de lo contrario, estas tareas programadas no se ejecutarán automáticamente.
+
         // Cancela pedidos pendientes que superaron el plazo de vigencia configurado.
         $schedule->command('sales:delete-expired')
             ->dailyAt('00:00')

@@ -129,7 +129,7 @@ class SalesController extends Controller
                     }),
                 ],
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error loading sale: ' . $e->getMessage(),
@@ -287,14 +287,19 @@ class SalesController extends Controller
                 ]
             );
 
-            $this->sendProductReviewReminderEmail($sale);
+            // FIX: correo fuera del try principal para no bloquear ni abortar la respuesta.
+            // Se ejecuta después de que la respuesta HTTP ya fue enviada al cliente (afterResponse).
+            $saleForEmail = $sale;
+            app()->terminating(function () use ($saleForEmail) {
+                $this->sendProductReviewReminderEmail($saleForEmail);
+            });
 
             return response()->json([
                 'success' => true,
                 'message' => 'Venta creada correctamente.',
                 'sale'    => $sale->load(['client', 'sellerAdmin', 'saleItems.product']),
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollback();
 
             return response()->json([
@@ -321,7 +326,12 @@ class SalesController extends Controller
 
         if ($sale->status === 'completed') {
             $this->ensureReviewPlaceholdersForCompletedSale($sale);
-            $this->sendProductReviewReminderEmail($sale);
+
+            // FIX: correo asíncrono para no bloquear la respuesta HTTP.
+            $saleForEmail = $sale;
+            app()->terminating(function () use ($saleForEmail) {
+                $this->sendProductReviewReminderEmail($saleForEmail);
+            });
         }
 
         $this->logAuditAction(
@@ -394,7 +404,7 @@ class SalesController extends Controller
         ]);
     }
 
-    // Complete a ready-to-pickup order without duplicating stock output movements
+    // Complete a ready-to-pickup order without duplicating stock output movements.
     public function complete(int $id)
     {
         try {
@@ -440,6 +450,7 @@ class SalesController extends Controller
                 $invoiceNumber = (new Sale)->generateInvoiceNumber();
             }
 
+            // FIX: toda la lógica de DB dentro del transaction; el correo queda fuera.
             DB::transaction(function () use ($sale, $invoiceNumber) {
                 $sale->update([
                     'status'         => 'completed',
@@ -449,8 +460,8 @@ class SalesController extends Controller
                 $this->ensureReviewPlaceholdersForCompletedSale($sale);
             });
 
+            // Refrescar el modelo DENTRO del try para que cualquier fallo sea atrapado.
             $sale->refresh();
-            $this->sendProductReviewReminderEmail($sale);
 
             $this->logAuditAction(
                 'sale_complete',
@@ -463,6 +474,14 @@ class SalesController extends Controller
                 ]
             );
 
+            // FIX: el correo se despacha DESPUÉS de que PHP envía la respuesta HTTP al cliente,
+            // usando el hook terminating() del kernel. Así nunca bloquea ni rompe el flujo,
+            // aunque el servidor de correo tarde o falle.
+            $saleForEmail = $sale;
+            app()->terminating(function () use ($saleForEmail) {
+                $this->sendProductReviewReminderEmail($saleForEmail);
+            });
+
             return response()->json([
                 'success' => true,
                 'message' => 'Pedido confirmado correctamente. La venta quedó registrada con su factura.',
@@ -472,7 +491,8 @@ class SalesController extends Controller
                     'status'         => $sale->status,
                 ],
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // FIX: \Throwable en lugar de \Exception para atrapar también errores fatales.
             return response()->json([
                 'success' => false,
                 'message' => 'Error al confirmar el pedido: ' . $e->getMessage(),
@@ -508,6 +528,13 @@ class SalesController extends Controller
                 ]
             );
 
+            // Notificar al cliente que su pedido está listo para recoger.
+            // Se ejecuta después de enviar la respuesta HTTP para no bloquear el flujo.
+            $saleForEmail = $sale;
+            app()->terminating(function () use ($saleForEmail) {
+                $this->sendReadyToPickupEmail($saleForEmail);
+            });
+
             return response()->json([
                 'success' => true,
                 'message' => 'Pedido marcado como listo para recoger.',
@@ -516,7 +543,7 @@ class SalesController extends Controller
                     'status'  => $sale->status,
                 ],
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error al actualizar el pedido: ' . $e->getMessage(),
@@ -573,14 +600,18 @@ class SalesController extends Controller
                 }
             });
 
-            try {
-                $notifier->notify($sale, $reason, $cancelledAt);
-            } catch (\Throwable $e) {
-                Log::warning('Manual cancellation notification failed.', [
-                    'sale_id' => $sale->sale_id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            // FIX: notificación de cancelación también asíncrona.
+            $saleForNotify = $sale;
+            app()->terminating(function () use ($saleForNotify, $notifier, $reason, $cancelledAt) {
+                try {
+                    $notifier->notify($saleForNotify, $reason, $cancelledAt);
+                } catch (\Throwable $e) {
+                    Log::warning('Manual cancellation notification failed.', [
+                        'sale_id' => $saleForNotify->sale_id,
+                        'error'   => $e->getMessage(),
+                    ]);
+                }
+            });
 
             $this->logAuditAction(
                 'sale_cancel',
@@ -597,7 +628,7 @@ class SalesController extends Controller
                 'success' => true,
                 'message' => 'Pedido rechazado. El stock de los productos fue liberado.',
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error al rechazar el pedido: ' . $e->getMessage(),
@@ -665,7 +696,7 @@ class SalesController extends Controller
                 'success' => false,
                 'message' => $e->errors()['quantity'][0] ?? 'Error de validación de stock.',
             ], 422);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error al registrar la devolución: ' . $e->getMessage(),
@@ -962,10 +993,10 @@ class SalesController extends Controller
         }
     }
 
-    // Restrict results to the requested sales status scope
+    // Restrict results to the requested sales status scope.
     private function applyVentasStatusScope(Builder $query, ?string $statusParam): void
     {
-        $closed = ['completed', 'cancelled', 'returned'];
+        $closed     = ['completed', 'cancelled', 'returned'];
         $allVisible = ['completed', 'cancelled', 'returned', 'ready_to_pickup'];
 
         if ($statusParam === 'all') {
@@ -1030,7 +1061,7 @@ class SalesController extends Controller
         return $today - $yesterday;
     }
 
-    // Map legacy Spanish payment values to internal English keys
+    // Map legacy Spanish payment values to internal English keys.
     private function mapPaymentMethodToEnglish(mixed $value): mixed
     {
         if (empty($value)) {
@@ -1062,7 +1093,7 @@ class SalesController extends Controller
         foreach ($productIds as $productId) {
             ProductReview::query()->firstOrCreate(
                 [
-                    'client_id' => (int) $sale->client_id,
+                    'client_id'  => (int) $sale->client_id,
                     'product_id' => (int) $productId,
                 ],
                 [
@@ -1073,6 +1104,7 @@ class SalesController extends Controller
     }
 
     // Notify the client to rate products after order confirmation.
+    // NOTE: Always call this via app()->terminating() to avoid blocking the HTTP response.
     private function sendProductReviewReminderEmail(Sale $sale): void
     {
         if ((string) $sale->status !== 'completed') {
@@ -1084,18 +1116,18 @@ class SalesController extends Controller
             return;
         }
 
-        $clientName = trim((string) $client->name) !== '' ? (string) $client->name : 'cliente';
+        $clientName   = trim((string) $client->name) !== '' ? (string) $client->name : 'cliente';
         $productCount = SaleItem::query()
             ->where('sale_id', $sale->sale_id)
             ->distinct('product_id')
             ->count('product_id');
 
         $productPhrase = $productCount === 1 ? 'el producto comprado' : 'los productos comprados';
-        $historyUrl = route('clients.invoices', ['tab' => 'historial']);
-        $body = "Estimado {$clientName},\n\n"
-            ."Favor reseñar {$productPhrase}.\n"
-            ."Para esto, acceda a Facturas > Historial de compras:\n{$historyUrl}\n\n"
-            ."Gracias por comprar en Ciclo Finca 4.";
+        $historyUrl    = route('clients.invoices', ['tab' => 'historial']);
+        $body          = "Estimado {$clientName},\n\n"
+            . "Favor reseñar {$productPhrase}.\n"
+            . "Para esto, acceda a Facturas > Historial de compras:\n{$historyUrl}\n\n"
+            . "Gracias por comprar en Ciclo Finca 4.";
 
         try {
             Mail::raw($body, function ($message) use ($client): void {
@@ -1104,10 +1136,10 @@ class SalesController extends Controller
             });
         } catch (\Throwable $e) {
             Log::warning('Could not send product review reminder email.', [
-                'sale_id' => $sale->sale_id ?? null,
+                'sale_id'   => $sale->sale_id ?? null,
                 'client_id' => $client->user_id ?? null,
-                'email' => $client->gmail ?? null,
-                'error' => $e->getMessage(),
+                'email'     => $client->gmail ?? null,
+                'error'     => $e->getMessage(),
             ]);
         }
     }
@@ -1200,6 +1232,54 @@ class SalesController extends Controller
                 ];
             default:
                 return [now()->startOfMonth()->startOfDay()->toDateTimeString(), now()->endOfMonth()->endOfDay()->toDateTimeString()];
+        }
+    }
+
+    private function sendReadyToPickupEmail(Sale $sale): void
+    {
+        if ((string) $sale->status !== 'ready_to_pickup') {
+            return;
+        }
+
+        $client = $sale->client ?: $sale->loadMissing('client')->client;
+        if (! $client || empty($client->gmail)) {
+            return;
+        }
+
+        $clientName   = trim((string) $client->name) !== '' ? (string) $client->name : 'cliente';
+        $invoiceLabel = $sale->invoice_number ?? '#' . $sale->sale_id;
+        $historyUrl   = route('clients.invoices', ['tab' => 'historial']);
+
+        $items = SaleItem::query()
+            ->with('product')
+            ->where('sale_id', $sale->sale_id)
+            ->get();
+
+        $itemLines = $items->map(function (SaleItem $item): string {
+            $name = $item->product ? $item->product->name : 'Producto';
+            return "  • {$name} × {$item->quantity}";
+        })->implode("\n");
+
+        $body = "Estimado {$clientName},\n\n"
+            . "¡Buenas noticias! Su pedido {$invoiceLabel} ya está listo para ser retirado en nuestra tienda.\n\n"
+            . "Productos:\n{$itemLines}\n\n"
+            . "Total: ₡" . number_format((float) $sale->total, 2, ',', '.') . "\n\n"
+            . "Recuerde traer su número de pedido o identificación al momento de recogerlo.\n\n"
+            . "Puede consultar el estado de sus pedidos en:\n{$historyUrl}\n\n"
+            . "Gracias por comprar en Ciclo Finca 4.";
+
+        try {
+            Mail::raw($body, function ($message) use ($client, $invoiceLabel): void {
+                $message->to($client->gmail)
+                    ->subject("Su pedido {$invoiceLabel} está listo para recoger - Ciclo Finca 4");
+            });
+        } catch (\Throwable $e) {
+            Log::warning('Could not send ready-to-pickup notification email.', [
+                'sale_id'   => $sale->sale_id ?? null,
+                'client_id' => $client->user_id ?? null,
+                'email'     => $client->gmail ?? null,
+                'error'     => $e->getMessage(),
+            ]);
         }
     }
 }

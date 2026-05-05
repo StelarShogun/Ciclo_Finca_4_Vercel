@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         const errEl = document.getElementById('order-expiration-form-error');
-        const input = document.getElementById('order_expiration_days');
+        const input = document.getElementById('ready_to_pickup_expiration_days');
         const submitBtn = document.getElementById('order-expiration-submit');
 
         errEl.style.display = 'none';
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'X-Requested-With': 'XMLHttpRequest',
                 },
                 body: JSON.stringify({
-                    order_expiration_days: input.value === '' ? null : Number(input.value),
+                    ready_to_pickup_expiration_days: input.value === '' ? null : Number(input.value),
                 }),
             });
 
@@ -79,8 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             close();
 
-            if (data.order_expiration_days != null) {
-                input.value = String(data.order_expiration_days);
+            if (data.ready_to_pickup_expiration_days != null) {
+                input.value = String(data.ready_to_pickup_expiration_days);
             }
         } catch {
             errEl.textContent = 'No se pudo conectar con el servidor.';

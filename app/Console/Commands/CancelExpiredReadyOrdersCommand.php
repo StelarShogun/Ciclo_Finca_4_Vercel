@@ -13,13 +13,11 @@ use Illuminate\Support\Facades\Log;
 
 class CancelExpiredReadyOrdersCommand extends Command
 {
-    // TODO: cambiar a días para producción. Actualmente en minutos para pruebas locales.
-    private const READY_EXPIRATION_MINUTES = 2;
-
     protected $signature = 'orders:cancel-expired-ready
-                            {--dry-run : Lista los pedidos afectados sin realizar cambios}';
+                            {--dry-run : Lista los pedidos afectados sin realizar cambios}
+                            {--minutes= : (Solo pruebas) Override del plazo en minutos desde ready_at}';
 
-    protected $description = 'Cancela pedidos en estado "listo para recoger" que superaron ' . self::READY_EXPIRATION_MINUTES . ' minuto(s) sin ser confirmados, devolviendo el stock al inventario.';
+    protected $description = 'Cancela pedidos en estado "listo para recoger" que superaron el plazo configurado sin ser confirmados, devolviendo el stock al inventario.';
 
     public function handle(
         InventoryMovementService $inventoryService,
@@ -27,7 +25,23 @@ class CancelExpiredReadyOrdersCommand extends Command
         AuditLogger $auditLogger,
     ): int {
         $isDryRun    = $this->option('dry-run');
-        $cutoff      = Carbon::now()->subMinutes(self::READY_EXPIRATION_MINUTES);
+        $minutesOpt  = $this->option('minutes');
+
+        if ($minutesOpt !== null) {
+            $minutes = (int) $minutesOpt;
+            if ($minutes <= 0) {
+                $this->error('La opción --minutes debe ser un entero mayor que cero.');
+
+                return self::FAILURE;
+            }
+
+            $cutoff = Carbon::now()->subMinutes($minutes);
+            $windowLabel = $minutes.' min';
+        } else {
+            $days   = Sale::getReadyToPickupExpirationDays();
+            $cutoff = Carbon::now()->subDays($days);
+            $windowLabel = $days.' día(s)';
+        }
         $reason      = 'Por vencimiento de encargo';
         $cancelledAt = Carbon::now();
 
@@ -47,7 +61,7 @@ class CancelExpiredReadyOrdersCommand extends Command
         $this->info(
             "Encontrados {$count} pedido(s) en 'listo para recoger' con ready_at anterior a "
             . $cutoff->format('Y-m-d H:i:s')
-            . ' (' . self::READY_EXPIRATION_MINUTES . ' min)'
+            . ' (' . $windowLabel . ')'
             . ($isDryRun ? ' [DRY RUN — sin cambios]' : '.')
         );
 

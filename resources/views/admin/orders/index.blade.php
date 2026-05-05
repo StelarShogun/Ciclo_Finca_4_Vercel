@@ -252,13 +252,14 @@
 
             <div class="modal-body">
                 <p class="cf4-order-expiry-modal-intro">
-                    Días que el sistema espera desde la fecha del pedido antes de considerarlo vencido y eliminarlo
-                    (<code>sales:delete-expired</code>).
+                    Días que el sistema espera desde que el pedido se marca como <strong>Listo para recoger</strong>
+                    (<code>ready_at</code>) antes de cancelarlo automáticamente
+                    (<code>orders:cancel-expired-ready</code>).
                 </p>
 
                 @if ($usesEnvDefaultForExpiry)
                     <p class="cf4-order-expiry-modal-hint">
-                        Se usa el valor por defecto (<code>ORDER_EXPIRATION_DAYS</code>) hasta que guarde un valor aquí.
+                        Se usa el valor por defecto (<code>READY_TO_PICKUP_EXPIRATION_DAYS</code>) hasta que guarde un valor aquí.
                     </p>
                 @endif
 
@@ -267,9 +268,9 @@
                     @method('PUT')
 
                     <div class="form-group">
-                        <label for="order_expiration_days">Días máximos de vigencia del pedido</label>
-                        <input type="number" id="order_expiration_days" name="order_expiration_days" min="1"
-                            step="1" required value="{{ old('order_expiration_days', $orderExpirationDays) }}">
+                        <label for="ready_to_pickup_expiration_days">Días máximos para recoger el pedido</label>
+                        <input type="number" id="ready_to_pickup_expiration_days" name="ready_to_pickup_expiration_days" min="1"
+                            step="1" required value="{{ old('ready_to_pickup_expiration_days', $readyToPickupExpirationDays) }}">
                         <p id="order-expiration-form-error" class="form-error" style="display:none;" role="alert"></p>
                         <p class="form-help">Debe ser un entero mayor que cero, por ejemplo 7 o 30.</p>
                     </div>

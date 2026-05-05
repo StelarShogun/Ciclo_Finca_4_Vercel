@@ -243,11 +243,11 @@
                         <table class="dashboard-table">
                             <thead>
                                 <tr>
-                                    <th>Invoice</th>
+                                    <th>Factura</th>
                                     <th>Cliente</th>
                                     <th>Total</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
                                 </tr>
                             </thead>
                             <tbody id="recent-sales-table" class="tbody-scroll">
@@ -267,8 +267,17 @@
                                         <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
                                         <td>
                                             {{-- Status badge: success / warning / danger --}}
+                                            @php
+                                                $statusLabels = [
+                                                    'completed' => 'Completada',
+                                                    'pending' => 'Pendiente',
+                                                    'cancelled' => 'Cancelada',
+                                                    'canceled' => 'Cancelada',
+                                                ];
+                                                $statusText = $statusLabels[$sale->status] ?? ucfirst($sale->status);
+                                            @endphp
                                             <span class="status-badge {{ $sale->status === 'completed' ? 'success' : ($sale->status === 'pending' ? 'warning' : 'danger') }}">
-                                                {{ ucfirst($sale->status) }}
+                                                {{ $statusText }}
                                             </span>
                                         </td>
                                     </tr>
@@ -311,11 +320,11 @@
                         </div>
                     </a>
 
-                    <a href="{{ route('suppliers.create') }}" class="action-card">
-                        <div class="action-icon"><i class="fas fa-truck"></i></div>
+                    <a href="{{ route('admin.reports.index') }}" class="action-card">
+                        <div class="action-icon"><i class="fas fa-file-alt"></i></div>
                         <div class="action-content">
-                            <h4>Nuevo Proveedor</h4>
-                            <p>Registrar un nuevo proveedor</p>
+                            <h4>Ver Reportes</h4>
+                            <p>Ingresar al módulo de reportes del sistema</p>
                         </div>
                     </a>
 

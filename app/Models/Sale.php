@@ -123,6 +123,18 @@ class Sale extends Model
         });
     }
 
+    public static function getReadyToPickupExpirationDays(): int
+    {
+        return Cache::remember(AppSetting::cacheKeyReadyToPickupExpirationDays(), 3600, function () {
+            $fromDb = AppSetting::getStoredReadyToPickupExpirationDays();
+            if ($fromDb !== null && $fromDb > 0) {
+                return $fromDb;
+            }
+
+            return max(1, (int) config('sales.ready_to_pickup_expiration_days', 3));
+        });
+    }
+
     public function getExpiresAtAttribute(): Carbon
     {
         $days = static::getOrderExpirationDays();
