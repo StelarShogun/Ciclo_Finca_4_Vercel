@@ -8,7 +8,6 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -21,15 +20,23 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ProductSalesExcelExport
 {
     // ── Brand colours (same palette as the PDF CSS) ──────────────────────────
-    private const COLOR_HEADER_BG  = 'FF2D6A4F'; // dark green
-    private const COLOR_HEADER_FG  = 'FFFFFFFF';
-    private const COLOR_TOP10_BG   = 'FFE8F5E9'; // soft green
+    private const COLOR_HEADER_BG = 'FF2D6A4F'; // dark green
+
+    private const COLOR_HEADER_FG = 'FFFFFFFF';
+
+    private const COLOR_TOP10_BG = 'FFE8F5E9'; // soft green
+
     private const COLOR_SECTION_BG = 'FF1B4332'; // darker green for section titles
+
     private const COLOR_SECTION_FG = 'FFFFFFFF';
-    private const COLOR_ALT_ROW    = 'FFF5F5F5';
-    private const COLOR_BORDER     = 'FFCCCCCC';
-    private const COLOR_FILTER_BG  = 'FFFFF9C4'; // light yellow
-    private const COLOR_FILTER_FG  = 'FF555555';
+
+    private const COLOR_ALT_ROW = 'FFF5F5F5';
+
+    private const COLOR_BORDER = 'FFCCCCCC';
+
+    private const COLOR_FILTER_BG = 'FFFFF9C4'; // light yellow
+
+    private const COLOR_FILTER_FG = 'FF555555';
 
     /**
      * Build a streamed XLSX download response.
@@ -51,8 +58,8 @@ class ProductSalesExcelExport
             $writer = new Xlsx($spreadsheet);
             $writer->save('php://output');
         }, $filename, [
-            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Cache-Control'       => 'max-age=0',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
@@ -116,6 +123,7 @@ class ProductSalesExcelExport
         }
 
         $row++; // blank separator
+
         return $row;
     }
 
@@ -157,6 +165,7 @@ class ProductSalesExcelExport
         }
 
         $row++;
+
         return $row;
     }
 

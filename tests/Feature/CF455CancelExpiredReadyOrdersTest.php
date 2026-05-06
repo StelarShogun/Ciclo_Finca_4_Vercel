@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Console\Commands\CancelExpiredReadyOrdersCommand;
 use App\Models\AdminUser;
 use App\Models\InventoryMovement;
 use App\Models\Product;
@@ -26,11 +25,11 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
         return AdminUser::firstOrCreate(
             ['gmail' => 'admin@cicloperez.com'],
             [
-                'name'           => 'Administrador',
-                'first_surname'  => 'Sistema',
+                'name' => 'Administrador',
+                'first_surname' => 'Sistema',
                 'second_surname' => null,
-                'password'       => bcrypt('Admin2024!@#'),
-                'last_access'    => null,
+                'password' => bcrypt('Admin2024!@#'),
+                'last_access' => null,
             ]
         );
     }
@@ -41,17 +40,17 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
         $counter++;
 
         $supplier = Supplier::create([
-            'name'  => "Supplier {$counter}",
+            'name' => "Supplier {$counter}",
             'email' => "supplier{$counter}@test.com",
         ]);
 
         return Product::create([
-            'name'           => "Product {$counter}",
-            'supplier_id'    => $supplier->supplier_id,
-            'stock_current'  => $stock,
-            'sale_price'     => 1000.00,
+            'name' => "Product {$counter}",
+            'supplier_id' => $supplier->supplier_id,
+            'stock_current' => $stock,
+            'sale_price' => 1000.00,
             'purchase_price' => 600.00,
-            'status'         => 'active',
+            'status' => 'active',
         ]);
     }
 
@@ -61,25 +60,25 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
         $invoiceCounter++;
 
         $sale = Sale::create([
-            'invoice_number' => 'TEST-' . str_pad((string) $invoiceCounter, 4, '0', STR_PAD_LEFT),
-            'client_id'      => null,
-            'sale_date'      => now(),
+            'invoice_number' => 'TEST-'.str_pad((string) $invoiceCounter, 4, '0', STR_PAD_LEFT),
+            'client_id' => null,
+            'sale_date' => now(),
             'payment_method' => 'cash',
-            'status'         => 'ready_to_pickup',
-            'order_source'   => 'web_cart',
-            'subtotal'       => $product->sale_price * $quantity,
-            'iva'            => 0,
-            'discount'       => 0,
-            'total'          => $product->sale_price * $quantity,
-            'ready_at'       => $readyAt ?? now()->subMinutes(5),
+            'status' => 'ready_to_pickup',
+            'order_source' => 'web_cart',
+            'subtotal' => $product->sale_price * $quantity,
+            'iva' => 0,
+            'discount' => 0,
+            'total' => $product->sale_price * $quantity,
+            'ready_at' => $readyAt ?? now()->subMinutes(5),
         ]);
 
         SaleItem::create([
-            'sale_id'    => $sale->sale_id,
+            'sale_id' => $sale->sale_id,
             'product_id' => $product->product_id,
-            'quantity'   => $quantity,
+            'quantity' => $quantity,
             'unit_price' => $product->sale_price,
-            'total'      => $product->sale_price * $quantity,
+            'total' => $product->sale_price * $quantity,
         ]);
 
         return $sale;
@@ -98,13 +97,13 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
     public function test_expired_ready_order_is_cancelled(): void
     {
         $product = $this->createProduct(stock: 10);
-        $sale    = $this->createReadyToPickupSale($product, quantity: 2, readyAt: now()->subMinutes(5));
+        $sale = $this->createReadyToPickupSale($product, quantity: 2, readyAt: now()->subMinutes(5));
 
         $this->runCommand();
 
         $this->assertDatabaseHas('sales', [
             'sale_id' => $sale->sale_id,
-            'status'  => 'cancelled',
+            'status' => 'cancelled',
         ]);
     }
 
@@ -120,15 +119,15 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
 
         $this->assertDatabaseHas('sales', [
             'sale_id' => $sale->sale_id,
-            'status'  => 'ready_to_pickup',
+            'status' => 'ready_to_pickup',
         ]);
     }
 
     /** Cancelling an expired order restores the product stock via a refund movement. */
     public function test_cancelling_expired_order_restores_stock(): void
     {
-        $product  = $this->createProduct(stock: 10);
-        $sale     = $this->createReadyToPickupSale($product, quantity: 3, readyAt: now()->subMinutes(5));
+        $product = $this->createProduct(stock: 10);
+        $sale = $this->createReadyToPickupSale($product, quantity: 3, readyAt: now()->subMinutes(5));
         $stockBefore = (int) $product->stock_current;
 
         $this->runCommand();
@@ -141,16 +140,16 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
     public function test_cancelling_expired_order_records_refund_movement(): void
     {
         $product = $this->createProduct(stock: 10);
-        $sale    = $this->createReadyToPickupSale($product, quantity: 3, readyAt: now()->subMinutes(5));
+        $sale = $this->createReadyToPickupSale($product, quantity: 3, readyAt: now()->subMinutes(5));
 
         $this->runCommand();
 
         $this->assertDatabaseHas('inventory_movements', [
-            'product_id'   => $product->product_id,
+            'product_id' => $product->product_id,
             'reference_id' => $sale->sale_id,
-            'type'         => 'cancelado',
-            'origin'       => 'cancellation',
-            'quantity'     => 3,
+            'type' => 'cancelado',
+            'origin' => 'cancellation',
+            'quantity' => 3,
         ]);
     }
 
@@ -158,7 +157,7 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
     public function test_order_without_ready_at_is_skipped(): void
     {
         $product = $this->createProduct(stock: 10);
-        $sale    = $this->createReadyToPickupSale($product, quantity: 2, readyAt: null);
+        $sale = $this->createReadyToPickupSale($product, quantity: 2, readyAt: null);
 
         // Force ready_at to null to simulate a pre-migration record
         Sale::where('sale_id', $sale->sale_id)->update(['ready_at' => null]);
@@ -167,7 +166,7 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
 
         $this->assertDatabaseHas('sales', [
             'sale_id' => $sale->sale_id,
-            'status'  => 'ready_to_pickup',
+            'status' => 'ready_to_pickup',
         ]);
 
         $this->assertDatabaseMissing('inventory_movements', [
@@ -179,7 +178,7 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
     public function test_cancellation_note_is_appended_to_order_notes(): void
     {
         $product = $this->createProduct(stock: 10);
-        $sale    = $this->createReadyToPickupSale($product, quantity: 2, readyAt: now()->subMinutes(5));
+        $sale = $this->createReadyToPickupSale($product, quantity: 2, readyAt: now()->subMinutes(5));
 
         $this->runCommand();
 
@@ -195,19 +194,19 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
     {
         $product = $this->createProduct(stock: 20);
 
-        $expiredSale    = $this->createReadyToPickupSale($product, quantity: 2, readyAt: now()->subMinutes(5));
+        $expiredSale = $this->createReadyToPickupSale($product, quantity: 2, readyAt: now()->subMinutes(5));
         $nonExpiredSale = $this->createReadyToPickupSale($product, quantity: 2, readyAt: now()->subSeconds(30));
 
         $this->runCommand();
 
         $this->assertDatabaseHas('sales', [
             'sale_id' => $expiredSale->sale_id,
-            'status'  => 'cancelled',
+            'status' => 'cancelled',
         ]);
 
         $this->assertDatabaseHas('sales', [
             'sale_id' => $nonExpiredSale->sale_id,
-            'status'  => 'ready_to_pickup',
+            'status' => 'ready_to_pickup',
         ]);
     }
 
@@ -218,23 +217,23 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
 
         $sale = Sale::create([
             'invoice_number' => 'TEST-COMPLETED-001',
-            'client_id'      => null,
-            'sale_date'      => now(),
+            'client_id' => null,
+            'sale_date' => now(),
             'payment_method' => 'cash',
-            'status'         => 'completed',
-            'order_source'   => 'web_cart',
-            'subtotal'       => 1000.00,
-            'iva'            => 0,
-            'discount'       => 0,
-            'total'          => 1000.00,
-            'ready_at'       => now()->subMinutes(10),
+            'status' => 'completed',
+            'order_source' => 'web_cart',
+            'subtotal' => 1000.00,
+            'iva' => 0,
+            'discount' => 0,
+            'total' => 1000.00,
+            'ready_at' => now()->subMinutes(10),
         ]);
 
         $this->runCommand();
 
         $this->assertDatabaseHas('sales', [
             'sale_id' => $sale->sale_id,
-            'status'  => 'completed',
+            'status' => 'completed',
         ]);
     }
 
@@ -267,33 +266,33 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
         $invoiceCounter++;
 
         $sale = Sale::create([
-            'invoice_number' => 'TEST-MULTI-' . $invoiceCounter,
-            'client_id'      => null,
-            'sale_date'      => now(),
+            'invoice_number' => 'TEST-MULTI-'.$invoiceCounter,
+            'client_id' => null,
+            'sale_date' => now(),
             'payment_method' => 'cash',
-            'status'         => 'ready_to_pickup',
-            'order_source'   => 'web_cart',
-            'subtotal'       => 5000.00,
-            'iva'            => 0,
-            'discount'       => 0,
-            'total'          => 5000.00,
-            'ready_at'       => now()->subMinutes(5),
+            'status' => 'ready_to_pickup',
+            'order_source' => 'web_cart',
+            'subtotal' => 5000.00,
+            'iva' => 0,
+            'discount' => 0,
+            'total' => 5000.00,
+            'ready_at' => now()->subMinutes(5),
         ]);
 
         SaleItem::create([
-            'sale_id'    => $sale->sale_id,
+            'sale_id' => $sale->sale_id,
             'product_id' => $productA->product_id,
-            'quantity'   => 3,
+            'quantity' => 3,
             'unit_price' => $productA->sale_price,
-            'total'      => $productA->sale_price * 3,
+            'total' => $productA->sale_price * 3,
         ]);
 
         SaleItem::create([
-            'sale_id'    => $sale->sale_id,
+            'sale_id' => $sale->sale_id,
             'product_id' => $productB->product_id,
-            'quantity'   => 5,
+            'quantity' => 5,
             'unit_price' => $productB->sale_price,
-            'total'      => $productB->sale_price * 5,
+            'total' => $productB->sale_price * 5,
         ]);
 
         $this->runCommand();
@@ -304,7 +303,7 @@ class CF455CancelExpiredReadyOrdersTest extends TestCase
         $this->assertEquals(13, $productA->stock_current);
         $this->assertEquals(25, $productB->stock_current);
 
-        $movementsForThisSale = \App\Models\InventoryMovement::where('reference_id', $sale->sale_id)->count();
+        $movementsForThisSale = InventoryMovement::where('reference_id', $sale->sale_id)->count();
         $this->assertEquals(2, $movementsForThisSale);
     }
 }

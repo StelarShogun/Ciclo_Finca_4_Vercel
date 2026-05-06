@@ -50,4 +50,3 @@ class SuppliersIndexFlashAlertsTest extends TestCase
         $this->assertStringContainsString('Supplier not found.', $html);
     }
 }
-

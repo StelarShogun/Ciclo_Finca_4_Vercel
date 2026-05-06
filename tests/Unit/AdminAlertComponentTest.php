@@ -32,4 +32,3 @@ class AdminAlertComponentTest extends TestCase
         $this->assertStringContainsString('admin-alert__close', $html);
     }
 }
-

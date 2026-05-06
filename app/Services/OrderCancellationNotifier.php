@@ -6,8 +6,8 @@ use App\Models\OrderNotificationLog;
 use App\Models\Sale;
 use App\Notifications\OrderCancelledNotification;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class OrderCancellationNotifier
 {

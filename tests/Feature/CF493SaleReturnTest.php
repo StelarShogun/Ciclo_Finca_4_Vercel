@@ -9,7 +9,6 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Supplier;
-use App\Services\InventoryMovementService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
@@ -26,11 +25,11 @@ class CF493SaleReturnTest extends TestCase
         return AdminUser::firstOrCreate(
             ['gmail' => 'admin@cicloperez.com'],
             [
-                'name'           => 'Administrador',
-                'first_surname'  => 'Sistema',
+                'name' => 'Administrador',
+                'first_surname' => 'Sistema',
                 'second_surname' => null,
-                'password'       => bcrypt('Admin2024!@#'),
-                'last_access'    => null,
+                'password' => bcrypt('Admin2024!@#'),
+                'last_access' => null,
             ]
         );
     }
@@ -41,17 +40,17 @@ class CF493SaleReturnTest extends TestCase
         $counter++;
 
         $supplier = Supplier::create([
-            'name'  => "Supplier {$counter}",
+            'name' => "Supplier {$counter}",
             'email' => "supplier{$counter}@test.com",
         ]);
 
         return Product::create([
-            'name'           => "Product {$counter}",
-            'supplier_id'    => $supplier->supplier_id,
-            'stock_current'  => $stock,
-            'sale_price'     => 100.00,
+            'name' => "Product {$counter}",
+            'supplier_id' => $supplier->supplier_id,
+            'stock_current' => $stock,
+            'sale_price' => 100.00,
             'purchase_price' => 60.00,
-            'status'         => 'active',
+            'status' => 'active',
         ]);
     }
 
@@ -66,24 +65,24 @@ class CF493SaleReturnTest extends TestCase
         string $status = 'completed'
     ): Sale {
         $sale = Sale::create([
-            'invoice_number'  => 'TEST-' . strtoupper(uniqid()),
+            'invoice_number' => 'TEST-'.strtoupper(uniqid()),
             'seller_admin_id' => null,
-            'sale_date'       => now(),
-            'payment_method'  => 'cash',
-            'status'          => $status,
-            'subtotal'        => $quantity * 100.00,
-            'iva'             => 0,
-            'discount'        => 0,
-            'total'           => $quantity * 100.00,
-            'order_source'    => 'walk_in',
+            'sale_date' => now(),
+            'payment_method' => 'cash',
+            'status' => $status,
+            'subtotal' => $quantity * 100.00,
+            'iva' => 0,
+            'discount' => 0,
+            'total' => $quantity * 100.00,
+            'order_source' => 'walk_in',
         ]);
 
         SaleItem::create([
-            'sale_id'    => $sale->sale_id,
+            'sale_id' => $sale->sale_id,
             'product_id' => $product->product_id,
-            'quantity'   => $quantity,
+            'quantity' => $quantity,
             'unit_price' => 100.00,
-            'total'      => $quantity * 100.00,
+            'total' => $quantity * 100.00,
         ]);
 
         return $sale->load('saleItems.product');
@@ -104,9 +103,9 @@ class CF493SaleReturnTest extends TestCase
      */
     public function test_completed_sale_can_be_returned(): void
     {
-        $admin   = $this->createAdmin();
+        $admin = $this->createAdmin();
         $product = $this->createProduct(stock: 10);
-        $sale    = $this->createSaleWithItem($product, quantity: 2);
+        $sale = $this->createSaleWithItem($product, quantity: 2);
 
         $this->actingAs($admin, 'admin')
             ->postJson($this->returnUrl($sale), ['reason' => 'El cliente devolvió el producto.'])
@@ -115,7 +114,7 @@ class CF493SaleReturnTest extends TestCase
 
         $this->assertDatabaseHas('sales', [
             'sale_id' => $sale->sale_id,
-            'status'  => 'returned',
+            'status' => 'returned',
         ]);
     }
 
@@ -124,9 +123,9 @@ class CF493SaleReturnTest extends TestCase
      */
     public function test_return_creates_one_devolucion_movement_per_item(): void
     {
-        $admin   = $this->createAdmin();
+        $admin = $this->createAdmin();
         $product = $this->createProduct(stock: 10);
-        $sale    = $this->createSaleWithItem($product, quantity: 3);
+        $sale = $this->createSaleWithItem($product, quantity: 3);
 
         $this->actingAs($admin, 'admin')
             ->postJson($this->returnUrl($sale), ['reason' => 'Producto defectuoso.'])
@@ -144,9 +143,9 @@ class CF493SaleReturnTest extends TestCase
      */
     public function test_return_restores_stock_for_each_product(): void
     {
-        $admin   = $this->createAdmin();
+        $admin = $this->createAdmin();
         $product = $this->createProduct(stock: 5); // stock already reduced by prior sale
-        $sale    = $this->createSaleWithItem($product, quantity: 3);
+        $sale = $this->createSaleWithItem($product, quantity: 3);
 
         $this->actingAs($admin, 'admin')
             ->postJson($this->returnUrl($sale), ['reason' => 'El cliente no lo quiso.'])
@@ -162,10 +161,10 @@ class CF493SaleReturnTest extends TestCase
      */
     public function test_return_reason_is_stored_in_inventory_movements_not_in_sale(): void
     {
-        $admin   = $this->createAdmin();
+        $admin = $this->createAdmin();
         $product = $this->createProduct(stock: 10);
-        $sale    = $this->createSaleWithItem($product, quantity: 2);
-        $reason  = 'Talla incorrecta, cliente pidió cambio.';
+        $sale = $this->createSaleWithItem($product, quantity: 2);
+        $reason = 'Talla incorrecta, cliente pidió cambio.';
 
         $this->actingAs($admin, 'admin')
             ->postJson($this->returnUrl($sale), ['reason' => $reason])
@@ -174,8 +173,8 @@ class CF493SaleReturnTest extends TestCase
         // Reason lives in inventory_movements.reason
         $this->assertDatabaseHas('inventory_movements', [
             'reference_id' => $sale->sale_id,
-            'origin'       => 'return',
-            'reason'       => $reason,
+            'origin' => 'return',
+            'reason' => $reason,
         ]);
     }
 
@@ -184,9 +183,9 @@ class CF493SaleReturnTest extends TestCase
      */
     public function test_return_movement_has_correct_stock_before_and_after(): void
     {
-        $admin   = $this->createAdmin();
+        $admin = $this->createAdmin();
         $product = $this->createProduct(stock: 4);
-        $sale    = $this->createSaleWithItem($product, quantity: 4);
+        $sale = $this->createSaleWithItem($product, quantity: 4);
 
         $this->actingAs($admin, 'admin')
             ->postJson($this->returnUrl($sale), ['reason' => 'Devolución completa del pedido.'])
@@ -195,9 +194,9 @@ class CF493SaleReturnTest extends TestCase
         $movement = InventoryMovement::where('reference_id', $sale->sale_id)->first();
 
         $this->assertNotNull($movement);
-        $this->assertEquals(4,  $movement->stock_before);
-        $this->assertEquals(8,  $movement->stock_after);  // 4 + 4 returned
-        $this->assertEquals(4,  $movement->quantity);
+        $this->assertEquals(4, $movement->stock_before);
+        $this->assertEquals(8, $movement->stock_after);  // 4 + 4 returned
+        $this->assertEquals(4, $movement->quantity);
         $this->assertEquals($product->product_id, $movement->product_id);
     }
 
@@ -207,9 +206,9 @@ class CF493SaleReturnTest extends TestCase
      */
     public function test_pending_sale_cannot_be_returned(): void
     {
-        $admin   = $this->createAdmin();
+        $admin = $this->createAdmin();
         $product = $this->createProduct(stock: 10);
-        $sale    = $this->createSaleWithItem($product, quantity: 2, status: 'pending');
+        $sale = $this->createSaleWithItem($product, quantity: 2, status: 'pending');
 
         $this->actingAs($admin, 'admin')
             ->postJson($this->returnUrl($sale), ['reason' => 'Intento de devolución en pedido pendiente.'])
@@ -218,7 +217,7 @@ class CF493SaleReturnTest extends TestCase
 
         $this->assertDatabaseMissing('inventory_movements', [
             'reference_id' => $sale->sale_id,
-            'origin'       => 'return',
+            'origin' => 'return',
         ]);
     }
 
@@ -227,9 +226,9 @@ class CF493SaleReturnTest extends TestCase
      */
     public function test_already_returned_sale_cannot_be_returned_again(): void
     {
-        $admin   = $this->createAdmin();
+        $admin = $this->createAdmin();
         $product = $this->createProduct(stock: 10);
-        $sale    = $this->createSaleWithItem($product, quantity: 2);
+        $sale = $this->createSaleWithItem($product, quantity: 2);
 
         $this->actingAs($admin, 'admin')
             ->postJson($this->returnUrl($sale), ['reason' => 'Primera devolución válida.'])
@@ -252,9 +251,9 @@ class CF493SaleReturnTest extends TestCase
      */
     public function test_return_without_reason_is_rejected(): void
     {
-        $admin   = $this->createAdmin();
+        $admin = $this->createAdmin();
         $product = $this->createProduct(stock: 10);
-        $sale    = $this->createSaleWithItem($product, quantity: 1);
+        $sale = $this->createSaleWithItem($product, quantity: 1);
 
         $this->actingAs($admin, 'admin')
             ->postJson($this->returnUrl($sale), [])
@@ -263,7 +262,7 @@ class CF493SaleReturnTest extends TestCase
 
         $this->assertDatabaseMissing('sales', [
             'sale_id' => $sale->sale_id,
-            'status'  => 'returned',
+            'status' => 'returned',
         ]);
     }
 
@@ -272,9 +271,9 @@ class CF493SaleReturnTest extends TestCase
      */
     public function test_return_with_reason_too_short_is_rejected(): void
     {
-        $admin   = $this->createAdmin();
+        $admin = $this->createAdmin();
         $product = $this->createProduct(stock: 10);
-        $sale    = $this->createSaleWithItem($product, quantity: 1);
+        $sale = $this->createSaleWithItem($product, quantity: 1);
 
         $this->actingAs($admin, 'admin')
             ->postJson($this->returnUrl($sale), ['reason' => 'ab'])
@@ -288,38 +287,38 @@ class CF493SaleReturnTest extends TestCase
      */
     public function test_return_with_multiple_items_creates_one_movement_per_item(): void
     {
-        $admin    = $this->createAdmin();
+        $admin = $this->createAdmin();
         $productA = $this->createProduct(stock: 5);
         $productB = $this->createProduct(stock: 8);
 
         // Build a sale with two items manually
         $sale = Sale::create([
-            'invoice_number'  => 'TEST-' . strtoupper(uniqid()),
+            'invoice_number' => 'TEST-'.strtoupper(uniqid()),
             'seller_admin_id' => null,
-            'sale_date'       => now(),
-            'payment_method'  => 'cash',
-            'status'          => 'completed',
-            'subtotal'        => 500.00,
-            'iva'             => 0,
-            'discount'        => 0,
-            'total'           => 500.00,
-            'order_source'    => 'walk_in',
+            'sale_date' => now(),
+            'payment_method' => 'cash',
+            'status' => 'completed',
+            'subtotal' => 500.00,
+            'iva' => 0,
+            'discount' => 0,
+            'total' => 500.00,
+            'order_source' => 'walk_in',
         ]);
 
         SaleItem::create([
-            'sale_id'    => $sale->sale_id,
+            'sale_id' => $sale->sale_id,
             'product_id' => $productA->product_id,
-            'quantity'   => 2,
+            'quantity' => 2,
             'unit_price' => 100.00,
-            'total'      => 200.00,
+            'total' => 200.00,
         ]);
 
         SaleItem::create([
-            'sale_id'    => $sale->sale_id,
+            'sale_id' => $sale->sale_id,
             'product_id' => $productB->product_id,
-            'quantity'   => 3,
+            'quantity' => 3,
             'unit_price' => 100.00,
-            'total'      => 300.00,
+            'total' => 300.00,
         ]);
 
         $this->actingAs($admin, 'admin')
@@ -331,7 +330,7 @@ class CF493SaleReturnTest extends TestCase
 
         $productA->refresh();
         $productB->refresh();
-        $this->assertEquals(7,  $productA->stock_current); // 5 + 2
+        $this->assertEquals(7, $productA->stock_current); // 5 + 2
         $this->assertEquals(11, $productB->stock_current); // 8 + 3
     }
 }

@@ -29,4 +29,3 @@ class ProductVariant extends Model
         return $this->belongsTo(Product::class, 'variant_product_id', 'product_id');
     }
 }
-

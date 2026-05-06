@@ -6,7 +6,6 @@ use App\Models\Product;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 
-
 class ProductImagesSeeder extends Seeder
 {
     public function run(): void
@@ -15,6 +14,7 @@ class ProductImagesSeeder extends Seeder
 
         if (! is_dir($imagesBase)) {
             $this->command?->warn("ProductImagesSeeder: directorio \"{$imagesBase}\" no encontrado.");
+
             return;
         }
 
@@ -22,11 +22,12 @@ class ProductImagesSeeder extends Seeder
 
         if (empty($folders)) {
             $this->command?->warn('ProductImagesSeeder: no hay subcarpetas en public/images/.');
+
             return;
         }
 
         $assigned = 0;
-        $skipped  = 0;
+        $skipped = 0;
 
         foreach ($folders as $folder) {
             $productName = basename($folder);
@@ -36,15 +37,17 @@ class ProductImagesSeeder extends Seeder
             if (! $product) {
                 $this->command?->warn("  ⚠ Sin coincidencia de producto para carpeta: \"{$productName}\"");
                 $skipped++;
+
                 continue;
             }
 
-            $mainFile    = $this->findBySuffix($folder, '_main');
+            $mainFile = $this->findBySuffix($folder, '_main');
             $galleryFile = $this->findBySuffix($folder, '_2');
 
             if (! $mainFile && ! $galleryFile) {
                 $this->command?->warn("  ⚠ Sin imágenes válidas en: \"{$productName}\"");
                 $skipped++;
+
                 continue;
             }
 
@@ -54,14 +57,14 @@ class ProductImagesSeeder extends Seeder
 
             if ($mainFile) {
                 $product->addMedia($mainFile)
-                        ->preservingOriginal()
-                        ->toMediaCollection('main_image');
+                    ->preservingOriginal()
+                    ->toMediaCollection('main_image');
             }
 
             if ($galleryFile) {
                 $product->addMedia($galleryFile)
-                        ->preservingOriginal()
-                        ->toMediaCollection('gallery');
+                    ->preservingOriginal()
+                    ->toMediaCollection('gallery');
             }
 
             $assigned++;
@@ -79,7 +82,7 @@ class ProductImagesSeeder extends Seeder
     {
         foreach (File::files($dir) as $file) {
             $nameWithoutExt = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-            $ext            = strtolower($file->getExtension());
+            $ext = strtolower($file->getExtension());
 
             if (! in_array($ext, ['webp', 'png', 'jpg', 'jpeg'], true)) {
                 continue;

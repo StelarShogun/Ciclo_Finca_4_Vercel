@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 class AppSetting extends Model
 {
     public const KEY_ORDER_EXPIRATION_DAYS = 'order_expiration_days';
+
     public const KEY_READY_TO_PICKUP_EXPIRATION_DAYS = 'ready_to_pickup_expiration_days';
 
     protected $fillable = [

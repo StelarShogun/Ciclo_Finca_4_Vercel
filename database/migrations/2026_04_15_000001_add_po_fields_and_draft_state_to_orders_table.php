@@ -24,7 +24,7 @@ return new class extends Migration
                 Schema::table('orders', function (Blueprint $table) {
                     $table->unique('po_number', 'uq_orders_po_number');
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // Ignore if index already exists
             }
         }
@@ -51,7 +51,7 @@ return new class extends Migration
                 DB::statement(
                     "ALTER TABLE `orders` MODIFY COLUMN `state` ENUM('pending','confirmed','delivered','cancelled') NOT NULL DEFAULT 'pending'"
                 );
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // ignore
             }
 
@@ -59,7 +59,7 @@ return new class extends Migration
                 if (Schema::hasColumn('orders', 'po_number')) {
                     try {
                         $table->dropUnique('uq_orders_po_number');
-                    } catch (\Throwable $e) {
+                    } catch (Throwable $e) {
                         // ignore
                     }
                     $table->dropColumn('po_number');
@@ -71,4 +71,3 @@ return new class extends Migration
         }
     }
 };
-

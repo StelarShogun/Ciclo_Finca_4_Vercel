@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -19,21 +20,28 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class RegistryExcelExport
 {
     // ── Paleta (misma que ProductSalesExcelExport) ────────────────────────────
-    private const COLOR_HEADER_BG  = 'FF2D6A4F';
-    private const COLOR_HEADER_FG  = 'FFFFFFFF';
+    private const COLOR_HEADER_BG = 'FF2D6A4F';
+
+    private const COLOR_HEADER_FG = 'FFFFFFFF';
+
     private const COLOR_SECTION_BG = 'FF1B4332';
+
     private const COLOR_SECTION_FG = 'FFFFFFFF';
-    private const COLOR_ALT_ROW    = 'FFF5F5F5';
-    private const COLOR_BORDER     = 'FFCCCCCC';
-    private const COLOR_FILTER_BG  = 'FFFFF9C4';
-    private const COLOR_FILTER_FG  = 'FF555555';
+
+    private const COLOR_ALT_ROW = 'FFF5F5F5';
+
+    private const COLOR_BORDER = 'FFCCCCCC';
+
+    private const COLOR_FILTER_BG = 'FFFFF9C4';
+
+    private const COLOR_FILTER_FG = 'FF555555';
 
     /**
      * Construye y descarga el archivo XLSX.
      *
-     * @param  array<int, string>              $headers      Encabezados de columna
-     * @param  array<int, array<int, string>>  $rows         Filas de datos ya formateadas
-     * @param  array<int, string>              $filterLines  Líneas del bloque de filtros
+     * @param  array<int, string>  $headers  Encabezados de columna
+     * @param  array<int, array<int, string>>  $rows  Filas de datos ya formateadas
+     * @param  array<int, string>  $filterLines  Líneas del bloque de filtros
      */
     public function download(
         string $title,
@@ -49,8 +57,8 @@ class RegistryExcelExport
             $writer = new Xlsx($spreadsheet);
             $writer->save('php://output');
         }, $filename, [
-            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Cache-Control'       => 'max-age=0',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
@@ -73,7 +81,7 @@ class RegistryExcelExport
         $sheet->setTitle(mb_substr($title, 0, 31)); // Excel: máx 31 chars
 
         $colCount = max(1, count($headers));
-        $lastCol  = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colCount);
+        $lastCol = Coordinate::stringFromColumnIndex($colCount);
 
         $row = 1;
         $row = $this->writeFilters($sheet, $filterLines, $row, $lastCol);
@@ -113,6 +121,7 @@ class RegistryExcelExport
         }
 
         $row++; // separador en blanco
+
         return $row;
     }
 
@@ -184,7 +193,7 @@ class RegistryExcelExport
             if (! isset($cols[$i])) {
                 break;
             }
-            $cell  = $cols[$i].$row;
+            $cell = $cols[$i].$row;
             $sheet->setCellValue($cell, $label);
             $style = $sheet->getStyle($cell);
             $style->getFont()->setBold(true)->setColor(new Color(self::COLOR_HEADER_FG));

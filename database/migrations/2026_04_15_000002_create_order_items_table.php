@@ -76,4 +76,3 @@ SQL);
         Schema::dropIfExists('order_items');
     }
 };
-

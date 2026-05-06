@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class SupplierController extends Controller
@@ -214,7 +215,7 @@ class SupplierController extends Controller
         }
     }
 
-    public function destroy(Request $request, string $id): RedirectResponse|\Illuminate\Http\JsonResponse
+    public function destroy(Request $request, string $id): RedirectResponse|JsonResponse
     {
         $supplier = Supplier::find($id);
         if (! $supplier) {

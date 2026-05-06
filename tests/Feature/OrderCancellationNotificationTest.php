@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Notifications\OrderCancelledNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
@@ -73,7 +74,7 @@ class OrderCancellationNotificationTest extends TestCase
         $this->assertDatabaseHas('notifications', [
             'notifiable_type' => Client::class,
             'notifiable_id' => $client->user_id,
-            'type' => \App\Notifications\OrderCancelledNotification::class,
+            'type' => OrderCancelledNotification::class,
         ]);
 
         $this->assertDatabaseHas('order_notification_logs', [
@@ -171,7 +172,7 @@ class OrderCancellationNotificationTest extends TestCase
         $this->assertDatabaseHas('notifications', [
             'notifiable_type' => Client::class,
             'notifiable_id' => $client->user_id,
-            'type' => \App\Notifications\OrderCancelledNotification::class,
+            'type' => OrderCancelledNotification::class,
         ]);
 
         $this->assertDatabaseHas('order_notification_logs', [

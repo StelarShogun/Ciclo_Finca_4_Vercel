@@ -21,7 +21,7 @@ class SendOrderExpiryRemindersCommand extends Command
         //   sale_date >= now - days        → not yet expired
         //   sale_date <  now - (days - 1)  → expires within the next day
         $expirationThreshold = now()->subDays($days);
-        $reminderThreshold   = now()->subDays($days - 1);
+        $reminderThreshold = now()->subDays($days - 1);
 
         $orders = Sale::query()
             ->where('status', 'pending')
@@ -33,10 +33,11 @@ class SendOrderExpiryRemindersCommand extends Command
 
         if ($orders->isEmpty()) {
             $this->info('No hay pedidos pendientes que venzan en las próximas 24 horas.');
+
             return self::SUCCESS;
         }
 
-        $sent    = 0;
+        $sent = 0;
         $skipped = 0;
 
         foreach ($orders as $order) {
@@ -45,6 +46,7 @@ class SendOrderExpiryRemindersCommand extends Command
             if (! $email) {
                 $this->warn("Pedido #{$order->sale_id}: sin correo registrado, omitido.");
                 $skipped++;
+
                 continue;
             }
 
