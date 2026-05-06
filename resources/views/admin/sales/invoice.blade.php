@@ -20,8 +20,9 @@
                 $fallbackUrl = route('sales.index');
 
                 // Avoid navigating back to the sales "show" route, which returns JSON (/sales/{id}).
-                $looksLikeJsonSaleShow = is_string($previousUrl)
-                    && preg_match('~/(?:admin/)?sales/\d+$~', $previousUrl) === 1;
+                $previousPath = is_string($previousUrl) ? parse_url($previousUrl, PHP_URL_PATH) : null;
+                $looksLikeJsonSaleShow = is_string($previousPath)
+                    && preg_match('~/(?:admin/)?sales/\d+/?$~', $previousPath) === 1;
 
                 $backUrl = ($previousUrl && $previousUrl !== $currentUrl && ! $looksLikeJsonSaleShow)
                     ? $previousUrl

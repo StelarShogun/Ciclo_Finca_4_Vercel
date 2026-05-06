@@ -6,6 +6,7 @@ use App\Models\Supplier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class SupplierController extends Controller
@@ -240,9 +241,14 @@ class SupplierController extends Controller
                 ->with('status', 'Proveedor eliminado exitosamente.');
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
+                Log::error('Supplier delete failed', [
+                    'supplier_id' => $id,
+                    'exception' => $e,
+                ]);
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Error al eliminar proveedor: '.$e->getMessage(),
+                    'message' => 'No se pudo completar la acción. Inténtalo nuevamente.',
                 ], 500);
             }
 
