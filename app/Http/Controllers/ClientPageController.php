@@ -188,7 +188,11 @@ class ClientPageController extends Controller
      * @param  Collection<int, Category>  $rootCategories
      * @return array<int, array{id: int, name: string, icon: string, url_parent: string, children: array<int, array{id: int, name: string, url: string}>}>
      */
-    private function buildCatalogCategoryNav($rootCategories, array $catalogParams): array
+    /**
+     * @param  Collection<int, Category>  $rootCategories
+     * @return array<int, array{id: int, name: string, icon: string, url_parent: string, children: array<int, array{id: int, name: string, url: string}>}>
+     */
+    private function buildCatalogCategoryNav(Collection $rootCategories, array $catalogParams): array
     {
         return $rootCategories->map(function (Category $c) use ($catalogParams) {
             return [
@@ -196,13 +200,17 @@ class ClientPageController extends Controller
                 'name' => $c->name,
                 'icon' => $this->clientCatalogCategoryIconClass($c->name),
                 'url_parent' => route('clients.catalog', array_merge($catalogParams, ['category_id' => $c->category_id])),
-                'children' => $c->childCategories->map(function (Category $ch) use ($catalogParams) {
+                'children' => $c->childCategories->map(function ($ch) use ($catalogParams) {
+                    if (! $ch instanceof Category) {
+                        return null;
+                    }
+
                     return [
                         'id' => (int) $ch->category_id,
                         'name' => $ch->name,
                         'url' => route('clients.catalog', array_merge($catalogParams, ['category_id' => $ch->category_id])),
                     ];
-                })->values()->all(),
+                })->filter()->values()->all(),
             ];
         })->values()->all();
     }
@@ -228,7 +236,7 @@ class ClientPageController extends Controller
             'electr' => 'fas fa-bolt',
         ];
         foreach ($pairs as $needle => $icon) {
-            if ($needle !== '' && str_contains($n, $needle)) {
+            if (str_contains($n, $needle)) {
                 return $icon;
             }
         }

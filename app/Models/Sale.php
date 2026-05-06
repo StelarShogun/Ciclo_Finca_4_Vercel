@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -159,7 +160,7 @@ class Sale extends Model
         return $days <= (int) config('sales.expiry_alert_days', 2) && $days > 0;
     }
 
-    public function scopeNotExpired($query)
+    public function scopeNotExpired(Builder $query): Builder
     {
         $days = static::getOrderExpirationDays();
         $limitDate = now()->subDays($days);

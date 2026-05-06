@@ -41,18 +41,23 @@ class ProductSalesExcelExport
     /**
      * Build a streamed XLSX download response.
      *
-     * @param  Collection<int, array<string, mixed>>  $top10
-     * @param  Collection<int, array<string, mixed>>  $tableRows
+     * @param  iterable<array<string, mixed>>  $top10
+     * @param  iterable<array<string, mixed>>  $tableRows
      * @param  array<int, string>  $filterLines
      */
     public function download(
-        Collection $top10,
-        Collection $tableRows,
+        iterable $top10,
+        iterable $tableRows,
         string $top10Metric,
         array $filterLines,
         string $filename,
     ): StreamedResponse {
-        $spreadsheet = $this->build($top10, $tableRows, $top10Metric, $filterLines);
+        $spreadsheet = $this->build(
+            collect($top10),
+            collect($tableRows),
+            $top10Metric,
+            $filterLines
+        );
 
         return response()->streamDownload(function () use ($spreadsheet): void {
             $writer = new Xlsx($spreadsheet);
