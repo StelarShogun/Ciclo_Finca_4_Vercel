@@ -32,9 +32,11 @@ return new class extends Migration
         // Add state 'draft' and default to draft.
         // MySQL: update the enum column definition.
         if (Schema::hasColumn('orders', 'state')) {
-            DB::statement(
-                "ALTER TABLE `orders` MODIFY COLUMN `state` ENUM('draft','pending','confirmed','delivered','cancelled') NOT NULL DEFAULT 'draft'"
-            );
+            if (Schema::getConnection()->getDriverName() === 'mysql') {
+                DB::statement(
+                    "ALTER TABLE `orders` MODIFY COLUMN `state` ENUM('draft','pending','confirmed','delivered','cancelled') NOT NULL DEFAULT 'draft'"
+                );
+            }
 
             // Backfill existing records: keep current values if valid, otherwise set to pending.
             DB::statement(
@@ -48,9 +50,11 @@ return new class extends Migration
         if (Schema::hasTable('orders')) {
             // revert enum (best-effort)
             try {
-                DB::statement(
-                    "ALTER TABLE `orders` MODIFY COLUMN `state` ENUM('pending','confirmed','delivered','cancelled') NOT NULL DEFAULT 'pending'"
-                );
+                if (Schema::getConnection()->getDriverName() === 'mysql') {
+                    DB::statement(
+                        "ALTER TABLE `orders` MODIFY COLUMN `state` ENUM('pending','confirmed','delivered','cancelled') NOT NULL DEFAULT 'pending'"
+                    );
+                }
             } catch (Throwable $e) {
                 // ignore
             }

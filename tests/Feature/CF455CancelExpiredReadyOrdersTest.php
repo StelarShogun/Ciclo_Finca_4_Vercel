@@ -8,13 +8,13 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Supplier;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
 
 class CF455CancelExpiredReadyOrdersTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     // -------------------------------------------------------------------------
     // Helpers

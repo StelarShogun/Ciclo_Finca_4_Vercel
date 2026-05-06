@@ -10,12 +10,12 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\InventoryMovementService;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class CF490SupplierOrderInventoryMovementTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     // -------------------------------------------------------------------------
     // Helpers

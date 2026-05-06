@@ -19,7 +19,7 @@ return new class extends Migration
             $table->decimal('total', 10, 2)->default(0);
             $table->enum('payment_method', ['cash', 'sinpe', 'transfer', 'card']);
             $table->string('payment_reference', 100)->nullable();
-            $table->enum('status', ['pending', 'completed', 'cancelled', 'refunded'])->default('pending');
+            $table->enum('status', ['pending', 'ready_to_pickup', 'completed', 'cancelled', 'refunded', 'returned'])->default('pending');
             $table->string('order_source', 20)->nullable();
             $table->text('notes')->nullable();
             $table->string('buyer_name', 120)->nullable();
