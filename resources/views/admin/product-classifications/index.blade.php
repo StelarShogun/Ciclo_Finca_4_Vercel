@@ -22,21 +22,21 @@
             </div>
 
             @if (session('status'))
-                <div class="success-message" style="margin-bottom: 1rem;">
-                    <i class="fas fa-check-circle"></i> {{ session('status') }}
-                </div>
+                <x-admin-alert type="success" :message="session('status')" dismissible />
             @endif
             @if (session('error'))
-                <div class="error-message" style="margin-bottom: 1rem;">
-                    <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-                </div>
+                <x-admin-alert type="error" :message="session('error')" />
             @endif
 
             <div class="form-card">
                 <div class="form-body">
                     @if ($products->isEmpty())
-                        <p><strong>No hay nada mal:</strong> solo faltan productos bien ubicados en el catálogo. En <strong>Inventario</strong>, al crear o editar, completá la categoría padre <em>y</em> el tipo concreto (ej. Bicicletas → MTB). Así podés usar color, talla, etc.</p>
-                        <p style="margin-top: 0.75rem;">Si el producto queda solo en la categoría padre (sin tipo concreto), no entra en esta lista.</p>
+                        <x-admin-alert type="info" title="No hay registros disponibles para mostrar." dismissible>
+                            <div>
+                                <p style="margin: 0;"><strong>No hay nada mal:</strong> solo faltan productos bien ubicados en el catálogo. En <strong>Inventario</strong>, al crear o editar, completá la categoría padre <em>y</em> el tipo concreto (ej. Bicicletas → MTB). Así podés usar color, talla, etc.</p>
+                                <p style="margin: 0.75rem 0 0;">Si el producto queda solo en la categoría padre (sin tipo concreto), no entra en esta lista.</p>
+                            </div>
+                        </x-admin-alert>
                     @else
                         <div style="overflow-x: auto;">
                             <table class="table" style="width: 100%; border-collapse: collapse;">

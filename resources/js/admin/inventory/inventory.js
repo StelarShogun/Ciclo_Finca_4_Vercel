@@ -1043,11 +1043,10 @@ function smoothScrollTop() {
                         title: 'Producto creado',
                         text: data.message,
                         icon: 'success',
-                        timer: 1500,
+                        timer: 3500,
                         timerProgressBar: true,
                         showConfirmButton: false,
                     }).then(() => { location.reload(); });
-                    location.reload();
                 } else if (data.errors) {
                     // Remove previous error messages
                     qsa('.error-message', newProductForm).forEach(el => el.remove());
@@ -1412,11 +1411,10 @@ function smoothScrollTop() {
                         title: 'Producto actualizado',
                         text: data.message,
                         icon: 'success',
-                        timer: 1500,
+                        timer: 3500,
                         timerProgressBar: true,
                         showConfirmButton: false,
                     }).then(() => { location.reload(); });
-                    location.reload();
                 } else if (data.errors) {
                     qsa('.error-message', editProductForm).forEach(el => el.remove());
 

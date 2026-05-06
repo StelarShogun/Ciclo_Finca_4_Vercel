@@ -14,7 +14,21 @@
             <button type="button" class="btn-print" onclick="window.print()">
                 <i class="fas fa-print" aria-hidden="true"></i> Imprimir
             </button>
-            <a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('sales.index') }}" class="btn-back">
+            @php
+                $previousUrl = url()->previous();
+                $currentUrl = url()->current();
+                $fallbackUrl = route('sales.index');
+
+                // Avoid navigating back to the sales "show" route, which returns JSON (/sales/{id}).
+                $looksLikeJsonSaleShow = is_string($previousUrl)
+                    && preg_match('~/(?:admin/)?sales/\d+$~', $previousUrl) === 1;
+
+                $backUrl = ($previousUrl && $previousUrl !== $currentUrl && ! $looksLikeJsonSaleShow)
+                    ? $previousUrl
+                    : $fallbackUrl;
+            @endphp
+
+            <a href="{{ $backUrl }}" class="btn-back">
                 <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver
             </a>
         </div>

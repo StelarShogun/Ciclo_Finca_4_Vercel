@@ -26,6 +26,13 @@
             </div>
         </header>
 
+        @if (session('status'))
+            <x-admin-alert type="success" :message="session('status')" dismissible />
+        @endif
+        @if (session('error'))
+            <x-admin-alert type="error" :message="session('error')" />
+        @endif
+
         {{-- ==================== KPI CARDS ==================== --}}
         <div class="kpi-grid">
 
@@ -124,8 +131,12 @@
                                         class="action-btn edit" title="Editar proveedor">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <form action="{{ route('suppliers.destroy', $supplier->supplier_id) }}"
-                                        method="POST" onsubmit="return deleteSupplier(event)" class="inline">
+                                    <form
+                                        action="{{ route('suppliers.destroy', $supplier->supplier_id) }}"
+                                        method="POST"
+                                        class="inline js-supplier-delete-form"
+                                        data-supplier-name="{{ $supplier->name }}"
+                                    >
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="action-btn delete" title="Eliminar proveedor">
