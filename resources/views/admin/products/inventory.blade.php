@@ -22,6 +22,14 @@
 
 <body class="admin-layout">
 
+    @php
+        $lowStockCardActive = request('stock_status') === 'low';
+        $lowStockCardUrl = $lowStockCardActive
+            ? route('inventory')
+            : route('inventory', ['stock_status' => 'low']);
+        $lowStockCardCta = $lowStockCardActive ? 'Ver todo' : 'Abrir inventario filtrado';
+    @endphp
+
     {{-- Sidebar navigation --}}
     @include('admin.parts.aside')
 
@@ -53,13 +61,15 @@
             </header>
 
             <section class="inventory-kpi-grid" aria-label="Resumen de inventario">
-                <a class="inventory-kpi-card" href="{{ route('inventory', ['stock_status' => 'low']) }}">
+                <a class="inventory-kpi-card" href="{{ $lowStockCardUrl }}">
                     <div class="inventory-kpi-card-head">
                         <h3>Stock bajo</h3>
                         <i class="fas fa-box-open" aria-hidden="true"></i>
                     </div>
                     <p class="inventory-kpi-card-value">{{ number_format((int) ($lowStockProductsCount ?? 0), 0, ',', '.') }}</p>
-                    <span class="inventory-kpi-card-link">Abrir inventario filtrado</span>
+                    <span class="inventory-kpi-card-link {{ $lowStockCardActive ? 'inventory-kpi-card-link--reset' : '' }}">
+                        {{ $lowStockCardCta }}
+                    </span>
                 </a>
             </section>
 
