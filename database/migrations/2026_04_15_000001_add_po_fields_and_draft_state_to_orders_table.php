@@ -24,14 +24,14 @@ return new class extends Migration
                 Schema::table('orders', function (Blueprint $table) {
                     $table->unique('po_number', 'uq_orders_po_number');
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // Ignore if index already exists
             }
         }
 
         // Add state 'draft' and default to draft.
         // MySQL: update the enum column definition.
-        if (Schema::hasColumn('orders', 'state')) {
+        if (Schema::hasColumn('orders', 'state') && Schema::getConnection()->getDriverName() === 'mysql') {
             DB::statement(
                 "ALTER TABLE `orders` MODIFY COLUMN `state` ENUM('draft','pending','confirmed','delivered','cancelled') NOT NULL DEFAULT 'draft'"
             );
@@ -48,10 +48,12 @@ return new class extends Migration
         if (Schema::hasTable('orders')) {
             // revert enum (best-effort)
             try {
-                DB::statement(
-                    "ALTER TABLE `orders` MODIFY COLUMN `state` ENUM('pending','confirmed','delivered','cancelled') NOT NULL DEFAULT 'pending'"
-                );
-            } catch (\Throwable $e) {
+                if (Schema::getConnection()->getDriverName() === 'mysql') {
+                    DB::statement(
+                        "ALTER TABLE `orders` MODIFY COLUMN `state` ENUM('pending','confirmed','delivered','cancelled') NOT NULL DEFAULT 'pending'"
+                    );
+                }
+            } catch (Throwable $e) {
                 // ignore
             }
 
@@ -59,7 +61,7 @@ return new class extends Migration
                 if (Schema::hasColumn('orders', 'po_number')) {
                     try {
                         $table->dropUnique('uq_orders_po_number');
-                    } catch (\Throwable $e) {
+                    } catch (Throwable $e) {
                         // ignore
                     }
                     $table->dropColumn('po_number');
@@ -71,4 +73,3 @@ return new class extends Migration
         }
     }
 };
-

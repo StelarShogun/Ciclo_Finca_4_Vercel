@@ -6,6 +6,9 @@ use App\Enums\MovementType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property-read AdminUser|null $adminUser
+ */
 // Eloquent model for the inventory_movements table.
 class InventoryMovement extends Model
 {
@@ -68,12 +71,12 @@ class InventoryMovement extends Model
     {
         return match ($this->origin) {
             'sale_admin' => 'Venta (admin)',
-            'sale_web'   => 'Venta web',
-            'return'     => 'Devolución de venta',
+            'sale_web' => 'Venta web',
+            'return' => 'Devolución de venta',
             'cancellation' => 'Cancelación de encargo',
-            'provider'   => 'Entrada de proveedor',
+            'provider' => 'Entrada de proveedor',
             'manual_adjustment' => 'Ajuste manual',
-            default      => ucwords(str_replace('_', ' ', $this->origin)),
+            default => ucwords(str_replace('_', ' ', $this->origin)),
         };
     }
 

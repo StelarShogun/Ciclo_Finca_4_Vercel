@@ -6,7 +6,6 @@ use App\Models\Product;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 
-
 class ProductImagesSeeder extends Seeder
 {
     public function run(): void
@@ -14,19 +13,21 @@ class ProductImagesSeeder extends Seeder
         $imagesBase = public_path('images');
 
         if (! is_dir($imagesBase)) {
-            $this->command?->warn("ProductImagesSeeder: directorio \"{$imagesBase}\" no encontrado.");
+            $this->command->warn("ProductImagesSeeder: directorio \"{$imagesBase}\" no encontrado.");
+
             return;
         }
 
         $folders = File::directories($imagesBase);
 
         if (empty($folders)) {
-            $this->command?->warn('ProductImagesSeeder: no hay subcarpetas en public/images/.');
+            $this->command->warn('ProductImagesSeeder: no hay subcarpetas en public/images/.');
+
             return;
         }
 
         $assigned = 0;
-        $skipped  = 0;
+        $skipped = 0;
 
         foreach ($folders as $folder) {
             $productName = basename($folder);
@@ -34,17 +35,19 @@ class ProductImagesSeeder extends Seeder
             $product = Product::where('name', $productName)->first();
 
             if (! $product) {
-                $this->command?->warn("  ⚠ Sin coincidencia de producto para carpeta: \"{$productName}\"");
+                $this->command->warn("  ⚠ Sin coincidencia de producto para carpeta: \"{$productName}\"");
                 $skipped++;
+
                 continue;
             }
 
-            $mainFile    = $this->findBySuffix($folder, '_main');
+            $mainFile = $this->findBySuffix($folder, '_main');
             $galleryFile = $this->findBySuffix($folder, '_2');
 
             if (! $mainFile && ! $galleryFile) {
-                $this->command?->warn("  ⚠ Sin imágenes válidas en: \"{$productName}\"");
+                $this->command->warn("  ⚠ Sin imágenes válidas en: \"{$productName}\"");
                 $skipped++;
+
                 continue;
             }
 
@@ -54,21 +57,21 @@ class ProductImagesSeeder extends Seeder
 
             if ($mainFile) {
                 $product->addMedia($mainFile)
-                        ->preservingOriginal()
-                        ->toMediaCollection('main_image');
+                    ->preservingOriginal()
+                    ->toMediaCollection('main_image');
             }
 
             if ($galleryFile) {
                 $product->addMedia($galleryFile)
-                        ->preservingOriginal()
-                        ->toMediaCollection('gallery');
+                    ->preservingOriginal()
+                    ->toMediaCollection('gallery');
             }
 
             $assigned++;
-            $this->command?->line("  ✓ {$productName}");
+            $this->command->line("  ✓ {$productName}");
         }
 
-        $this->command?->info("ProductImagesSeeder: {$assigned} producto(s) con imágenes asignadas, {$skipped} omitido(s).");
+        $this->command->info("ProductImagesSeeder: {$assigned} producto(s) con imágenes asignadas, {$skipped} omitido(s).");
     }
 
     /**
@@ -79,7 +82,7 @@ class ProductImagesSeeder extends Seeder
     {
         foreach (File::files($dir) as $file) {
             $nameWithoutExt = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-            $ext            = strtolower($file->getExtension());
+            $ext = strtolower($file->getExtension());
 
             if (! in_array($ext, ['webp', 'png', 'jpg', 'jpeg'], true)) {
                 continue;

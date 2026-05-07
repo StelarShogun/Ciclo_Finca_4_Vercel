@@ -4,7 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $num_order
+ * @property int|null $user_id
+ * @property string $state
+ * @property string|null $reason
+ * @property Carbon $changed_at
+ * @property-read Order|null $order
+ * @property-read AdminUser|null $admin
+ */
 class OrderStateTimeline extends Model
 {
     public $timestamps = false;

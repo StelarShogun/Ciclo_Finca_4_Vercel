@@ -10,17 +10,19 @@ use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\RegistryExcelExport;
 use App\Services\Admin\ReportExcelFilename;
-use App\Services\Admin\ReportPdfFilename;
 use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\OrderCancellationNotifier;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SalesController extends Controller
 {
@@ -36,12 +38,12 @@ class SalesController extends Controller
 
         $sales = $query->orderBy('sale_date', 'desc')->paginate(15)->withQueryString();
 
-        $dailySales             = $this->calculateDailySales();
-        $dailySalesTrend        = $this->calculateDailySalesTrend();
-        $dailyTransactions      = $this->calculateDailyTransactions();
+        $dailySales = $this->calculateDailySales();
+        $dailySalesTrend = $this->calculateDailySalesTrend();
+        $dailyTransactions = $this->calculateDailyTransactions();
         $dailyTransactionsTrend = $this->calculateDailyTransactionsTrend();
-        $refunds                = $this->calculateRefunds();
-        $refundsTrend           = $this->calculateRefundsTrend();
+        $refunds = $this->calculateRefunds();
+        $refundsTrend = $this->calculateRefundsTrend();
 
         return view('admin.sales.index', compact(
             'sales',
@@ -65,7 +67,7 @@ class SalesController extends Controller
                 $q->where('order_source', 'web_cart')
                     ->orWhereNull('order_source');
             })
-            ->notExpired();
+            ->where('sale_date', '>=', now()->subDays(Sale::getOrderExpirationDays()));
 
         $hasNew = (clone $baseQuery)
             ->where('sale_id', '>', $since)
@@ -74,7 +76,7 @@ class SalesController extends Controller
         $latestSaleId = (clone $baseQuery)->max('sale_id') ?? 0;
 
         return response()->json([
-            'hasNew'       => $hasNew,
+            'hasNew' => $hasNew,
             'latestSaleId' => $latestSaleId,
         ]);
     }
@@ -87,43 +89,43 @@ class SalesController extends Controller
             return response()->json([
                 'success' => true,
                 'sale' => [
-                    'sale_id'                         => $sale->sale_id,
-                    'invoice_number'                  => $sale->invoice_number,
-                    'sale_date'                       => $sale->sale_date->toISOString(),
-                    'status'                          => $sale->status,
-                    'payment_method'                  => $sale->payment_method,
-                    'payment_reference'               => $sale->payment_reference,
-                    'subtotal'                        => $sale->subtotal,
-                    'iva'                             => $sale->iva,
-                    'discount'                        => $sale->discount,
-                    'total'                           => $sale->total,
-                    'notes'                           => $sale->notes,
-                    'order_source'                    => $sale->order_source,
+                    'sale_id' => $sale->sale_id,
+                    'invoice_number' => $sale->invoice_number,
+                    'sale_date' => $sale->sale_date->toISOString(),
+                    'status' => $sale->status,
+                    'payment_method' => $sale->payment_method,
+                    'payment_reference' => $sale->payment_reference,
+                    'subtotal' => $sale->subtotal,
+                    'iva' => $sale->iva,
+                    'discount' => $sale->discount,
+                    'total' => $sale->total,
+                    'notes' => $sale->notes,
+                    'order_source' => $sale->order_source,
                     'days_remaining_until_expiration' => $sale->days_remaining_until_expiration,
-                    'expires_at'                      => $sale->expires_at->toISOString(),
-                    'is_expiry_warning'               => $sale->is_expiry_warning,
+                    'expires_at' => $sale->expires_at->toISOString(),
+                    'is_expiry_warning' => $sale->is_expiry_warning,
                     'buyer' => [
-                        'name'  => $sale->buyer_name,
+                        'name' => $sale->buyer_name,
                         'email' => $sale->buyer_email,
                     ],
                     'client' => $sale->client ? [
-                        'user_id'        => $sale->client->user_id,
-                        'name'           => $sale->client->name,
-                        'first_surname'  => $sale->client->first_surname,
+                        'user_id' => $sale->client->user_id,
+                        'name' => $sale->client->name,
+                        'first_surname' => $sale->client->first_surname,
                         'second_surname' => $sale->client->second_surname,
-                        'gmail'          => $sale->client->gmail,
+                        'gmail' => $sale->client->gmail,
                     ] : null,
                     'sale_items' => $sale->saleItems->map(function (SaleItem $item) {
                         return [
-                            'id'         => $item->id,
+                            'id' => $item->id,
                             'product_id' => $item->product_id,
-                            'quantity'   => $item->quantity,
+                            'quantity' => $item->quantity,
                             'unit_price' => $item->unit_price,
-                            'total'      => $item->total,
-                            'product'    => $item->product ? [
+                            'total' => $item->total,
+                            'product' => $item->product ? [
                                 'product_id' => $item->product->product_id,
-                                'name'       => $item->product->name,
-                                'sku'        => Product::skuFromId((int) $item->product->product_id),
+                                'name' => $item->product->name,
+                                'sku' => Product::skuFromId((int) $item->product->product_id),
                             ] : null,
                         ];
                     }),
@@ -132,57 +134,57 @@ class SalesController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading sale: ' . $e->getMessage(),
+                'message' => 'Error loading sale: '.$e->getMessage(),
             ], 500);
         }
     }
 
     public function store(Request $request, InventoryMovementService $inventoryService)
     {
-        $items        = $request->items ?? $request->productos ?? [];
-        $buyerName    = $request->buyer_name ?: null;
-        $buyerEmail   = $request->buyer_email ?: null;
-        $clientId     = $request->client_id ?: null;
+        $items = $request->items ?? $request->productos ?? [];
+        $buyerName = $request->buyer_name ?: null;
+        $buyerEmail = $request->buyer_email ?: null;
+        $clientId = $request->client_id ?: null;
 
-        $paymentMethod    = $request->payment_method ?? $this->mapPaymentMethodToEnglish($request->metodo_pago);
+        $paymentMethod = $request->payment_method ?? $this->mapPaymentMethodToEnglish($request->metodo_pago);
         $paymentReference = $request->payment_reference ?? $request->referencia_pago;
-        $discount         = $request->discount ?? $request->descuento;
-        $notes            = $request->notes ?? $request->notas;
+        $discount = $request->discount ?? $request->descuento;
+        $notes = $request->notes ?? $request->notas;
 
         $request->merge([
-            'items'             => $items,
-            'payment_method'    => $paymentMethod,
+            'items' => $items,
+            'payment_method' => $paymentMethod,
             'payment_reference' => $paymentReference,
-            'discount'          => $discount,
-            'notes'             => $notes,
+            'discount' => $discount,
+            'notes' => $notes,
         ]);
 
         $normalizedItems = collect($request->items)->map(function ($item) {
             $item['product_id'] = $item['product_id'] ?? $item['producto_id'] ?? null;
-            $item['quantity']   = $item['quantity'] ?? $item['cantidad'] ?? 1;
+            $item['quantity'] = $item['quantity'] ?? $item['cantidad'] ?? 1;
 
             return $item;
         })->all();
         $request->merge(['items' => $normalizedItems]);
 
         $request->validate([
-            'buyer_name'              => 'nullable|string|max:120',
-            'buyer_email'             => 'nullable|email|max:150',
-            'client_id'               => 'nullable|exists:client_table,user_id',
-            'items'                   => 'required|array|min:1',
-            'items.*.product_id'      => 'required|exists:products,product_id',
-            'items.*.producto_id'     => 'nullable',
-            'items.*.quantity'        => 'nullable|integer|min:1',
-            'items.*.cantidad'        => 'nullable|integer|min:1',
+            'buyer_name' => 'nullable|string|max:120',
+            'buyer_email' => 'nullable|email|max:150',
+            'client_id' => 'nullable|exists:client_table,user_id',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,product_id',
+            'items.*.producto_id' => 'nullable',
+            'items.*.quantity' => 'nullable|integer|min:1',
+            'items.*.cantidad' => 'nullable|integer|min:1',
             'items.*.precio_unitario' => 'required|numeric|min:0',
-            'items.*.total'           => 'required|numeric|min:0',
-            'payment_method'          => 'required|in:cash,sinpe,transfer',
-            'payment_reference'       => 'nullable|string|max:255',
-            'discount'                => 'nullable|numeric|min:0',
-            'iva_percentage'          => 'nullable|numeric|min:0|max:13',
-            'notes'                   => 'nullable|string|max:500',
+            'items.*.total' => 'required|numeric|min:0',
+            'payment_method' => 'required|in:cash,sinpe,transfer',
+            'payment_reference' => 'nullable|string|max:255',
+            'discount' => 'nullable|numeric|min:0',
+            'iva_percentage' => 'nullable|numeric|min:0|max:13',
+            'notes' => 'nullable|string|max:500',
         ], [
-            'items.required'    => 'At least one item is required.',
+            'items.required' => 'At least one item is required.',
         ]);
 
         DB::beginTransaction();
@@ -193,7 +195,7 @@ class SalesController extends Controller
                 $product = Product::find($item['product_id']);
                 if (! $product || $item['quantity'] > $product->stock_current) {
                     DB::rollBack();
-                    $name      = $product ? $product->name : 'ID ' . $item['product_id'];
+                    $name = $product ? $product->name : 'ID '.$item['product_id'];
                     $available = $product ? $product->stock_current : 0;
 
                     return response()->json([
@@ -202,16 +204,16 @@ class SalesController extends Controller
                     ], 400);
                 }
 
-                $quantity  = (int) $item['quantity'];
+                $quantity = (int) $item['quantity'];
                 $unitPrice = $this->roundMoney((float) $item['precio_unitario']);
                 $lineTotal = $this->roundMoney($quantity * $unitPrice);
 
                 $preparedLines[] = [
-                    'product'    => $product,
+                    'product' => $product,
                     'product_id' => (int) $item['product_id'],
-                    'quantity'   => $quantity,
+                    'quantity' => $quantity,
                     'unit_price' => $unitPrice,
-                    'total'      => $lineTotal,
+                    'total' => $lineTotal,
                 ];
             }
 
@@ -226,48 +228,48 @@ class SalesController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'El descuento no puede ser mayor que el subtotal (₡' . number_format($subtotal, 2, ',', '.') . ').',
+                    'message' => 'El descuento no puede ser mayor que el subtotal (₡'.number_format($subtotal, 2, ',', '.').').',
                 ], 422);
             }
 
-            $ivaPercent  = (float) ($request->input('iva_percentage', 0));
-            $ivaPercent  = max(0.0, min(13.0, $ivaPercent));
+            $ivaPercent = (float) ($request->input('iva_percentage', 0));
+            $ivaPercent = max(0.0, min(13.0, $ivaPercent));
             $taxableBase = $this->roundMoney($subtotal - $discount);
-            $iva         = $this->roundMoney($taxableBase * ($ivaPercent / 100));
-            $total       = $this->roundMoney($taxableBase + $iva);
+            $iva = $this->roundMoney($taxableBase * ($ivaPercent / 100));
+            $total = $this->roundMoney($taxableBase + $iva);
 
             $orderSource = $clientId ? 'web_cart' : 'walk_in';
             $sale = Sale::create([
-                'invoice_number'    => (new Sale)->generateInvoiceNumber(),
-                'client_id'         => $clientId,
-                'seller_admin_id'   => Auth::guard('admin')->id(),
-                'sale_date'         => now(),
-                'payment_method'    => $request->payment_method,
+                'invoice_number' => (new Sale)->generateInvoiceNumber(),
+                'client_id' => $clientId,
+                'seller_admin_id' => Auth::guard('admin')->id(),
+                'sale_date' => now(),
+                'payment_method' => $request->payment_method,
                 'payment_reference' => $request->payment_reference ?? null,
-                'status'            => 'completed',
-                'discount'          => $discount,
-                'notes'             => $request->notes,
-                'buyer_name'        => $buyerName,
-                'buyer_email'       => $buyerEmail,
-                'order_source'      => $orderSource,
-                'subtotal'          => $subtotal,
-                'iva'               => $iva,
-                'total'             => $total,
+                'status' => 'completed',
+                'discount' => $discount,
+                'notes' => $request->notes,
+                'buyer_name' => $buyerName,
+                'buyer_email' => $buyerEmail,
+                'order_source' => $orderSource,
+                'subtotal' => $subtotal,
+                'iva' => $iva,
+                'total' => $total,
             ]);
 
             foreach ($preparedLines as $line) {
                 SaleItem::create([
-                    'sale_id'    => $sale->sale_id,
+                    'sale_id' => $sale->sale_id,
                     'product_id' => $line['product_id'],
-                    'quantity'   => $line['quantity'],
+                    'quantity' => $line['quantity'],
                     'unit_price' => $line['unit_price'],
-                    'total'      => $line['total'],
+                    'total' => $line['total'],
                 ]);
 
                 $inventoryService->recordSale(
-                    product:  $line['product'],
+                    product: $line['product'],
                     quantity: $line['quantity'],
-                    saleId:   $sale->sale_id,
+                    saleId: $sale->sale_id,
                 );
             }
 
@@ -279,11 +281,11 @@ class SalesController extends Controller
                 'sale_create',
                 'Venta creada desde panel administrativo.',
                 [
-                    'sale_id'        => (int) $sale->sale_id,
+                    'sale_id' => (int) $sale->sale_id,
                     'invoice_number' => (string) $sale->invoice_number,
-                    'status'         => (string) $sale->status,
-                    'total'          => (float) $sale->total,
-                    'items_count'    => count($preparedLines),
+                    'status' => (string) $sale->status,
+                    'total' => (float) $sale->total,
+                    'items_count' => count($preparedLines),
                 ]
             );
 
@@ -297,14 +299,14 @@ class SalesController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Venta creada correctamente.',
-                'sale'    => $sale->load(['client', 'sellerAdmin', 'saleItems.product']),
+                'sale' => $sale->load(['client', 'sellerAdmin', 'saleItems.product']),
             ]);
         } catch (\Throwable $e) {
             DB::rollback();
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error al crear la venta: ' . $e->getMessage(),
+                'message' => 'Error al crear la venta: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -316,12 +318,12 @@ class SalesController extends Controller
 
         $request->validate([
             'status' => 'required|in:pending,ready_to_pickup,completed,cancelled,returned',
-            'notes'  => 'nullable|string|max:500',
+            'notes' => 'nullable|string|max:500',
         ]);
 
         $sale->update([
             'status' => $request->status,
-            'notes'  => $request->notes,
+            'notes' => $request->notes,
         ]);
 
         if ($sale->status === 'completed') {
@@ -338,10 +340,10 @@ class SalesController extends Controller
             'sale_update_status',
             'Estado de venta actualizado.',
             [
-                'sale_id'        => (int) $sale->sale_id,
+                'sale_id' => (int) $sale->sale_id,
                 'invoice_number' => (string) ($sale->invoice_number ?? ''),
-                'from_status'    => $previousStatus,
-                'to_status'      => (string) $sale->status,
+                'from_status' => $previousStatus,
+                'to_status' => (string) $sale->status,
             ]
         );
 
@@ -357,8 +359,8 @@ class SalesController extends Controller
             'reason' => 'required|string|min:3|max:500',
         ], [
             'reason.required' => 'Debe ingresar un motivo de cancelación.',
-            'reason.min'      => 'El motivo debe tener al menos 3 caracteres.',
-            'reason.max'      => 'El motivo no puede superar los 500 caracteres.',
+            'reason.min' => 'El motivo debe tener al menos 3 caracteres.',
+            'reason.max' => 'El motivo no puede superar los 500 caracteres.',
         ]);
 
         $sale = Sale::with('saleItems.product')->findOrFail($id);
@@ -378,10 +380,10 @@ class SalesController extends Controller
             foreach ($sale->saleItems as $item) {
                 if ($item->product) {
                     $inventoryService->recordOrderCancellation(
-                        product:  $item->product,
+                        product: $item->product,
                         quantity: (int) $item->quantity,
-                        saleId:   $sale->sale_id,
-                        reason:   $reason,
+                        saleId: $sale->sale_id,
+                        reason: $reason,
                     );
                 }
             }
@@ -391,10 +393,10 @@ class SalesController extends Controller
             'sale_cancel',
             'Venta cancelada desde endpoint de eliminación.',
             [
-                'sale_id'        => (int) $sale->sale_id,
+                'sale_id' => (int) $sale->sale_id,
                 'invoice_number' => (string) ($sale->invoice_number ?? ''),
-                'from_status'    => 'pending',
-                'to_status'      => 'cancelled',
+                'from_status' => 'pending',
+                'to_status' => 'cancelled',
             ]
         );
 
@@ -453,7 +455,7 @@ class SalesController extends Controller
             // FIX: toda la lógica de DB dentro del transaction; el correo queda fuera.
             DB::transaction(function () use ($sale, $invoiceNumber) {
                 $sale->update([
-                    'status'         => 'completed',
+                    'status' => 'completed',
                     'invoice_number' => $invoiceNumber,
                 ]);
 
@@ -467,10 +469,10 @@ class SalesController extends Controller
                 'sale_complete',
                 'Pedido confirmado como venta completada.',
                 [
-                    'sale_id'        => (int) $sale->sale_id,
+                    'sale_id' => (int) $sale->sale_id,
                     'invoice_number' => (string) $sale->invoice_number,
-                    'from_status'    => 'ready_to_pickup',
-                    'to_status'      => 'completed',
+                    'from_status' => 'ready_to_pickup',
+                    'to_status' => 'completed',
                 ]
             );
 
@@ -486,21 +488,21 @@ class SalesController extends Controller
                 'success' => true,
                 'message' => 'Pedido confirmado correctamente. La venta quedó registrada con su factura.',
                 'sale' => [
-                    'sale_id'        => $sale->sale_id,
+                    'sale_id' => $sale->sale_id,
                     'invoice_number' => $sale->invoice_number,
-                    'status'         => $sale->status,
+                    'status' => $sale->status,
                 ],
             ]);
         } catch (\Throwable $e) {
             // FIX: \Throwable en lugar de \Exception para atrapar también errores fatales.
             return response()->json([
                 'success' => false,
-                'message' => 'Error al confirmar el pedido: ' . $e->getMessage(),
+                'message' => 'Error al confirmar el pedido: '.$e->getMessage(),
             ], 500);
         }
     }
 
-    public function markReadyToPickup(int $id): \Illuminate\Http\JsonResponse
+    public function markReadyToPickup(int $id): JsonResponse
     {
         try {
             $sale = Sale::findOrFail($id);
@@ -513,7 +515,7 @@ class SalesController extends Controller
             }
 
             $sale->update([
-                'status'   => 'ready_to_pickup',
+                'status' => 'ready_to_pickup',
                 'ready_at' => now(),
             ]);
 
@@ -521,10 +523,10 @@ class SalesController extends Controller
                 'sale_ready_to_pickup',
                 'Pedido marcado como listo para recoger.',
                 [
-                    'sale_id'        => (int) $sale->sale_id,
+                    'sale_id' => (int) $sale->sale_id,
                     'invoice_number' => (string) ($sale->invoice_number ?? ''),
-                    'from_status'    => 'pending',
-                    'to_status'      => 'ready_to_pickup',
+                    'from_status' => 'pending',
+                    'to_status' => 'ready_to_pickup',
                 ]
             );
 
@@ -540,13 +542,13 @@ class SalesController extends Controller
                 'message' => 'Pedido marcado como listo para recoger.',
                 'sale' => [
                     'sale_id' => $sale->sale_id,
-                    'status'  => $sale->status,
+                    'status' => $sale->status,
                 ],
             ]);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al actualizar el pedido: ' . $e->getMessage(),
+                'message' => 'Error al actualizar el pedido: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -558,8 +560,8 @@ class SalesController extends Controller
             'reason' => 'required|string|min:3|max:500',
         ], [
             'reason.required' => 'Debe ingresar un motivo de cancelación.',
-            'reason.min'      => 'El motivo debe tener al menos 3 caracteres.',
-            'reason.max'      => 'El motivo no puede superar los 500 caracteres.',
+            'reason.min' => 'El motivo debe tener al menos 3 caracteres.',
+            'reason.max' => 'El motivo no puede superar los 500 caracteres.',
         ]);
 
         try {
@@ -591,10 +593,10 @@ class SalesController extends Controller
                 foreach ($sale->saleItems as $item) {
                     if ($item->product) {
                         $inventoryService->recordOrderCancellation(
-                            product:  $item->product,
+                            product: $item->product,
                             quantity: (int) $item->quantity,
-                            saleId:   $sale->sale_id,
-                            reason:   $reason,
+                            saleId: $sale->sale_id,
+                            reason: $reason,
                         );
                     }
                 }
@@ -608,7 +610,7 @@ class SalesController extends Controller
                 } catch (\Throwable $e) {
                     Log::warning('Manual cancellation notification failed.', [
                         'sale_id' => $saleForNotify->sale_id,
-                        'error'   => $e->getMessage(),
+                        'error' => $e->getMessage(),
                     ]);
                 }
             });
@@ -617,10 +619,10 @@ class SalesController extends Controller
                 'sale_cancel',
                 'Pedido cancelado y stock liberado.',
                 [
-                    'sale_id'        => (int) $sale->sale_id,
+                    'sale_id' => (int) $sale->sale_id,
                     'invoice_number' => (string) ($sale->invoice_number ?? ''),
-                    'from_status'    => $previousStatus,
-                    'to_status'      => 'cancelled',
+                    'from_status' => $previousStatus,
+                    'to_status' => 'cancelled',
                 ]
             );
 
@@ -631,7 +633,7 @@ class SalesController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al rechazar el pedido: ' . $e->getMessage(),
+                'message' => 'Error al rechazar el pedido: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -642,8 +644,8 @@ class SalesController extends Controller
             'reason' => 'required|string|min:3|max:500',
         ], [
             'reason.required' => 'Debe ingresar un motivo de devolución.',
-            'reason.min'      => 'El motivo debe tener al menos 3 caracteres.',
-            'reason.max'      => 'El motivo no puede superar los 500 caracteres.',
+            'reason.min' => 'El motivo debe tener al menos 3 caracteres.',
+            'reason.max' => 'El motivo no puede superar los 500 caracteres.',
         ]);
 
         $sale = Sale::with('saleItems.product')->findOrFail($id);
@@ -666,10 +668,10 @@ class SalesController extends Controller
                 foreach ($sale->saleItems as $item) {
                     if ($item->product) {
                         $inventoryService->recordSaleReturn(
-                            product:  $item->product,
+                            product: $item->product,
                             quantity: (int) $item->quantity,
-                            saleId:   $sale->sale_id,
-                            reason:   $reason,
+                            saleId: $sale->sale_id,
+                            reason: $reason,
                         );
                     }
                 }
@@ -679,11 +681,11 @@ class SalesController extends Controller
                 'sale_return',
                 'Devolución registrada sobre venta completada.',
                 [
-                    'sale_id'        => (int) $sale->sale_id,
+                    'sale_id' => (int) $sale->sale_id,
                     'invoice_number' => (string) ($sale->invoice_number ?? ''),
-                    'from_status'    => 'completed',
-                    'to_status'      => 'returned',
-                    'reason'         => trim($request->reason),
+                    'from_status' => 'completed',
+                    'to_status' => 'returned',
+                    'reason' => trim($request->reason),
                 ]
             );
 
@@ -691,7 +693,7 @@ class SalesController extends Controller
                 'success' => true,
                 'message' => 'Devolución registrada correctamente. El stock fue reintegrado al inventario.',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->errors()['quantity'][0] ?? 'Error de validación de stock.',
@@ -699,7 +701,7 @@ class SalesController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al registrar la devolución: ' . $e->getMessage(),
+                'message' => 'Error al registrar la devolución: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -743,10 +745,10 @@ class SalesController extends Controller
             }
 
             if ($format === 'csv') {
-                $filename = 'sales_' . now()->format('Y-m-d_H-i-s') . '.csv';
-                $headers  = [
-                    'Content-Type'        => 'text/csv; charset=UTF-8',
-                    'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                $filename = 'sales_'.now()->format('Y-m-d_H-i-s').'.csv';
+                $headers = [
+                    'Content-Type' => 'text/csv; charset=UTF-8',
+                    'Content-Disposition' => 'attachment; filename="'.$filename.'"',
                 ];
 
                 $chunkSize = AdminPdfExportLimits::SALES_CSV_CHUNK;
@@ -813,14 +815,14 @@ class SalesController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error exporting sales: ' . $e->getMessage(),
+                'message' => 'Error exporting sales: '.$e->getMessage(),
             ], 500);
         }
     }
 
-    private function exportSalesExcel(Request $request, Builder $base): \Symfony\Component\HttpFoundation\StreamedResponse
+    private function exportSalesExcel(Request $request, Builder $base): StreamedResponse
     {
-        $maxRows       = AdminPdfExportLimits::SALES_MAX_ROWS;
+        $maxRows = AdminPdfExportLimits::SALES_MAX_ROWS;
         $totalMatching = (clone $base)->count();
 
         $filterLines = $this->salesExportFilterLines($request);
@@ -836,7 +838,11 @@ class SalesController extends Controller
 
         $headers = ['ID Venta', 'Factura', 'Cliente', 'Email', 'Fecha', 'Estado', 'Método pago', 'Subtotal (₡)', 'IVA (₡)', 'Descuento (₡)', 'Total (₡)', 'Ítems', 'Notas'];
 
-        $dataRows = $rows->map(function (Sale $sale): array {
+        $dataRows = $rows->map(function ($sale): array {
+            if (! $sale instanceof Sale) {
+                return [];
+            }
+
             $customer = $sale->client
                 ? trim($sale->client->name.' '.($sale->client->first_surname ?? '').' '.($sale->client->second_surname ?? ''))
                 : ($sale->buyer_name ?: 'Walk-in / Sin datos');
@@ -875,9 +881,9 @@ class SalesController extends Controller
 
     private function exportSalesPdf(Request $request, Builder $base)
     {
-        $maxRows       = AdminPdfExportLimits::SALES_MAX_ROWS;
+        $maxRows = AdminPdfExportLimits::SALES_MAX_ROWS;
         $totalMatching = (clone $base)->count();
-        $filterLines   = $this->salesExportFilterLines($request);
+        $filterLines = $this->salesExportFilterLines($request);
 
         if ($totalMatching > $maxRows) {
             $filterLines[] = 'Nota: el PDF incluye como máximo '.$maxRows.' filas ('.$totalMatching.' ventas coinciden con los filtros).';
@@ -891,32 +897,32 @@ class SalesController extends Controller
             ->selectRaw('COALESCE(SUM(discount), 0) as agg_sum_discount')
             ->first();
 
-        $agg    = $aggregate !== null ? $aggregate->getAttributes() : [];
+        $agg = $aggregate !== null ? $aggregate->getAttributes() : [];
         $totals = [
-            'count'        => (int) ($agg['agg_count'] ?? 0),
-            'sum_total'    => (float) ($agg['agg_sum_total'] ?? 0.0),
+            'count' => (int) ($agg['agg_count'] ?? 0),
+            'sum_total' => (float) ($agg['agg_sum_total'] ?? 0.0),
             'sum_subtotal' => (float) ($agg['agg_sum_subtotal'] ?? 0.0),
-            'sum_iva'      => (float) ($agg['agg_sum_iva'] ?? 0.0),
+            'sum_iva' => (float) ($agg['agg_sum_iva'] ?? 0.0),
             'sum_discount' => (float) ($agg['agg_sum_discount'] ?? 0.0),
         ];
 
-        $rows     = (clone $base)->with(['client'])->orderBy('sale_date', 'desc')->limit($maxRows)->get();
+        $rows = (clone $base)->with(['client'])->orderBy('sale_date', 'desc')->limit($maxRows)->get();
         $logoPath = public_path('assets/images/brand/logo-ciclo-finca-icon.png');
 
         return app(AdminPdfExportService::class)->download('admin.sales.sales-pdf', [
-            'sales'        => $rows,
-            'totals'       => $totals,
-            'pdfTitle'     => 'Reporte de ventas',
-            'pdfSubtitle'  => 'Listado filtrado — Ciclo Finca 4',
-            'logoPath'     => is_file($logoPath) ? $logoPath : null,
-            'filterLines'  => $filterLines,
+            'sales' => $rows,
+            'totals' => $totals,
+            'pdfTitle' => 'Reporte de ventas',
+            'pdfSubtitle' => 'Listado filtrado — Ciclo Finca 4',
+            'logoPath' => is_file($logoPath) ? $logoPath : null,
+            'filterLines' => $filterLines,
             'generatedFor' => 'Administración',
         ], 'ventas');
     }
 
     private function salesExportFilterLines(Request $request): array
     {
-        $lines  = [];
+        $lines = [];
         $status = $request->query('status');
 
         if (in_array($status, ['cancelled', 'returned', 'all'], true)) {
@@ -945,7 +951,9 @@ class SalesController extends Controller
 
     private function applySalesAdminListFilters(Builder $query, Request $request): void
     {
-        $query->notExpired();
+        $days = Sale::getOrderExpirationDays();
+        $limitDate = now()->subDays($days);
+        $query->where('sale_date', '>=', $limitDate);
 
         $this->applyVentasStatusScope($query, $request->query('status'));
 
@@ -996,7 +1004,7 @@ class SalesController extends Controller
     // Restrict results to the requested sales status scope.
     private function applyVentasStatusScope(Builder $query, ?string $statusParam): void
     {
-        $closed     = ['completed', 'cancelled', 'returned'];
+        $closed = ['completed', 'cancelled', 'returned'];
         $allVisible = ['completed', 'cancelled', 'returned', 'ready_to_pickup'];
 
         if ($statusParam === 'all') {
@@ -1021,7 +1029,7 @@ class SalesController extends Controller
 
     private function calculateDailySalesTrend()
     {
-        $today     = Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->sum('total');
+        $today = Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->sum('total');
         $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->where('status', 'completed')->sum('total');
         if ($yesterday == 0) {
             return $today > 0 ? 100 : 0;
@@ -1037,7 +1045,7 @@ class SalesController extends Controller
 
     private function calculateDailyTransactionsTrend()
     {
-        $today     = Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->count();
+        $today = Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->count();
         $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->where('status', 'completed')->count();
         if ($yesterday == 0) {
             return $today > 0 ? 100 : 0;
@@ -1055,7 +1063,7 @@ class SalesController extends Controller
 
     private function calculateRefundsTrend(): int
     {
-        $today     = Sale::whereDate('sale_date', Carbon::today())->where('status', 'returned')->count();
+        $today = Sale::whereDate('sale_date', Carbon::today())->where('status', 'returned')->count();
         $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->where('status', 'returned')->count();
 
         return $today - $yesterday;
@@ -1093,7 +1101,7 @@ class SalesController extends Controller
         foreach ($productIds as $productId) {
             ProductReview::query()->firstOrCreate(
                 [
-                    'client_id'  => (int) $sale->client_id,
+                    'client_id' => (int) $sale->client_id,
                     'product_id' => (int) $productId,
                 ],
                 [
@@ -1116,18 +1124,18 @@ class SalesController extends Controller
             return;
         }
 
-        $clientName   = trim((string) $client->name) !== '' ? (string) $client->name : 'cliente';
+        $clientName = trim((string) $client->name) !== '' ? (string) $client->name : 'cliente';
         $productCount = SaleItem::query()
             ->where('sale_id', $sale->sale_id)
             ->distinct('product_id')
             ->count('product_id');
 
         $productPhrase = $productCount === 1 ? 'el producto comprado' : 'los productos comprados';
-        $historyUrl    = route('clients.invoices', ['tab' => 'historial']);
-        $body          = "Estimado {$clientName},\n\n"
-            . "Favor reseñar {$productPhrase}.\n"
-            . "Para esto, acceda a Facturas > Historial de compras:\n{$historyUrl}\n\n"
-            . "Gracias por comprar en Ciclo Finca 4.";
+        $historyUrl = route('clients.invoices', ['tab' => 'historial']);
+        $body = "Estimado {$clientName},\n\n"
+            ."Favor reseñar {$productPhrase}.\n"
+            ."Para esto, acceda a Facturas > Historial de compras:\n{$historyUrl}\n\n"
+            .'Gracias por comprar en Ciclo Finca 4.';
 
         try {
             Mail::raw($body, function ($message) use ($client): void {
@@ -1136,10 +1144,10 @@ class SalesController extends Controller
             });
         } catch (\Throwable $e) {
             Log::warning('Could not send product review reminder email.', [
-                'sale_id'   => $sale->sale_id ?? null,
+                'sale_id' => $sale->sale_id ?? null,
                 'client_id' => $client->user_id ?? null,
-                'email'     => $client->gmail ?? null,
-                'error'     => $e->getMessage(),
+                'email' => $client->gmail ?? null,
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -1151,7 +1159,7 @@ class SalesController extends Controller
         } catch (\Throwable $e) {
             Log::warning('Sales audit log write failed', [
                 'action_type' => $actionType,
-                'error'       => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -1159,18 +1167,18 @@ class SalesController extends Controller
     public function byCategory(Request $request)
     {
         $dateRange = $request->input('date_range', 'month');
-        $dateFrom  = $request->input('date_from');
-        $dateTo    = $request->input('date_to');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
 
         if ($dateRange === 'custom') {
             $request->validate([
                 'date_from' => 'required|date',
-                'date_to'   => 'required|date|after_or_equal:date_from',
+                'date_to' => 'required|date|after_or_equal:date_from',
             ], [
-                'date_from.required'     => 'La fecha de inicio es obligatoria.',
-                'date_from.date'         => 'La fecha de inicio no es válida.',
-                'date_to.required'       => 'La fecha de fin es obligatoria.',
-                'date_to.date'           => 'La fecha de fin no es válida.',
+                'date_from.required' => 'La fecha de inicio es obligatoria.',
+                'date_from.date' => 'La fecha de inicio no es válida.',
+                'date_to.required' => 'La fecha de fin es obligatoria.',
+                'date_to.date' => 'La fecha de fin no es válida.',
                 'date_to.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
             ]);
         }
@@ -1178,9 +1186,9 @@ class SalesController extends Controller
         [$from, $to] = $this->resolveDateRange($dateRange, $dateFrom, $dateTo);
 
         $rows = SaleItem::query()
-            ->join('sales',      'sale_items.sale_id',    '=', 'sales.sale_id')
-            ->join('products',   'sale_items.product_id', '=', 'products.product_id')
-            ->join('categories', 'products.category_id',  '=', 'categories.category_id')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.sale_id')
+            ->join('products', 'sale_items.product_id', '=', 'products.product_id')
+            ->join('categories', 'products.category_id', '=', 'categories.category_id')
             ->where('sales.status', 'completed')
             ->whereBetween('sales.sale_date', [$from, $to])
             ->groupBy('categories.category_id', 'categories.name')
@@ -1205,8 +1213,8 @@ class SalesController extends Controller
 
         $chartData = $rows->map(function ($r) {
             return [
-                'label'   => $r->category_name,
-                'value'   => $r->total_revenue,
+                'label' => $r->category_name,
+                'value' => $r->total_revenue,
                 'percent' => $r->percentage,
             ];
         })->values()->toArray();
@@ -1228,7 +1236,7 @@ class SalesController extends Controller
             case 'custom':
                 return [
                     $dateFrom ? Carbon::parse($dateFrom)->startOfDay()->toDateTimeString() : now()->startOfDay()->toDateTimeString(),
-                    $dateTo   ? Carbon::parse($dateTo)->endOfDay()->toDateTimeString()     : now()->endOfDay()->toDateTimeString(),
+                    $dateTo ? Carbon::parse($dateTo)->endOfDay()->toDateTimeString() : now()->endOfDay()->toDateTimeString(),
                 ];
             default:
                 return [now()->startOfMonth()->startOfDay()->toDateTimeString(), now()->endOfMonth()->endOfDay()->toDateTimeString()];
@@ -1246,9 +1254,9 @@ class SalesController extends Controller
             return;
         }
 
-        $clientName   = trim((string) $client->name) !== '' ? (string) $client->name : 'cliente';
-        $invoiceLabel = $sale->invoice_number ?? '#' . $sale->sale_id;
-        $historyUrl   = route('clients.invoices', ['tab' => 'historial']);
+        $clientName = trim((string) $client->name) !== '' ? (string) $client->name : 'cliente';
+        $invoiceLabel = $sale->invoice_number ?? '#'.$sale->sale_id;
+        $historyUrl = route('clients.invoices', ['tab' => 'historial']);
 
         $items = SaleItem::query()
             ->with('product')
@@ -1257,16 +1265,17 @@ class SalesController extends Controller
 
         $itemLines = $items->map(function (SaleItem $item): string {
             $name = $item->product ? $item->product->name : 'Producto';
+
             return "  • {$name} × {$item->quantity}";
         })->implode("\n");
 
         $body = "Estimado {$clientName},\n\n"
-            . "¡Buenas noticias! Su pedido {$invoiceLabel} ya está listo para ser retirado en nuestra tienda.\n\n"
-            . "Productos:\n{$itemLines}\n\n"
-            . "Total: ₡" . number_format((float) $sale->total, 2, ',', '.') . "\n\n"
-            . "Recuerde traer su número de pedido o identificación al momento de recogerlo.\n\n"
-            . "Puede consultar el estado de sus pedidos en:\n{$historyUrl}\n\n"
-            . "Gracias por comprar en Ciclo Finca 4.";
+            ."¡Buenas noticias! Su pedido {$invoiceLabel} ya está listo para ser retirado en nuestra tienda.\n\n"
+            ."Productos:\n{$itemLines}\n\n"
+            .'Total: ₡'.number_format((float) $sale->total, 2, ',', '.')."\n\n"
+            ."Recuerde traer su número de pedido o identificación al momento de recogerlo.\n\n"
+            ."Puede consultar el estado de sus pedidos en:\n{$historyUrl}\n\n"
+            .'Gracias por comprar en Ciclo Finca 4.';
 
         try {
             Mail::raw($body, function ($message) use ($client, $invoiceLabel): void {
@@ -1275,10 +1284,10 @@ class SalesController extends Controller
             });
         } catch (\Throwable $e) {
             Log::warning('Could not send ready-to-pickup notification email.', [
-                'sale_id'   => $sale->sale_id ?? null,
+                'sale_id' => $sale->sale_id ?? null,
                 'client_id' => $client->user_id ?? null,
-                'email'     => $client->gmail ?? null,
-                'error'     => $e->getMessage(),
+                'email' => $client->gmail ?? null,
+                'error' => $e->getMessage(),
             ]);
         }
     }

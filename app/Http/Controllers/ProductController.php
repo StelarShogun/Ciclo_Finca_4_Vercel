@@ -9,11 +9,10 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\Admin\AdminInventoryExportQuery;
-use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\RegistryExcelExport;
 use App\Services\Admin\ReportExcelFilename;
-use App\Services\Admin\ReportPdfFilename;
 use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\ProductClassificationAssignmentService;
@@ -104,7 +103,7 @@ class ProductController extends Controller
                 }
             }
 
-            $this->logAudit('product_create', 'Producto creado.', $auditContext ?? []);
+            $this->logAudit('product_create', 'Producto creado.', $auditContext);
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -347,7 +346,7 @@ class ProductController extends Controller
             $this->logAudit(
                 'product_update',
                 'Producto actualizado.',
-                $auditContext ?? ['product_id' => (int) $id]
+                $auditContext
             );
 
             if ($request->wantsJson() || $request->ajax()) {
@@ -524,7 +523,11 @@ class ProductController extends Controller
         $paginator = $query->paginate($perPage);
 
         // Normalize products into the structure expected by the view
-        $products = collect($paginator->items())->map(function (Product $product) {
+        $products = collect($paginator->items())->map(function ($product) {
+            if (! $product instanceof Product) {
+                return null;
+            }
+
             return (object) [
                 'product_id' => $product->product_id,
                 'id' => $product->product_id,
@@ -539,7 +542,7 @@ class ProductController extends Controller
                 'status_class' => $product->status === 'active' ? 'success' :
                                 ($product->status === 'inactive' ? 'warning' : 'secondary'),
             ];
-        });
+        })->filter();
 
         // Load deduplicated root categories and the dependent subcategory tree
         $categories = Category::query()
@@ -566,7 +569,7 @@ class ProductController extends Controller
         $format = strtolower($format ?? $request->get('format', 'pdf'));
 
         $exportAll = $request->query('scope') === 'all';
-        $baseQuery = $exportAll ? $this->inventoryProductsFilteredQuery(new Request()) : $this->inventoryProductsFilteredQuery($request);
+        $baseQuery = $exportAll ? $this->inventoryProductsFilteredQuery(new Request) : $this->inventoryProductsFilteredQuery($request);
         $filterLines = $exportAll ? ['Inventario: todo (sin filtros)'] : $this->inventoryExportFilterLines($request);
 
         $withRelations = ['category:category_id,name', 'supplier:supplier_id,name'];
@@ -575,6 +578,10 @@ class ProductController extends Controller
             $data = (clone $baseQuery)->with($withRelations)->get();
             $xml = new \SimpleXMLElement('<products/>');
             foreach ($data as $p) {
+                if (! $p instanceof Product) {
+                    continue;
+                }
+
                 $n = $xml->addChild('product');
                 $n->addChild('id', (string) $p->product_id);
                 $n->addChild('name', htmlspecialchars($p->name));
@@ -611,6 +618,10 @@ class ProductController extends Controller
                 ->get();
 
             $products = $pdfRows->map(function ($p) {
+                if (! $p instanceof Product) {
+                    return null;
+                }
+
                 return (object) [
                     'id' => $p->product_id,
                     'name' => $p->name,
@@ -624,7 +635,7 @@ class ProductController extends Controller
                     'status' => ucfirst(str_replace('_', ' ', $p->status)),
                     'created_at' => $p->created_at ? $p->created_at->format('d/m/Y') : 'N/A',
                 ];
-            });
+            })->filter()->values();
 
             $logoPath = public_path('assets/images/brand/logo-ciclo-finca-icon.png');
 
@@ -657,6 +668,10 @@ class ProductController extends Controller
 
             $headers = ['ID', 'Nombre', 'Descripción', 'Categoría', 'Proveedor', 'Precio compra', 'Precio venta', 'Stock actual', 'Stock mínimo', 'Estado', 'Creado'];
             $dataRows = $rows->map(function ($p) {
+                if (! $p instanceof Product) {
+                    return null;
+                }
+
                 return [
                     (string) $p->product_id,
                     $p->name,
@@ -670,7 +685,7 @@ class ProductController extends Controller
                     $p->status,
                     $p->created_at ? $p->created_at->format('Y-m-d H:i:s') : '',
                 ];
-            })->values()->all();
+            })->filter()->values()->all();
 
             return app(RegistryExcelExport::class)->download(
                 'Inventario de productos',
@@ -1126,7 +1141,7 @@ class ProductController extends Controller
         try {
             $validated = $request->validate([
                 'quantity' => ['required', 'numeric', 'min:1'],
-                'reason'   => ['required', 'string', 'min:3', 'max:500'],
+                'reason' => ['required', 'string', 'min:3', 'max:500'],
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -1180,7 +1195,7 @@ class ProductController extends Controller
         try {
             $validated = $request->validate([
                 'quantity' => ['required', 'numeric', 'min:1'],
-                'reason'   => ['required', 'string', 'min:3', 'max:500'],
+                'reason' => ['required', 'string', 'min:3', 'max:500'],
             ]);
         } catch (ValidationException $e) {
             return response()->json([

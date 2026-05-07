@@ -8,14 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Normalized line for a supplier purchase order (`orders`).
  *
- * @property int         $id
- * @property int         $order_num_order
- * @property int         $product_id
- * @property string      $name
- * @property int         $quantity
- * @property int|null    $received_quantity  Cantidad efectivamente recibida (null = sin recepción aún)
+ * @property int $id
+ * @property int $order_num_order
+ * @property int $product_id
+ * @property string $name
+ * @property int $quantity
+ * @property int|null $received_quantity Cantidad efectivamente recibida (null = sin recepción aún)
  * @property numeric-string $unit_price
  * @property numeric-string $total
+ * @property-read Product|null $product
  */
 class OrderItem extends Model
 {
@@ -32,10 +33,10 @@ class OrderItem extends Model
     ];
 
     protected $casts = [
-        'quantity'          => 'integer',
+        'quantity' => 'integer',
         'received_quantity' => 'integer',
-        'unit_price'        => 'decimal:2',
-        'total'             => 'decimal:2',
+        'unit_price' => 'decimal:2',
+        'total' => 'decimal:2',
     ];
 
     public function order(): BelongsTo

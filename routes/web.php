@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Admin\ClientPurchaseHistoryController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\ClientPurchaseHistoryController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\ReportsRegistryExportController;
 use App\Http\Controllers\AdminClientController;
@@ -11,10 +11,12 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClassificationCatalogController;
+use App\Http\Controllers\ClientCatalogProductSuggestionsController;
 use App\Http\Controllers\ClientPageController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FavoriteProductController;
+use App\Http\Controllers\InventoryMovementController;
 use App\Http\Controllers\ProductClassificationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductReviewController;
@@ -22,7 +24,6 @@ use App\Http\Controllers\ProductVariantController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierOrderController;
-use App\Http\Controllers\InventoryMovementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -57,14 +58,14 @@ Route::get('/run-migrations', function (Request $request) use ($assertDeployHelp
 
         if ($exitCode !== 0) {
             return response(
-                '❌ migrate exited with code ' . $exitCode . '<br><pre>' . e($output) . '</pre>',
+                '❌ migrate exited with code '.$exitCode.'<br><pre>'.e($output).'</pre>',
                 500
             );
         }
 
-        return '✅ Migrations executed successfully:<br><pre>' . e($output) . '</pre>';
+        return '✅ Migrations executed successfully:<br><pre>'.e($output).'</pre>';
     } catch (Throwable $e) {
-        return response('❌ Error running migrations: ' . e($e->getMessage()), 500);
+        return response('❌ Error running migrations: '.e($e->getMessage()), 500);
     }
 });
 
@@ -91,14 +92,14 @@ Route::get('/run-seeders/{class?}', function (Request $request, ?string $class =
 
         if ($exitCode !== 0) {
             return response(
-                '❌ db:seed exited with code ' . $exitCode . '<br><pre>' . e($output) . '</pre>',
+                '❌ db:seed exited with code '.$exitCode.'<br><pre>'.e($output).'</pre>',
                 500
             );
         }
 
-        return '✅ Seeder executed:<br><pre>' . e($output) . '</pre>';
+        return '✅ Seeder executed:<br><pre>'.e($output).'</pre>';
     } catch (Throwable $e) {
-        return response('❌ Error: ' . e($e->getMessage()), 500);
+        return response('❌ Error: '.e($e->getMessage()), 500);
     }
 })->where('class', '[A-Za-z0-9\\\\_]+');
 
@@ -137,8 +138,8 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
 
     // Inventory movement routes.
     Route::prefix('inventory/movements')->name('admin.inventory.movements.')->group(function () {
-        Route::get('/',                 [InventoryMovementController::class, 'index'])->name('index');
-        Route::get('/{productId}',      [InventoryMovementController::class, 'show'])->name('show');
+        Route::get('/', [InventoryMovementController::class, 'index'])->name('index');
+        Route::get('/{productId}', [InventoryMovementController::class, 'show'])->name('show');
         Route::get('/{productId}/json', [InventoryMovementController::class, 'json'])->name('json');
     });
 
@@ -231,7 +232,7 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/sales/{id}/print', [SalesController::class, 'print'])->name('sales.print');
     Route::get('/sales/{id}/invoice', [SalesController::class, 'invoice'])->name('sales.invoice');
     Route::patch('orders/{id}/ready-to-pickup', [SalesController::class, 'markReadyToPickup'])
-    ->name('admin.orders.ready-to-pickup');
+        ->name('admin.orders.ready-to-pickup');
 
     // Client order management routes.
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
@@ -302,7 +303,7 @@ Route::get('/', [ClientPageController::class, 'home'])->name('clients.home');
 Route::get('/catalog', [ClientPageController::class, 'catalog'])->name('clients.catalog');
 
 // Predictive suggestions for the public client catalog search bar.
-Route::get('/api/products/suggestions', \App\Http\Controllers\ClientCatalogProductSuggestionsController::class)
+Route::get('/api/products/suggestions', ClientCatalogProductSuggestionsController::class)
     ->middleware('throttle:60,1')
     ->name('api.products.suggestions');
 
