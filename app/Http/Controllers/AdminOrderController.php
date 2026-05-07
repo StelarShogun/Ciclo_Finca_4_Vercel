@@ -13,13 +13,9 @@ class AdminOrderController extends Controller
         $status = $request->get('status');
         $search = $request->get('search');
 
-        $query = Sale::query()
-            ->where(function ($q) {
-                $q->where('order_source', 'web_cart')
-                    ->orWhereNull('order_source');
-            })
-            ->whereIn('status', ['pending', 'ready_to_pickup', 'completed', 'cancelled', 'refunded'])
-            ->notExpired()
+        $baseWebOrdersQuery = $this->baseWebOrdersQuery();
+
+        $query = (clone $baseWebOrdersQuery)
             ->with(['client', 'saleItems.product']);
 
         if ($status) {
@@ -41,15 +37,13 @@ class AdminOrderController extends Controller
 
         $orders = $query->orderBy('sale_date', 'desc')->paginate(10)->withQueryString();
 
-        $basePurchasesQuery = Sale::query()
-            ->whereIn('status', ['pending', 'completed'])
-            ->where(function ($q) {
-                $q->where('order_source', 'web_cart')
-                    ->orWhereNull('order_source');
-            })
-            ->notExpired();
+        $basePurchasesQuery = (clone $baseWebOrdersQuery)
+            ->whereIn('status', ['pending', 'completed']);
 
         $latestPurchaseSaleId = (clone $basePurchasesQuery)->max('sale_id') ?? 0;
+        $pendingWebOrdersCount = (clone $baseWebOrdersQuery)
+            ->where('status', 'pending')
+            ->count();
 
         $stored = AppSetting::getStoredReadyToPickupExpirationDays();
         $readyToPickupExpirationDays = ($stored !== null && $stored > 0)
@@ -60,8 +54,20 @@ class AdminOrderController extends Controller
         return view('admin.orders.index', compact(
             'orders',
             'latestPurchaseSaleId',
+            'pendingWebOrdersCount',
             'readyToPickupExpirationDays',
             'usesEnvDefaultForExpiry'
         ));
+    }
+
+    private function baseWebOrdersQuery()
+    {
+        return Sale::query()
+            ->where(function ($q) {
+                $q->where('order_source', 'web_cart')
+                    ->orWhereNull('order_source');
+            })
+            ->whereIn('status', ['pending', 'ready_to_pickup', 'completed', 'cancelled', 'refunded'])
+            ->notExpired();
     }
 }
