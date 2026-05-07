@@ -210,4 +210,3 @@ class AuditLogReportTest extends TestCase
             ->assertRedirect(route('admin.login'));
     }
 }
-

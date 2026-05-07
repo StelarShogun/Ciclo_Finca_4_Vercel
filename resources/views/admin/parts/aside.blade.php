@@ -73,12 +73,6 @@
                     <span class="sidebar-label">Usuarios</span>
                 </a>
             </li>
-            <li>
-                <a href="{{ url('/moderation') }}">
-                    <i class="fas fa-comments"></i>
-                    <span class="sidebar-label">Moderación</span>
-                </a>
-            </li>
 
             <li class="{{ request()->routeIs('admin.reports.*') || request()->routeIs('sales.reports.*') || request()->routeIs('admin.inventory.movements.*') ? 'active' : '' }}">
                 <a href="{{ route('admin.reports.index').\App\Services\Admin\AdminReportsHubQuery::sidebarReportsIndexSuffix(request()) }}">

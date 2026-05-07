@@ -18,7 +18,7 @@ class SalesPerformanceDateRangeServiceTest extends TestCase
     {
         CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-04-16 10:30:00'));
 
-        $service = new SalesPerformanceDateRangeService();
+        $service = new SalesPerformanceDateRangeService;
         $resolved = $service->resolve(['preset' => 'today']);
 
         $this->assertSame('today', $resolved['preset']);
@@ -34,7 +34,7 @@ class SalesPerformanceDateRangeServiceTest extends TestCase
     {
         CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-04-16 10:30:00'));
 
-        $service = new SalesPerformanceDateRangeService();
+        $service = new SalesPerformanceDateRangeService;
         $resolved = $service->resolve([
             'preset' => 'custom',
             'from' => '2026-04-10',

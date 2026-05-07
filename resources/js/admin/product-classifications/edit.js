@@ -29,19 +29,9 @@ function init() {
             return;
         }
 
-        Swal.fire({
-            title: '¿Guardar cambios?',
-            text: 'Se actualizarán los valores de atributos de este producto.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, guardar',
-            cancelButtonText: 'Cancelar',
-        }).then((result) => {
-            if (!result.isConfirmed) return;
-            isDirty = false;
-            form.removeEventListener('submit', submitHandler);
-            form.submit();
-        });
+        isDirty = false;
+        form.removeEventListener('submit', submitHandler);
+        form.submit();
     };
 
     form.addEventListener('submit', submitHandler);

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AdminUser;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -253,7 +254,7 @@ class ProductVariantDeletionTest extends TestCase
     private function actingAsAdmin(): void
     {
         // Admin guard is used in the app; for tests, bypass via session guard using a minimal user row.
-        $admin = \App\Models\AdminUser::create([
+        $admin = AdminUser::create([
             'name' => 'Admin',
             'first_surname' => 'Test',
             'second_surname' => 'User',
@@ -264,4 +265,3 @@ class ProductVariantDeletionTest extends TestCase
         $this->actingAs($admin, 'admin');
     }
 }
-

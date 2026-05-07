@@ -109,4 +109,3 @@ class ProductAuditLoggingTest extends TestCase
         $this->assertSame('Producto Editado QA', $log->meta['changes']['name']['to'] ?? null);
     }
 }
-

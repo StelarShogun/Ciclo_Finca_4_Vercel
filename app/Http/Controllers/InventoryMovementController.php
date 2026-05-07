@@ -6,6 +6,7 @@ use App\Enums\MovementType;
 use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Services\InventoryMovementService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 // Read-only controller for inventory movement history.
@@ -23,7 +24,7 @@ class InventoryMovementController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhereRaw("CONCAT('BK-', LPAD(product_id, 3, '0')) LIKE ?", ["%{$search}%"]);
+                    ->orWhereRaw("CONCAT('BK-', LPAD(product_id, 3, '0')) LIKE ?", ["%{$search}%"]);
             });
         }
 
@@ -66,7 +67,7 @@ class InventoryMovementController extends Controller
             ->with('adminUser')
             ->orderBy('created_at', 'desc');
 
-        $perPage   = min((int) $request->get('per_page', 30), 100);
+        $perPage = min((int) $request->get('per_page', 30), 100);
         $movements = $query->paginate($perPage)->withQueryString();
 
         // Reuses the filtered base query to calculate summary metrics.
@@ -80,7 +81,7 @@ class InventoryMovementController extends Controller
                     MovementType::CANCELADO->value,
                 ])
                 ->sum('quantity'),
-            'total_salidas'  => (clone $summaryBase)
+            'total_salidas' => (clone $summaryBase)
                 ->where('type', MovementType::SALIDA->value)
                 ->sum('quantity'),
         ];
@@ -88,24 +89,24 @@ class InventoryMovementController extends Controller
         return response()->json([
             'success' => true,
             'product' => [
-                'product_id'    => $product->product_id,
-                'name'          => $product->name,
-                'sku'           => Product::skuFromId((int) $product->product_id),
+                'product_id' => $product->product_id,
+                'name' => $product->name,
+                'sku' => Product::skuFromId((int) $product->product_id),
                 'stock_current' => $product->stock_current,
             ],
-            'data'    => $movements->map(fn ($m) => $this->formatMovement($m)),
+            'data' => $movements->map(fn ($m) => $this->formatMovement($m)),
             'summary' => $summary,
-            'meta'    => [
+            'meta' => [
                 'current_page' => $movements->currentPage(),
-                'last_page'    => $movements->lastPage(),
-                'total'        => $movements->total(),
-                'per_page'     => $movements->perPage(),
+                'last_page' => $movements->lastPage(),
+                'total' => $movements->total(),
+                'per_page' => $movements->perPage(),
             ],
         ]);
     }
 
     // Builds the filtered base query for movements.
-    private function buildBaseQuery(int $productId, Request $request): \Illuminate\Database\Eloquent\Builder
+    private function buildBaseQuery(int $productId, Request $request): Builder
     {
         $q = InventoryMovement::where('product_id', $productId);
 
@@ -139,24 +140,24 @@ class InventoryMovementController extends Controller
     private function formatMovement(InventoryMovement $m): array
     {
         return [
-            'id'               => $m->id,
-            'type'             => $m->type instanceof MovementType
+            'id' => $m->id,
+            'type' => $m->type instanceof MovementType
                                     ? $m->type->value
                                     : $m->type,
-            'type_label'       => $m->typeLabel(),
-            'type_badge'       => $m->typeBadgeClass(),
-            'origin'           => $m->origin,
-            'origin_label'     => $m->originLabel(),
-            'quantity'         => $m->quantity,
-            'stock_before'     => $m->stock_before,
-            'stock_after'      => $m->stock_after,
-            'reference_id'     => $m->reference_id,
-            'reason'           => $m->reason,
-            'admin'            => $m->adminUser ? [
-                'id'   => $m->adminUser->user_id,
+            'type_label' => $m->typeLabel(),
+            'type_badge' => $m->typeBadgeClass(),
+            'origin' => $m->origin,
+            'origin_label' => $m->originLabel(),
+            'quantity' => $m->quantity,
+            'stock_before' => $m->stock_before,
+            'stock_after' => $m->stock_after,
+            'reference_id' => $m->reference_id,
+            'reason' => $m->reason,
+            'admin' => $m->adminUser ? [
+                'id' => $m->adminUser->user_id,
                 'name' => $m->adminName(),
             ] : null,
-            'created_at'       => $m->created_at->toISOString(),
+            'created_at' => $m->created_at->toISOString(),
             'created_at_human' => $m->created_at->format('d/m/Y H:i:s'),
         ];
     }

@@ -8,8 +8,8 @@ use App\Models\Client;
 use App\Services\Admin\ClientPurchaseHistoryQuery;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 /**
  * CF4-33 — historial de compras por cliente (ventas completadas con cliente).

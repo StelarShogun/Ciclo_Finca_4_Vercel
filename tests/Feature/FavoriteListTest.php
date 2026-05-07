@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Client;
 use App\Models\FavoriteProduct;
 use App\Models\Product;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -220,7 +221,7 @@ class FavoriteListTest extends TestCase
                 ->where('product_id', $product->product_id)
                 ->count());
 
-            $this->expectException(\Illuminate\Database\QueryException::class);
+            $this->expectException(QueryException::class);
 
             FavoriteProduct::create([
                 'user_id' => $client->user_id,
