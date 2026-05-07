@@ -301,6 +301,11 @@ Route::get('/admin/catalog-exit', function () {
 Route::get('/', [ClientPageController::class, 'home'])->name('clients.home');
 Route::get('/catalog', [ClientPageController::class, 'catalog'])->name('clients.catalog');
 
+// Predictive suggestions for the public client catalog search bar.
+Route::get('/api/products/suggestions', \App\Http\Controllers\ClientCatalogProductSuggestionsController::class)
+    ->middleware('throttle:60,1')
+    ->name('api.products.suggestions');
+
 // Product route with numeric ID and optional SEO slug.
 Route::get('/product/{id}/{slug?}', [ClientPageController::class, 'product'])
     ->where(['id' => '[0-9]+', 'slug' => '[a-z0-9\-]*'])
