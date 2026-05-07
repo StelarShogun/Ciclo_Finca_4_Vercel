@@ -47,6 +47,19 @@
             </div>
         </header>
 
+        <section class="kpi-grid cf4-orders-kpi-grid" aria-label="Resumen de encargos">
+            <a class="kpi-card cf4-orders-kpi-card-link" href="{{ route('admin.orders.index', ['status' => 'pending']) }}">
+                <div class="kpi-header">
+                    <h3 class="kpi-title">Pendientes web</h3>
+                    <div class="kpi-icon info"><i class="fas fa-clock"></i></div>
+                </div>
+                <p class="kpi-value">{{ number_format((int) ($pendingWebOrdersCount ?? 0), 0, ',', '.') }}</p>
+                <div class="kpi-trend trend-up">
+                    <i class="fas fa-arrow-right"></i> Ver pedidos pendientes
+                </div>
+            </a>
+        </section>
+
         <div class="orders-table-card">
             <form method="GET" action="{{ route('admin.orders.index') }}" class="orders-toolbar" id="orders-filters-form">
                 <div class="filter-group">

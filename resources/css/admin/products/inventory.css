@@ -36,6 +36,63 @@
   margin: 0 auto;
 }
 
+.inventory-kpi-grid {
+  margin: 0 0 1.25rem 0;
+  display: grid;
+  grid-template-columns: minmax(220px, 360px);
+  gap: 1rem;
+}
+
+.inventory-kpi-card {
+  text-decoration: none;
+  color: #111827;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.inventory-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.inventory-kpi-card:focus-visible {
+  outline: 3px solid rgba(46, 125, 50, 0.22);
+  outline-offset: 2px;
+}
+
+.inventory-kpi-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: #4b5563;
+  margin-bottom: 0.35rem;
+}
+
+.inventory-kpi-card-head h3 {
+  margin: 0;
+  font-size: 0.86rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.inventory-kpi-card-value {
+  margin: 0 0 0.25rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.inventory-kpi-card-link {
+  font-size: 0.88rem;
+  color: #065f46;
+  font-weight: 600;
+}
+
 /* ============================================================
   3. INVENTORY HEADER
   ============================================================ */

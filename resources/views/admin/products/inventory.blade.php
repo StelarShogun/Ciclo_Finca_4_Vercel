@@ -52,6 +52,17 @@
                 </div>
             </header>
 
+            <section class="inventory-kpi-grid" aria-label="Resumen de inventario">
+                <a class="inventory-kpi-card" href="{{ route('inventory', ['stock_status' => 'low']) }}">
+                    <div class="inventory-kpi-card-head">
+                        <h3>Stock bajo</h3>
+                        <i class="fas fa-box-open" aria-hidden="true"></i>
+                    </div>
+                    <p class="inventory-kpi-card-value">{{ number_format((int) ($lowStockProductsCount ?? 0), 0, ',', '.') }}</p>
+                    <span class="inventory-kpi-card-link">Abrir inventario filtrado</span>
+                </a>
+            </section>
+
             {{-- Flash messages --}}
             @if(session('status'))
                 <div class="alert alert-success">

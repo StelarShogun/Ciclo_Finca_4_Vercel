@@ -518,6 +518,7 @@ class ProductController extends Controller
     public function inventory(Request $request)
     {
         $query = $this->inventoryProductsFilteredQuery($request)->with(['category.parent', 'supplier']);
+        $lowStockProductsCount = Product::query()->lowStockAlert()->count();
 
         $perPage = $request->get('per_page', 10);
         $paginator = $query->paginate($perPage);
@@ -553,6 +554,7 @@ class ProductController extends Controller
         return view('admin.products.inventory', [
             'products' => $products,
             'paginator' => $paginator,
+            'lowStockProductsCount' => $lowStockProductsCount,
             'categories' => $categories,
             'subcategoriesByParent' => $subcategoriesByParent,
             'brands' => Brand::orderBy('name')->get(['id', 'name']),
