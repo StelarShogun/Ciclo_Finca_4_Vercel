@@ -103,7 +103,7 @@ class ProductController extends Controller
                 }
             }
 
-            $this->logAudit('product_create', 'Producto creado.', $auditContext);
+            $this->logAudit('product_create', 'Producto creado.', $auditContext ?? []);
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -346,7 +346,7 @@ class ProductController extends Controller
             $this->logAudit(
                 'product_update',
                 'Producto actualizado.',
-                $auditContext
+                $auditContext ?? ['product_id' => (int) $id]
             );
 
             if ($request->wantsJson() || $request->ajax()) {

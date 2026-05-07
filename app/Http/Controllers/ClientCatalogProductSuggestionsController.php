@@ -25,6 +25,7 @@ class ClientCatalogProductSuggestionsController extends Controller
         }
 
         try {
+            $hasMediaTable = Schema::hasTable('media');
             $suggestions = [];
 
             // SKU can be derived from product_id, so when the user types BK-001 or 001,
@@ -38,7 +39,7 @@ class ClientCatalogProductSuggestionsController extends Controller
                     ->first();
 
                 if ($p instanceof Product) {
-                    $suggestions[] = $this->productSuggestionRow($p, 'sku', 1000);
+                    $suggestions[] = $this->productSuggestionRow($p, 'sku', 1000, $hasMediaTable);
                 }
             }
 
@@ -59,7 +60,7 @@ class ClientCatalogProductSuggestionsController extends Controller
                 ->get();
 
             foreach ($productCandidates as $p) {
-                $row = $this->scoredProductSuggestion($p, $term);
+                $row = $this->scoredProductSuggestion($p, $term, $hasMediaTable);
                 if ($row !== null) {
                     $suggestions[] = $row;
                 }
@@ -155,7 +156,7 @@ class ClientCatalogProductSuggestionsController extends Controller
         return null;
     }
 
-    private function scoredProductSuggestion(Product $p, string $termLower): ?array
+    private function scoredProductSuggestion(Product $p, string $termLower, bool $hasMediaTable): ?array
     {
         $name = (string) $p->name;
         $nameLower = mb_strtolower($name);
@@ -182,14 +183,14 @@ class ClientCatalogProductSuggestionsController extends Controller
             default => 1,
         };
 
-        return $this->productSuggestionRow($p, $matchType, $best);
+        return $this->productSuggestionRow($p, $matchType, $best, $hasMediaTable);
     }
 
-    private function productSuggestionRow(Product $p, string $matchType, int $score): array
+    private function productSuggestionRow(Product $p, string $matchType, int $score, bool $hasMediaTable): array
     {
         $sku = Product::skuFromId((int) $p->product_id);
         $imageUrl = '';
-        if (Schema::hasTable('media')) {
+        if ($hasMediaTable) {
             try {
                 $imageUrl = (string) $p->getFirstMediaUrl('main_image');
             } catch (\Throwable $e) {
