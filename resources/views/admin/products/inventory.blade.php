@@ -149,6 +149,51 @@
                             </button>
                         </div>
 
+                        <div class="filter-group filter-group--classification">
+                            <button
+                                type="button"
+                                class="btn btn-primary btn-classification-toggle"
+                                id="toggle-classification-filters"
+                                aria-expanded="false"
+                                aria-controls="classification-filters-panel">
+                                <i class="fas fa-sliders-h"></i>
+                                Más filtros por clasificación
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="classification-filters-panel"
+                        class="classification-filters-panel"
+                        hidden>
+                        <div
+                            id="classification-filters-container"
+                            class="classification-filters-grid"
+                            data-endpoint="{{ route('inventory.classification-filters') }}"
+                            data-loaded="{{ !empty($classificationFilters) ? '1' : '0' }}">
+                            @foreach(($classificationFilters ?? []) as $classificationFilter)
+                                @php
+                                    $slug = (string) ($classificationFilter['slug'] ?? '');
+                                    $label = (string) ($classificationFilter['label'] ?? $slug);
+                                    $options = $classificationFilter['options'] ?? [];
+                                @endphp
+                                @if($slug !== '')
+                                    <div class="filter-group">
+                                        <label for="classification-filter-{{ $slug }}">{{ $label }}</label>
+                                        <select id="classification-filter-{{ $slug }}" name="classifications[{{ $slug }}]">
+                                            <option value="">Todos</option>
+                                            @foreach($options as $option)
+                                                <option value="{{ $option['value'] }}"
+                                                    @selected((string) request("classifications.$slug") === (string) $option['value'])>
+                                                    {{ $option['label'] }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
                     </div>
                 </form>
             </div>
@@ -175,6 +220,21 @@
                         </button>
                     </div>
                 </div>
+
+                @php
+                    $classificationRequestFilters = collect(request('classifications', []))
+                        ->filter(fn ($value) => is_string($value) && trim($value) !== '');
+                @endphp
+                @if($paginator->total() === 0)
+                    <div class="alert alert-info" style="margin: 16px 0;">
+                        <i class="fas fa-info-circle"></i>
+                        @if($classificationRequestFilters->isNotEmpty())
+                            No hay productos para la combinación de clasificaciones seleccionada.
+                        @else
+                            No hay productos que coincidan con los filtros aplicados.
+                        @endif
+                    </div>
+                @endif
 
                 {{-- Table view --}}
                 <div class="products-table table-view active">

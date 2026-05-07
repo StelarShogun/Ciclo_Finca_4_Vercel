@@ -155,6 +155,8 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
 
     // Inventory routes.
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');
+    Route::get('/inventory/classification-filters', [ProductController::class, 'inventoryClassificationFiltersOptions'])
+        ->name('inventory.classification-filters');
 
     // Classification catalog routes.
     Route::get('/classifications/catalog', [ClassificationCatalogController::class, 'index'])->name('admin.classifications.catalog.index');
