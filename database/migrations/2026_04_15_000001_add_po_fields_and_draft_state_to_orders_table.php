@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 return new class extends Migration
 {
@@ -31,10 +32,12 @@ return new class extends Migration
 
         // Add state 'draft' and default to draft.
         // MySQL: update the enum column definition.
-        if (Schema::hasColumn('orders', 'state') && Schema::getConnection()->getDriverName() === 'mysql') {
-            DB::statement(
-                "ALTER TABLE `orders` MODIFY COLUMN `state` ENUM('draft','pending','confirmed','delivered','cancelled') NOT NULL DEFAULT 'draft'"
-            );
+        if (Schema::hasColumn('orders', 'state')) {
+            if (Schema::getConnection()->getDriverName() === 'mysql') {
+                DB::statement(
+                    "ALTER TABLE `orders` MODIFY COLUMN `state` ENUM('draft','pending','confirmed','delivered','cancelled') NOT NULL DEFAULT 'draft'"
+                );
+            }
 
             // Backfill existing records: keep current values if valid, otherwise set to pending.
             DB::statement(

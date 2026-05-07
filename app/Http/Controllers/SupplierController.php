@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class SupplierController extends Controller
@@ -97,28 +100,39 @@ class SupplierController extends Controller
         }
     }
 
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
         $supplier = Supplier::find($id);
         if (! $supplier) {
-            return response()->json(['success' => false, 'message' => 'Proveedor no encontrado.'], 404);
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Proveedor no encontrado.'], 404);
+            }
+
+            return redirect()
+                ->route('suppliers.index')
+                ->with('error', 'Proveedor no encontrado.');
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'supplier_id' => $supplier->supplier_id,
-                'name' => $supplier->name,
-                'primary_contact' => $supplier->primary_contact,
-                'email' => $supplier->email,
-                'phone' => $supplier->phone,
-                'address' => $supplier->address,
-                'delivery_time' => $supplier->delivery_time,
-                'rating' => $supplier->rating ?? '0',
-                'status' => 'Activo',
-                'created_at' => $supplier->created_at,
-            ],
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'supplier_id' => $supplier->supplier_id,
+                    'name' => $supplier->name,
+                    'primary_contact' => $supplier->primary_contact,
+                    'email' => $supplier->email,
+                    'phone' => $supplier->phone,
+                    'address' => $supplier->address,
+                    'delivery_time' => $supplier->delivery_time,
+                    'rating' => $supplier->rating ?? '0',
+                    'status' => 'Activo',
+                    'created_at' => $supplier->created_at,
+                ],
+            ]);
+        }
+
+        // Avoid rendering JSON in the browser when navigated directly.
+        return redirect()->route('suppliers.index');
     }
 
     public function edit(string $id)
@@ -202,22 +216,45 @@ class SupplierController extends Controller
         }
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id): RedirectResponse|JsonResponse
     {
         $supplier = Supplier::find($id);
         if (! $supplier) {
-            return response()->json(['success' => false, 'message' => 'Proveedor no encontrado.'], 404);
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Proveedor no encontrado.'], 404);
+            }
+
+            return redirect()
+                ->route('suppliers.index')
+                ->with('error', 'Proveedor no encontrado.');
         }
 
         try {
             $supplier->delete();
 
-            return response()->json(['success' => true, 'message' => 'Proveedor eliminado exitosamente.']);
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Proveedor eliminado exitosamente.']);
+            }
+
+            return redirect()
+                ->route('suppliers.index')
+                ->with('status', 'Proveedor eliminado exitosamente.');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al eliminar proveedor: '.$e->getMessage(),
-            ], 500);
+            if ($request->expectsJson()) {
+                Log::error('Supplier delete failed', [
+                    'supplier_id' => $id,
+                    'exception' => $e,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo completar la acción. Inténtalo nuevamente.',
+                ], 500);
+            }
+
+            return redirect()
+                ->route('suppliers.index')
+                ->with('error', 'No se pudo completar la acción. Inténtalo nuevamente.');
         }
     }
 }

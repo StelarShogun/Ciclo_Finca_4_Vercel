@@ -57,13 +57,13 @@
                         @endforeach
 
                         @if ($errors->any())
-                            <div class="error-message" style="margin-bottom: 1rem;">
+                            <x-admin-alert type="error" title="Revisa los campos marcados antes de continuar.">
                                 <ul style="margin: 0; padding-left: 1.25rem;">
                                     @foreach ($errors->all() as $err)
                                         <li>{{ $err }}</li>
                                     @endforeach
                                 </ul>
-                            </div>
+                            </x-admin-alert>
                         @endif
 
                         <div class="form-actions">

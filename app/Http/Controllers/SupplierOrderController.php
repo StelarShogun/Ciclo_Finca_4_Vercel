@@ -17,6 +17,8 @@ use Illuminate\Validation\ValidationException;
 
 class SupplierOrderController extends Controller
 {
+    private const FINAL_STATES = ['delivered', 'cancelled'];
+
     private function fullTextBooleanQuery(string $raw): string
     {
         $trimmed = trim($raw);
@@ -97,7 +99,11 @@ class SupplierOrderController extends Controller
             ->orderBy('orders.date', 'desc');
 
         if ($state) {
-            $query->where('state', $state);
+            if ($state === 'open') {
+                $query->whereNotIn('state', self::FINAL_STATES);
+            } else {
+                $query->where('state', $state);
+            }
         }
 
         if ($dateFrom) {
@@ -133,8 +139,11 @@ class SupplierOrderController extends Controller
         }
 
         $orders = $query->paginate(10)->withQueryString();
+        $openSupplierOrdersCount = Order::query()
+            ->whereNotIn('state', self::FINAL_STATES)
+            ->count();
 
-        return view('admin.orders.index_supplier', compact('orders'));
+        return view('admin.orders.index_supplier', compact('orders', 'openSupplierOrdersCount'));
     }
 
     public function create()

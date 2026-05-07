@@ -188,7 +188,11 @@ class ClientPageController extends Controller
      * @param  Collection<int, Category>  $rootCategories
      * @return array<int, array{id: int, name: string, icon: string, url_parent: string, children: array<int, array{id: int, name: string, url: string}>}>
      */
-    private function buildCatalogCategoryNav($rootCategories, array $catalogParams): array
+    /**
+     * @param  Collection<int, Category>  $rootCategories
+     * @return array<int, array{id: int, name: string, icon: string, url_parent: string, children: array<int, array{id: int, name: string, url: string}>}>
+     */
+    private function buildCatalogCategoryNav(Collection $rootCategories, array $catalogParams): array
     {
         return $rootCategories->map(function (Category $c) use ($catalogParams) {
             return [

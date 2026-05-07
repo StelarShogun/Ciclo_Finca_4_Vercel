@@ -192,7 +192,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // CSV exports were removed: they are not wired to any route.
+    // CSV export intentionally omitted — current UI supports PDF/Excel only (not wired to routes).
 
     // =========================================================================
     // BRANDS
@@ -277,7 +277,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // CSV exports were removed: they are not wired to any route.
+    // CSV export intentionally omitted — current UI supports PDF/Excel only (not wired to routes).
 
     // =========================================================================
     // SUPPLIER ORDERS
@@ -409,7 +409,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // CSV exports were removed: they are not wired to any route.
+    // CSV export intentionally omitted — current UI supports PDF/Excel only (not wired to routes).
 
     // Builds a comma-separated summary of product names and quantities for a single supplier order.
     private function summarizeSupplierOrderLines(Order $order): string
@@ -486,7 +486,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // CSV exports were removed: they are not wired to any route.
+    // CSV export intentionally omitted — current UI supports PDF/Excel only (not wired to routes).
 
     // =========================================================================
     // CLIENT ORDERS (web cart)
@@ -618,7 +618,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // CSV exports were removed: they are not wired to any route.
+    // CSV export intentionally omitted — current UI supports PDF/Excel only (not wired to routes).
 
     // =========================================================================
     // SHARED HELPERS
@@ -644,5 +644,5 @@ class ReportsRegistryExportController extends Controller
         ], $filenameSlug);
     }
 
-    // CSV exports were removed: they are not wired to any route.
+    // CSV export intentionally omitted — current UI supports PDF/Excel only (not wired to routes).
 }
