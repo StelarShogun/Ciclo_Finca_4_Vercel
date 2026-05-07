@@ -25,7 +25,7 @@ return new class extends Migration
                     ->on('admins')
                     ->nullOnDelete();
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Best-effort: ignore if FK already exists or DB doesn't support it.
         }
     }
@@ -41,7 +41,7 @@ return new class extends Migration
             Schema::table('orders', function (Blueprint $table) {
                 $table->dropForeign(['confirmed_by']);
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // ignore
         }
 
@@ -55,4 +55,3 @@ return new class extends Migration
         });
     }
 };
-

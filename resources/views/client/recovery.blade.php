@@ -21,6 +21,21 @@
         <h2 class="text-center mb-2">Recuperar Contraseña</h2>
         <p class="login-subtitle text-center mb-4">Ingresa tu correo y define una nueva contraseña</p>
 
+        @if (session('unregistered_recovery_email'))
+            <div class="alert alert-danger mb-3" role="alert">
+                <div class="mb-1">Correo no está registrado.</div>
+                <a href="{{ route('clients.register.form') }}" class="alert-link">Ir a registrarse</a>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger mb-3" role="alert">
+                @foreach ($errors->all() as $error)
+                    <div>{{ $error }}</div>
+                @endforeach
+            </div>
+        @endif
+
         <form id="formRecovery" method="POST" action="{{ route('clients.recovery') }}" novalidate>
             @csrf
 
@@ -33,6 +48,7 @@
                 <input type="email" id="recovery-email" name="gmail"
                        class="form-control"
                        required
+                       value="{{ old('gmail') }}"
                        placeholder="ejemplo@gmail.com"
                        autocomplete="email">
                 <div id="msg-recovery-email" class="field-msg"></div>

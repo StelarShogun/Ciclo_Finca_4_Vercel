@@ -38,9 +38,9 @@
                     <button class="btn btn-primary" id="open-new-product-modal">
                         <i class="fas fa-plus"></i> Nuevo Producto
                     </button>
-                    <a class="btn btn-secondary" href="{{ route('admin.reports.exports') }}{{ $inventoryExportsQuery }}" title="Abre el centro de exportación; las descargas de inventario respetan los filtros aplicados en esta pantalla">
-                        <i class="fas fa-file-export"></i>
-                        Exportar datos
+                    <a class="btn btn-secondary" href="{{ route('categories.parents.create') }}">
+                        <i class="fas fa-layer-group"></i>
+                        Crear categoría
                     </a>
                     <a class="btn btn-secondary" href="{{ route('categories.subcategories.create') }}">
                         <i class="fas fa-sitemap"></i>
@@ -71,9 +71,9 @@
                     <div class="filters-grid">
 
                         <div class="filter-group">
-                            <label for="parent-category-filter">Rubro</label>
+                            <label for="parent-category-filter">Categoría padre</label>
                             <select id="parent-category-filter" name="parent_category_id">
-                                <option value="">Todos los rubros</option>
+                                <option value="">Todas las categorías padre</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}"
                                         @selected((string) request('parent_category_id') === (string) $category->category_id)>
@@ -174,6 +174,7 @@
                                 @php $adminAv = $product->adminAvailabilityLabel(); @endphp
                                 <tr>
                                     <td class="product-cell">
+                                        <div class="product-cell-content">
                                         <div class="product-thumb-wrap product-thumb-wrap--table">
                                             {{-- MediaLibrary image with legacy fallback --}}
                                             <img src="{{ $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
@@ -191,6 +192,7 @@
                                         <div class="product-info">
                                             <h4>{{ $product->name }}</h4>
                                             <span class="sku">SKU: {{ 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT) }}</span>
+                                        </div>
                                         </div>
                                     </td>
                                     <td>
@@ -430,9 +432,9 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-parent-category">Rubro *</label>
+                            <label for="new-parent-category">Categoría padre *</label>
                             <select id="new-parent-category" required>
-                                <option value="">Seleccionar rubro</option>
+                                <option value="">Seleccionar categoría padre</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
@@ -441,9 +443,9 @@
                         <div class="form-group">
                             <label for="new-subcategory">Tipo concreto <span class="text-muted">(recomendado)</span></label>
                             <select id="new-subcategory" aria-describedby="new-subcategory-hint">
-                                <option value="">Solo el rubro general</option>
+                                <option value="">Solo categoría padre (sin tipo)</option>
                             </select>
-                            <small id="new-subcategory-hint" class="form-text text-muted">Si dejás solo el rubro (ej. Bicicletas), no vas a poder cargar color, talla, etc. Elegí el tipo (ej. MTB) para usar esas opciones.</small>
+                            <small id="new-subcategory-hint" class="form-text text-muted">Si dejás solo la categoría padre (ej. Bicicletas), no vas a poder cargar color, talla, etc. Elegí el tipo (ej. MTB) para usar esas opciones.</small>
                             <input type="hidden" id="new-category" name="category_id" value="">
                         </div>
                         <div class="form-group">
@@ -565,9 +567,9 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="edit-parent-category">Rubro *</label>
+                            <label for="edit-parent-category">Categoría padre *</label>
                             <select id="edit-parent-category" required>
-                                <option value="">Seleccionar rubro</option>
+                                <option value="">Seleccionar categoría padre</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
@@ -576,7 +578,7 @@
                         <div class="form-group">
                             <label for="edit-subcategory">Tipo concreto <span class="text-muted">(recomendado)</span></label>
                             <select id="edit-subcategory">
-                                <option value="">Solo el rubro general</option>
+                                <option value="">Solo categoría padre (sin tipo)</option>
                             </select>
                             <input type="hidden" id="edit-category" name="category_id" required>
                         </div>
@@ -644,6 +646,32 @@
                                 <small>Se muestra en el inicio y en «Destacados y novedades» del catálogo público.</small>
                             </span>
                         </label>
+                    </div>
+
+                    {{-- CF4-74 — Variantes / presentaciones del producto --}}
+                    <div class="form-group" id="edit-variants-section">
+                        <label>Variantes / presentaciones</label>
+                        <div style="display:flex; gap:10px; align-items:flex-start; margin: 0.35rem 0 0.5rem;">
+                            <div class="brand-combobox" id="edit-variant-combobox" style="flex:1;">
+                                <input
+                                    type="text"
+                                    id="edit-variant-search"
+                                    class="brand-combobox-input"
+                                    placeholder="Buscar producto para agregar como variante (nombre o SKU)…"
+                                    autocomplete="off"
+                                    aria-label="Buscar producto para agregar como variante">
+                                <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                <div class="brand-combobox-dropdown" id="edit-variant-dropdown"></div>
+                            </div>
+                            <input type="hidden" id="edit-variant-product-id" value="">
+                            <button type="button" class="btn btn-primary" id="edit-variant-add-btn" disabled>
+                                <i class="fas fa-plus"></i> Agregar
+                            </button>
+                        </div>
+                        <div id="edit-variants-list" class="form-text text-muted">—</div>
+                        <small class="form-text text-muted">
+                            Eliminá solo una variante sin afectar el producto base. No se permite si la variante tiene pedidos activos o pendientes.
+                        </small>
                     </div>
                 </form>
             </div>
@@ -847,12 +875,12 @@
                 {{-- Reason --}}
                 <div class="stock-form-group">
                     <label for="stock-modal-reason">Motivo *</label>
-                    <select id="stock-modal-reason">
-                        <option value="" disabled selected>Selecciona un motivo…</option>
-                        <option value="manual_adjustment">Ajuste Manual</option>
-                        <option value="damage">Daño</option>
-                        <option value="refund">Entrada por reembolso / nota de crédito</option>
-                    </select>
+                    <input type="text"
+                           id="stock-modal-reason"
+                           class="stock-form-control"
+                           placeholder="Describe el motivo del ajuste…"
+                           maxlength="500"
+                           autocomplete="off">
                     <span class="stock-field-error" id="stock-modal-reason-error"></span>
                 </div>
 

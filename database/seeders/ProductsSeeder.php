@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 
 class ProductsSeeder extends Seeder
 {
@@ -71,7 +72,7 @@ class ProductsSeeder extends Seeder
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, int>  $supplierIds
+     * @param  Collection<string, int>  $supplierIds
      * @return array<string, mixed>
      */
     private function row(

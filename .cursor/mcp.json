@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "Magic MCP": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@21st-dev/magic@latest",
+        "API_KEY=\"YOUR-21STDEV-API-KEY\""
+      ],
+      "env": {}
+    },
+    "stitch": {
+      "url": "https://stitch.googleapis.com/mcp",
+      "headers": {
+        "X-Goog-Api-Key": "YOUR-STITCH-API-KEY"
+      }
+    }
+  }
+}

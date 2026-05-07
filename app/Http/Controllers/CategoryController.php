@@ -8,6 +8,43 @@ use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
+    public function createParentCategory()
+    {
+        return view('categories.parents.create');
+    }
+
+    public function storeParentCategory(Request $request)
+    {
+        $request->merge([
+            'name' => trim((string) $request->input('name', '')),
+        ]);
+
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('categories', 'name')->where(
+                    fn ($query) => $query->whereNull('parent_category_id')
+                ),
+            ],
+            'description' => 'nullable|string',
+        ], [
+            'name.required' => 'El nombre de la categoría es obligatorio.',
+            'name.unique' => 'Ya existe una categoría con ese nombre.',
+        ]);
+
+        Category::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'parent_category_id' => null,
+        ]);
+
+        return redirect()
+            ->route('categories.parents.create')
+            ->with('status', 'Categoría creada correctamente.');
+    }
+
     public function createSubcategory()
     {
         // Avoid duplicated names in the parent selector (seeders may have inserted repeated roots).

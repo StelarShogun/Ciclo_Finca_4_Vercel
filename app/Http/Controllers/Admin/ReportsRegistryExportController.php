@@ -11,10 +11,9 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Supplier;
 use App\Services\Admin\AdminPdfExportLimits;
-use App\Services\Admin\ReportExcelFilename;
-use App\Services\Admin\ReportPdfFilename;
+use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\RegistryExcelExport;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use App\Services\Admin\ReportExcelFilename;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -39,38 +38,35 @@ class ReportsRegistryExportController extends Controller
             abort(404);
         }
 
-        // Validate the requested export format; defaults to CSV.
-        $format = strtolower((string) $request->query('format', 'csv'));
-        if (! in_array($format, ['csv', 'pdf', 'excel'], true)) {
-            abort(400, 'Formato no válido. Use csv, pdf o excel.');
+        // Validate the requested export format; defaults to PDF.
+        $format = strtolower((string) $request->query('format', 'pdf'));
+        if (! in_array($format, ['pdf', 'excel'], true)) {
+            abort(400, 'Formato no válido. Use pdf o excel.');
         }
+
+        $effectiveRequest = $request->query('scope') === 'all' ? new Request : $request;
 
         // Route each slug/format combination to its dedicated handler.
         return match ($slug) {
             'proveedores' => match ($format) {
-                'pdf'   => $this->suppliersPdf($request),
-                'excel' => $this->suppliersExcel($request),
-                default => $this->suppliersCsv($request),
+                'pdf' => $this->suppliersPdf($effectiveRequest),
+                'excel' => $this->suppliersExcel($effectiveRequest),
             },
             'marcas' => match ($format) {
-                'pdf'   => $this->brandsPdf($request),
-                'excel' => $this->brandsExcel($request),
-                default => $this->brandsCsv($request),
+                'pdf' => $this->brandsPdf($effectiveRequest),
+                'excel' => $this->brandsExcel($effectiveRequest),
             },
             'pedidos-proveedores' => match ($format) {
-                'pdf'   => $this->supplierOrdersPdf($request),
-                'excel' => $this->supplierOrdersExcel($request),
-                default => $this->supplierOrdersCsv($request),
+                'pdf' => $this->supplierOrdersPdf($effectiveRequest),
+                'excel' => $this->supplierOrdersExcel($effectiveRequest),
             },
             'usuarios' => match ($format) {
-                'pdf'   => $this->clientsPdf(),
+                'pdf' => $this->clientsPdf(),
                 'excel' => $this->clientsExcel(),
-                default => $this->clientsCsv(),
             },
             'pedidos-clientes' => match ($format) {
-                'pdf'   => $this->clientOrdersPdf($request),
-                'excel' => $this->clientOrdersExcel($request),
-                default => $this->clientOrdersCsv($request),
+                'pdf' => $this->clientOrdersPdf($effectiveRequest),
+                'excel' => $this->clientOrdersExcel($effectiveRequest),
             },
         };
     }
@@ -155,10 +151,10 @@ class ReportsRegistryExportController extends Controller
     // Generates and streams a PDF export of the suppliers list, applying the row limit defined in AdminPdfExportLimits.
     private function suppliersPdf(Request $request): Response
     {
-        $base        = $this->suppliersBase($request);
-        $total       = (clone $base)->count();
+        $base = $this->suppliersBase($request);
+        $total = (clone $base)->count();
         $filterLines = $this->suppliersCatalogFilterLines($request);
-        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
         // Warn the user if the result set exceeds the PDF row cap.
         if ($total > $max) {
             $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' proveedores coinciden).';
@@ -177,10 +173,10 @@ class ReportsRegistryExportController extends Controller
     // Generates and streams an Excel export of the suppliers list.
     private function suppliersExcel(Request $request): StreamedResponse
     {
-        $base        = $this->suppliersBase($request);
-        $total       = (clone $base)->count();
+        $base = $this->suppliersBase($request);
+        $total = (clone $base)->count();
         $filterLines = $this->suppliersCatalogFilterLines($request);
-        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
         // Warn the user if the result set exceeds the Excel row cap.
         if ($total > $max) {
             $filterLines[] = 'Nota: el Excel incluye como máximo '.$max.' filas ('.$total.' proveedores coinciden).';
@@ -196,32 +192,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // Streams a CSV export of suppliers using a database cursor to keep memory usage low.
-    private function suppliersCsv(Request $request): StreamedResponse
-    {
-        return $this->streamRegistryCsv(
-            'proveedores_'.now()->format('Y-m-d_His').'.csv',
-            ['ID', 'Nombre', 'Contacto', 'Teléfono', 'Email', 'Dirección', 'Entrega_dias', 'Valoracion', 'Estado'],
-            function (callable $emitRow) use ($request): void {
-                foreach ($this->suppliersBase($request)->cursor() as $s) {
-                    if (! $s instanceof Supplier) {
-                        continue;
-                    }
-                    $emitRow([
-                        $s->supplier_id,
-                        $s->name,
-                        $s->primary_contact,
-                        $s->phone,
-                        $s->email,
-                        $s->address,
-                        $s->delivery_time,
-                        $s->rating,
-                        $s->status,
-                    ]);
-                }
-            }
-        );
-    }
+    // CSV export intentionally omitted — current UI supports PDF/Excel only.
 
     // =========================================================================
     // BRANDS
@@ -274,10 +245,10 @@ class ReportsRegistryExportController extends Controller
     // Generates and streams a PDF export of the brands catalogue.
     private function brandsPdf(Request $request): Response
     {
-        $base        = $this->brandsBase($request);
-        $total       = (clone $base)->count();
+        $base = $this->brandsBase($request);
+        $total = (clone $base)->count();
         $filterLines = $this->brandsCatalogFilterLines($request);
-        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
         if ($total > $max) {
             $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' marcas coinciden).';
         }
@@ -288,10 +259,10 @@ class ReportsRegistryExportController extends Controller
     // Generates and streams an Excel export of the brands catalogue.
     private function brandsExcel(Request $request): StreamedResponse
     {
-        $base        = $this->brandsBase($request);
-        $total       = (clone $base)->count();
+        $base = $this->brandsBase($request);
+        $total = (clone $base)->count();
         $filterLines = $this->brandsCatalogFilterLines($request);
-        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
         if ($total > $max) {
             $filterLines[] = 'Nota: el Excel incluye como máximo '.$max.' filas ('.$total.' marcas coinciden).';
         }
@@ -306,22 +277,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // Streams a CSV export of brands using a database cursor to keep memory usage low.
-    private function brandsCsv(Request $request): StreamedResponse
-    {
-        return $this->streamRegistryCsv(
-            'marcas_'.now()->format('Y-m-d_His').'.csv',
-            ['ID', 'Nombre'],
-            function (callable $emitRow) use ($request): void {
-                foreach ($this->brandsBase($request)->cursor() as $b) {
-                    if (! $b instanceof Brand) {
-                        continue;
-                    }
-                    $emitRow([$b->id, $b->name]);
-                }
-            }
-        );
-    }
+    // CSV export intentionally omitted — current UI supports PDF/Excel only.
 
     // =========================================================================
     // SUPPLIER ORDERS
@@ -352,7 +308,7 @@ class ReportsRegistryExportController extends Controller
     {
         // Swap inverted date boundaries so the range is always chronologically correct.
         $dateFrom = $request->get('date_from');
-        $dateTo   = $request->get('date_to');
+        $dateTo = $request->get('date_to');
         if ($dateFrom && $dateTo && $dateTo < $dateFrom) {
             [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
         }
@@ -396,8 +352,8 @@ class ReportsRegistryExportController extends Controller
                 continue;
             }
             $supplierName = ($o->supplier instanceof Supplier) ? $o->supplier->name : '—';
-            $dateStr      = $o->date !== null ? $o->date->format('d/m/Y H:i') : '';
-            $summary      = $this->summarizeSupplierOrderLines($o);
+            $dateStr = $o->date !== null ? $o->date->format('d/m/Y H:i') : '';
+            $summary = $this->summarizeSupplierOrderLines($o);
             $data[] = [
                 (string) $o->num_order,
                 $supplierName,
@@ -414,10 +370,10 @@ class ReportsRegistryExportController extends Controller
     // Generates and streams a PDF export of supplier orders.
     private function supplierOrdersPdf(Request $request): Response
     {
-        $base        = $this->supplierOrdersBase($request);
-        $total       = (clone $base)->count();
+        $base = $this->supplierOrdersBase($request);
+        $total = (clone $base)->count();
         $filterLines = $this->supplierOrderFilterLines($request);
-        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
         if ($total > $max) {
             $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' pedidos coinciden).';
         }
@@ -435,10 +391,10 @@ class ReportsRegistryExportController extends Controller
     // Generates and streams an Excel export of supplier orders.
     private function supplierOrdersExcel(Request $request): StreamedResponse
     {
-        $base        = $this->supplierOrdersBase($request);
-        $total       = (clone $base)->count();
+        $base = $this->supplierOrdersBase($request);
+        $total = (clone $base)->count();
         $filterLines = $this->supplierOrderFilterLines($request);
-        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
         if ($total > $max) {
             $filterLines[] = 'Nota: el Excel incluye como máximo '.$max.' filas ('.$total.' pedidos coinciden).';
         }
@@ -453,47 +409,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // Streams a CSV export of supplier orders in chunks to avoid loading all records into memory at once.
-    // Line items are serialised as a JSON array in the last column.
-    private function supplierOrdersCsv(Request $request): StreamedResponse
-    {
-        $chunk = AdminPdfExportLimits::REGISTRY_CSV_CHUNK;
-
-        return $this->streamRegistryCsv(
-            'pedidos_proveedores_'.now()->format('Y-m-d_His').'.csv',
-            ['Num_pedido', 'Proveedor', 'Fecha', 'Estado', 'Total', 'Lineas_pedido_JSON'],
-            function (callable $emitRow) use ($request, $chunk): void {
-                $this->supplierOrdersBase($request)->chunkById($chunk, function ($orders) use ($emitRow): void {
-                    foreach ($orders as $o) {
-                        if (! $o instanceof Order) {
-                            continue;
-                        }
-                        $supplierName = ($o->supplier instanceof Supplier) ? $o->supplier->name : null;
-                        $dateStr      = $o->date !== null ? $o->date->format('Y-m-d H:i:s') : null;
-                        // Use already-loaded items when available to avoid an extra query per order.
-                        $lines        = $o->relationLoaded('orderItems')
-                            ? $o->orderItems
-                            : OrderItem::query()->where('order_num_order', $o->num_order)->get();
-                        $payload = $lines->map(fn (OrderItem $line) => [
-                            'product_id' => (int) $line->product_id,
-                            'name'       => $line->name,
-                            'quantity'   => (int) $line->quantity,
-                            'unit_price' => (float) $line->unit_price,
-                            'total'      => (float) $line->total,
-                        ])->values()->all();
-                        $emitRow([
-                            $o->num_order,
-                            $supplierName,
-                            $dateStr,
-                            $o->state,
-                            $o->total,
-                            json_encode($payload, JSON_UNESCAPED_UNICODE),
-                        ]);
-                    }
-                }, 'num_order');
-            }
-        );
-    }
+    // CSV export intentionally omitted — current UI supports PDF/Excel only.
 
     // Builds a comma-separated summary of product names and quantities for a single supplier order.
     private function summarizeSupplierOrderLines(Order $order): string
@@ -570,31 +486,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // Streams a CSV export of clients using a database cursor to keep memory usage low.
-    private function clientsCsv(): StreamedResponse
-    {
-        return $this->streamRegistryCsv(
-            'usuarios_clientes_'.now()->format('Y-m-d_His').'.csv',
-            ['user_id', 'nombre', 'apellido1', 'apellido2', 'email', 'activo', 'proveedor', 'email_verificado'],
-            function (callable $emitRow): void {
-                foreach (Client::query()->orderBy('name')->cursor() as $c) {
-                    if (! $c instanceof Client) {
-                        continue;
-                    }
-                    $emitRow([
-                        $c->user_id,
-                        $c->name,
-                        $c->first_surname,
-                        $c->second_surname,
-                        $c->gmail,
-                        $c->active ? '1' : '0',
-                        $c->provider,
-                        $c->email_verified ? '1' : '0',
-                    ]);
-                }
-            }
-        );
-    }
+    // CSV export intentionally omitted — current UI supports PDF/Excel only.
 
     // =========================================================================
     // CLIENT ORDERS (web cart)
@@ -671,7 +563,7 @@ class ReportsRegistryExportController extends Controller
                 return ($item->product !== null ? $item->product->name : '?').' (×'.$item->quantity.')';
             })->implode(', ');
             $saleDate = $sale->sale_date;
-            $data[]   = [
+            $data[] = [
                 (string) ($sale->invoice_number ?? '#'.$sale->sale_id),
                 $truncate ? Str::limit($customer, 40) : $customer,
                 $saleDate !== null ? $saleDate->format('d/m/Y H:i') : '',
@@ -687,10 +579,10 @@ class ReportsRegistryExportController extends Controller
     // Generates and streams a PDF export of client orders.
     private function clientOrdersPdf(Request $request): Response
     {
-        $base        = $this->clientOrdersBase($request);
-        $total       = (clone $base)->count();
+        $base = $this->clientOrdersBase($request);
+        $total = (clone $base)->count();
         $filterLines = $this->clientOrderFilterLines($request);
-        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
         if ($total > $max) {
             $filterLines[] = 'Nota: el PDF incluye como máximo '.$max.' filas ('.$total.' pedidos coinciden).';
         }
@@ -708,10 +600,10 @@ class ReportsRegistryExportController extends Controller
     // Generates and streams an Excel export of client orders.
     private function clientOrdersExcel(Request $request): StreamedResponse
     {
-        $base        = $this->clientOrdersBase($request);
-        $total       = (clone $base)->count();
+        $base = $this->clientOrdersBase($request);
+        $total = (clone $base)->count();
         $filterLines = $this->clientOrderFilterLines($request);
-        $max         = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
+        $max = AdminPdfExportLimits::REGISTRY_MAX_ROWS;
         if ($total > $max) {
             $filterLines[] = 'Nota: el Excel incluye como máximo '.$max.' filas ('.$total.' pedidos coinciden).';
         }
@@ -726,44 +618,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // Streams a CSV export of client orders in chunks to avoid loading all records into memory at once.
-    private function clientOrdersCsv(Request $request): StreamedResponse
-    {
-        $chunk = AdminPdfExportLimits::REGISTRY_CSV_CHUNK;
-
-        return $this->streamRegistryCsv(
-            'pedidos_clientes_'.now()->format('Y-m-d_His').'.csv',
-            ['sale_id', 'invoice', 'cliente', 'email_cliente', 'fecha', 'estado', 'total', 'items_resumen'],
-            function (callable $emitRow) use ($request, $chunk): void {
-                $this->clientOrdersBase($request)->chunkById($chunk, function ($sales) use ($emitRow): void {
-                    foreach ($sales as $sale) {
-                        if (! $sale instanceof Sale) {
-                            continue;
-                        }
-                        // Prefer the linked client's full name; fall back to the guest buyer name.
-                        $customer = $sale->client
-                            ? trim($sale->client->name.' '.($sale->client->first_surname ?? '').' '.($sale->client->second_surname ?? ''))
-                            : ($sale->buyer_name ?: '');
-                        $email = $sale->client ? $sale->client->gmail : ($sale->buyer_email ?? '');
-                        $items = $sale->saleItems->map(function (SaleItem $item): string {
-                            return ($item->product !== null ? $item->product->name : '?').' (x'.$item->quantity.')';
-                        })->implode(', ');
-                        $saleDate = $sale->sale_date;
-                        $emitRow([
-                            $sale->sale_id,
-                            $sale->invoice_number,
-                            $customer,
-                            $email,
-                            $saleDate !== null ? $saleDate->format('Y-m-d H:i:s') : null,
-                            $sale->status,
-                            $sale->total,
-                            $items,
-                        ]);
-                    }
-                }, 'sale_id');
-            }
-        );
-    }
+    // CSV export intentionally omitted — current UI supports PDF/Excel only.
 
     // =========================================================================
     // SHARED HELPERS
@@ -778,44 +633,16 @@ class ReportsRegistryExportController extends Controller
         array $rows,
         string $filenameSlug
     ): Response {
-        $pdf = PDF::loadView('admin.exports.registry-table-pdf', [
-            'pdfTitle'     => $title,
-            'pdfSubtitle'  => $subtitle,
-            'logoPath'     => $this->resolvedLogoPath(),
-            'filterLines'  => $filterLines,
+        return app(AdminPdfExportService::class)->download('admin.exports.registry-table-pdf', [
+            'pdfTitle' => $title,
+            'pdfSubtitle' => $subtitle,
+            'logoPath' => $this->resolvedLogoPath(),
+            'filterLines' => $filterLines,
             'generatedFor' => 'Administración',
-            'headers'      => $headers,
-            'rows'         => $rows,
-        ]);
-
-        return $pdf->download(ReportPdfFilename::make($filenameSlug));
+            'headers' => $headers,
+            'rows' => $rows,
+        ], $filenameSlug);
     }
 
-    // Streams a UTF-8 BOM-prefixed CSV file row by row via a producer callback, avoiding full in-memory buffering.
-    // The separator is a semicolon to maximise compatibility with European spreadsheet locales.
-    private function streamRegistryCsv(string $filename, array $headerRow, callable $producer): StreamedResponse
-    {
-        $httpHeaders = [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
-        ];
-
-        $callback = function () use ($headerRow, $producer): void {
-            $file = fopen('php://output', 'w');
-            if ($file === false) {
-                return;
-            }
-            // Write the UTF-8 BOM so Excel opens the file without encoding issues.
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            fputcsv($file, $headerRow, ';');
-            // Provide a type-safe row emitter to the producer callback.
-            $emitRow = static function (array $row) use ($file): void {
-                fputcsv($file, array_map(fn ($v) => $v === null ? '' : $v, $row), ';');
-            };
-            $producer($emitRow);
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $httpHeaders);
-    }
+    // CSV export intentionally omitted — current UI supports PDF/Excel only.
 }

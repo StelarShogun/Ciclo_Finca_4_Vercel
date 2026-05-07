@@ -37,7 +37,7 @@ class ProductClassificationController extends Controller
         if (! $product->category || $product->category->parent_category_id === null) {
             return redirect()
                 ->route('admin.product-classifications.index')
-                ->with('error', 'Primero ubicá el producto en un tipo concreto (ej. «MTB»), no solo en el rubro general. Desde Inventario podés cambiarlo.');
+                ->with('error', 'Primero ubicá el producto en un tipo concreto (ej. «MTB»), no solo en la categoría padre. Desde Inventario podés cambiarlo.');
         }
 
         $attributes = ClassificationDimension::query()

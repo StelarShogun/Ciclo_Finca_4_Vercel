@@ -14,19 +14,19 @@ class AdminOrderSettingsController extends Controller
     public function update(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
-            'order_expiration_days' => ['required', 'integer', 'min:1'],
+            'ready_to_pickup_expiration_days' => ['required', 'integer', 'min:1'],
         ], [
-            'order_expiration_days.required' => 'Indique el número de días.',
-            'order_expiration_days.integer' => 'El plazo debe ser un número entero.',
-            'order_expiration_days.min' => 'El plazo debe ser mayor que cero.',
+            'ready_to_pickup_expiration_days.required' => 'Indique el número de días.',
+            'ready_to_pickup_expiration_days.integer' => 'El plazo debe ser un número entero.',
+            'ready_to_pickup_expiration_days.min' => 'El plazo debe ser mayor que cero.',
         ]);
 
-        $days = (int) $validated['order_expiration_days'];
-        $previous = AppSetting::getStoredOrderExpirationDays();
-        AppSetting::setOrderExpirationDays($days);
+        $days = (int) $validated['ready_to_pickup_expiration_days'];
+        $previous = AppSetting::getStoredReadyToPickupExpirationDays();
+        AppSetting::setReadyToPickupExpirationDays($days);
         $this->logAuditAction(
-            'client_order_settings_update',
-            'Configuración de expiración automática de pedidos actualizada.',
+            'client_order_pickup_settings_update',
+            'Configuración de cancelación automática para pedidos listos para recoger actualizada.',
             [
                 'from_days' => $previous,
                 'to_days' => $days,
@@ -38,7 +38,7 @@ class AdminOrderSettingsController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => $message,
-                'order_expiration_days' => $days,
+                'ready_to_pickup_expiration_days' => $days,
             ]);
         }
 

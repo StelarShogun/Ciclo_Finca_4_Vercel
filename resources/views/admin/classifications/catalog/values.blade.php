@@ -21,13 +21,22 @@
             </div>
 
             @if (session('status'))
-                <div class="success-message" style="margin-bottom:1rem;"><i class="fas fa-check-circle"></i> {{ session('status') }}</div>
+                <x-admin-alert type="success" :message="session('status')" dismissible />
             @endif
 
             <div class="form-card" style="margin-bottom:1.5rem;">
                 <h2 style="font-size:1.1rem; margin-bottom:1rem;">Añadir valor</h2>
                 <form action="{{ route('admin.classifications.values.store', $dimension) }}" method="POST" class="form-body">
                     @csrf
+                    @if ($errors->any())
+                        <x-admin-alert type="error" title="Revisa los campos marcados antes de continuar.">
+                            <ul style="margin: 0; padding-left: 1.25rem;">
+                                @foreach ($errors->all() as $err)
+                                    <li>{{ $err }}</li>
+                                @endforeach
+                            </ul>
+                        </x-admin-alert>
+                    @endif
                     <div class="form-row" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
                         <div class="form-group">
                             <label for="value">Valor (lo que verá el cliente) *</label>
@@ -69,12 +78,24 @@
                                             <form action="{{ route('admin.classifications.values.destroy', $val) }}" method="POST" style="display:inline;">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button" class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.85rem; color:#b91c1c;" data-confirm="Se desactivará este valor. Los productos que ya lo tenían siguen igual.">Desactivar</button>
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-secondary"
+                                                    style="padding:0.25rem 0.5rem; font-size:0.85rem; color:#b91c1c;"
+                                                    data-confirm-title="¿Deseas desactivar este valor?"
+                                                    data-confirm="Se desactivará este valor. Los productos que ya lo tenían siguen igual."
+                                                >Desactivar</button>
                                             </form>
                                         @else
                                             <form action="{{ route('admin.classifications.values.restore', $val) }}" method="POST" style="display:inline;">
                                                 @csrf
-                                                <button type="button" class="btn btn-primary" style="padding:0.25rem 0.5rem; font-size:0.85rem;" data-confirm="Se activará de nuevo este valor.">Activar</button>
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-primary"
+                                                    style="padding:0.25rem 0.5rem; font-size:0.85rem;"
+                                                    data-confirm-title="¿Deseas activar este valor?"
+                                                    data-confirm="Se activará de nuevo este valor."
+                                                >Activar</button>
                                             </form>
                                         @endif
                                     </td>

@@ -9,6 +9,8 @@ class AppSetting extends Model
 {
     public const KEY_ORDER_EXPIRATION_DAYS = 'order_expiration_days';
 
+    public const KEY_READY_TO_PICKUP_EXPIRATION_DAYS = 'ready_to_pickup_expiration_days';
+
     protected $fillable = [
         'key',
         'value',
@@ -41,8 +43,40 @@ class AppSetting extends Model
         Cache::forget(self::cacheKeyOrderExpirationDays());
     }
 
+    public static function getStoredReadyToPickupExpirationDays(): ?int
+    {
+        $raw = static::query()
+            ->where('key', self::KEY_READY_TO_PICKUP_EXPIRATION_DAYS)
+            ->value('value');
+
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+
+        if (! is_numeric($raw)) {
+            return null;
+        }
+
+        return (int) $raw;
+    }
+
+    public static function setReadyToPickupExpirationDays(int $days): void
+    {
+        static::updateOrCreate(
+            ['key' => self::KEY_READY_TO_PICKUP_EXPIRATION_DAYS],
+            ['value' => (string) $days]
+        );
+
+        Cache::forget(self::cacheKeyReadyToPickupExpirationDays());
+    }
+
     public static function cacheKeyOrderExpirationDays(): string
     {
         return 'app_settings.effective_order_expiration_days';
+    }
+
+    public static function cacheKeyReadyToPickupExpirationDays(): string
+    {
+        return 'app_settings.effective_ready_to_pickup_expiration_days';
     }
 }

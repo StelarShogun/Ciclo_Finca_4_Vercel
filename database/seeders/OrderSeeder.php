@@ -15,7 +15,8 @@ class OrderSeeder extends Seeder
     private function nextPo(): string
     {
         $this->seq++;
-        return 'PO-' . now()->format('Y') . '-' . str_pad((string) $this->seq, 4, '0', STR_PAD_LEFT);
+
+        return 'PO-'.now()->format('Y').'-'.str_pad((string) $this->seq, 4, '0', STR_PAD_LEFT);
     }
 
     public function run(): void

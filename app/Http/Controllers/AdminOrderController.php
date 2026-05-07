@@ -18,7 +18,7 @@ class AdminOrderController extends Controller
                 $q->where('order_source', 'web_cart')
                     ->orWhereNull('order_source');
             })
-            ->whereIn('status', ['pending', 'completed', 'cancelled', 'refunded'])
+            ->whereIn('status', ['pending', 'ready_to_pickup', 'completed', 'cancelled', 'refunded'])
             ->notExpired()
             ->with(['client', 'saleItems.product']);
 
@@ -51,16 +51,16 @@ class AdminOrderController extends Controller
 
         $latestPurchaseSaleId = (clone $basePurchasesQuery)->max('sale_id') ?? 0;
 
-        $stored = AppSetting::getStoredOrderExpirationDays();
-        $orderExpirationDays = ($stored !== null && $stored > 0)
+        $stored = AppSetting::getStoredReadyToPickupExpirationDays();
+        $readyToPickupExpirationDays = ($stored !== null && $stored > 0)
             ? $stored
-            : max(1, (int) config('sales.order_expiration_days', 30));
+            : max(1, (int) config('sales.ready_to_pickup_expiration_days', 3));
         $usesEnvDefaultForExpiry = $stored === null;
 
         return view('admin.orders.index', compact(
             'orders',
             'latestPurchaseSaleId',
-            'orderExpirationDays',
+            'readyToPickupExpirationDays',
             'usesEnvDefaultForExpiry'
         ));
     }

@@ -34,6 +34,90 @@ function jsonHeaders() {
     };
 }
 
+function escapeHtml(raw) {
+    return String(raw)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function escapeHtmlAttr(raw) {
+    // For attributes; same escaping as HTML content.
+    return escapeHtml(raw);
+}
+
+async function safeParseJsonResponse(response) {
+    const contentType = response.headers.get('content-type') || '';
+
+    // If we were redirected (often to login) or content isn't JSON, treat as session/HTML issue.
+    if (response.redirected || !contentType.includes('application/json')) {
+        const text = await response.text().catch(() => '');
+        const looksLikeHtml = /<html|<body|<!doctype/i.test(text);
+        const msg = looksLikeHtml
+            ? 'Tu sesión parece expirada. Recargá la página o volvé a iniciar sesión.'
+            : 'La respuesta del servidor no es JSON. Recargá la página e intentá de nuevo.';
+        throw Object.assign(new Error(msg), {
+            status: response.status,
+            redirected: response.redirected,
+        });
+    }
+
+    return await response.json();
+}
+
+async function readJsonOrThrow(response, fallbackMessage) {
+    if (response.ok) {
+        return await safeParseJsonResponse(response);
+    }
+
+    try {
+        const data = await safeParseJsonResponse(response);
+        const msg = data?.message || fallbackMessage || 'Ocurrió un error.';
+        throw Object.assign(new Error(msg), { status: response.status, data });
+    } catch (err) {
+        // safeParseJsonResponse may throw on HTML/redirect; preserve its message.
+        if (err instanceof Error) throw err;
+        throw Object.assign(new Error(fallbackMessage || 'Ocurrió un error.'), { status: response.status });
+    }
+}
+
+function renderVariantsListHtml({ baseProductId, variants }) {
+    const list = Array.isArray(variants) ? variants : [];
+    if (!list.length) {
+        return '<span class="text-muted">Sin variantes registradas.</span>';
+    }
+
+    const items = list
+        .map((v) => {
+            const variantId = String(v.product_id ?? '');
+            const name = String(v.name ?? '');
+            const status = String(v.status ?? '');
+            const price = v.sale_price !== undefined ? `₡${v.sale_price}` : '—';
+            const stock = v.stock_current !== undefined ? String(v.stock_current) : '—';
+
+            return `
+                <div class="variant-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6;">
+                    <div style="min-width:0;">
+                        <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(name)}</div>
+                        <div class="text-muted" style="font-size:12px;">ID ${escapeHtml(variantId)} · ${escapeHtml(price)} · Stock ${escapeHtml(stock)} · ${escapeHtml(status)}</div>
+                    </div>
+                    <button type="button"
+                            class="btn btn-secondary js-delete-variant"
+                            data-base-product-id="${String(baseProductId)}"
+                            data-variant-product-id="${variantId}"
+                            data-variant-name="${escapeHtmlAttr(name)}">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                </div>
+            `;
+        })
+        .join('');
+
+    return `<div class="variant-list">${items}</div>`;
+}
+
 /** Sincroniza botones estrella destacado (vista tabla y cuadrícula) tras toggle o recarga de datos. */
 function syncFeaturedStarButtons(productId, isFeatured) {
     const id = String(productId);
@@ -62,7 +146,7 @@ function fillSubcategoryOptions(subSelect, parentId, selectedId = '') {
     if (!subSelect) return;
     const tree = window.inventoryCategoryTree || {};
     const isFilter = subSelect.id === 'subcategory-filter';
-    const emptyLabel = isFilter ? 'Todos los tipos' : 'Solo el rubro general';
+    const emptyLabel = isFilter ? 'Todos los tipos' : 'Solo categoría padre (sin tipo)';
 
     subSelect.innerHTML = '';
     const opt0 = document.createElement('option');
@@ -290,6 +374,226 @@ function initBrandCombobox(searchInputId, hiddenInputId, dropdownId, wrapperId) 
     }
 
     return { selectBrand, setValue, open, close, reset };
+}
+
+/**
+ * Async combobox for product search (variants selector).
+ * Fetches from /admin/products/search?q=... and allows keyboard selection.
+ */
+function initProductSearchCombobox({ searchInputId, hiddenInputId, dropdownId, wrapperId, onSelected }) {
+    const searchInput = qs('#' + searchInputId);
+    const hiddenInput = qs('#' + hiddenInputId);
+    const dropdown = qs('#' + dropdownId);
+    const wrapper = qs('#' + wrapperId);
+    const chevron = wrapper?.querySelector('.brand-combobox-chevron');
+    if (!searchInput || !hiddenInput || !dropdown || !wrapper) return null;
+
+    let isOpen = false;
+    let activeIndex = -1;
+    let lastResults = [];
+    let debounceTimer = null;
+    let abortController = null;
+    let currentBaseProductId = null;
+    let excludedVariantIds = new Set();
+
+    function setBaseContext({ baseProductId, currentVariants }) {
+        currentBaseProductId = baseProductId ? String(baseProductId) : null;
+        const ids = (Array.isArray(currentVariants) ? currentVariants : [])
+            .map((v) => String(v?.product_id ?? ''))
+            .filter(Boolean);
+        excludedVariantIds = new Set(ids);
+        if (currentBaseProductId) excludedVariantIds.add(String(currentBaseProductId));
+    }
+
+    function open() {
+        dropdown.classList.add('open');
+        wrapper.classList.add('open');
+        isOpen = true;
+        if (chevron) chevron.classList.add('rotated');
+    }
+
+    function close() {
+        dropdown.classList.remove('open');
+        wrapper.classList.remove('open');
+        isOpen = false;
+        activeIndex = -1;
+        if (chevron) chevron.classList.remove('rotated');
+    }
+
+    function reset() {
+        hiddenInput.value = '';
+        searchInput.value = '';
+        lastResults = [];
+        activeIndex = -1;
+        dropdown.innerHTML = '';
+        close();
+        onSelected?.(null);
+    }
+
+    function renderResults(results, { query }) {
+        dropdown.innerHTML = '';
+        lastResults = results;
+        activeIndex = results.length ? 0 : -1;
+
+        if (!results.length) {
+            const noResult = document.createElement('div');
+            noResult.className = 'brand-combobox-no-result';
+            noResult.textContent = query && query.trim().length >= 2 ? 'Sin resultados' : 'Escribí al menos 2 caracteres';
+            dropdown.appendChild(noResult);
+            return;
+        }
+
+        results.forEach((p, idx) => {
+            const row = document.createElement('div');
+            row.className = 'brand-combobox-option';
+            if (idx === activeIndex) row.classList.add('selected');
+
+            const name = String(p?.name ?? '');
+            const sku = String(p?.sku ?? '');
+            const unitPrice = p?.unit_price !== undefined ? `₡${p.unit_price}` : '';
+            row.innerHTML = `
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                    <div style="font-weight:600;line-height:1.15;">${escapeHtml(name)}</div>
+                    <div style="font-size:12px;color:#6b7280;">${escapeHtml(sku)}${unitPrice ? ` · ${escapeHtml(unitPrice)}` : ''}</div>
+                </div>
+            `;
+
+            row.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                selectProduct(p);
+            });
+
+            dropdown.appendChild(row);
+        });
+    }
+
+    function setActiveIndex(nextIndex) {
+        const options = Array.from(dropdown.querySelectorAll('.brand-combobox-option'));
+        if (!options.length) return;
+        const safe = Math.max(0, Math.min(options.length - 1, nextIndex));
+        activeIndex = safe;
+        options.forEach((el, i) => el.classList.toggle('selected', i === safe));
+        options[safe]?.scrollIntoView({ block: 'nearest' });
+    }
+
+    function selectProduct(product) {
+        if (!product || !product.product_id) return;
+        hiddenInput.value = String(product.product_id);
+        searchInput.value = String(product.name || '');
+        wrapper.classList.remove('error');
+        close();
+        onSelected?.(product);
+    }
+
+    function showLoading() {
+        dropdown.innerHTML = '';
+        const msg = document.createElement('div');
+        msg.className = 'brand-combobox-no-result';
+        msg.textContent = 'Buscando…';
+        dropdown.appendChild(msg);
+    }
+
+    async function fetchProducts(query) {
+        const q = String(query || '').trim();
+        if (q.length < 2) {
+            renderResults([], { query: q });
+            return;
+        }
+
+        abortController?.abort();
+        abortController = new AbortController();
+
+        showLoading();
+
+        const url = new URL('/admin/products/search', window.location.origin);
+        url.searchParams.set('q', q);
+
+        const response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            signal: abortController.signal,
+        });
+
+        const data = await readJsonOrThrow(response, 'No se pudo buscar productos.');
+        const products = Array.isArray(data?.products) ? data.products : [];
+        const filtered = products.filter((p) => {
+            const id = String(p?.product_id ?? '');
+            if (!id) return false;
+            return !excludedVariantIds.has(id);
+        });
+
+        renderResults(filtered, { query: q });
+    }
+
+    function scheduleFetch() {
+        const q = searchInput.value;
+        if (!isOpen) open();
+        hiddenInput.value = '';
+        onSelected?.(null);
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            fetchProducts(q).catch((err) => {
+                if (err?.name === 'AbortError') return;
+                dropdown.innerHTML = '';
+                const noResult = document.createElement('div');
+                noResult.className = 'brand-combobox-no-result';
+                noResult.textContent = 'No se pudo buscar. Probá de nuevo.';
+                dropdown.appendChild(noResult);
+            });
+        }, 220);
+    }
+
+    searchInput.addEventListener('focus', () => open());
+    searchInput.addEventListener('input', scheduleFetch);
+    searchInput.addEventListener('keydown', (e) => {
+        if (!isOpen && (e.key === 'ArrowDown' || e.key === 'Enter')) {
+            open();
+            scheduleFetch();
+            return;
+        }
+        if (!isOpen) return;
+
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            close();
+            return;
+        }
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setActiveIndex(activeIndex + 1);
+            return;
+        }
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setActiveIndex(activeIndex - 1);
+            return;
+        }
+        if (e.key === 'Enter') {
+            const pick = lastResults[activeIndex];
+            if (pick) {
+                e.preventDefault();
+                selectProduct(pick);
+            }
+        }
+    });
+    searchInput.addEventListener('blur', () => {
+        setTimeout(() => {
+            if (!hiddenInput.value) searchInput.value = '';
+            close();
+        }, 150);
+    });
+    if (chevron) {
+        chevron.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            if (isOpen) close();
+            else { searchInput.focus(); open(); scheduleFetch(); }
+        });
+    }
+
+    return { reset, open, close, setBaseContext, selectProduct };
 }
 
 // Request a fresh CSRF token from the server
@@ -684,7 +988,7 @@ function smoothScrollTop() {
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({
                         title: 'Categoría',
-                        text: 'Elegí el rubro. El tipo concreto es opcional, pero si lo dejás solo en el rubro general no podrás usar color, talla, etc.',
+                        text: 'Elegí la categoría padre. El tipo concreto es opcional, pero si dejás el producto solo en categoría padre (sin tipo) no podrás usar color, talla, etc.',
                         icon: 'info',
                         confirmButtonText: 'Entendido',
                     });
@@ -739,11 +1043,10 @@ function smoothScrollTop() {
                         title: 'Producto creado',
                         text: data.message,
                         icon: 'success',
-                        timer: 1500,
+                        timer: 3500,
                         timerProgressBar: true,
                         showConfirmButton: false,
                     }).then(() => { location.reload(); });
-                    location.reload();
                 } else if (data.errors) {
                     // Remove previous error messages
                     qsa('.error-message', newProductForm).forEach(el => el.remove());
@@ -808,6 +1111,24 @@ function smoothScrollTop() {
     const editSubcategory = qs('#edit-subcategory');
     const editFinalCategory = qs('#edit-category');
 
+    // CF4-74 — Variants selector (modern UX) inside edit modal
+    const editVariantAddBtn = qs('#edit-variant-add-btn');
+    const editVariantHidden = qs('#edit-variant-product-id');
+    const editVariantSearch = qs('#edit-variant-search');
+    const editVariantsList = qs('#edit-variants-list');
+    let currentEditProductId = null;
+    let currentEditVariants = [];
+
+    const editVariantCombobox = initProductSearchCombobox({
+        searchInputId: 'edit-variant-search',
+        hiddenInputId: 'edit-variant-product-id',
+        dropdownId: 'edit-variant-dropdown',
+        wrapperId: 'edit-variant-combobox',
+        onSelected: (p) => {
+            if (editVariantAddBtn) editVariantAddBtn.disabled = !p?.product_id;
+        },
+    });
+
     editBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const productId = btn.dataset.productId;
@@ -816,14 +1137,20 @@ function smoothScrollTop() {
                 headers: jsonHeaders(),
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al cargar el producto');
-                }
-                return response.json();
+                return readJsonOrThrow(response, 'Error al cargar el producto');
             })
             .then(data => {
                 if(data.success){
                     const product = data.data;
+                    currentEditProductId = String(productId || '');
+                    currentEditVariants = Array.isArray(product.variants) ? product.variants : [];
+                    editVariantCombobox?.setBaseContext({
+                        baseProductId: currentEditProductId,
+                        currentVariants: currentEditVariants,
+                    });
+                    editVariantCombobox?.reset();
+                    if (editVariantAddBtn) editVariantAddBtn.disabled = true;
+
                     editProductForm.action = `/products/${productId}`;
                     qs('#edit-name').value = product.name || '';
                     qs('#edit-description').value = product.description || '';
@@ -867,6 +1194,14 @@ function smoothScrollTop() {
                     if (editFeatured) {
                         editFeatured.checked = Boolean(product.is_featured);
                     }
+
+                    const variantsList = qs('#edit-variants-list');
+                    if (variantsList) {
+                        variantsList.innerHTML = renderVariantsListHtml({
+                            baseProductId: productId,
+                            variants: product.variants || [],
+                        });
+                    }
                     editModal.classList.add('active');
                 } else {
                     Swal.fire({
@@ -881,7 +1216,7 @@ function smoothScrollTop() {
                 console.error('Error:', error);
                 Swal.fire({
                     title: 'Error',
-                    text: 'Error al cargar el producto. Inténtalo de nuevo.',
+                    text: error?.message || 'Error al cargar el producto. Inténtalo de nuevo.',
                     icon: 'error',
                     confirmButtonText: 'Entendido'
                 });
@@ -942,6 +1277,88 @@ function smoothScrollTop() {
         });
     }
 
+    async function addVariantLink({ baseId, variantId }) {
+        const response = await smartFetch(`/products/${baseId}/variants`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                ...jsonHeaders(),
+            },
+            body: JSON.stringify({ variant_product_id: Number(variantId) }),
+        });
+
+        let data = {};
+        try {
+            data = await response.json();
+        } catch {
+            data = {};
+        }
+
+        if (!response.ok || !data?.success) {
+            const msg = data?.message || 'No se pudo agregar la variante.';
+            throw Object.assign(new Error(msg), { status: response.status });
+        }
+
+        return data.variant;
+    }
+
+    function ensureVariantsPlaceholder() {
+        if (!editVariantsList) return;
+        const rows = editVariantsList.querySelectorAll('.variant-row');
+        if (rows.length === 0) {
+            editVariantsList.innerHTML = '<span class="text-muted">Sin variantes registradas.</span>';
+        }
+    }
+
+    if (editVariantAddBtn) {
+        editVariantAddBtn.addEventListener('click', async () => {
+            const baseId = currentEditProductId;
+            const variantId = editVariantHidden?.value;
+            if (!baseId || !variantId) return;
+
+            setActionButtonLoading(editVariantAddBtn, true, 'Agregando...');
+            try {
+                const variant = await addVariantLink({ baseId, variantId });
+
+                currentEditVariants = [...(currentEditVariants || []), variant].filter(Boolean);
+                editVariantCombobox?.setBaseContext({ baseProductId: baseId, currentVariants: currentEditVariants });
+
+                if (editVariantsList) {
+                    const placeholder = editVariantsList.querySelector('.text-muted');
+                    if (placeholder && placeholder.textContent?.includes('Sin variantes')) {
+                        editVariantsList.innerHTML = '';
+                    }
+
+                    const wrap = document.createElement('div');
+                    wrap.innerHTML = renderVariantsListHtml({ baseProductId: baseId, variants: [variant] });
+                    const newRow = wrap.querySelector('.variant-row');
+                    if (newRow) {
+                        const listContainer = editVariantsList.querySelector('.variant-list');
+                        if (listContainer) {
+                            listContainer.appendChild(newRow);
+                        } else {
+                            // If the list wasn't wrapped yet, render a full list to keep structure consistent
+                            editVariantsList.innerHTML = renderVariantsListHtml({ baseProductId: baseId, variants: currentEditVariants });
+                        }
+                    } else {
+                        editVariantsList.innerHTML = renderVariantsListHtml({ baseProductId: baseId, variants: currentEditVariants });
+                    }
+                }
+
+                editVariantCombobox?.reset();
+                Swal.fire('Agregada', 'Variante agregada correctamente.', 'success');
+            } catch (err) {
+                const msg = err?.message || 'No se pudo agregar la variante.';
+                Swal.fire('No se pudo agregar', msg, 'error');
+            } finally {
+                setActionButtonLoading(editVariantAddBtn, false);
+                editVariantAddBtn.disabled = true;
+                editVariantSearch?.focus();
+            }
+        });
+    }
+
     if (saveEditBtn) {
         saveEditBtn.addEventListener('click', () => {
             syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
@@ -994,11 +1411,10 @@ function smoothScrollTop() {
                         title: 'Producto actualizado',
                         text: data.message,
                         icon: 'success',
-                        timer: 1500,
+                        timer: 3500,
                         timerProgressBar: true,
                         showConfirmButton: false,
                     }).then(() => { location.reload(); });
-                    location.reload();
                 } else if (data.errors) {
                     qsa('.error-message', editProductForm).forEach(el => el.remove());
 
@@ -1050,6 +1466,72 @@ function smoothScrollTop() {
             });
         });
     }
+
+    document.body.addEventListener('click', (e) => {
+        const btn = e.target.closest('.js-delete-variant');
+        if (!btn) return;
+        e.preventDefault();
+
+        const baseId = btn.dataset.baseProductId;
+        const variantId = btn.dataset.variantProductId;
+        const variantName = btn.dataset.variantName || `#${variantId}`;
+        if (!baseId || !variantId) return;
+
+        Swal.fire({
+            titleText: `¿Eliminar la variante "${variantName}"?`,
+            text: 'Esta acción solo elimina la variante seleccionada. El producto base permanecerá activo.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+
+            setActionButtonLoading(btn, true, 'Eliminando...');
+            smartFetch(`/products/${baseId}/variants/${variantId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    ...jsonHeaders(),
+                },
+            })
+                .then(async (response) => {
+                    let data = {};
+                    try {
+                        data = await response.json();
+                    } catch {
+                        data = {};
+                    }
+
+                    setActionButtonLoading(btn, false);
+
+                    if (response.ok && data.success) {
+                        const row = btn.closest('.variant-row');
+                        if (row) row.remove();
+                        if (currentEditProductId && String(baseId) === String(currentEditProductId)) {
+                            currentEditVariants = (currentEditVariants || []).filter((v) => String(v?.product_id) !== String(variantId));
+                            editVariantCombobox?.setBaseContext({
+                                baseProductId: currentEditProductId,
+                                currentVariants: currentEditVariants,
+                            });
+                        }
+                        ensureVariantsPlaceholder();
+                        Swal.fire('Eliminada', data.message || 'Variante eliminada correctamente.', 'success');
+                        return;
+                    }
+
+                    const msg = data.message || 'No se pudo eliminar la variante.';
+                    Swal.fire('No se puede eliminar', msg, response.status === 409 ? 'info' : 'error');
+                })
+                .catch(() => {
+                    setActionButtonLoading(btn, false);
+                    Swal.fire('Error', 'Error de conexión al eliminar la variante.', 'error');
+                });
+        });
+    });
 
     // Modal: View product details
     const viewProductModal = qs('#view-product-modal');
@@ -1111,10 +1593,7 @@ function smoothScrollTop() {
                 headers: jsonHeaders(),
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al cargar el producto');
-                }
-                return response.json();
+                return readJsonOrThrow(response, 'Error al cargar el producto');
             })
             .then(data => {
                 setActionButtonLoading(btn, false);
@@ -1213,7 +1692,7 @@ function smoothScrollTop() {
                 console.error('Error:', error);
                 Swal.fire({
                     title: 'Error',
-                    text: 'Error al cargar el producto. Inténtalo de nuevo.',
+                    text: error?.message || 'Error al cargar el producto. Inténtalo de nuevo.',
                     icon: 'error',
                     confirmButtonText: 'Entendido'
                 });
@@ -1670,26 +2149,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-// ============================================================
-//  STOCK ADJUSTMENT MODULE — merged from stock-adjust.js
-// ============================================================
-/**
- * stock-adjust.js
- *
- * Handles the manual stock-adjustment modal for the inventory page.
- *
- * Usage (in inventory.js or via @vite):
- *   import './stock-adjust.js';
- *
- * Or load as a standalone <script> AFTER the DOM is ready.
- *
- * Routes expected:
- *   POST /inventory/add-manual/{id}
- *   POST /inventory/remove-manual/{id}
- *
- * Both endpoints accept JSON body: { quantity, reason }
- * and return: { success, message, stock_current?, errors? }
- */
 
 (function () {
     'use strict';
@@ -1729,7 +2188,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── DOM references (resolved after DOMContentLoaded) ──────────────────
     let modal, backdrop, modalTitle, modalTitleIcon;
     let productIdInput, productNameEl, productStockEl;
-    let qtyInput, reasonSelect;
+    let qtyInput, reasonInput;
     let qtyError, reasonError, alertBanner, alertMsg;
     let confirmBtn, confirmBtnText, confirmBtnSpinner;
     let cancelBtn, closeBtn;
@@ -1750,7 +2209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         productNameEl      = document.getElementById('stock-modal-product-name');
         productStockEl     = document.getElementById('stock-modal-product-stock');
         qtyInput           = document.getElementById('stock-modal-qty');
-        reasonSelect       = document.getElementById('stock-modal-reason');
+        reasonInput        = document.getElementById('stock-modal-reason');
         qtyError           = document.getElementById('stock-modal-qty-error');
         reasonError        = document.getElementById('stock-modal-reason-error');
         alertBanner        = document.getElementById('stock-modal-alert');
@@ -1841,9 +2300,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Reset ─────────────────────────────────────────────────────────────
     function resetForm() {
         qtyInput.value         = '';
-        reasonSelect.value     = '';
+        reasonInput.value      = '';
         qtyInput.classList.remove('is-invalid');
-        reasonSelect.classList.remove('is-invalid');
+        reasonInput.classList.remove('is-invalid');
         qtyError.classList.remove('visible');
         qtyError.textContent   = '';
         reasonError.classList.remove('visible');
@@ -1867,14 +2326,24 @@ document.addEventListener('DOMContentLoaded', () => {
             qtyError.classList.remove('visible');
         }
 
-        const validReasons = ['manual_adjustment', 'damage', 'refund'];
-        if (!reasonSelect.value || !validReasons.includes(reasonSelect.value)) {
-            reasonSelect.classList.add('is-invalid');
-            reasonError.textContent = 'Selecciona un motivo válido.';
+        const reason = (reasonInput.value || '').trim();
+        if (!reason) {
+            reasonInput.classList.add('is-invalid');
+            reasonError.textContent = 'El motivo es obligatorio.';
+            reasonError.classList.add('visible');
+            valid = false;
+        } else if (reason.length < 3) {
+            reasonInput.classList.add('is-invalid');
+            reasonError.textContent = 'El motivo debe tener al menos 3 caracteres.';
+            reasonError.classList.add('visible');
+            valid = false;
+        } else if (reason.length > 500) {
+            reasonInput.classList.add('is-invalid');
+            reasonError.textContent = 'El motivo no puede superar los 500 caracteres.';
             reasonError.classList.add('visible');
             valid = false;
         } else {
-            reasonSelect.classList.remove('is-invalid');
+            reasonInput.classList.remove('is-invalid');
             reasonError.classList.remove('visible');
         }
 
@@ -1933,7 +2402,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({
                     quantity: parseInt(qtyInput.value, 10),
-                    reason:   reasonSelect.value,
+                    reason:   (reasonInput.value || '').trim(),
                 }),
             });
 
@@ -1957,7 +2426,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         qtyError.classList.add('visible');
                     }
                     if (data.errors.reason) {
-                        reasonSelect.classList.add('is-invalid');
+                        reasonInput.classList.add('is-invalid');
                         reasonError.textContent = data.errors.reason[0];
                         reasonError.classList.add('visible');
                     }

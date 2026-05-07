@@ -17,6 +17,7 @@
 # =========================
 /public/build
 /public/hot
+.vite-cache/
 
 # =========================
 # STORAGE (ARCHIVOS GENERADOS)
@@ -91,7 +92,8 @@ vendor/composer/autoload_static.php
 vendor/composer/autoload_real.php
 vendor/composer/autoload_classmap.php
 
-# Cursor IDE: ignorar todo bajo .cursor salvo skills versionadas (docfork/db-skills).
-/.cursor/*
-!/.cursor/skills/
-!/.cursor/skills/**
+# =========================
+# CURSOR IDE
+# =========================
+.cursor/skills/
+.cursor/plans/cf4-112_pdf_service_7ccce6a9.plan.md

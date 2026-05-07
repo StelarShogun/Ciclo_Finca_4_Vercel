@@ -4,16 +4,18 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SalesPerformanceRangeRequest;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\SaleItem;
+use App\Models\Supplier;
 use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\ProductSalesExcelExport;
 use App\Services\Admin\ProductSalesReportQuery;
 use App\Services\Admin\ReportExcelFilename;
-use App\Services\Admin\ReportPdfFilename;
 use App\Services\SalesPerformanceDateRangeService;
 use App\Services\SalesPerformanceMetricsService;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
-use App\Models\SaleItem;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -34,10 +36,29 @@ class ReportsController extends Controller
     }
 
     // Renders the centralised export hub.
-    // Navigation links preserve any active query-string filters forwarded from other report screens.
+    // Passes pre-loaded option lists so the modal filters show real names instead of IDs.
     public function exports()
     {
-        return view('admin.reports.exports');
+        // Categorías raíz (canónicas) para el filtro de inventario.
+        $parentCategories = Category::whereNull('parent_category_id')
+            ->orderBy('name')
+            ->get(['category_id', 'name'])
+            ->unique(fn ($c) => mb_strtolower(trim($c->name)))
+            ->values();
+
+        // Subcategorías agrupadas por id canónico de categoría padre.
+        $subcatsByParent = Category::subcategoriesGroupedByCanonicalParent();
+
+        // Proveedores con sus datos de contacto para autorrelleno.
+        $suppliers = Supplier::orderBy('name')
+            ->get(['supplier_id', 'name', 'primary_contact', 'phone', 'email']);
+
+        // Marcas para el filtro de proveedores de marcas (si aplica en el futuro).
+        $brands = Brand::orderBy('name')->get(['id', 'name']);
+
+        return view('admin.reports.exports', compact(
+            'parentCategories', 'subcatsByParent', 'suppliers', 'brands'
+        ));
     }
 
     // Renders the sales-performance view (CF4-24).
@@ -230,7 +251,7 @@ class ReportsController extends Controller
 
         $logoPath = public_path('assets/images/brand/logo-ciclo-finca-icon.png');
 
-        $pdf = PDF::loadView('admin.reports.product-sales-pdf', [
+        return app(AdminPdfExportService::class)->download('admin.reports.product-sales-pdf', [
             'period' => $period,
             'top10Metric' => $top10Metric,
             'top10' => $top10Formatted,
@@ -242,9 +263,7 @@ class ReportsController extends Controller
             'logoPath' => is_file($logoPath) ? $logoPath : null,
             'filterLines' => $filterLines,
             'generatedFor' => 'Administración',
-        ]);
-
-        return $pdf->download(ReportPdfFilename::make('productos-vendidos'));
+        ], 'productos-vendidos');
     }
 
     // Generates and streams an Excel export of the product-sales report.
@@ -393,31 +412,31 @@ class ReportsController extends Controller
         return $start->format('d/m/Y').' - '.$end->format('d/m/Y');
     }
 
-        public function byCategory(Request $request)
+    public function byCategory(Request $request)
     {
         $dateRange = $request->input('date_range', 'month');
-        $dateFrom  = $request->input('date_from');
-        $dateTo    = $request->input('date_to');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
 
         if ($dateRange === 'custom') {
             $request->validate([
                 'date_from' => 'required|date',
-                'date_to'   => 'required|date|after_or_equal:date_from',
+                'date_to' => 'required|date|after_or_equal:date_from',
             ], [
-                'date_from.required'      => 'La fecha de inicio es obligatoria.',
-                'date_from.date'          => 'La fecha de inicio no es válida.',
-                'date_to.required'        => 'La fecha de fin es obligatoria.',
-                'date_to.date'            => 'La fecha de fin no es válida.',
-                'date_to.after_or_equal'  => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
+                'date_from.required' => 'La fecha de inicio es obligatoria.',
+                'date_from.date' => 'La fecha de inicio no es válida.',
+                'date_to.required' => 'La fecha de fin es obligatoria.',
+                'date_to.date' => 'La fecha de fin no es válida.',
+                'date_to.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
             ]);
         }
 
         [$from, $to] = $this->resolveDateRange($dateRange, $dateFrom, $dateTo);
 
         $rows = SaleItem::query()
-            ->join('sales',      'sale_items.sale_id',    '=', 'sales.sale_id')
-            ->join('products',   'sale_items.product_id', '=', 'products.product_id')
-            ->join('categories', 'products.category_id',  '=', 'categories.category_id')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.sale_id')
+            ->join('products', 'sale_items.product_id', '=', 'products.product_id')
+            ->join('categories', 'products.category_id', '=', 'categories.category_id')
             ->where('sales.status', 'completed')
             ->whereBetween('sales.sale_date', [$from, $to])
             ->groupBy('categories.category_id', 'categories.name')
@@ -436,13 +455,14 @@ class ReportsController extends Controller
             $row->percentage = $grandTotal > 0
                 ? round(($row->total_revenue / $grandTotal) * 100, 1)
                 : 0;
+
             return $row;
         });
 
         $chartData = $rows->map(function ($r) {
             return [
-                'label'   => $r->category_name,
-                'value'   => $r->total_revenue,
+                'label' => $r->category_name,
+                'value' => $r->total_revenue,
                 'percent' => $r->percentage,
             ];
         })->values()->toArray();
@@ -473,7 +493,7 @@ class ReportsController extends Controller
             case 'custom':
                 return [
                     $dateFrom ? Carbon::parse($dateFrom)->startOfDay()->toDateTimeString() : now()->startOfDay()->toDateTimeString(),
-                    $dateTo   ? Carbon::parse($dateTo)->endOfDay()->toDateTimeString()     : now()->endOfDay()->toDateTimeString(),
+                    $dateTo ? Carbon::parse($dateTo)->endOfDay()->toDateTimeString() : now()->endOfDay()->toDateTimeString(),
                 ];
             default:
                 return [

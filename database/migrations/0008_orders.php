@@ -46,7 +46,7 @@ return new class extends Migration
         if (Schema::getConnection()->getDriverName() === 'mysql') {
             try {
                 DB::statement('ALTER TABLE order_items ADD FULLTEXT KEY ft_order_items_name (`name`)');
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 // optional
             }
         }
