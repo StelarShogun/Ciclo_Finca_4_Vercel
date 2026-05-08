@@ -9,11 +9,10 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\Admin\AdminInventoryExportQuery;
-use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\AdminPdfExportLimits;
+use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\RegistryExcelExport;
 use App\Services\Admin\ReportExcelFilename;
-use App\Services\Admin\ReportPdfFilename;
 use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\ProductClassificationAssignmentService;
@@ -519,6 +518,7 @@ class ProductController extends Controller
     public function inventory(Request $request)
     {
         $query = $this->inventoryProductsFilteredQuery($request)->with(['category.parent', 'supplier']);
+        $lowStockProductsCount = Product::query()->lowStockAlert()->count();
 
         $perPage = $request->get('per_page', 10);
         $paginator = $query->paginate($perPage);
@@ -554,6 +554,7 @@ class ProductController extends Controller
         return view('admin.products.inventory', [
             'products' => $products,
             'paginator' => $paginator,
+            'lowStockProductsCount' => $lowStockProductsCount,
             'categories' => $categories,
             'subcategoriesByParent' => $subcategoriesByParent,
             'brands' => Brand::orderBy('name')->get(['id', 'name']),
@@ -566,7 +567,7 @@ class ProductController extends Controller
         $format = strtolower($format ?? $request->get('format', 'pdf'));
 
         $exportAll = $request->query('scope') === 'all';
-        $baseQuery = $exportAll ? $this->inventoryProductsFilteredQuery(new Request()) : $this->inventoryProductsFilteredQuery($request);
+        $baseQuery = $exportAll ? $this->inventoryProductsFilteredQuery(new Request) : $this->inventoryProductsFilteredQuery($request);
         $filterLines = $exportAll ? ['Inventario: todo (sin filtros)'] : $this->inventoryExportFilterLines($request);
 
         $withRelations = ['category:category_id,name', 'supplier:supplier_id,name'];
@@ -1126,7 +1127,7 @@ class ProductController extends Controller
         try {
             $validated = $request->validate([
                 'quantity' => ['required', 'numeric', 'min:1'],
-                'reason'   => ['required', 'string', 'min:3', 'max:500'],
+                'reason' => ['required', 'string', 'min:3', 'max:500'],
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -1180,7 +1181,7 @@ class ProductController extends Controller
         try {
             $validated = $request->validate([
                 'quantity' => ['required', 'numeric', 'min:1'],
-                'reason'   => ['required', 'string', 'min:3', 'max:500'],
+                'reason' => ['required', 'string', 'min:3', 'max:500'],
             ]);
         } catch (ValidationException $e) {
             return response()->json([

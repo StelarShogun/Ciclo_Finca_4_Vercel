@@ -7,29 +7,22 @@ use Illuminate\Support\Facades\Cache;
 
 class AppSetting extends Model
 {
-    // ── Existing keys ──────────────────────────────────────────────────────────
-    public const KEY_ORDER_EXPIRATION_DAYS           = 'order_expiration_days';
+    public const KEY_ORDER_EXPIRATION_DAYS = 'order_expiration_days';
     public const KEY_READY_TO_PICKUP_EXPIRATION_DAYS = 'ready_to_pickup_expiration_days';
 
-    // ── New keys ───────────────────────────────────────────────────────────────
     public const KEY_WEEKLY_REPORT_RECIPIENTS = 'weekly_report_recipients';
-    public const KEY_WEEKLY_REPORT_DAY        = 'weekly_report_day';
-    public const KEY_WEEKLY_REPORT_HOUR       = 'weekly_report_hour';
-    public const KEY_WEEKLY_REPORT_MINUTE     = 'weekly_report_minute';
+    public const KEY_WEEKLY_REPORT_DAY = 'weekly_report_day';
+    public const KEY_WEEKLY_REPORT_HOUR = 'weekly_report_hour';
+    public const KEY_WEEKLY_REPORT_MINUTE = 'weekly_report_minute';
 
     protected $fillable = [
         'key',
         'value',
     ];
 
-    // ── Default values for weekly report ──────────────────────────────────────
-    private const DEFAULT_WEEKLY_REPORT_DAY  = 1;  // Monday
-    private const DEFAULT_WEEKLY_REPORT_HOUR = 8;  // 08:00
+    private const DEFAULT_WEEKLY_REPORT_DAY = 1;
+    private const DEFAULT_WEEKLY_REPORT_HOUR = 8;
     private const DEFAULT_WEEKLY_REPORT_MINUTE = 0;
-
-    // ══════════════════════════════════════════════════════════════════════════
-    // Existing: order expiration days
-    // ══════════════════════════════════════════════════════════════════════════
 
     public static function getStoredOrderExpirationDays(): ?int
     {
@@ -58,10 +51,6 @@ class AppSetting extends Model
         Cache::forget(self::cacheKeyOrderExpirationDays());
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // Existing: ready-to-pickup expiration days
-    // ══════════════════════════════════════════════════════════════════════════
-
     public static function getStoredReadyToPickupExpirationDays(): ?int
     {
         $raw = static::query()
@@ -89,15 +78,6 @@ class AppSetting extends Model
         Cache::forget(self::cacheKeyReadyToPickupExpirationDays());
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // New: weekly report recipients
-    // ══════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Returns the stored recipient list, or an empty array when not configured.
-     *
-     * @return string[]
-     */
     public static function getWeeklyReportRecipients(): array
     {
         $raw = static::query()
@@ -113,9 +93,6 @@ class AppSetting extends Model
         return is_array($decoded) ? array_values(array_filter($decoded, 'is_string')) : [];
     }
 
-    /**
-     * @param  string[]  $emails
-     */
     public static function setWeeklyReportRecipients(array $emails): void
     {
         static::updateOrCreate(
@@ -126,14 +103,6 @@ class AppSetting extends Model
         Cache::forget(self::cacheKeyWeeklyReportRecipients());
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // New: weekly report day
-    // ══════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Returns the configured day-of-week (0 = Sunday, 6 = Saturday),
-     * falling back to Monday when not set.
-     */
     public static function getWeeklyReportDay(): int
     {
         $raw = static::query()
@@ -159,13 +128,6 @@ class AppSetting extends Model
         Cache::forget(self::cacheKeyWeeklyReportDay());
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // New: weekly report hour
-    // ══════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Returns the configured send hour (0–23), falling back to 08:00 when not set.
-     */
     public static function getWeeklyReportHour(): int
     {
         $raw = static::query()
@@ -191,13 +153,6 @@ class AppSetting extends Model
         Cache::forget(self::cacheKeyWeeklyReportHour());
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // New: weekly report minute
-    // ══════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Returns the configured send minute (0–59), falling back to 00 when not set.
-     */
     public static function getWeeklyReportMinute(): int
     {
         $raw = static::query()
@@ -222,10 +177,6 @@ class AppSetting extends Model
 
         Cache::forget(self::cacheKeyWeeklyReportMinute());
     }
-
-    // ══════════════════════════════════════════════════════════════════════════
-    // Cache keys
-    // ══════════════════════════════════════════════════════════════════════════
 
     public static function cacheKeyOrderExpirationDays(): string
     {

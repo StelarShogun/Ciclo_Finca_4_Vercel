@@ -24,8 +24,8 @@ class CancelExpiredReadyOrdersCommand extends Command
         OrderCancellationNotifier $notifier,
         AuditLogger $auditLogger,
     ): int {
-        $isDryRun    = $this->option('dry-run');
-        $minutesOpt  = $this->option('minutes');
+        $isDryRun = $this->option('dry-run');
+        $minutesOpt = $this->option('minutes');
 
         if ($minutesOpt !== null) {
             $minutes = (int) $minutesOpt;
@@ -38,11 +38,11 @@ class CancelExpiredReadyOrdersCommand extends Command
             $cutoff = Carbon::now()->subMinutes($minutes);
             $windowLabel = $minutes.' min';
         } else {
-            $days   = Sale::getReadyToPickupExpirationDays();
+            $days = Sale::getReadyToPickupExpirationDays();
             $cutoff = Carbon::now()->subDays($days);
             $windowLabel = $days.' día(s)';
         }
-        $reason      = 'Por vencimiento de encargo';
+        $reason = 'Por vencimiento de encargo';
         $cancelledAt = Carbon::now();
 
         $query = Sale::with('saleItems.product')
@@ -60,13 +60,13 @@ class CancelExpiredReadyOrdersCommand extends Command
 
         $this->info(
             "Encontrados {$count} pedido(s) en 'listo para recoger' con ready_at anterior a "
-            . $cutoff->format('Y-m-d H:i:s')
-            . ' (' . $windowLabel . ')'
-            . ($isDryRun ? ' [DRY RUN — sin cambios]' : '.')
+            .$cutoff->format('Y-m-d H:i:s')
+            .' ('.$windowLabel.')'
+            .($isDryRun ? ' [DRY RUN — sin cambios]' : '.')
         );
 
         $cancelled = 0;
-        $failed    = 0;
+        $failed = 0;
 
         $query->get()->each(function (Sale $sale) use (
             $isDryRun,
@@ -78,7 +78,7 @@ class CancelExpiredReadyOrdersCommand extends Command
             &$cancelled,
             &$failed,
         ): void {
-            $label = $sale->invoice_number ?? ('#' . $sale->sale_id);
+            $label = $sale->invoice_number ?? ('#'.$sale->sale_id);
 
             if ($isDryRun) {
                 $this->line("  [dry-run] Se cancelaría el pedido {$label} (ready_at: {$sale->ready_at})");
@@ -87,18 +87,18 @@ class CancelExpiredReadyOrdersCommand extends Command
             }
 
             try {
-                DB::transaction(function () use ($sale, $reason, $cancelledAt, $inventoryService): void {
+                DB::transaction(function () use ($sale, $reason, $inventoryService): void {
                     $cancellationNote = 'Cancelado automáticamente por vencimiento del plazo de recogida.';
-                    $existingNotes = $sale->notes ? $sale->notes . "\n" : '';
-                    $sale->update(['status' => 'cancelled', 'notes' => $existingNotes . $cancellationNote]);
+                    $existingNotes = $sale->notes ? $sale->notes."\n" : '';
+                    $sale->update(['status' => 'cancelled', 'notes' => $existingNotes.$cancellationNote]);
 
                     foreach ($sale->saleItems as $item) {
                         if ($item->product) {
                             $inventoryService->recordOrderCancellation(
-                                product:  $item->product,
+                                product: $item->product,
                                 quantity: (int) $item->quantity,
-                                saleId:   $sale->sale_id,
-                                reason:   $reason,
+                                saleId: $sale->sale_id,
+                                reason: $reason,
                             );
                         }
                     }
@@ -109,7 +109,7 @@ class CancelExpiredReadyOrdersCommand extends Command
                 } catch (\Throwable $e) {
                     Log::warning('Auto-cancellation notification failed.', [
                         'sale_id' => $sale->sale_id,
-                        'error'   => $e->getMessage(),
+                        'error' => $e->getMessage(),
                     ]);
                 }
 
@@ -119,18 +119,18 @@ class CancelExpiredReadyOrdersCommand extends Command
                         'sales',
                         'Pedido cancelado automáticamente por vencimiento de plazo de recogida.',
                         [
-                            'sale_id'        => (int) $sale->sale_id,
+                            'sale_id' => (int) $sale->sale_id,
                             'invoice_number' => (string) ($sale->invoice_number ?? ''),
-                            'ready_at'       => (string) $sale->ready_at,
-                            'cancelled_at'   => $cancelledAt->toISOString(),
-                            'from_status'    => 'ready_to_pickup',
-                            'to_status'      => 'cancelled',
+                            'ready_at' => (string) $sale->ready_at,
+                            'cancelled_at' => $cancelledAt->toISOString(),
+                            'from_status' => 'ready_to_pickup',
+                            'to_status' => 'cancelled',
                         ]
                     );
                 } catch (\Throwable $e) {
                     Log::warning('Auto-cancellation audit log failed.', [
                         'sale_id' => $sale->sale_id,
-                        'error'   => $e->getMessage(),
+                        'error' => $e->getMessage(),
                     ]);
                 }
 
@@ -142,7 +142,7 @@ class CancelExpiredReadyOrdersCommand extends Command
                 $this->error("Error al cancelar el pedido {$label}: {$e->getMessage()}");
                 Log::error('Auto-cancellation of expired ready_to_pickup order failed.', [
                     'sale_id' => $sale->sale_id,
-                    'error'   => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
             }
         });

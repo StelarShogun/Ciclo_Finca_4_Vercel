@@ -16,16 +16,16 @@ return new class extends Migration
             // Product affected by the inventory movement.
             $table->unsignedBigInteger('product_id');
             $table->foreign('product_id')
-                  ->references('product_id')
-                  ->on('products')
-                  ->restrictOnDelete();
+                ->references('product_id')
+                ->on('products')
+                ->restrictOnDelete();
 
             // Admin user who triggered the movement, when applicable.
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')
-                  ->references('user_id')   // Primary key of the admins table.
-                  ->on('admins')
-                  ->nullOnDelete();
+                ->references('user_id')   // Primary key of the admins table.
+                ->on('admins')
+                ->nullOnDelete();
 
             // Movement direction stored as a readable string value.
             $table->string('type', 20)->comment('entrada | salida | ajuste | devolucion');
@@ -44,11 +44,11 @@ return new class extends Migration
 
             // Optional reference to the source document.
             $table->unsignedBigInteger('reference_id')->nullable()
-                  ->comment('sale_id, num_order, etc. según origin');
+                ->comment('sale_id, num_order, etc. según origin');
 
             // Optional user-provided notes.
             $table->text('notes')->nullable()
-                  ->comment('Observaciones adicionales ingresadas por el usuario');
+                ->comment('Observaciones adicionales ingresadas por el usuario');
 
             // Movement timestamps.
             $table->timestamps(); // created_at = fecha/hora del movimiento; updated_at raramente cambia
@@ -57,7 +57,7 @@ return new class extends Migration
             $table->index(['product_id', 'created_at'], 'idx_inv_mov_product_date');
 
             // Supports filtering by movement type and origin.
-            $table->index('type',   'idx_inv_mov_type');
+            $table->index('type', 'idx_inv_mov_type');
             $table->index('origin', 'idx_inv_mov_origin');
 
             // Supports traceability to the originating document.

@@ -3,12 +3,11 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
-
 
 class Sale extends Model
 {
@@ -36,11 +35,11 @@ class Sale extends Model
     ];
 
     protected $casts = [
-        'subtotal'  => 'decimal:2',
-        'iva'       => 'decimal:2',
-        'discount'  => 'decimal:2',
-        'total'     => 'decimal:2',
-        'ready_at'  => 'datetime',  // Integrado desde rama local: complementa el campo ya presente en $fillable.
+        'subtotal' => 'decimal:2',
+        'iva' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'total' => 'decimal:2',
+        'ready_at' => 'datetime',  // Integrado desde rama local: complementa el campo ya presente en $fillable.
     ];
 
     // Converts sale_date from UTC to the application timezone for consistent display.
@@ -100,10 +99,10 @@ class Sale extends Model
     {
         $maxNum = self::where('invoice_number', 'like', 'CF4-%')
             ->get(['invoice_number'])
-            ->map(fn($s) => (int) substr($s->invoice_number, 4))
+            ->map(fn ($s) => (int) substr($s->invoice_number, 4))
             ->max() ?? 0;
 
-        return 'CF4-' . str_pad((string) ($maxNum + 1), 4, '0', STR_PAD_LEFT);
+        return 'CF4-'.str_pad((string) ($maxNum + 1), 4, '0', STR_PAD_LEFT);
     }
 
     public function calculateTotal()
@@ -161,7 +160,7 @@ class Sale extends Model
         return $days <= (int) config('sales.expiry_alert_days', 2) && $days > 0;
     }
 
-    public function scopeNotExpired($query)
+    public function scopeNotExpired(Builder $query): Builder
     {
         $days = static::getOrderExpirationDays();
         $limitDate = now()->subDays($days);

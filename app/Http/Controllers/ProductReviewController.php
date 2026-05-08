@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\SaleItem;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ProductReviewController extends Controller
 {
-    public function storeOrUpdate(Request $request, Product $product): RedirectResponse|\Illuminate\Http\JsonResponse
+    public function storeOrUpdate(Request $request, Product $product): RedirectResponse|JsonResponse
     {
         $client = Auth::guard('clients')->user();
         abort_if(! $client, 403);
@@ -54,7 +55,7 @@ class ProductReviewController extends Controller
         return back()->with('status', 'Tu reseña se guardó correctamente.');
     }
 
-    public function storeBatch(Request $request): \Illuminate\Http\JsonResponse
+    public function storeBatch(Request $request): JsonResponse
     {
         $client = Auth::guard('clients')->user();
         abort_if(! $client, 403);

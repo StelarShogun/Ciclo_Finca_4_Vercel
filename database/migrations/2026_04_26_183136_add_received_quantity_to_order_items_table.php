@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::table('order_items', function (Blueprint $table) {
             $table->unsignedInteger('received_quantity')
-                  ->nullable()
-                  ->default(null)
-                  ->after('quantity')
-                  ->comment('Cantidad efectivamente recibida al registrar la recepción del pedido.');
+                ->nullable()
+                ->default(null)
+                ->after('quantity')
+                ->comment('Cantidad efectivamente recibida al registrar la recepción del pedido.');
         });
     }
 

@@ -14,7 +14,7 @@ class CF4116SalesDateRangeFilterTest extends TestCase
         try {
             parent::setUp();
         } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: ' . $e->getMessage());
+            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
         }
         if (Schema::getConnection()->getDriverName() !== 'mysql') {
             $this->markTestSkipped('SalesDateRangeFilterTest requiere MySQL.');
@@ -35,7 +35,7 @@ class CF4116SalesDateRangeFilterTest extends TestCase
         $resp = $this->actingAs($this->getAdmin(), 'admin')
             ->get(route('sales.index', [
                 'start_date' => Carbon::today()->subDays(2)->toDateString(),
-                'end_date'   => Carbon::today()->subDay()->toDateString(),
+                'end_date' => Carbon::today()->subDay()->toDateString(),
             ]));
 
         $resp->assertOk();
@@ -48,8 +48,8 @@ class CF4116SalesDateRangeFilterTest extends TestCase
         $resp = $this->actingAs($this->getAdmin(), 'admin')
             ->get(route('sales.reports.byCategory', [
                 'date_range' => 'custom',
-                'date_from'  => Carbon::today()->toDateString(),
-                'date_to'    => Carbon::today()->subDays(5)->toDateString(),
+                'date_from' => Carbon::today()->toDateString(),
+                'date_to' => Carbon::today()->subDays(5)->toDateString(),
             ]));
 
         $resp->assertSessionHasErrors(['date_to']);
@@ -61,7 +61,7 @@ class CF4116SalesDateRangeFilterTest extends TestCase
         $resp = $this->actingAs($this->getAdmin(), 'admin')
             ->get(route('sales.index', [
                 'start_date' => Carbon::today()->addDay()->toDateString(),
-                'end_date'   => Carbon::today()->addDays(2)->toDateString(),
+                'end_date' => Carbon::today()->addDays(2)->toDateString(),
             ]));
 
         $resp->assertOk();
@@ -72,19 +72,20 @@ class CF4116SalesDateRangeFilterTest extends TestCase
     public function test_selected_dates_are_preserved_after_filter_is_applied(): void
     {
         $startDate = Carbon::today()->subDays(2)->toDateString();
-        $endDate   = Carbon::today()->subDay()->toDateString();
+        $endDate = Carbon::today()->subDay()->toDateString();
 
         $resp = $this->actingAs($this->getAdmin(), 'admin')
             ->get(route('sales.index', [
                 'start_date' => $startDate,
-                'end_date'   => $endDate,
+                'end_date' => $endDate,
             ]));
 
         $resp->assertOk();
         $resp->assertViewHas('sales', function ($paginator) use ($startDate, $endDate) {
             $url = $paginator->url(1);
-            return str_contains($url, 'start_date=' . $startDate)
-                && str_contains($url, 'end_date=' . $endDate);
+
+            return str_contains($url, 'start_date='.$startDate)
+                && str_contains($url, 'end_date='.$endDate);
         });
     }
 
@@ -93,10 +94,10 @@ class CF4116SalesDateRangeFilterTest extends TestCase
     {
         $resp = $this->actingAs($this->getAdmin(), 'admin')
             ->get(route('sales.index', [
-                'start_date'     => Carbon::today()->subDays(2)->toDateString(),
-                'end_date'       => Carbon::today()->subDay()->toDateString(),
+                'start_date' => Carbon::today()->subDays(2)->toDateString(),
+                'end_date' => Carbon::today()->subDay()->toDateString(),
                 'payment_method' => 'cash',
-                'status'         => 'completed',
+                'status' => 'completed',
             ]));
 
         $resp->assertOk();

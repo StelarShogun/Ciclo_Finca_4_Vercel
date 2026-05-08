@@ -24,7 +24,13 @@
             <div class="form-card">
                 <div class="form-body">
                     @if ($subcategories->isEmpty())
-                        <p>Todavía no hay tipos de producto. Creá uno en <a href="{{ route('categories.subcategories.create') }}">categorías</a>.</p>
+                        <x-admin-alert
+                            type="info"
+                            title="No hay registros disponibles para mostrar."
+                            dismissible
+                        >
+                            Todavía no hay tipos de producto. Creá uno en <a href="{{ route('categories.subcategories.create') }}">categorías</a>.
+                        </x-admin-alert>
                     @else
                         <table style="width:100%; border-collapse:collapse;">
                             <thead>

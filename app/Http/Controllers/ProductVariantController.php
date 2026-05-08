@@ -160,4 +160,3 @@ class ProductVariantController extends Controller
         return ['draft', 'pending', 'confirmed', 'partial_received'];
     }
 }
-

@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\Product;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -15,7 +14,7 @@ class CF497CatalogBrandFilterTest extends TestCase
         try {
             parent::setUp();
         } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: ' . $e->getMessage());
+            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
         }
         if (Schema::getConnection()->getDriverName() !== 'mysql') {
             $this->markTestSkipped('CatalogBrandFilterTest requiere MySQL.');
@@ -54,6 +53,7 @@ class CF497CatalogBrandFilterTest extends TestCase
         $resp->assertOk();
         $resp->assertViewHas('products', function ($paginator) use ($productOfA, $productOfB) {
             $ids = $paginator->pluck('product_id')->all();
+
             return in_array($productOfA->product_id, $ids, true)
                 && ! in_array($productOfB->product_id, $ids, true);
         });
@@ -71,10 +71,10 @@ class CF497CatalogBrandFilterTest extends TestCase
         $category = Category::whereNull('parent_category_id')->first();
 
         $resp = $this->get(route('clients.catalog', [
-            'brand_id'    => $brand->id,
+            'brand_id' => $brand->id,
             'category_id' => $category?->category_id,
-            'min_price'   => '0',
-            'max_price'   => '9999999',
+            'min_price' => '0',
+            'max_price' => '9999999',
         ]));
 
         $resp->assertOk();
@@ -99,7 +99,7 @@ class CF497CatalogBrandFilterTest extends TestCase
         }
 
         $resp = $this->get(route('clients.catalog', [
-            'brand_id'    => $brand->id,
+            'brand_id' => $brand->id,
             'category_id' => $product->category_id,
         ]));
 
@@ -107,11 +107,12 @@ class CF497CatalogBrandFilterTest extends TestCase
         $resp->assertViewHas('products', function ($paginator) use ($brand, $product) {
             foreach ($paginator->items() as $p) {
                 $belongsToBrand = $p->brands->contains('id', $brand->id);
-                $inCategory     = (int) $p->category_id === (int) $product->category_id;
+                $inCategory = (int) $p->category_id === (int) $product->category_id;
                 if (! $belongsToBrand || ! $inCategory) {
                     return false;
                 }
             }
+
             return true;
         });
     }
@@ -134,7 +135,7 @@ class CF497CatalogBrandFilterTest extends TestCase
     {
         $brand = Brand::whereDoesntHave('products', function ($q) {
             $q->whereRaw('LOWER(TRIM(COALESCE(status, \'\'))) IN (\'active\', \'activo\')')
-              ->where('stock_current', '>', 0);
+                ->where('stock_current', '>', 0);
         })->first();
 
         if (! $brand) {
@@ -163,7 +164,8 @@ class CF497CatalogBrandFilterTest extends TestCase
         $resp->assertOk();
         $resp->assertViewHas('products', function ($paginator) use ($brand) {
             $url = $paginator->url(1);
-            return str_contains($url, 'brand_id=' . $brand->id);
+
+            return str_contains($url, 'brand_id='.$brand->id);
         });
     }
 
@@ -177,7 +179,7 @@ class CF497CatalogBrandFilterTest extends TestCase
         }
 
         $resp = $this->get(route('clients.catalog', [
-            'brand_id'  => $brand->id,
+            'brand_id' => $brand->id,
             'min_price' => '999999',
             'max_price' => '999999',
         ]));
@@ -189,6 +191,7 @@ class CF497CatalogBrandFilterTest extends TestCase
                     return false;
                 }
             }
+
             return true;
         });
     }

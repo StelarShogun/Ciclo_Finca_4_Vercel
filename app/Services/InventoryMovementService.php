@@ -27,11 +27,11 @@ class InventoryMovementService
     // Conservado de rama dev: nombre ORIGIN_REASONS y entradas sin 'damage'
     // (rama local añadía 'damage' => '…' pero ese origen no existe en VALID_ORIGINS).
     public const ORIGIN_REASONS = [
-        'sale_admin'        => 'Venta por administrador',
-        'sale_web'          => 'Venta por tienda web',
-        'return'            => 'Devolución de cliente',
-        'cancellation'      => 'Cancelación de encargo',
-        'provider'          => 'Recepción de pedido de proveedor',
+        'sale_admin' => 'Venta por administrador',
+        'sale_web' => 'Venta por tienda web',
+        'return' => 'Devolución de cliente',
+        'cancellation' => 'Cancelación de encargo',
+        'provider' => 'Recepción de pedido de proveedor',
         'manual_adjustment' => 'Ajuste manual de inventario',
     ];
 
@@ -53,7 +53,7 @@ class InventoryMovementService
         // Reject unsupported movement origins.
         if (! in_array($origin, self::VALID_ORIGINS, true)) {
             throw new \RuntimeException(
-                "Origin '{$origin}' no es válido. Valores permitidos: " . implode(', ', self::VALID_ORIGINS)
+                "Origin '{$origin}' no es válido. Valores permitidos: ".implode(', ', self::VALID_ORIGINS)
             );
         }
 
@@ -68,7 +68,7 @@ class InventoryMovementService
             // Lock the product row to prevent concurrent stock updates.
             /** @var Product $freshProduct */
             $freshProduct = Product::lockForUpdate()->findOrFail($product->product_id);
-            $stockBefore  = (int) $freshProduct->stock_current;
+            $stockBefore = (int) $freshProduct->stock_current;
 
             // Calculate the resulting stock based on movement type.
             $stockAfter = match ($type) {
@@ -97,15 +97,15 @@ class InventoryMovementService
 
             // Store the movement in the audit log.
             $movement = InventoryMovement::create([
-                'product_id'   => $freshProduct->product_id,
-                'user_id'      => $resolvedUserId,
-                'type'         => $type->value,
-                'origin'       => $origin,
-                'quantity'     => $quantity,
+                'product_id' => $freshProduct->product_id,
+                'user_id' => $resolvedUserId,
+                'type' => $type->value,
+                'origin' => $origin,
+                'quantity' => $quantity,
                 'stock_before' => $stockBefore,
-                'stock_after'  => $stockAfter,
+                'stock_after' => $stockAfter,
                 'reference_id' => $referenceId,
-                'reason'       => $resolvedReason,
+                'reason' => $resolvedReason,
             ]);
 
             // Sync the provided product instance with the updated stock.
@@ -123,10 +123,10 @@ class InventoryMovementService
         int $saleId,
     ): InventoryMovement {
         return $this->record(
-            product:     $product,
-            type:        MovementType::SALIDA,
-            origin:      'sale_admin',
-            quantity:    $quantity,
+            product: $product,
+            type: MovementType::SALIDA,
+            origin: 'sale_admin',
+            quantity: $quantity,
             referenceId: $saleId,
         );
     }
@@ -139,12 +139,12 @@ class InventoryMovementService
         int $saleId,
     ): InventoryMovement {
         return $this->record(
-            product:     $product,
-            type:        MovementType::SALIDA,
-            origin:      'sale_web',
-            quantity:    $quantity,
+            product: $product,
+            type: MovementType::SALIDA,
+            origin: 'sale_web',
+            quantity: $quantity,
             referenceId: $saleId,
-            userId:      null,
+            userId: null,
         );
     }
 
@@ -159,12 +159,12 @@ class InventoryMovementService
         string $reason,
     ): InventoryMovement {
         return $this->record(
-            product:     $product,
-            type:        MovementType::DEVOLUCION,
-            origin:      'return',
-            quantity:    $quantity,
+            product: $product,
+            type: MovementType::DEVOLUCION,
+            origin: 'return',
+            quantity: $quantity,
             referenceId: $saleId,
-            reason:      $reason,
+            reason: $reason,
         );
     }
 
@@ -183,13 +183,13 @@ class InventoryMovementService
         }
 
         return $this->record(
-            product:     $product,
-            type:        MovementType::CANCELADO,
-            origin:      'cancellation',
-            quantity:    $quantity,
+            product: $product,
+            type: MovementType::CANCELADO,
+            origin: 'cancellation',
+            quantity: $quantity,
             referenceId: $saleId,
-            userId:      $userId,
-            reason:      $reason,
+            userId: $userId,
+            reason: $reason,
         );
     }
 
@@ -201,12 +201,12 @@ class InventoryMovementService
         int $orderId,
     ): InventoryMovement {
         return $this->record(
-            product:     $product,
-            type:        MovementType::ENTRADA,
-            origin:      'provider',
-            quantity:    $quantity,
+            product: $product,
+            type: MovementType::ENTRADA,
+            origin: 'provider',
+            quantity: $quantity,
             referenceId: $orderId,
-            reason:      self::ORIGIN_REASONS['provider'],
+            reason: self::ORIGIN_REASONS['provider'],
         );
     }
 
@@ -217,11 +217,11 @@ class InventoryMovementService
         string $reason,
     ): InventoryMovement {
         return $this->record(
-            product:  $product,
-            type:     MovementType::ENTRADA,
-            origin:   'manual_adjustment',
+            product: $product,
+            type: MovementType::ENTRADA,
+            origin: 'manual_adjustment',
             quantity: $quantity,
-            reason:   $reason,
+            reason: $reason,
         );
     }
 
@@ -232,11 +232,11 @@ class InventoryMovementService
         string $reason,
     ): InventoryMovement {
         return $this->record(
-            product:  $product,
-            type:     MovementType::SALIDA,
-            origin:   'manual_adjustment',
+            product: $product,
+            type: MovementType::SALIDA,
+            origin: 'manual_adjustment',
             quantity: $quantity,
-            reason:   $reason,
+            reason: $reason,
         );
     }
 }

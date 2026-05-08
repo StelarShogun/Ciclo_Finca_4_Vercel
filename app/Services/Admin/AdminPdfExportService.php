@@ -17,4 +17,3 @@ final class AdminPdfExportService
         return $pdf->download(ReportPdfFilename::make($filenameSlug));
     }
 }
-
