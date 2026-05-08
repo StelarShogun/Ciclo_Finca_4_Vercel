@@ -16,6 +16,266 @@ function isClientStockShortMessage(msg) {
 }
 
 // ----------------------------------------------------------------
+// CATALOG: PREDICTIVE SEARCH SUGGESTIONS (CF4-106)
+// ----------------------------------------------------------------
+(function initCatalogPredictiveSearch() {
+    var root = document.querySelector('[data-catalog-suggestions]');
+    var input = document.getElementById('search');
+    if (!root || !input) return;
+
+    var url = root.getAttribute('data-suggestions-url') || '';
+    if (!url) return;
+
+    var list = document.getElementById('catalog-search-suggestions');
+    if (!list) return;
+
+    var state = {
+        open: false,
+        loading: false,
+        error: false,
+        items: [],
+        activeIndex: -1,
+        lastQuery: '',
+        aborter: null,
+        debounceId: null,
+    };
+
+    function setOpen(open) {
+        state.open = !!open;
+        list.classList.toggle('is-open', state.open);
+        list.setAttribute('aria-hidden', state.open ? 'false' : 'true');
+        input.setAttribute('aria-expanded', state.open ? 'true' : 'false');
+        if (!state.open) {
+            state.activeIndex = -1;
+        }
+    }
+
+    function esc(s) {
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function badgeFor(item) {
+        if (!item) return '';
+        if (item.type === 'category') return 'Categoría';
+        if (item.match_type === 'sku') return 'SKU';
+        if (item.match_type === 'category') return 'En categoría';
+        return '';
+    }
+
+    function render() {
+        if (!state.open) {
+            list.innerHTML = '';
+            return;
+        }
+
+        if (state.loading) {
+            list.innerHTML = '<div class="catalog-search-suggestions-state">Cargando sugerencias...</div>';
+            return;
+        }
+
+        if (state.error) {
+            list.innerHTML = '<div class="catalog-search-suggestions-state">No pudimos cargar sugerencias en este momento.</div>';
+            return;
+        }
+
+        if (!state.items || state.items.length === 0) {
+            list.innerHTML = '<div class="catalog-search-suggestions-state">No se encontraron productos relacionados</div>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < state.items.length; i++) {
+            var it = state.items[i] || {};
+            var active = i === state.activeIndex ? ' is-active' : '';
+            var title = esc(it.name || '');
+            var metaParts = [];
+            if (it.sku) metaParts.push(esc(it.sku));
+            if (it.category) metaParts.push(esc(it.category));
+            var meta = metaParts.length ? '<div class="catalog-search-suggestion-meta">' + metaParts.join(' · ') + '</div>' : '';
+            var badge = badgeFor(it);
+            var badgeHtml = badge ? '<div class="catalog-search-suggestion-badge">' + esc(badge) + '</div>' : '';
+
+            var thumb = '';
+            if (it.image_url) {
+                thumb = '<div class="catalog-search-suggestion-thumb"><img src="' + esc(it.image_url) + '" alt="" loading="lazy"></div>';
+            } else {
+                thumb = '<div class="catalog-search-suggestion-thumb" aria-hidden="true"></div>';
+            }
+
+            html += ''
+                + '<div class="catalog-search-suggestion' + active + '"'
+                + ' role="option"'
+                + ' data-suggestion-index="' + i + '"'
+                + ' aria-selected="' + (i === state.activeIndex ? 'true' : 'false') + '">'
+                + thumb
+                + '<div class="catalog-search-suggestion-body">'
+                + '<div class="catalog-search-suggestion-title">' + title + '</div>'
+                + meta
+                + '</div>'
+                + badgeHtml
+                + '</div>';
+        }
+        list.innerHTML = html;
+    }
+
+    function setActiveIndex(next) {
+        var n = state.items ? state.items.length : 0;
+        if (n <= 0) {
+            state.activeIndex = -1;
+            render();
+            return;
+        }
+        if (next < -1) next = -1;
+        if (next >= n) next = n - 1;
+        state.activeIndex = next;
+        render();
+    }
+
+    function close() {
+        setOpen(false);
+    }
+
+    function openIfNeeded() {
+        if (!state.open) setOpen(true);
+    }
+
+    function selectIndex(idx) {
+        var it = state.items && idx >= 0 ? state.items[idx] : null;
+        if (!it || !it.url) return;
+        window.location.href = it.url;
+    }
+
+    function fetchSuggestions(query) {
+        if (state.aborter) {
+            try { state.aborter.abort(); } catch (e) {}
+        }
+
+        state.aborter = new AbortController();
+        state.loading = true;
+        state.error = false;
+        state.items = [];
+        state.activeIndex = -1;
+        openIfNeeded();
+        render();
+
+        var reqUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'search=' + encodeURIComponent(query);
+        fetch(reqUrl, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            signal: state.aborter.signal,
+        })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                state.loading = false;
+                state.error = false;
+                state.items = (data && Array.isArray(data.suggestions)) ? data.suggestions : [];
+                openIfNeeded();
+                render();
+            })
+            .catch(function (err) {
+                if (err && err.name === 'AbortError') return;
+                state.loading = false;
+                state.error = true;
+                state.items = [];
+                openIfNeeded();
+                render();
+            });
+    }
+
+    function schedule(query) {
+        if (state.debounceId) clearTimeout(state.debounceId);
+        state.debounceId = setTimeout(function () {
+            state.debounceId = null;
+            fetchSuggestions(query);
+        }, 400);
+    }
+
+    input.addEventListener('input', function () {
+        var q = String(input.value || '').trim();
+        state.lastQuery = q;
+
+        if (q.length < 2) {
+            if (state.aborter) {
+                try { state.aborter.abort(); } catch (e) {}
+            }
+            state.loading = false;
+            state.error = false;
+            state.items = [];
+            state.activeIndex = -1;
+            close();
+            return;
+        }
+
+        schedule(q);
+    });
+
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown') {
+            if (!state.open) setOpen(true);
+            if (state.open) {
+                e.preventDefault();
+                setActiveIndex(state.activeIndex + 1);
+            }
+            return;
+        }
+
+        if (e.key === 'ArrowUp') {
+            if (state.open) {
+                e.preventDefault();
+                setActiveIndex(state.activeIndex - 1);
+            }
+            return;
+        }
+
+        if (e.key === 'Escape') {
+            if (state.open) {
+                e.preventDefault();
+                close();
+            }
+            return;
+        }
+
+        if (e.key === 'Enter') {
+            // Only intercept Enter when there is an active suggestion.
+            if (state.open && state.activeIndex >= 0) {
+                e.preventDefault();
+                selectIndex(state.activeIndex);
+            }
+            // Otherwise, allow the normal GET form submit to proceed.
+            return;
+        }
+    });
+
+    list.addEventListener('mousemove', function (e) {
+        var row = e.target && e.target.closest ? e.target.closest('[data-suggestion-index]') : null;
+        if (!row) return;
+        var idx = parseInt(row.getAttribute('data-suggestion-index'), 10);
+        if (!isNaN(idx) && idx !== state.activeIndex) {
+            state.activeIndex = idx;
+            render();
+        }
+    });
+
+    list.addEventListener('mousedown', function (e) {
+        var row = e.target && e.target.closest ? e.target.closest('[data-suggestion-index]') : null;
+        if (!row) return;
+        e.preventDefault(); // prevent input blur before navigation
+        var idx = parseInt(row.getAttribute('data-suggestion-index'), 10);
+        if (!isNaN(idx)) selectIndex(idx);
+    });
+
+    document.addEventListener('mousedown', function (e) {
+        if (!state.open) return;
+        if (root.contains(e.target) || list.contains(e.target) || input.contains(e.target)) return;
+        close();
+    });
+})();
+
+// ----------------------------------------------------------------
 // CART COUNTER (navbar)
 // ----------------------------------------------------------------
 

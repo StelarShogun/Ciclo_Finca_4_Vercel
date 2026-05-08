@@ -278,7 +278,7 @@ class SupplierOrderController extends Controller
             ->findOrFail($id);
 
         $productsPayload = $order->orderItems
-            ->map(fn ($item) => [
+            ->map(fn (OrderItem $item) => [
                 'id' => $item->id,
                 'name' => $item->name,
                 'quantity' => (int) $item->quantity,
@@ -308,10 +308,10 @@ class SupplierOrderController extends Controller
                 'state' => $order->state,
                 'total' => (float) $order->total,
                 'timeline' => $order->stateTimeline
-                    ->map(fn ($timeline) => [
+                    ->map(fn (OrderStateTimeline $timeline) => [
                         'state' => $timeline->state,
                         'changed_at' => $timeline->changed_at->format('d/m/Y H:i'),
-                        'user_name' => $timeline->admin
+                        'user_name' => $timeline->admin instanceof AdminUser
                             ? trim($timeline->admin->name.' '.($timeline->admin->first_surname ?? ''))
                             : 'Sistema',
                         'reason' => $timeline->reason,
@@ -375,7 +375,7 @@ class SupplierOrderController extends Controller
                 ->get();
 
             $alreadyProcessedViaReceive = $items->contains(
-                fn ($item) => $item->received_quantity !== null
+                fn (OrderItem $item) => $item->received_quantity !== null
             );
 
             if (! $alreadyProcessedViaReceive) {
@@ -488,8 +488,8 @@ class SupplierOrderController extends Controller
         ]);
 
         $shortages = $order->orderItems
-            ->filter(fn ($item) => (int) ($item->received_quantity ?? 0) < (int) $item->quantity)
-            ->map(fn ($item) => [
+            ->filter(fn (OrderItem $item) => (int) ($item->received_quantity ?? 0) < (int) $item->quantity)
+            ->map(fn (OrderItem $item) => [
                 'order_item_id' => (int) $item->id,
                 'product_id' => $item->product_id ? (int) $item->product_id : null,
                 'name' => (string) $item->name,
@@ -660,7 +660,7 @@ class SupplierOrderController extends Controller
             $order->load('orderItems');
 
             $isPartial = $order->orderItems->contains(
-                fn ($item) => (int) ($item->received_quantity ?? 0) < (int) $item->quantity
+                fn (OrderItem $item) => (int) ($item->received_quantity ?? 0) < (int) $item->quantity
             );
 
             $newState = $isPartial ? 'partial_received' : 'delivered';

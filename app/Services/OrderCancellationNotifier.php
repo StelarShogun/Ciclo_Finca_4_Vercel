@@ -16,9 +16,9 @@ class OrderCancellationNotifier
         $sale->loadMissing('client');
 
         $client = $sale->client;
-        $email = $client?->gmail ?? $sale->buyer_email;
+        $email = $client !== null ? $client->gmail : $sale->buyer_email;
         if (! $email) {
-            $this->logChannel($sale, $client?->user_id, 'mail', 'skipped', $reason, $cancelledAt, null, 'Missing recipient email');
+            $this->logChannel($sale, $client !== null ? $client->user_id : null, 'mail', 'skipped', $reason, $cancelledAt, null, 'Missing recipient email');
             Log::warning('Order cancellation notification skipped: missing recipient email.', [
                 'sale_id' => $sale->sale_id,
                 'reason' => $reason,

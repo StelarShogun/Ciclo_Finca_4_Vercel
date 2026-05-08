@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 /**
  * @property-read int|null $products_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ClassificationDimension> $classificationDimensions
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Category> $childCategories
  */
 class Category extends Model
 {

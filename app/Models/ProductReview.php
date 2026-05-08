@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * @property float|int|string|null $avg_stars
+ * @property int|string|null $review_count
+ */
 class ProductReview extends Model
 {
     protected $table = 'product_reviews';
@@ -49,7 +53,8 @@ class ProductReview extends Model
     public static function aggregatesForProductIds(array $productIds): array
     {
         $productIds = array_values(array_unique(array_map('intval', array_filter($productIds))));
-        if ($productIds === [] || ! Schema::hasTable((new static)->getTable())) {
+        $table = static::query()->getModel()->getTable();
+        if ($productIds === [] || ! Schema::hasTable($table)) {
             return [];
         }
 

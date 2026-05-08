@@ -155,4 +155,3 @@ class CF100AdminCardsToggleTest extends TestCase
         $filteredResponse->assertSee(route('inventory'), false);
     }
 }
-

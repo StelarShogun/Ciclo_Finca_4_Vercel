@@ -11,6 +11,7 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClassificationCatalogController;
+use App\Http\Controllers\ClientCatalogProductSuggestionsController;
 use App\Http\Controllers\ClientPageController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
@@ -300,6 +301,11 @@ Route::get('/admin/catalog-exit', function () {
 // Public client pages.
 Route::get('/', [ClientPageController::class, 'home'])->name('clients.home');
 Route::get('/catalog', [ClientPageController::class, 'catalog'])->name('clients.catalog');
+
+// Predictive suggestions for the public client catalog search bar.
+Route::get('/api/products/suggestions', ClientCatalogProductSuggestionsController::class)
+    ->middleware('throttle:60,1')
+    ->name('api.products.suggestions');
 
 // Product route with numeric ID and optional SEO slug.
 Route::get('/product/{id}/{slug?}', [ClientPageController::class, 'product'])

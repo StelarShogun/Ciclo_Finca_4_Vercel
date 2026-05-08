@@ -70,8 +70,6 @@ class ProductSalesExcelExport
     }
 
     /**
-     * @param  Collection<int, array<string, mixed>>  $top10
-     * @param  Collection<int, array<string, mixed>>  $tableRows
      * @param  array<int, string>  $filterLines
      */
     private function build(

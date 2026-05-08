@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $received_quantity Cantidad efectivamente recibida (null = sin recepción aún)
  * @property numeric-string $unit_price
  * @property numeric-string $total
+ * @property-read Product|null $product
  */
 class OrderItem extends Model
 {

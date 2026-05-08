@@ -16,8 +16,8 @@ use App\Services\Admin\RegistryExcelExport;
 use App\Services\Admin\ReportExcelFilename;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportsRegistryExportController extends Controller
@@ -192,7 +192,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // CSV export intentionally omitted — current UI supports PDF/Excel only.
+    // CSV export intentionally omitted — current UI supports PDF/Excel only (not wired to routes).
 
     // =========================================================================
     // BRANDS
@@ -277,7 +277,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // CSV export intentionally omitted — current UI supports PDF/Excel only.
+    // CSV export intentionally omitted — current UI supports PDF/Excel only (not wired to routes).
 
     // =========================================================================
     // SUPPLIER ORDERS
@@ -409,7 +409,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // CSV export intentionally omitted — current UI supports PDF/Excel only.
+    // CSV export intentionally omitted — current UI supports PDF/Excel only (not wired to routes).
 
     // Builds a comma-separated summary of product names and quantities for a single supplier order.
     private function summarizeSupplierOrderLines(Order $order): string
@@ -486,7 +486,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // CSV export intentionally omitted — current UI supports PDF/Excel only.
+    // CSV export intentionally omitted — current UI supports PDF/Excel only (not wired to routes).
 
     // =========================================================================
     // CLIENT ORDERS (web cart)
@@ -618,7 +618,7 @@ class ReportsRegistryExportController extends Controller
         );
     }
 
-    // CSV export intentionally omitted — current UI supports PDF/Excel only.
+    // CSV export intentionally omitted — current UI supports PDF/Excel only (not wired to routes).
 
     // =========================================================================
     // SHARED HELPERS
@@ -644,5 +644,5 @@ class ReportsRegistryExportController extends Controller
         ], $filenameSlug);
     }
 
-    // CSV export intentionally omitted — current UI supports PDF/Excel only.
+    // CSV export intentionally omitted — current UI supports PDF/Excel only (not wired to routes).
 }

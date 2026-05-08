@@ -94,7 +94,7 @@ class InventoryMovementController extends Controller
                 'sku' => Product::skuFromId((int) $product->product_id),
                 'stock_current' => $product->stock_current,
             ],
-            'data' => $movements->map(fn ($m) => $this->formatMovement($m)),
+            'data' => $movements->getCollection()->map(fn ($m) => $m instanceof InventoryMovement ? $this->formatMovement($m) : []),
             'summary' => $summary,
             'meta' => [
                 'current_page' => $movements->currentPage(),

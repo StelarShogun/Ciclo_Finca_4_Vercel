@@ -200,17 +200,13 @@ class ClientPageController extends Controller
                 'name' => $c->name,
                 'icon' => $this->clientCatalogCategoryIconClass($c->name),
                 'url_parent' => route('clients.catalog', array_merge($catalogParams, ['category_id' => $c->category_id])),
-                'children' => $c->childCategories->map(function ($ch) use ($catalogParams) {
-                    if (! $ch instanceof Category) {
-                        return null;
-                    }
-
+                'children' => $c->childCategories->map(function (Category $ch) use ($catalogParams) {
                     return [
                         'id' => (int) $ch->category_id,
                         'name' => $ch->name,
                         'url' => route('clients.catalog', array_merge($catalogParams, ['category_id' => $ch->category_id])),
                     ];
-                })->filter()->values()->all(),
+                })->values()->all(),
             ];
         })->values()->all();
     }

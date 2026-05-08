@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\ClassificationDimension;
 use App\Models\ClassificationValue;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -92,7 +93,9 @@ class ClassificationEloquentTest extends TestCase
         $loaded = $product->classificationValues;
         $this->assertCount(1, $loaded);
         $this->assertSame($value->id, $loaded->first()->id);
-        $this->assertSame($dimension->id, (int) $loaded->first()->pivot->classification_dimension_id);
+        $pivot = $loaded->first()->getRelationValue('pivot');
+        $this->assertInstanceOf(Pivot::class, $pivot);
+        $this->assertSame($dimension->id, (int) $pivot->getAttribute('classification_dimension_id'));
 
         $this->assertTrue(
             $sub->classificationDimensions()->whereKey($dimension->id)->exists()

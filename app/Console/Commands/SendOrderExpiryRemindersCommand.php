@@ -41,9 +41,8 @@ class SendOrderExpiryRemindersCommand extends Command
         $skipped = 0;
 
         foreach ($orders as $order) {
-            $email = $order->client_id
-                ? $order->client->gmail
-                : $order->buyer_email;
+            $client = $order->client;
+            $email = $client !== null ? $client->gmail : $order->buyer_email;
 
             if (! $email) {
                 $this->warn("Pedido #{$order->sale_id}: sin correo registrado, omitido.");
@@ -52,8 +51,8 @@ class SendOrderExpiryRemindersCommand extends Command
                 continue;
             }
 
-            $clientName = $order->client
-                ? trim("{$order->client->name} {$order->client->first_surname}")
+            $clientName = $client !== null
+                ? trim("{$client->name} {$client->first_surname}")
                 : ($order->buyer_name ?? 'Cliente');
 
             Mail::to($email)->send(

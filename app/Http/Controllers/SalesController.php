@@ -67,7 +67,7 @@ class SalesController extends Controller
                 $q->where('order_source', 'web_cart')
                     ->orWhereNull('order_source');
             })
-            ->notExpired();
+            ->where('sale_date', '>=', now()->subDays(Sale::getOrderExpirationDays()));
 
         $hasNew = (clone $baseQuery)
             ->where('sale_id', '>', $since)
@@ -838,7 +838,11 @@ class SalesController extends Controller
 
         $headers = ['ID Venta', 'Factura', 'Cliente', 'Email', 'Fecha', 'Estado', 'Método pago', 'Subtotal (₡)', 'IVA (₡)', 'Descuento (₡)', 'Total (₡)', 'Ítems', 'Notas'];
 
-        $dataRows = $rows->map(function (Sale $sale): array {
+        $dataRows = $rows->map(function ($sale): array {
+            if (! $sale instanceof Sale) {
+                return [];
+            }
+
             $customer = $sale->client
                 ? trim($sale->client->name.' '.($sale->client->first_surname ?? '').' '.($sale->client->second_surname ?? ''))
                 : ($sale->buyer_name ?: 'Walk-in / Sin datos');
@@ -947,7 +951,9 @@ class SalesController extends Controller
 
     private function applySalesAdminListFilters(Builder $query, Request $request): void
     {
-        $query->notExpired();
+        $days = Sale::getOrderExpirationDays();
+        $limitDate = now()->subDays($days);
+        $query->where('sale_date', '>=', $limitDate);
 
         $this->applyVentasStatusScope($query, $request->query('status'));
 
