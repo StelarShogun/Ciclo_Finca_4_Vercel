@@ -6,6 +6,8 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\ClassificationDimension;
+use App\Models\ClassificationValue;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\Admin\AdminInventoryExportQuery;
@@ -519,6 +521,11 @@ class ProductController extends Controller
     {
         $query = $this->inventoryProductsFilteredQuery($request)->with(['category.parent', 'supplier']);
         $lowStockProductsCount = Product::query()->lowStockAlert()->count();
+        $hasClassificationSelections = collect((array) $request->input('classifications', []))
+            ->contains(fn ($value) => is_string($value) && trim($value) !== '');
+        $classificationFilters = $hasClassificationSelections
+            ? $this->inventoryClassificationFilters($request)
+            : [];
 
         $perPage = $request->get('per_page', 10);
         $paginator = $query->paginate($perPage);
@@ -563,6 +570,16 @@ class ProductController extends Controller
             'subcategoriesByParent' => $subcategoriesByParent,
             'brands' => Brand::orderBy('name')->get(['id', 'name']),
             'inventoryExportsQuery' => AdminInventoryExportQuery::queryStringFromRequest($request),
+            'classificationFilters' => $classificationFilters,
+            'hasClassificationSelections' => $hasClassificationSelections,
+        ]);
+    }
+
+    public function inventoryClassificationFiltersOptions(Request $request)
+    {
+        return response()->json([
+            'success' => true,
+            'filters' => $this->inventoryClassificationFilters($request),
         ]);
     }
 
@@ -1080,6 +1097,21 @@ class ProductController extends Controller
             $query->where('status', $request->status);
         }
 
+        $classificationFilters = $request->input('classifications', []);
+        if (is_array($classificationFilters)) {
+            foreach ($classificationFilters as $slug => $rawValue) {
+                $slug = trim((string) $slug);
+                if ($slug === '' || ! is_string($rawValue) || trim($rawValue) === '') {
+                    continue;
+                }
+                $normalizedValue = ClassificationValue::normalizeStoredValue($rawValue);
+                $query->whereHas('classificationValues', function ($q) use ($slug, $normalizedValue) {
+                    $q->where('classification_values.normalized_value', $normalizedValue)
+                        ->whereHas('dimension', fn ($d) => $d->where('slug', $slug));
+                });
+            }
+        }
+
         [$sort, $order] = $this->validatedInventorySort($request->get('sort'), $request->get('order'));
         $query->orderBy($sort, $order);
 
@@ -1129,12 +1161,87 @@ class ProductController extends Controller
         if ($request->filled('status')) {
             $lines[] = 'Estado producto: '.$request->status;
         }
+        $classificationFilters = $request->input('classifications', []);
+        if (is_array($classificationFilters)) {
+            $labelsBySlug = ClassificationDimension::query()
+                ->select(['slug', 'label'])
+                ->whereIn('slug', array_keys($classificationFilters))
+                ->get()
+                ->pluck('label', 'slug');
+
+            foreach ($classificationFilters as $slug => $value) {
+                if (! is_string($value) || trim($value) === '') {
+                    continue;
+                }
+                $label = $labelsBySlug[$slug] ?? $slug;
+                $lines[] = "{$label}: {$value}";
+            }
+        }
 
         if (count($lines) === 0) {
             $lines[] = 'Sin filtros adicionales (todos los productos según orden por defecto).';
         }
 
         return $lines;
+    }
+
+    /** Dynamic classification filters loaded on demand for the current inventory scope. */
+    private function inventoryClassificationFilters(?Request $request = null): array
+    {
+        $requestForScope = $request ?? new Request;
+        $requestWithoutClassification = $requestForScope->duplicate();
+        $requestWithoutClassification->merge(['classifications' => []]);
+        $filteredProductIds = $this->inventoryProductsFilteredQuery($requestWithoutClassification)
+            ->reorder()
+            ->select('products.product_id');
+
+        $dimensions = ClassificationDimension::query()
+            ->select(['slug', 'label'])
+            ->join('classification_product', 'classification_product.classification_dimension_id', '=', 'classification_dimensions.id')
+            ->joinSub(clone $filteredProductIds, 'inventory_filtered_products', function ($join) {
+                $join->on('inventory_filtered_products.product_id', '=', 'classification_product.product_id');
+            })
+            ->whereNull('classification_dimensions.deleted_at')
+            ->groupBy('classification_dimensions.slug', 'classification_dimensions.label')
+            ->orderBy('label')
+            ->get();
+
+        return $dimensions->map(function (ClassificationDimension $dimension) use ($filteredProductIds) {
+            return [
+                'slug' => (string) $dimension->slug,
+                'label' => (string) $dimension->label,
+                'options' => $this->classificationFilterValuesBySlug((string) $dimension->slug, clone $filteredProductIds),
+            ];
+        })->filter(fn (array $f) => $f['options'] !== [])->values()->all();
+    }
+
+    /** Distinct visible values for a classification slug across products. */
+    private function classificationFilterValuesBySlug(string $slug, ?Builder $filteredProductIds = null): array
+    {
+        $query = ClassificationValue::query()
+            ->selectRaw('classification_values.normalized_value, MIN(classification_values.value) AS display_value')
+            ->join('classification_dimensions', 'classification_dimensions.id', '=', 'classification_values.classification_dimension_id')
+            ->join('classification_product', 'classification_product.classification_value_id', '=', 'classification_values.id')
+            ->join('products', 'products.product_id', '=', 'classification_product.product_id')
+            ->where('classification_dimensions.slug', $slug)
+            ->whereNull('classification_dimensions.deleted_at')
+            ->whereNull('classification_values.deleted_at')
+            ->groupBy('classification_values.normalized_value')
+            ->orderBy('display_value');
+
+        if ($filteredProductIds !== null) {
+            $query->joinSub($filteredProductIds, 'inventory_filtered_products', function ($join) {
+                $join->on('inventory_filtered_products.product_id', '=', 'classification_product.product_id');
+            });
+        }
+
+        return $query->get()
+            ->map(fn ($row) => [
+                'value' => (string) $row->normalized_value,
+                'label' => (string) $row->display_value,
+            ])
+            ->values()
+            ->all();
     }
 
     // Add manual stock and register the inventory movement

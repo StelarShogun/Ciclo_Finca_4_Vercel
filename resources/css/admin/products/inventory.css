@@ -317,8 +317,8 @@
 
 .filters-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(170px, 22vw, 240px), 1fr));
+  gap: 14px;
   align-items: end;
 }
 
@@ -327,18 +327,29 @@
   flex-direction: column;
 }
 
+.filter-group--full {
+  grid-column: 1 / -1;
+}
+
+.filter-group--classification {
+  grid-column: span 2;
+  min-width: 0;
+}
+
 .filter-group label {
   font-weight: 500;
   color: var(--color-dark);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  font-size: 0.92rem;
 }
 
 .filter-group input,
 .filter-group select {
-  padding: 10px 15px;
+  padding: 8px 12px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  min-height: 42px;
   transition: all 0.3s ease;
 }
 
@@ -347,6 +358,42 @@
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+}
+
+.filters-section .btn {
+  min-height: 42px;
+  padding: 8px 14px;
+  font-size: 0.92rem;
+}
+
+.btn-classification-toggle {
+  width: 100% !important;
+  max-width: 420px;
+  min-width: clamp(280px, 34vw, 420px);
+  align-self: flex-start;
+  justify-content: flex-start;
+  white-space: nowrap;
+}
+
+.classification-filters-panel {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.classification-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(170px, 22vw, 240px), 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.classification-filters-panel .filter-group label {
+  color: var(--color-dark);
+  font-weight: 500;
+  font-size: 0.92rem;
 }
 
 /* ============================================================
@@ -1192,6 +1239,17 @@
   .filters-grid {
     grid-template-columns: 1fr;
   }
+  .classification-filters-grid {
+    grid-template-columns: 1fr;
+  }
+  .filter-group--classification {
+    grid-column: auto;
+  }
+  .btn-classification-toggle {
+    width: 100% !important;
+    min-width: 0;
+    max-width: 100%;
+  }
   .admin-header {
     border-radius: 12px;
     padding: 1rem 1.25rem;
@@ -1268,6 +1326,14 @@
   .btn {
     padding: 10px 16px;
     font-size: 0.9rem;
+  }
+  .filters-section .btn {
+    min-height: 40px;
+    width: 100%;
+  }
+  .filter-group input,
+  .filter-group select {
+    min-height: 40px;
   }
 }
 
