@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 class AppSetting extends Model
 {
@@ -25,11 +27,24 @@ class AppSetting extends Model
     private const DEFAULT_WEEKLY_REPORT_HOUR = 8;
     private const DEFAULT_WEEKLY_REPORT_MINUTE = 0;
 
+    private static function getSettingValue(string $key): ?string
+    {
+        try {
+            if (! Schema::hasTable((new static())->getTable())) {
+                return null;
+            }
+
+            return static::query()
+                ->where('key', $key)
+                ->value('value');
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
     public static function getStoredOrderExpirationDays(): ?int
     {
-        $raw = static::query()
-            ->where('key', self::KEY_ORDER_EXPIRATION_DAYS)
-            ->value('value');
+        $raw = self::getSettingValue(self::KEY_ORDER_EXPIRATION_DAYS);
 
         if ($raw === null || $raw === '') {
             return null;
@@ -54,9 +69,7 @@ class AppSetting extends Model
 
     public static function getStoredReadyToPickupExpirationDays(): ?int
     {
-        $raw = static::query()
-            ->where('key', self::KEY_READY_TO_PICKUP_EXPIRATION_DAYS)
-            ->value('value');
+        $raw = self::getSettingValue(self::KEY_READY_TO_PICKUP_EXPIRATION_DAYS);
 
         if ($raw === null || $raw === '') {
             return null;
@@ -82,9 +95,7 @@ class AppSetting extends Model
 
     public static function getStoredReadyToPickupExpirationHours(): ?int
     {
-        $raw = static::query()
-            ->where('key', self::KEY_READY_TO_PICKUP_EXPIRATION_HOURS)
-            ->value('value');
+        $raw = self::getSettingValue(self::KEY_READY_TO_PICKUP_EXPIRATION_HOURS);
 
         if ($raw === null || $raw === '') {
             return null;
@@ -110,9 +121,7 @@ class AppSetting extends Model
 
     public static function getWeeklyReportRecipients(): array
     {
-        $raw = static::query()
-            ->where('key', self::KEY_WEEKLY_REPORT_RECIPIENTS)
-            ->value('value');
+        $raw = self::getSettingValue(self::KEY_WEEKLY_REPORT_RECIPIENTS);
 
         if ($raw === null || $raw === '') {
             return [];
@@ -135,9 +144,7 @@ class AppSetting extends Model
 
     public static function getWeeklyReportDay(): int
     {
-        $raw = static::query()
-            ->where('key', self::KEY_WEEKLY_REPORT_DAY)
-            ->value('value');
+        $raw = self::getSettingValue(self::KEY_WEEKLY_REPORT_DAY);
 
         if ($raw === null || $raw === '' || ! is_numeric($raw)) {
             return self::DEFAULT_WEEKLY_REPORT_DAY;
@@ -160,9 +167,7 @@ class AppSetting extends Model
 
     public static function getWeeklyReportHour(): int
     {
-        $raw = static::query()
-            ->where('key', self::KEY_WEEKLY_REPORT_HOUR)
-            ->value('value');
+        $raw = self::getSettingValue(self::KEY_WEEKLY_REPORT_HOUR);
 
         if ($raw === null || $raw === '' || ! is_numeric($raw)) {
             return self::DEFAULT_WEEKLY_REPORT_HOUR;
@@ -185,9 +190,7 @@ class AppSetting extends Model
 
     public static function getWeeklyReportMinute(): int
     {
-        $raw = static::query()
-            ->where('key', self::KEY_WEEKLY_REPORT_MINUTE)
-            ->value('value');
+        $raw = self::getSettingValue(self::KEY_WEEKLY_REPORT_MINUTE);
 
         if ($raw === null || $raw === '' || ! is_numeric($raw)) {
             return self::DEFAULT_WEEKLY_REPORT_MINUTE;
