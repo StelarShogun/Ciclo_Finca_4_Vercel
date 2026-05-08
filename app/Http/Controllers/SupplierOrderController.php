@@ -51,11 +51,12 @@ class SupplierOrderController extends Controller
         $supplierId = (int) $request->query('supplier_id', 0);
 
         $products = Product::query()
-            ->select(['product_id', 'name', 'purchase_price', 'sale_price'])
+            ->select(['product_id', 'name', 'purchase_price', 'sale_price', 'sku'])
             ->when($supplierId > 0, fn ($query) => $query->where('supplier_id', $supplierId))
             ->when($q !== '' && mb_strlen($q) >= 2, function ($query) use ($q) {
                 $query->where(function ($inner) use ($q) {
                     $inner->where('name', 'like', '%'.$q.'%')
+                        ->orWhere('sku', 'like', '%'.$q.'%')
                         ->orWhereRaw("CONCAT('BK-', LPAD(product_id, 3, '0')) LIKE ?", ['%'.$q.'%']);
                 });
             })
@@ -72,7 +73,7 @@ class SupplierOrderController extends Controller
                 return [
                     'product_id' => (int) $product->product_id,
                     'name' => (string) $product->name,
-                    'sku' => Product::skuFromId((int) $product->product_id),
+                    'sku' => $product->displaySku(),
                     'unit_price' => round($unitPrice, 2),
                 ];
             })

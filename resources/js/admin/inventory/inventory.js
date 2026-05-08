@@ -96,20 +96,29 @@ function renderVariantsListHtml({ baseProductId, variants }) {
             const status = String(v.status ?? '');
             const price = v.sale_price !== undefined ? `₡${v.sale_price}` : '—';
             const stock = v.stock_current !== undefined ? String(v.stock_current) : '—';
+            const skuLabel = v.sku !== undefined ? String(v.sku) : '';
 
             return `
                 <div class="variant-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6;">
                     <div style="min-width:0;">
                         <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(name)}</div>
-                        <div class="text-muted" style="font-size:12px;">ID ${escapeHtml(variantId)} · ${escapeHtml(price)} · Stock ${escapeHtml(stock)} · ${escapeHtml(status)}</div>
+                        <div class="text-muted" style="font-size:12px;">SKU ${escapeHtml(skuLabel)} · ${escapeHtml(price)} · Stock ${escapeHtml(stock)} · ${escapeHtml(status)}</div>
                     </div>
-                    <button type="button"
-                            class="btn btn-secondary js-delete-variant"
-                            data-base-product-id="${String(baseProductId)}"
-                            data-variant-product-id="${variantId}"
-                            data-variant-name="${escapeHtmlAttr(name)}">
-                        <i class="fas fa-trash"></i> Eliminar
-                    </button>
+                    <div style="display:flex;gap:6px;flex-shrink:0;">
+                        <button type="button"
+                                class="btn btn-secondary js-edit-variant"
+                                data-base-product-id="${String(baseProductId)}"
+                                data-variant-product-id="${variantId}">
+                            <i class="fas fa-pen"></i> Editar
+                        </button>
+                        <button type="button"
+                                class="btn btn-secondary js-delete-variant"
+                                data-base-product-id="${String(baseProductId)}"
+                                data-variant-product-id="${variantId}"
+                                data-variant-name="${escapeHtmlAttr(name)}">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </div>
                 </div>
             `;
         })
@@ -1531,6 +1540,157 @@ function smoothScrollTop() {
                     Swal.fire('Error', 'Error de conexión al eliminar la variante.', 'error');
                 });
         });
+    });
+
+    // CF4-72 — Editar variante (precio, stock, SKU)
+    const variantEditModal = qs('#variant-edit-modal');
+    const variantEditBackdrop = qs('#variant-edit-modal-backdrop');
+    const variantEditCloseBtn = qs('#variant-edit-modal-close');
+    const variantEditCancelBtn = qs('#variant-edit-cancel-btn');
+    const variantEditSaveBtn = qs('#variant-edit-save-btn');
+
+    function findVariantInEditList(variantProductId) {
+        return (currentEditVariants || []).find((v) => String(v?.product_id) === String(variantProductId));
+    }
+
+    function closeVariantEditModal() {
+        if (!variantEditModal) return;
+        variantEditModal.classList.remove('active');
+        variantEditModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function openVariantEditModal(baseId, variantProductId) {
+        const v = findVariantInEditList(variantProductId);
+        if (!v || !variantEditModal) {
+            Swal.fire('Error', 'No se encontró la variante en la lista.', 'error');
+            return;
+        }
+        const baseInput = qs('#variant-edit-base-id');
+        const variantInput = qs('#variant-edit-variant-id');
+        if (baseInput) baseInput.value = String(baseId);
+        if (variantInput) variantInput.value = String(variantProductId);
+
+        const titleEl = qs('#variant-edit-variant-title');
+        if (titleEl) titleEl.textContent = v.name || `Variante #${variantProductId}`;
+
+        const skuLocked = Boolean(v.sku_locked);
+        const lockedFlag = qs('#variant-edit-sku-locked');
+        if (lockedFlag) lockedFlag.value = skuLocked ? '1' : '0';
+
+        const skuInput = qs('#variant-edit-sku-input');
+        const hintDefault = qs('#variant-edit-sku-hint-default');
+        const lockedMsg = qs('#variant-edit-sku-locked-msg');
+
+        if (skuInput) {
+            skuInput.disabled = skuLocked;
+            const custom = v.sku_custom != null && String(v.sku_custom).trim() !== '' ? String(v.sku_custom) : '';
+            skuInput.value = custom;
+        }
+        if (hintDefault) {
+            hintDefault.style.display = skuLocked ? 'none' : 'block';
+            hintDefault.textContent = skuLocked
+                ? ''
+                : `Si lo dejás vacío se usará el código automático (${v.sku ? String(v.sku) : ''}).`;
+        }
+        if (lockedMsg) {
+            lockedMsg.style.display = skuLocked ? 'block' : 'none';
+        }
+
+        const priceEl = qs('#variant-edit-sale-price');
+        const stockEl = qs('#variant-edit-stock');
+        if (priceEl) priceEl.value = v.sale_price != null ? String(v.sale_price) : '';
+        if (stockEl) stockEl.value = v.stock_current != null ? String(v.stock_current) : '';
+
+        variantEditModal.classList.add('active');
+        variantEditModal.setAttribute('aria-hidden', 'false');
+    }
+
+    [variantEditBackdrop, variantEditCloseBtn, variantEditCancelBtn].forEach((el) => {
+        el?.addEventListener('click', () => closeVariantEditModal());
+    });
+
+    document.body.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.js-edit-variant');
+        if (!editBtn) return;
+        e.preventDefault();
+        const baseId = editBtn.dataset.baseProductId;
+        const variantId = editBtn.dataset.variantProductId;
+        if (!baseId || !variantId) return;
+        openVariantEditModal(baseId, variantId);
+    });
+
+    variantEditSaveBtn?.addEventListener('click', () => {
+        const baseId = qs('#variant-edit-base-id')?.value;
+        const variantId = qs('#variant-edit-variant-id')?.value;
+        const locked = qs('#variant-edit-sku-locked')?.value === '1';
+        if (!baseId || !variantId) return;
+
+        const salePrice = qs('#variant-edit-sale-price')?.value;
+        const stockRaw = qs('#variant-edit-stock')?.value;
+
+        const payload = {
+            sale_price: salePrice,
+            stock_current: Number.parseInt(String(stockRaw), 10),
+        };
+        if (!locked) {
+            payload.sku = qs('#variant-edit-sku-input')?.value?.trim() ?? '';
+        }
+
+        setButtonLoading(variantEditSaveBtn, true, 'Guardando...');
+
+        smartFetch(`/products/${baseId}/variants/${variantId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                ...jsonHeaders(),
+            },
+            body: JSON.stringify(payload),
+        })
+            .then(async (response) => {
+                let data = {};
+                try {
+                    data = await response.json();
+                } catch {
+                    data = {};
+                }
+                setButtonLoading(variantEditSaveBtn, false);
+
+                if (response.ok && data.success) {
+                    closeVariantEditModal();
+                    const updated = data.variant;
+                    if (updated && currentEditProductId && String(baseId) === String(currentEditProductId)) {
+                        currentEditVariants = (currentEditVariants || []).map((row) =>
+                            String(row?.product_id) === String(variantId) ? { ...row, ...updated } : row
+                        );
+                        const variantsList = qs('#edit-variants-list');
+                        if (variantsList) {
+                            variantsList.innerHTML = renderVariantsListHtml({
+                                baseProductId: baseId,
+                                variants: currentEditVariants,
+                            });
+                        }
+                        editVariantCombobox?.setBaseContext({
+                            baseProductId: currentEditProductId,
+                            currentVariants: currentEditVariants,
+                        });
+                    }
+                    Swal.fire('Listo', data.message || 'Variante actualizada correctamente.', 'success');
+                    return;
+                }
+
+                const msg = data.message || 'No se pudo guardar la variante.';
+                if (data.errors && typeof data.errors === 'object') {
+                    const first = Object.values(data.errors).flat()[0];
+                    Swal.fire('Revisá los datos', first || msg, 'warning');
+                } else {
+                    Swal.fire('Error', msg, 'error');
+                }
+            })
+            .catch(() => {
+                setButtonLoading(variantEditSaveBtn, false);
+                Swal.fire('Error', 'Error de conexión al guardar la variante.', 'error');
+            });
     });
 
     // Modal: View product details

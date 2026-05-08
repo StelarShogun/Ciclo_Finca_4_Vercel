@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Notifications\OrderReadyToPickupNotification;
 use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\RegistryExcelExport;
@@ -104,6 +105,10 @@ class SalesController extends Controller
                     'days_remaining_until_expiration' => $sale->days_remaining_until_expiration,
                     'expires_at' => $sale->expires_at->toISOString(),
                     'is_expiry_warning' => $sale->is_expiry_warning,
+                    'ready_at' => $sale->ready_at?->toISOString(),
+                    'pickup_expires_at' => $sale->pickup_expires_at?->toISOString(),
+                    'pickup_time_remaining_label' => $sale->pickup_time_remaining_label,
+                    'is_pickup_expired' => $sale->isPickupExpired(),
                     'buyer' => [
                         'name' => $sale->buyer_name,
                         'email' => $sale->buyer_email,
@@ -125,7 +130,7 @@ class SalesController extends Controller
                             'product' => $item->product ? [
                                 'product_id' => $item->product->product_id,
                                 'name' => $item->product->name,
-                                'sku' => Product::skuFromId((int) $item->product->product_id),
+                                'sku' => $item->product->displaySku(),
                             ] : null,
                         ];
                     }),
@@ -519,6 +524,8 @@ class SalesController extends Controller
                 'ready_at' => now(),
             ]);
 
+            $sale->refresh()->load(['client', 'saleItems.product']);
+
             $this->logAuditAction(
                 'sale_ready_to_pickup',
                 'Pedido marcado como listo para recoger.',
@@ -530,11 +537,22 @@ class SalesController extends Controller
                 ]
             );
 
-            // Notificar al cliente que su pedido está listo para recoger.
-            // Se ejecuta después de enviar la respuesta HTTP para no bloquear el flujo.
-            $saleForEmail = $sale;
-            app()->terminating(function () use ($saleForEmail) {
-                $this->sendReadyToPickupEmail($saleForEmail);
+            $saleForNotify = $sale;
+            app()->terminating(function () use ($saleForNotify): void {
+                $client = $saleForNotify->client;
+                if (! $client) {
+                    return;
+                }
+
+                try {
+                    $client->notify(new OrderReadyToPickupNotification($saleForNotify));
+                } catch (\Throwable $e) {
+                    Log::warning('Could not notify client (ready-to-pickup).', [
+                        'sale_id' => $saleForNotify->sale_id,
+                        'client_id' => $client->user_id ?? null,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             });
 
             return response()->json([
@@ -1234,55 +1252,6 @@ class SalesController extends Controller
                 ];
             default:
                 return [now()->startOfMonth()->startOfDay()->toDateTimeString(), now()->endOfMonth()->endOfDay()->toDateTimeString()];
-        }
-    }
-
-    private function sendReadyToPickupEmail(Sale $sale): void
-    {
-        if ((string) $sale->status !== 'ready_to_pickup') {
-            return;
-        }
-
-        $client = $sale->client ?: $sale->loadMissing('client')->client;
-        if (! $client || empty($client->gmail)) {
-            return;
-        }
-
-        $clientName = trim((string) $client->name) !== '' ? (string) $client->name : 'cliente';
-        $invoiceLabel = $sale->invoice_number ?? '#'.$sale->sale_id;
-        $historyUrl = route('clients.invoices', ['tab' => 'historial']);
-
-        $items = SaleItem::query()
-            ->with('product')
-            ->where('sale_id', $sale->sale_id)
-            ->get();
-
-        $itemLines = $items->map(function (SaleItem $item): string {
-            $name = $item->product ? $item->product->name : 'Producto';
-
-            return "  • {$name} × {$item->quantity}";
-        })->implode("\n");
-
-        $body = "Estimado {$clientName},\n\n"
-            ."¡Buenas noticias! Su pedido {$invoiceLabel} ya está listo para ser retirado en nuestra tienda.\n\n"
-            ."Productos:\n{$itemLines}\n\n"
-            .'Total: ₡'.number_format((float) $sale->total, 2, ',', '.')."\n\n"
-            ."Recuerde traer su número de pedido o identificación al momento de recogerlo.\n\n"
-            ."Puede consultar el estado de sus pedidos en:\n{$historyUrl}\n\n"
-            .'Gracias por comprar en Ciclo Finca 4.';
-
-        try {
-            Mail::raw($body, function ($message) use ($client, $invoiceLabel): void {
-                $message->to($client->gmail)
-                    ->subject("Su pedido {$invoiceLabel} está listo para recoger - Ciclo Finca 4");
-            });
-        } catch (\Throwable $e) {
-            Log::warning('Could not send ready-to-pickup notification email.', [
-                'sale_id' => $sale->sale_id ?? null,
-                'client_id' => $client->user_id ?? null,
-                'email' => $client->gmail ?? null,
-                'error' => $e->getMessage(),
-            ]);
         }
     }
 }

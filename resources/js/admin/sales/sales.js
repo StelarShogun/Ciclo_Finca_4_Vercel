@@ -300,11 +300,12 @@ function viewSale(id) {
         const fecha         = new Date(sale.sale_date).toLocaleString('es-CR');
         const items         = sale.sale_items || sale.saleItems || [];
         const statusLabels  = {
-            pending:   'Pendiente',
-            completed: 'Confirmado',
-            cancelled: 'Rechazado',
-            refunded:  'Reembolsado (histórico)',
-            returned:  'Devuelta',
+            pending:         'Pendiente',
+            ready_to_pickup: 'Por recoger',
+            completed:       'Confirmado',
+            cancelled:       'Rechazado',
+            refunded:        'Reembolsado (histórico)',
+            returned:        'Devuelta',
         };
         const paymentLabels = { cash: 'Efectivo', sinpe: 'SINPE movil', transfer: 'Transferencia' };
 
@@ -331,19 +332,36 @@ function viewSale(id) {
                 + '</tr>';
         }).join('');
 
-        // Expiration badge with warning tooltip
-        const daysLeft    = sale.days_remaining_until_expiration;
+        // Expiration badge.
+        // - ready_to_pickup: deadline = ready_at + READY_TO_PICKUP_EXPIRATION_HOURS
+        //   (exposed by the backend as pickup_time_remaining_label / is_pickup_expired).
+        // - completed: confirmed sales have no deadline anymore (they are already finalized).
+        // - other statuses: legacy 30-day countdown from sale_date.
         let expiryBadge;
-        if (typeof daysLeft !== 'undefined' && daysLeft <= 0) {
-            expiryBadge = '<span class="expiry-badge expiry-expired">Expirado</span>';
-        } else if (sale.is_expiry_warning) {
-            expiryBadge = '<span class="expiry-badge expiry-warning">'
-                + '<span class="expiry-warning-trigger" tabindex="0" role="button">'
-                + '<i class="fas fa-exclamation-triangle"></i>'
-                + '<span class="expiry-tooltip-label">Atencion! Este pedido se eliminara automaticamente en ' + daysLeft + ' dia(s).</span>'
-                + '</span>' + daysLeft + ' dia(s)</span>';
+        if (sale.status === 'ready_to_pickup') {
+            const pickupLabel = (sale.pickup_time_remaining_label || '').trim();
+            if (sale.is_pickup_expired || pickupLabel === 'Vencido') {
+                expiryBadge = '<span class="expiry-badge expiry-expired"><i class="fas fa-clock"></i> Vencido</span>';
+            } else if (pickupLabel !== '') {
+                expiryBadge = '<span class="expiry-badge expiry-ok">' + pickupLabel + '</span>';
+            } else {
+                expiryBadge = '-';
+            }
+        } else if (sale.status === 'completed') {
+            expiryBadge = '<span class="text-muted">—</span>';
         } else {
-            expiryBadge = (typeof daysLeft !== 'undefined') ? daysLeft + ' dia(s)' : '-';
+            const daysLeft = sale.days_remaining_until_expiration;
+            if (typeof daysLeft !== 'undefined' && daysLeft <= 0) {
+                expiryBadge = '<span class="expiry-badge expiry-expired">Expirado</span>';
+            } else if (sale.is_expiry_warning) {
+                expiryBadge = '<span class="expiry-badge expiry-warning">'
+                    + '<span class="expiry-warning-trigger" tabindex="0" role="button">'
+                    + '<i class="fas fa-exclamation-triangle"></i>'
+                    + '<span class="expiry-tooltip-label">Atencion! Este pedido se eliminara automaticamente en ' + daysLeft + ' dia(s).</span>'
+                    + '</span>' + daysLeft + ' dia(s)</span>';
+            } else {
+                expiryBadge = (typeof daysLeft !== 'undefined') ? daysLeft + ' dia(s)' : '-';
+            }
         }
 
         const discountRow = (sale.discount || 0) > 0

@@ -14,6 +14,68 @@ function isClientStockShortMessage(msg) {
     return msg === 'Producto agotado' || msg === 'Stock insuficiente';
 }
 
+/** Horas máximas para retiro tras marcar listo (`meta[name="cf4-ready-to-pickup-expiration-hours"]`). */
+function getCf4ReadyToPickupExpirationHours() {
+    var meta = document.querySelector('meta[name="cf4-ready-to-pickup-expiration-hours"]');
+    var n = meta ? parseInt(meta.getAttribute('content'), 10) : NaN;
+    if (!isFinite(n) || n < 1) return 72;
+    return n;
+}
+
+/** Frase legible para el aviso post-checkout (p. ej. "72 horas", "3 días"). */
+function formatCf4PickupWindowPhrase(hours) {
+    var h = Math.floor(Number(hours));
+    if (!isFinite(h) || h < 1) h = 72;
+    if (h >= 24 && h % 24 === 0) {
+        var d = h / 24;
+        return d === 1 ? '1 día' : d + ' días';
+    }
+    return h === 1 ? '1 hora' : h + ' horas';
+}
+
+/** Etiqueta corta del método de pago para el Swal de confirmación previa. */
+function getCf4PaymentMethodShortLabel(method) {
+    switch (String(method || '').toLowerCase()) {
+        case 'cash':     return 'efectivo';
+        case 'sinpe':    return 'SINPE móvil';
+        case 'transfer': return 'transferencia bancaria';
+        default:         return 'el método seleccionado';
+    }
+}
+
+/**
+ * Texto del Swal de éxito post-checkout. Cambia según las horas configuradas
+ * (meta cf4-ready-to-pickup-expiration-hours) y el método de pago elegido.
+ */
+function buildCf4CheckoutSuccessText(paymentMethod) {
+    var phrase = formatCf4PickupWindowPhrase(getCf4ReadyToPickupExpirationHours());
+    var base = 'Su pedido fue enviado con éxito. Cuando esté listo para recoger, '
+        + 'recibirá un aviso y tendrá hasta ' + phrase + ' para retirarlo en tienda.';
+
+    var paymentLine;
+    switch (String(paymentMethod || '').toLowerCase()) {
+        case 'sinpe':
+            paymentLine = ' El pago se realizará al momento del retiro mediante SINPE móvil; '
+                + 'recuerde llevar el comprobante.';
+            break;
+        case 'transfer':
+            paymentLine = ' El pago se realizará al momento del retiro mediante transferencia bancaria; '
+                + 'recuerde llevar el comprobante.';
+            break;
+        case 'cash':
+        default:
+            paymentLine = ' El pago se realizará al momento del retiro en efectivo.';
+            break;
+    }
+
+    return base + paymentLine;
+}
+
+function getCheckoutPaymentMethodFallback() {
+    var selected = document.querySelector('input[name="checkout_payment_method"]:checked');
+    return selected ? selected.value : 'cash';
+}
+
 // ============================================================
 // CART COUNTER (navbar)
 // ============================================================
@@ -1441,15 +1503,24 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // — Add-to-cart (delegated) —
+    // — Favorites drawer remove button (delegated) —
+    // El resto de manejadores de carrito se delega a clients-page.js cuando esa
+    // entrada de Vite también se carga (catalog/cart/product/home). Si solo se
+    // carga clients-users.js (login/register/recovery/profile) no hay UI de
+    // carrito, por lo que omitimos los listeners para evitar doble ejecución.
     document.addEventListener('click', function (e) {
         var favoriteRemoveBtn = e.target.closest('[data-favorite-remove-btn]');
         if (favoriteRemoveBtn) {
             e.preventDefault();
             toggleFavoriteFromDrawer(favoriteRemoveBtn.getAttribute('data-product-id'));
-            return;
         }
+    });
 
+    // — Cart UI listeners (only when clients-page.js is NOT loaded on this page) —
+    // Pages that render cart UI (cart, catalog, product, home) load clients-page.js,
+    // which already binds these handlers. Avoid double-binding here.
+    if (!window.__cf4ClientPageJsLoaded) {
+    document.addEventListener('click', function (e) {
         var addBtn = e.target.closest('.add-to-cart-btn');
         if (addBtn) {
             if (addBtn.dataset.purchasable === '0' || parseInt(addBtn.dataset.productStock, 10) < 1) {
@@ -1682,8 +1753,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var proceedBtn = document.getElementById('proceed-checkout');
     if (proceedBtn) {
         proceedBtn.addEventListener('click', function () {
+            var chosenMethodPreview = getCheckoutPaymentMethodFallback();
             Swal.fire({
-                title: '¿Confirmar compra?',
+                title: '¿Confirmar pedido con pago por '
+                    + getCf4PaymentMethodShortLabel(chosenMethodPreview) + '?',
                 text: 'Se enviará tu pedido para retiro en tienda.',
                 icon: 'question',
                 showCancelButton: true,
@@ -1702,7 +1775,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         'X-CSRF-TOKEN': getCsrfToken(),
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    },
+                    body: JSON.stringify({ payment_method: getCheckoutPaymentMethodFallback() })
                 })
                     .then(function (res) { return res.json(); })
                     .then(function (data) {
@@ -1720,9 +1794,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         updateCartCount(0);
                         showCartEmptyState();
+                        var paidWith = (data && data.payment_method)
+                            ? data.payment_method
+                            : getCheckoutPaymentMethodFallback();
                         Swal.fire({
                             icon: 'success',
-                            text: 'Su pedido fue enviado con éxito. Tiene un lapso de 3 días para retirarlo en nuestro local. El pago se realiza de forma presencial mediante SINPE, efectivo o tarjeta.',
+                            title: '¡Pedido confirmado!',
+                            text: buildCf4CheckoutSuccessText(paidWith),
                             confirmButtonText: 'Entendido'
                         });
                     })
@@ -1735,6 +1813,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+    } // end if (!window.__cf4ClientPageJsLoaded)
 
     // — ESC closes all modals and dropdowns —
     document.addEventListener('keydown', function (e) {

@@ -271,12 +271,20 @@
                                                 $statusLabels = [
                                                     'completed' => 'Completada',
                                                     'pending' => 'Pendiente',
+                                                    'ready_to_pickup' => 'Por recoger',
                                                     'cancelled' => 'Cancelada',
                                                     'canceled' => 'Cancelada',
+                                                    'refunded' => 'Reembolsada',
+                                                    'returned' => 'Devuelta',
                                                 ];
                                                 $statusText = $statusLabels[$sale->status] ?? ucfirst($sale->status);
+                                                $statusBadgeClass = match ($sale->status) {
+                                                    'completed' => 'success',
+                                                    'pending', 'ready_to_pickup' => 'warning',
+                                                    default => 'danger',
+                                                };
                                             @endphp
-                                            <span class="status-badge {{ $sale->status === 'completed' ? 'success' : ($sale->status === 'pending' ? 'warning' : 'danger') }}">
+                                            <span class="status-badge {{ $statusBadgeClass }}">
                                                 {{ $statusText }}
                                             </span>
                                         </td>

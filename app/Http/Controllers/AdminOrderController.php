@@ -45,17 +45,22 @@ class AdminOrderController extends Controller
             ->where('status', 'pending')
             ->count();
 
-        $stored = AppSetting::getStoredReadyToPickupExpirationDays();
-        $readyToPickupExpirationDays = ($stored !== null && $stored > 0)
-            ? $stored
-            : max(1, (int) config('sales.ready_to_pickup_expiration_days', 3));
-        $usesEnvDefaultForExpiry = $stored === null;
+        $storedHours = AppSetting::getStoredReadyToPickupExpirationHours();
+        $storedDaysLegacy = AppSetting::getStoredReadyToPickupExpirationDays();
+        if ($storedHours !== null && $storedHours > 0) {
+            $readyToPickupExpirationHours = $storedHours;
+        } elseif ($storedDaysLegacy !== null && $storedDaysLegacy > 0) {
+            $readyToPickupExpirationHours = $storedDaysLegacy * 24;
+        } else {
+            $readyToPickupExpirationHours = max(1, (int) config('sales.ready_to_pickup_expiration_hours', 72));
+        }
+        $usesEnvDefaultForExpiry = $storedHours === null && $storedDaysLegacy === null;
 
         return view('admin.orders.index', compact(
             'orders',
             'latestPurchaseSaleId',
             'pendingWebOrdersCount',
-            'readyToPickupExpirationDays',
+            'readyToPickupExpirationHours',
             'usesEnvDefaultForExpiry'
         ));
     }

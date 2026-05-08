@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateProductRequest;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\SaleItem;
 use App\Models\Supplier;
 use App\Services\Admin\AdminInventoryExportQuery;
 use App\Services\Admin\AdminPdfExportLimits;
@@ -150,13 +151,20 @@ class ProductController extends Controller
                 $productData['media_main'] = $product->getFirstMediaUrl('main_image');
                 $productData['media_gallery'] = $product->getMedia('gallery')->map(fn ($m) => $m->getUrl())->values()->toArray();
                 $productData['variants'] = $product->variants
-                    ->map(fn (Product $v) => [
-                        'product_id' => (int) $v->product_id,
-                        'name' => (string) $v->name,
-                        'status' => (string) $v->status,
-                        'stock_current' => (int) $v->stock_current,
-                        'sale_price' => (string) $v->sale_price,
-                    ])
+                    ->map(function (Product $v) {
+                        $skuLocked = SaleItem::query()->where('product_id', $v->product_id)->exists();
+
+                        return [
+                            'product_id' => (int) $v->product_id,
+                            'name' => (string) $v->name,
+                            'status' => (string) $v->status,
+                            'stock_current' => (int) $v->stock_current,
+                            'sale_price' => (string) $v->sale_price,
+                            'sku' => $v->displaySku(),
+                            'sku_custom' => $v->sku,
+                            'sku_locked' => $skuLocked,
+                        ];
+                    })
                     ->values()
                     ->all();
 
@@ -529,7 +537,7 @@ class ProductController extends Controller
                 'product_id' => $product->product_id,
                 'id' => $product->product_id,
                 'name' => $product->name,
-                'sku' => Product::skuFromId((int) $product->product_id),
+                'sku' => $product->displaySku(),
                 'image' => $product->image ?? 'default.png',
                 'category' => (object) ['name' => optional($product->category)->name ?? 'Uncategorized'],
                 'stock' => $product->stock_current,

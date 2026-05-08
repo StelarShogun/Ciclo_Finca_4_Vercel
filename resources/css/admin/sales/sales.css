@@ -241,10 +241,12 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.status-badge.pending   { background: var(--color-warning-bg); color: var(--color-warning); }
-.status-badge.completed { background: var(--color-success-bg); color: var(--color-success); }
-.status-badge.cancelled { background: var(--color-danger-bg);  color: var(--color-danger);  }
-.status-badge.refunded  { background: var(--color-info-bg);    color: var(--color-info);    }
+.status-badge.pending         { background: var(--color-warning-bg); color: var(--color-warning); }
+.status-badge.ready_to_pickup { background: var(--color-info-bg);    color: var(--color-info);    }
+.status-badge.completed       { background: var(--color-success-bg); color: var(--color-success); }
+.status-badge.cancelled       { background: var(--color-danger-bg);  color: var(--color-danger);  }
+.status-badge.refunded        { background: var(--color-info-bg);    color: var(--color-info);    }
+.status-badge.returned        { background: var(--color-info-bg);    color: var(--color-info);    }
 
 /* ============================================================
   4. KPI CARDS

@@ -185,6 +185,10 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
         ->whereNumber('product')
         ->whereNumber('variant')
         ->name('admin.products.variants.destroy');
+    Route::put('/products/{product}/variants/{variant}', [ProductVariantController::class, 'update'])
+        ->whereNumber('product')
+        ->whereNumber('variant')
+        ->name('admin.products.variants.update');
 
     // Featured product toggle route.
     Route::post('/products/{id}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');

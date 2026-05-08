@@ -212,7 +212,7 @@
                                         </div>
                                         <div class="product-info">
                                             <h4>{{ $product->name }}</h4>
-                                            <span class="sku">SKU: {{ 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT) }}</span>
+                                            <span class="sku">SKU: {{ $product->displaySku() }}</span>
                                         </div>
                                         </div>
                                     </td>
@@ -312,7 +312,7 @@
                                     </div>
                                     <div class="product-card-info">
                                         <h4>{{ $product->name }}</h4>
-                                        <span class="sku">SKU: {{ 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT) }}</span>
+                                        <span class="sku">SKU: {{ $product->displaySku() }}</span>
                                     </div>
                                 </div>
                                 <div class="product-card-details">
@@ -699,6 +699,47 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="cancel-edit">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="save-edit">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- CF4-72 — Editar variante (precio, stock, SKU condicional) --}}
+    <div class="edit-modal" id="variant-edit-modal" aria-hidden="true">
+        <div class="modal-backdrop" id="variant-edit-modal-backdrop"></div>
+        <div class="modal-content modal-auto-size">
+            <div class="modal-header">
+                <h3><i class="fas fa-layer-group"></i> Editar variante</h3>
+                <button type="button" class="modal-close" id="variant-edit-modal-close" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted" style="margin-bottom: 1rem;" id="variant-edit-variant-title"></p>
+                <div class="form-group">
+                    <label for="variant-edit-sku-input">SKU</label>
+                    <input type="text" id="variant-edit-sku-input" class="form-control" maxlength="64" autocomplete="off">
+                    <small class="form-text text-muted" id="variant-edit-sku-hint-default"></small>
+                    <small class="form-text text-warning" id="variant-edit-sku-locked-msg" style="display:none;">
+                        SKU bloqueado por historial de ventas.
+                    </small>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="variant-edit-sale-price">Precio de venta (₡) *</label>
+                        <input type="number" id="variant-edit-sale-price" class="form-control" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="variant-edit-stock">Stock actual *</label>
+                        <input type="number" id="variant-edit-stock" class="form-control" min="0" step="1" required>
+                    </div>
+                </div>
+                <input type="hidden" id="variant-edit-base-id" value="">
+                <input type="hidden" id="variant-edit-variant-id" value="">
+                <input type="hidden" id="variant-edit-sku-locked" value="0">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="variant-edit-cancel-btn">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="variant-edit-save-btn">Guardar variante</button>
             </div>
         </div>
     </div>

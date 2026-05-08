@@ -1,3 +1,9 @@
+// Marker used by clients-users.js to skip the cart/checkout listeners
+// it duplicates. The header (loaded on every page) ships clients-users.js,
+// while pages with cart UI also ship this file; without this guard each
+// click on .quantity-btn / cart-remove-item / proceed-checkout fires twice.
+window.__cf4ClientPageJsLoaded = true;
+
 // ----------------------------------------------------------------
 // GLOBAL UTILITIES
 // ----------------------------------------------------------------
@@ -13,6 +19,63 @@ function getCsrfToken() {
 /** Mensajes cortos de stock devueltos por el servidor (carrito / checkout). */
 function isClientStockShortMessage(msg) {
     return msg === 'Producto agotado' || msg === 'Stock insuficiente';
+}
+
+/** Horas máximas para retiro tras marcar listo (`meta[name="cf4-ready-to-pickup-expiration-hours"]`). */
+function getCf4ReadyToPickupExpirationHours() {
+    var meta = document.querySelector('meta[name="cf4-ready-to-pickup-expiration-hours"]');
+    var n = meta ? parseInt(meta.getAttribute('content'), 10) : NaN;
+    if (!isFinite(n) || n < 1) return 72;
+    return n;
+}
+
+/** Frase legible para el aviso post-checkout (p. ej. "72 horas", "3 días"). */
+function formatCf4PickupWindowPhrase(hours) {
+    var h = Math.floor(Number(hours));
+    if (!isFinite(h) || h < 1) h = 72;
+    if (h >= 24 && h % 24 === 0) {
+        var d = h / 24;
+        return d === 1 ? '1 día' : d + ' días';
+    }
+    return h === 1 ? '1 hora' : h + ' horas';
+}
+
+/** Etiqueta corta del método de pago para el Swal de confirmación previa. */
+function getCf4PaymentMethodShortLabel(method) {
+    switch (String(method || '').toLowerCase()) {
+        case 'cash':     return 'efectivo';
+        case 'sinpe':    return 'SINPE móvil';
+        case 'transfer': return 'transferencia bancaria';
+        default:         return 'el método seleccionado';
+    }
+}
+
+/**
+ * Texto del Swal de éxito post-checkout. Cambia según las horas configuradas
+ * (meta cf4-ready-to-pickup-expiration-hours) y el método de pago elegido.
+ */
+function buildCf4CheckoutSuccessText(paymentMethod) {
+    var phrase = formatCf4PickupWindowPhrase(getCf4ReadyToPickupExpirationHours());
+    var base = 'Su pedido fue enviado con éxito. Cuando esté listo para recoger, '
+        + 'recibirá un aviso y tendrá hasta ' + phrase + ' para retirarlo en tienda.';
+
+    var paymentLine;
+    switch (String(paymentMethod || '').toLowerCase()) {
+        case 'sinpe':
+            paymentLine = ' El pago se realizará al momento del retiro mediante SINPE móvil; '
+                + 'recuerde llevar el comprobante.';
+            break;
+        case 'transfer':
+            paymentLine = ' El pago se realizará al momento del retiro mediante transferencia bancaria; '
+                + 'recuerde llevar el comprobante.';
+            break;
+        case 'cash':
+        default:
+            paymentLine = ' El pago se realizará al momento del retiro en efectivo.';
+            break;
+    }
+
+    return base + paymentLine;
 }
 
 // ----------------------------------------------------------------
@@ -227,6 +290,12 @@ function closeModal(id) {
 // CART PAGE (/cart)
 // ----------------------------------------------------------------
 
+/** Selected checkout payment method from summary radios (default cash). */
+function getCheckoutPaymentMethod() {
+    var selected = document.querySelector('input[name="checkout_payment_method"]:checked');
+    return selected ? selected.value : 'cash';
+}
+
 /** PUTs a quantity change for a single cart item, then updates DOM (no reload). */
 function updateCartQuantity(productId, quantity) {
     fetch('/cart/update', {
@@ -253,17 +322,22 @@ function updateCartQuantity(productId, quantity) {
 
                 updateCartCount(data.cart_count || 0);
 
-                // Update the affected line subtotal using unit price from the rendered UI.
                 var cartItem = document.querySelector('.cart-item[data-product-id="' + productId + '"]');
                 if (cartItem) {
-                    var unitPriceEl   = cartItem.querySelector('.item-price');
-                    var unitPriceText = unitPriceEl ? unitPriceEl.textContent : '';
-                    // Matches "₡1.234 c/u" => returns 1234
-                    var unitPrice     = parseInt(unitPriceText.replace(/[^\d]/g, ''), 10) || 0;
-                    var newSubtotal   = unitPrice * quantity;
                     var lineSubtotalEl = cartItem.querySelector('.subtotal-amount');
-                    if (lineSubtotalEl) {
-                        lineSubtotalEl.textContent = '₡' + newSubtotal.toLocaleString('es-CR');
+                    if (lineSubtotalEl && data.line_subtotal != null) {
+                        lineSubtotalEl.textContent = '₡' + Number(data.line_subtotal).toLocaleString('es-CR');
+                    }
+                    var qtyInput = cartItem.querySelector('.quantity-input');
+                    if (qtyInput && data.quantity_applied != null) {
+                        qtyInput.value = data.quantity_applied;
+                    }
+                    if (data.stock_clamped) {
+                        Swal.fire(
+                            'Aviso',
+                            'La cantidad se ajustó al stock disponible (' + data.quantity_applied + ' unidades).',
+                            'warning'
+                        );
                     }
                 }
             } else {
@@ -736,8 +810,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var proceedBtn = document.getElementById('proceed-checkout');
     if (proceedBtn) {
         proceedBtn.addEventListener('click', function () {
+            var chosenMethodPreview = getCheckoutPaymentMethod();
             Swal.fire({
-                title: '¿Confirmar compra?',
+                title: '¿Confirmar pedido con pago por '
+                    + getCf4PaymentMethodShortLabel(chosenMethodPreview) + '?',
                 text: 'Se enviará tu pedido para retiro en tienda.',
                 icon: 'question',
                 showCancelButton: true,
@@ -756,7 +832,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         'X-CSRF-TOKEN': getCsrfToken(),
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    },
+                    body: JSON.stringify({ payment_method: getCheckoutPaymentMethod() })
                 })
                     .then(function (res) { return res.json(); })
                     .then(function (data) {
@@ -793,10 +870,13 @@ document.addEventListener('DOMContentLoaded', function () {
                             badge.style.display = 'flex';
                         })();
 
+                        var paidWith = (data && data.payment_method)
+                            ? data.payment_method
+                            : getCheckoutPaymentMethod();
                         Swal.fire({
                             icon: 'success',
                             title: '¡Pedido confirmado!',
-                            text: 'Su pedido fue enviado con éxito. Cuando el pedido sea procesado, se te enviara un correo de confirmación y podrás retirarlo en nuestro local (Con un maximo de 3 dias antes de su vencimiento). El pago se realiza de forma presencial mediante SINPE, efectivo o tarjeta.',
+                            text: buildCf4CheckoutSuccessText(paidWith),
                             confirmButtonText: 'Entendido'
                         });
                     })

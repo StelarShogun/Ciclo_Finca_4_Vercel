@@ -9,6 +9,7 @@ use App\Models\SaleItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Session;
 use Tests\TestCase;
 
 class CF4ClientCartTest extends TestCase
@@ -79,6 +80,19 @@ class CF4ClientCartTest extends TestCase
         $updateRes->assertStatus(200);
         $this->assertTrue($updateRes->json('success'));
         $this->assertEquals(90, $updateRes->json('cart_total'));
+        $this->assertSame(1, $updateRes->json('quantity_applied'));
+        $this->assertFalse($updateRes->json('stock_clamped'));
+        $this->assertEquals(90.0, $updateRes->json('line_subtotal'));
+
+        $clampRes = $this->putJson(route('clients.cart.update'), [
+            'product_id' => $product->product_id,
+            'quantity' => 99,
+        ]);
+        $clampRes->assertStatus(200);
+        $this->assertTrue($clampRes->json('success'));
+        $this->assertSame(10, $clampRes->json('quantity_applied'));
+        $this->assertTrue($clampRes->json('stock_clamped'));
+        $this->assertEquals(900.0, $clampRes->json('line_subtotal'));
 
         $removeRes = $this->deleteJson(route('clients.cart.remove', $product->product_id));
         $removeRes->assertStatus(200);
@@ -144,7 +158,9 @@ class CF4ClientCartTest extends TestCase
             'quantity' => 1,
         ]);
 
-        $checkoutRes = $this->postJson(route('clients.cart.checkout'));
+        $checkoutRes = $this->postJson(route('clients.cart.checkout'), [
+            'payment_method' => 'cash',
+        ]);
         $checkoutRes->assertStatus(200);
         $this->assertTrue($checkoutRes->json('success'));
 
@@ -230,5 +246,109 @@ class CF4ClientCartTest extends TestCase
 
         $this->get('/product/'.$product->product_id)->assertRedirect($canonical);
         $this->get($path)->assertStatus(200);
+    }
+
+    public function test_checkout_persists_quantity_greater_than_one_in_sale_items(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'MultiQty',
+            'second_surname' => null,
+            'gmail' => 'cliente-multiqty@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $product = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Giant Escape 3 Test',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 250_000,
+            'purchase_price' => 100_000,
+            'stock_current' => 15,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($client, 'clients');
+
+        $this->postJson(route('clients.cart.add'), [
+            'product_id' => $product->product_id,
+            'quantity' => 11,
+        ])->assertStatus(200);
+
+        $checkoutRes = $this->postJson(route('clients.cart.checkout'), [
+            'payment_method' => 'transfer',
+        ]);
+        $checkoutRes->assertStatus(200);
+        $this->assertTrue($checkoutRes->json('success'));
+
+        $saleId = $checkoutRes->json('sale_id');
+        $sale = Sale::findOrFail($saleId);
+        $this->assertEquals(11 * 250_000, (float) $sale->total);
+        $this->assertSame('transfer', $sale->payment_method);
+
+        $line = SaleItem::where('sale_id', $saleId)->where('product_id', $product->product_id)->first();
+        $this->assertNotNull($line);
+        $this->assertSame(11, (int) $line->quantity);
+        $this->assertEquals(250_000.0, (float) $line->unit_price);
+
+        $product->refresh();
+        $this->assertSame(4, (int) $product->stock_current);
+
+        $this->assertSame([], Session::get('cart', []));
+    }
+
+    public function test_cart_render_does_not_overwrite_session_quantities(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Sesion',
+            'second_surname' => null,
+            'gmail' => 'cliente-sesion@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $product = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Producto sesión',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 100,
+            'purchase_price' => 10,
+            'stock_current' => 15,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($client, 'clients');
+
+        $inflatedRow = [
+            'product_id' => $product->product_id,
+            'name' => $product->name,
+            'price' => 100.0,
+            'quantity' => 11,
+            'image' => '',
+            'subtotal' => 999,
+            'stock_available' => 15,
+        ];
+
+        $this->withSession(['cart' => [$inflatedRow]])
+            ->get(route('clients.cart'))
+            ->assertStatus(200);
+
+        $cart = Session::get('cart', []);
+        $this->assertCount(1, $cart);
+        $this->assertSame(11, (int) $cart[0]['quantity']);
+        $this->assertArrayNotHasKey('subtotal', $cart[0]);
+        $this->assertArrayNotHasKey('stock_available', $cart[0]);
+        $allowed = ['product_id', 'name', 'price', 'quantity', 'image'];
+        foreach (array_keys($cart[0]) as $key) {
+            $this->assertContains($key, $allowed);
+        }
     }
 }
