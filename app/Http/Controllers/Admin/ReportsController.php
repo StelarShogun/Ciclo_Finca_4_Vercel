@@ -8,6 +8,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\SaleItem;
 use App\Models\Supplier;
+use App\Services\Admin\CatalogMostSearchedProductsReportQuery;
 use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\ProductSalesExcelExport;
@@ -145,6 +146,35 @@ class ReportsController extends Controller
             'q' => $this->normalizeQuery($request->query('q')),
             'top10' => $this->normalizeTop10Metric($request->query('top10')),
         ]);
+    }
+
+    /** CF4-108 — productos más vistos en resultados de búsqueda del catálogo público. */
+    public function catalogMostSearchedProducts(Request $request)
+    {
+        $period = $this->normalizeCatalogSearchPeriod($request->query('period'));
+        $rows = CatalogMostSearchedProductsReportQuery::topProducts($period, 50);
+        $totalEvents = CatalogMostSearchedProductsReportQuery::totalEventsSince($period);
+        $uniqueProducts = CatalogMostSearchedProductsReportQuery::distinctProductCount($period);
+        $topRow = $rows->first();
+        $maxHits = max(1, (int) ($rows->max('hit_count') ?? 0));
+
+        return view('admin.reports.catalog-most-searched-products', [
+            'period' => $period,
+            'rows' => $rows,
+            'totalEvents' => $totalEvents,
+            'uniqueProducts' => $uniqueProducts,
+            'topProductName' => $topRow->name ?? null,
+            'topProductHits' => isset($topRow->hit_count) ? (int) $topRow->hit_count : null,
+            'maxHits' => $maxHits,
+        ]);
+    }
+
+    /** @return '7d'|'30d'|'90d' */
+    private function normalizeCatalogSearchPeriod(mixed $value): string
+    {
+        $v = is_string($value) ? $value : '';
+
+        return in_array($v, ['7d', '30d', '90d'], true) ? $v : '30d';
     }
 
     // Returns a paginated product-sales table plus the Top 10 chart data as JSON.

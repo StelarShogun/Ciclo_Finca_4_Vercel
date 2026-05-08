@@ -50,6 +50,14 @@
                 </div>
                 <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
             </a>
+            <a href="{{ route('admin.reports.catalog-search-products', ['period' => '30d']) }}" class="report-card">
+                <div class="report-card-icon"><i class="fas fa-search"></i></div>
+                <div class="report-card-body">
+                    <h2>Productos más buscados</h2>
+                    <p>Ranking según apariciones en el catálogo cuando los clientes buscan por texto (últimos 7, 30 o 90 días).</p>
+                </div>
+                <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
+            </a>
             <a href="{{ route('admin.inventory.movements.index') }}" class="report-card">
                 <div class="report-card-icon"><i class="fas fa-clock-rotate-left"></i></div>
                 <div class="report-card-body">

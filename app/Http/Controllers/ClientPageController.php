@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Services\Catalog\CatalogProductSearchTelemetry;
 use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -127,6 +128,10 @@ class ClientPageController extends Controller
 
         $perPage = $request->get('per_page', 12);
         $products = $query->paginate($perPage)->withQueryString();
+
+        if ($request->filled('search')) {
+            CatalogProductSearchTelemetry::recordSearchResultsPage((string) $request->input('search'), $products);
+        }
 
         $categories = Category::whereNull('parent_category_id')
             ->with(['childCategories' => function ($q) {

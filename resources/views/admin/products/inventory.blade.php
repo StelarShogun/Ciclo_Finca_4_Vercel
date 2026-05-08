@@ -154,7 +154,7 @@
                                 type="button"
                                 class="btn btn-primary btn-classification-toggle"
                                 id="toggle-classification-filters"
-                                aria-expanded="false"
+                                aria-expanded="{{ ($hasClassificationSelections ?? false) ? 'true' : 'false' }}"
                                 aria-controls="classification-filters-panel">
                                 <i class="fas fa-sliders-h"></i>
                                 Más filtros por clasificación
@@ -165,8 +165,8 @@
 
                     <div
                         id="classification-filters-panel"
-                        class="classification-filters-panel"
-                        hidden>
+                        class="classification-filters-panel{{ ($hasClassificationSelections ?? false) ? ' is-open' : '' }}"
+                        @unless($hasClassificationSelections ?? false) hidden @endunless>
                         <div
                             id="classification-filters-container"
                             class="classification-filters-grid"
