@@ -150,10 +150,21 @@ class ProductController extends Controller
                 $productData['classification_value_ids'] = $product->classificationValues->pluck('id')->values()->all();
                 $productData['media_main'] = $product->getFirstMediaUrl('main_image');
                 $productData['media_gallery'] = $product->getMedia('gallery')->map(fn ($m) => $m->getUrl())->values()->toArray();
-                $productData['variants'] = $product->variants
-                    ->map(function (Product $v) {
-                        $skuLocked = SaleItem::query()->where('product_id', $v->product_id)->exists();
+                $variantIds = $product->variants->pluck('product_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
 
+                $lockedVariantIds = [];
+                if ($variantIds !== []) {
+                    $lockedVariantIds = SaleItem::query()
+                        ->whereIn('product_id', $variantIds)
+                        ->distinct()
+                        ->pluck('product_id')
+                        ->map(fn ($id) => (int) $id)
+                        ->all();
+                }
+                $lockedSet = array_fill_keys($lockedVariantIds, true);
+
+                $productData['variants'] = $product->variants
+                    ->map(function (Product $v) use ($lockedSet) {
                         return [
                             'product_id' => (int) $v->product_id,
                             'name' => (string) $v->name,
@@ -162,7 +173,7 @@ class ProductController extends Controller
                             'sale_price' => (string) $v->sale_price,
                             'sku' => $v->displaySku(),
                             'sku_custom' => $v->sku,
-                            'sku_locked' => $skuLocked,
+                            'sku_locked' => isset($lockedSet[(int) $v->product_id]),
                         ];
                     })
                     ->values()

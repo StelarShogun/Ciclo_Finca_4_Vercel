@@ -19,11 +19,7 @@ class OrderReadyToPickupNotificationTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
+        parent::setUp();
 
         if (Schema::getConnection()->getDriverName() !== 'mysql') {
             $this->markTestSkipped('Este test requiere MySQL.');

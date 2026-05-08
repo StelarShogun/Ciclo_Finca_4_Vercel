@@ -1,3 +1,8 @@
+import {
+    buildCf4CheckoutSuccessText,
+    getCf4PaymentMethodShortLabel,
+} from './checkout-copy.js';
+
 // ============================================================
 // GLOBAL UTILITIES
 // ============================================================
@@ -12,63 +17,6 @@ function getCsrfToken() {
 
 function isClientStockShortMessage(msg) {
     return msg === 'Producto agotado' || msg === 'Stock insuficiente';
-}
-
-/** Horas máximas para retiro tras marcar listo (`meta[name="cf4-ready-to-pickup-expiration-hours"]`). */
-function getCf4ReadyToPickupExpirationHours() {
-    var meta = document.querySelector('meta[name="cf4-ready-to-pickup-expiration-hours"]');
-    var n = meta ? parseInt(meta.getAttribute('content'), 10) : NaN;
-    if (!isFinite(n) || n < 1) return 72;
-    return n;
-}
-
-/** Frase legible para el aviso post-checkout (p. ej. "72 horas", "3 días"). */
-function formatCf4PickupWindowPhrase(hours) {
-    var h = Math.floor(Number(hours));
-    if (!isFinite(h) || h < 1) h = 72;
-    if (h >= 24 && h % 24 === 0) {
-        var d = h / 24;
-        return d === 1 ? '1 día' : d + ' días';
-    }
-    return h === 1 ? '1 hora' : h + ' horas';
-}
-
-/** Etiqueta corta del método de pago para el Swal de confirmación previa. */
-function getCf4PaymentMethodShortLabel(method) {
-    switch (String(method || '').toLowerCase()) {
-        case 'cash':     return 'efectivo';
-        case 'sinpe':    return 'SINPE móvil';
-        case 'transfer': return 'transferencia bancaria';
-        default:         return 'el método seleccionado';
-    }
-}
-
-/**
- * Texto del Swal de éxito post-checkout. Cambia según las horas configuradas
- * (meta cf4-ready-to-pickup-expiration-hours) y el método de pago elegido.
- */
-function buildCf4CheckoutSuccessText(paymentMethod) {
-    var phrase = formatCf4PickupWindowPhrase(getCf4ReadyToPickupExpirationHours());
-    var base = 'Su pedido fue enviado con éxito. Cuando esté listo para recoger, '
-        + 'recibirá un aviso y tendrá hasta ' + phrase + ' para retirarlo en tienda.';
-
-    var paymentLine;
-    switch (String(paymentMethod || '').toLowerCase()) {
-        case 'sinpe':
-            paymentLine = ' El pago se realizará al momento del retiro mediante SINPE móvil; '
-                + 'recuerde llevar el comprobante.';
-            break;
-        case 'transfer':
-            paymentLine = ' El pago se realizará al momento del retiro mediante transferencia bancaria; '
-                + 'recuerde llevar el comprobante.';
-            break;
-        case 'cash':
-        default:
-            paymentLine = ' El pago se realizará al momento del retiro en efectivo.';
-            break;
-    }
-
-    return base + paymentLine;
 }
 
 function getCheckoutPaymentMethodFallback() {

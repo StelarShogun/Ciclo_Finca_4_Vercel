@@ -223,9 +223,9 @@
                                 </span>
                             </td>
 
-                            {{-- Expiry / pickup window.
-                                 Confirmed sales no longer have a deadline (they are already finalized),
-                                 so we render an em dash for any non-pending status. --}}
+                            {{-- Expiry / pickup window: ready_to_pickup shows pickup countdown from ready_at;
+                                 completed shows an em dash (finalized). Other statuses use the legacy
+                                 30-day countdown from sale_date. --}}
                             <td>
                                 @if ($sale->status === 'ready_to_pickup')
                                     @php

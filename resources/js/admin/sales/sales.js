@@ -357,10 +357,10 @@ function viewSale(id) {
                 expiryBadge = '<span class="expiry-badge expiry-warning">'
                     + '<span class="expiry-warning-trigger" tabindex="0" role="button">'
                     + '<i class="fas fa-exclamation-triangle"></i>'
-                    + '<span class="expiry-tooltip-label">Atencion! Este pedido se eliminara automaticamente en ' + daysLeft + ' dia(s).</span>'
-                    + '</span>' + daysLeft + ' dia(s)</span>';
+                    + '<span class="expiry-tooltip-label">¡Atención! Este pedido se eliminará automáticamente en ' + daysLeft + ' día(s).</span>'
+                    + '</span>' + daysLeft + ' día(s)</span>';
             } else {
-                expiryBadge = (typeof daysLeft !== 'undefined') ? daysLeft + ' dia(s)' : '-';
+                expiryBadge = (typeof daysLeft !== 'undefined') ? daysLeft + ' día(s)' : '-';
             }
         }
 
