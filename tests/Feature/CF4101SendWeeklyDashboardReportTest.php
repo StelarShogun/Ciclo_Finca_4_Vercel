@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\WeeklyDashboardReportMail;
+use App\Models\AdminUser;
 use App\Models\AppSetting;
 use App\Models\Category;
 use App\Models\Product;
@@ -26,9 +27,9 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
 
     /** Persists the weekly report settings. */
     private function configureReport(
-        int   $day        = 1,
-        int   $hour       = 8,
-        int   $minute     = 0,
+        int $day = 1,
+        int $hour = 8,
+        int $minute = 0,
         array $recipients = ['admin@ciclofinca.com']
     ): void {
         AppSetting::setWeeklyReportDay($day);
@@ -44,7 +45,7 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
         $counter++;
 
         return Supplier::create([
-            'name'  => "Test Supplier {$counter}",
+            'name' => "Test Supplier {$counter}",
             'email' => "supplier{$counter}@test.com",
         ]);
     }
@@ -56,13 +57,13 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
         $counter++;
 
         return Product::create([
-            'name'           => "Test Product {$counter}",
-            'supplier_id'    => $supplier->supplier_id,
-            'stock_current'  => $stockCurrent,
-            'stock_minimum'  => $stockMinimum,
-            'sale_price'     => 1500.00,
+            'name' => "Test Product {$counter}",
+            'supplier_id' => $supplier->supplier_id,
+            'stock_current' => $stockCurrent,
+            'stock_minimum' => $stockMinimum,
+            'sale_price' => 1500.00,
             'purchase_price' => 900.00,
-            'status'         => 'active',
+            'status' => 'active',
         ]);
     }
 
@@ -77,24 +78,24 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
         $counter++;
 
         return Sale::create([
-            'invoice_number' => 'INV-TEST-' . str_pad((string) $counter, 5, '0', STR_PAD_LEFT),
-            'sale_date'      => $date->copy()->startOfDay(),
-            'status'         => 'completed',
-            'total'          => $total,
+            'invoice_number' => 'INV-TEST-'.str_pad((string) $counter, 5, '0', STR_PAD_LEFT),
+            'sale_date' => $date->copy()->startOfDay(),
+            'status' => 'completed',
+            'total' => $total,
         ]);
     }
 
     /** Returns the test admin user, creating it if it does not exist. */
-    private function createAdmin(): \App\Models\AdminUser
+    private function createAdmin(): AdminUser
     {
-        return \App\Models\AdminUser::firstOrCreate(
+        return AdminUser::firstOrCreate(
             ['gmail' => 'admin@cicloperez.com'],
             [
-                'name'           => 'Administrator',
-                'first_surname'  => 'System',
+                'name' => 'Administrator',
+                'first_surname' => 'System',
                 'second_surname' => null,
-                'password'       => bcrypt('Admin2024!@#'),
-                'last_access'    => null,
+                'password' => bcrypt('Admin2024!@#'),
+                'last_access' => null,
             ]
         );
     }
@@ -112,9 +113,9 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
     private function settingsPayload(array $overrides = []): array
     {
         return array_merge([
-            'weekly_report_day'        => 3,
-            'weekly_report_hour'       => 9,
-            'weekly_report_minute'     => 30,
+            'weekly_report_day' => 3,
+            'weekly_report_hour' => 9,
+            'weekly_report_minute' => 30,
             'weekly_report_recipients' => 'manager@ciclofinca.com, admin@ciclofinca.com',
         ], $overrides);
     }
@@ -129,12 +130,12 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
         Mail::fake();
 
         $recipients = ['manager@ciclofinca.com', 'admin@ciclofinca.com'];
-        $now        = Carbon::now();
+        $now = Carbon::now();
 
         $this->configureReport(
-            day:        (int) $now->format('w'),
-            hour:       (int) $now->format('G'),
-            minute:     (int) $now->format('i'),
+            day: (int) $now->format('w'),
+            hour: (int) $now->format('G'),
+            minute: (int) $now->format('i'),
             recipients: $recipients,
         );
 
@@ -168,8 +169,8 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
 
         $tomorrow = Carbon::now()->addDay();
         $this->configureReport(
-            day:    (int) $tomorrow->format('w'),
-            hour:   3,
+            day: (int) $tomorrow->format('w'),
+            hour: 3,
             minute: 0,
         );
 
@@ -191,11 +192,11 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
                 route('admin.orders.settings.weekly-report.update'),
                 $this->settingsPayload()
             )->assertOk()
-             ->assertJsonFragment([
-                 'weekly_report_day'    => 3,
-                 'weekly_report_hour'   => 9,
-                 'weekly_report_minute' => 30,
-             ]);
+            ->assertJsonFragment([
+                'weekly_report_day' => 3,
+                'weekly_report_hour' => 9,
+                'weekly_report_minute' => 30,
+            ]);
 
         $this->assertSame(3, AppSetting::getWeeklyReportDay());
         $this->assertSame(9, AppSetting::getWeeklyReportHour());
@@ -266,7 +267,7 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
         Mail::assertSent(WeeklyDashboardReportMail::class);
 
         $sentMail = Mail::sent(WeeklyDashboardReportMail::class)->first();
-        $kpis     = $this->getKpisFromMail($sentMail);
+        $kpis = $this->getKpisFromMail($sentMail);
 
         // El KPI debe coincidir exactamente con la consulta directa a la BD.
         $this->assertSame((float) $expectedTotal, (float) $kpis['periodSales']);
@@ -317,15 +318,15 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
         $this->configureReport(recipients: ['test@ciclofinca.com']);
 
         $product = $this->createProduct($this->createSupplier());
-        $sale    = $this->createCompletedSale(Carbon::now()->subDays(2), total: 3000.0);
+        $sale = $this->createCompletedSale(Carbon::now()->subDays(2), total: 3000.0);
 
         SaleItem::create([
-            'sale_id'    => $sale->sale_id,
+            'sale_id' => $sale->sale_id,
             'product_id' => $product->product_id,
-            'name'       => $product->name,
-            'quantity'   => 3,
+            'name' => $product->name,
+            'quantity' => 3,
             'unit_price' => 1000.0,
-            'total'      => 3000.0,
+            'total' => 3000.0,
         ]);
 
         $this->artisan('reports:send-weekly-dashboard --force')

@@ -14,19 +14,19 @@ class AdminWeeklyReportSettingsController extends Controller
     public function update(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
-            'weekly_report_day'        => ['required', 'integer', Rule::in([0, 1, 2, 3, 4, 5, 6])],
-            'weekly_report_hour'       => ['required', 'integer', 'min:0', 'max:23'],
-            'weekly_report_minute'     => ['required', 'integer', 'min:0', 'max:59'],
+            'weekly_report_day' => ['required', 'integer', Rule::in([0, 1, 2, 3, 4, 5, 6])],
+            'weekly_report_hour' => ['required', 'integer', 'min:0', 'max:23'],
+            'weekly_report_minute' => ['required', 'integer', 'min:0', 'max:59'],
             'weekly_report_recipients' => ['required', 'string'],
         ], [
-            'weekly_report_day.required'        => 'Seleccione el día de envío.',
-            'weekly_report_day.in'              => 'El día debe ser un valor entre 0 (domingo) y 6 (sábado).',
-            'weekly_report_hour.required'       => 'Indique la hora de envío.',
-            'weekly_report_hour.min'            => 'La hora debe estar entre 0 y 23.',
-            'weekly_report_hour.max'            => 'La hora debe estar entre 0 y 23.',
-            'weekly_report_minute.required'     => 'Indique los minutos de envío.',
-            'weekly_report_minute.min'          => 'Los minutos deben estar entre 0 y 59.',
-            'weekly_report_minute.max'          => 'Los minutos deben estar entre 0 y 59.',
+            'weekly_report_day.required' => 'Seleccione el día de envío.',
+            'weekly_report_day.in' => 'El día debe ser un valor entre 0 (domingo) y 6 (sábado).',
+            'weekly_report_hour.required' => 'Indique la hora de envío.',
+            'weekly_report_hour.min' => 'La hora debe estar entre 0 y 23.',
+            'weekly_report_hour.max' => 'La hora debe estar entre 0 y 23.',
+            'weekly_report_minute.required' => 'Indique los minutos de envío.',
+            'weekly_report_minute.min' => 'Los minutos deben estar entre 0 y 59.',
+            'weekly_report_minute.max' => 'Los minutos deben estar entre 0 y 59.',
             'weekly_report_recipients.required' => 'Ingrese al menos un correo destinatario.',
         ]);
 
@@ -55,9 +55,9 @@ class AdminWeeklyReportSettingsController extends Controller
         AppSetting::setWeeklyReportRecipients($emails);
 
         Log::info('admin.weekly_report_settings_update', [
-            'day'        => $validated['weekly_report_day'],
-            'hour'       => $validated['weekly_report_hour'],
-            'minute'     => $validated['weekly_report_minute'],
+            'day' => $validated['weekly_report_day'],
+            'hour' => $validated['weekly_report_hour'],
+            'minute' => $validated['weekly_report_minute'],
             'recipients' => $emails,
         ]);
 
@@ -65,11 +65,11 @@ class AdminWeeklyReportSettingsController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json([
-                'message'                   => $message,
-                'weekly_report_day'         => (int) $validated['weekly_report_day'],
-                'weekly_report_hour'        => (int) $validated['weekly_report_hour'],
-                'weekly_report_minute'      => (int) $validated['weekly_report_minute'],
-                'weekly_report_recipients'  => $emails,
+                'message' => $message,
+                'weekly_report_day' => (int) $validated['weekly_report_day'],
+                'weekly_report_hour' => (int) $validated['weekly_report_hour'],
+                'weekly_report_minute' => (int) $validated['weekly_report_minute'],
+                'weekly_report_recipients' => $emails,
             ]);
         }
 

@@ -42,14 +42,14 @@ class SendWeeklyDashboardReportCommand extends Command
             // El scheduler ya restringe la ejecución al día+hora+minuto correctos
             // mediante el cron dinámico del Kernel; esta guarda es una red de
             // seguridad para ejecuciones manuales fuera del momento configurado.
-            $configuredDay    = AppSetting::getWeeklyReportDay();    // 0 = Dom … 6 = Sáb
-            $configuredHour   = AppSetting::getWeeklyReportHour();   // 0–23
+            $configuredDay = AppSetting::getWeeklyReportDay();    // 0 = Dom … 6 = Sáb
+            $configuredHour = AppSetting::getWeeklyReportHour();   // 0–23
             $configuredMinute = AppSetting::getWeeklyReportMinute(); // 0–59
-            $now              = Carbon::now();
+            $now = Carbon::now();
 
             if (
-                (int) $now->format('w') !== $configuredDay    ||
-                (int) $now->format('G') !== $configuredHour   ||
+                (int) $now->format('w') !== $configuredDay ||
+                (int) $now->format('G') !== $configuredHour ||
                 (int) $now->format('i') !== $configuredMinute
             ) {
                 $this->info('No es el momento configurado para el envío. Use --force para forzar el envío ahora mismo.');
@@ -58,7 +58,7 @@ class SendWeeklyDashboardReportCommand extends Command
             }
         }
 
-        $periodEnd   = Carbon::now()->startOfDay();
+        $periodEnd = Carbon::now()->startOfDay();
         $periodStart = $periodEnd->copy()->subDays(6); // últimos 7 días, igual que el dashboard
 
         $kpis = $this->buildKpis($periodStart, $periodEnd);
@@ -80,9 +80,9 @@ class SendWeeklyDashboardReportCommand extends Command
     private function buildKpis(Carbon $periodStart, Carbon $periodEnd): array
     {
         // ── Totals ────────────────────────────────────────────────────────────
-        $totalProducts    = Product::count();
-        $totalSuppliers   = Supplier::count();
-        $totalCategories  = Category::count();
+        $totalProducts = Product::count();
+        $totalSuppliers = Supplier::count();
+        $totalCategories = Category::count();
 
         // ── Sales in period ───────────────────────────────────────────────────
         $periodSales = Sale::whereBetween('sale_date', [$periodStart, $periodEnd->copy()->endOfDay()])
@@ -124,7 +124,7 @@ class SendWeeklyDashboardReportCommand extends Command
             ->get()
             ->map(fn (Category $c) => [
                 'categoria' => $c->name,
-                'total'     => $c->products_count,
+                'total' => $c->products_count,
             ]);
 
         // ── Top products in period ────────────────────────────────────────────
@@ -162,11 +162,11 @@ class SendWeeklyDashboardReportCommand extends Command
 
     /**
      * @param  array<string, mixed>  $kpis
-     * @param  string[]              $recipients
+     * @param  string[]  $recipients
      */
     private function sendEmails(array $kpis, array $recipients, Carbon $periodStart, Carbon $periodEnd): int
     {
-        $sent   = 0;
+        $sent = 0;
         $failed = 0;
 
         foreach ($recipients as $email) {
@@ -179,20 +179,20 @@ class SendWeeklyDashboardReportCommand extends Command
                 $this->error("Error al enviar a {$email}: {$e->getMessage()}");
                 Log::error('reports:send-weekly-dashboard — fallo al enviar correo.', [
                     'recipient' => $email,
-                    'error'     => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
 
         $start = $periodStart->format('Y-m-d');
-        $end   = $periodEnd->format('Y-m-d');
+        $end = $periodEnd->format('Y-m-d');
 
         Log::info('reports:send-weekly-dashboard — ejecución finalizada.', [
-            'period'       => "{$start} → {$end}",
-            'recipients'   => $recipients,
-            'sent'         => $sent,
-            'failed'       => $failed,
-            'executed_at'  => Carbon::now()->toISOString(),
+            'period' => "{$start} → {$end}",
+            'recipients' => $recipients,
+            'sent' => $sent,
+            'failed' => $failed,
+            'executed_at' => Carbon::now()->toISOString(),
         ]);
 
         $this->info("Finalizado: {$sent} correo(s) enviado(s), {$failed} fallido(s).");
@@ -204,14 +204,14 @@ class SendWeeklyDashboardReportCommand extends Command
 
     /**
      * @param  array<string, mixed>  $kpis
-     * @param  string[]              $recipients
+     * @param  string[]  $recipients
      */
     private function renderDryRun(array $kpis, array $recipients, Carbon $periodStart, Carbon $periodEnd): void
     {
         $this->info('[DRY RUN] No se enviarán correos.');
         $this->line('');
         $this->line("Período   : {$periodStart->format('d/m/Y')} → {$periodEnd->format('d/m/Y')}");
-        $this->line("Ventas    : ₡" . number_format($kpis['periodSales'], 0, ',', '.') . " ({$kpis['periodSalesCount']} pedidos)");
+        $this->line('Ventas    : ₡'.number_format($kpis['periodSales'], 0, ',', '.')." ({$kpis['periodSalesCount']} pedidos)");
         $this->line("Stock bajo: {$kpis['lowStockCount']} producto(s)");
         $this->line("Productos : {$kpis['totalProducts']}");
         $this->line('');
@@ -232,17 +232,17 @@ class SendWeeklyDashboardReportCommand extends Command
     {
         $byDate = [];
         foreach ($rows as $row) {
-            $d   = data_get($row, 'date');
+            $d = data_get($row, 'date');
             $key = $d instanceof Carbon ? $d->format('Y-m-d') : substr((string) $d, 0, 10);
             $byDate[$key] = (float) data_get($row, 'total');
         }
 
-        $out    = [];
+        $out = [];
         $cursor = $rangeStart->copy()->startOfDay();
-        $end    = $rangeEnd->copy()->startOfDay();
+        $end = $rangeEnd->copy()->startOfDay();
 
         while ($cursor->lte($end)) {
-            $key   = $cursor->format('Y-m-d');
+            $key = $cursor->format('Y-m-d');
             $out[] = ['date' => $key, 'total' => $byDate[$key] ?? 0.0];
             $cursor->addDay();
         }

@@ -15,8 +15,6 @@ class WeeklyDashboardReportMail extends Mailable
 
     /**
      * @param  array<string, mixed>  $kpis  Pre-built KPI payload from the command.
-     * @param  Carbon                $periodStart
-     * @param  Carbon                $periodEnd
      */
     public function __construct(
         public readonly array $kpis,
@@ -27,7 +25,7 @@ class WeeklyDashboardReportMail extends Mailable
     public function envelope(): Envelope
     {
         $start = $this->periodStart->format('d/m/Y');
-        $end   = $this->periodEnd->format('d/m/Y');
+        $end = $this->periodEnd->format('d/m/Y');
 
         return new Envelope(
             subject: "Reporte semanal del dashboard — {$start} al {$end}",
@@ -39,9 +37,9 @@ class WeeklyDashboardReportMail extends Mailable
         return new Content(
             view: 'emails.weekly-dashboard-report',
             with: [
-                'kpis'        => $this->kpis,
+                'kpis' => $this->kpis,
                 'periodStart' => $this->periodStart,
-                'periodEnd'   => $this->periodEnd,
+                'periodEnd' => $this->periodEnd,
                 'dashboardUrl' => url('/dashboard'),
             ],
         );

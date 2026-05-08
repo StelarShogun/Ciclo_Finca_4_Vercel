@@ -13,9 +13,9 @@ return new class extends Migration
     public function up(): void
     {
         $defaults = [
-            'weekly_report_day'        => '1',    // Monday (0 = Sun … 6 = Sat)
-            'weekly_report_hour'       => '8',    // 08:00
-            'weekly_report_minute'     => '0',    // 00
+            'weekly_report_day' => '1',    // Monday (0 = Sun … 6 = Sat)
+            'weekly_report_hour' => '8',    // 08:00
+            'weekly_report_minute' => '0',    // 00
             'weekly_report_recipients' => '[]',   // empty list — admin must fill this in
         ];
 

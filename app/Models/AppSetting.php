@@ -10,12 +10,17 @@ use Throwable;
 class AppSetting extends Model
 {
     public const KEY_ORDER_EXPIRATION_DAYS = 'order_expiration_days';
+
     public const KEY_READY_TO_PICKUP_EXPIRATION_DAYS = 'ready_to_pickup_expiration_days';
+
     public const KEY_READY_TO_PICKUP_EXPIRATION_HOURS = 'ready_to_pickup_expiration_hours';
 
     public const KEY_WEEKLY_REPORT_RECIPIENTS = 'weekly_report_recipients';
+
     public const KEY_WEEKLY_REPORT_DAY = 'weekly_report_day';
+
     public const KEY_WEEKLY_REPORT_HOUR = 'weekly_report_hour';
+
     public const KEY_WEEKLY_REPORT_MINUTE = 'weekly_report_minute';
 
     protected $fillable = [
@@ -24,13 +29,15 @@ class AppSetting extends Model
     ];
 
     private const DEFAULT_WEEKLY_REPORT_DAY = 1;
+
     private const DEFAULT_WEEKLY_REPORT_HOUR = 8;
+
     private const DEFAULT_WEEKLY_REPORT_MINUTE = 0;
 
     private static function getSettingValue(string $key): ?string
     {
         try {
-            if (! Schema::hasTable((new static())->getTable())) {
+            if (! Schema::hasTable((new static)->getTable())) {
                 return null;
             }
 

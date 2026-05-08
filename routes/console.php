@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\AppSetting;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -32,9 +33,9 @@ Schedule::command('orders:cancel-expired-ready')
 //
 // Previsualizar sin enviar: php artisan reports:send-weekly-dashboard --dry-run
 // Forzar envío inmediato:   php artisan reports:send-weekly-dashboard --force
-$reportDay    = \App\Models\AppSetting::getWeeklyReportDay();    // 0 = Dom … 6 = Sáb
-$reportHour   = \App\Models\AppSetting::getWeeklyReportHour();   // 0–23
-$reportMinute = \App\Models\AppSetting::getWeeklyReportMinute(); // 0–59
+$reportDay = AppSetting::getWeeklyReportDay();    // 0 = Dom … 6 = Sáb
+$reportHour = AppSetting::getWeeklyReportHour();   // 0–23
+$reportMinute = AppSetting::getWeeklyReportMinute(); // 0–59
 
 Schedule::command('reports:send-weekly-dashboard')
     ->cron(sprintf('%d %d * * %d', $reportMinute, $reportHour, $reportDay))
