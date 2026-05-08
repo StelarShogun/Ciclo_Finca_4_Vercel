@@ -262,4 +262,3 @@ class CF105AdminInventoryClassificationFilterTest extends TestCase
         $response->assertJsonFragment(['slug' => 'material']);
     }
 }
-

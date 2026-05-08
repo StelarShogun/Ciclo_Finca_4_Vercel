@@ -2,6 +2,7 @@
 
 namespace App\Services\Catalog;
 
+use App\Models\Product;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +17,7 @@ final class CatalogProductSearchTelemetry
 
     private const MAX_QUERY_STORED = 255;
 
-    /** @param  LengthAwarePaginator<int, \App\Models\Product>  $paginator */
+    /** @param  LengthAwarePaginator<int, Product>  $paginator */
     public static function recordSearchResultsPage(string $rawSearch, LengthAwarePaginator $paginator): void
     {
         $normalized = trim(mb_substr($rawSearch, 0, self::MAX_QUERY_STORED));

@@ -144,7 +144,7 @@ class CF108CatalogSearchPopularityTest extends TestCase
             ->get(route('admin.reports.catalog-search-products', ['period' => '30d']))
             ->assertOk()
             ->assertSee('CF108 Alpha Marker bicicleta demo', false)
-            ->assertSee(\App\Models\Product::skuFromId((int) $matching->product_id), false);
+            ->assertSee(Product::skuFromId((int) $matching->product_id), false);
 
         $this->assertSame(
             0,
