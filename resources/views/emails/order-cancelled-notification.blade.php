@@ -8,10 +8,7 @@
 <body style="margin:0;padding:0;background-color:#f2f4f7;font-family:Arial,Helvetica,sans-serif;">
     @php
         $mailContact = (string) config('mail.from.address', 'ciclo.finca4@gmail.com');
-        $configuredUrl = (string) config('app.url', '');
-        $siteUrl = $configuredUrl !== '' && !str_contains($configuredUrl, 'localhost')
-            ? $configuredUrl
-            : 'https://ciclo-finca-4-app-main.onrender.com';
+        $siteUrl = rtrim((string) config('app.frontend_url', config('app.url')), '/');
     @endphp
 
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f2f4f7;padding:20px 8px;">

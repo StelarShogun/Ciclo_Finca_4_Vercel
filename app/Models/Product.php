@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +15,13 @@ use Illuminate\Validation\ValidationException;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+/**
+ * @property-read Category|null $category
+ * @property-read Supplier|null $supplier
+ * @property-read Collection<int, Brand> $brands
+ * @property-read Collection<int, Product> $variants
+ * @property-read Collection<int, ClassificationValue> $classificationValues
+ */
 // Product model with media support and inventory-related helpers.
 class Product extends Model implements HasMedia
 {
@@ -37,7 +45,7 @@ class Product extends Model implements HasMedia
 
     // Mass-assignable product attributes.
     protected $fillable = [
-        'category_id', 'supplier_id', 'name', 'description', 'image', 'images',
+        'category_id', 'supplier_id', 'name', 'sku', 'description', 'image', 'images',
         'sale_price', 'purchase_price', 'stock_current', 'stock_minimum', 'status',
         'is_featured',
     ];
@@ -62,6 +70,14 @@ class Product extends Model implements HasMedia
     public static function skuFromId(int $productId): string
     {
         return 'BK-'.str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
+    }
+
+    /** SKU mostrado: valor personalizado en BD o código derivado del ID (BK-xxx). */
+    public function displaySku(): string
+    {
+        $custom = trim((string) ($this->attributes['sku'] ?? ''));
+
+        return $custom !== '' ? $custom : self::skuFromId((int) $this->product_id);
     }
 
     // Normalizes localized and canonical status values.
@@ -242,7 +258,13 @@ class Product extends Model implements HasMedia
     // Limits the query to products at or below the minimum stock threshold.
     public function scopeLowStockAlert(Builder $query): Builder
     {
-        return $query->activeInClientStore()
+        $ok = ['active', 'activo'];
+        $placeholders = implode(',', array_fill(0, count($ok), '?'));
+
+        return $query->whereRaw(
+            'LOWER(TRIM(COALESCE(status, \'\'))) IN ('.$placeholders.')',
+            $ok
+        )
             ->where('stock_minimum', '>', 0)
             ->where('stock_current', '>', 0)
             ->whereColumn('stock_current', '<=', 'stock_minimum');

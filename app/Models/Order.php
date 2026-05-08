@@ -2,10 +2,30 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $num_order
+ * @property int|null $supplier_id
+ * @property string|null $po_number
+ * @property string $state
+ * @property Carbon|null $date
+ * @property Carbon|null $estimated_delivery_date
+ * @property Carbon|null $received_at
+ * @property Carbon|null $delivered_at
+ * @property Carbon|null $confirmed_at
+ * @property int|null $confirmed_by
+ * @property float|int|string $total
+ * @property bool $closed_with_shorts
+ * @property-read Supplier|null $supplier
+ * @property-read Collection<int, OrderItem> $orderItems
+ * @property-read Collection<int, OrderStateTimeline> $stateTimeline
+ * @property-read AdminUser|null $confirmedBy
+ */
 class Order extends Model
 {
     protected $table = 'orders';

@@ -6,6 +6,9 @@ use App\Enums\MovementType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property-read AdminUser|null $adminUser
+ */
 // Eloquent model for the inventory_movements table.
 class InventoryMovement extends Model
 {

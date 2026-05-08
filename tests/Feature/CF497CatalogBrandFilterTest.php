@@ -44,7 +44,7 @@ class CF497CatalogBrandFilterTest extends TestCase
             'LOWER(TRIM(COALESCE(status, \'\'))) IN (\'active\', \'activo\')'
         )->where('stock_current', '>', 0)->first();
 
-        if (! $productOfA || ! $productOfB) {
+        if (! $productOfA instanceof Product || ! $productOfB instanceof Product) {
             $this->markTestSkipped('Se necesita al menos un producto activo por cada una de las dos marcas.');
         }
 
@@ -94,7 +94,7 @@ class CF497CatalogBrandFilterTest extends TestCase
             'LOWER(TRIM(COALESCE(status, \'\'))) IN (\'active\', \'activo\')'
         )->where('stock_current', '>', 0)->first();
 
-        if (! $product || ! $product->category_id) {
+        if (! $product instanceof Product || ! $product->category_id) {
             $this->markTestSkipped('No hay un producto activo con categoría para la marca seleccionada.');
         }
 

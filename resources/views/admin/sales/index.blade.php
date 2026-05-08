@@ -165,10 +165,12 @@
         {{-- ==================== SALES TABLE ==================== --}}
         @php
             $statusLabels = [
-                'pending'   => 'Pendiente',
-                'completed' => 'Confirmada',
-                'cancelled' => 'Rechazado',
-                'returned'  => 'Devuelta',
+                'pending'         => 'Pendiente',
+                'ready_to_pickup' => 'Por recoger',
+                'completed'       => 'Confirmada',
+                'cancelled'       => 'Rechazado',
+                'refunded'        => 'Reembolsada',
+                'returned'        => 'Devuelta',
             ];
             $paymentLabels = ['cash' => 'Efectivo', 'sinpe' => 'SINPE Móvil', 'transfer' => 'Transferencia'];
 
@@ -221,31 +223,50 @@
                                 </span>
                             </td>
 
-                            {{-- Expiry badge: expired / warning / ok --}}
+                            {{-- Expiry / pickup window: ready_to_pickup shows pickup countdown from ready_at;
+                                 completed shows an em dash (finalized). Other statuses use the legacy
+                                 30-day countdown from sale_date. --}}
                             <td>
-                                @php
-                                    $days = $sale->days_remaining_until_expiration;
-                                    $warn = $sale->is_expiry_warning;
-                                @endphp
-                                @if ($days <= 0)
-                                    <span class="expiry-badge expiry-expired" title="El pedido ha expirado">
-                                        <i class="fas fa-clock"></i> Expirado
-                                    </span>
-                                @elseif($warn)
-                                    <span class="expiry-badge expiry-warning">
-                                        <span class="expiry-warning-trigger" tabindex="0" role="button"
-                                            aria-label="Ver aviso de expiración">
-                                            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
-                                            <span class="expiry-tooltip-label">
-                                                ¡Atención! Este pedido será eliminado automáticamente en
-                                                {{ $days }} día(s).
-                                                Por favor tome las acciones necesarias antes de la fecha límite.
-                                            </span>
+                                @if ($sale->status === 'ready_to_pickup')
+                                    @php
+                                        $pickupLabel = $sale->pickup_time_remaining_label;
+                                    @endphp
+                                    @if ($pickupLabel === 'Vencido')
+                                        <span class="expiry-badge expiry-expired" title="Plazo de recogida vencido">
+                                            <i class="fas fa-clock"></i> Vencido
                                         </span>
-                                        {{ $days }} día(s)
-                                    </span>
+                                    @elseif ($pickupLabel !== '')
+                                        <span class="expiry-badge expiry-ok">{{ $pickupLabel }}</span>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                @elseif ($sale->status === 'completed')
+                                    <span class="text-muted">—</span>
                                 @else
-                                    <span class="expiry-badge expiry-ok">{{ $days }} día(s)</span>
+                                    @php
+                                        $days = $sale->days_remaining_until_expiration;
+                                        $warn = $sale->is_expiry_warning;
+                                    @endphp
+                                    @if ($days <= 0)
+                                        <span class="expiry-badge expiry-expired" title="El pedido ha expirado">
+                                            <i class="fas fa-clock"></i> Expirado
+                                        </span>
+                                    @elseif($warn)
+                                        <span class="expiry-badge expiry-warning">
+                                            <span class="expiry-warning-trigger" tabindex="0" role="button"
+                                                aria-label="Ver aviso de expiración">
+                                                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                                                <span class="expiry-tooltip-label">
+                                                    ¡Atención! Este pedido será eliminado automáticamente en
+                                                    {{ $days }} día(s).
+                                                    Por favor tome las acciones necesarias antes de la fecha límite.
+                                                </span>
+                                            </span>
+                                            {{ $days }} día(s)
+                                        </span>
+                                    @else
+                                        <span class="expiry-badge expiry-ok">{{ $days }} día(s)</span>
+                                    @endif
                                 @endif
                             </td>
 

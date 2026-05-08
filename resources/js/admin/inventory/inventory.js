@@ -96,20 +96,29 @@ function renderVariantsListHtml({ baseProductId, variants }) {
             const status = String(v.status ?? '');
             const price = v.sale_price !== undefined ? `₡${v.sale_price}` : '—';
             const stock = v.stock_current !== undefined ? String(v.stock_current) : '—';
+            const skuLabel = v.sku !== undefined ? String(v.sku) : '';
 
             return `
                 <div class="variant-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6;">
                     <div style="min-width:0;">
                         <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(name)}</div>
-                        <div class="text-muted" style="font-size:12px;">ID ${escapeHtml(variantId)} · ${escapeHtml(price)} · Stock ${escapeHtml(stock)} · ${escapeHtml(status)}</div>
+                        <div class="text-muted" style="font-size:12px;">SKU ${escapeHtml(skuLabel)} · ${escapeHtml(price)} · Stock ${escapeHtml(stock)} · ${escapeHtml(status)}</div>
                     </div>
-                    <button type="button"
-                            class="btn btn-secondary js-delete-variant"
-                            data-base-product-id="${String(baseProductId)}"
-                            data-variant-product-id="${variantId}"
-                            data-variant-name="${escapeHtmlAttr(name)}">
-                        <i class="fas fa-trash"></i> Eliminar
-                    </button>
+                    <div style="display:flex;gap:6px;flex-shrink:0;">
+                        <button type="button"
+                                class="btn btn-secondary js-edit-variant"
+                                data-base-product-id="${String(baseProductId)}"
+                                data-variant-product-id="${variantId}">
+                            <i class="fas fa-pen"></i> Editar
+                        </button>
+                        <button type="button"
+                                class="btn btn-secondary js-delete-variant"
+                                data-base-product-id="${String(baseProductId)}"
+                                data-variant-product-id="${variantId}"
+                                data-variant-name="${escapeHtmlAttr(name)}">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </div>
                 </div>
             `;
         })
@@ -1533,6 +1542,157 @@ function smoothScrollTop() {
         });
     });
 
+    // CF4-72 — Editar variante (precio, stock, SKU)
+    const variantEditModal = qs('#variant-edit-modal');
+    const variantEditBackdrop = qs('#variant-edit-modal-backdrop');
+    const variantEditCloseBtn = qs('#variant-edit-modal-close');
+    const variantEditCancelBtn = qs('#variant-edit-cancel-btn');
+    const variantEditSaveBtn = qs('#variant-edit-save-btn');
+
+    function findVariantInEditList(variantProductId) {
+        return (currentEditVariants || []).find((v) => String(v?.product_id) === String(variantProductId));
+    }
+
+    function closeVariantEditModal() {
+        if (!variantEditModal) return;
+        variantEditModal.classList.remove('active');
+        variantEditModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function openVariantEditModal(baseId, variantProductId) {
+        const v = findVariantInEditList(variantProductId);
+        if (!v || !variantEditModal) {
+            Swal.fire('Error', 'No se encontró la variante en la lista.', 'error');
+            return;
+        }
+        const baseInput = qs('#variant-edit-base-id');
+        const variantInput = qs('#variant-edit-variant-id');
+        if (baseInput) baseInput.value = String(baseId);
+        if (variantInput) variantInput.value = String(variantProductId);
+
+        const titleEl = qs('#variant-edit-variant-title');
+        if (titleEl) titleEl.textContent = v.name || `Variante #${variantProductId}`;
+
+        const skuLocked = Boolean(v.sku_locked);
+        const lockedFlag = qs('#variant-edit-sku-locked');
+        if (lockedFlag) lockedFlag.value = skuLocked ? '1' : '0';
+
+        const skuInput = qs('#variant-edit-sku-input');
+        const hintDefault = qs('#variant-edit-sku-hint-default');
+        const lockedMsg = qs('#variant-edit-sku-locked-msg');
+
+        if (skuInput) {
+            skuInput.disabled = skuLocked;
+            const custom = v.sku_custom != null && String(v.sku_custom).trim() !== '' ? String(v.sku_custom) : '';
+            skuInput.value = custom;
+        }
+        if (hintDefault) {
+            hintDefault.style.display = skuLocked ? 'none' : 'block';
+            hintDefault.textContent = skuLocked
+                ? ''
+                : `Si lo dejás vacío se usará el código automático (${v.sku ? String(v.sku) : ''}).`;
+        }
+        if (lockedMsg) {
+            lockedMsg.style.display = skuLocked ? 'block' : 'none';
+        }
+
+        const priceEl = qs('#variant-edit-sale-price');
+        const stockEl = qs('#variant-edit-stock');
+        if (priceEl) priceEl.value = v.sale_price != null ? String(v.sale_price) : '';
+        if (stockEl) stockEl.value = v.stock_current != null ? String(v.stock_current) : '';
+
+        variantEditModal.classList.add('active');
+        variantEditModal.setAttribute('aria-hidden', 'false');
+    }
+
+    [variantEditBackdrop, variantEditCloseBtn, variantEditCancelBtn].forEach((el) => {
+        el?.addEventListener('click', () => closeVariantEditModal());
+    });
+
+    document.body.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.js-edit-variant');
+        if (!editBtn) return;
+        e.preventDefault();
+        const baseId = editBtn.dataset.baseProductId;
+        const variantId = editBtn.dataset.variantProductId;
+        if (!baseId || !variantId) return;
+        openVariantEditModal(baseId, variantId);
+    });
+
+    variantEditSaveBtn?.addEventListener('click', () => {
+        const baseId = qs('#variant-edit-base-id')?.value;
+        const variantId = qs('#variant-edit-variant-id')?.value;
+        const locked = qs('#variant-edit-sku-locked')?.value === '1';
+        if (!baseId || !variantId) return;
+
+        const salePrice = qs('#variant-edit-sale-price')?.value;
+        const stockRaw = qs('#variant-edit-stock')?.value;
+
+        const payload = {
+            sale_price: salePrice,
+            stock_current: Number.parseInt(String(stockRaw), 10),
+        };
+        if (!locked) {
+            payload.sku = qs('#variant-edit-sku-input')?.value?.trim() ?? '';
+        }
+
+        setButtonLoading(variantEditSaveBtn, true, 'Guardando...');
+
+        smartFetch(`/products/${baseId}/variants/${variantId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                ...jsonHeaders(),
+            },
+            body: JSON.stringify(payload),
+        })
+            .then(async (response) => {
+                let data = {};
+                try {
+                    data = await response.json();
+                } catch {
+                    data = {};
+                }
+                setButtonLoading(variantEditSaveBtn, false);
+
+                if (response.ok && data.success) {
+                    closeVariantEditModal();
+                    const updated = data.variant;
+                    if (updated && currentEditProductId && String(baseId) === String(currentEditProductId)) {
+                        currentEditVariants = (currentEditVariants || []).map((row) =>
+                            String(row?.product_id) === String(variantId) ? { ...row, ...updated } : row
+                        );
+                        const variantsList = qs('#edit-variants-list');
+                        if (variantsList) {
+                            variantsList.innerHTML = renderVariantsListHtml({
+                                baseProductId: baseId,
+                                variants: currentEditVariants,
+                            });
+                        }
+                        editVariantCombobox?.setBaseContext({
+                            baseProductId: currentEditProductId,
+                            currentVariants: currentEditVariants,
+                        });
+                    }
+                    Swal.fire('Listo', data.message || 'Variante actualizada correctamente.', 'success');
+                    return;
+                }
+
+                const msg = data.message || 'No se pudo guardar la variante.';
+                if (data.errors && typeof data.errors === 'object') {
+                    const first = Object.values(data.errors).flat()[0];
+                    Swal.fire('Revisá los datos', first || msg, 'warning');
+                } else {
+                    Swal.fire('Error', msg, 'error');
+                }
+            })
+            .catch(() => {
+                setButtonLoading(variantEditSaveBtn, false);
+                Swal.fire('Error', 'Error de conexión al guardar la variante.', 'error');
+            });
+    });
+
     // Modal: View product details
     const viewProductModal = qs('#view-product-modal');
     const viewDetailsBtns = qsa('.view-details-btn');
@@ -2125,11 +2285,134 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filterForm) {
         const parentFilter = qs('#parent-category-filter');
         const subcategoryFilter = qs('#subcategory-filter');
+        const classificationToggleBtn = qs('#toggle-classification-filters');
+        const classificationPanel = qs('#classification-filters-panel');
+        const classificationContainer = qs('#classification-filters-container');
+
+        const getSelectedClassificationMap = () => {
+            const selected = {};
+            qsa('select[name^="classifications["]', filterForm).forEach((select) => {
+                const match = select.name.match(/^classifications\[(.+)\]$/);
+                if (!match) return;
+                selected[match[1]] = String(select.value || '');
+            });
+            return selected;
+        };
+
+        const renderClassificationFilters = (filters, selected = {}) => {
+            if (!classificationContainer) return;
+            const list = Array.isArray(filters) ? filters : [];
+            classificationContainer.innerHTML = '';
+
+            if (!list.length) {
+                const empty = document.createElement('p');
+                empty.className = 'form-text text-muted';
+                empty.textContent = 'No hay clasificaciones disponibles para los filtros base actuales.';
+                classificationContainer.appendChild(empty);
+                return;
+            }
+
+            list.forEach((filter) => {
+                const slug = String(filter?.slug || '').trim();
+                if (!slug) return;
+                const label = String(filter?.label || slug);
+                const options = Array.isArray(filter?.options) ? filter.options : [];
+
+                const wrap = document.createElement('div');
+                wrap.className = 'filter-group';
+
+                const fieldLabel = document.createElement('label');
+                fieldLabel.setAttribute('for', `classification-filter-${slug}`);
+                fieldLabel.textContent = label;
+
+                const select = document.createElement('select');
+                select.id = `classification-filter-${slug}`;
+                select.name = `classifications[${slug}]`;
+
+                const opt0 = document.createElement('option');
+                opt0.value = '';
+                opt0.textContent = 'Todos';
+                select.appendChild(opt0);
+
+                options.forEach((option) => {
+                    const opt = document.createElement('option');
+                    opt.value = String(option?.value ?? '');
+                    opt.textContent = String(option?.label ?? option?.value ?? '');
+                    if (String(selected[slug] || '') === opt.value) {
+                        opt.selected = true;
+                    }
+                    select.appendChild(opt);
+                });
+
+                wrap.appendChild(fieldLabel);
+                wrap.appendChild(select);
+                classificationContainer.appendChild(wrap);
+            });
+        };
+
+        const openClassificationPanel = () => {
+            if (!classificationPanel || !classificationToggleBtn) return;
+            classificationPanel.hidden = false;
+            classificationPanel.classList.add('is-open');
+            classificationToggleBtn.setAttribute('aria-expanded', 'true');
+        };
+
+        const closeClassificationPanel = () => {
+            if (!classificationPanel || !classificationToggleBtn) return;
+            classificationPanel.classList.remove('is-open');
+            classificationPanel.hidden = true;
+            classificationToggleBtn.setAttribute('aria-expanded', 'false');
+        };
+
+        const loadClassificationFiltersOnDemand = async () => {
+            if (!classificationContainer) return;
+            if (classificationContainer.dataset.loaded === '1') return;
+
+            const endpoint = classificationContainer.dataset.endpoint;
+            if (!endpoint) return;
+
+            const params = new URLSearchParams();
+            const formData = new FormData(filterForm);
+            formData.forEach((value, key) => {
+                if (typeof value !== 'string' || value.trim() === '') return;
+                if (key.startsWith('classifications[')) return;
+                params.append(key, value);
+            });
+
+            classificationContainer.innerHTML = '<p class="form-text text-muted">Cargando clasificaciones…</p>';
+            const url = params.toString() ? `${endpoint}?${params.toString()}` : endpoint;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: jsonHeaders(),
+                });
+                const data = await readJsonOrThrow(response, 'No se pudieron cargar las clasificaciones.');
+                renderClassificationFilters(data?.filters || [], getSelectedClassificationMap());
+                classificationContainer.dataset.loaded = '1';
+            } catch (_err) {
+                classificationContainer.innerHTML = '<p class="form-text text-muted" style="color:#b91c1c;">No se pudieron cargar los filtros de clasificación.</p>';
+            }
+        };
+
         if (parentFilter && subcategoryFilter) {
             const selectedFromData = subcategoryFilter.dataset.selected || '';
             fillSubcategoryOptions(subcategoryFilter, parentFilter.value, selectedFromData);
             parentFilter.addEventListener('change', () => {
                 fillSubcategoryOptions(subcategoryFilter, parentFilter.value);
+            });
+        }
+
+        if (classificationToggleBtn && classificationPanel) {
+            classificationToggleBtn.addEventListener('click', async () => {
+                const isOpen = classificationToggleBtn.getAttribute('aria-expanded') === 'true';
+                if (isOpen) {
+                    closeClassificationPanel();
+                    return;
+                }
+                openClassificationPanel();
+                await loadClassificationFiltersOnDemand();
             });
         }
 

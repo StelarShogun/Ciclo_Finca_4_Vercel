@@ -653,6 +653,7 @@ class ClientUserController extends Controller
 
         $state = Str::random(40);
         session(['google_oauth_state' => $state]);
+        session()->save();
 
         $query = http_build_query([
             'client_id' => $googleConfig['client_id'],
@@ -684,6 +685,12 @@ class ClientUserController extends Controller
             $stateFromRequest = (string) $request->query('state', '');
 
             if ($stateFromSession === '' || $stateFromRequest === '' || ! hash_equals($stateFromSession, $stateFromRequest)) {
+                Log::warning('oauth_state_mismatch', [
+                    'session_present' => $stateFromSession !== '',
+                    'request_present' => $stateFromRequest !== '',
+                    'driver' => config('session.driver'),
+                ]);
+
                 return redirect()->route('clients.home')->with('error', 'Sesión OAuth inválida. Inténtalo de nuevo.');
             }
 

@@ -24,6 +24,7 @@ class InventoryMovementController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%")
                     ->orWhereRaw("CONCAT('BK-', LPAD(product_id, 3, '0')) LIKE ?", ["%{$search}%"]);
             });
         }
@@ -91,10 +92,10 @@ class InventoryMovementController extends Controller
             'product' => [
                 'product_id' => $product->product_id,
                 'name' => $product->name,
-                'sku' => Product::skuFromId((int) $product->product_id),
+                'sku' => $product->displaySku(),
                 'stock_current' => $product->stock_current,
             ],
-            'data' => $movements->map(fn ($m) => $this->formatMovement($m)),
+            'data' => $movements->getCollection()->map(fn ($m) => $m instanceof InventoryMovement ? $this->formatMovement($m) : []),
             'summary' => $summary,
             'meta' => [
                 'current_page' => $movements->currentPage(),

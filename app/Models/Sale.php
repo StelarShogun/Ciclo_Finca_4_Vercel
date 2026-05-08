@@ -4,11 +4,16 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * @property-read Collection<int, SaleItem> $saleItems
+ * @property-read Client|null $client
+ */
 class Sale extends Model
 {
     protected $table = 'sales';
@@ -122,16 +127,29 @@ class Sale extends Model
         });
     }
 
-    public static function getReadyToPickupExpirationDays(): int
+    public static function getReadyToPickupExpirationHours(): int
     {
-        return Cache::remember(AppSetting::cacheKeyReadyToPickupExpirationDays(), 3600, function () {
-            $fromDb = AppSetting::getStoredReadyToPickupExpirationDays();
-            if ($fromDb !== null && $fromDb > 0) {
-                return $fromDb;
+        return Cache::remember(AppSetting::cacheKeyReadyToPickupExpirationHours(), 3600, function () {
+            $fromHours = AppSetting::getStoredReadyToPickupExpirationHours();
+            if ($fromHours !== null && $fromHours > 0) {
+                return max(1, $fromHours);
             }
 
-            return max(1, (int) config('sales.ready_to_pickup_expiration_days', 3));
+            $fromDays = AppSetting::getStoredReadyToPickupExpirationDays();
+            if ($fromDays !== null && $fromDays > 0) {
+                return max(1, $fromDays * 24);
+            }
+
+            return max(1, (int) config('sales.ready_to_pickup_expiration_hours', 72));
         });
+    }
+
+    /**
+     * @deprecated Prefer getReadyToPickupExpirationHours(); retained for backward compatibility (rounded days).
+     */
+    public static function getReadyToPickupExpirationDays(): int
+    {
+        return max(1, (int) ceil(static::getReadyToPickupExpirationHours() / 24));
     }
 
     public function getExpiresAtAttribute(): Carbon
@@ -139,6 +157,60 @@ class Sale extends Model
         $days = static::getOrderExpirationDays();
 
         return $this->sale_date->copy()->addDays($days);
+    }
+
+    public function getPickupExpiresAtAttribute(): ?Carbon
+    {
+        if ($this->ready_at === null) {
+            return null;
+        }
+
+        return $this->ready_at->copy()->addHours(static::getReadyToPickupExpirationHours());
+    }
+
+    public function isPickupExpired(): bool
+    {
+        if ($this->ready_at === null) {
+            return false;
+        }
+
+        $expires = $this->pickup_expires_at;
+
+        return $expires !== null && now()->greaterThanOrEqualTo($expires);
+    }
+
+    public function getPickupTimeRemainingLabelAttribute(): string
+    {
+        if ($this->ready_at === null) {
+            return '';
+        }
+
+        $expires = $this->pickup_expires_at;
+        if ($expires === null) {
+            return '';
+        }
+
+        $now = now();
+        if ($now->greaterThanOrEqualTo($expires)) {
+            return 'Vencido';
+        }
+
+        $secondsLeft = max(0, $expires->getTimestamp() - $now->getTimestamp());
+        $hoursLeft = (int) floor($secondsLeft / 3600);
+
+        if ($hoursLeft >= 24) {
+            $daysLeft = (int) floor($hoursLeft / 24);
+
+            return $daysLeft === 1 ? '1 día restante' : "{$daysLeft} días restantes";
+        }
+
+        if ($hoursLeft >= 1) {
+            return $hoursLeft === 1 ? '1 hora restante' : "{$hoursLeft} horas restantes";
+        }
+
+        $minutesLeft = max(1, (int) ceil($secondsLeft / 60));
+
+        return "{$minutesLeft} min restantes";
     }
 
     public function getDaysRemainingUntilExpirationAttribute(): int

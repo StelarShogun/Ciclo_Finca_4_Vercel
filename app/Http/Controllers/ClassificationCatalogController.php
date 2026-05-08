@@ -93,16 +93,10 @@ class ClassificationCatalogController extends Controller
                     'id' => $d->id,
                     'label' => $d->label,
                     'slug' => $d->slug,
-                    'values' => $d->values->map(function ($v) {
-                        if (! $v instanceof ClassificationValue) {
-                            return null;
-                        }
-
-                        return [
-                            'id' => $v->id,
-                            'value' => $v->value,
-                        ];
-                    })->filter()->values(),
+                    'values' => $d->values->map(fn (ClassificationValue $v) => [
+                        'id' => $v->id,
+                        'value' => $v->value,
+                    ])->values(),
                 ])->values();
             }
         );

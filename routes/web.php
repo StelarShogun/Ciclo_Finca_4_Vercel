@@ -12,6 +12,7 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClassificationCatalogController;
+use App\Http\Controllers\ClientCatalogProductSuggestionsController;
 use App\Http\Controllers\ClientPageController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
@@ -134,6 +135,8 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/reports/productos-vendidos/pdf', [ReportsController::class, 'productSalesPdf'])->name('admin.reports.product-sales.pdf');
     Route::get('/reports/productos-vendidos/excel', [ReportsController::class, 'productSalesExcel'])
         ->name('admin.reports.product-sales.excel');
+    Route::get('/reports/catalogo-busquedas', [ReportsController::class, 'catalogMostSearchedProducts'])
+        ->name('admin.reports.catalog-search-products');
     Route::get('/sales/reports/by-category', [ReportsController::class, 'byCategory'])->name('sales.reports.byCategory');
 
     // Inventory movement routes.
@@ -156,6 +159,8 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
 
     // Inventory routes.
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');
+    Route::get('/inventory/classification-filters', [ProductController::class, 'inventoryClassificationFiltersOptions'])
+        ->name('inventory.classification-filters');
 
     // Classification catalog routes.
     Route::get('/classifications/catalog', [ClassificationCatalogController::class, 'index'])->name('admin.classifications.catalog.index');
@@ -186,6 +191,10 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
         ->whereNumber('product')
         ->whereNumber('variant')
         ->name('admin.products.variants.destroy');
+    Route::put('/products/{product}/variants/{variant}', [ProductVariantController::class, 'update'])
+        ->whereNumber('product')
+        ->whereNumber('variant')
+        ->name('admin.products.variants.update');
 
     // Featured product toggle route.
     Route::post('/products/{id}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
@@ -304,6 +313,11 @@ Route::get('/admin/catalog-exit', function () {
 // Public client pages.
 Route::get('/', [ClientPageController::class, 'home'])->name('clients.home');
 Route::get('/catalog', [ClientPageController::class, 'catalog'])->name('clients.catalog');
+
+// Predictive suggestions for the public client catalog search bar.
+Route::get('/api/products/suggestions', ClientCatalogProductSuggestionsController::class)
+    ->middleware('throttle:60,1')
+    ->name('api.products.suggestions');
 
 // Product route with numeric ID and optional SEO slug.
 Route::get('/product/{id}/{slug?}', [ClientPageController::class, 'product'])

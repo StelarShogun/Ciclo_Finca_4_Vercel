@@ -13,7 +13,7 @@ class ProductImagesSeeder extends Seeder
         $imagesBase = public_path('images');
 
         if (! is_dir($imagesBase)) {
-            $this->command?->warn("ProductImagesSeeder: directorio \"{$imagesBase}\" no encontrado.");
+            $this->command->warn("ProductImagesSeeder: directorio \"{$imagesBase}\" no encontrado.");
 
             return;
         }
@@ -21,7 +21,7 @@ class ProductImagesSeeder extends Seeder
         $folders = File::directories($imagesBase);
 
         if (empty($folders)) {
-            $this->command?->warn('ProductImagesSeeder: no hay subcarpetas en public/images/.');
+            $this->command->warn('ProductImagesSeeder: no hay subcarpetas en public/images/.');
 
             return;
         }
@@ -35,7 +35,7 @@ class ProductImagesSeeder extends Seeder
             $product = Product::where('name', $productName)->first();
 
             if (! $product) {
-                $this->command?->warn("  ⚠ Sin coincidencia de producto para carpeta: \"{$productName}\"");
+                $this->command->warn("  ⚠ Sin coincidencia de producto para carpeta: \"{$productName}\"");
                 $skipped++;
 
                 continue;
@@ -45,7 +45,7 @@ class ProductImagesSeeder extends Seeder
             $galleryFile = $this->findBySuffix($folder, '_2');
 
             if (! $mainFile && ! $galleryFile) {
-                $this->command?->warn("  ⚠ Sin imágenes válidas en: \"{$productName}\"");
+                $this->command->warn("  ⚠ Sin imágenes válidas en: \"{$productName}\"");
                 $skipped++;
 
                 continue;
@@ -68,10 +68,10 @@ class ProductImagesSeeder extends Seeder
             }
 
             $assigned++;
-            $this->command?->line("  ✓ {$productName}");
+            $this->command->line("  ✓ {$productName}");
         }
 
-        $this->command?->info("ProductImagesSeeder: {$assigned} producto(s) con imágenes asignadas, {$skipped} omitido(s).");
+        $this->command->info("ProductImagesSeeder: {$assigned} producto(s) con imágenes asignadas, {$skipped} omitido(s).");
     }
 
     /**

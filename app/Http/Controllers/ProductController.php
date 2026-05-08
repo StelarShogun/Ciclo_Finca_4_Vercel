@@ -6,7 +6,10 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\ClassificationDimension;
+use App\Models\ClassificationValue;
 use App\Models\Product;
+use App\Models\SaleItem;
 use App\Models\Supplier;
 use App\Services\Admin\AdminInventoryExportQuery;
 use App\Services\Admin\AdminPdfExportLimits;
@@ -149,14 +152,32 @@ class ProductController extends Controller
                 $productData['classification_value_ids'] = $product->classificationValues->pluck('id')->values()->all();
                 $productData['media_main'] = $product->getFirstMediaUrl('main_image');
                 $productData['media_gallery'] = $product->getMedia('gallery')->map(fn ($m) => $m->getUrl())->values()->toArray();
+                $variantIds = $product->variants->pluck('product_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
+
+                $lockedVariantIds = [];
+                if ($variantIds !== []) {
+                    $lockedVariantIds = SaleItem::query()
+                        ->whereIn('product_id', $variantIds)
+                        ->distinct()
+                        ->pluck('product_id')
+                        ->map(fn ($id) => (int) $id)
+                        ->all();
+                }
+                $lockedSet = array_fill_keys($lockedVariantIds, true);
+
                 $productData['variants'] = $product->variants
-                    ->map(fn (Product $v) => [
-                        'product_id' => (int) $v->product_id,
-                        'name' => (string) $v->name,
-                        'status' => (string) $v->status,
-                        'stock_current' => (int) $v->stock_current,
-                        'sale_price' => (string) $v->sale_price,
-                    ])
+                    ->map(function (Product $v) use ($lockedSet) {
+                        return [
+                            'product_id' => (int) $v->product_id,
+                            'name' => (string) $v->name,
+                            'status' => (string) $v->status,
+                            'stock_current' => (int) $v->stock_current,
+                            'sale_price' => (string) $v->sale_price,
+                            'sku' => $v->displaySku(),
+                            'sku_custom' => $v->sku,
+                            'sku_locked' => isset($lockedSet[(int) $v->product_id]),
+                        ];
+                    })
                     ->values()
                     ->all();
 
@@ -519,17 +540,26 @@ class ProductController extends Controller
     {
         $query = $this->inventoryProductsFilteredQuery($request)->with(['category.parent', 'supplier']);
         $lowStockProductsCount = Product::query()->lowStockAlert()->count();
+        $hasClassificationSelections = collect((array) $request->input('classifications', []))
+            ->contains(fn ($value) => is_string($value) && trim($value) !== '');
+        $classificationFilters = $hasClassificationSelections
+            ? $this->inventoryClassificationFilters($request)
+            : [];
 
         $perPage = $request->get('per_page', 10);
         $paginator = $query->paginate($perPage);
 
         // Normalize products into the structure expected by the view
-        $products = collect($paginator->items())->map(function (Product $product) {
+        $products = collect($paginator->items())->map(function ($product) {
+            if (! $product instanceof Product) {
+                return null;
+            }
+
             return (object) [
                 'product_id' => $product->product_id,
                 'id' => $product->product_id,
                 'name' => $product->name,
-                'sku' => Product::skuFromId((int) $product->product_id),
+                'sku' => $product->displaySku(),
                 'image' => $product->image ?? 'default.png',
                 'category' => (object) ['name' => optional($product->category)->name ?? 'Uncategorized'],
                 'stock' => $product->stock_current,
@@ -539,7 +569,7 @@ class ProductController extends Controller
                 'status_class' => $product->status === 'active' ? 'success' :
                                 ($product->status === 'inactive' ? 'warning' : 'secondary'),
             ];
-        });
+        })->filter();
 
         // Load deduplicated root categories and the dependent subcategory tree
         $categories = Category::query()
@@ -559,6 +589,16 @@ class ProductController extends Controller
             'subcategoriesByParent' => $subcategoriesByParent,
             'brands' => Brand::orderBy('name')->get(['id', 'name']),
             'inventoryExportsQuery' => AdminInventoryExportQuery::queryStringFromRequest($request),
+            'classificationFilters' => $classificationFilters,
+            'hasClassificationSelections' => $hasClassificationSelections,
+        ]);
+    }
+
+    public function inventoryClassificationFiltersOptions(Request $request)
+    {
+        return response()->json([
+            'success' => true,
+            'filters' => $this->inventoryClassificationFilters($request),
         ]);
     }
 
@@ -576,6 +616,10 @@ class ProductController extends Controller
             $data = (clone $baseQuery)->with($withRelations)->get();
             $xml = new \SimpleXMLElement('<products/>');
             foreach ($data as $p) {
+                if (! $p instanceof Product) {
+                    continue;
+                }
+
                 $n = $xml->addChild('product');
                 $n->addChild('id', (string) $p->product_id);
                 $n->addChild('name', htmlspecialchars($p->name));
@@ -612,6 +656,10 @@ class ProductController extends Controller
                 ->get();
 
             $products = $pdfRows->map(function ($p) {
+                if (! $p instanceof Product) {
+                    return null;
+                }
+
                 return (object) [
                     'id' => $p->product_id,
                     'name' => $p->name,
@@ -625,7 +673,7 @@ class ProductController extends Controller
                     'status' => ucfirst(str_replace('_', ' ', $p->status)),
                     'created_at' => $p->created_at ? $p->created_at->format('d/m/Y') : 'N/A',
                 ];
-            });
+            })->filter()->values();
 
             $logoPath = public_path('assets/images/brand/logo-ciclo-finca-icon.png');
 
@@ -658,6 +706,10 @@ class ProductController extends Controller
 
             $headers = ['ID', 'Nombre', 'Descripción', 'Categoría', 'Proveedor', 'Precio compra', 'Precio venta', 'Stock actual', 'Stock mínimo', 'Estado', 'Creado'];
             $dataRows = $rows->map(function ($p) {
+                if (! $p instanceof Product) {
+                    return null;
+                }
+
                 return [
                     (string) $p->product_id,
                     $p->name,
@@ -671,7 +723,7 @@ class ProductController extends Controller
                     $p->status,
                     $p->created_at ? $p->created_at->format('Y-m-d H:i:s') : '',
                 ];
-            })->values()->all();
+            })->filter()->values()->all();
 
             return app(RegistryExcelExport::class)->download(
                 'Inventario de productos',
@@ -1064,6 +1116,21 @@ class ProductController extends Controller
             $query->where('status', $request->status);
         }
 
+        $classificationFilters = $request->input('classifications', []);
+        if (is_array($classificationFilters)) {
+            foreach ($classificationFilters as $slug => $rawValue) {
+                $slug = trim((string) $slug);
+                if ($slug === '' || ! is_string($rawValue) || trim($rawValue) === '') {
+                    continue;
+                }
+                $normalizedValue = ClassificationValue::normalizeStoredValue($rawValue);
+                $query->whereHas('classificationValues', function ($q) use ($slug, $normalizedValue) {
+                    $q->where('classification_values.normalized_value', $normalizedValue)
+                        ->whereHas('dimension', fn ($d) => $d->where('slug', $slug));
+                });
+            }
+        }
+
         [$sort, $order] = $this->validatedInventorySort($request->get('sort'), $request->get('order'));
         $query->orderBy($sort, $order);
 
@@ -1113,12 +1180,87 @@ class ProductController extends Controller
         if ($request->filled('status')) {
             $lines[] = 'Estado producto: '.$request->status;
         }
+        $classificationFilters = $request->input('classifications', []);
+        if (is_array($classificationFilters)) {
+            $labelsBySlug = ClassificationDimension::query()
+                ->select(['slug', 'label'])
+                ->whereIn('slug', array_keys($classificationFilters))
+                ->get()
+                ->pluck('label', 'slug');
+
+            foreach ($classificationFilters as $slug => $value) {
+                if (! is_string($value) || trim($value) === '') {
+                    continue;
+                }
+                $label = $labelsBySlug[$slug] ?? $slug;
+                $lines[] = "{$label}: {$value}";
+            }
+        }
 
         if (count($lines) === 0) {
             $lines[] = 'Sin filtros adicionales (todos los productos según orden por defecto).';
         }
 
         return $lines;
+    }
+
+    /** Dynamic classification filters loaded on demand for the current inventory scope. */
+    private function inventoryClassificationFilters(?Request $request = null): array
+    {
+        $requestForScope = $request ?? new Request;
+        $requestWithoutClassification = $requestForScope->duplicate();
+        $requestWithoutClassification->merge(['classifications' => []]);
+        $filteredProductIds = $this->inventoryProductsFilteredQuery($requestWithoutClassification)
+            ->reorder()
+            ->select('products.product_id');
+
+        $dimensions = ClassificationDimension::query()
+            ->select(['slug', 'label'])
+            ->join('classification_product', 'classification_product.classification_dimension_id', '=', 'classification_dimensions.id')
+            ->joinSub(clone $filteredProductIds, 'inventory_filtered_products', function ($join) {
+                $join->on('inventory_filtered_products.product_id', '=', 'classification_product.product_id');
+            })
+            ->whereNull('classification_dimensions.deleted_at')
+            ->groupBy('classification_dimensions.slug', 'classification_dimensions.label')
+            ->orderBy('label')
+            ->get();
+
+        return $dimensions->map(function (ClassificationDimension $dimension) use ($filteredProductIds) {
+            return [
+                'slug' => (string) $dimension->slug,
+                'label' => (string) $dimension->label,
+                'options' => $this->classificationFilterValuesBySlug((string) $dimension->slug, clone $filteredProductIds),
+            ];
+        })->filter(fn (array $f) => $f['options'] !== [])->values()->all();
+    }
+
+    /** Distinct visible values for a classification slug across products. */
+    private function classificationFilterValuesBySlug(string $slug, ?Builder $filteredProductIds = null): array
+    {
+        $query = ClassificationValue::query()
+            ->selectRaw('classification_values.normalized_value, MIN(classification_values.value) AS display_value')
+            ->join('classification_dimensions', 'classification_dimensions.id', '=', 'classification_values.classification_dimension_id')
+            ->join('classification_product', 'classification_product.classification_value_id', '=', 'classification_values.id')
+            ->join('products', 'products.product_id', '=', 'classification_product.product_id')
+            ->where('classification_dimensions.slug', $slug)
+            ->whereNull('classification_dimensions.deleted_at')
+            ->whereNull('classification_values.deleted_at')
+            ->groupBy('classification_values.normalized_value')
+            ->orderBy('display_value');
+
+        if ($filteredProductIds !== null) {
+            $query->joinSub($filteredProductIds, 'inventory_filtered_products', function ($join) {
+                $join->on('inventory_filtered_products.product_id', '=', 'classification_product.product_id');
+            });
+        }
+
+        return $query->get()
+            ->map(fn ($row) => [
+                'value' => (string) $row->normalized_value,
+                'label' => (string) $row->display_value,
+            ])
+            ->values()
+            ->all();
     }
 
     // Add manual stock and register the inventory movement

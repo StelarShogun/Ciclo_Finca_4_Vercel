@@ -1,3 +1,8 @@
+import {
+    buildCf4CheckoutSuccessText,
+    getCf4PaymentMethodShortLabel,
+} from './checkout-copy.js';
+
 // ============================================================
 // GLOBAL UTILITIES
 // ============================================================
@@ -12,6 +17,11 @@ function getCsrfToken() {
 
 function isClientStockShortMessage(msg) {
     return msg === 'Producto agotado' || msg === 'Stock insuficiente';
+}
+
+function getCheckoutPaymentMethodFallback() {
+    var selected = document.querySelector('input[name="checkout_payment_method"]:checked');
+    return selected ? selected.value : 'cash';
 }
 
 // ============================================================
@@ -1441,15 +1451,24 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // — Add-to-cart (delegated) —
+    // — Favorites drawer remove button (delegated) —
+    // El resto de manejadores de carrito se delega a clients-page.js cuando esa
+    // entrada de Vite también se carga (catalog/cart/product/home). Si solo se
+    // carga clients-users.js (login/register/recovery/profile) no hay UI de
+    // carrito, por lo que omitimos los listeners para evitar doble ejecución.
     document.addEventListener('click', function (e) {
         var favoriteRemoveBtn = e.target.closest('[data-favorite-remove-btn]');
         if (favoriteRemoveBtn) {
             e.preventDefault();
             toggleFavoriteFromDrawer(favoriteRemoveBtn.getAttribute('data-product-id'));
-            return;
         }
+    });
 
+    // — Cart UI listeners (only when clients-page.js is NOT loaded on this page) —
+    // Pages that render cart UI (cart, catalog, product, home) load clients-page.js,
+    // which already binds these handlers. Avoid double-binding here.
+    if (!window.__cf4ClientPageJsLoaded) {
+    document.addEventListener('click', function (e) {
         var addBtn = e.target.closest('.add-to-cart-btn');
         if (addBtn) {
             if (addBtn.dataset.purchasable === '0' || parseInt(addBtn.dataset.productStock, 10) < 1) {
@@ -1682,8 +1701,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var proceedBtn = document.getElementById('proceed-checkout');
     if (proceedBtn) {
         proceedBtn.addEventListener('click', function () {
+            var chosenMethodPreview = getCheckoutPaymentMethodFallback();
             Swal.fire({
-                title: '¿Confirmar compra?',
+                title: '¿Confirmar pedido con pago por '
+                    + getCf4PaymentMethodShortLabel(chosenMethodPreview) + '?',
                 text: 'Se enviará tu pedido para retiro en tienda.',
                 icon: 'question',
                 showCancelButton: true,
@@ -1702,7 +1723,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         'X-CSRF-TOKEN': getCsrfToken(),
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    },
+                    body: JSON.stringify({ payment_method: getCheckoutPaymentMethodFallback() })
                 })
                     .then(function (res) { return res.json(); })
                     .then(function (data) {
@@ -1720,9 +1742,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         updateCartCount(0);
                         showCartEmptyState();
+                        var paidWith = (data && data.payment_method)
+                            ? data.payment_method
+                            : getCheckoutPaymentMethodFallback();
                         Swal.fire({
                             icon: 'success',
-                            text: 'Su pedido fue enviado con éxito. Tiene un lapso de 3 días para retirarlo en nuestro local. El pago se realiza de forma presencial mediante SINPE, efectivo o tarjeta.',
+                            title: '¡Pedido confirmado!',
+                            text: buildCf4CheckoutSuccessText(paidWith),
                             confirmButtonText: 'Entendido'
                         });
                     })
@@ -1735,6 +1761,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+    } // end if (!window.__cf4ClientPageJsLoaded)
 
     // — ESC closes all modals and dropdowns —
     document.addEventListener('keydown', function (e) {

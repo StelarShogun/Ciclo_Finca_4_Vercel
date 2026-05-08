@@ -270,14 +270,14 @@
 
             <div class="modal-body">
                 <p class="cf4-order-expiry-modal-intro">
-                    Días que el sistema espera desde que el pedido se marca como <strong>Listo para recoger</strong>
-                    (<code>ready_at</code>) antes de cancelarlo automáticamente
-                    (<code>orders:cancel-expired-ready</code>).
+                    Cuántas horas tiene el cliente para retirar un pedido marcado como
+                    <strong>Listo para recoger</strong>. Si pasa ese tiempo sin recogerlo,
+                    el sistema lo cancela automáticamente.
                 </p>
 
                 @if ($usesEnvDefaultForExpiry)
                     <p class="cf4-order-expiry-modal-hint">
-                        Se usa el valor por defecto (<code>READY_TO_PICKUP_EXPIRATION_DAYS</code>) hasta que guarde un valor aquí.
+                        Si no guarda un valor aquí, se usa el valor por defecto del sistema.
                     </p>
                 @endif
 
@@ -286,11 +286,11 @@
                     @method('PUT')
 
                     <div class="form-group">
-                        <label for="ready_to_pickup_expiration_days">Días máximos para recoger el pedido</label>
-                        <input type="number" id="ready_to_pickup_expiration_days" name="ready_to_pickup_expiration_days" min="1"
-                            step="1" required value="{{ old('ready_to_pickup_expiration_days', $readyToPickupExpirationDays) }}">
+                        <label for="ready_to_pickup_expiration_hours">Horas para recoger el pedido</label>
+                        <input type="number" id="ready_to_pickup_expiration_hours" name="ready_to_pickup_expiration_hours" min="1"
+                            max="8760" step="1" required value="{{ old('ready_to_pickup_expiration_hours', $readyToPickupExpirationHours) }}">
                         <p id="order-expiration-form-error" class="form-error" style="display:none;" role="alert"></p>
-                        <p class="form-help">Debe ser un entero mayor que cero, por ejemplo 7 o 30.</p>
+                        <p class="form-help">Ejemplo: 72 horas (3 días). Mínimo 1, máximo 8760.</p>
                     </div>
 
                     <div class="modal-footer cf4-order-expiry-modal-footer">

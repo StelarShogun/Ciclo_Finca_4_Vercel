@@ -9,6 +9,9 @@
 @section('content')
 <div class="cart-container">
     <div class="container">
+        @if(session('cart_stock_adjusted'))
+            <div class="alert alert-warning mb-3" role="alert">{{ session('cart_stock_adjusted') }}</div>
+        @endif
         <div class="cart-page-card">
             <div class="cart-header">
                 <h1 class="cart-title">
@@ -86,6 +89,23 @@
                         <div class="summary-card">
                             <h3 class="summary-title">Resumen del Pedido</h3>
                             <div class="summary-details">
+                                <div class="summary-row">
+                                    <span>Método de pago:</span>
+                                </div>
+                                <div class="checkout-payment-options" style="margin-bottom:12px;">
+                                    <label style="display:block;margin-bottom:6px;">
+                                        <input type="radio" name="checkout_payment_method" value="cash" checked>
+                                        Efectivo
+                                    </label>
+                                    <label style="display:block;margin-bottom:6px;">
+                                        <input type="radio" name="checkout_payment_method" value="sinpe">
+                                        SINPE Móvil
+                                    </label>
+                                    <label style="display:block;margin-bottom:6px;">
+                                        <input type="radio" name="checkout_payment_method" value="transfer">
+                                        Transferencia
+                                    </label>
+                                </div>
                                 <div class="summary-row">
                                     <span>Subtotal:</span>
                                     <span id="cart-subtotal">₡{{ number_format($total, 0, ',', '.') }}</span>

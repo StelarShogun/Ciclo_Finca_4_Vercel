@@ -38,9 +38,9 @@ class CancelExpiredReadyOrdersCommand extends Command
             $cutoff = Carbon::now()->subMinutes($minutes);
             $windowLabel = $minutes.' min';
         } else {
-            $days = Sale::getReadyToPickupExpirationDays();
-            $cutoff = Carbon::now()->subDays($days);
-            $windowLabel = $days.' día(s)';
+            $hours = Sale::getReadyToPickupExpirationHours();
+            $cutoff = Carbon::now()->subHours($hours);
+            $windowLabel = $hours.' hora(s)';
         }
         $reason = 'Por vencimiento de encargo';
         $cancelledAt = Carbon::now();

@@ -21,7 +21,7 @@ class ClientPurchaseHistoryDemoSeeder extends Seeder
     {
         $admin = AdminUser::query()->orderBy('user_id')->first();
         if (! $admin) {
-            $this->command?->warn('ClientPurchaseHistoryDemoSeeder: no hay admin; se omite.');
+            $this->command->warn('ClientPurchaseHistoryDemoSeeder: no hay admin; se omite.');
 
             return;
         }
@@ -81,7 +81,7 @@ class ClientPurchaseHistoryDemoSeeder extends Seeder
             ]);
         }
 
-        $this->command?->info(
+        $this->command->info(
             'ClientPurchaseHistoryDemoSeeder: '.count($rows).' ventas para clientes user_id '.$clientA->user_id.' y '.$clientB->user_id.'.',
         );
     }

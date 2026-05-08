@@ -20,7 +20,7 @@ class SalesPerformanceDemoSeeder extends Seeder
     {
         $admin = AdminUser::query()->orderBy('user_id')->first();
         if (! $admin) {
-            $this->command?->warn('SalesPerformanceDemoSeeder: no hay admin; se omite.');
+            $this->command->warn('SalesPerformanceDemoSeeder: no hay admin; se omite.');
 
             return;
         }
@@ -65,6 +65,6 @@ class SalesPerformanceDemoSeeder extends Seeder
             ]);
         }
 
-        $this->command?->info('SalesPerformanceDemoSeeder: '.count($rows).' ventas completadas (semana + año actual/anterior).');
+        $this->command->info('SalesPerformanceDemoSeeder: '.count($rows).' ventas completadas (semana + año actual/anterior).');
     }
 }
