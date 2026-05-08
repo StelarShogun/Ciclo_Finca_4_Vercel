@@ -56,6 +56,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Public site URL (mail / absolute links)
+    |--------------------------------------------------------------------------
+    |
+    | Use the same value as APP_URL in typical setups. Queue workers must have
+    | this set so transactional emails do not fall back to localhost.
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', env('APP_URL', 'http://localhost')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

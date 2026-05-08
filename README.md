@@ -59,3 +59,50 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Tests locales (MySQL en Docker)
+
+Los tests Feature usan MySQL real (mismas migraciones que producción). Pasos:
+
+1. Levanta los contenedores:
+
+   ```bash
+   docker compose up -d db_ciclo
+   ```
+
+2. Crea la base `laravel_test` (una sola vez):
+
+   ```bash
+   docker exec mysql_db_ciclo mysql -uroot -proot \
+       -e "CREATE DATABASE IF NOT EXISTS laravel_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+           GRANT ALL PRIVILEGES ON laravel_test.* TO 'ciclo_finca_4'@'%';
+           FLUSH PRIVILEGES;"
+   ```
+
+3. Copia `.env.testing.example` a `.env.testing` y deja `DB_HOST=127.0.0.1` y `DB_PORT=3307` (puerto que expone `docker-compose.yml`).
+
+4. Ejecuta la suite con:
+
+   ```bash
+   composer test
+   # o, equivalentemente
+   ./scripts/test --filter=CF4ClientCartTest
+   ```
+
+### Habilitar `pdo_mysql` / `mysqli` sin tocar `/etc/php/php.ini`
+
+En distribuciones tipo Arch / CachyOS las extensiones `pdo_mysql` y `mysqli` vienen instaladas pero **deshabilitadas** en `/etc/php/php.ini`. Para evitar pedir privilegios de root:
+
+- Este repo trae `scripts/php-ini.d/99-mysql.ini` que activa ambas extensiones.
+- `composer test` y `./scripts/test` exportan `PHP_INI_SCAN_DIR=:scripts/php-ini.d`, de modo que PHP carga ese `.ini` adicional sin perder los del sistema.
+- Si prefieres habilitarlas globalmente, descomenta `extension=pdo_mysql` y `extension=mysqli` en `/etc/php/php.ini` (requiere sudo) y ya no necesitas `PHP_INI_SCAN_DIR`.
+
+> **Comprobación rápida**: `PHP_INI_SCAN_DIR=:scripts/php-ini.d php -m | grep -E 'pdo_mysql|mysqli'` debe imprimir ambos.
+
+## Producción (Render) — recordatorios
+
+- **`APP_URL`** y opcionalmente **`FRONTEND_URL`**: deben ser la URL pública HTTPS. Los **workers de cola** deben tener las mismas variables o los correos pueden generar enlaces a `localhost`.
+- **`SESSION_DRIVER=database`**: requiere tabla `sessions` migrada (`database/migrations/0002_sessions.php`). Alternativa temporal: `SESSION_DRIVER=cookie`.
+- **Google OAuth**: `GOOGLE_REDIRECT_URI` debe coincidir exactamente con la URI autorizada en Google Cloud Console (`{APP_URL}/auth/google/callback`).
+- **Plazo “por recoger”**: configurable en horas (`READY_TO_PICKUP_EXPIRATION_HOURS` y ajuste en panel de pedidos).
+- **Nota Jira**: correcciones de carrito / pedidos / notificaciones **no cierran CF4-72** (esa HU es sobre variantes de producto); ver `docs/CART_ORDER_FIXES_NOTE.md`.

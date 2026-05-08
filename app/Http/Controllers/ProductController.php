@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\ClassificationDimension;
 use App\Models\ClassificationValue;
 use App\Models\Product;
+use App\Models\SaleItem;
 use App\Models\Supplier;
 use App\Services\Admin\AdminInventoryExportQuery;
 use App\Services\Admin\AdminPdfExportLimits;
@@ -151,14 +152,32 @@ class ProductController extends Controller
                 $productData['classification_value_ids'] = $product->classificationValues->pluck('id')->values()->all();
                 $productData['media_main'] = $product->getFirstMediaUrl('main_image');
                 $productData['media_gallery'] = $product->getMedia('gallery')->map(fn ($m) => $m->getUrl())->values()->toArray();
+                $variantIds = $product->variants->pluck('product_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
+
+                $lockedVariantIds = [];
+                if ($variantIds !== []) {
+                    $lockedVariantIds = SaleItem::query()
+                        ->whereIn('product_id', $variantIds)
+                        ->distinct()
+                        ->pluck('product_id')
+                        ->map(fn ($id) => (int) $id)
+                        ->all();
+                }
+                $lockedSet = array_fill_keys($lockedVariantIds, true);
+
                 $productData['variants'] = $product->variants
-                    ->map(fn (Product $v) => [
-                        'product_id' => (int) $v->product_id,
-                        'name' => (string) $v->name,
-                        'status' => (string) $v->status,
-                        'stock_current' => (int) $v->stock_current,
-                        'sale_price' => (string) $v->sale_price,
-                    ])
+                    ->map(function (Product $v) use ($lockedSet) {
+                        return [
+                            'product_id' => (int) $v->product_id,
+                            'name' => (string) $v->name,
+                            'status' => (string) $v->status,
+                            'stock_current' => (int) $v->stock_current,
+                            'sale_price' => (string) $v->sale_price,
+                            'sku' => $v->displaySku(),
+                            'sku_custom' => $v->sku,
+                            'sku_locked' => isset($lockedSet[(int) $v->product_id]),
+                        ];
+                    })
                     ->values()
                     ->all();
 
@@ -540,7 +559,7 @@ class ProductController extends Controller
                 'product_id' => $product->product_id,
                 'id' => $product->product_id,
                 'name' => $product->name,
-                'sku' => Product::skuFromId((int) $product->product_id),
+                'sku' => $product->displaySku(),
                 'image' => $product->image ?? 'default.png',
                 'category' => (object) ['name' => optional($product->category)->name ?? 'Uncategorized'],
                 'stock' => $product->stock_current,

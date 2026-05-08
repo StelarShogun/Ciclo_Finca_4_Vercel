@@ -14,22 +14,25 @@ class AdminOrderSettingsController extends Controller
     public function update(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
-            'ready_to_pickup_expiration_days' => ['required', 'integer', 'min:1'],
+            'ready_to_pickup_expiration_hours' => ['required', 'integer', 'min:1', 'max:8760'],
         ], [
-            'ready_to_pickup_expiration_days.required' => 'Indique el número de días.',
-            'ready_to_pickup_expiration_days.integer' => 'El plazo debe ser un número entero.',
-            'ready_to_pickup_expiration_days.min' => 'El plazo debe ser mayor que cero.',
+            'ready_to_pickup_expiration_hours.required' => 'Indique el número de horas.',
+            'ready_to_pickup_expiration_hours.integer' => 'El plazo debe ser un número entero.',
+            'ready_to_pickup_expiration_hours.min' => 'El plazo debe ser mayor que cero.',
+            'ready_to_pickup_expiration_hours.max' => 'El plazo no puede superar 8760 horas (1 año).',
         ]);
 
-        $days = (int) $validated['ready_to_pickup_expiration_days'];
-        $previous = AppSetting::getStoredReadyToPickupExpirationDays();
-        AppSetting::setReadyToPickupExpirationDays($days);
+        $hours = (int) $validated['ready_to_pickup_expiration_hours'];
+        $previousHours = AppSetting::getStoredReadyToPickupExpirationHours();
+        $previousDays = AppSetting::getStoredReadyToPickupExpirationDays();
+        AppSetting::setReadyToPickupExpirationHours($hours);
         $this->logAuditAction(
             'client_order_pickup_settings_update',
-            'Configuración de cancelación automática para pedidos listos para recoger actualizada.',
+            'Configuración de cancelación automática para pedidos listos para recoger actualizada (horas).',
             [
-                'from_days' => $previous,
-                'to_days' => $days,
+                'from_hours_stored' => $previousHours,
+                'from_days_stored_legacy' => $previousDays,
+                'to_hours' => $hours,
             ]
         );
 
@@ -38,7 +41,7 @@ class AdminOrderSettingsController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => $message,
-                'ready_to_pickup_expiration_days' => $days,
+                'ready_to_pickup_expiration_hours' => $hours,
             ]);
         }
 

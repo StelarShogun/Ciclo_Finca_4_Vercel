@@ -16,7 +16,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 
 class ClientPageController extends Controller
 {
@@ -482,6 +484,112 @@ class ClientPageController extends Controller
         ]);
     }
 
+    /**
+     * Clamp quantities to current stock and drop unpurchasable lines. Updates session only when it changes.
+     */
+    private function syncCartWithStock(): void
+    {
+        $before = Session::get('cart', []);
+        $synced = [];
+        $adjustedNames = [];
+
+        foreach ($before as $item) {
+            if (! isset($item['product_id'])) {
+                continue;
+            }
+
+            $product = Product::find($item['product_id']);
+
+            if (! $product || ! $product->isPurchasableByClient()) {
+                continue;
+            }
+
+            $requested = (int) ($item['quantity'] ?? 0);
+            $qty = min($requested, (int) $product->stock_current);
+
+            if ($qty < 1) {
+                continue;
+            }
+
+            if ($qty < $requested) {
+                $adjustedNames[] = $product->name;
+            }
+
+            $synced[] = [
+                'product_id' => (int) $product->product_id,
+                'name' => (string) ($item['name'] ?? $product->name),
+                'price' => (float) ($item['price'] ?? $product->sale_price),
+                'quantity' => $qty,
+                'image' => (string) ($item['image'] ?? ''),
+            ];
+        }
+
+        $needsPut = ! $this->cartsAreEquivalent($before, $synced)
+            || $this->sessionCartHasNonMinimalKeys($before);
+
+        if ($needsPut) {
+            Session::put('cart', $synced);
+        }
+
+        if ($adjustedNames !== []) {
+            session()->flash(
+                'cart_stock_adjusted',
+                'Ajustamos el carrito al stock disponible para: '.implode(', ', array_unique($adjustedNames)).'.'
+            );
+        }
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $a
+     * @param  array<int, array<string, mixed>>  $b
+     */
+    private function cartsAreEquivalent(array $a, array $b): bool
+    {
+        return json_encode($this->normalizeCartForComparison($a)) === json_encode($this->normalizeCartForComparison($b));
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $cart
+     * @return array<int, array{product_id:int, quantity:int, price:float, name:string, image:string}>
+     */
+    private function normalizeCartForComparison(array $cart): array
+    {
+        $rows = [];
+        foreach ($cart as $item) {
+            if (! isset($item['product_id'])) {
+                continue;
+            }
+            $rows[] = [
+                'product_id' => (int) $item['product_id'],
+                'quantity' => (int) ($item['quantity'] ?? 0),
+                'price' => (float) ($item['price'] ?? 0),
+                'name' => (string) ($item['name'] ?? ''),
+                'image' => (string) ($item['image'] ?? ''),
+            ];
+        }
+        usort($rows, fn ($x, $y) => $x['product_id'] <=> $y['product_id']);
+
+        return $rows;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $cart
+     */
+    private function sessionCartHasNonMinimalKeys(array $cart): bool
+    {
+        $allowed = ['product_id', 'name', 'price', 'quantity', 'image'];
+
+        foreach ($cart as $item) {
+            foreach (array_keys($item) as $key) {
+                if (! in_array($key, $allowed, true)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private function getCartCount(): int
     {
         return count(Session::get('cart', []));
@@ -500,7 +608,11 @@ class ClientPageController extends Controller
             return response()->json(['success' => false, 'message' => Product::MSG_CLIENT_AGOTADO], 400);
         }
 
-        if ($product->stock_current < $request->quantity) {
+        $requestedQty = (int) $request->quantity;
+        $quantityApplied = min($requestedQty, (int) $product->stock_current);
+        $stockClamped = $quantityApplied < $requestedQty;
+
+        if ($quantityApplied < 1) {
             return response()->json([
                 'success' => false,
                 'message' => $product->stock_current < 1
@@ -510,12 +622,29 @@ class ClientPageController extends Controller
         }
 
         $cart = Session::get('cart', []);
+        $lineSubtotal = 0.0;
+        $found = false;
 
         foreach ($cart as $index => $item) {
             if ($item['product_id'] == $request->product_id) {
-                $cart[$index]['quantity'] = $request->quantity;
+                $cart[$index]['quantity'] = $quantityApplied;
+                // Keep only minimal keys so the session never retains inflated rows.
+                $cart[$index] = [
+                    'product_id' => (int) $item['product_id'],
+                    'name' => (string) ($item['name'] ?? ''),
+                    'price' => (float) $item['price'],
+                    'quantity' => $quantityApplied,
+                    'image' => (string) ($item['image'] ?? ''),
+                ];
+                $unitPrice = (float) $item['price'];
+                $lineSubtotal = $unitPrice * $quantityApplied;
+                $found = true;
                 break;
             }
+        }
+
+        if (! $found) {
+            return response()->json(['success' => false, 'message' => 'El producto no está en el carrito'], 404);
         }
 
         Session::put('cart', $cart);
@@ -525,11 +654,20 @@ class ClientPageController extends Controller
             'message' => 'Carrito actualizado',
             'cart_count' => $this->getCartCount(),
             'cart_total' => $this->getCartTotal(),
+            'line_subtotal' => $lineSubtotal,
+            'quantity_applied' => $quantityApplied,
+            'stock_clamped' => $stockClamped,
         ]);
     }
 
+    /**
+     * Display cart. Session `cart` is the source of truth (minimal rows only).
+     * It is only mutated via addToCart, updateCart, removeFromCart, or syncCartWithStock when stock clamps occur.
+     */
     public function cart()
     {
+        $this->syncCartWithStock();
+
         $cart = Session::get('cart', []);
         $cartItems = [];
         $total = 0;
@@ -537,7 +675,7 @@ class ClientPageController extends Controller
         foreach ($cart as $item) {
             $product = Product::find($item['product_id']);
 
-            // Rebuild cart rows using the latest product availability.
+            // Rebuild cart rows using the latest product availability (display only).
             if ($product && $product->isPurchasableByClient()) {
                 $qty = min((int) $item['quantity'], $product->stock_current);
                 if ($qty < 1) {
@@ -559,8 +697,6 @@ class ClientPageController extends Controller
                 ];
             }
         }
-
-        Session::put('cart', $cartItems);
 
         $cartCount = $this->getCartCount();
 
@@ -596,6 +732,13 @@ class ClientPageController extends Controller
             return response()->json(['success' => false, 'message' => 'El carrito está vacío'], 400);
         }
 
+        $validatedCheckout = $request->validate([
+            'payment_method' => ['required', Rule::in(['cash', 'sinpe', 'transfer'])],
+        ], [
+            'payment_method.required' => 'Seleccione un método de pago.',
+            'payment_method.in' => 'Método de pago no válido.',
+        ]);
+
         DB::beginTransaction();
         try {
             $subtotal = 0;
@@ -610,7 +753,18 @@ class ClientPageController extends Controller
                     return response()->json(['success' => false, 'message' => Product::MSG_CLIENT_AGOTADO], 400);
                 }
 
-                if ($product->stock_current < $item['quantity']) {
+                $quantity = (int) ($item['quantity'] ?? 0);
+                if ($quantity < 1) {
+                    Log::warning('checkout_invalid_quantity', [
+                        'product_id' => $item['product_id'] ?? null,
+                        'raw_quantity' => $item['quantity'] ?? null,
+                    ]);
+                    DB::rollBack();
+
+                    return response()->json(['success' => false, 'message' => 'Cantidad inválida en el carrito. Actualiza la página e inténtalo de nuevo.'], 400);
+                }
+
+                if ($product->stock_current < $quantity) {
                     DB::rollBack();
 
                     return response()->json([
@@ -621,16 +775,23 @@ class ClientPageController extends Controller
                     ], 400);
                 }
 
-                $itemTotal = $item['price'] * $item['quantity'];
+                $itemTotal = $item['price'] * $quantity;
                 $subtotal += $itemTotal;
 
                 $validatedItems[] = [
                     'product' => $product,
-                    'quantity' => $item['quantity'],
+                    'quantity' => $quantity,
                     'price' => $item['price'],
                     'total' => $itemTotal,
                 ];
             }
+
+            Log::info('checkout_persisting_items', [
+                'items' => collect($validatedItems)->map(fn ($i) => [
+                    'product_id' => $i['product']->product_id,
+                    'qty' => $i['quantity'],
+                ])->values()->all(),
+            ]);
 
             /** @var Client|null $client */
             $client = Auth::guard('clients')->user();
@@ -639,21 +800,21 @@ class ClientPageController extends Controller
                 'invoice_number' => (new Sale)->generateInvoiceNumber(),
                 'client_id' => $client?->user_id,
                 'sale_date' => now(),
-                'payment_method' => 'cash',
+                'payment_method' => $validatedCheckout['payment_method'],
                 'status' => 'pending',
                 'order_source' => 'web_cart',
                 'subtotal' => $subtotal,
                 'iva' => 0,
                 'discount' => 0,
                 'total' => $subtotal,
-                'notes' => 'Order placed from the online store',
+                'notes' => 'Pedido realizado desde la tienda en línea',
             ]);
 
             foreach ($validatedItems as $item) {
                 SaleItem::create([
                     'sale_id' => $sale->sale_id,
                     'product_id' => $item['product']->product_id,
-                    'quantity' => $item['quantity'],
+                    'quantity' => (int) $item['quantity'],
                     'unit_price' => $item['price'],
                     'unit_discount' => 0,
                     'total' => $item['total'],
@@ -674,6 +835,7 @@ class ClientPageController extends Controller
                 'message' => 'Pedido creado exitosamente',
                 'sale_id' => $sale->sale_id,
                 'invoice_number' => $sale->invoice_number,
+                'payment_method' => $sale->payment_method,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();

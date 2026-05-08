@@ -517,9 +517,7 @@
                                                     </span>
                                                     <div>
                                                         <div class="cf4-product-name">{{ $productName }}</div>
-                                                        @if($product && !empty($product->sku))
-                                                            <div class="cf4-product-meta">SKU: {{ $product->sku }}</div>
-                                                        @endif
+                                                        <div class="cf4-product-meta">SKU: {{ $product ? $product->displaySku() : '—' }}</div>
                                                     </div>
                                                 </div>
                                             </td>

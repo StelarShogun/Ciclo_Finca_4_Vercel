@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Wrapper for `php artisan test` / phpunit that loads pdo_mysql and mysqli on hosts where they are not enabled by default (e.g. Arch / CachyOS where the modules are installed but disabled in /etc/php/php.ini).
+#
+# Usage:
+#   scripts/test                  # run full suite
+#   scripts/test --filter=Foo     # forwards extra args to artisan test
+#
+# Requires the docker-compose MySQL container (db_ciclo) to be running (port 3307) and `.env.testing` to be configured.
+
+set -euo pipefail
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+INI_DIR="$PROJECT_ROOT/scripts/php-ini.d"
+
+# Prepend ":" to also keep the system PHP ini scan dir.
+export PHP_INI_SCAN_DIR=":$INI_DIR"
+
+cd "$PROJECT_ROOT"
+exec php artisan test "$@"

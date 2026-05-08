@@ -233,8 +233,14 @@
 
         <!-- FOOTER -->
         <div class="footer">
+            @php
+                $siteUrl = rtrim((string) config('app.frontend_url', config('app.url')), '/');
+            @endphp
             <p style="margin:0 0 6px 0;">
                 © {{ date('Y') }} <strong>Ciclo Finca 4</strong>. Todos los derechos reservados.
+            </p>
+            <p style="margin:0 0 8px 0;">
+                <a href="{{ $siteUrl }}" style="color:#2e7d32;">{{ $siteUrl }}</a>
             </p>
             <p style="margin:0;">
                 Este es un correo automático, por favor no respondas directamente a esta dirección.

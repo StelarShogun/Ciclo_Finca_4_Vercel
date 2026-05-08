@@ -45,7 +45,7 @@ class Product extends Model implements HasMedia
 
     // Mass-assignable product attributes.
     protected $fillable = [
-        'category_id', 'supplier_id', 'name', 'description', 'image', 'images',
+        'category_id', 'supplier_id', 'name', 'sku', 'description', 'image', 'images',
         'sale_price', 'purchase_price', 'stock_current', 'stock_minimum', 'status',
         'is_featured',
     ];
@@ -70,6 +70,14 @@ class Product extends Model implements HasMedia
     public static function skuFromId(int $productId): string
     {
         return 'BK-'.str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
+    }
+
+    /** SKU mostrado: valor personalizado en BD o código derivado del ID (BK-xxx). */
+    public function displaySku(): string
+    {
+        $custom = trim((string) ($this->attributes['sku'] ?? ''));
+
+        return $custom !== '' ? $custom : self::skuFromId((int) $this->product_id);
     }
 
     // Normalizes localized and canonical status values.
