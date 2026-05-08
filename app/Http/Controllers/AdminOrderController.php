@@ -57,11 +57,18 @@ class AdminOrderController extends Controller
             : max(1, (int) config('sales.ready_to_pickup_expiration_days', 3));
         $usesEnvDefaultForExpiry = $stored === null;
 
+        $weeklyReportDay = AppSetting::getWeeklyReportDay();
+        $weeklyReportHour = AppSetting::getWeeklyReportHour();
+        $weeklyReportRecipients = AppSetting::getWeeklyReportRecipients();
+
         return view('admin.orders.index', compact(
             'orders',
             'latestPurchaseSaleId',
             'readyToPickupExpirationDays',
-            'usesEnvDefaultForExpiry'
+            'usesEnvDefaultForExpiry',
+            'weeklyReportDay',
+            'weeklyReportHour',
+            'weeklyReportRecipients'
         ));
     }
 }
