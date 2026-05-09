@@ -25,7 +25,10 @@ class SalesPerformanceDemoSeeder extends Seeder
             return;
         }
 
-        Sale::query()->where('notes', self::NOTES)->delete();
+        // Incluye filas cuyo notes fue ampliado por otros seeders (p. ej. "Demo CF4-24 | FULL_DEMO: …").
+        Sale::query()
+            ->where('notes', 'like', '%'.self::NOTES.'%')
+            ->delete();
 
         $tz = config('app.timezone', 'America/Costa_Rica');
         $now = Carbon::now($tz);

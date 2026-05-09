@@ -104,7 +104,7 @@ class StoreProductRequest extends FormRequest
             if (! Category::declaredCanonicalParentMatchesCategory($categoryId, $parentId)) {
                 $validator->errors()->add(
                     'category_id',
-                    'La categoría seleccionada no corresponde a la categoría padre indicada.'
+                    'La categoría del producto no corresponde a la categoría seleccionada en el formulario.'
                 );
 
                 return;
@@ -116,7 +116,7 @@ class StoreProductRequest extends FormRequest
             $categoryId = (int) $this->input('category_id');
             $category = Category::query()->find($categoryId);
             if (! $category || $category->parent_category_id === null) {
-                $validator->errors()->add('classification_value_ids', 'Color, talla, etc. solo aplican cuando el producto tiene un tipo concreto (no solo la categoría padre).');
+                $validator->errors()->add('classification_value_ids', 'Color, talla, etc. solo aplican cuando el producto tiene subcategoría (no solo la categoría raíz).');
 
                 return;
             }
@@ -163,7 +163,7 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'category_id' => 'categoría',
-            'parent_category_id' => 'categoría padre',
+            'parent_category_id' => 'categoría',
             'supplier_id' => 'proveedor',
             'name' => 'nombre del producto',
             'description' => 'descripción',

@@ -148,7 +148,7 @@ class ClassificationCatalogController extends Controller
         return view('admin.classifications.catalog.show', compact('category', 'attributes'));
     }
 
-    public function storeDimension(StoreClassificationDimensionRequest $request, Category $category): RedirectResponse
+    public function storeDimension(StoreClassificationDimensionRequest $request, Category $category): JsonResponse|RedirectResponse
     {
         $this->assertSubcategory($category);
         $data = $request->validated();
@@ -160,8 +160,20 @@ class ClassificationCatalogController extends Controller
             ->max('sort_order') ?? -1;
         $data['sort_order'] = $maxOrder + 1;
 
-        ClassificationDimension::create($data);
+        /** @var ClassificationDimension $dimension */
+        $dimension = ClassificationDimension::create($data);
         self::forgetClassificationOptionsCacheForCategory((int) $category->category_id);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'dimension' => [
+                    'id' => $dimension->id,
+                    'label' => $dimension->label,
+                    'slug' => $dimension->slug,
+                    'values' => [],
+                ],
+            ], 201);
+        }
 
         return redirect()
             ->route('admin.classifications.catalog.show', $category)
@@ -224,7 +236,7 @@ class ClassificationCatalogController extends Controller
         return view('admin.classifications.catalog.values', compact('dimension'));
     }
 
-    public function storeValue(StoreClassificationValueRequest $request, ClassificationDimension $dimension): RedirectResponse
+    public function storeValue(StoreClassificationValueRequest $request, ClassificationDimension $dimension): JsonResponse|RedirectResponse
     {
         $dimension->load('category');
         $this->assertSubcategory($dimension->category);
@@ -237,8 +249,19 @@ class ClassificationCatalogController extends Controller
             ->max('sort_order') ?? -1;
         $data['sort_order'] = $maxOrder + 1;
 
-        ClassificationValue::create($data);
+        /** @var ClassificationValue $value */
+        $value = ClassificationValue::create($data);
         self::forgetClassificationOptionsCacheForCategory((int) $dimension->category->category_id);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'value' => [
+                    'id' => $value->id,
+                    'value' => $value->value,
+                    'classification_dimension_id' => $dimension->id,
+                ],
+            ], 201);
+        }
 
         return redirect()
             ->route('admin.classifications.values.index', $dimension)
