@@ -153,7 +153,7 @@
 
         <!-- HEADER -->
         <div class="header">
-            <h1>🌿 Ciclo Finca 4</h1>
+            <h1>🚲 Ciclo Finca 4</h1>
         </div>
 
         <!-- BODY -->

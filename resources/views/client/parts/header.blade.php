@@ -49,6 +49,8 @@
                             $pendingInvoiceCount = \App\Models\Sale::where('client_id', auth('clients')->user()->user_id)
                                 ->where('status', 'pending')
                                 ->count();
+                            $unreadNotificationCount = auth('clients')->user()->unreadNotifications()->count();
+                            $notificationBadgeLabel = $unreadNotificationCount > 9 ? '9+' : (string) $unreadNotificationCount;
                         @endphp
 
                         <button type="button" class="cf4-favorites-btn" id="favorites-open-btn"
@@ -78,9 +80,14 @@
                         <div class="user-menu-wrap" id="user-menu">
                             <button class="user-menu-trigger" id="user-menu-trigger" type="button" aria-expanded="false"
                                 aria-haspopup="true" title="Mi cuenta">
-                                <div class="user-avatar-bubble">
-                                    {{ strtoupper(substr(Auth::guard('clients')->user()->name, 0, 1)) }}{{ strtoupper(substr(Auth::guard('clients')->user()->first_surname, 0, 1)) }}
-                                </div>
+                                <span class="user-menu-trigger-avatar-wrap">
+                                    <span class="user-avatar-bubble">
+                                        {{ strtoupper(substr(Auth::guard('clients')->user()->name, 0, 1)) }}{{ strtoupper(substr(Auth::guard('clients')->user()->first_surname, 0, 1)) }}
+                                    </span>
+                                    @if($unreadNotificationCount > 0)
+                                        <span class="cf4-invoice-count user-menu-trigger-notification-badge" id="nav-notification-badge">{{ $notificationBadgeLabel }}</span>
+                                    @endif
+                                </span>
                                 <span class="user-trigger-name">
                                     {{ Auth::guard('clients')->user()->name }}
                                 </span>
@@ -99,10 +106,13 @@
                                 </div>
                                 <div class="user-dropdown-body">
                                     <a href="{{ route('clients.notifications') }}"
-                                        class="user-dropdown-item {{ request()->routeIs('clients.notifications') ? 'active' : '' }}"
+                                        class="user-dropdown-item user-dropdown-item--with-badge {{ request()->routeIs('clients.notifications') ? 'active' : '' }}"
                                         role="menuitem">
                                         <i class="fas fa-bell"></i>
-                                        Notificaciones
+                                        <span>Notificaciones</span>
+                                        @if($unreadNotificationCount > 0)
+                                            <span class="cf4-nav-badge cf4-nav-badge--inline">{{ $notificationBadgeLabel }}</span>
+                                        @endif
                                     </a>
                                     <a href="{{ route('clients.profile') }}"
                                         class="user-dropdown-item {{ request()->routeIs('clients.profile') ? 'active' : '' }}"
