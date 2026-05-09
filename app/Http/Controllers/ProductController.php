@@ -1183,9 +1183,7 @@ class ProductController extends Controller
         $classificationFilters = $request->input('classifications', []);
         if (is_array($classificationFilters)) {
             $labelsBySlug = ClassificationDimension::query()
-                ->select(['slug', 'label'])
                 ->whereIn('slug', array_keys($classificationFilters))
-                ->get()
                 ->pluck('label', 'slug');
 
             foreach ($classificationFilters as $slug => $value) {
