@@ -24,6 +24,7 @@ class AdminOrderController extends Controller
 
         if ($search) {
             $search = trim($search);
+
             $query->where(function ($q) use ($search) {
                 $q->where('sale_id', 'like', "%{$search}%")
                     ->orWhere('invoice_number', 'like', "%{$search}%")
@@ -41,12 +42,14 @@ class AdminOrderController extends Controller
             ->whereIn('status', ['pending', 'completed']);
 
         $latestPurchaseSaleId = (clone $basePurchasesQuery)->max('sale_id') ?? 0;
+
         $pendingWebOrdersCount = (clone $baseWebOrdersQuery)
             ->where('status', 'pending')
             ->count();
 
         $storedHours = AppSetting::getStoredReadyToPickupExpirationHours();
         $storedDaysLegacy = AppSetting::getStoredReadyToPickupExpirationDays();
+
         if ($storedHours !== null && $storedHours > 0) {
             $readyToPickupExpirationHours = $storedHours;
         } elseif ($storedDaysLegacy !== null && $storedDaysLegacy > 0) {
@@ -54,14 +57,22 @@ class AdminOrderController extends Controller
         } else {
             $readyToPickupExpirationHours = max(1, (int) config('sales.ready_to_pickup_expiration_hours', 72));
         }
+
         $usesEnvDefaultForExpiry = $storedHours === null && $storedDaysLegacy === null;
+
+        $weeklyReportDay = AppSetting::getWeeklyReportDay();
+        $weeklyReportHour = AppSetting::getWeeklyReportHour();
+        $weeklyReportRecipients = AppSetting::getWeeklyReportRecipients();
 
         return view('admin.orders.index', compact(
             'orders',
             'latestPurchaseSaleId',
             'pendingWebOrdersCount',
             'readyToPickupExpirationHours',
-            'usesEnvDefaultForExpiry'
+            'usesEnvDefaultForExpiry',
+            'weeklyReportDay',
+            'weeklyReportHour',
+            'weeklyReportRecipients'
         ));
     }
 

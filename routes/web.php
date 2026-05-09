@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminOrderSettingsController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminWeeklyReportSettingsController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClassificationCatalogController;
@@ -246,6 +247,9 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::put('/orders/settings/order-expiration', [AdminOrderSettingsController::class, 'update'])
         ->name('admin.orders.settings.order-expiration.update');
+
+    Route::put('/orders/settings/weekly-report', [AdminWeeklyReportSettingsController::class, 'update'])
+        ->name('admin.orders.settings.weekly-report.update');
 
     // Supplier order routes.
     Route::get('/supplier-orders', [SupplierOrderController::class, 'index'])->name('admin.supplier-orders.index');
