@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 /** Weekly dashboard KPI report. */
@@ -382,7 +383,8 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
     public function test_successful_execution_is_logged_with_required_context(): void
     {
         Mail::fake();
-        Log::spy();
+        /** @var MockInterface $logSpy */
+        $logSpy = Log::spy();
 
         $recipients = ['log-test@ciclofinca.com'];
         $this->configureReport(recipients: $recipients);
@@ -390,7 +392,7 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
         $this->artisan('reports:send-weekly-dashboard --force')
             ->assertExitCode(0);
 
-        Log::shouldHaveReceived('info')
+        $logSpy->shouldHaveReceived('info')
             ->once()
             ->withArgs(function (string $message, array $context) use ($recipients) {
                 return str_contains($message, 'reports:send-weekly-dashboard')
@@ -403,7 +405,8 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
     /** A delivery failure is logged with the affected recipient and error detail. */
     public function test_failed_email_is_logged_with_recipient_and_error_detail(): void
     {
-        Log::spy();
+        /** @var MockInterface $logSpy */
+        $logSpy = Log::spy();
 
         $this->configureReport(recipients: ['failure@ciclofinca.com']);
 
@@ -412,7 +415,7 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
         $this->artisan('reports:send-weekly-dashboard --force')
             ->assertExitCode(1);
 
-        Log::shouldHaveReceived('error')
+        $logSpy->shouldHaveReceived('error')
             ->once()
             ->withArgs(function (string $message, array $context) {
                 return str_contains($message, 'reports:send-weekly-dashboard')
@@ -424,14 +427,15 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
     public function test_execution_log_always_includes_sent_and_failed_counts(): void
     {
         Mail::fake();
-        Log::spy();
+        /** @var MockInterface $logSpy */
+        $logSpy = Log::spy();
 
         $this->configureReport(recipients: ['a@ciclofinca.com', 'b@ciclofinca.com']);
 
         $this->artisan('reports:send-weekly-dashboard --force')
             ->assertExitCode(0);
 
-        Log::shouldHaveReceived('info')
+        $logSpy->shouldHaveReceived('info')
             ->withArgs(function (string $message, array $context) {
                 return str_contains($message, 'reports:send-weekly-dashboard')
                     && array_key_exists('sent', $context)
@@ -442,7 +446,8 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
     /** Missing recipients produce a warning instead of a normal execution log. */
     public function test_missing_recipients_logs_a_warning_instead_of_info(): void
     {
-        Log::spy();
+        /** @var MockInterface $logSpy */
+        $logSpy = Log::spy();
         Mail::fake();
 
         AppSetting::setWeeklyReportRecipients([]);
@@ -450,7 +455,7 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
         $this->artisan('reports:send-weekly-dashboard --force')
             ->assertExitCode(0);
 
-        Log::shouldHaveReceived('warning')
+        $logSpy->shouldHaveReceived('warning')
             ->once()
             ->withArgs(fn (string $message) => str_contains($message, 'reports:send-weekly-dashboard'));
 
