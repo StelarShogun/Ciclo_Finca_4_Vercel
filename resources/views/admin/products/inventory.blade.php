@@ -527,6 +527,7 @@
                                 <option value="">Solo categoría padre (sin tipo)</option>
                             </select>
                             <small id="new-subcategory-hint" class="form-text text-muted">Si dejás solo la categoría padre (ej. Bicicletas), no vas a poder cargar color, talla, etc. Elegí el tipo (ej. MTB) para usar esas opciones.</small>
+                            <input type="hidden" id="new-parent-category-id" name="parent_category_id" value="">
                             <input type="hidden" id="new-category" name="category_id" value="">
                         </div>
                         <div class="form-group">
@@ -661,6 +662,7 @@
                             <select id="edit-subcategory">
                                 <option value="">Solo categoría padre (sin tipo)</option>
                             </select>
+                            <input type="hidden" id="edit-parent-category-id" name="parent_category_id" value="">
                             <input type="hidden" id="edit-category" name="category_id" required>
                         </div>
                         <div class="form-group">

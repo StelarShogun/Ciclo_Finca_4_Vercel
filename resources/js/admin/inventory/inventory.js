@@ -278,14 +278,23 @@ function refreshClassificationFields(containerSelector, categoryId, preselectedI
         });
 }
 
-function bindDependentCategorySelectors({ parentSelect, subSelect, hiddenCategoryInput }) {
+function syncParentCategoryHiddenInput(parentSelect, parentHiddenInput) {
+    if (!parentHiddenInput || !parentSelect) {
+        return;
+    }
+    parentHiddenInput.value = parentSelect.value || '';
+}
+
+function bindDependentCategorySelectors({ parentSelect, subSelect, hiddenCategoryInput, parentCategoryHiddenInput }) {
     if (!parentSelect || !subSelect || !hiddenCategoryInput) return;
     parentSelect.addEventListener('change', () => {
         fillSubcategoryOptions(subSelect, parentSelect.value);
         syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput);
+        syncParentCategoryHiddenInput(parentSelect, parentCategoryHiddenInput);
     });
     subSelect.addEventListener('change', () => {
         syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput);
+        syncParentCategoryHiddenInput(parentSelect, parentCategoryHiddenInput);
     });
 }
 
@@ -909,6 +918,7 @@ function smoothScrollTop() {
     const newParentCategory = qs('#new-parent-category');
     const newSubcategory = qs('#new-subcategory');
     const newFinalCategory = qs('#new-category');
+    const newParentCategoryHidden = qs('#new-parent-category-id');
 
     // --- Gallery input validation (webkitdirectory may pick non-image files) ---
     const VALID_IMAGE_TYPES = ['image/jpeg','image/png','image/gif','image/svg+xml','image/webp','image/avif'];
@@ -969,6 +979,7 @@ function smoothScrollTop() {
             newBrandCombobox?.reset();
             newProductModal.classList.add('active');
             syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
+            syncParentCategoryHiddenInput(newParentCategory, newParentCategoryHidden);
             refreshClassificationFields('#new-classification-fields', newFinalCategory?.value || '', null);
         });
     }
@@ -988,6 +999,7 @@ function smoothScrollTop() {
     if (saveNewProductBtn) {
         saveNewProductBtn.addEventListener('click', () => {
             syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
+            syncParentCategoryHiddenInput(newParentCategory, newParentCategoryHidden);
 
             if (newProductForm && typeof newProductForm.reportValidity === 'function' && !newProductForm.reportValidity()) {
                 return;
@@ -1119,6 +1131,7 @@ function smoothScrollTop() {
     const editParentCategory = qs('#edit-parent-category');
     const editSubcategory = qs('#edit-subcategory');
     const editFinalCategory = qs('#edit-category');
+    const editParentCategoryHidden = qs('#edit-parent-category-id');
 
     // CF4-74 — Variants selector (modern UX) inside edit modal
     const editVariantAddBtn = qs('#edit-variant-add-btn');
@@ -1185,6 +1198,7 @@ function smoothScrollTop() {
                         editParentCategory.value = detectedParentId;
                         fillSubcategoryOptions(editSubcategory, detectedParentId, detectedSubcategoryId);
                         syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
+                        syncParentCategoryHiddenInput(editParentCategory, editParentCategoryHidden);
                     }
                     qs('#edit-provider').value = product.supplier_id || '';
                     editBrandCombobox?.setValue(product.brand_id || '');
@@ -1242,13 +1256,15 @@ function smoothScrollTop() {
     bindDependentCategorySelectors({
         parentSelect: newParentCategory,
         subSelect: newSubcategory,
-        hiddenCategoryInput: newFinalCategory
+        hiddenCategoryInput: newFinalCategory,
+        parentCategoryHiddenInput: newParentCategoryHidden,
     });
 
     bindDependentCategorySelectors({
         parentSelect: editParentCategory,
         subSelect: editSubcategory,
-        hiddenCategoryInput: editFinalCategory
+        hiddenCategoryInput: editFinalCategory,
+        parentCategoryHiddenInput: editParentCategoryHidden,
     });
 
     /** CF4-84 — al cambiar categoría en edición se limpian selecciones previas */
@@ -1371,6 +1387,7 @@ function smoothScrollTop() {
     if (saveEditBtn) {
         saveEditBtn.addEventListener('click', () => {
             syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
+            syncParentCategoryHiddenInput(editParentCategory, editParentCategoryHidden);
 
             if (!qs('#edit-brand')?.value) {
                 const cb = qs('#edit-brand-combobox');
