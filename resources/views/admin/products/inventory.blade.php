@@ -92,9 +92,9 @@
                     <div class="filters-grid">
 
                         <div class="filter-group">
-                            <label for="parent-category-filter">Categoría padre</label>
+                            <label for="parent-category-filter">Categoría</label>
                             <select id="parent-category-filter" name="parent_category_id">
-                                <option value="">Todas las categorías padre</option>
+                                <option value="">Todas las categorías</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}"
                                         @selected((string) request('parent_category_id') === (string) $category->category_id)>
@@ -105,7 +105,7 @@
                         </div>
 
                         <div class="filter-group">
-                            <label for="subcategory-filter">Tipo de producto</label>
+                            <label for="subcategory-filter">Subcategoría</label>
                             <select id="subcategory-filter" name="subcategory_id" data-selected="{{ request('subcategory_id') }}">
                                 <option value="">Todos los tipos</option>
                             </select>
@@ -513,20 +513,24 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-parent-category">Categoría padre *</label>
+                            <label for="new-parent-category">Categoría *</label>
                             <select id="new-parent-category" required>
-                                <option value="">Seleccionar categoría padre</option>
+                                <option value="">Seleccionar categoría</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="new-subcategory">Tipo concreto <span class="text-muted">(recomendado)</span></label>
+                            <label for="new-subcategory">Subcategoría <span class="text-muted">(recomendado)</span></label>
                             <select id="new-subcategory" aria-describedby="new-subcategory-hint">
-                                <option value="">Solo categoría padre (sin tipo)</option>
+                                <option value="">Seleccioná primero una categoría</option>
                             </select>
-                            <small id="new-subcategory-hint" class="form-text text-muted">Si dejás solo la categoría padre (ej. Bicicletas), no vas a poder cargar color, talla, etc. Elegí el tipo (ej. MTB) para usar esas opciones.</small>
+                            <small id="new-subcategory-hint" class="form-text text-muted"
+                                data-default-hint="Si no elegís subcategoría (ej. solo «Bicicletas»), no vas a poder cargar color, talla, etc. Elegí una subcategoría (ej. MTB) cuando exista.">
+                                Elegí categoría y, si aplica, subcategoría. Sin subcategoría no podrás usar atributos como color o talla hasta que existan en catálogo.
+                            </small>
+                            <input type="hidden" id="new-parent-category-id" name="parent_category_id" value="">
                             <input type="hidden" id="new-category" name="category_id" value="">
                         </div>
                         <div class="form-group">
@@ -585,18 +589,19 @@
                         </select>
                     </div>
                     <div class="form-group" id="new-classification-section">
-                        <label>Atributos (color, talla…)</label>
-                        <div id="new-classification-fields"></div>
-                        <small class="form-text text-muted">Un valor por atributo. Aparece cuando elegís subcategoría y cargaste atributos en «Opciones por tipo».</small>
+                        <label id="new-classification-heading">Atributos (color, talla…)</label>
+                        <div id="new-classification-fields" aria-labelledby="new-classification-heading"></div>
+                        <small class="form-text text-muted classification-section-hint">Un valor por atributo cuando el producto tiene subcategoría.</small>
                     </div>
                     <div class="form-group form-group-featured">
-                        <label class="featured-checkbox-label" for="new-featured">
-                            <input type="checkbox" id="new-featured" value="1">
-                            <span class="featured-checkbox-text">
-                                <span class="featured-checkbox-title">Destacado en tienda</span>
-                                <small>Se muestra en el inicio y en «Destacados y novedades» del catálogo público.</small>
-                            </span>
-                        </label>
+                        <div class="featured-store-toggle">
+                            <input type="checkbox" id="new-featured" class="featured-store-toggle__input" value="1"
+                                   aria-describedby="new-featured-desc">
+                            <label for="new-featured" class="featured-store-toggle__copy">
+                                <span class="featured-store-toggle__title">Destacado en tienda</span>
+                                <small id="new-featured-desc" class="featured-store-toggle__desc">Se muestra en el inicio y en «Destacados y novedades» del catálogo público.</small>
+                            </label>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -648,19 +653,24 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="edit-parent-category">Categoría padre *</label>
+                            <label for="edit-parent-category">Categoría *</label>
                             <select id="edit-parent-category" required>
-                                <option value="">Seleccionar categoría padre</option>
+                                <option value="">Seleccionar categoría</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="edit-subcategory">Tipo concreto <span class="text-muted">(recomendado)</span></label>
-                            <select id="edit-subcategory">
-                                <option value="">Solo categoría padre (sin tipo)</option>
+                            <label for="edit-subcategory">Subcategoría <span class="text-muted">(recomendado)</span></label>
+                            <select id="edit-subcategory" aria-describedby="edit-subcategory-hint">
+                                <option value="">Seleccioná primero una categoría</option>
                             </select>
+                            <small id="edit-subcategory-hint" class="form-text text-muted"
+                                data-default-hint="Si no elegís subcategoría (ej. solo «Bicicletas»), no vas a poder cargar color, talla, etc. Elegí una subcategoría (ej. MTB) cuando exista.">
+                                Elegí categoría y, si aplica, subcategoría. Sin subcategoría no podrás usar atributos como color o talla hasta que existan en catálogo.
+                            </small>
+                            <input type="hidden" id="edit-parent-category-id" name="parent_category_id" value="">
                             <input type="hidden" id="edit-category" name="category_id" required>
                         </div>
                         <div class="form-group">
@@ -715,18 +725,19 @@
                         </select>
                     </div>
                     <div class="form-group" id="edit-classification-section">
-                        <label>Atributos (color, talla…)</label>
-                        <div id="edit-classification-fields"></div>
-                        <small class="form-text text-muted">Un valor por atributo. Visible si el producto tiene subcategoría y atributos en «Opciones por tipo».</small>
+                        <label id="edit-classification-heading">Atributos (color, talla…)</label>
+                        <div id="edit-classification-fields" aria-labelledby="edit-classification-heading"></div>
+                        <small class="form-text text-muted classification-section-hint">Un valor por atributo cuando el producto tiene subcategoría.</small>
                     </div>
                     <div class="form-group form-group-featured">
-                        <label class="featured-checkbox-label" for="edit-featured">
-                            <input type="checkbox" id="edit-featured" value="1">
-                            <span class="featured-checkbox-text">
-                                <span class="featured-checkbox-title">Destacado en tienda</span>
-                                <small>Se muestra en el inicio y en «Destacados y novedades» del catálogo público.</small>
-                            </span>
-                        </label>
+                        <div class="featured-store-toggle">
+                            <input type="checkbox" id="edit-featured" class="featured-store-toggle__input" value="1"
+                                   aria-describedby="edit-featured-desc">
+                            <label for="edit-featured" class="featured-store-toggle__copy">
+                                <span class="featured-store-toggle__title">Destacado en tienda</span>
+                                <small id="edit-featured-desc" class="featured-store-toggle__desc">Se muestra en el inicio y en «Destacados y novedades» del catálogo público.</small>
+                            </label>
+                        </div>
                     </div>
 
                     {{-- CF4-74 — Variantes / presentaciones del producto --}}

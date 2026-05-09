@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Category;
 use App\Services\ProductClassificationAssignmentService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -26,6 +27,13 @@ class StoreProductRequest extends FormRequest
 
         return [
             'category_id' => 'required|exists:categories,category_id',
+            'parent_category_id' => [
+                'required',
+                'integer',
+                Rule::exists('categories', 'category_id')->where(
+                    fn ($query) => $query->whereNull('parent_category_id')
+                ),
+            ],
             'supplier_id' => 'required|exists:suppliers,supplier_id',
             'brand_id' => 'required|exists:brands,id',
             'name' => ['required', 'string', 'max:200', $nameRule],
@@ -69,13 +77,36 @@ class StoreProductRequest extends FormRequest
             $this->files->set('images', $images);
         }
 
+        if ($this->has('parent_category_id') && $this->input('parent_category_id') !== null && $this->input('parent_category_id') !== '') {
+            $merge['parent_category_id'] = (int) $this->input('parent_category_id');
+        }
+
         $this->merge($merge);
+    }
+
+    public function validated($key = null, $default = null)
+    {
+        if ($key !== null) {
+            return parent::validated($key, $default);
+        }
+
+        return Arr::except(parent::validated(), ['parent_category_id']);
     }
 
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
             if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+            $categoryId = (int) $this->input('category_id');
+            $parentId = (int) $this->input('parent_category_id');
+            if (! Category::declaredCanonicalParentMatchesCategory($categoryId, $parentId)) {
+                $validator->errors()->add(
+                    'category_id',
+                    'La categoría del producto no corresponde a la categoría seleccionada en el formulario.'
+                );
+
                 return;
             }
             $ids = $this->input('classification_value_ids', []);
@@ -85,7 +116,7 @@ class StoreProductRequest extends FormRequest
             $categoryId = (int) $this->input('category_id');
             $category = Category::query()->find($categoryId);
             if (! $category || $category->parent_category_id === null) {
-                $validator->errors()->add('classification_value_ids', 'Color, talla, etc. solo aplican cuando el producto tiene un tipo concreto (no solo la categoría padre).');
+                $validator->errors()->add('classification_value_ids', 'Color, talla, etc. solo aplican cuando el producto tiene subcategoría (no solo la categoría raíz).');
 
                 return;
             }
@@ -132,6 +163,7 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'category_id' => 'categoría',
+            'parent_category_id' => 'categoría',
             'supplier_id' => 'proveedor',
             'name' => 'nombre del producto',
             'description' => 'descripción',

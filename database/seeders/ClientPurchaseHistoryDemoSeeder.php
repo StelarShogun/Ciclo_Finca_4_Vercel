@@ -26,7 +26,9 @@ class ClientPurchaseHistoryDemoSeeder extends Seeder
             return;
         }
 
-        Sale::query()->where('notes', self::NOTES)->delete();
+        Sale::query()
+            ->where('notes', 'like', '%'.self::NOTES.'%')
+            ->delete();
 
         $tz = config('app.timezone', 'America/Costa_Rica');
         $now = Carbon::now($tz);
