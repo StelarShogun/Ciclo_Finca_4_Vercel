@@ -40,15 +40,14 @@ class ProductReviewReminderNotification extends Notification
 
     public function toArray(object $notifiable): array
     {
-        $historyUrl = $this->historyUrlAbsolute();
-
         return [
             'sale_id' => $this->sale->sale_id,
             'message' => sprintf(
                 'Te invitamos a reseñar %s. Podés hacerlo desde Facturas > Historial de compras.',
                 $this->productPhrase()
             ),
-            'action_url' => $historyUrl,
+            // Relative path so in-app links follow the current host/port (Docker, artisan serve, etc.).
+            'action_url' => $this->historyUrlRelative(),
             'action_label' => 'Ir al historial de compras',
         ];
     }
@@ -63,10 +62,16 @@ class ProductReviewReminderNotification extends Notification
         return $productCount === 1 ? 'el producto comprado' : 'los productos comprados';
     }
 
+    private function historyUrlRelative(): string
+    {
+        return route('clients.invoices', ['tab' => 'historial'], absolute: false);
+    }
+
+    /** Absolute URL for transactional mail clients (uses FRONTEND_URL / APP_URL). */
     private function historyUrlAbsolute(): string
     {
         $base = rtrim((string) config('app.frontend_url', config('app.url')), '/');
-        $path = route('clients.invoices', ['tab' => 'historial'], absolute: false);
+        $path = $this->historyUrlRelative();
 
         return str_starts_with($path, 'http') ? $path : $base.$path;
     }

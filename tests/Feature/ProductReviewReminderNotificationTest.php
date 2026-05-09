@@ -92,6 +92,7 @@ class ProductReviewReminderNotificationTest extends TestCase
         $this->assertNotNull($row);
         $data = $row->data;
         $this->assertArrayHasKey('action_url', $data);
+        $this->assertStringStartsWith('/', (string) $data['action_url']);
         $this->assertStringContainsString('historial', (string) $data['action_url']);
         $this->assertSame('Ir al historial de compras', $data['action_label']);
     }
