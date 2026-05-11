@@ -28,12 +28,19 @@ class ClientCatalogProductSuggestionsController extends Controller
             $hasMediaTable = Schema::hasTable('media');
             $suggestions = [];
 
+            $productWith = ['category'];
+            if ($hasMediaTable) {
+                $productWith['media'] = static function ($q) {
+                    $q->where('collection_name', 'main_image');
+                };
+            }
+
             // SKU can be derived from product_id, so when the user types BK-001 or 001,
             // attempt to resolve the exact product_id first.
             $skuId = $this->parseSkuLikeToProductId($search);
             if ($skuId !== null) {
                 $p = Product::query()
-                    ->with(['category'])
+                    ->with($productWith)
                     ->activeInClientStore()
                     ->where('product_id', $skuId)
                     ->first();
@@ -46,17 +53,19 @@ class ClientCatalogProductSuggestionsController extends Controller
             $term = mb_strtolower($search);
             $like = '%'.$term.'%';
 
+            // Single query with LEFT JOIN avoids per-row EXISTS from orWhereHas (major win on large catalogs).
             $productCandidates = Product::query()
-                ->with(['category'])
+                ->select('products.*')
+                ->leftJoin('categories', 'categories.category_id', '=', 'products.category_id')
+                ->with($productWith)
                 ->activeInClientStore()
                 ->where(function ($q) use ($like) {
-                    $q->whereRaw('LOWER(name) LIKE ?', [$like])
-                        ->orWhereRaw('LOWER(COALESCE(description, \'\')) LIKE ?', [$like])
-                        ->orWhereHas('category', function ($cq) use ($like) {
-                            $cq->whereRaw('LOWER(name) LIKE ?', [$like]);
-                        });
+                    $q->whereRaw('LOWER(products.name) LIKE ?', [$like])
+                        ->orWhereRaw('LOWER(COALESCE(products.description, \'\')) LIKE ?', [$like])
+                        ->orWhereRaw('LOWER(COALESCE(categories.name, \'\')) LIKE ?', [$like]);
                 })
-                ->limit(60)
+                ->distinct()
+                ->limit(28)
                 ->get();
 
             foreach ($productCandidates as $p) {
@@ -68,7 +77,7 @@ class ClientCatalogProductSuggestionsController extends Controller
 
             $categoryCandidates = Category::query()
                 ->whereRaw('LOWER(name) LIKE ?', [$like])
-                ->limit(20)
+                ->limit(12)
                 ->get();
 
             foreach ($categoryCandidates as $c) {

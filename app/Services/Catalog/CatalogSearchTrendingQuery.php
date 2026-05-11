@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Services\Admin\CatalogMostSearchedProductsReportQuery;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /** Reads aggregated catalog search metrics for client-facing trending (CF4-107). */
 final class CatalogSearchTrendingQuery
@@ -71,8 +72,15 @@ final class CatalogSearchTrendingQuery
     {
         $limit = max(1, min($limit, 10));
 
+        $with = ['category'];
+        if (Schema::hasTable('media')) {
+            $with['media'] = static function ($q) {
+                $q->where('collection_name', 'main_image');
+            };
+        }
+
         return Product::query()
-            ->with(['category'])
+            ->with($with)
             ->activeInClientStore()
             ->orderByDesc('updated_at')
             ->limit($limit)

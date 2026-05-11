@@ -19,6 +19,13 @@ class ClientCatalogSearchTrendingController extends Controller
         try {
             $hasMediaTable = Schema::hasTable('media');
 
+            $productWith = ['category'];
+            if ($hasMediaTable) {
+                $productWith['media'] = static function ($q) {
+                    $q->where('collection_name', 'main_image');
+                };
+            }
+
             $productScores = CatalogSearchTrendingQuery::toppedActiveProductScores($period, $limit);
 
             /** @var \Illuminate\Support\Collection<int,\App\Models\Product> $products */
@@ -26,7 +33,7 @@ class ClientCatalogSearchTrendingController extends Controller
             if ($productScores->isNotEmpty()) {
                 $order = $productScores->pluck('product_id')->all();
                 $products = Product::query()
-                    ->with(['category'])
+                    ->with($productWith)
                     ->whereIn('product_id', $order)
                     ->activeInClientStore()
                     ->get();

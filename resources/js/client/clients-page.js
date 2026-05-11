@@ -374,10 +374,12 @@ function isClientStockShortMessage(msg) {
     function schedule(query) {
         if (!url) return;
         if (state.debounceId) clearTimeout(state.debounceId);
+        // Shorter debounce + immediate fetch for longer queries keeps perceived latency under ~1s.
+        var delay = query.length >= 4 ? 0 : 160;
         state.debounceId = setTimeout(function () {
             state.debounceId = null;
             fetchSuggestions(query);
-        }, 400);
+        }, delay);
     }
 
     if (!url && !trendingUrl) return;
