@@ -24,7 +24,6 @@ use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\ProductVariantController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\XmlPriceDeviationController;
-use App\Http\Controllers\InventoryMovementController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierOrderController;
 use Illuminate\Http\Request;
