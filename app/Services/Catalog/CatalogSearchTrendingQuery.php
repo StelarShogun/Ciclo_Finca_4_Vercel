@@ -86,5 +86,4 @@ final class CatalogSearchTrendingQuery
             ->limit($limit)
             ->get();
     }
-
 }

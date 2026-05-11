@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Services\Admin\CatalogMostSearchedProductsReportQuery;
 use App\Services\Catalog\CatalogSearchTrendingQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
@@ -28,7 +30,7 @@ class ClientCatalogSearchTrendingController extends Controller
 
             $productScores = CatalogSearchTrendingQuery::toppedActiveProductScores($period, $limit);
 
-            /** @var \Illuminate\Support\Collection<int,\App\Models\Product> $products */
+            /** @var Collection<int,Product> $products */
             $products = collect();
             if ($productScores->isNotEmpty()) {
                 $order = $productScores->pluck('product_id')->all();
@@ -98,7 +100,7 @@ class ClientCatalogSearchTrendingController extends Controller
      */
     private function periodMeta(string $period): array
     {
-        $start = \App\Services\Admin\CatalogMostSearchedProductsReportQuery::periodStart($period);
+        $start = CatalogMostSearchedProductsReportQuery::periodStart($period);
 
         return [
             'period' => [
