@@ -111,7 +111,7 @@
                     </h3>
 
                     {{-- GET form: category_id se conserva por URL al filtrar desde el menú de categorías --}}
-                    <form method="GET" action="{{ route('clients.catalog') }}" id="filter-form">
+                    <form method="GET" action="{{ route('clients.catalog') }}" id="filter-form" autocomplete="off">
                         @if(request('category_id'))
                             <input type="hidden" name="category_id" value="{{ request('category_id') }}">
                         @endif
@@ -123,7 +123,8 @@
                         @endif
                         <div class="filter-group catalog-search-group"
                              data-catalog-suggestions
-                             data-suggestions-url="{{ route('api.products.suggestions') }}">
+                             data-suggestions-url="{{ route('api.products.suggestions') }}"
+                             data-trending-url="{{ route('api.catalog.search-trending') }}">
                             <label for="search">Buscar</label>
                             <input type="text"
                                    id="search"
@@ -131,6 +132,8 @@
                                    class="form-control"
                                    placeholder="Nombre o descripción..."
                                    autocomplete="off"
+                                   autocorrect="off"
+                                   autocapitalize="off"
                                    spellcheck="false"
                                    role="combobox"
                                    aria-autocomplete="list"

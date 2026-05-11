@@ -13,6 +13,7 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClassificationCatalogController;
 use App\Http\Controllers\ClientCatalogProductSuggestionsController;
+use App\Http\Controllers\ClientCatalogSearchTrendingController;
 use App\Http\Controllers\ClientPageController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
@@ -318,6 +319,10 @@ Route::get('/catalog', [ClientPageController::class, 'catalog'])->name('clients.
 Route::get('/api/products/suggestions', ClientCatalogProductSuggestionsController::class)
     ->middleware('throttle:60,1')
     ->name('api.products.suggestions');
+
+Route::get('/api/catalog/search-trending', ClientCatalogSearchTrendingController::class)
+    ->middleware('throttle:60,1')
+    ->name('api.catalog.search-trending');
 
 // Product route with numeric ID and optional SEO slug.
 Route::get('/product/{id}/{slug?}', [ClientPageController::class, 'product'])
