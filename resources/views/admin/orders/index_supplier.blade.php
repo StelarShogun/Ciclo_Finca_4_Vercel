@@ -41,6 +41,9 @@
                 </p>
             </div>
             <div class="sales-header-actions">
+                <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-file-import"></i> Analizar XML de proveedor
+                </a>
                 <a href="{{ route('admin.supplier-orders.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i>
                     Nuevo pedido
