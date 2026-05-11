@@ -239,6 +239,43 @@
   right: -5px;
 }
 
+/* Unread notifications — same accent as invoice badge */
+.cf4-nav-badge {
+  background: var(--color-accent);
+  color: white;
+  border-radius: 50%;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  position: absolute;
+  top: -6px;
+  right: -4px;
+  line-height: 1;
+}
+
+.cf4-nav-badge--inline {
+  position: static;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Override dropdown row text color so badge stays white on orange (parent .active uses green text). */
+.user-dropdown-item .cf4-nav-badge.cf4-nav-badge--inline {
+  color: #fff;
+  background: var(--color-accent);
+}
+
+/* With menu open, show count only next to "Notificaciones", not on profile trigger. */
+.user-menu-wrap.open .user-menu-trigger-notification-badge {
+  display: none;
+}
+
 .cf4-favorites-btn {
   position: relative;
   background: var(--background-white);
@@ -398,6 +435,7 @@
 .user-menu-wrap { position: relative; }
 
 .user-menu-trigger {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -418,6 +456,21 @@
 .user-menu-wrap.open .user-menu-trigger {
   border-color: var(--color-primary);
   background: var(--color-success-bg);
+}
+
+.user-menu-trigger-avatar-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-menu-trigger .user-menu-trigger-notification-badge {
+  width: auto;
+  min-width: 22px;
+  padding: 0 5px;
+  z-index: 2;
 }
 
 .user-avatar-bubble {
@@ -514,6 +567,11 @@
   color: var(--text-primary);
   transition: var(--transition);
   cursor: pointer;
+}
+
+.user-dropdown-item--with-badge {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .user-dropdown-item:hover { background: var(--background-light); }

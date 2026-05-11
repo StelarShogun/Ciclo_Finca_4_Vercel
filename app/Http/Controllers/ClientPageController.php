@@ -921,6 +921,8 @@ class ClientPageController extends Controller
     {
         /** @var Client $client */
         $client = Auth::guard('clients')->user();
+        $client->unreadNotifications->markAsRead();
+
         $cartCount = $this->getCartCount();
 
         $notifications = $client->notifications()
