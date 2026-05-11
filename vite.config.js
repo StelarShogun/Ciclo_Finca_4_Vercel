@@ -55,6 +55,7 @@ const adminAssets = [
 // =======================
 const clientAssets = [
     // JS
+    "resources/js/client/checkout-copy.js",
     "resources/js/client/clients-page.js",
     "resources/js/client/clients-users.js",
 

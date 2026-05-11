@@ -2,6 +2,32 @@
 @import "../sidebar.css";
 
 /* CF4-21 Pedidos — mismo bloque de cabecera que Ventas (.sales-header en sales.css) */
+.cf4-orders-module .cf4-orders-kpi-grid {
+  margin-bottom: 1rem;
+  grid-template-columns: minmax(260px, 360px);
+  justify-content: start;
+}
+
+.cf4-orders-module .cf4-orders-kpi-card-link {
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.cf4-orders-module .cf4-orders-kpi-card-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(17, 24, 39, 0.1);
+}
+
+.cf4-orders-module .cf4-orders-kpi-card-link:focus-visible {
+  outline: 3px solid rgba(46, 125, 50, 0.24);
+  outline-offset: 2px;
+}
+
+.cf4-orders-module .cf4-kpi-reset-text {
+  color: var(--color-danger);
+}
+
 .cf4-orders-module .orders-table-card {
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -147,6 +173,11 @@
 .cf4-orders-module .order-status-pill.pending {
   background: var(--color-warning-bg);
   color: var(--color-warning);
+}
+
+.cf4-orders-module .order-status-pill.ready_to_pickup {
+  background: var(--color-info-bg);
+  color: var(--color-info);
 }
 
 .cf4-orders-module .order-status-pill.draft {
@@ -395,6 +426,8 @@
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
+}
+
 /* Listado: auditoría de confirmación (CF4-15) */
 .cf4-supplier-orders-module .order-conf-cell {
   font-size: 0.82rem;
@@ -419,5 +452,4 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
 }

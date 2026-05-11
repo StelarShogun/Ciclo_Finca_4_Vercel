@@ -21,12 +21,14 @@ class ClientPurchaseHistoryDemoSeeder extends Seeder
     {
         $admin = AdminUser::query()->orderBy('user_id')->first();
         if (! $admin) {
-            $this->command?->warn('ClientPurchaseHistoryDemoSeeder: no hay admin; se omite.');
+            $this->command->warn('ClientPurchaseHistoryDemoSeeder: no hay admin; se omite.');
 
             return;
         }
 
-        Sale::query()->where('notes', self::NOTES)->delete();
+        Sale::query()
+            ->where('notes', 'like', '%'.self::NOTES.'%')
+            ->delete();
 
         $tz = config('app.timezone', 'America/Costa_Rica');
         $now = Carbon::now($tz);
@@ -81,7 +83,7 @@ class ClientPurchaseHistoryDemoSeeder extends Seeder
             ]);
         }
 
-        $this->command?->info(
+        $this->command->info(
             'ClientPurchaseHistoryDemoSeeder: '.count($rows).' ventas para clientes user_id '.$clientA->user_id.' y '.$clientB->user_id.'.',
         );
     }

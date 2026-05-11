@@ -21,6 +21,11 @@
             'delivered'        => 'Entregado',
             'cancelled'        => 'Cancelado',
         ];
+        $openCardActive = request('state') === 'open';
+        $openCardUrl = $openCardActive
+            ? route('admin.supplier-orders.index')
+            : route('admin.supplier-orders.index', ['state' => 'open']);
+        $openCardCta = $openCardActive ? 'Ver todo' : 'Ver pedidos no finales';
     @endphp
 
     <div class="sales-container cf4-orders-module cf4-supplier-orders-module">
@@ -46,12 +51,26 @@
             </div>
         </header>
 
+        <section class="kpi-grid cf4-orders-kpi-grid" aria-label="Resumen de pedidos a proveedores">
+            <a class="kpi-card cf4-orders-kpi-card-link" href="{{ $openCardUrl }}">
+                <div class="kpi-header">
+                    <h3 class="kpi-title">Pedidos abiertos</h3>
+                    <div class="kpi-icon info"><i class="fas fa-truck-loading"></i></div>
+                </div>
+                <p class="kpi-value">{{ number_format((int) ($openSupplierOrdersCount ?? 0), 0, ',', '.') }}</p>
+                <div class="kpi-trend {{ $openCardActive ? 'trend-down cf4-kpi-reset-text' : 'trend-up' }}">
+                    <i class="fas fa-arrow-right"></i> {{ $openCardCta }}
+                </div>
+            </a>
+        </section>
+
         <div class="orders-table-card">
             <form method="GET" action="{{ route('admin.supplier-orders.index') }}" class="orders-toolbar" id="supplier-orders-filters-form">
                 <div class="filter-group">
                     <label for="supplier-orders-state">Estado</label>
                     <select id="supplier-orders-state" name="state">
                         <option value="">Todos</option>
+                        <option value="open"             {{ request('state') === 'open'             ? 'selected' : '' }}>Abiertas (no finales)</option>
                         <option value="draft"            {{ request('state') === 'draft'            ? 'selected' : '' }}>Borrador</option>
                         <option value="pending"          {{ request('state') === 'pending'          ? 'selected' : '' }}>Pendiente</option>
                         <option value="confirmed"        {{ request('state') === 'confirmed'        ? 'selected' : '' }}>Confirmado</option>
@@ -101,6 +120,7 @@
                     <label style="opacity:.8;">Filtros rápidos</label>
                     <div>
                         {!! $pill('', 'Todos') !!}
+                        {!! $pill('open', 'Abiertas') !!}
                         {!! $pill('draft', 'Borrador') !!}
                         {!! $pill('pending', 'Pendiente') !!}
                         {!! $pill('confirmed', 'Confirmado') !!}

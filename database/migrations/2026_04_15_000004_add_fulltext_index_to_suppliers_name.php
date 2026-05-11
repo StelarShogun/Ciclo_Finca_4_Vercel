@@ -19,7 +19,7 @@ return new class extends Migration
         // FULLTEXT enables fast search over supplier names.
         try {
             DB::statement('ALTER TABLE `suppliers` ADD FULLTEXT `ft_suppliers_name` (`name`)');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // ignore
         }
     }
@@ -36,9 +36,8 @@ return new class extends Migration
 
         try {
             DB::statement('ALTER TABLE `suppliers` DROP INDEX `ft_suppliers_name`');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // ignore
         }
     }
 };
-

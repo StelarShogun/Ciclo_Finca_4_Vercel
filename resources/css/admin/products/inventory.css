@@ -24,7 +24,9 @@
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
-  overflow-x: auto;
+  /* Una sola zona de scroll horizontal: la tabla (.products-table.table-view). Si admin-main
+     también tiene overflow-x:auto, aparecen dos barras horizontales (página + tabla). */
+  overflow-x: hidden;
 }
 
 /* ============================================================
@@ -34,6 +36,87 @@
   padding: 20px;
   max-width: 1400px;
   margin: 0 auto;
+}
+
+.inventory-kpi-grid {
+  margin: 0 0 1.25rem 0;
+  display: grid;
+  grid-template-columns: minmax(260px, 360px);
+  gap: 1rem;
+}
+
+.inventory-kpi-card {
+  text-decoration: none;
+  color: var(--color-dark);
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.inventory-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.inventory-kpi-card:focus-visible {
+  outline: 3px solid rgba(46, 125, 50, 0.22);
+  outline-offset: 2px;
+}
+
+.inventory-kpi-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 15px;
+}
+
+.inventory-kpi-card-head h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.inventory-kpi-card-head i {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.inventory-kpi-card-value {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-dark);
+}
+
+.inventory-kpi-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  color: var(--color-success);
+  font-weight: 500;
+}
+
+.inventory-kpi-card-link::before {
+  content: "\2192";
+  font-size: 0.9rem;
+}
+
+.inventory-kpi-card-link--reset {
+  color: var(--color-danger);
 }
 
 /* ============================================================
@@ -236,8 +319,8 @@
 
 .filters-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(170px, 22vw, 240px), 1fr));
+  gap: 14px;
   align-items: end;
 }
 
@@ -246,18 +329,29 @@
   flex-direction: column;
 }
 
+.filter-group--full {
+  grid-column: 1 / -1;
+}
+
+.filter-group--classification {
+  grid-column: span 2;
+  min-width: 0;
+}
+
 .filter-group label {
   font-weight: 500;
   color: var(--color-dark);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  font-size: 0.92rem;
 }
 
 .filter-group input,
 .filter-group select {
-  padding: 10px 15px;
+  padding: 8px 12px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  min-height: 42px;
   transition: all 0.3s ease;
 }
 
@@ -266,6 +360,42 @@
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+}
+
+.filters-section .btn {
+  min-height: 42px;
+  padding: 8px 14px;
+  font-size: 0.92rem;
+}
+
+.btn-classification-toggle {
+  width: 100% !important;
+  max-width: 420px;
+  min-width: clamp(280px, 34vw, 420px);
+  align-self: flex-start;
+  justify-content: flex-start;
+  white-space: nowrap;
+}
+
+.classification-filters-panel {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.classification-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(170px, 22vw, 240px), 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.classification-filters-panel .filter-group label {
+  color: var(--color-dark);
+  font-weight: 500;
+  font-size: 0.92rem;
 }
 
 /* ============================================================
@@ -458,37 +588,306 @@
   margin-top: 0.25rem;
 }
 
-.featured-checkbox-label {
+/* “Destacado en tienda”: checkbox alineado al título (no un cuadro suelto sin contexto) */
+.featured-store-toggle {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 10px;
+  background: #f9fafb;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  flex-wrap: nowrap;
+}
+
+.featured-store-toggle__input {
+  width: 1.2rem;
+  height: 1.2rem;
+  min-width: 1.2rem;
+  min-height: 1.2rem;
+  margin-top: 0.1rem;
+  accent-color: var(--color-primary, #10b981);
+  flex-shrink: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.featured-store-toggle__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
   cursor: pointer;
   font-weight: 500;
   color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
 }
 
-.featured-checkbox-label input {
-  margin-top: 0.2rem;
-  width: 1.1rem;
-  height: 1.1rem;
-  accent-color: var(--color-primary);
-  flex-shrink: 0;
-}
-
-.featured-checkbox-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.featured-checkbox-title {
+.featured-store-toggle__title {
+  display: block;
   font-weight: 600;
+  line-height: 1.3;
 }
 
-.featured-checkbox-text small {
+.featured-store-toggle__desc {
+  display: block;
   font-weight: 400;
   color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+/* ——— Editor de atributos (clasificación) en modal de producto ——— */
+.classification-fields-root {
+  min-width: 0;
+}
+
+.classification-loading {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0.25rem 0;
+}
+
+.classification-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.classification-editor__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+}
+
+.cf-toolbar-feedback {
+  flex: 1 1 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: 0.8125rem;
   line-height: 1.4;
+  min-height: 0;
+}
+
+.cf-toolbar-feedback--error {
+  color: #b91c1c;
+}
+
+.cf-toolbar-feedback--success {
+  color: #047857;
+}
+
+.cf-toolbar-input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.cf-toolbar-input.is-invalid {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15);
+}
+
+.cf-toolbar-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  min-height: 2.5rem;
+  touch-action: manipulation;
+}
+
+.classification-empty {
+  padding: 0.75rem 0.5rem 0.25rem;
+  border-top: 1px dashed #d1d5db;
+  margin-top: 0.15rem;
+}
+
+.classification-empty__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.35rem;
+}
+
+.classification-empty__text {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.classification-parent-only-msg {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  margin: 0.25rem 0 0;
+}
+
+.classification-card {
+  position: relative;
+  z-index: 1;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* La tarjeta con lista abierta debe pintar encima de las siguientes (evita que el input de “Talla” tape el dropdown de “Color”). */
+.classification-card.is-dropdown-open {
+  z-index: 40;
+}
+
+.classification-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.65rem;
+  margin-bottom: 0.5rem;
+}
+
+.classification-card__title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.classification-card__slug {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-family: ui-monospace, monospace;
+}
+
+.cf-chip-wrap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.cf-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #065f46;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.cf-chip__clear {
+  margin-left: 0.15rem;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.2rem 0.45rem;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.cf-chip__clear:hover {
+  background: #f3f4f6;
+  color: #dc2626;
+}
+
+.cf-combobox {
+  position: relative;
+  z-index: 0;
+}
+
+.cf-combobox__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  min-height: 2.75rem;
+  touch-action: manipulation;
+}
+
+.cf-combobox__input:focus {
+  outline: 2px solid rgba(16, 185, 129, 0.35);
+  border-color: var(--color-primary, #10b981);
+}
+
+.cf-combobox__list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  max-height: min(220px, 40vh);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+  z-index: 2;
+}
+
+.cf-list__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  border: none;
+  background: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--text-primary);
+  min-height: 2.75rem;
+  touch-action: manipulation;
+}
+
+.cf-list__item:hover,
+.cf-list__item:focus-visible {
+  background: #f0fdf4;
+}
+
+.cf-list__create {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  border: none;
+  border-top: 1px dashed #e5e7eb;
+  background: #fafafa;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--color-primary, #059669);
+  cursor: pointer;
+  min-height: 2.75rem;
+  touch-action: manipulation;
+}
+
+.cf-field-error {
+  font-size: 0.8rem;
+  color: #b91c1c;
+  margin: 0.35rem 0 0;
 }
 
 .product-info h4 {
@@ -698,19 +1097,31 @@
   color: var(--color-danger);
 }
 
+/* Un modal abierto: evita scroll de la página detrás (segunda barra vertical). */
+html:has(.edit-modal.active),
+html:has(#stock-adjust-modal.is-open) {
+  overflow: hidden;
+}
+
 /* ============================================================
   11. MODALS
   ============================================================ */
 .edit-modal {
   display: none;
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
+  max-height: 100dvh;
   z-index: 2000;
   align-items: center;
   justify-content: center;
+  padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right))
+    max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+  box-sizing: border-box;
+  /* El overlay no debe ser scrollable; solo .modal-body lleva overflow-y (evita doble barra). */
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .edit-modal.active {
@@ -718,13 +1129,13 @@
 }
 
 .modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 1999;
+  z-index: 0;
+  cursor: pointer;
 }
 
 .modal-content {
@@ -734,15 +1145,24 @@
   box-shadow: var(--shadow-lg);
   width: 90%;
   max-width: 700px;
-  max-height: 90vh;
-  overflow-y: auto;
-  z-index: 2001;
-  margin: 1rem;
+  /* Altura máxima usable en móvil (dvh + safe area); sin scroll en esta caja — solo .modal-body */
+  max-height: min(90vh, 100dvh - max(1.5rem, env(safe-area-inset-top)) - max(1.5rem, env(safe-area-inset-bottom)));
+  min-height: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .modal-auto-size {
   width: fit-content;
-  min-width: 500px;
+  min-width: min(500px, 100%);
+  max-width: min(700px, calc(100vw - 2rem));
 }
 
 .modal-header {
@@ -752,6 +1172,7 @@
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--border-color);
   background: var(--background-white);
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -776,8 +1197,18 @@
 
 .modal-body {
   padding: 1.5rem;
-  max-height: calc(90vh - 130px);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* El formulario no debe crear otro viewport de scroll dentro del body */
+.modal-body > form {
+  min-height: 0;
+  overflow: visible;
 }
 
 .modal-footer {
@@ -787,6 +1218,7 @@
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--border-color);
   background: var(--background-white);
+  flex-shrink: 0;
 }
 
 /* ============================================================
@@ -803,7 +1235,7 @@
   color: var(--text-primary);
 }
 
-.form-group input,
+.form-group input:not([type="checkbox"]):not([type="radio"]),
 .form-group select,
 .form-group textarea {
   width: 100%;
@@ -814,7 +1246,25 @@
   transition: border-color 0.2s;
 }
 
-.form-group input:focus,
+/* Los checkboxes/radio no deben heredar width:100% (rompe filas flex, p. ej. Destacado en tienda). */
+.form-group input[type="checkbox"],
+.form-group input[type="radio"] {
+  width: auto;
+  max-width: none;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  vertical-align: middle;
+}
+
+.form-group .featured-store-toggle__input[type="checkbox"] {
+  width: 1.2rem;
+  min-width: 1.2rem;
+  height: 1.2rem;
+  min-height: 1.2rem;
+}
+
+.form-group input:not([type="checkbox"]):not([type="radio"]):focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
@@ -1111,6 +1561,17 @@
   .filters-grid {
     grid-template-columns: 1fr;
   }
+  .classification-filters-grid {
+    grid-template-columns: 1fr;
+  }
+  .filter-group--classification {
+    grid-column: auto;
+  }
+  .btn-classification-toggle {
+    width: 100% !important;
+    min-width: 0;
+    max-width: 100%;
+  }
   .admin-header {
     border-radius: 12px;
     padding: 1rem 1.25rem;
@@ -1187,6 +1648,14 @@
   .btn {
     padding: 10px 16px;
     font-size: 0.9rem;
+  }
+  .filters-section .btn {
+    min-height: 40px;
+    width: 100%;
+  }
+  .filter-group input,
+  .filter-group select {
+    min-height: 40px;
   }
 }
 

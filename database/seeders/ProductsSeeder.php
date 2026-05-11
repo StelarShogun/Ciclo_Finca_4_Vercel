@@ -6,13 +6,14 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 
 class ProductsSeeder extends Seeder
 {
     public function run(): void
     {
         if (Product::query()->exists()) {
-            $this->command?->warn('ProductsSeeder: ya hay productos; se omite. Usa migrate:fresh --seed para repoblar desde cero.');
+            $this->command->warn('ProductsSeeder: ya hay productos; se omite. Usa migrate:fresh --seed para repoblar desde cero.');
 
             return;
         }
@@ -67,11 +68,11 @@ class ProductsSeeder extends Seeder
             Product::create($data);
         }
 
-        $this->command?->info('ProductsSeeder: '.count($rows).' productos creados.');
+        $this->command->info('ProductsSeeder: '.count($rows).' productos creados.');
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, int>  $supplierIds
+     * @param  Collection<string, int>  $supplierIds
      * @return array<string, mixed>
      */
     private function row(

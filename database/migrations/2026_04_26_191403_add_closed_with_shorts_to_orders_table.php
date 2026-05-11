@@ -20,10 +20,10 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             $table->boolean('closed_with_shorts')
-                  ->default(false)
-                  ->nullable()
-                  ->after('received_at')
-                  ->comment('true si el pedido se cerró manualmente desde partial_received con faltantes del proveedor');
+                ->default(false)
+                ->nullable()
+                ->after('received_at')
+                ->comment('true si el pedido se cerró manualmente desde partial_received con faltantes del proveedor');
         });
     }
 

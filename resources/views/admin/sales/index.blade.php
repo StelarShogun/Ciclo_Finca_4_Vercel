@@ -61,11 +61,11 @@
                 </div>
             </div>
 
-            {{-- Refund count with trend indicator --}}
+            {{-- Refund/return count with trend indicator --}}
             <div class="kpi-card">
                 <div class="kpi-header">
-                    <h3 class="kpi-title">Reembolsos</h3>
-                    <div class="kpi-icon danger"><i class="fas fa-undo"></i></div>
+                    <h3 class="kpi-title">Devoluciones</h3>
+                    <div class="kpi-icon danger"><i class="fas fa-rotate-left"></i></div>
                 </div>
                 <p class="kpi-value">{{ $refunds }}</p>
                 <div class="kpi-trend {{ $refundsTrend >= 0 ? 'trend-up' : 'trend-down' }}">
@@ -89,10 +89,10 @@
                             <option value="completed"
                                 {{ ($salesStatusUi ?? 'completed') === 'completed' ? 'selected' : '' }}>Confirmada
                                 (completada)</option>
+                            <option value="returned" {{ ($salesStatusUi ?? '') === 'returned' ? 'selected' : '' }}>
+                                Devuelta</option>
                             <option value="cancelled" {{ ($salesStatusUi ?? '') === 'cancelled' ? 'selected' : '' }}>
                                 Cancelada / rechazada</option>
-                            <option value="refunded" {{ ($salesStatusUi ?? '') === 'refunded' ? 'selected' : '' }}>
-                                Reembolsada</option>
                             <option value="all" {{ ($salesStatusUi ?? '') === 'all' ? 'selected' : '' }}>Todas las
                                 cerradas</option>
                         </select>
@@ -112,8 +112,7 @@
                         </select>
                     </div>
 
-                    {{-- Custom date range inputs — shown only when "custom" is selected.
-                         Values are persisted from the request so they survive filter submission. --}}
+                    {{-- Custom date range inputs — shown only when "custom" is selected. --}}
                     <div class="filter-group filter-group--date-from" id="custom-date-from-group"
                         style="{{ request('date_range') == 'custom' ? '' : 'display:none;' }}">
                         <label for="date-from">Fecha inicial</label>
@@ -156,7 +155,6 @@
 
                 </div>
 
-                {{-- CA-04: Inline validation error shown by JS before form submission --}}
                 <div id="date-range-error" class="alert alert-danger" style="display:none; margin-top: 0.5rem;">
                     <i class="fas fa-exclamation-circle"></i>
                     <span id="date-range-error-msg">El rango de fechas no es válido.</span>
@@ -165,19 +163,20 @@
         </div>
 
         {{-- ==================== SALES TABLE ==================== --}}
-        {{-- Label maps for status and payment method display --}}
         @php
             $statusLabels = [
-                'pending' => 'Pendiente',
-                'completed' => 'Confirmada',
-                'cancelled' => 'Rechazado',
-                'refunded' => 'Reembolsado',
+                'pending'         => 'Pendiente',
+                'ready_to_pickup' => 'Por recoger',
+                'completed'       => 'Confirmada',
+                'cancelled'       => 'Rechazado',
+                'refunded'        => 'Reembolsada',
+                'returned'        => 'Devuelta',
             ];
             $paymentLabels = ['cash' => 'Efectivo', 'sinpe' => 'SINPE Móvil', 'transfer' => 'Transferencia'];
 
             $isCustomRange = request('date_range') == 'custom';
-            $hasDateFrom = request('date_from');
-            $hasDateTo = request('date_to');
+            $hasDateFrom   = request('date_from');
+            $hasDateTo     = request('date_to');
             $isDateFiltered =
                 in_array(request('date_range'), ['today', 'week', 'month']) ||
                 ($isCustomRange && ($hasDateFrom || $hasDateTo));
@@ -224,31 +223,50 @@
                                 </span>
                             </td>
 
-                            {{-- Expiry badge: expired / warning / ok --}}
+                            {{-- Expiry / pickup window: ready_to_pickup shows pickup countdown from ready_at;
+                                 completed shows an em dash (finalized). Other statuses use the legacy
+                                 30-day countdown from sale_date. --}}
                             <td>
-                                @php
-                                    $days = $sale->days_remaining_until_expiration;
-                                    $warn = $sale->is_expiry_warning;
-                                @endphp
-                                @if ($days <= 0)
-                                    <span class="expiry-badge expiry-expired" title="El pedido ha expirado">
-                                        <i class="fas fa-clock"></i> Expirado
-                                    </span>
-                                @elseif($warn)
-                                    <span class="expiry-badge expiry-warning">
-                                        <span class="expiry-warning-trigger" tabindex="0" role="button"
-                                            aria-label="Ver aviso de expiración">
-                                            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
-                                            <span class="expiry-tooltip-label">
-                                                ¡Atención! Este pedido será eliminado automáticamente en
-                                                {{ $days }} día(s).
-                                                Por favor tome las acciones necesarias antes de la fecha límite.
-                                            </span>
+                                @if ($sale->status === 'ready_to_pickup')
+                                    @php
+                                        $pickupLabel = $sale->pickup_time_remaining_label;
+                                    @endphp
+                                    @if ($pickupLabel === 'Vencido')
+                                        <span class="expiry-badge expiry-expired" title="Plazo de recogida vencido">
+                                            <i class="fas fa-clock"></i> Vencido
                                         </span>
-                                        {{ $days }} día(s)
-                                    </span>
+                                    @elseif ($pickupLabel !== '')
+                                        <span class="expiry-badge expiry-ok">{{ $pickupLabel }}</span>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                @elseif ($sale->status === 'completed')
+                                    <span class="text-muted">—</span>
                                 @else
-                                    <span class="expiry-badge expiry-ok">{{ $days }} día(s)</span>
+                                    @php
+                                        $days = $sale->days_remaining_until_expiration;
+                                        $warn = $sale->is_expiry_warning;
+                                    @endphp
+                                    @if ($days <= 0)
+                                        <span class="expiry-badge expiry-expired" title="El pedido ha expirado">
+                                            <i class="fas fa-clock"></i> Expirado
+                                        </span>
+                                    @elseif($warn)
+                                        <span class="expiry-badge expiry-warning">
+                                            <span class="expiry-warning-trigger" tabindex="0" role="button"
+                                                aria-label="Ver aviso de expiración">
+                                                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                                                <span class="expiry-tooltip-label">
+                                                    ¡Atención! Este pedido será eliminado automáticamente en
+                                                    {{ $days }} día(s).
+                                                    Por favor tome las acciones necesarias antes de la fecha límite.
+                                                </span>
+                                            </span>
+                                            {{ $days }} día(s)
+                                        </span>
+                                    @else
+                                        <span class="expiry-badge expiry-ok">{{ $days }} día(s)</span>
+                                    @endif
                                 @endif
                             </td>
 
@@ -256,7 +274,7 @@
 
                             <td><strong>₡{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
 
-                            {{-- Row actions vary by sale status --}}
+                            {{-- Row actions vary by sale status (CA-01) --}}
                             <td>
                                 <div class="actions-container">
                                     <button class="action-btn view" onclick="viewSale('{{ $sale->sale_id }}')"
@@ -270,9 +288,11 @@
                                             <i class="fas fa-file-invoice" aria-hidden="true"></i>
                                             Ver factura
                                         </a>
-                                        <button class="action-btn warning" onclick="refundSale('{{ $sale->sale_id }}')"
-                                            title="Reembolsar">
-                                            <i class="fas fa-undo"></i>
+                                        {{-- CA-01: Devolución visible únicamente para ventas completadas --}}
+                                        <button class="action-btn info"
+                                            onclick="openReturnModal('{{ $sale->sale_id }}', '{{ $sale->invoice_number ?? '#' . $sale->sale_id }}')"
+                                            title="Registrar devolución">
+                                            <i class="fas fa-rotate-left"></i>
                                         </button>
                                     @endif
                                     @if ($sale->status !== 'cancelled')
@@ -304,7 +324,9 @@
     </div>
 
     {{-- Route URLs exposed via meta tags; read by sales.js (avoids inline JS) --}}
-    <meta name="sales-route-store" content="{{ route('sales.store') }}">
+    <meta name="sales-route-store"     content="{{ route('sales.store') }}">
+    <meta name="sales-route-heartbeat" content="{{ route('sales.history.heartbeat') }}">
+    <meta name="sales-route-return"    content="{{ url('/sales') }}">
 
     {{-- ==================== MODAL: NEW SALE ==================== --}}
     <div id="new-sale-modal" class="modal-overlay">
@@ -426,7 +448,6 @@
     </div>
 
     {{-- ==================== MODAL: VIEW SALE DETAILS ==================== --}}
-    {{-- Body content is injected dynamically via viewSale() --}}
     <div id="view-sale-modal" class="modal-overlay">
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
@@ -442,6 +463,52 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeViewSaleModal()">
                     <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ==================== MODAL: RETURN SALE ==================== --}}
+    {{-- Shown only for completed sales; requires a mandatory reason before confirming. --}}
+    <div id="return-sale-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-rotate-left"></i> Registrar Devolución</h3>
+                <button class="modal-close" onclick="closeReturnModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="return-sale-label" class="sale-notes" style="margin-bottom: 1rem;"></p>
+
+                {{-- CA-02: Motivo obligatorio --}}
+                <div class="form-group">
+                    <label for="return-reason-input">
+                        Motivo de la devolución <span style="color: var(--color-danger);">*</span>
+                    </label>
+                    <textarea
+                        id="return-reason-input"
+                        rows="4"
+                        maxlength="500"
+                        placeholder="Describa el motivo de la devolución (obligatorio)..."
+                        style="width: 100%; resize: vertical;"
+                    ></textarea>
+                    <small id="return-reason-error" class="text-danger" style="display:none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        El motivo es obligatorio y debe tener al menos 3 caracteres.
+                    </small>
+                </div>
+
+                <div class="alert alert-warning" style="margin-top: 0.75rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Al confirmar, la venta pasará a estado <strong>Devuelta</strong> y el stock de todos
+                    los productos será reintegrado al inventario automáticamente.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeReturnModal()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="confirm-return-btn" onclick="confirmReturn()">
+                    <i class="fas fa-rotate-left"></i> Confirmar devolución
                 </button>
             </div>
         </div>

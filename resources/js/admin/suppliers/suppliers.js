@@ -281,55 +281,70 @@ function closeModal() {
     document.getElementById('modalDetalleProveedor').classList.remove('active');
 }
 
-// Prompts for confirmation and then sends a DELETE request for the given supplier
-async function deleteSupplier(event) {
-    event.preventDefault();
-
+// Centralized delete confirmation for supplier forms.
+document.addEventListener('submit', async (event) => {
     const form = event.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    if (!form.classList.contains('js-supplier-delete-form')) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
     const actionUrl = form.getAttribute('action');
-    const row = form.closest('tr');
-    const nameCell = row.querySelector('.proveedor-nombre');
-    // Use the supplier's name in the confirmation dialog for clarity
-    const supplierName = nameCell ? nameCell.textContent.trim() : 'este proveedor';
+    if (!actionUrl) return;
+
+    const supplierName = form.dataset.supplierName || 'este proveedor';
 
     const result = await Swal.fire({
-        title: '¿Estás seguro?',
-        text: `¿Deseas eliminar el proveedor "${supplierName}"?`,
+        title: '¿Deseas eliminar este proveedor?',
+        text: `Se eliminará el proveedor “${supplierName}”. Esta acción no se puede revertir fácilmente. ¿Deseas continuar?`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        confirmButtonColor: '#b91c1c',
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'No, cancelar',
+        focusCancel: true,
     });
 
-    // User cancelled — do nothing
     if (!result.isConfirmed) return;
 
     try {
         const response = await fetch(actionUrl, {
-            method: 'DELETE',
+            method: 'POST',
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-            }
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+            },
+            body: new URLSearchParams({ _method: 'DELETE' }),
         });
 
-        const data = await response.json();
-
-        if (data.success) {
-            // Reload the page so the deleted row disappears from the table
-            Swal.fire({ icon: 'success', title: 'Eliminado', text: 'El proveedor ha sido eliminado correctamente' })
-                .then(() => location.reload());
-        } else {
-            Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Error al eliminar el proveedor' });
+        const data = await response.json().catch(() => null);
+        if (data?.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Proveedor eliminado',
+                text: data.message || 'Proveedor eliminado correctamente.',
+                confirmButtonText: 'Entendido',
+            }).then(() => location.reload());
+            return;
         }
+
+        Swal.fire({
+            icon: 'error',
+            title: 'No se pudo eliminar',
+            text: (data && data.message) ? data.message : 'No se pudo completar la acción. Inténtalo nuevamente.',
+            confirmButtonText: 'Cerrar',
+        });
     } catch (error) {
         console.error('Error:', error);
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexión al eliminar el proveedor' });
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de conexión',
+            text: 'No se pudo conectar con el servidor. Intenta nuevamente.',
+            confirmButtonText: 'Cerrar',
+        });
     }
-}
+});
 
 // Opens the "new supplier" modal and resets its form to a blank state
 function openNewSupplierModal() {

@@ -18,6 +18,7 @@ final class AdminInventoryExportQuery
         'category_id',
         'stock_status',
         'status',
+        'classifications',
         'sort',
         'order',
     ];

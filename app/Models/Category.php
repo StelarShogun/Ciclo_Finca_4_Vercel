@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 /**
  * @property-read int|null $products_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ClassificationDimension> $classificationDimensions
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Category> $childCategories
  */
 class Category extends Model
 {
@@ -179,5 +180,26 @@ class Category extends Model
         }
 
         return $ids !== [] ? $ids : [$canonicalParentId];
+    }
+
+    public static function declaredCanonicalParentMatchesCategory(int $categoryId, int $declaredCanonicalParentId): bool
+    {
+        $category = static::query()->find($categoryId);
+        if (! $category) {
+            return false;
+        }
+
+        $canonicalMap = static::canonicalRootIdByPhysicalRootId();
+
+        if ($category->parent_category_id === null) {
+            $canonicalForThisRoot = $canonicalMap[(int) $category->category_id] ?? (int) $category->category_id;
+
+            return $declaredCanonicalParentId === $canonicalForThisRoot;
+        }
+
+        $physParent = (int) $category->parent_category_id;
+        $canonicalParent = $canonicalMap[$physParent] ?? $physParent;
+
+        return $declaredCanonicalParentId === $canonicalParent;
     }
 }

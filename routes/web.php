@@ -1,20 +1,23 @@
 <?php
 
-use App\Http\Controllers\Admin\ClientPurchaseHistoryController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\ClientPurchaseHistoryController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\ReportsRegistryExportController;
 use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminOrderSettingsController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminWeeklyReportSettingsController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClassificationCatalogController;
+use App\Http\Controllers\ClientCatalogProductSuggestionsController;
 use App\Http\Controllers\ClientPageController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FavoriteProductController;
+use App\Http\Controllers\InventoryMovementController;
 use App\Http\Controllers\ProductClassificationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductReviewController;
@@ -58,14 +61,14 @@ Route::get('/run-migrations', function (Request $request) use ($assertDeployHelp
 
         if ($exitCode !== 0) {
             return response(
-                '❌ migrate exited with code ' . $exitCode . '<br><pre>' . e($output) . '</pre>',
+                '❌ migrate exited with code '.$exitCode.'<br><pre>'.e($output).'</pre>',
                 500
             );
         }
 
-        return '✅ Migrations executed successfully:<br><pre>' . e($output) . '</pre>';
+        return '✅ Migrations executed successfully:<br><pre>'.e($output).'</pre>';
     } catch (Throwable $e) {
-        return response('❌ Error running migrations: ' . e($e->getMessage()), 500);
+        return response('❌ Error running migrations: '.e($e->getMessage()), 500);
     }
 });
 
@@ -92,14 +95,14 @@ Route::get('/run-seeders/{class?}', function (Request $request, ?string $class =
 
         if ($exitCode !== 0) {
             return response(
-                '❌ db:seed exited with code ' . $exitCode . '<br><pre>' . e($output) . '</pre>',
+                '❌ db:seed exited with code '.$exitCode.'<br><pre>'.e($output).'</pre>',
                 500
             );
         }
 
-        return '✅ Seeder executed:<br><pre>' . e($output) . '</pre>';
+        return '✅ Seeder executed:<br><pre>'.e($output).'</pre>';
     } catch (Throwable $e) {
-        return response('❌ Error: ' . e($e->getMessage()), 500);
+        return response('❌ Error: '.e($e->getMessage()), 500);
     }
 })->where('class', '[A-Za-z0-9\\\\_]+');
 
@@ -133,13 +136,15 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/reports/productos-vendidos/table', [ReportsController::class, 'productSalesTable'])->name('admin.reports.product-sales.table');
     Route::get('/reports/productos-vendidos/pdf', [ReportsController::class, 'productSalesPdf'])->name('admin.reports.product-sales.pdf');
     Route::get('/reports/productos-vendidos/excel', [ReportsController::class, 'productSalesExcel'])
-     ->name('admin.reports.product-sales.excel');
+        ->name('admin.reports.product-sales.excel');
+    Route::get('/reports/catalogo-busquedas', [ReportsController::class, 'catalogMostSearchedProducts'])
+        ->name('admin.reports.catalog-search-products');
     Route::get('/sales/reports/by-category', [ReportsController::class, 'byCategory'])->name('sales.reports.byCategory');
 
     // Inventory movement routes.
     Route::prefix('inventory/movements')->name('admin.inventory.movements.')->group(function () {
-        Route::get('/',                 [InventoryMovementController::class, 'index'])->name('index');
-        Route::get('/{productId}',      [InventoryMovementController::class, 'show'])->name('show');
+        Route::get('/', [InventoryMovementController::class, 'index'])->name('index');
+        Route::get('/{productId}', [InventoryMovementController::class, 'show'])->name('show');
         Route::get('/{productId}/json', [InventoryMovementController::class, 'json'])->name('json');
     });
 
@@ -156,6 +161,8 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
 
     // Inventory routes.
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');
+    Route::get('/inventory/classification-filters', [ProductController::class, 'inventoryClassificationFiltersOptions'])
+        ->name('inventory.classification-filters');
 
     // Classification catalog routes.
     Route::get('/classifications/catalog', [ClassificationCatalogController::class, 'index'])->name('admin.classifications.catalog.index');
@@ -178,7 +185,7 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/products/{product}/classifications/edit', [ProductClassificationController::class, 'edit'])->name('admin.products.classifications.edit');
     Route::put('/products/{product}/classifications', [ProductClassificationController::class, 'update'])->name('admin.products.classifications.update');
 
-    // Product variant management routes (CF4-74).
+    // Product variant management routes.
     Route::post('/products/{product}/variants', [ProductVariantController::class, 'store'])
         ->whereNumber('product')
         ->name('admin.products.variants.store');
@@ -186,6 +193,10 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
         ->whereNumber('product')
         ->whereNumber('variant')
         ->name('admin.products.variants.destroy');
+    Route::put('/products/{product}/variants/{variant}', [ProductVariantController::class, 'update'])
+        ->whereNumber('product')
+        ->whereNumber('variant')
+        ->name('admin.products.variants.update');
 
     // Featured product toggle route.
     Route::post('/products/{id}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
@@ -222,18 +233,25 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
     Route::get('/sales/history/heartbeat', [SalesController::class, 'historyHeartbeat'])->name('sales.history.heartbeat');
 
-    // Sales routes.
+    // Sales resource + state-change actions.
     Route::resource('sales', SalesController::class);
     Route::post('/sales/{id}/complete', [SalesController::class, 'complete'])->name('sales.complete');
     Route::post('/sales/{id}/cancel', [SalesController::class, 'cancel'])->name('sales.cancel');
-    Route::post('/sales/{id}/refund', [SalesController::class, 'refund'])->name('sales.refund');
+
+    Route::post('/sales/{id}/return', [SalesController::class, 'returnSale'])->name('sales.return');
+
     Route::get('/sales/{id}/print', [SalesController::class, 'print'])->name('sales.print');
     Route::get('/sales/{id}/invoice', [SalesController::class, 'invoice'])->name('sales.invoice');
+    Route::patch('orders/{id}/ready-to-pickup', [SalesController::class, 'markReadyToPickup'])
+        ->name('admin.orders.ready-to-pickup');
 
     // Client order management routes.
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::put('/orders/settings/order-expiration', [AdminOrderSettingsController::class, 'update'])
         ->name('admin.orders.settings.order-expiration.update');
+
+    Route::put('/orders/settings/weekly-report', [AdminWeeklyReportSettingsController::class, 'update'])
+        ->name('admin.orders.settings.weekly-report.update');
 
     // Supplier order routes.
     Route::get('/supplier-orders', [SupplierOrderController::class, 'index'])->name('admin.supplier-orders.index');
@@ -258,7 +276,7 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/supplier-orders/{id}', [SupplierOrderController::class, 'show'])->name('admin.supplier-orders.show');
     Route::patch('/supplier-orders/{id}/state', [SupplierOrderController::class, 'updateState'])->name('admin.supplier-orders.update-state');
     Route::post('/supplier-orders/{id}/receive', [SupplierOrderController::class, 'receiveOrder'])->name('admin.supplier-orders.receive');
-    Route::post('/supplier-orders/{id}/close-partial', [SupplierOrderController::class, 'closePartial'])->name('admin.supplier-orders.close-partial'); // ← NUEVO
+    Route::post('/supplier-orders/{id}/close-partial', [SupplierOrderController::class, 'closePartial'])->name('admin.supplier-orders.close-partial');
     Route::get('/supplier/details/{id}', [SupplierOrderController::class, 'supplierDetails'])->name('admin.supplier-orders.supplier');
 
     // Admin client management routes.
@@ -311,6 +329,11 @@ Route::get('/admin/catalog-exit', function () {
 // Public client pages.
 Route::get('/', [ClientPageController::class, 'home'])->name('clients.home');
 Route::get('/catalog', [ClientPageController::class, 'catalog'])->name('clients.catalog');
+
+// Predictive suggestions for the public client catalog search bar.
+Route::get('/api/products/suggestions', ClientCatalogProductSuggestionsController::class)
+    ->middleware('throttle:60,1')
+    ->name('api.products.suggestions');
 
 // Product route with numeric ID and optional SEO slug.
 Route::get('/product/{id}/{slug?}', [ClientPageController::class, 'product'])

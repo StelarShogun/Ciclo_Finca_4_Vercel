@@ -259,4 +259,7 @@
 <meta name="cf4-invoice-initial-count" content="{{ \App\Models\Sale::where('client_id', auth('clients')->user()->user_id)->where('status', 'pending')->count() }}">
 @endauth
 
+{{-- Ventana para retiro tras "listo para recoger" (copia post-checkout; respeta AppSetting / READY_TO_PICKUP_EXPIRATION_HOURS). --}}
+<meta name="cf4-ready-to-pickup-expiration-hours" content="{{ \App\Models\Sale::getReadyToPickupExpirationHours() }}">
+
 @vite('resources/js/client/clients-users.js')

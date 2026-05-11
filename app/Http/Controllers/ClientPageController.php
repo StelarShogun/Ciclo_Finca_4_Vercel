@@ -10,12 +10,15 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Services\Catalog\CatalogProductSearchTelemetry;
 use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 
 class ClientPageController extends Controller
 {
@@ -39,7 +42,11 @@ class ClientPageController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        return view('client.home', compact('featuredProducts', 'categories', 'cartCount'));
+        $productReviewStats = ProductReview::aggregatesForProductIds(
+            $featuredProducts->pluck('product_id')->map(fn ($id) => (int) $id)->all()
+        );
+
+        return view('client.home', compact('featuredProducts', 'categories', 'cartCount', 'productReviewStats'));
     }
 
     public function catalog(Request $request)
@@ -124,6 +131,10 @@ class ClientPageController extends Controller
         $perPage = $request->get('per_page', 12);
         $products = $query->paginate($perPage)->withQueryString();
 
+        if ($request->filled('search')) {
+            CatalogProductSearchTelemetry::recordSearchResultsPage((string) $request->input('search'), $products);
+        }
+
         $categories = Category::whereNull('parent_category_id')
             ->with(['childCategories' => function ($q) {
                 $q->orderBy('name');
@@ -150,16 +161,31 @@ class ClientPageController extends Controller
             && $selectedCategory
             && $products->total() === 0;
 
+        $catalogProductIdsForReviews = $products->getCollection()
+            ->pluck('product_id')
+            ->merge($catalogSpotlight->map(fn (array $row) => (int) $row['product']->product_id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $productReviewStats = ProductReview::aggregatesForProductIds($catalogProductIdsForReviews);
+
         return view('client.catalog', compact(
-            'products', 'categories', 'cartCount',
-            'selectedCategory', 'subcategories', 'parentCategoryForSubcats',
+            'products',
+            'categories',
+            'cartCount',
+            'selectedCategory',
+            'subcategories',
+            'parentCategoryForSubcats',
             'catalogSpotlight',
             'favoriteProductIds',
             'catalogParams',
             'catalogCategoryNav',
             'emptyCategoryNoProducts',
             'brands',
-            'selectedBrand'
+            'selectedBrand',
+            'productReviewStats'
         ));
     }
 
@@ -169,7 +195,11 @@ class ClientPageController extends Controller
      * @param  Collection<int, Category>  $rootCategories
      * @return array<int, array{id: int, name: string, icon: string, url_parent: string, children: array<int, array{id: int, name: string, url: string}>}>
      */
-    private function buildCatalogCategoryNav($rootCategories, array $catalogParams): array
+    /**
+     * @param  Collection<int, Category>  $rootCategories
+     * @return array<int, array{id: int, name: string, icon: string, url_parent: string, children: array<int, array{id: int, name: string, url: string}>}>
+     */
+    private function buildCatalogCategoryNav(Collection $rootCategories, array $catalogParams): array
     {
         return $rootCategories->map(function (Category $c) use ($catalogParams) {
             return [
@@ -209,7 +239,7 @@ class ClientPageController extends Controller
             'electr' => 'fas fa-bolt',
         ];
         foreach ($pairs as $needle => $icon) {
-            if ($needle !== '' && str_contains($n, $needle)) {
+            if (str_contains($n, $needle)) {
                 return $icon;
             }
         }
@@ -246,17 +276,17 @@ class ClientPageController extends Controller
             ->concat($novelties->map(fn (Product $p) => ['product' => $p, 'spotlight' => 'novelty']));
     }
 
-    public function product(int $id, ?string $slug = null)
+    public function product(Request $request, int $id, ?string $slug = null)
     {
         $product = Product::with(['category', 'supplier', 'classificationValues.dimension'])->findOrFail($id);
 
         // Redirect to the canonical product URL when the slug does not match.
         $canonicalSlug = $product->clientPublicSlug();
         if ($slug !== $canonicalSlug) {
-            return redirect()->route('clients.product', [
-                'id' => $product->product_id,
-                'slug' => $canonicalSlug,
-            ], 301);
+            return redirect()->route('clients.product', array_merge(
+                ['id' => $product->product_id, 'slug' => $canonicalSlug],
+                $request->only(['reviews_sort', 'page', 'review_filter'])
+            ), 301);
         }
 
         $relatedProducts = Product::with(['category'])
@@ -269,6 +299,7 @@ class ClientPageController extends Controller
 
         $clientCanReview = false;
         $clientReview = null;
+        $myHighlightedReview = null;
         if (Auth::guard('clients')->check()) {
             $clientId = (int) Auth::guard('clients')->id();
             $clientCanReview = SaleItem::query()
@@ -283,16 +314,89 @@ class ClientPageController extends Controller
                 ->where('product_id', $product->product_id)
                 ->where('client_id', $clientId)
                 ->first();
+
+            $myHighlightedReview = ProductReview::query()
+                ->with(['client:user_id,name,first_surname,second_surname'])
+                ->where('product_id', $product->product_id)
+                ->where('client_id', $clientId)
+                ->publiclyListed()
+                ->first();
         }
 
-        $productReviews = ProductReview::query()
-            ->with('client:user_id,name,first_surname')
+        $aggregate = ProductReview::query()
             ->where('product_id', $product->product_id)
-            ->whereNotNull('stars')
-            ->latest()
-            ->get();
+            ->publiclyListed()
+            ->selectRaw('AVG(stars) as avg_stars, COUNT(*) as review_count')
+            ->first();
 
-        $averageStars = $productReviews->avg('stars');
+        $totalReviewsCount = (int) ($aggregate->review_count ?? 0);
+        $averageStars = $totalReviewsCount > 0
+            ? round((float) $aggregate->avg_stars, 2)
+            : null;
+
+        $distributionCounts = ProductReview::query()
+            ->where('product_id', $product->product_id)
+            ->publiclyListed()
+            ->selectRaw('stars, COUNT(*) as c')
+            ->groupBy('stars')
+            ->pluck('c', 'stars');
+
+        $starDistribution = [];
+        for ($s = 1; $s <= 5; $s++) {
+            $starDistribution[$s] = (int) ($distributionCounts[$s] ?? 0);
+        }
+
+        $verifiedPurchaserIds = Sale::query()
+            ->completed()
+            ->whereHas('saleItems', function ($q) use ($product) {
+                $q->where('product_id', $product->product_id);
+            })
+            ->distinct()
+            ->pluck('client_id')
+            ->map(fn ($id) => (int) $id);
+
+        $reviewsSort = $request->query('reviews_sort', 'recent');
+        if (! in_array($reviewsSort, ['recent', 'stars_high', 'stars_low'], true)) {
+            $reviewsSort = 'recent';
+        }
+
+        $reviewFilter = $request->query('review_filter', 'all');
+        if ($reviewFilter !== 'all' && (! ctype_digit((string) $reviewFilter) || ! in_array((int) $reviewFilter, [1, 2, 3, 4, 5], true))) {
+            $reviewFilter = 'all';
+        }
+
+        $showMyHighlightedReview = $myHighlightedReview !== null
+            && ($reviewFilter === 'all' || (int) $myHighlightedReview->stars === (int) $reviewFilter);
+
+        $othersQuery = ProductReview::query()
+            ->with(['client:user_id,name,first_surname,second_surname'])
+            ->where('product_id', $product->product_id)
+            ->publiclyListed();
+
+        if ($myHighlightedReview !== null) {
+            $othersQuery->where('review_id', '!=', $myHighlightedReview->review_id);
+        }
+
+        if ($reviewFilter !== 'all') {
+            $othersQuery->where('stars', (int) $reviewFilter);
+        }
+
+        match ($reviewsSort) {
+            'stars_high' => $othersQuery->orderByDesc('stars')->orderByDesc('created_at'),
+            'stars_low' => $othersQuery->orderBy('stars')->orderByDesc('created_at'),
+            default => $othersQuery->orderByDesc('created_at'),
+        };
+
+        $productReviewsPaginated = $othersQuery
+            ->paginate(10)
+            ->withQueryString();
+
+        $productReviewStats = ProductReview::aggregatesForProductIds(
+            array_values(array_unique(array_merge(
+                [(int) $product->product_id],
+                $relatedProducts->pluck('product_id')->map(fn ($id) => (int) $id)->all()
+            )))
+        );
 
         return view('client.product', compact(
             'product',
@@ -300,8 +404,16 @@ class ClientPageController extends Controller
             'cartCount',
             'clientCanReview',
             'clientReview',
-            'productReviews',
-            'averageStars'
+            'myHighlightedReview',
+            'showMyHighlightedReview',
+            'productReviewsPaginated',
+            'totalReviewsCount',
+            'averageStars',
+            'starDistribution',
+            'verifiedPurchaserIds',
+            'reviewsSort',
+            'reviewFilter',
+            'productReviewStats'
         ));
     }
 
@@ -372,6 +484,112 @@ class ClientPageController extends Controller
         ]);
     }
 
+    /**
+     * Clamp quantities to current stock and drop unpurchasable lines. Updates session only when it changes.
+     */
+    private function syncCartWithStock(): void
+    {
+        $before = Session::get('cart', []);
+        $synced = [];
+        $adjustedNames = [];
+
+        foreach ($before as $item) {
+            if (! isset($item['product_id'])) {
+                continue;
+            }
+
+            $product = Product::find($item['product_id']);
+
+            if (! $product || ! $product->isPurchasableByClient()) {
+                continue;
+            }
+
+            $requested = (int) ($item['quantity'] ?? 0);
+            $qty = min($requested, (int) $product->stock_current);
+
+            if ($qty < 1) {
+                continue;
+            }
+
+            if ($qty < $requested) {
+                $adjustedNames[] = $product->name;
+            }
+
+            $synced[] = [
+                'product_id' => (int) $product->product_id,
+                'name' => (string) ($item['name'] ?? $product->name),
+                'price' => (float) ($item['price'] ?? $product->sale_price),
+                'quantity' => $qty,
+                'image' => (string) ($item['image'] ?? ''),
+            ];
+        }
+
+        $needsPut = ! $this->cartsAreEquivalent($before, $synced)
+            || $this->sessionCartHasNonMinimalKeys($before);
+
+        if ($needsPut) {
+            Session::put('cart', $synced);
+        }
+
+        if ($adjustedNames !== []) {
+            session()->flash(
+                'cart_stock_adjusted',
+                'Ajustamos el carrito al stock disponible para: '.implode(', ', array_unique($adjustedNames)).'.'
+            );
+        }
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $a
+     * @param  array<int, array<string, mixed>>  $b
+     */
+    private function cartsAreEquivalent(array $a, array $b): bool
+    {
+        return json_encode($this->normalizeCartForComparison($a)) === json_encode($this->normalizeCartForComparison($b));
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $cart
+     * @return array<int, array{product_id:int, quantity:int, price:float, name:string, image:string}>
+     */
+    private function normalizeCartForComparison(array $cart): array
+    {
+        $rows = [];
+        foreach ($cart as $item) {
+            if (! isset($item['product_id'])) {
+                continue;
+            }
+            $rows[] = [
+                'product_id' => (int) $item['product_id'],
+                'quantity' => (int) ($item['quantity'] ?? 0),
+                'price' => (float) ($item['price'] ?? 0),
+                'name' => (string) ($item['name'] ?? ''),
+                'image' => (string) ($item['image'] ?? ''),
+            ];
+        }
+        usort($rows, fn ($x, $y) => $x['product_id'] <=> $y['product_id']);
+
+        return $rows;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $cart
+     */
+    private function sessionCartHasNonMinimalKeys(array $cart): bool
+    {
+        $allowed = ['product_id', 'name', 'price', 'quantity', 'image'];
+
+        foreach ($cart as $item) {
+            foreach (array_keys($item) as $key) {
+                if (! in_array($key, $allowed, true)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private function getCartCount(): int
     {
         return count(Session::get('cart', []));
@@ -390,7 +608,11 @@ class ClientPageController extends Controller
             return response()->json(['success' => false, 'message' => Product::MSG_CLIENT_AGOTADO], 400);
         }
 
-        if ($product->stock_current < $request->quantity) {
+        $requestedQty = (int) $request->quantity;
+        $quantityApplied = min($requestedQty, (int) $product->stock_current);
+        $stockClamped = $quantityApplied < $requestedQty;
+
+        if ($quantityApplied < 1) {
             return response()->json([
                 'success' => false,
                 'message' => $product->stock_current < 1
@@ -400,12 +622,29 @@ class ClientPageController extends Controller
         }
 
         $cart = Session::get('cart', []);
+        $lineSubtotal = 0.0;
+        $found = false;
 
         foreach ($cart as $index => $item) {
             if ($item['product_id'] == $request->product_id) {
-                $cart[$index]['quantity'] = $request->quantity;
+                $cart[$index]['quantity'] = $quantityApplied;
+                // Keep only minimal keys so the session never retains inflated rows.
+                $cart[$index] = [
+                    'product_id' => (int) $item['product_id'],
+                    'name' => (string) ($item['name'] ?? ''),
+                    'price' => (float) $item['price'],
+                    'quantity' => $quantityApplied,
+                    'image' => (string) ($item['image'] ?? ''),
+                ];
+                $unitPrice = (float) $item['price'];
+                $lineSubtotal = $unitPrice * $quantityApplied;
+                $found = true;
                 break;
             }
+        }
+
+        if (! $found) {
+            return response()->json(['success' => false, 'message' => 'El producto no está en el carrito'], 404);
         }
 
         Session::put('cart', $cart);
@@ -415,11 +654,20 @@ class ClientPageController extends Controller
             'message' => 'Carrito actualizado',
             'cart_count' => $this->getCartCount(),
             'cart_total' => $this->getCartTotal(),
+            'line_subtotal' => $lineSubtotal,
+            'quantity_applied' => $quantityApplied,
+            'stock_clamped' => $stockClamped,
         ]);
     }
 
+    /**
+     * Display cart. Session `cart` is the source of truth (minimal rows only).
+     * It is only mutated via addToCart, updateCart, removeFromCart, or syncCartWithStock when stock clamps occur.
+     */
     public function cart()
     {
+        $this->syncCartWithStock();
+
         $cart = Session::get('cart', []);
         $cartItems = [];
         $total = 0;
@@ -427,7 +675,7 @@ class ClientPageController extends Controller
         foreach ($cart as $item) {
             $product = Product::find($item['product_id']);
 
-            // Rebuild cart rows using the latest product availability.
+            // Rebuild cart rows using the latest product availability (display only).
             if ($product && $product->isPurchasableByClient()) {
                 $qty = min((int) $item['quantity'], $product->stock_current);
                 if ($qty < 1) {
@@ -449,8 +697,6 @@ class ClientPageController extends Controller
                 ];
             }
         }
-
-        Session::put('cart', $cartItems);
 
         $cartCount = $this->getCartCount();
 
@@ -477,9 +723,7 @@ class ClientPageController extends Controller
         ]);
     }
 
-    // Creates a pending web order and records stock خروج with origin 'sale_web'.
-    // Inventory movements are stored through recordWebCartSale().
-    // user_id remains null because no admin is authenticated in this flow.
+    // Creates a pending web order and reserves stock immediately.
     public function checkout(Request $request, InventoryMovementService $inventoryService)
     {
         $cart = Session::get('cart', []);
@@ -487,6 +731,13 @@ class ClientPageController extends Controller
         if (empty($cart)) {
             return response()->json(['success' => false, 'message' => 'El carrito está vacío'], 400);
         }
+
+        $validatedCheckout = $request->validate([
+            'payment_method' => ['required', Rule::in(['cash', 'sinpe', 'transfer'])],
+        ], [
+            'payment_method.required' => 'Seleccione un método de pago.',
+            'payment_method.in' => 'Método de pago no válido.',
+        ]);
 
         DB::beginTransaction();
         try {
@@ -502,7 +753,18 @@ class ClientPageController extends Controller
                     return response()->json(['success' => false, 'message' => Product::MSG_CLIENT_AGOTADO], 400);
                 }
 
-                if ($product->stock_current < $item['quantity']) {
+                $quantity = (int) ($item['quantity'] ?? 0);
+                if ($quantity < 1) {
+                    Log::warning('checkout_invalid_quantity', [
+                        'product_id' => $item['product_id'] ?? null,
+                        'raw_quantity' => $item['quantity'] ?? null,
+                    ]);
+                    DB::rollBack();
+
+                    return response()->json(['success' => false, 'message' => 'Cantidad inválida en el carrito. Actualiza la página e inténtalo de nuevo.'], 400);
+                }
+
+                if ($product->stock_current < $quantity) {
                     DB::rollBack();
 
                     return response()->json([
@@ -513,16 +775,23 @@ class ClientPageController extends Controller
                     ], 400);
                 }
 
-                $itemTotal = $item['price'] * $item['quantity'];
+                $itemTotal = $item['price'] * $quantity;
                 $subtotal += $itemTotal;
 
                 $validatedItems[] = [
                     'product' => $product,
-                    'quantity' => $item['quantity'],
+                    'quantity' => $quantity,
                     'price' => $item['price'],
                     'total' => $itemTotal,
                 ];
             }
+
+            Log::info('checkout_persisting_items', [
+                'items' => collect($validatedItems)->map(fn ($i) => [
+                    'product_id' => $i['product']->product_id,
+                    'qty' => $i['quantity'],
+                ])->values()->all(),
+            ]);
 
             /** @var Client|null $client */
             $client = Auth::guard('clients')->user();
@@ -531,27 +800,26 @@ class ClientPageController extends Controller
                 'invoice_number' => (new Sale)->generateInvoiceNumber(),
                 'client_id' => $client?->user_id,
                 'sale_date' => now(),
-                'payment_method' => 'cash',
+                'payment_method' => $validatedCheckout['payment_method'],
                 'status' => 'pending',
                 'order_source' => 'web_cart',
                 'subtotal' => $subtotal,
                 'iva' => 0,
                 'discount' => 0,
                 'total' => $subtotal,
-                'notes' => 'Order placed from the online store',
+                'notes' => 'Pedido realizado desde la tienda en línea',
             ]);
 
             foreach ($validatedItems as $item) {
                 SaleItem::create([
                     'sale_id' => $sale->sale_id,
                     'product_id' => $item['product']->product_id,
-                    'quantity' => $item['quantity'],
+                    'quantity' => (int) $item['quantity'],
                     'unit_price' => $item['price'],
                     'unit_discount' => 0,
                     'total' => $item['total'],
                 ]);
 
-                // Record the web sale movement without an authenticated admin user.
                 $inventoryService->recordWebCartSale(
                     product: $item['product'],
                     quantity: (int) $item['quantity'],
@@ -567,8 +835,8 @@ class ClientPageController extends Controller
                 'message' => 'Pedido creado exitosamente',
                 'sale_id' => $sale->sale_id,
                 'invoice_number' => $sale->invoice_number,
+                'payment_method' => $sale->payment_method,
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -582,6 +850,9 @@ class ClientPageController extends Controller
         $client = Auth::guard('clients')->user();
         $tab = $request->query('tab', 'facturas');
         $pendingReviewProducts = collect();
+
+        $activeStatuses = $this->activeClientInvoiceStatuses();
+        $cancelledStatuses = $this->cancelledClientInvoiceStatuses();
 
         if ($tab === 'historial') {
             $orders = Sale::with(['saleItems.product'])
@@ -603,21 +874,35 @@ class ClientPageController extends Controller
                     ];
                 })
                 ->values();
-        } else {
-            $tab = 'facturas';
+        } elseif ($tab === 'canceladas') {
             $orders = Sale::with(['saleItems.product'])
                 ->where('client_id', $client->user_id)
-                ->where('status', 'pending')
+                ->whereIn('status', $cancelledStatuses)
+                ->orderByDesc('sale_date')
+                ->get();
+        } else {
+            $tab = 'facturas';
+
+            $orders = Sale::with(['saleItems.product'])
+                ->where('client_id', $client->user_id)
+                ->whereIn('status', $activeStatuses)
                 ->orderByDesc('sale_date')
                 ->get();
         }
 
         $cartCount = $this->getCartCount();
+
         $invoiceCount = Sale::where('client_id', $client->user_id)
-            ->where('status', 'pending')
+            ->whereIn('status', $activeStatuses)
             ->count();
 
-        return view('client.Invoices', compact('orders', 'cartCount', 'invoiceCount', 'tab', 'pendingReviewProducts'));
+        return view('client.Invoices', compact(
+            'orders',
+            'cartCount',
+            'invoiceCount',
+            'tab',
+            'pendingReviewProducts'
+        ));
     }
 
     public function invoicesHeartbeat()
@@ -626,7 +911,7 @@ class ClientPageController extends Controller
         $client = Auth::guard('clients')->user();
 
         $count = Sale::where('client_id', $client->user_id)
-            ->where('status', 'pending')
+            ->whereIn('status', $this->activeClientInvoiceStatuses())
             ->count();
 
         return response()->json(['count' => $count]);
@@ -649,7 +934,6 @@ class ClientPageController extends Controller
     {
         $client = Auth::guard('clients')->user();
 
-        // Do not reveal whether another client's order exists.
         if ((int) $sale->client_id !== (int) $client->user_id) {
             abort(404);
         }
@@ -657,8 +941,9 @@ class ClientPageController extends Controller
         $sale->load(['saleItems.product']);
 
         $cartCount = $this->getCartCount();
+
         $invoiceCount = Sale::where('client_id', $client->user_id)
-            ->where('status', 'pending')
+            ->whereIn('status', $this->activeClientInvoiceStatuses())
             ->count();
 
         return view('client.invoice-detail', compact('sale', 'cartCount', 'invoiceCount'));
@@ -671,5 +956,15 @@ class ClientPageController extends Controller
             fn ($carry, $item) => $carry + $item['price'] * $item['quantity'],
             0
         );
+    }
+
+    private function activeClientInvoiceStatuses(): array
+    {
+        return ['pending', 'ready_to_pickup'];
+    }
+
+    private function cancelledClientInvoiceStatuses(): array
+    {
+        return ['cancelled', 'canceled'];
     }
 }

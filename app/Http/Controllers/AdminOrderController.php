@@ -13,13 +13,9 @@ class AdminOrderController extends Controller
         $status = $request->get('status');
         $search = $request->get('search');
 
-        $query = Sale::query()
-            ->where(function ($q) {
-                $q->where('order_source', 'web_cart')
-                    ->orWhereNull('order_source');
-            })
-            ->whereIn('status', ['pending', 'completed', 'cancelled', 'refunded'])
-            ->notExpired()
+        $baseWebOrdersQuery = $this->baseWebOrdersQuery();
+
+        $query = (clone $baseWebOrdersQuery)
             ->with(['client', 'saleItems.product']);
 
         if ($status) {
@@ -28,6 +24,7 @@ class AdminOrderController extends Controller
 
         if ($search) {
             $search = trim($search);
+
             $query->where(function ($q) use ($search) {
                 $q->where('sale_id', 'like', "%{$search}%")
                     ->orWhere('invoice_number', 'like', "%{$search}%")
@@ -41,27 +38,52 @@ class AdminOrderController extends Controller
 
         $orders = $query->orderBy('sale_date', 'desc')->paginate(10)->withQueryString();
 
-        $basePurchasesQuery = Sale::query()
-            ->whereIn('status', ['pending', 'completed'])
-            ->where(function ($q) {
-                $q->where('order_source', 'web_cart')
-                    ->orWhereNull('order_source');
-            })
-            ->notExpired();
+        $basePurchasesQuery = (clone $baseWebOrdersQuery)
+            ->whereIn('status', ['pending', 'completed']);
 
         $latestPurchaseSaleId = (clone $basePurchasesQuery)->max('sale_id') ?? 0;
 
-        $stored = AppSetting::getStoredOrderExpirationDays();
-        $orderExpirationDays = ($stored !== null && $stored > 0)
-            ? $stored
-            : max(1, (int) config('sales.order_expiration_days', 30));
-        $usesEnvDefaultForExpiry = $stored === null;
+        $pendingWebOrdersCount = (clone $baseWebOrdersQuery)
+            ->where('status', 'pending')
+            ->count();
+
+        $storedHours = AppSetting::getStoredReadyToPickupExpirationHours();
+        $storedDaysLegacy = AppSetting::getStoredReadyToPickupExpirationDays();
+
+        if ($storedHours !== null && $storedHours > 0) {
+            $readyToPickupExpirationHours = $storedHours;
+        } elseif ($storedDaysLegacy !== null && $storedDaysLegacy > 0) {
+            $readyToPickupExpirationHours = $storedDaysLegacy * 24;
+        } else {
+            $readyToPickupExpirationHours = max(1, (int) config('sales.ready_to_pickup_expiration_hours', 72));
+        }
+
+        $usesEnvDefaultForExpiry = $storedHours === null && $storedDaysLegacy === null;
+
+        $weeklyReportDay = AppSetting::getWeeklyReportDay();
+        $weeklyReportHour = AppSetting::getWeeklyReportHour();
+        $weeklyReportRecipients = AppSetting::getWeeklyReportRecipients();
 
         return view('admin.orders.index', compact(
             'orders',
             'latestPurchaseSaleId',
-            'orderExpirationDays',
-            'usesEnvDefaultForExpiry'
+            'pendingWebOrdersCount',
+            'readyToPickupExpirationHours',
+            'usesEnvDefaultForExpiry',
+            'weeklyReportDay',
+            'weeklyReportHour',
+            'weeklyReportRecipients'
         ));
+    }
+
+    private function baseWebOrdersQuery()
+    {
+        return Sale::query()
+            ->where(function ($q) {
+                $q->where('order_source', 'web_cart')
+                    ->orWhereNull('order_source');
+            })
+            ->whereIn('status', ['pending', 'ready_to_pickup', 'completed', 'cancelled', 'refunded'])
+            ->notExpired();
     }
 }

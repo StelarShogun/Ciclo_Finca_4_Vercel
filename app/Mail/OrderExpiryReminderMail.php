@@ -23,7 +23,7 @@ class OrderExpiryReminderMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Recordatorio: Tu pedido #' . $this->sale->sale_id . ' vence mañana',
+            subject: 'Recordatorio: Tu pedido #'.$this->sale->sale_id.' vence mañana',
         );
     }
 

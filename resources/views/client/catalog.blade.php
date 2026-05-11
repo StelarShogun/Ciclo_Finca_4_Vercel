@@ -121,14 +121,27 @@
                                 {{ $errors->first('price_range') }}
                             </div>
                         @endif
-                        <div class="filter-group">
+                        <div class="filter-group catalog-search-group"
+                             data-catalog-suggestions
+                             data-suggestions-url="{{ route('api.products.suggestions') }}">
                             <label for="search">Buscar</label>
                             <input type="text"
                                    id="search"
                                    name="search"
                                    class="form-control"
                                    placeholder="Nombre o descripción..."
+                                   autocomplete="off"
+                                   spellcheck="false"
+                                   role="combobox"
+                                   aria-autocomplete="list"
+                                   aria-expanded="false"
+                                   aria-controls="catalog-search-suggestions"
                                    value="{{ request('search') }}">
+                            <div id="catalog-search-suggestions"
+                                 class="catalog-search-suggestions"
+                                 role="listbox"
+                                 aria-label="Sugerencias de búsqueda"
+                                 aria-hidden="true"></div>
                         </div>
 
                         <div class="filter-group">
@@ -332,6 +345,12 @@
                                             <h3 class="product-name">
                                                 <a href="{{ $product->clientProductUrl() }}">{{ $product->name }}</a>
                                             </h3>
+                                            @php $spotRs = $productReviewStats[(int) $product->product_id] ?? null; @endphp
+                                            @include('client.parts.product-stars-inline', [
+                                                'avgStars' => (float) data_get($spotRs, 'avg', 0),
+                                                'reviewCount' => (int) data_get($spotRs, 'count', 0),
+                                                'variant' => 'card',
+                                            ])
                                             <p @class([
                                                 'product-availability-text',
                                                 'is-available' => $catLabel === 'Disponible',
@@ -443,6 +462,12 @@
                                                 {{ $product->name }}
                                             </a>
                                         </h3>
+                                        @php $cardRs = $productReviewStats[(int) $product->product_id] ?? null; @endphp
+                                        @include('client.parts.product-stars-inline', [
+                                            'avgStars' => (float) data_get($cardRs, 'avg', 0),
+                                            'reviewCount' => (int) data_get($cardRs, 'count', 0),
+                                            'variant' => 'card',
+                                        ])
                                         <p @class([
                                             'product-availability-text',
                                             'is-available' => $catLabel === 'Disponible',

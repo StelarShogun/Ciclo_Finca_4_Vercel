@@ -11,6 +11,8 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ProductVariantController extends Controller
 {
@@ -93,6 +95,113 @@ class ProductVariantController extends Controller
                 'status' => (string) $variant->status,
                 'stock_current' => (int) $variant->stock_current,
                 'sale_price' => (string) $variant->sale_price,
+                'sku' => $variant->displaySku(),
+                'sku_custom' => $variant->sku,
+                'sku_locked' => SaleItem::query()->where('product_id', $variant->product_id)->exists(),
+            ],
+        ]);
+    }
+
+    public function update(Request $request, Product $product, Product $variant): JsonResponse
+    {
+        $link = ProductVariant::query()
+            ->where('base_product_id', $product->product_id)
+            ->where('variant_product_id', $variant->product_id)
+            ->first();
+
+        if (! $link) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La variante no existe o no pertenece a este producto base.',
+            ], 404);
+        }
+
+        $hasSales = SaleItem::query()->where('product_id', $variant->product_id)->exists();
+
+        $skuWasProvided = $request->has('sku');
+        if ($skuWasProvided) {
+            $raw = $request->input('sku');
+            $normalizedSku = null;
+            if (is_string($raw)) {
+                $t = trim($raw);
+                $normalizedSku = $t === '' ? null : $t;
+            }
+            $request->merge(['sku' => $normalizedSku]);
+        }
+
+        if ($skuWasProvided && $hasSales) {
+            $current = $variant->sku;
+            $normCurrent = ($current === null || $current === '') ? null : trim((string) $current);
+            $normIncoming = $request->input('sku');
+            if ($normCurrent !== $normIncoming) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede modificar el SKU porque esta variante ya tiene ventas asociadas.',
+                ], 422);
+            }
+        }
+
+        $rules = [
+            'sale_price' => ['required', 'numeric', 'min:0'],
+            'stock_current' => ['required', 'integer', 'min:0'],
+        ];
+
+        if ($skuWasProvided) {
+            $rules['sku'] = [
+                'nullable',
+                'string',
+                'max:64',
+                'regex:/^[A-Za-z0-9\-]+$/',
+                Rule::unique('products', 'sku')->ignore($variant->product_id, 'product_id'),
+            ];
+        }
+
+        try {
+            $validated = $request->validate($rules, [
+                'sale_price.required' => 'El precio es obligatorio.',
+                'stock_current.required' => 'El stock es obligatorio.',
+                'sku.regex' => 'El SKU solo puede contener letras, números y guiones.',
+                'sku.unique' => 'Ese SKU ya está en uso por otro producto.',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Revisa los datos enviados.',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+
+        $variant->sale_price = $validated['sale_price'];
+        $variant->stock_current = $validated['stock_current'];
+
+        if ($skuWasProvided) {
+            $variant->sku = $validated['sku'];
+        }
+
+        try {
+            $variant->save();
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => collect($e->errors())->flatten()->first() ?? 'Revisa los datos enviados.',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+
+        $variant->refresh();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Variante actualizada correctamente.',
+            'variant' => [
+                'product_id' => (int) $variant->product_id,
+                'name' => (string) $variant->name,
+                'status' => (string) $variant->status,
+                'stock_current' => (int) $variant->stock_current,
+                'sale_price' => (string) $variant->sale_price,
+                'sku' => $variant->displaySku(),
+                'sku_custom' => $variant->sku,
+                'sku_locked' => $hasSales,
             ],
         ]);
     }
@@ -160,4 +269,3 @@ class ProductVariantController extends Controller
         return ['draft', 'pending', 'confirmed', 'partial_received'];
     }
 }
-

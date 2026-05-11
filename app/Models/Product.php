@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +15,13 @@ use Illuminate\Validation\ValidationException;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+/**
+ * @property-read Category|null $category
+ * @property-read Supplier|null $supplier
+ * @property-read Collection<int, Brand> $brands
+ * @property-read Collection<int, Product> $variants
+ * @property-read Collection<int, ClassificationValue> $classificationValues
+ */
 // Product model with media support and inventory-related helpers.
 class Product extends Model implements HasMedia
 {
@@ -72,6 +80,14 @@ class Product extends Model implements HasMedia
     public static function skuFromId(int $productId): string
     {
         return 'BK-' . str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
+    }
+
+    // Returns a custom SKU or a generated BK-xxx code.
+    public function displaySku(): string
+    {
+        $custom = trim((string) ($this->attributes['sku'] ?? ''));
+
+        return $custom !== '' ? $custom : self::skuFromId((int) $this->product_id);
     }
 
     // Normalizes localized and canonical status values.

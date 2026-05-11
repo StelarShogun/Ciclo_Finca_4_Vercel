@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Client;
 use App\Models\FavoriteProduct;
 use App\Models\Product;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -132,7 +133,7 @@ class FavoriteListTest extends TestCase
 
             $list = $this->getJson(route('clients.favorites.index'));
             $list->assertOk();
-            $rows = array_filter($list->json('favorites', []), fn (array $row) => (int) $row['product_id'] === (int) $product->product_id);
+            $rows = array_filter((array) $list->json('favorites'), fn (array $row) => (int) $row['product_id'] === (int) $product->product_id);
             $this->assertCount(1, $rows);
             $first = array_values($rows)[0];
             $this->assertSame($product->name, $first['name']);
@@ -160,7 +161,7 @@ class FavoriteListTest extends TestCase
             $list = $this->getJson(route('clients.favorites.index'));
             $list->assertOk();
             $this->assertEmpty(
-                array_filter($list->json('favorites', []), fn (array $row) => (int) $row['product_id'] === (int) $product->product_id)
+                array_filter((array) $list->json('favorites'), fn (array $row) => (int) $row['product_id'] === (int) $product->product_id)
             );
         } finally {
             $this->cleanupFavoriteClientAndProduct($client, $product);
@@ -186,7 +187,7 @@ class FavoriteListTest extends TestCase
             $listAfterOn = $this->getJson(route('clients.favorites.index'));
             $listAfterOn->assertOk();
             $this->assertNotEmpty(
-                array_filter($listAfterOn->json('favorites', []), fn (array $row) => (int) $row['product_id'] === (int) $product->product_id)
+                array_filter((array) $listAfterOn->json('favorites'), fn (array $row) => (int) $row['product_id'] === (int) $product->product_id)
             );
 
             $this->postJson(route('clients.favorites.toggle'), [
@@ -196,7 +197,7 @@ class FavoriteListTest extends TestCase
             $listAfterOff = $this->getJson(route('clients.favorites.index'));
             $listAfterOff->assertOk();
             $this->assertEmpty(
-                array_filter($listAfterOff->json('favorites', []), fn (array $row) => (int) $row['product_id'] === (int) $product->product_id)
+                array_filter((array) $listAfterOff->json('favorites'), fn (array $row) => (int) $row['product_id'] === (int) $product->product_id)
             );
         } finally {
             $this->cleanupFavoriteClientAndProduct($client, $product);
@@ -220,7 +221,7 @@ class FavoriteListTest extends TestCase
                 ->where('product_id', $product->product_id)
                 ->count());
 
-            $this->expectException(\Illuminate\Database\QueryException::class);
+            $this->expectException(QueryException::class);
 
             FavoriteProduct::create([
                 'user_id' => $client->user_id,
@@ -260,7 +261,7 @@ class FavoriteListTest extends TestCase
 
             $list = $this->getJson(route('clients.favorites.index'));
             $list->assertOk();
-            $ids = collect($list->json('favorites', []))->pluck('product_id')->map(fn ($id) => (int) $id)->all();
+            $ids = collect((array) $list->json('favorites'))->pluck('product_id')->map(fn ($id) => (int) $id)->all();
 
             $this->assertContains((int) $productA->product_id, $ids);
             $this->assertContains((int) $productB->product_id, $ids);

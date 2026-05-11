@@ -6,6 +6,7 @@ use App\Http\Requests\UpdateProductClassificationsRequest;
 use App\Models\ClassificationDimension;
 use App\Models\Product;
 use App\Services\ProductClassificationAssignmentService;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -49,7 +50,10 @@ class ProductClassificationController extends Controller
 
         $selectedByAttribute = [];
         foreach ($product->classificationValues as $cv) {
-            $selectedByAttribute[(int) $cv->pivot->classification_dimension_id] = (int) $cv->id;
+            $pivot = $cv->getRelationValue('pivot');
+            if ($pivot instanceof Pivot) {
+                $selectedByAttribute[(int) $pivot->getAttribute('classification_dimension_id')] = (int) $cv->getKey();
+            }
         }
 
         return view('admin.product-classifications.edit', compact('product', 'attributes', 'selectedByAttribute'));

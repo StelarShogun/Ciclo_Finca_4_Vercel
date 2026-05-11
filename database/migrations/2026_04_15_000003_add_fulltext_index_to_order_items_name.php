@@ -20,7 +20,7 @@ return new class extends Migration
         // Best-effort: ignore if already exists or engine doesn't support it.
         try {
             DB::statement('ALTER TABLE `order_items` ADD FULLTEXT `ft_order_items_name` (`name`)');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // ignore
         }
     }
@@ -37,9 +37,8 @@ return new class extends Migration
 
         try {
             DB::statement('ALTER TABLE `order_items` DROP INDEX `ft_order_items_name`');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // ignore
         }
     }
 };
-
