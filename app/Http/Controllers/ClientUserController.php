@@ -504,19 +504,19 @@ class ClientUserController extends Controller
 
         $client = Client::where('gmail', strtolower($request->gmail))->first();
 
-        // Always respond with the same message to avoid email enumeration.
-        // If the client doesn't exist, redirect to the verify form anyway.
         if (! $client) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
-                    'success' => true,
-                    'needs_verification' => true,
-                    'redirect' => route('clients.recovery.verify.form'),
-                    'message' => 'Si el correo existe, se ha enviado un código de verificación.',
-                ]);
+                    'success' => false,
+                    'message' => 'Correo no está registrado.',
+                    'register_url' => route('clients.register.form'),
+                ], 422);
             }
 
-            return redirect()->route('clients.recovery.verify.form');
+            return redirect()
+                ->route('clients.recovery.form')
+                ->withInput($request->only('gmail'))
+                ->with('unregistered_recovery_email', true);
         }
 
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -633,7 +633,8 @@ class ClientUserController extends Controller
             return response()->json(['success' => true, 'message' => 'Contraseña actualizada correctamente.']);
         }
 
-        return redirect()->route('login.show')->with('status', 'Contraseña actualizada. Ya puedes iniciar sesión.');
+        return redirect()->route('login.show')
+            ->with('recovery_success_modal', 'Contraseña actualizada. Ya puedes iniciar sesión.');
     }
 
     /**
@@ -652,6 +653,7 @@ class ClientUserController extends Controller
 
         $state = Str::random(40);
         session(['google_oauth_state' => $state]);
+        session()->save();
 
         $query = http_build_query([
             'client_id' => $googleConfig['client_id'],
@@ -683,6 +685,12 @@ class ClientUserController extends Controller
             $stateFromRequest = (string) $request->query('state', '');
 
             if ($stateFromSession === '' || $stateFromRequest === '' || ! hash_equals($stateFromSession, $stateFromRequest)) {
+                Log::warning('oauth_state_mismatch', [
+                    'session_present' => $stateFromSession !== '',
+                    'request_present' => $stateFromRequest !== '',
+                    'driver' => config('session.driver'),
+                ]);
+
                 return redirect()->route('clients.home')->with('error', 'Sesión OAuth inválida. Inténtalo de nuevo.');
             }
 

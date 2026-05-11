@@ -24,6 +24,15 @@
                 <form action="{{ route('admin.classifications.values.update', $value) }}" method="POST" class="form-body">
                     @csrf
                     @method('PUT')
+                    @if ($errors->any())
+                        <x-admin-alert type="error" title="Revisa los campos marcados antes de continuar.">
+                            <ul style="margin: 0; padding-left: 1.25rem;">
+                                @foreach ($errors->all() as $err)
+                                    <li>{{ $err }}</li>
+                                @endforeach
+                            </ul>
+                        </x-admin-alert>
+                    @endif
                     <div class="form-group">
                         <label for="value">Valor (lo que verá el cliente) *</label>
                         <input type="text" id="value" name="value" value="{{ old('value', $value->value) }}" required maxlength="255">

@@ -6,6 +6,7 @@ use App\Http\Requests\UpdateProductClassificationsRequest;
 use App\Models\ClassificationDimension;
 use App\Models\Product;
 use App\Services\ProductClassificationAssignmentService;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -37,7 +38,7 @@ class ProductClassificationController extends Controller
         if (! $product->category || $product->category->parent_category_id === null) {
             return redirect()
                 ->route('admin.product-classifications.index')
-                ->with('error', 'Primero ubicá el producto en un tipo concreto (ej. «MTB»), no solo en el rubro general. Desde Inventario podés cambiarlo.');
+                ->with('error', 'Primero ubicá el producto en un tipo concreto (ej. «MTB»), no solo en la categoría padre. Desde Inventario podés cambiarlo.');
         }
 
         $attributes = ClassificationDimension::query()
@@ -49,7 +50,10 @@ class ProductClassificationController extends Controller
 
         $selectedByAttribute = [];
         foreach ($product->classificationValues as $cv) {
-            $selectedByAttribute[(int) $cv->pivot->classification_dimension_id] = (int) $cv->id;
+            $pivot = $cv->getRelationValue('pivot');
+            if ($pivot instanceof Pivot) {
+                $selectedByAttribute[(int) $pivot->getAttribute('classification_dimension_id')] = (int) $cv->getKey();
+            }
         }
 
         return view('admin.product-classifications.edit', compact('product', 'attributes', 'selectedByAttribute'));

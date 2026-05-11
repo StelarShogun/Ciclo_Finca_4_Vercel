@@ -2,8 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property-read Collection<int, Product> $products
+ */
 class Supplier extends Model
 {
     protected $table = 'suppliers';
@@ -38,7 +43,7 @@ class Supplier extends Model
     ];
 
     // Relationship with products
-    public function products()
+    public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'supplier_id', 'supplier_id');
     }

@@ -23,6 +23,7 @@ const adminAssets = [
     "resources/js/admin/classifications/catalog.js",
     "resources/js/admin/reports/product-sales.js",
     "resources/js/admin/reports/sales-performance.js",
+    "resources/js/admin/reports/exports-modal.js",
     "resources/js/admin/reports/inventory-movements.js",        
     "resources/js/admin/reports/client-purchase-history.js",  
     "resources/js/admin/reports/client-purchase-client-show.js", 
@@ -54,6 +55,7 @@ const adminAssets = [
 // =======================
 const clientAssets = [
     // JS
+    "resources/js/client/checkout-copy.js",
     "resources/js/client/clients-page.js",
     "resources/js/client/clients-users.js",
 
@@ -66,6 +68,8 @@ const clientAssets = [
 ];
 
 export default defineConfig({
+    // Keep Vite cache outside node_modules to avoid permission issues on WSL mounts.
+    cacheDir: ".vite-cache",
     plugins: [
         laravel({
             detectTls: false,

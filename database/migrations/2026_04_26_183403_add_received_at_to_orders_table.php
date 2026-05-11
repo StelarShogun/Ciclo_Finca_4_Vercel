@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             $table->timestamp('received_at')
-                  ->nullable()
-                  ->default(null)
-                  ->after('delivered_at')
-                  ->comment('Fecha en que se registró la recepción de mercancía vía receiveOrder().');
+                ->nullable()
+                ->default(null)
+                ->after('delivered_at')
+                ->comment('Fecha en que se registró la recepción de mercancía vía receiveOrder().');
         });
     }
 

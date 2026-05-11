@@ -21,14 +21,18 @@ final class ProductSalesReportQuery
             ->select(
                 'products.product_id',
                 'products.name',
+                'products.sku',
                 DB::raw('SUM(sale_items.quantity) as units_sold'),
                 DB::raw('SUM(sale_items.total) as revenue'),
             )
-            ->groupBy('products.product_id', 'products.name');
+            ->groupBy('products.product_id', 'products.name', 'products.sku');
 
         if ($q !== '') {
             $like = '%'.addcslashes($q, '%_\\').'%';
-            $query->havingRaw("(products.name LIKE ? OR {$skuExpr} LIKE ?)", [$like, $like]);
+            $query->havingRaw(
+                "(products.name LIKE ? OR {$skuExpr} LIKE ? OR COALESCE(products.sku, '') LIKE ?)",
+                [$like, $like, $like]
+            );
         }
 
         return $query;
@@ -42,7 +46,9 @@ final class ProductSalesReportQuery
         return [
             'product_id' => (int) $row->product_id,
             'name' => (string) $row->name,
-            'sku' => Product::skuFromId((int) $row->product_id),
+            'sku' => (isset($row->sku) && is_string($row->sku) && trim($row->sku) !== '')
+                ? trim($row->sku)
+                : Product::skuFromId((int) $row->product_id),
             'units_sold' => (int) $row->units_sold,
             'revenue' => round((float) $row->revenue, 2),
         ];

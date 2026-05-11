@@ -13,14 +13,16 @@ document.addEventListener('click', (e) => {
     e.stopPropagation();
 
     const message = btn.getAttribute('data-confirm');
+    const title = btn.getAttribute('data-confirm-title') || '¿Deseas continuar?';
 
     Swal.fire({
-        title: '¿Estás segura?',
+        title,
         text: message,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Sí, continuar',
-        cancelButtonText: 'Cancelar',
+        cancelButtonText: 'No, cancelar',
+        focusCancel: true,
         confirmButtonColor: '#b91c1c',
     }).then((result) => {
         if (result.isConfirmed) {

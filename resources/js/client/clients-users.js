@@ -1,3 +1,8 @@
+import {
+    buildCf4CheckoutSuccessText,
+    getCf4PaymentMethodShortLabel,
+} from './checkout-copy.js';
+
 // ============================================================
 // GLOBAL UTILITIES
 // ============================================================
@@ -12,6 +17,11 @@ function getCsrfToken() {
 
 function isClientStockShortMessage(msg) {
     return msg === 'Producto agotado' || msg === 'Stock insuficiente';
+}
+
+function getCheckoutPaymentMethodFallback() {
+    var selected = document.querySelector('input[name="checkout_payment_method"]:checked');
+    return selected ? selected.value : 'cash';
 }
 
 // ============================================================
@@ -361,6 +371,170 @@ function setHeaderMenuOpen(open) {
         icon.classList.toggle('fa-bars',  !open);
         icon.classList.toggle('fa-times',  open);
     }
+}
+
+function setFavoritesDrawerOpen(open) {
+    var drawer = document.getElementById('favorites-drawer');
+    var overlay = document.getElementById('favorites-overlay');
+    if (!drawer || !overlay) return;
+    drawer.classList.toggle('is-open', open);
+    drawer.setAttribute('aria-hidden', String(!open));
+    overlay.hidden = !open;
+}
+
+var favoritesCache = [];
+
+function getInitialFavoritesFromMeta() {
+    var meta = document.querySelector('meta[name="cf4-favorites-initial"]');
+    if (!meta) return [];
+    try {
+        var parsed = JSON.parse(meta.getAttribute('content') || '[]');
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function syncFavoriteButtonsState(productId, isFavorite) {
+    document.querySelectorAll('[data-product-favorite-btn][data-product-id="' + productId + '"]').forEach(function (btn) {
+        btn.classList.toggle('is-active', !!isFavorite);
+        btn.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
+        btn.setAttribute('aria-label', isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos');
+        var icon = btn.querySelector('i');
+        if (icon) {
+            icon.classList.toggle('fas', !!isFavorite);
+            icon.classList.toggle('far', !isFavorite);
+            icon.classList.add('fa-heart');
+        }
+    });
+}
+
+function upsertFavoriteCacheItem(productId) {
+    var pid = String(productId);
+    var cardBtn = document.querySelector('[data-product-favorite-btn][data-product-id="' + pid + '"]');
+    var card = cardBtn ? cardBtn.closest('.product-card') : null;
+    if (!card) return;
+
+    var nameLink = card.querySelector('.product-name a');
+    var categoryEl = card.querySelector('.product-category');
+    var priceEl = card.querySelector('.product-price-value');
+    var imageEl = card.querySelector('.product-image img');
+
+    var existingIndex = favoritesCache.findIndex(function (item) {
+        return String(item.product_id) === pid;
+    });
+
+    var entry = {
+        product_id: Number(pid),
+        name: nameLink ? nameLink.textContent.trim() : '',
+        category: categoryEl ? categoryEl.textContent.trim() : 'Sin categoría',
+        price_formatted: priceEl ? priceEl.textContent.trim() : '',
+        url: nameLink ? nameLink.getAttribute('href') : '#',
+        image_url: imageEl ? imageEl.getAttribute('src') : ''
+    };
+
+    if (existingIndex >= 0) {
+        favoritesCache[existingIndex] = entry;
+    } else {
+        favoritesCache.unshift(entry);
+    }
+}
+
+function renderFavoritesDrawerItems(items) {
+    var body = document.getElementById('favorites-drawer-body');
+    if (!body) return;
+
+    if (!Array.isArray(items) || items.length === 0) {
+        body.innerHTML = ''
+            + '<div class="cf4-favorites-empty">'
+            + '<i class="far fa-heart"></i>'
+            + '<p>Aún no tienes productos guardados.<br>¡Explora el catálogo!</p>'
+            + '</div>';
+        return;
+    }
+
+    body.innerHTML = items.map(function (item) {
+        return ''
+            + '<article class="cf4-favorite-item" data-favorite-product-id="' + item.product_id + '">'
+            + '  <img src="' + item.image_url + '" alt="' + item.name + '">'
+            + '  <div class="cf4-favorite-meta">'
+            + '    <div class="cf4-favorite-category">' + item.category + '</div>'
+            + '    <a class="cf4-favorite-name" href="' + item.url + '">' + item.name + '</a>'
+            + '    <div class="cf4-favorite-price">' + item.price_formatted + '</div>'
+            + '  </div>'
+            + '  <button type="button" class="cf4-favorite-remove" data-favorite-remove-btn data-product-id="' + item.product_id + '" aria-label="Quitar de favoritos">'
+            + '    <i class="fas fa-heart"></i>'
+            + '  </button>'
+            + '</article>';
+    }).join('');
+}
+
+function loadFavoritesDrawerItems() {
+    var body = document.getElementById('favorites-drawer-body');
+    var indexMeta = document.querySelector('meta[name="cf4-favorites-index-url"]');
+    if (!body) return Promise.resolve();
+
+    body.innerHTML = '<p class="cf4-favorites-loading">Cargando favoritos...</p>';
+
+    if (!indexMeta) {
+        renderFavoritesDrawerItems(favoritesCache);
+        return Promise.resolve();
+    }
+
+    return fetch(indexMeta.getAttribute('content'), {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (!data || data.success !== true) {
+                throw new Error((data && data.message) ? data.message : 'No se pudieron cargar favoritos');
+            }
+            favoritesCache = Array.isArray(data.favorites) ? data.favorites : [];
+            renderFavoritesDrawerItems(favoritesCache);
+        })
+        .catch(function () {
+            renderFavoritesDrawerItems(favoritesCache);
+        });
+}
+
+function toggleFavoriteFromDrawer(productId) {
+    var toggleMeta = document.querySelector('meta[name="cf4-favorites-toggle-url"]');
+    if (!toggleMeta || !productId) return Promise.resolve();
+
+    return fetch(toggleMeta.getAttribute('content'), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': getCsrfToken(),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ product_id: productId })
+    })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (!data || data.success !== true) {
+                throw new Error((data && data.message) ? data.message : 'No se pudo actualizar favorito');
+            }
+            var removed = data.is_favorite === false;
+            if (removed) {
+                favoritesCache = favoritesCache.filter(function (item) {
+                    return String(item.product_id) !== String(productId);
+                });
+            }
+            syncFavoriteButtonsState(String(productId), !removed);
+            return loadFavoritesDrawerItems();
+        })
+        .catch(function (err) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: err.message || 'No se pudo actualizar favorito.'
+            });
+        });
 }
 
 // ============================================================
@@ -898,7 +1072,7 @@ function sendPassword(form) {
                 showMsg('msg-recovery-email', 'error', 'Solo se aceptan correos @gmail.com.');
                 setInputState(this, 'input-error');
             } else {
-                showMsg('msg-recovery-email', 'success', 'Correo válido.');
+                clearMsg('msg-recovery-email');
                 setInputState(this, 'input-ok');
             }
         });
@@ -995,6 +1169,8 @@ function sendPassword(form) {
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function () {
+    favoritesCache = getInitialFavoritesFromMeta();
+
 
     // — Initialise cart counter —
     var cartLinkEl  = document.getElementById('cart-link');
@@ -1046,6 +1222,51 @@ document.addEventListener('DOMContentLoaded', function () {
             setHeaderMenuOpen(!header.classList.contains('menu-open'));
         });
     }
+
+    var favoritesOpenBtn = document.getElementById('favorites-open-btn');
+    var favoritesCloseBtn = document.getElementById('favorites-close-btn');
+    var favoritesOverlay = document.getElementById('favorites-overlay');
+    var favoritesDrawer = document.getElementById('favorites-drawer');
+
+    if (favoritesOpenBtn && favoritesDrawer && favoritesOverlay) {
+        favoritesOpenBtn.addEventListener('click', function () {
+            setFavoritesDrawerOpen(true);
+            loadFavoritesDrawerItems();
+        });
+    }
+
+    if (favoritesCloseBtn) {
+        favoritesCloseBtn.addEventListener('click', function () {
+            setFavoritesDrawerOpen(false);
+        });
+    }
+
+    if (favoritesOverlay) {
+        favoritesOverlay.addEventListener('click', function () {
+            setFavoritesDrawerOpen(false);
+        });
+    }
+
+    window.addEventListener('cf4:favorites:changed', function (event) {
+        var detail = event && event.detail ? event.detail : {};
+        var pid = String(detail.product_id || '');
+        var isFav = !!detail.is_favorite;
+        if (!pid) return;
+
+        if (isFav) {
+            upsertFavoriteCacheItem(pid);
+        } else {
+            favoritesCache = favoritesCache.filter(function (item) {
+                return String(item.product_id) !== pid;
+            });
+        }
+
+        syncFavoriteButtonsState(pid, isFav);
+
+        if (favoritesDrawer && favoritesDrawer.classList.contains('is-open')) {
+            renderFavoritesDrawerItems(favoritesCache);
+        }
+    });
 
     // — Close mobile menu when selecting a nav link —
     document.querySelectorAll('.header-menu-panel .nav-link').forEach(function (link) {
@@ -1230,7 +1451,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // — Add-to-cart (delegated) —
+    // — Favorites drawer remove button (delegated) —
+    // El resto de manejadores de carrito se delega a clients-page.js cuando esa
+    // entrada de Vite también se carga (catalog/cart/product/home). Si solo se
+    // carga clients-users.js (login/register/recovery/profile) no hay UI de
+    // carrito, por lo que omitimos los listeners para evitar doble ejecución.
+    document.addEventListener('click', function (e) {
+        var favoriteRemoveBtn = e.target.closest('[data-favorite-remove-btn]');
+        if (favoriteRemoveBtn) {
+            e.preventDefault();
+            toggleFavoriteFromDrawer(favoriteRemoveBtn.getAttribute('data-product-id'));
+        }
+    });
+
+    // — Cart UI listeners (only when clients-page.js is NOT loaded on this page) —
+    // Pages that render cart UI (cart, catalog, product, home) load clients-page.js,
+    // which already binds these handlers. Avoid double-binding here.
+    if (!window.__cf4ClientPageJsLoaded) {
     document.addEventListener('click', function (e) {
         var addBtn = e.target.closest('.add-to-cart-btn');
         if (addBtn) {
@@ -1464,8 +1701,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var proceedBtn = document.getElementById('proceed-checkout');
     if (proceedBtn) {
         proceedBtn.addEventListener('click', function () {
+            var chosenMethodPreview = getCheckoutPaymentMethodFallback();
             Swal.fire({
-                title: '¿Confirmar compra?',
+                title: '¿Confirmar pedido con pago por '
+                    + getCf4PaymentMethodShortLabel(chosenMethodPreview) + '?',
                 text: 'Se enviará tu pedido para retiro en tienda.',
                 icon: 'question',
                 showCancelButton: true,
@@ -1484,7 +1723,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         'X-CSRF-TOKEN': getCsrfToken(),
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    },
+                    body: JSON.stringify({ payment_method: getCheckoutPaymentMethodFallback() })
                 })
                     .then(function (res) { return res.json(); })
                     .then(function (data) {
@@ -1502,9 +1742,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         updateCartCount(0);
                         showCartEmptyState();
+                        var paidWith = (data && data.payment_method)
+                            ? data.payment_method
+                            : getCheckoutPaymentMethodFallback();
                         Swal.fire({
                             icon: 'success',
-                            text: 'Su pedido fue enviado con éxito. Tiene un lapso de 3 días para retirarlo en nuestro local. El pago se realiza de forma presencial mediante SINPE, efectivo o tarjeta.',
+                            title: '¡Pedido confirmado!',
+                            text: buildCf4CheckoutSuccessText(paidWith),
                             confirmButtonText: 'Entendido'
                         });
                     })
@@ -1517,11 +1761,13 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+    } // end if (!window.__cf4ClientPageJsLoaded)
 
     // — ESC closes all modals and dropdowns —
     document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
         setHeaderMenuOpen(false);
+        setFavoritesDrawerOpen(false);
         closeUserDropdown();
         closeLoginModal();
         document.querySelectorAll('.modal.active').forEach(function (modal) {

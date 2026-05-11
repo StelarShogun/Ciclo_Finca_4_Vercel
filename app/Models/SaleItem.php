@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $quantity
  * @property numeric-string|null $unit_price
  * @property numeric-string|null $total
+ * @property float|int|string|null $percentage
+ * @property float|int|string|null $total_revenue
+ * @property string|null $category_name
  * @property-read Product|null $product
  */
 class SaleItem extends Model

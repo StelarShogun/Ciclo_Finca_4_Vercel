@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AppSetting;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Supplier;
-use App\Services\Admin\ReportPdfFilename;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use App\Services\Admin\AdminPdfExportService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
@@ -25,6 +26,11 @@ class DashboardController extends Controller
 
         try {
             $data = $this->gatherDashboardData();
+
+            $data['weeklyReportDay'] = AppSetting::getWeeklyReportDay();
+            $data['weeklyReportHour'] = AppSetting::getWeeklyReportHour();
+            $data['weeklyReportMinute'] = AppSetting::getWeeklyReportMinute();
+            $data['weeklyReportRecipients'] = AppSetting::getWeeklyReportRecipients();
 
             return view('admin.dashboard', $data);
 
@@ -193,9 +199,11 @@ class DashboardController extends Controller
                     'generatedFor' => 'Administración',
                 ]);
 
-                $pdf = PDF::loadView('admin.exports.dashboard-pdf', $pdfData);
-
-                return $pdf->download(ReportPdfFilename::make('dashboard'));
+                return app(AdminPdfExportService::class)->download(
+                    'admin.exports.dashboard-pdf',
+                    $pdfData,
+                    'dashboard'
+                );
             }
 
             if ($format === 'excel') {
@@ -208,7 +216,7 @@ class DashboardController extends Controller
             ], 400);
 
         } catch (\Exception $e) {
-            \Log::error('Error al exportar dashboard: '.$e->getMessage(), [
+            Log::error('Error al exportar dashboard: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
 
@@ -239,7 +247,7 @@ class DashboardController extends Controller
 
         if (config('app.debug')) {
             $categoriasExistentes = Category::count();
-            \Log::debug("Categorías en DB: {$categoriasExistentes}");
+            Log::debug("Categorías en DB: {$categoriasExistentes}");
         }
 
         $totalProducts = Product::count();

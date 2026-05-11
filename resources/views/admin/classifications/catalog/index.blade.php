@@ -24,13 +24,19 @@
             <div class="form-card">
                 <div class="form-body">
                     @if ($subcategories->isEmpty())
-                        <p>Todavía no hay tipos de producto. Creá uno en <a href="{{ route('categories.subcategories.create') }}">categorías</a>.</p>
+                        <x-admin-alert
+                            type="info"
+                            title="No hay registros disponibles para mostrar."
+                            dismissible
+                        >
+                            Todavía no hay tipos de producto. Creá uno en <a href="{{ route('categories.subcategories.create') }}">categorías</a>.
+                        </x-admin-alert>
                     @else
                         <table style="width:100%; border-collapse:collapse;">
                             <thead>
                                 <tr style="border-bottom:2px solid #e5e7eb; text-align:left;">
-                                    <th style="padding:0.75rem;">Tipo de producto</th>
-                                    <th style="padding:0.75rem;">Rubro</th>
+                                    <th style="padding:0.75rem;">Categoría</th>
+                                    <th style="padding:0.75rem;">Subcategoría</th>
                                     <th style="padding:0.75rem;">Atributos definidos</th>
                                     <th style="padding:0.75rem;"></th>
                                 </tr>
@@ -38,8 +44,8 @@
                             <tbody>
                                 @foreach ($subcategories as $sub)
                                     <tr style="border-bottom:1px solid #f3f4f6;">
-                                        <td style="padding:0.75rem;">{{ $sub->name }}</td>
                                         <td style="padding:0.75rem;">{{ optional($sub->parent)->name ?? '—' }}</td>
+                                        <td style="padding:0.75rem;">{{ $sub->name }}</td>
                                         <td style="padding:0.75rem;">{{ $sub->classification_dimensions_count }}</td>
                                         <td style="padding:0.75rem;">
                                             <a href="{{ route('admin.classifications.catalog.show', $sub) }}" class="btn btn-primary" style="display:inline-flex; padding:0.35rem 0.75rem; text-decoration:none; border-radius:6px;">

@@ -22,6 +22,14 @@
 
 <body class="admin-layout">
 
+    @php
+        $lowStockCardActive = request('stock_status') === 'low';
+        $lowStockCardUrl = $lowStockCardActive
+            ? route('inventory')
+            : route('inventory', ['stock_status' => 'low']);
+        $lowStockCardCta = $lowStockCardActive ? 'Ver todo' : 'Abrir inventario filtrado';
+    @endphp
+
     {{-- Sidebar navigation --}}
     @include('admin.parts.aside')
 
@@ -38,9 +46,9 @@
                     <button class="btn btn-primary" id="open-new-product-modal">
                         <i class="fas fa-plus"></i> Nuevo Producto
                     </button>
-                    <a class="btn btn-secondary" href="{{ route('admin.reports.exports') }}{{ $inventoryExportsQuery }}" title="Abre el centro de exportación; las descargas de inventario respetan los filtros aplicados en esta pantalla">
-                        <i class="fas fa-file-export"></i>
-                        Exportar datos
+                    <a class="btn btn-secondary" href="{{ route('categories.parents.create') }}">
+                        <i class="fas fa-layer-group"></i>
+                        Crear categoría
                     </a>
                     <a class="btn btn-secondary" href="{{ route('categories.subcategories.create') }}">
                         <i class="fas fa-sitemap"></i>
@@ -51,6 +59,19 @@
                     </button>
                 </div>
             </header>
+
+            <section class="inventory-kpi-grid" aria-label="Resumen de inventario">
+                <a class="inventory-kpi-card" href="{{ $lowStockCardUrl }}">
+                    <div class="inventory-kpi-card-head">
+                        <h3>Stock bajo</h3>
+                        <i class="fas fa-box-open" aria-hidden="true"></i>
+                    </div>
+                    <p class="inventory-kpi-card-value">{{ number_format((int) ($lowStockProductsCount ?? 0), 0, ',', '.') }}</p>
+                    <span class="inventory-kpi-card-link {{ $lowStockCardActive ? 'inventory-kpi-card-link--reset' : '' }}">
+                        {{ $lowStockCardCta }}
+                    </span>
+                </a>
+            </section>
 
             {{-- Flash messages --}}
             @if(session('status'))
@@ -71,9 +92,9 @@
                     <div class="filters-grid">
 
                         <div class="filter-group">
-                            <label for="parent-category-filter">Rubro</label>
+                            <label for="parent-category-filter">Categoría</label>
                             <select id="parent-category-filter" name="parent_category_id">
-                                <option value="">Todos los rubros</option>
+                                <option value="">Todas las categorías</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}"
                                         @selected((string) request('parent_category_id') === (string) $category->category_id)>
@@ -84,7 +105,7 @@
                         </div>
 
                         <div class="filter-group">
-                            <label for="subcategory-filter">Tipo de producto</label>
+                            <label for="subcategory-filter">Subcategoría</label>
                             <select id="subcategory-filter" name="subcategory_id" data-selected="{{ request('subcategory_id') }}">
                                 <option value="">Todos los tipos</option>
                             </select>
@@ -128,6 +149,51 @@
                             </button>
                         </div>
 
+                        <div class="filter-group filter-group--classification">
+                            <button
+                                type="button"
+                                class="btn btn-primary btn-classification-toggle"
+                                id="toggle-classification-filters"
+                                aria-expanded="{{ ($hasClassificationSelections ?? false) ? 'true' : 'false' }}"
+                                aria-controls="classification-filters-panel">
+                                <i class="fas fa-sliders-h"></i>
+                                Más filtros por clasificación
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="classification-filters-panel"
+                        class="classification-filters-panel{{ ($hasClassificationSelections ?? false) ? ' is-open' : '' }}"
+                        @unless($hasClassificationSelections ?? false) hidden @endunless>
+                        <div
+                            id="classification-filters-container"
+                            class="classification-filters-grid"
+                            data-endpoint="{{ route('inventory.classification-filters') }}"
+                            data-loaded="{{ !empty($classificationFilters) ? '1' : '0' }}">
+                            @foreach(($classificationFilters ?? []) as $classificationFilter)
+                                @php
+                                    $slug = (string) ($classificationFilter['slug'] ?? '');
+                                    $label = (string) ($classificationFilter['label'] ?? $slug);
+                                    $options = $classificationFilter['options'] ?? [];
+                                @endphp
+                                @if($slug !== '')
+                                    <div class="filter-group">
+                                        <label for="classification-filter-{{ $slug }}">{{ $label }}</label>
+                                        <select id="classification-filter-{{ $slug }}" name="classifications[{{ $slug }}]">
+                                            <option value="">Todos</option>
+                                            @foreach($options as $option)
+                                                <option value="{{ $option['value'] }}"
+                                                    @selected((string) request("classifications.$slug") === (string) $option['value'])>
+                                                    {{ $option['label'] }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
                     </div>
                 </form>
             </div>
@@ -155,6 +221,21 @@
                     </div>
                 </div>
 
+                @php
+                    $classificationRequestFilters = collect(request('classifications', []))
+                        ->filter(fn ($value) => is_string($value) && trim($value) !== '');
+                @endphp
+                @if($paginator->total() === 0)
+                    <div class="alert alert-info" style="margin: 16px 0;">
+                        <i class="fas fa-info-circle"></i>
+                        @if($classificationRequestFilters->isNotEmpty())
+                            No hay productos para la combinación de clasificaciones seleccionada.
+                        @else
+                            No hay productos que coincidan con los filtros aplicados.
+                        @endif
+                    </div>
+                @endif
+
                 {{-- Table view --}}
                 <div class="products-table table-view active">
                     <table>
@@ -174,6 +255,7 @@
                                 @php $adminAv = $product->adminAvailabilityLabel(); @endphp
                                 <tr>
                                     <td class="product-cell">
+                                        <div class="product-cell-content">
                                         <div class="product-thumb-wrap product-thumb-wrap--table">
                                             {{-- MediaLibrary image with legacy fallback --}}
                                             <img src="{{ $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
@@ -190,7 +272,8 @@
                                         </div>
                                         <div class="product-info">
                                             <h4>{{ $product->name }}</h4>
-                                            <span class="sku">SKU: {{ 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT) }}</span>
+                                            <span class="sku">SKU: {{ $product->displaySku() }}</span>
+                                        </div>
                                         </div>
                                     </td>
                                     <td>
@@ -289,7 +372,7 @@
                                     </div>
                                     <div class="product-card-info">
                                         <h4>{{ $product->name }}</h4>
-                                        <span class="sku">SKU: {{ 'BK-' . str_pad($product->product_id, 3, '0', STR_PAD_LEFT) }}</span>
+                                        <span class="sku">SKU: {{ $product->displaySku() }}</span>
                                     </div>
                                 </div>
                                 <div class="product-card-details">
@@ -430,20 +513,24 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-parent-category">Rubro *</label>
+                            <label for="new-parent-category">Categoría *</label>
                             <select id="new-parent-category" required>
-                                <option value="">Seleccionar rubro</option>
+                                <option value="">Seleccionar categoría</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="new-subcategory">Tipo concreto <span class="text-muted">(recomendado)</span></label>
+                            <label for="new-subcategory">Subcategoría <span class="text-muted">(recomendado)</span></label>
                             <select id="new-subcategory" aria-describedby="new-subcategory-hint">
-                                <option value="">Solo el rubro general</option>
+                                <option value="">Seleccioná primero una categoría</option>
                             </select>
-                            <small id="new-subcategory-hint" class="form-text text-muted">Si dejás solo el rubro (ej. Bicicletas), no vas a poder cargar color, talla, etc. Elegí el tipo (ej. MTB) para usar esas opciones.</small>
+                            <small id="new-subcategory-hint" class="form-text text-muted"
+                                data-default-hint="Si no elegís subcategoría (ej. solo «Bicicletas»), no vas a poder cargar color, talla, etc. Elegí una subcategoría (ej. MTB) cuando exista.">
+                                Elegí categoría y, si aplica, subcategoría. Sin subcategoría no podrás usar atributos como color o talla hasta que existan en catálogo.
+                            </small>
+                            <input type="hidden" id="new-parent-category-id" name="parent_category_id" value="">
                             <input type="hidden" id="new-category" name="category_id" value="">
                         </div>
                         <div class="form-group">
@@ -502,18 +589,19 @@
                         </select>
                     </div>
                     <div class="form-group" id="new-classification-section">
-                        <label>Atributos (color, talla…)</label>
-                        <div id="new-classification-fields"></div>
-                        <small class="form-text text-muted">Un valor por atributo. Aparece cuando elegís subcategoría y cargaste atributos en «Opciones por tipo».</small>
+                        <label id="new-classification-heading">Atributos (color, talla…)</label>
+                        <div id="new-classification-fields" aria-labelledby="new-classification-heading"></div>
+                        <small class="form-text text-muted classification-section-hint">Un valor por atributo cuando el producto tiene subcategoría.</small>
                     </div>
                     <div class="form-group form-group-featured">
-                        <label class="featured-checkbox-label" for="new-featured">
-                            <input type="checkbox" id="new-featured" value="1">
-                            <span class="featured-checkbox-text">
-                                <span class="featured-checkbox-title">Destacado en tienda</span>
-                                <small>Se muestra en el inicio y en «Destacados y novedades» del catálogo público.</small>
-                            </span>
-                        </label>
+                        <div class="featured-store-toggle">
+                            <input type="checkbox" id="new-featured" class="featured-store-toggle__input" value="1"
+                                   aria-describedby="new-featured-desc">
+                            <label for="new-featured" class="featured-store-toggle__copy">
+                                <span class="featured-store-toggle__title">Destacado en tienda</span>
+                                <small id="new-featured-desc" class="featured-store-toggle__desc">Se muestra en el inicio y en «Destacados y novedades» del catálogo público.</small>
+                            </label>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -565,19 +653,24 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="edit-parent-category">Rubro *</label>
+                            <label for="edit-parent-category">Categoría *</label>
                             <select id="edit-parent-category" required>
-                                <option value="">Seleccionar rubro</option>
+                                <option value="">Seleccionar categoría</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="edit-subcategory">Tipo concreto <span class="text-muted">(recomendado)</span></label>
-                            <select id="edit-subcategory">
-                                <option value="">Solo el rubro general</option>
+                            <label for="edit-subcategory">Subcategoría <span class="text-muted">(recomendado)</span></label>
+                            <select id="edit-subcategory" aria-describedby="edit-subcategory-hint">
+                                <option value="">Seleccioná primero una categoría</option>
                             </select>
+                            <small id="edit-subcategory-hint" class="form-text text-muted"
+                                data-default-hint="Si no elegís subcategoría (ej. solo «Bicicletas»), no vas a poder cargar color, talla, etc. Elegí una subcategoría (ej. MTB) cuando exista.">
+                                Elegí categoría y, si aplica, subcategoría. Sin subcategoría no podrás usar atributos como color o talla hasta que existan en catálogo.
+                            </small>
+                            <input type="hidden" id="edit-parent-category-id" name="parent_category_id" value="">
                             <input type="hidden" id="edit-category" name="category_id" required>
                         </div>
                         <div class="form-group">
@@ -632,24 +725,92 @@
                         </select>
                     </div>
                     <div class="form-group" id="edit-classification-section">
-                        <label>Atributos (color, talla…)</label>
-                        <div id="edit-classification-fields"></div>
-                        <small class="form-text text-muted">Un valor por atributo. Visible si el producto tiene subcategoría y atributos en «Opciones por tipo».</small>
+                        <label id="edit-classification-heading">Atributos (color, talla…)</label>
+                        <div id="edit-classification-fields" aria-labelledby="edit-classification-heading"></div>
+                        <small class="form-text text-muted classification-section-hint">Un valor por atributo cuando el producto tiene subcategoría.</small>
                     </div>
                     <div class="form-group form-group-featured">
-                        <label class="featured-checkbox-label" for="edit-featured">
-                            <input type="checkbox" id="edit-featured" value="1">
-                            <span class="featured-checkbox-text">
-                                <span class="featured-checkbox-title">Destacado en tienda</span>
-                                <small>Se muestra en el inicio y en «Destacados y novedades» del catálogo público.</small>
-                            </span>
-                        </label>
+                        <div class="featured-store-toggle">
+                            <input type="checkbox" id="edit-featured" class="featured-store-toggle__input" value="1"
+                                   aria-describedby="edit-featured-desc">
+                            <label for="edit-featured" class="featured-store-toggle__copy">
+                                <span class="featured-store-toggle__title">Destacado en tienda</span>
+                                <small id="edit-featured-desc" class="featured-store-toggle__desc">Se muestra en el inicio y en «Destacados y novedades» del catálogo público.</small>
+                            </label>
+                        </div>
+                    </div>
+
+                    {{-- CF4-74 — Variantes / presentaciones del producto --}}
+                    <div class="form-group" id="edit-variants-section">
+                        <label>Variantes / presentaciones</label>
+                        <div style="display:flex; gap:10px; align-items:flex-start; margin: 0.35rem 0 0.5rem;">
+                            <div class="brand-combobox" id="edit-variant-combobox" style="flex:1;">
+                                <input
+                                    type="text"
+                                    id="edit-variant-search"
+                                    class="brand-combobox-input"
+                                    placeholder="Buscar producto para agregar como variante (nombre o SKU)…"
+                                    autocomplete="off"
+                                    aria-label="Buscar producto para agregar como variante">
+                                <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                <div class="brand-combobox-dropdown" id="edit-variant-dropdown"></div>
+                            </div>
+                            <input type="hidden" id="edit-variant-product-id" value="">
+                            <button type="button" class="btn btn-primary" id="edit-variant-add-btn" disabled>
+                                <i class="fas fa-plus"></i> Agregar
+                            </button>
+                        </div>
+                        <div id="edit-variants-list" class="form-text text-muted">—</div>
+                        <small class="form-text text-muted">
+                            Eliminá solo una variante sin afectar el producto base. No se permite si la variante tiene pedidos activos o pendientes.
+                        </small>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="cancel-edit">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="save-edit">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- CF4-72 — Editar variante (precio, stock, SKU condicional) --}}
+    <div class="edit-modal" id="variant-edit-modal" aria-hidden="true">
+        <div class="modal-backdrop" id="variant-edit-modal-backdrop"></div>
+        <div class="modal-content modal-auto-size">
+            <div class="modal-header">
+                <h3><i class="fas fa-layer-group"></i> Editar variante</h3>
+                <button type="button" class="modal-close" id="variant-edit-modal-close" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted" style="margin-bottom: 1rem;" id="variant-edit-variant-title"></p>
+                <div class="form-group">
+                    <label for="variant-edit-sku-input">SKU</label>
+                    <input type="text" id="variant-edit-sku-input" class="form-control" maxlength="64" autocomplete="off">
+                    <small class="form-text text-muted" id="variant-edit-sku-hint-default"></small>
+                    <small class="form-text text-warning" id="variant-edit-sku-locked-msg" style="display:none;">
+                        SKU bloqueado por historial de ventas.
+                    </small>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="variant-edit-sale-price">Precio de venta (₡) *</label>
+                        <input type="number" id="variant-edit-sale-price" class="form-control" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="variant-edit-stock">Stock actual *</label>
+                        <input type="number" id="variant-edit-stock" class="form-control" min="0" step="1" required>
+                    </div>
+                </div>
+                <input type="hidden" id="variant-edit-base-id" value="">
+                <input type="hidden" id="variant-edit-variant-id" value="">
+                <input type="hidden" id="variant-edit-sku-locked" value="0">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="variant-edit-cancel-btn">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="variant-edit-save-btn">Guardar variante</button>
             </div>
         </div>
     </div>
@@ -847,12 +1008,12 @@
                 {{-- Reason --}}
                 <div class="stock-form-group">
                     <label for="stock-modal-reason">Motivo *</label>
-                    <select id="stock-modal-reason">
-                        <option value="" disabled selected>Selecciona un motivo…</option>
-                        <option value="manual_adjustment">Ajuste Manual</option>
-                        <option value="damage">Daño</option>
-                        <option value="refund">Entrada por reembolso / nota de crédito</option>
-                    </select>
+                    <input type="text"
+                           id="stock-modal-reason"
+                           class="stock-form-control"
+                           placeholder="Describe el motivo del ajuste…"
+                           maxlength="500"
+                           autocomplete="off">
                     <span class="stock-field-error" id="stock-modal-reason-error"></span>
                 </div>
 

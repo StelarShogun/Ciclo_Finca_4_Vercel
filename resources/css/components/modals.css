@@ -6,25 +6,31 @@
 .edit-modal {
   display: none;
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
+  max-height: 100dvh;
   z-index: 2000;
-  padding: 20px;
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
   box-sizing: border-box;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .modal-overlay {
   display: none;
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
+  max-height: 100dvh;
   z-index: 2000;
-  padding: 20px;
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
   box-sizing: border-box;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .modal-overlay.active,
@@ -36,11 +42,11 @@
 
 .modal-backdrop {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
+  z-index: 0;
   cursor: pointer;
 }
 
@@ -52,8 +58,12 @@
   width: fit-content !important;
   min-width: 400px;
   max-width: min(90vw, 900px) !important;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-height: min(90vh, 100dvh - 2rem);
+  /* Single vertical scroll: only .modal-body scrolls (avoid nested scroll). */
+  min-height: 0;
+  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
   box-shadow: var(--shadow-heavy);
   display: flex;
   flex-direction: column;
@@ -61,14 +71,14 @@
   animation: modalSlideIn 0.3s ease;
 }
 
-/* Modales que se adaptan autom√°ticamente al contenido */
+/* Modales que se adaptan autom?ticamente al contenido */
 .modal-content.modal-auto-size {
   width: fit-content !important;
   min-width: 400px;
   max-width: min(90vw, 900px) !important;
 }
 
-/* Excepci√≥n: modal de importaci√≥n NO debe usar el max-width limitado */
+/* Excepci?n: modal de importaci?n NO debe usar el max-width limitado */
 #import-modal .modal-content.modal-auto-size {
   max-width: min(95vw, 1000px) !important;
   min-width: 800px !important;
@@ -120,10 +130,19 @@
 /* ===== BODY DEL MODAL ===== */
 .modal-body {
   padding: 1.5rem;
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-body > form {
+  min-height: 0;
+  overflow: visible;
 }
 
 /* ===== FOOTER DEL MODAL ===== */
@@ -136,7 +155,7 @@
   flex-shrink: 0;
 }
 
-/* ===== TAMA√ˇOS ESPEC√ˇFICOS POR MODAL ===== */
+/* ===== TAMAˇˇOS ESPECˇˇFICOS POR MODAL ===== */
 /* Modales de productos */
 #new-product-modal .modal-content,
 #edit-modal .modal-content {
@@ -151,21 +170,21 @@
   max-width: min(90vw, 700px) !important;
 }
 
-/* Modales de importaci√≥n/exportaci√≥n */
+/* Modales de importaci?n/exportaci?n */
 #import-modal .modal-content {
   min-width: 800px !important;
   width: fit-content !important;
   max-width: min(95vw, 1000px) !important; 
 }
 
-/* Sobrescribir modal-auto-size para el modal de importaci√≥n */
+/* Sobrescribir modal-auto-size para el modal de importaci?n */
 #import-modal .modal-content.modal-auto-size {
   min-width: 800px !important;
   width: fit-content !important;
   max-width: min(95vw, 1000px) !important;
 }
 
-/* Ajustar padding del body del modal de importaci√≥n para mejor distribuci√≥n */
+/* Ajustar padding del body del modal de importaci?n para mejor distribuci?n */
 #import-modal .modal-body {
   padding: 1.5rem 2rem;
 }
@@ -250,7 +269,7 @@
     margin: 1rem;
   }
 
-  /* Modal de importaci√≥n mantiene m√°s ancho incluso en m√≥viles */
+  /* Modal de importaci?n mantiene m?s ancho incluso en m?viles */
   #import-modal .modal-content,
   #import-modal .modal-content.modal-auto-size {
     min-width: 95vw !important;

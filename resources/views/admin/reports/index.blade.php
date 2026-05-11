@@ -22,7 +22,7 @@
                 <div class="report-card-icon"><i class="fas fa-file-export"></i></div>
                 <div class="report-card-body">
                     <h2>Exportar datos</h2>
-                    <p>Descargas centralizadas: PDF y CSV, EXCEL, XML o JSON de inventario y ventas, más proveedores, marcas, pedidos a proveedores, usuarios y encargos.</p>
+                    <p>Descargas centralizadas: PDF, Excel y XML de inventario y ventas, más proveedores, marcas, pedidos a proveedores, usuarios y encargos.</p>
                 </div>
                 <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
             </a>
@@ -47,6 +47,14 @@
                 <div class="report-card-body">
                     <h2>Productos más vendidos</h2>
                     <p>Consulta cuánto se vendió de cada producto y cuánto ingresó. Busca por nombre o código y descubre cuáles son los favoritos.</p>
+                </div>
+                <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
+            </a>
+            <a href="{{ route('admin.reports.catalog-search-products', ['period' => '30d']) }}" class="report-card">
+                <div class="report-card-icon"><i class="fas fa-search"></i></div>
+                <div class="report-card-body">
+                    <h2>Productos más buscados</h2>
+                    <p>Ranking según apariciones en el catálogo cuando los clientes buscan por texto (últimos 7, 30 o 90 días).</p>
                 </div>
                 <span class="report-card-arrow"><i class="fas fa-arrow-right"></i></span>
             </a>

@@ -2,6 +2,7 @@
 @import "../utilities.css";
 @import "../sidebar.css";
 @import "../components/pagination.css";
+@import "./catalog-most-searched-report.css";
 
 /* ════════════════════════════════════════════════════════════════════════════
    reports-hub.css
@@ -9,6 +10,7 @@
      · Hub principal (reports-hub)
      · Índice de movimientos de inventario (inv-index)
      · Detalle de movimientos de inventario (inventory-movements)
+     · CF4-108 — Productos más buscados en catálogo (import en cabecera)
    ════════════════════════════════════════════════════════════════════════════ */
 
 

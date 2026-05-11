@@ -49,7 +49,7 @@ class UpdateProductClassificationsRequest extends FormRequest
             $product->loadMissing('category');
             $category = $product->category;
             if (! $category || $category->parent_category_id === null) {
-                $validator->errors()->add('classification_value_ids', 'El producto debe estar en un tipo concreto del catálogo (no solo en el rubro general).');
+                $validator->errors()->add('classification_value_ids', 'El producto debe estar en un tipo concreto del catálogo (no solo en la categoría padre).');
 
                 return;
             }

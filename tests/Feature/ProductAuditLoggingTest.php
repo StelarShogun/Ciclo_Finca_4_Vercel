@@ -78,6 +78,7 @@ class ProductAuditLoggingTest extends TestCase
 
         $payload = [
             'category_id' => $category->category_id,
+            'parent_category_id' => $category->category_id,
             'supplier_id' => $supplier->supplier_id,
             'brand_id' => $brand->id,
             'name' => 'Producto Editado QA',
@@ -109,4 +110,3 @@ class ProductAuditLoggingTest extends TestCase
         $this->assertSame('Producto Editado QA', $log->meta['changes']['name']['to'] ?? null);
     }
 }
-

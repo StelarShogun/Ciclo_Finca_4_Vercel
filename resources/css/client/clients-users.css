@@ -1286,6 +1286,24 @@ body.guest-layout {
     background: rgba(0, 0, 0, 0.025);
 }
 
+.cf4-notification-message {
+    margin: 0;
+}
+
+.cf4-notification-action {
+    margin-top: 8px;
+}
+
+.cf4-notification-action a {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.cf4-notification-action a:hover {
+    text-decoration: underline;
+}
+
 /* ── Invoice number sub-line ── */
 .cf4-invoice-number {
     font-size: 0.83rem;

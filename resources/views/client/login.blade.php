@@ -30,7 +30,7 @@
         @endif
 
         {{-- Show success message (e.g. after password reset) --}}
-        @if (session('status'))
+        @if (session('status') && !session('recovery_success_modal'))
             <div class="alert alert-success mb-3" role="alert">
                 <i class="fas fa-check-circle"></i>
                 {{ session('status') }}
@@ -129,4 +129,20 @@
     {{-- reCAPTCHA script loaded async to avoid blocking render --}}
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     @vite(['resources/js/client/clients-users.js'])
+    @if (session('recovery_success_modal'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Contraseña actualizada',
+                    text: @json(session('recovery_success_modal')),
+                    confirmButtonText: 'Aceptar',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then(function () {
+                    window.location.href = @json(route('login.show'));
+                });
+            });
+        </script>
+    @endif
 @endpush

@@ -6,6 +6,9 @@ use App\Enums\MovementType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property-read AdminUser|null $adminUser
+ */
 // Eloquent model for the inventory_movements table.
 class InventoryMovement extends Model
 {
@@ -21,6 +24,7 @@ class InventoryMovement extends Model
         'stock_before',
         'stock_after',
         'reference_id',
+        'reason',
     ];
 
     // Attribute casting for enum, numeric, and timestamp fields.
@@ -68,11 +72,10 @@ class InventoryMovement extends Model
         return match ($this->origin) {
             'sale_admin' => 'Venta (admin)',
             'sale_web' => 'Venta web',
-            'return' => 'Devolución de venta o cancelación',
+            'return' => 'Devolución de venta',
+            'cancellation' => 'Cancelación de encargo',
             'provider' => 'Entrada de proveedor',
             'manual_adjustment' => 'Ajuste manual',
-            'damage' => 'Daño / Merma',
-            'refund' => 'Entrada manual (reembolso / nota de crédito)',
             default => ucwords(str_replace('_', ' ', $this->origin)),
         };
     }

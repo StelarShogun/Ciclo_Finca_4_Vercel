@@ -1,0 +1,60 @@
+# Automated checks when code lands on Dev (push after merge) or on PRs targeting Dev.
+# For mandatory human review before merge, enable branch protection (see repository Settings).
+
+name: CI — Dev
+
+on:
+  push:
+    branches:
+      - Dev
+  pull_request:
+    branches:
+      - Dev
+  workflow_dispatch:
+
+concurrency:
+  group: ci-dev-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Lint, tests, static analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, dom, fileinfo, openssl, pdo, sqlite, pdo_sqlite, tokenizer, xml, ctype, json, bcmath, curl, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
+
+      - name: Prepare Laravel environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+
+      - name: Pint (code style)
+        run: composer run lint
+
+      - name: PHPUnit
+        run: composer run test
+
+      - name: PHPStan
+        run: composer run phpstan

@@ -15,7 +15,14 @@ function esc(text) {
 function buildSaleDetailHtml(sale) {
     const fecha = new Date(sale.sale_date).toLocaleString('es-CR');
     const items = sale.sale_items || sale.saleItems || [];
-    const statusLabels = { pending: 'Pendiente', completed: 'Confirmado', cancelled: 'Rechazado', refunded: 'Reembolsado' };
+    const statusLabels = {
+        pending: 'Pendiente',
+        ready_to_pickup: 'Por recoger',
+        completed: 'Confirmado',
+        cancelled: 'Rechazado',
+        refunded: 'Reembolsado',
+        returned: 'Devuelta',
+    };
     const paymentLabels = { cash: 'Efectivo', sinpe: 'SINPE móvil', transfer: 'Transferencia' };
 
     let customerName = 'Mostrador / sin datos';
@@ -43,14 +50,29 @@ function buildSaleDetailHtml(sale) {
         })
         .join('');
 
-    const daysLeft = sale.days_remaining_until_expiration;
-    let expiryBadge = '—';
-    if (typeof daysLeft !== 'undefined' && daysLeft <= 0) {
-        expiryBadge = '<span class="expiry-badge expiry-expired">Expirado</span>';
-    } else if (sale.is_expiry_warning) {
-        expiryBadge = `<span class="expiry-badge expiry-warning">${esc(String(daysLeft))} día(s)</span>`;
-    } else if (typeof daysLeft !== 'undefined') {
-        expiryBadge = esc(String(daysLeft)) + ' día(s)';
+    // Expiration badge — same convention as the main sales modal:
+    // - ready_to_pickup uses the new pickup_time_remaining_label (72h from ready_at).
+    // - completed sales no longer expire, render an em dash.
+    // - other statuses keep the legacy 30-day countdown from sale_date.
+    let expiryBadge = '<span class="text-muted">—</span>';
+    if (sale.status === 'ready_to_pickup') {
+        const pickupLabel = (sale.pickup_time_remaining_label || '').trim();
+        if (sale.is_pickup_expired || pickupLabel === 'Vencido') {
+            expiryBadge = '<span class="expiry-badge expiry-expired"><i class="fas fa-clock"></i> Vencido</span>';
+        } else if (pickupLabel !== '') {
+            expiryBadge = `<span class="expiry-badge expiry-ok">${esc(pickupLabel)}</span>`;
+        }
+    } else if (sale.status === 'completed') {
+        expiryBadge = '<span class="text-muted">—</span>';
+    } else {
+        const daysLeft = sale.days_remaining_until_expiration;
+        if (typeof daysLeft !== 'undefined' && daysLeft <= 0) {
+            expiryBadge = '<span class="expiry-badge expiry-expired">Expirado</span>';
+        } else if (sale.is_expiry_warning) {
+            expiryBadge = `<span class="expiry-badge expiry-warning">${esc(String(daysLeft))} día(s)</span>`;
+        } else if (typeof daysLeft !== 'undefined') {
+            expiryBadge = esc(String(daysLeft)) + ' día(s)';
+        }
     }
 
     const refBlock =

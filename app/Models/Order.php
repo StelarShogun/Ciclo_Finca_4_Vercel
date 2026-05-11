@@ -2,10 +2,30 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $num_order
+ * @property int|null $supplier_id
+ * @property string|null $po_number
+ * @property string $state
+ * @property Carbon|null $date
+ * @property Carbon|null $estimated_delivery_date
+ * @property Carbon|null $received_at
+ * @property Carbon|null $delivered_at
+ * @property Carbon|null $confirmed_at
+ * @property int|null $confirmed_by
+ * @property float|int|string $total
+ * @property bool $closed_with_shorts
+ * @property-read Supplier|null $supplier
+ * @property-read Collection<int, OrderItem> $orderItems
+ * @property-read Collection<int, OrderStateTimeline> $stateTimeline
+ * @property-read AdminUser|null $confirmedBy
+ */
 class Order extends Model
 {
     protected $table = 'orders';
@@ -27,12 +47,12 @@ class Order extends Model
     ];
 
     protected $casts = [
-        'date'                    => 'datetime',
+        'date' => 'datetime',
         'estimated_delivery_date' => 'date',
-        'received_at'             => 'datetime',
-        'delivered_at'            => 'datetime',
-        'confirmed_at'            => 'datetime',
-        'closed_with_shorts'      => 'boolean',
+        'received_at' => 'datetime',
+        'delivered_at' => 'datetime',
+        'confirmed_at' => 'datetime',
+        'closed_with_shorts' => 'boolean',
     ];
 
     /**
@@ -49,19 +69,19 @@ class Order extends Model
      * y el controller lo interceda antes de persistir el estado real.
      */
     public const TRANSITIONS = [
-        'draft'            => ['confirmed', 'cancelled'],
-        'pending'          => ['confirmed', 'cancelled'],
-        'confirmed'        => ['partial_received', 'delivered', 'cancelled'],
+        'draft' => ['confirmed', 'cancelled'],
+        'pending' => ['confirmed', 'cancelled'],
+        'confirmed' => ['partial_received', 'delivered', 'cancelled'],
         'partial_received' => ['delivered', 'cancelled'],
     ];
 
     public const STATE_LABELS = [
-        'draft'            => 'Borrador',
-        'pending'          => 'Pendiente',
-        'confirmed'        => 'Confirmado',
+        'draft' => 'Borrador',
+        'pending' => 'Pendiente',
+        'confirmed' => 'Confirmado',
         'partial_received' => 'Recepción parcial',
-        'delivered'        => 'Entregado',
-        'cancelled'        => 'Cancelado',
+        'delivered' => 'Entregado',
+        'cancelled' => 'Cancelado',
     ];
 
     /**

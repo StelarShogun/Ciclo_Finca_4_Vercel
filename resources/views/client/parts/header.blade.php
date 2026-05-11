@@ -49,7 +49,14 @@
                             $pendingInvoiceCount = \App\Models\Sale::where('client_id', auth('clients')->user()->user_id)
                                 ->where('status', 'pending')
                                 ->count();
+                            $unreadNotificationCount = auth('clients')->user()->unreadNotifications()->count();
+                            $notificationBadgeLabel = $unreadNotificationCount > 9 ? '9+' : (string) $unreadNotificationCount;
                         @endphp
+
+                        <button type="button" class="cf4-favorites-btn" id="favorites-open-btn"
+                            title="Mis favoritos" aria-label="Abrir favoritos">
+                            <i class="far fa-heart"></i>
+                        </button>
 
                         {{-- Cart button with item counter --}}
                         <a href="{{ route('clients.cart') }}" class="cart-btn cart-btn-link" id="cart-link"
@@ -73,9 +80,14 @@
                         <div class="user-menu-wrap" id="user-menu">
                             <button class="user-menu-trigger" id="user-menu-trigger" type="button" aria-expanded="false"
                                 aria-haspopup="true" title="Mi cuenta">
-                                <div class="user-avatar-bubble">
-                                    {{ strtoupper(substr(Auth::guard('clients')->user()->name, 0, 1)) }}{{ strtoupper(substr(Auth::guard('clients')->user()->first_surname, 0, 1)) }}
-                                </div>
+                                <span class="user-menu-trigger-avatar-wrap">
+                                    <span class="user-avatar-bubble">
+                                        {{ strtoupper(substr(Auth::guard('clients')->user()->name, 0, 1)) }}{{ strtoupper(substr(Auth::guard('clients')->user()->first_surname, 0, 1)) }}
+                                    </span>
+                                    @if($unreadNotificationCount > 0)
+                                        <span class="cf4-invoice-count user-menu-trigger-notification-badge" id="nav-notification-badge">{{ $notificationBadgeLabel }}</span>
+                                    @endif
+                                </span>
                                 <span class="user-trigger-name">
                                     {{ Auth::guard('clients')->user()->name }}
                                 </span>
@@ -93,6 +105,15 @@
                                     </p>
                                 </div>
                                 <div class="user-dropdown-body">
+                                    <a href="{{ route('clients.notifications') }}"
+                                        class="user-dropdown-item user-dropdown-item--with-badge {{ request()->routeIs('clients.notifications') ? 'active' : '' }}"
+                                        role="menuitem">
+                                        <i class="fas fa-bell"></i>
+                                        <span>Notificaciones</span>
+                                        @if($unreadNotificationCount > 0)
+                                            <span class="cf4-nav-badge cf4-nav-badge--inline">{{ $notificationBadgeLabel }}</span>
+                                        @endif
+                                    </a>
                                     <a href="{{ route('clients.profile') }}"
                                         class="user-dropdown-item {{ request()->routeIs('clients.profile') ? 'active' : '' }}"
                                         role="menuitem">
@@ -190,10 +211,65 @@
     </div>
 </header>
 
+@auth('clients')
+@php
+    $favoritesIndexUrl = \Illuminate\Support\Facades\Route::has('clients.favorites.index')
+        ? route('clients.favorites.index')
+        : url('/favorites');
+    $favoritesToggleUrl = \Illuminate\Support\Facades\Route::has('clients.favorites.toggle')
+        ? route('clients.favorites.toggle')
+        : url('/favorites/toggle');
+    $initialFavorites = \App\Models\FavoriteProduct::query()
+        ->with(['product.category'])
+        ->where('user_id', auth('clients')->id())
+        ->latest('id')
+        ->get()
+        ->filter(fn (\App\Models\FavoriteProduct $favorite) => $favorite->product !== null)
+        ->map(function (\App\Models\FavoriteProduct $favorite) {
+            $product = $favorite->product;
+
+            return [
+                'product_id' => (int) $product->product_id,
+                'name' => (string) $product->name,
+                'category' => (string) ($product->category->name ?? 'Sin categoría'),
+                'price' => (float) $product->sale_price,
+                'price_formatted' => '₡'.number_format((float) $product->sale_price, 0, ',', '.'),
+                'stock_label' => (string) $product->clientCatalogStockLabel(),
+                'url' => (string) $product->clientProductUrl(),
+                'image_url' => (string) ($product->getFirstMediaUrl('main_image')
+                    ?: asset('assets/images/products/'.($product->image ?? 'default.png'))),
+            ];
+        })
+        ->values();
+@endphp
+<div class="cf4-favorites-overlay" id="favorites-overlay" hidden></div>
+<aside class="cf4-favorites-drawer" id="favorites-drawer" aria-hidden="true">
+    <div class="cf4-favorites-drawer-header">
+        <h3><i class="fas fa-heart"></i> Mis Favoritos</h3>
+        <button type="button" id="favorites-close-btn" aria-label="Cerrar favoritos">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="cf4-favorites-drawer-body" id="favorites-drawer-body">
+        <div class="cf4-favorites-empty">
+            <i class="far fa-heart"></i>
+            <p>Aún no tienes productos guardados.<br>¡Explora el catálogo!</p>
+        </div>
+    </div>
+</aside>
+
+<meta name="cf4-favorites-index-url" content="{{ $favoritesIndexUrl }}">
+<meta name="cf4-favorites-toggle-url" content="{{ $favoritesToggleUrl }}">
+<meta name="cf4-favorites-initial" content='@json($initialFavorites)'>
+@endauth
+
 {{-- Invoice heartbeat meta (only for authenticated clients) --}}
 @auth('clients')
 <meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
 <meta name="cf4-invoice-initial-count" content="{{ \App\Models\Sale::where('client_id', auth('clients')->user()->user_id)->where('status', 'pending')->count() }}">
 @endauth
+
+{{-- Ventana para retiro tras "listo para recoger" (copia post-checkout; respeta AppSetting / READY_TO_PICKUP_EXPIRATION_HOURS). --}}
+<meta name="cf4-ready-to-pickup-expiration-hours" content="{{ \App\Models\Sale::getReadyToPickupExpirationHours() }}">
 
 @vite('resources/js/client/clients-users.js')

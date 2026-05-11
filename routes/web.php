@@ -1,25 +1,32 @@
 <?php
 
-use App\Http\Controllers\Admin\ClientPurchaseHistoryController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\ClientPurchaseHistoryController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\ReportsRegistryExportController;
 use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminOrderSettingsController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminWeeklyReportSettingsController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClassificationCatalogController;
+use App\Http\Controllers\ClientCatalogProductSuggestionsController;
+use App\Http\Controllers\ClientCatalogSearchTrendingController;
 use App\Http\Controllers\ClientPageController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FavoriteProductController;
+use App\Http\Controllers\InventoryMovementController;
 use App\Http\Controllers\ProductClassificationController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductReviewController;
+use App\Http\Controllers\ProductVariantController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\XmlPriceDeviationController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierOrderController;
-use App\Http\Controllers\InventoryMovementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -54,14 +61,14 @@ Route::get('/run-migrations', function (Request $request) use ($assertDeployHelp
 
         if ($exitCode !== 0) {
             return response(
-                '❌ migrate exited with code ' . $exitCode . '<br><pre>' . e($output) . '</pre>',
+                '❌ migrate exited with code '.$exitCode.'<br><pre>'.e($output).'</pre>',
                 500
             );
         }
 
-        return '✅ Migrations executed successfully:<br><pre>' . e($output) . '</pre>';
+        return '✅ Migrations executed successfully:<br><pre>'.e($output).'</pre>';
     } catch (Throwable $e) {
-        return response('❌ Error running migrations: ' . e($e->getMessage()), 500);
+        return response('❌ Error running migrations: '.e($e->getMessage()), 500);
     }
 });
 
@@ -88,14 +95,14 @@ Route::get('/run-seeders/{class?}', function (Request $request, ?string $class =
 
         if ($exitCode !== 0) {
             return response(
-                '❌ db:seed exited with code ' . $exitCode . '<br><pre>' . e($output) . '</pre>',
+                '❌ db:seed exited with code '.$exitCode.'<br><pre>'.e($output).'</pre>',
                 500
             );
         }
 
-        return '✅ Seeder executed:<br><pre>' . e($output) . '</pre>';
+        return '✅ Seeder executed:<br><pre>'.e($output).'</pre>';
     } catch (Throwable $e) {
-        return response('❌ Error: ' . e($e->getMessage()), 500);
+        return response('❌ Error: '.e($e->getMessage()), 500);
     }
 })->where('class', '[A-Za-z0-9\\\\_]+');
 
@@ -129,13 +136,15 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/reports/productos-vendidos/table', [ReportsController::class, 'productSalesTable'])->name('admin.reports.product-sales.table');
     Route::get('/reports/productos-vendidos/pdf', [ReportsController::class, 'productSalesPdf'])->name('admin.reports.product-sales.pdf');
     Route::get('/reports/productos-vendidos/excel', [ReportsController::class, 'productSalesExcel'])
-     ->name('admin.reports.product-sales.excel');
+        ->name('admin.reports.product-sales.excel');
+    Route::get('/reports/catalogo-busquedas', [ReportsController::class, 'catalogMostSearchedProducts'])
+        ->name('admin.reports.catalog-search-products');
     Route::get('/sales/reports/by-category', [ReportsController::class, 'byCategory'])->name('sales.reports.byCategory');
 
     // Inventory movement routes.
     Route::prefix('inventory/movements')->name('admin.inventory.movements.')->group(function () {
-        Route::get('/',                 [InventoryMovementController::class, 'index'])->name('index');
-        Route::get('/{productId}',      [InventoryMovementController::class, 'show'])->name('show');
+        Route::get('/', [InventoryMovementController::class, 'index'])->name('index');
+        Route::get('/{productId}', [InventoryMovementController::class, 'show'])->name('show');
         Route::get('/{productId}/json', [InventoryMovementController::class, 'json'])->name('json');
     });
 
@@ -152,6 +161,8 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
 
     // Inventory routes.
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');
+    Route::get('/inventory/classification-filters', [ProductController::class, 'inventoryClassificationFiltersOptions'])
+        ->name('inventory.classification-filters');
 
     // Classification catalog routes.
     Route::get('/classifications/catalog', [ClassificationCatalogController::class, 'index'])->name('admin.classifications.catalog.index');
@@ -173,6 +184,19 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/product-classifications', [ProductClassificationController::class, 'index'])->name('admin.product-classifications.index');
     Route::get('/products/{product}/classifications/edit', [ProductClassificationController::class, 'edit'])->name('admin.products.classifications.edit');
     Route::put('/products/{product}/classifications', [ProductClassificationController::class, 'update'])->name('admin.products.classifications.update');
+
+    // Product variant management routes.
+    Route::post('/products/{product}/variants', [ProductVariantController::class, 'store'])
+        ->whereNumber('product')
+        ->name('admin.products.variants.store');
+    Route::delete('/products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])
+        ->whereNumber('product')
+        ->whereNumber('variant')
+        ->name('admin.products.variants.destroy');
+    Route::put('/products/{product}/variants/{variant}', [ProductVariantController::class, 'update'])
+        ->whereNumber('product')
+        ->whereNumber('variant')
+        ->name('admin.products.variants.update');
 
     // Featured product toggle route.
     Route::post('/products/{id}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
@@ -197,6 +221,10 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     // Brand routes.
     Route::resource('brands', BrandController::class)->only(['index', 'store', 'update', 'destroy']);
 
+    // Parent category routes.
+    Route::get('/categories/parents/create', [CategoryController::class, 'createParentCategory'])->name('categories.parents.create');
+    Route::post('/categories/parents', [CategoryController::class, 'storeParentCategory'])->name('categories.parents.store');
+
     // Subcategory routes.
     Route::get('/categories/subcategories/create', [CategoryController::class, 'createSubcategory'])->name('categories.subcategories.create');
     Route::post('/categories/subcategories', [CategoryController::class, 'store'])->name('categories.subcategories.store');
@@ -205,18 +233,25 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
     Route::get('/sales/history/heartbeat', [SalesController::class, 'historyHeartbeat'])->name('sales.history.heartbeat');
 
-    // Sales routes.
+    // Sales resource + state-change actions.
     Route::resource('sales', SalesController::class);
     Route::post('/sales/{id}/complete', [SalesController::class, 'complete'])->name('sales.complete');
     Route::post('/sales/{id}/cancel', [SalesController::class, 'cancel'])->name('sales.cancel');
-    Route::post('/sales/{id}/refund', [SalesController::class, 'refund'])->name('sales.refund');
+
+    Route::post('/sales/{id}/return', [SalesController::class, 'returnSale'])->name('sales.return');
+
     Route::get('/sales/{id}/print', [SalesController::class, 'print'])->name('sales.print');
     Route::get('/sales/{id}/invoice', [SalesController::class, 'invoice'])->name('sales.invoice');
+    Route::patch('orders/{id}/ready-to-pickup', [SalesController::class, 'markReadyToPickup'])
+        ->name('admin.orders.ready-to-pickup');
 
     // Client order management routes.
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::put('/orders/settings/order-expiration', [AdminOrderSettingsController::class, 'update'])
         ->name('admin.orders.settings.order-expiration.update');
+
+    Route::put('/orders/settings/weekly-report', [AdminWeeklyReportSettingsController::class, 'update'])
+        ->name('admin.orders.settings.weekly-report.update');
 
     // Supplier order routes.
     Route::get('/supplier-orders', [SupplierOrderController::class, 'index'])->name('admin.supplier-orders.index');
@@ -224,10 +259,24 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::post('/supplier-orders', [SupplierOrderController::class, 'store'])->name('admin.supplier-orders.store');
     Route::get('/supplier-orders/{id}/detail', [SupplierOrderController::class, 'detail'])->name('admin.supplier-orders.detail');
     Route::get('/admin/products/search', [SupplierOrderController::class, 'searchProducts'])->name('admin.products.search');
+
+    // XML Price Deviation (inside the admin auth middleware group) 
+    Route::prefix('supplier-orders/xml-deviation')->name('admin.supplier-orders.xml-deviation.')->group(function () {
+
+        Route::get('/', [XmlPriceDeviationController::class, 'showUploadForm'])
+            ->name('upload');
+        Route::post('/analyse', [XmlPriceDeviationController::class, 'analyse'])
+            ->name('analyse');
+        Route::get('/review', [XmlPriceDeviationController::class, 'review'])
+            ->name('review');
+        Route::post('/apply', [XmlPriceDeviationController::class, 'apply'])
+            ->name('apply');
+    });
+
     Route::get('/supplier-orders/{id}', [SupplierOrderController::class, 'show'])->name('admin.supplier-orders.show');
     Route::patch('/supplier-orders/{id}/state', [SupplierOrderController::class, 'updateState'])->name('admin.supplier-orders.update-state');
     Route::post('/supplier-orders/{id}/receive', [SupplierOrderController::class, 'receiveOrder'])->name('admin.supplier-orders.receive');
-    Route::post('/supplier-orders/{id}/close-partial', [SupplierOrderController::class, 'closePartial'])->name('admin.supplier-orders.close-partial'); // ← NUEVO
+    Route::post('/supplier-orders/{id}/close-partial', [SupplierOrderController::class, 'closePartial'])->name('admin.supplier-orders.close-partial');
     Route::get('/supplier/details/{id}', [SupplierOrderController::class, 'supplierDetails'])->name('admin.supplier-orders.supplier');
 
     // Admin client management routes.
@@ -281,6 +330,15 @@ Route::get('/admin/catalog-exit', function () {
 Route::get('/', [ClientPageController::class, 'home'])->name('clients.home');
 Route::get('/catalog', [ClientPageController::class, 'catalog'])->name('clients.catalog');
 
+// Predictive suggestions for the public client catalog search bar.
+Route::get('/api/products/suggestions', ClientCatalogProductSuggestionsController::class)
+    ->middleware('throttle:60,1')
+    ->name('api.products.suggestions');
+
+Route::get('/api/catalog/search-trending', ClientCatalogSearchTrendingController::class)
+    ->middleware('throttle:60,1')
+    ->name('api.catalog.search-trending');
+
 // Product route with numeric ID and optional SEO slug.
 Route::get('/product/{id}/{slug?}', [ClientPageController::class, 'product'])
     ->where(['id' => '[0-9]+', 'slug' => '[a-z0-9\-]*'])
@@ -308,7 +366,8 @@ Route::get('/recovery/verify', [ClientUserController::class, 'showRecoveryVerify
 Route::post('/recovery/verify', [ClientUserController::class, 'verifyRecoveryAndReset'])->name('clients.recovery.verify');
 
 // Logs out the client while preserving the admin session when both are active.
-Route::post('/logout', function (Request $request) {
+Route::post('/logout', function () {
+    $request = request();
     Auth::guard('clients')->logout();
 
     if (Auth::guard('admin')->check()) {
@@ -355,12 +414,27 @@ Route::middleware(['auth:clients'])->group(function () {
     Route::delete('/cart/clear', [ClientPageController::class, 'clearCart'])->name('clients.cart.clear');
     Route::post('/cart/checkout', [ClientPageController::class, 'checkout'])->name('clients.cart.checkout');
 
+    // Product reviews.
+    Route::post('/products/{product}/review', [ProductReviewController::class, 'storeOrUpdate'])
+        ->whereNumber('product')
+        ->name('clients.products.review.store');
+    Route::post('/products/reviews/batch', [ProductReviewController::class, 'storeBatch'])
+        ->name('clients.products.review.batch');
+
     // Invoice routes.
     Route::get('/invoices', [ClientPageController::class, 'invoices'])->name('clients.invoices');
     Route::get('/invoices/heartbeat', [ClientPageController::class, 'invoicesHeartbeat'])->name('clients.invoices.heartbeat');
+    Route::get('/notifications', [ClientPageController::class, 'notifications'])->name('clients.notifications');
+    Route::get('/invoices/{sale}', [ClientPageController::class, 'showInvoice'])
+        ->whereNumber('sale')
+        ->name('clients.invoices.show');
 
     // Profile routes.
     Route::get('/profile', [ClientUserController::class, 'show'])->name('clients.profile');
     Route::put('/profile', [ClientUserController::class, 'update'])->name('clients.profile.update');
     Route::put('/profile/password', [ClientUserController::class, 'updatePassword'])->name('clients.profile.password');
+
+    // Favorite products routes.
+    Route::get('/favorites', [FavoriteProductController::class, 'index'])->name('clients.favorites.index');
+    Route::post('/favorites/toggle', [FavoriteProductController::class, 'toggle'])->name('clients.favorites.toggle');
 });

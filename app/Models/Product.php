@@ -3,16 +3,25 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+/**
+ * @property-read Category|null $category
+ * @property-read Supplier|null $supplier
+ * @property-read Collection<int, Brand> $brands
+ * @property-read Collection<int, Product> $variants
+ * @property-read Collection<int, ClassificationValue> $classificationValues
+ */
 // Product model with media support and inventory-related helpers.
 class Product extends Model implements HasMedia
 {
@@ -36,8 +45,18 @@ class Product extends Model implements HasMedia
 
     // Mass-assignable product attributes.
     protected $fillable = [
-        'category_id', 'supplier_id', 'name', 'description', 'image', 'images',
-        'sale_price', 'purchase_price', 'stock_current', 'stock_minimum', 'status',
+        'category_id',
+        'supplier_id',
+        'name',
+        'sku',
+        'description',
+        'image',
+        'images',
+        'sale_price',
+        'purchase_price',
+        'stock_current',
+        'stock_minimum',
+        'status',
         'is_featured',
     ];
 
@@ -60,7 +79,15 @@ class Product extends Model implements HasMedia
     // Builds the catalog SKU from the product ID.
     public static function skuFromId(int $productId): string
     {
-        return 'BK-'.str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
+        return 'BK-' . str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
+    }
+
+    // Returns a custom SKU or a generated BK-xxx code.
+    public function displaySku(): string
+    {
+        $custom = trim((string) ($this->attributes['sku'] ?? ''));
+
+        return $custom !== '' ? $custom : self::skuFromId((int) $this->product_id);
     }
 
     // Normalizes localized and canonical status values.
@@ -91,7 +118,7 @@ class Product extends Model implements HasMedia
         $placeholders = implode(',', array_fill(0, count($ok), '?'));
 
         return $query->whereRaw(
-            'LOWER(TRIM(COALESCE(status, \'\'))) IN ('.$placeholders.')',
+            'LOWER(TRIM(COALESCE(status, \'\'))) IN (' . $placeholders . ')',
             $ok
         );
     }
@@ -137,6 +164,12 @@ class Product extends Model implements HasMedia
         return $this->hasMany(SaleItem::class, 'product_id', 'product_id');
     }
 
+    // Reviews submitted by clients who bought this product.
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class, 'product_id', 'product_id');
+    }
+
     // Brands associated with this product.
     public function brands(): BelongsToMany
     {
@@ -174,6 +207,13 @@ class Product extends Model implements HasMedia
         }
 
         return 'Disponible';
+    }
+
+    // Purchase price change history for this product.
+    public function purchasePriceHistories(): HasMany
+    {
+        return $this->hasMany(ProductPurchasePriceHistory::class, 'product_id', 'product_id')
+            ->orderBy('created_at', 'desc');
     }
 
     // Returns the availability label used in the admin panel.
@@ -261,6 +301,7 @@ class Product extends Model implements HasMedia
         if ($stockCurrent <= 0) {
             return 'low';
         }
+
         if ($stockMinimum > 0 && $stockCurrent <= $stockMinimum) {
             return 'medium';
         }
@@ -279,6 +320,7 @@ class Product extends Model implements HasMedia
                     ]);
                 }
             }
+
             if ($p->sale_price < $p->purchase_price) {
                 throw ValidationException::withMessages([
                     'sale_price' => 'El precio de venta no puede ser menor que el de compra.',
@@ -292,5 +334,24 @@ class Product extends Model implements HasMedia
     {
         return $this->hasMany(InventoryMovement::class, 'product_id', 'product_id')
             ->orderBy('created_at', 'asc');
+    }
+
+    // Variant links where this product is the base product.
+    public function variantLinks(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class, 'base_product_id', 'product_id');
+    }
+
+    // Product variants associated through the variant link table.
+    public function variants(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Product::class,
+            ProductVariant::class,
+            'base_product_id',
+            'product_id',
+            'product_id',
+            'variant_product_id'
+        );
     }
 }

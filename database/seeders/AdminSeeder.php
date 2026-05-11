@@ -34,6 +34,16 @@ class AdminSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'name' => 'Arturo',
+                'first_surname' => 'Chavarría',
+                'second_surname' => null,
+                'gmail' => 'arturo01097@gmail.com',
+                'password' => Hash::make('12345678'),
+                'last_access' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
                 'name' => 'Administrador',
                 'first_surname' => 'Sistema',
                 'second_surname' => null,
