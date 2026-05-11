@@ -37,8 +37,18 @@ class Product extends Model implements HasMedia
 
     // Mass-assignable product attributes.
     protected $fillable = [
-        'category_id', 'supplier_id', 'name', 'description', 'image', 'images',
-        'sale_price', 'purchase_price', 'stock_current', 'stock_minimum', 'status',
+        'category_id',
+        'supplier_id',
+        'name',
+        'sku',
+        'description',
+        'image',
+        'images',
+        'sale_price',
+        'purchase_price',
+        'stock_current',
+        'stock_minimum',
+        'status',
         'is_featured',
     ];
 
@@ -61,7 +71,7 @@ class Product extends Model implements HasMedia
     // Builds the catalog SKU from the product ID.
     public static function skuFromId(int $productId): string
     {
-        return 'BK-'.str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
+        return 'BK-' . str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
     }
 
     // Normalizes localized and canonical status values.
@@ -92,7 +102,7 @@ class Product extends Model implements HasMedia
         $placeholders = implode(',', array_fill(0, count($ok), '?'));
 
         return $query->whereRaw(
-            'LOWER(TRIM(COALESCE(status, \'\'))) IN ('.$placeholders.')',
+            'LOWER(TRIM(COALESCE(status, \'\'))) IN (' . $placeholders . ')',
             $ok
         );
     }
@@ -183,6 +193,13 @@ class Product extends Model implements HasMedia
         return 'Disponible';
     }
 
+    // Purchase price change history for this product.
+    public function purchasePriceHistories(): HasMany
+    {
+        return $this->hasMany(ProductPurchasePriceHistory::class, 'product_id', 'product_id')
+            ->orderBy('created_at', 'desc');
+    }
+
     // Returns the availability label used in the admin panel.
     public function adminAvailabilityLabel(): string
     {
@@ -268,6 +285,7 @@ class Product extends Model implements HasMedia
         if ($stockCurrent <= 0) {
             return 'low';
         }
+
         if ($stockMinimum > 0 && $stockCurrent <= $stockMinimum) {
             return 'medium';
         }
@@ -286,6 +304,7 @@ class Product extends Model implements HasMedia
                     ]);
                 }
             }
+
             if ($p->sale_price < $p->purchase_price) {
                 throw ValidationException::withMessages([
                     'sale_price' => 'El precio de venta no puede ser menor que el de compra.',
@@ -301,11 +320,13 @@ class Product extends Model implements HasMedia
             ->orderBy('created_at', 'asc');
     }
 
+    // Variant links where this product is the base product.
     public function variantLinks(): HasMany
     {
         return $this->hasMany(ProductVariant::class, 'base_product_id', 'product_id');
     }
 
+    // Product variants associated through the variant link table.
     public function variants(): HasManyThrough
     {
         return $this->hasManyThrough(

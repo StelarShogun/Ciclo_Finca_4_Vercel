@@ -20,9 +20,10 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\ProductVariantController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\XmlPriceDeviationController;
+use App\Http\Controllers\InventoryMovementController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierOrderController;
-use App\Http\Controllers\InventoryMovementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -240,6 +241,20 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::post('/supplier-orders', [SupplierOrderController::class, 'store'])->name('admin.supplier-orders.store');
     Route::get('/supplier-orders/{id}/detail', [SupplierOrderController::class, 'detail'])->name('admin.supplier-orders.detail');
     Route::get('/admin/products/search', [SupplierOrderController::class, 'searchProducts'])->name('admin.products.search');
+
+    // XML Price Deviation (inside the admin auth middleware group) 
+    Route::prefix('supplier-orders/xml-deviation')->name('admin.supplier-orders.xml-deviation.')->group(function () {
+
+        Route::get('/', [XmlPriceDeviationController::class, 'showUploadForm'])
+            ->name('upload');
+        Route::post('/analyse', [XmlPriceDeviationController::class, 'analyse'])
+            ->name('analyse');
+        Route::get('/review', [XmlPriceDeviationController::class, 'review'])
+            ->name('review');
+        Route::post('/apply', [XmlPriceDeviationController::class, 'apply'])
+            ->name('apply');
+    });
+
     Route::get('/supplier-orders/{id}', [SupplierOrderController::class, 'show'])->name('admin.supplier-orders.show');
     Route::patch('/supplier-orders/{id}/state', [SupplierOrderController::class, 'updateState'])->name('admin.supplier-orders.update-state');
     Route::post('/supplier-orders/{id}/receive', [SupplierOrderController::class, 'receiveOrder'])->name('admin.supplier-orders.receive');
