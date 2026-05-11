@@ -24,10 +24,6 @@ class CF107CatalogSearchTrendingTest extends TestCase
             $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
         }
 
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('CF107CatalogSearchTrendingTest requiere MySQL.');
-        }
-
         foreach (['products', 'catalog_product_search_events', 'categories', 'suppliers'] as $table) {
             if (! Schema::hasTable($table)) {
                 $this->markTestSkipped('Tabla requerida no existe: '.$table);

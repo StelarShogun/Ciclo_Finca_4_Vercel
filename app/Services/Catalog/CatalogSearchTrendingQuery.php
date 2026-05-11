@@ -56,7 +56,7 @@ final class CatalogSearchTrendingQuery
         return DB::table('catalog_product_search_events')
             ->where('created_at', '>=', $start)
             ->whereNotNull('query_normalized')
-            ->whereRaw('CHAR_LENGTH(TRIM(query_normalized)) >= 2')
+            ->whereRaw('LENGTH(TRIM(query_normalized)) >= 2')
             ->groupBy('query_normalized')
             ->orderByDesc(DB::raw('COUNT(*)'))
             ->limit($limit)
