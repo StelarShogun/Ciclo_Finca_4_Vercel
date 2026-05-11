@@ -27,7 +27,7 @@ function isClientStockShortMessage(msg) {
 }
 
 // ----------------------------------------------------------------
-// CATALOG: PREDICTIVE SEARCH SUGGESTIONS (CF4-106)
+// CATALOG: TRENDING + PREDICTIVE SEARCH (CF4-107 / CF4-106)
 // ----------------------------------------------------------------
 (function initCatalogPredictiveSearch() {
     var root = document.querySelector('[data-catalog-suggestions]');
@@ -35,7 +35,7 @@ function isClientStockShortMessage(msg) {
     if (!root || !input) return;
 
     var url = root.getAttribute('data-suggestions-url') || '';
-    if (!url) return;
+    var trendingUrl = root.getAttribute('data-trending-url') || '';
 
     var list = document.getElementById('catalog-search-suggestions');
     if (!list) return;
@@ -47,9 +47,14 @@ function isClientStockShortMessage(msg) {
         items: [],
         activeIndex: -1,
         lastQuery: '',
+        mode: 'idle',
+        trendingCache: null,
+        trendingAborter: null,
         aborter: null,
         debounceId: null,
     };
+
+    list.setAttribute('aria-label', 'Tendencias y sugerencias de búsqueda');
 
     function setOpen(open) {
         state.open = !!open;
@@ -59,6 +64,24 @@ function isClientStockShortMessage(msg) {
         if (!state.open) {
             state.activeIndex = -1;
         }
+    }
+
+    function abortTrendingFetch() {
+        if (state.trendingAborter) {
+            try { state.trendingAborter.abort(); } catch (err) {}
+        }
+        state.trendingAborter = null;
+    }
+
+    function abortSuggestionsFetch() {
+        if (state.aborter) {
+            try { state.aborter.abort(); } catch (err) {}
+        }
+        state.aborter = null;
+    }
+
+    function trimmedQueryLength() {
+        return String(input.value || '').trim().length;
     }
 
     function esc(s) {
@@ -74,7 +97,89 @@ function isClientStockShortMessage(msg) {
         if (item.type === 'category') return 'Categoría';
         if (item.match_type === 'sku') return 'SKU';
         if (item.match_type === 'category') return 'En categoría';
+        if (item.match_type === 'trending') return 'Tendencia';
+        if (item.match_type === 'featured') return 'Sugerido';
         return '';
+    }
+
+    /** @param {{type?: string, match_type?: string, sku?: string, category?: string, name?: string, image_url?: string}} it */
+    function suggestionRowHtml(i, isActive, it) {
+        var active = isActive ? ' is-active' : '';
+        var title = esc(it.name || '');
+        var metaParts = [];
+        if (it.sku) metaParts.push(esc(it.sku));
+        if (it.category) metaParts.push(esc(it.category));
+        var shouldShowMeta = it.match_type !== 'trending_term';
+        var meta = (shouldShowMeta && metaParts.length)
+            ? '<div class="catalog-search-suggestion-meta">' + metaParts.join(' · ') + '</div>'
+            : '';
+        var badge = badgeFor(it);
+        var badgeHtml = badge ? '<div class="catalog-search-suggestion-badge">' + esc(badge) + '</div>' : '';
+        var termThumb =
+            (it.match_type === 'trending_term' || (!it.image_url && (it.type === 'term' || it.match_type === 'trending_term')))
+                ? ' catalog-search-suggestion-thumb--term'
+                : '';
+
+        var thumb = '';
+        if (it.image_url) {
+            thumb = '<div class="catalog-search-suggestion-thumb"><img src="' + esc(it.image_url) + '" alt="" loading="lazy"></div>';
+        } else {
+            thumb = '<div class="catalog-search-suggestion-thumb' + termThumb + '" aria-hidden="true"></div>';
+        }
+
+        return ''
+            + '<div class="catalog-search-suggestion' + active + '"'
+            + ' role="option"'
+            + ' data-suggestion-index="' + i + '"'
+            + ' aria-selected="' + (isActive ? 'true' : 'false') + '">'
+            + thumb
+            + '<div class="catalog-search-suggestion-body">'
+            + '<div class="catalog-search-suggestion-title">' + title + '</div>'
+            + meta
+            + '</div>'
+            + badgeHtml
+            + '</div>';
+    }
+
+    function renderTrending(payload) {
+        state.mode = 'trending';
+
+        var flat = [];
+        var html = '';
+        var idx = 0;
+
+        var products = (payload && Array.isArray(payload.products)) ? payload.products : [];
+        var terms = (payload && !payload.is_fallback && Array.isArray(payload.terms)) ? payload.terms : [];
+        var shouldShowTerms = terms.length > 0;
+
+        if (shouldShowTerms) {
+            var h1 = 'Tendencias de búsqueda';
+            html += '<div class="catalog-search-suggestions-section" role="presentation">' + esc(h1) + '</div>';
+            for (var ti = 0; ti < terms.length; ti++) {
+                html += suggestionRowHtml(idx, idx === state.activeIndex, terms[ti] || {});
+                flat.push(terms[ti]);
+                idx += 1;
+            }
+        } else if (products.length) {
+            var h2 = payload.is_fallback ? 'Productos sugeridos' : 'Productos en tendencia';
+            html += '<div class="catalog-search-suggestions-section" role="presentation">' + esc(h2) + '</div>';
+            for (var pi = 0; pi < products.length; pi++) {
+                html += suggestionRowHtml(idx, idx === state.activeIndex, products[pi] || {});
+                flat.push(products[pi]);
+                idx += 1;
+            }
+        }
+
+        state.items = flat;
+
+        if (!html) {
+            list.innerHTML = '<div class="catalog-search-suggestions-state">' + esc(
+                'Aún no registramos suficientes búsquedas para mostrar tendencias.'
+            ) + '</div>';
+            return;
+        }
+
+        list.innerHTML = html;
     }
 
     function render() {
@@ -84,51 +189,39 @@ function isClientStockShortMessage(msg) {
         }
 
         if (state.loading) {
-            list.innerHTML = '<div class="catalog-search-suggestions-state">Cargando sugerencias...</div>';
+            list.innerHTML = '<div class="catalog-search-suggestions-state">' + esc(
+                state.mode === 'trending' ? 'Cargando tendencias...' : 'Cargando sugerencias...'
+            ) + '</div>';
             return;
         }
 
         if (state.error) {
-            list.innerHTML = '<div class="catalog-search-suggestions-state">No pudimos cargar sugerencias en este momento.</div>';
+            list.innerHTML = '<div class="catalog-search-suggestions-state">' + esc(
+                'No pudimos cargar resultados en este momento.'
+            ) + '</div>';
             return;
         }
 
+        if (state.mode === 'trending') {
+            if (state.trendingCache) {
+                renderTrending(state.trendingCache);
+                return;
+            }
+            renderTrending({});
+            return;
+        }
+
+        // predictive suggestions
         if (!state.items || state.items.length === 0) {
-            list.innerHTML = '<div class="catalog-search-suggestions-state">No se encontraron productos relacionados</div>';
+            list.innerHTML = '<div class="catalog-search-suggestions-state">' + esc(
+                'No se encontraron productos relacionados'
+            ) + '</div>';
             return;
         }
 
         var html = '';
         for (var i = 0; i < state.items.length; i++) {
-            var it = state.items[i] || {};
-            var active = i === state.activeIndex ? ' is-active' : '';
-            var title = esc(it.name || '');
-            var metaParts = [];
-            if (it.sku) metaParts.push(esc(it.sku));
-            if (it.category) metaParts.push(esc(it.category));
-            var meta = metaParts.length ? '<div class="catalog-search-suggestion-meta">' + metaParts.join(' · ') + '</div>' : '';
-            var badge = badgeFor(it);
-            var badgeHtml = badge ? '<div class="catalog-search-suggestion-badge">' + esc(badge) + '</div>' : '';
-
-            var thumb = '';
-            if (it.image_url) {
-                thumb = '<div class="catalog-search-suggestion-thumb"><img src="' + esc(it.image_url) + '" alt="" loading="lazy"></div>';
-            } else {
-                thumb = '<div class="catalog-search-suggestion-thumb" aria-hidden="true"></div>';
-            }
-
-            html += ''
-                + '<div class="catalog-search-suggestion' + active + '"'
-                + ' role="option"'
-                + ' data-suggestion-index="' + i + '"'
-                + ' aria-selected="' + (i === state.activeIndex ? 'true' : 'false') + '">'
-                + thumb
-                + '<div class="catalog-search-suggestion-body">'
-                + '<div class="catalog-search-suggestion-title">' + title + '</div>'
-                + meta
-                + '</div>'
-                + badgeHtml
-                + '</div>';
+            html += suggestionRowHtml(i, i === state.activeIndex, state.items[i] || {});
         }
         list.innerHTML = html;
     }
@@ -160,12 +253,22 @@ function isClientStockShortMessage(msg) {
         window.location.href = it.url;
     }
 
-    function fetchSuggestions(query) {
-        if (state.aborter) {
-            try { state.aborter.abort(); } catch (e) {}
+    function fetchTrending() {
+        if (!trendingUrl) return;
+
+        if (state.trendingCache) {
+            state.mode = 'trending';
+            state.loading = false;
+            state.error = false;
+            state.activeIndex = -1;
+            openIfNeeded();
+            render();
+            return;
         }
 
-        state.aborter = new AbortController();
+        abortTrendingFetch();
+        state.trendingAborter = new AbortController();
+        state.mode = 'trending';
         state.loading = true;
         state.error = false;
         state.items = [];
@@ -173,7 +276,74 @@ function isClientStockShortMessage(msg) {
         openIfNeeded();
         render();
 
+        fetch(trendingUrl, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            signal: state.trendingAborter.signal,
+        })
+            .then(function (res) {
+                if (!res.ok) throw new Error('Trending unavailable');
+                return res.json();
+            })
+            .then(function (data) {
+                if (trimmedQueryLength() >= 2 || state.mode !== 'trending') {
+                    state.loading = false;
+                    state.trendingAborter = null;
+                    return;
+                }
+
+                state.loading = false;
+                state.error = false;
+                state.trendingCache = data && typeof data === 'object' ? data : { products: [], terms: [] };
+                openIfNeeded();
+                render();
+
+                state.trendingAborter = null;
+            })
+            .catch(function (err) {
+                state.trendingAborter = null;
+                if (err && err.name === 'AbortError') return;
+                if (trimmedQueryLength() >= 2 || state.mode !== 'trending') {
+                    state.loading = false;
+                    return;
+                }
+                state.loading = false;
+                state.error = true;
+                state.items = [];
+                openIfNeeded();
+                render();
+            });
+    }
+
+    function tryOpenTrendingOnShortQuery() {
+        if (trimmedQueryLength() >= 2) return;
+        if (!trendingUrl) {
+            close();
+            return;
+        }
+
+        abortSuggestionsFetch();
+
+        fetchTrending();
+    }
+
+    function fetchSuggestions(query) {
+        abortSuggestionsFetch();
+
+        state.aborter = new AbortController();
+        state.loading = true;
+        state.error = false;
+        state.items = [];
+        state.activeIndex = -1;
+        state.mode = 'predictive';
+
+        abortTrendingFetch();
+
+        openIfNeeded();
+        render();
+
         var reqUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'search=' + encodeURIComponent(query);
+
         fetch(reqUrl, {
             method: 'GET',
             headers: { 'Accept': 'application/json' },
@@ -181,6 +351,10 @@ function isClientStockShortMessage(msg) {
         })
             .then(function (res) { return res.json(); })
             .then(function (data) {
+                if (trimmedQueryLength() < 2 || state.mode !== 'predictive') {
+                    state.loading = false;
+                    return;
+                }
                 state.loading = false;
                 state.error = false;
                 state.items = (data && Array.isArray(data.suggestions)) ? data.suggestions : [];
@@ -198,6 +372,7 @@ function isClientStockShortMessage(msg) {
     }
 
     function schedule(query) {
+        if (!url) return;
         if (state.debounceId) clearTimeout(state.debounceId);
         state.debounceId = setTimeout(function () {
             state.debounceId = null;
@@ -205,23 +380,42 @@ function isClientStockShortMessage(msg) {
         }, 400);
     }
 
+    if (!url && !trendingUrl) return;
+
     input.addEventListener('input', function () {
         var q = String(input.value || '').trim();
         state.lastQuery = q;
 
         if (q.length < 2) {
-            if (state.aborter) {
-                try { state.aborter.abort(); } catch (e) {}
+            abortSuggestionsFetch();
+            if (state.debounceId) {
+                clearTimeout(state.debounceId);
+                state.debounceId = null;
             }
-            state.loading = false;
-            state.error = false;
-            state.items = [];
-            state.activeIndex = -1;
+
+            tryOpenTrendingOnShortQuery();
+
+            return;
+        }
+
+        if (!url) {
+            abortTrendingFetch();
             close();
             return;
         }
 
+        state.mode = 'predictive';
+
+        abortTrendingFetch();
         schedule(q);
+    });
+
+    ['focus', 'pointerdown'].forEach(function (ev) {
+        input.addEventListener(ev, function () {
+            if (trimmedQueryLength() < 2) {
+                tryOpenTrendingOnShortQuery();
+            }
+        });
     });
 
     input.addEventListener('keydown', function (e) {
@@ -251,7 +445,7 @@ function isClientStockShortMessage(msg) {
         }
 
         if (e.key === 'Enter') {
-            // Only intercept Enter when there is an active suggestion.
+            // Only intercept Enter when there is an active suggestion / trending row.
             if (state.open && state.activeIndex >= 0) {
                 e.preventDefault();
                 selectIndex(state.activeIndex);
