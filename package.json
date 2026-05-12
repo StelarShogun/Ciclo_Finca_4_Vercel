@@ -17,6 +17,7 @@
         "vite": "^7.3.2"
     },
     "dependencies": {
-        "sweetalert2": "^11.23.0"
+        "sweetalert2": "^11.23.0",
+        "swiper": "^12.1.4"
     }
 }

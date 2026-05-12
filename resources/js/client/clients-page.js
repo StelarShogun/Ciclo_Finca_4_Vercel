@@ -1,3 +1,9 @@
+import Swiper from 'swiper';
+import { Navigation, Pagination, Autoplay, A11y } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/a11y';
 import {
     buildCf4CheckoutSuccessText,
     getCf4PaymentMethodShortLabel,
@@ -1828,6 +1834,78 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         goTo(0);
+    })();
+
+    // ---- Catalog spotlight carousel (Swiper) ----
+    // Renders featured + novelty products with autoplay, navigation arrows,
+    // pagination dots and mobile swipe. Markup lives in catalog.blade.php
+    // behind `[data-catalog-spotlight-carousel]` and is hidden by Blade when
+    // any filter is active or the user is past page 1 of pagination.
+    (function initCatalogSpotlightCarousel() {
+        var root = document.querySelector('[data-catalog-spotlight-carousel]');
+        if (!root) return;
+
+        var swiperEl = root.querySelector('.swiper');
+        var prevBtn = root.querySelector('[data-spotlight-prev]');
+        var nextBtn = root.querySelector('[data-spotlight-next]');
+        var paginationEl = root.querySelector('.swiper-pagination');
+        if (!swiperEl) return;
+
+        var slides = swiperEl.querySelectorAll('.swiper-slide');
+        if (!slides.length) return;
+
+        var delay = parseInt(root.getAttribute('data-autoplay-delay'), 10);
+        if (!Number.isFinite(delay) || delay <= 0) delay = 4000;
+
+        var prefersReducedMotion = window.matchMedia
+            && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        var autoplayOption = prefersReducedMotion
+            ? false
+            : {
+                delay: delay,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+            };
+
+        try {
+            new Swiper(swiperEl, {
+                modules: [Navigation, Pagination, Autoplay, A11y],
+                slidesPerView: 1,
+                spaceBetween: 18,
+                loop: slides.length > 3,
+                speed: 600,
+                grabCursor: true,
+                watchOverflow: true,
+                autoplay: autoplayOption,
+                navigation: {
+                    prevEl: prevBtn,
+                    nextEl: nextBtn,
+                    disabledClass: 'swiper-button-disabled',
+                },
+                pagination: {
+                    el: paginationEl,
+                    clickable: true,
+                    bulletClass: 'swiper-pagination-bullet',
+                    bulletActiveClass: 'swiper-pagination-bullet-active',
+                },
+                a11y: {
+                    prevSlideMessage: 'Producto destacado anterior',
+                    nextSlideMessage: 'Siguiente producto destacado',
+                    paginationBulletMessage: 'Ir al producto destacado {{index}}',
+                    slideLabelMessage: '{{index}} de {{slidesLength}}',
+                },
+                breakpoints: {
+                    768: { slidesPerView: 2, spaceBetween: 18 },
+                    1024: { slidesPerView: 3, spaceBetween: 22 },
+                },
+            });
+        } catch (err) {
+            // Fail silently — carousel is enhancement; the page already shows the cards.
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('Catalog spotlight carousel failed to init:', err);
+            }
+        }
     })();
 
 }); // end DOMContentLoaded

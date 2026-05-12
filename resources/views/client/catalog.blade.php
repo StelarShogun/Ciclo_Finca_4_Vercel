@@ -301,24 +301,48 @@
 
                 <script type="application/json" id="catalog-category-tree-data">@json($catalogCategoryNav)</script>
 
-                @if($catalogSpotlight->isNotEmpty())
+                @php
+                    // CF4-XXX: spotlight carousel rules — hide when any catalog filter is active
+                    // (search text, category, brand, price range) and only show on page 1.
+                    $hasActiveCatalogFilters = request()->filled('search')
+                        || request()->filled('category_id')
+                        || request()->filled('brand_id')
+                        || request()->filled('min_price')
+                        || request()->filled('max_price');
+                    $catalogIsFirstPage = (int) ($products->currentPage() ?: 1) === 1;
+                    $showCatalogSpotlight = $catalogSpotlight->isNotEmpty()
+                        && ! $hasActiveCatalogFilters
+                        && $catalogIsFirstPage;
+                @endphp
+
+                @if($showCatalogSpotlight)
                     <section class="catalog-spotlight-section" aria-labelledby="catalog-spotlight-heading">
                         <div class="catalog-spotlight-inner">
                             <header class="catalog-spotlight-header">
                                 <h2 id="catalog-spotlight-heading" class="catalog-spotlight-title">Destacados y novedades</h2>
                                 <p class="catalog-spotlight-subtitle">Productos recomendados y recién incorporados al catálogo.</p>
                             </header>
-                            <div class="catalog-spotlight-grid" role="list">
-                                @foreach($catalogSpotlight as $row)
-                                    @php
-                                        /** @var \App\Models\Product $product */
-                                        $product = $row['product'];
-                                        $spotlight = $row['spotlight'];
-                                        $catLabel = $product->clientCatalogStockLabel();
-                                        $canBuy = $product->isPurchasableByClient();
-                                        $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
-                                    @endphp
-                                    <article class="product-card product-card--catalog-spotlight" role="listitem">
+                            <div class="catalog-spotlight-carousel"
+                                 data-catalog-spotlight-carousel
+                                 data-autoplay-delay="4000"
+                                 role="region"
+                                 aria-roledescription="carrusel"
+                                 aria-label="Productos destacados y novedades del catálogo">
+                                <div class="swiper catalog-spotlight-swiper">
+                                    <div class="swiper-wrapper">
+                                        @foreach($catalogSpotlight as $row)
+                                            @php
+                                                /** @var \App\Models\Product $product */
+                                                $product = $row['product'];
+                                                $spotlight = $row['spotlight'];
+                                                $catLabel = $product->clientCatalogStockLabel();
+                                                $canBuy = $product->isPurchasableByClient();
+                                                $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
+                                            @endphp
+                                            <article class="swiper-slide product-card product-card--catalog-spotlight"
+                                                     role="group"
+                                                     aria-roledescription="diapositiva"
+                                                     aria-label="{{ $loop->iteration }} de {{ $loop->count }}: {{ $product->name }}">
                                         <div class="product-image">
                                             <button type="button"
                                                     class="product-favorite-btn {{ $isFavorite ? 'is-active' : '' }}"
@@ -402,7 +426,23 @@
                                             </div>
                                         </div>
                                     </article>
-                                @endforeach
+                                        @endforeach
+                                    </div>
+                                    <div class="swiper-pagination catalog-spotlight-pagination" aria-label="Posición del carrusel"></div>
+                                </div>
+
+                                <button type="button"
+                                        class="catalog-spotlight-nav catalog-spotlight-nav--prev"
+                                        data-spotlight-prev
+                                        aria-label="Producto destacado anterior">
+                                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                                </button>
+                                <button type="button"
+                                        class="catalog-spotlight-nav catalog-spotlight-nav--next"
+                                        data-spotlight-next
+                                        aria-label="Siguiente producto destacado">
+                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                </button>
                             </div>
                         </div>
                     </section>
