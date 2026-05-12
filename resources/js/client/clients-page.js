@@ -1871,9 +1871,11 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             new Swiper(swiperEl, {
                 modules: [Navigation, Pagination, Autoplay, A11y],
+                // Show a single product at a time across all viewports.
                 slidesPerView: 1,
                 spaceBetween: 18,
-                loop: slides.length > 3,
+                centeredSlides: false,
+                loop: slides.length > 1,
                 speed: 600,
                 grabCursor: true,
                 watchOverflow: true,
@@ -1894,10 +1896,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     nextSlideMessage: 'Siguiente producto destacado',
                     paginationBulletMessage: 'Ir al producto destacado {{index}}',
                     slideLabelMessage: '{{index}} de {{slidesLength}}',
-                },
-                breakpoints: {
-                    768: { slidesPerView: 2, spaceBetween: 18 },
-                    1024: { slidesPerView: 3, spaceBetween: 22 },
                 },
             });
         } catch (err) {

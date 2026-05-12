@@ -2533,15 +2533,17 @@ body.guest-layout {
   gap: 18px;
 }
 
-/* CF4-XXX: Spotlight carousel (Swiper) — autoplay 4s, 1/2/3 items responsive. */
+/* CF4-XXX: Spotlight carousel (Swiper) — autoplay 4s, single product per view. */
 .catalog-spotlight-carousel {
   position: relative;
-  padding: 4px 48px 48px;
+  padding: 4px 56px 48px;
 }
 
 .catalog-spotlight-carousel .swiper {
   overflow: hidden;
   padding: 4px 4px 8px;
+  max-width: 360px;
+  margin: 0 auto;
 }
 
 .catalog-spotlight-carousel .swiper-wrapper {
