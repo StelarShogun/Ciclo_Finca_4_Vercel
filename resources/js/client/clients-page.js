@@ -889,9 +889,25 @@ document.addEventListener('DOMContentLoaded', function () {
     (function initCatalogFilterSearchSync() {
         var filterForm = document.getElementById('filter-form');
         var navSearch = document.getElementById('catalog-nav-search');
-        if (!filterForm || !navSearch) return;
+        var hiddenSearch = document.getElementById('catalog-filter-search-fallback');
+        if (!filterForm) return;
+
+        function syncHiddenFromNav() {
+            if (!navSearch || !hiddenSearch) return;
+            hiddenSearch.value = String(navSearch.value || '');
+        }
+
+        if (navSearch && hiddenSearch) {
+            navSearch.addEventListener('input', syncHiddenFromNav);
+            navSearch.addEventListener('change', syncHiddenFromNav);
+            syncHiddenFromNav();
+        }
+
         filterForm.addEventListener('formdata', function (e) {
-            e.formData.set('search', String(navSearch.value || '').trim());
+            var q = navSearch
+                ? String(navSearch.value || '').trim()
+                : (hiddenSearch ? String(hiddenSearch.value || '').trim() : '');
+            e.formData.set('search', q);
         });
     })();
 

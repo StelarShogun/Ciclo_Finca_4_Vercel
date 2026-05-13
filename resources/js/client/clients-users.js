@@ -1204,15 +1204,6 @@ document.addEventListener('DOMContentLoaded', function () {
             toggleUserDropdown();
         });
 
-        var profileUrl = userMenuTrigger.getAttribute('data-profile-url');
-        if (profileUrl) {
-            userMenuTrigger.addEventListener('dblclick', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                closeUserDropdown();
-                window.location.href = profileUrl;
-            });
-        }
     }
 
     // — Close user dropdown on outside click —

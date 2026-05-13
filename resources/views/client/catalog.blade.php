@@ -113,6 +113,8 @@
 
                     {{-- GET form: category_id se conserva por URL al filtrar desde el menú de categorías --}}
                     <form method="GET" action="{{ route('clients.catalog') }}" id="filter-form" autocomplete="off">
+                        {{-- Búsqueda en el header: sin JS el GET conserva `search`; con JS se sincroniza desde #catalog-nav-search. --}}
+                        <input type="hidden" name="search" id="catalog-filter-search-fallback" value="{{ old('search', request('search', '')) }}">
                         @if(request('category_id'))
                             <input type="hidden" name="category_id" value="{{ request('category_id') }}">
                         @endif

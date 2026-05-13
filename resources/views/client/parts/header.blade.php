@@ -140,8 +140,7 @@
                         {{-- Dropdown menu for the authenticated client --}}
                         <div class="user-menu-wrap" id="user-menu">
                             <button class="user-menu-trigger" id="user-menu-trigger" type="button" aria-expanded="false"
-                                aria-haspopup="true" title="Mi cuenta"
-                                data-profile-url="{{ route('clients.profile') }}">
+                                aria-haspopup="true" title="Mi cuenta">
                                 <span class="user-menu-trigger-avatar-wrap">
                                     <span class="user-avatar-bubble">
                                         {{ strtoupper(substr(Auth::guard('clients')->user()->name, 0, 1)) }}{{ strtoupper(substr(Auth::guard('clients')->user()->first_surname, 0, 1)) }}

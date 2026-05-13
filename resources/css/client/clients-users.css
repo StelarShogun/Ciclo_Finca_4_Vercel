@@ -1,69 +1,10 @@
 @import "../admin/sweetalert2-modal-zindex.css";
 
 /* ===================================================================
-   1. VARIABLES 
+   1. VARIABLES
+   Tokens globales en resources/css/client/variables-reset.css (el layout
+   cliente lo carga antes vía @vite en client/layouts/app).
    =================================================================== */
-:root {
-  /* CF4-132 — paleta de marca (alineado con variables-reset cliente) */
-  --brand-darkest:       #051F20;
-  --brand-dark:          #0B2B26;
-  --brand-medium-dark:   #163832;
-  --brand-medium:        #235347;
-  --brand-light:         #8EB69B;
-  --brand-lightest:      #DAF1DE;
-
-  --color-darkest:       var(--brand-darkest);
-  --color-medium-dark:   var(--brand-medium-dark);
-  --color-medium:        var(--brand-medium);
-  --color-lightest:      var(--brand-lightest);
-
-  /* Primary colors */
-  --color-primary:       var(--brand-medium);
-  --color-primary-dark:  var(--brand-medium-dark);
-  --color-primary-light: var(--brand-light);
-  --color-accent:        #ff6f00;
-
-  /* State colors */
-  --color-success:       var(--brand-medium);
-  --color-success-bg:    var(--brand-lightest);
-  --color-danger:      #d32f2f;
-  --color-danger-bg:   #ffebee;
-  --color-warning:     #f57c00;
-  --color-warning-bg:  #fff3e0;
-  --color-info:        #1976d2;
-  --color-info-bg:     #e3f2fd;
-
-  /* Neutral colors */
-  --color-secondary:     #455a64;
-  --color-secondary-bg:  #eceff1;
-  --color-light:         #f8f9fa;
-  --color-dark:          #212529;
-  --color-muted:         #6c757d;
-
-  /* Text colors */
-  --text-primary:   #333;
-  --text-secondary: #666;
-
-  /* Backgrounds */
-  --background-main:  var(--brand-lightest);
-  --background-white: #ffffff;
-  --background-light: #f8f9fa;
-
-  /* Borders */
-  --border-color:         #e0e0e0;
-  --border-radius:        8px;
-  --border-radius-small:  4px;
-  --border-radius-large:  12px;
-
-  /* Shadows */
-  --shadow-sm:     0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-md:     0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.1);
-  --shadow-lg:     0 10px 15px rgba(0, 0, 0, 0.1);
-
-  /* Transition */
-  --transition: all 0.3s ease;
-}
 
 /* ===================================================================
    2. RESET & BASE
