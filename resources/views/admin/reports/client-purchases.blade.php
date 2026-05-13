@@ -22,35 +22,37 @@
         $q = $q ?? '';
     @endphp
 
-    <div
-        id="client-purchases-root"
-        class="client-purchases-report"
+    <div id="client-purchases-root" class="client-purchases-report"
         data-table-url="{{ route('admin.reports.client-purchases.table') }}"
         data-show-url-template="{{ url('/reports/client-purchases') }}/__CLIENT__"
-        data-page-url="{{ url('/reports/client-purchases') }}"
-        data-period="{{ e($period) }}"
-        data-sort="{{ e($sort) }}"
-        data-dir="{{ e($dir) }}"
-        data-initial-q="{{ e($q) }}"
-    >
+        data-page-url="{{ url('/reports/client-purchases') }}" data-period="{{ e($period) }}"
+        data-sort="{{ e($sort) }}" data-dir="{{ e($dir) }}" data-initial-q="{{ e($q) }}">
         <nav class="reports-breadcrumb">
             <a href="{{ route('admin.reports.index') }}">Reportes</a>
             <span class="sep">/</span>
             <span>Compras por cliente</span>
         </nav>
 
-        @component('admin.partials.page-header', ['title' => 'Historial de compras por cliente'])
+        @component('admin.partials.page-header', ['title' => 'Compras por cliente'])
+            <p>
+                Analiza el historial de compras por cliente en el periodo seleccionado, incluyendo total comprado,
+                cantidad de órdenes y ticket promedio. También puedes buscar por nombre, apellido o correo.
+            </p>
         @endcomponent
 
         <div class="client-purchases-toolbar">
             <div class="period-toggle" role="group" aria-label="Periodo">
-                <button type="button" class="period-btn {{ $period === '7d' ? 'active' : '' }}" data-period="7d">7 días</button>
-                <button type="button" class="period-btn {{ $period === '30d' ? 'active' : '' }}" data-period="30d">30 días</button>
-                <button type="button" class="period-btn {{ $period === '90d' ? 'active' : '' }}" data-period="90d">90 días</button>
+                <button type="button" class="period-btn {{ $period === '7d' ? 'active' : '' }}" data-period="7d">7
+                    días</button>
+                <button type="button" class="period-btn {{ $period === '30d' ? 'active' : '' }}" data-period="30d">30
+                    días</button>
+                <button type="button" class="period-btn {{ $period === '90d' ? 'active' : '' }}" data-period="90d">90
+                    días</button>
             </div>
             <div class="search-wrap">
                 <label for="client-purchases-search" class="sr-only">Buscar por nombre, apellido o correo</label>
-                <input type="search" id="client-purchases-search" class="client-purchases-search" placeholder="Nombre, apellido o correo…" value="{{ e($q) }}" autocomplete="off">
+                <input type="search" id="client-purchases-search" class="client-purchases-search"
+                    placeholder="Nombre, apellido o correo…" value="{{ e($q) }}" autocomplete="off">
             </div>
         </div>
 
@@ -63,7 +65,9 @@
                             <th>Cliente</th>
                             <th>Correo</th>
                             <th class="num">
-                                <button type="button" class="nav-sort {{ $sort === 'total_purchased' ? 'is-active' : '' }}" data-sort="total_purchased">
+                                <button type="button"
+                                    class="nav-sort {{ $sort === 'total_purchased' ? 'is-active' : '' }}"
+                                    data-sort="total_purchased">
                                     Total comprado
                                     @if ($sort === 'total_purchased')
                                         <i class="fas fa-sort-{{ $dir === 'asc' ? 'up' : 'down' }}" aria-hidden="true"></i>
@@ -71,7 +75,8 @@
                                 </button>
                             </th>
                             <th class="num">
-                                <button type="button" class="nav-sort {{ $sort === 'orders_count' ? 'is-active' : '' }}" data-sort="orders_count">
+                                <button type="button" class="nav-sort {{ $sort === 'orders_count' ? 'is-active' : '' }}"
+                                    data-sort="orders_count">
                                     Compras
                                     @if ($sort === 'orders_count')
                                         <i class="fas fa-sort-{{ $dir === 'asc' ? 'up' : 'down' }}" aria-hidden="true"></i>
@@ -79,7 +84,8 @@
                                 </button>
                             </th>
                             <th class="num">
-                                <button type="button" class="nav-sort {{ $sort === 'avg_ticket' ? 'is-active' : '' }}" data-sort="avg_ticket">
+                                <button type="button" class="nav-sort {{ $sort === 'avg_ticket' ? 'is-active' : '' }}"
+                                    data-sort="avg_ticket">
                                     Ticket promedio
                                     @if ($sort === 'avg_ticket')
                                         <i class="fas fa-sort-{{ $dir === 'asc' ? 'up' : 'down' }}" aria-hidden="true"></i>
@@ -90,12 +96,15 @@
                         </tr>
                     </thead>
                     <tbody id="client-purchases-body">
-                        <tr><td colspan="6" class="loading-cell">Cargando…</td></tr>
+                        <tr>
+                            <td colspan="6" class="loading-cell">Cargando…</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
             <div id="client-purchases-pagination" class="pagination-wrapper" aria-live="polite"></div>
-            <p id="client-purchases-empty" class="empty-msg" hidden>No hay clientes con compras completadas en este periodo para los criterios seleccionados.</p>
+            <p id="client-purchases-empty" class="empty-msg" hidden>No hay clientes con compras completadas en este periodo
+                para los criterios seleccionados.</p>
         </section>
     </div>
 @endsection

@@ -39,12 +39,12 @@
             {{-- ==================== HEADER ==================== --}}
             @component('admin.partials.page-header', [
                 'title' => 'Gestión de Inventario',
-                'description' => 'Administra los productos y el stock del sistema',
+                    'description' => 'Administra productos, categorías, stock, disponibilidad y precios del inventario.',
             ])
                 @slot('actions')
                     <div class="usuarios-actions">
                         <button class="btn btn-primary" id="open-new-product-modal">
-                            <i class="fas fa-plus"></i> Nuevo Producto
+                            <i class="fas fa-plus"></i> Nuevo producto
                         </button>
                         <a class="btn btn-secondary" href="{{ route('categories.parents.create') }}">
                             <i class="fas fa-layer-group"></i>
@@ -52,7 +52,7 @@
                         </a>
                         <a class="btn btn-secondary" href="{{ route('categories.subcategories.create') }}">
                             <i class="fas fa-sitemap"></i>
-                            Crear Subcategoría
+                            Crear subcategoría
                         </a>
                         <button class="btn btn-secondary" id="import-btn">
                             <i class="fas fa-upload"></i> Importar
@@ -481,7 +481,7 @@
         <div class="modal-backdrop"></div>
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
-                <h3><i class="fas fa-plus-circle"></i> Nuevo Producto</h3>
+                <h3><i class="fas fa-plus-circle"></i> Nuevo producto</h3>
                 <button class="modal-close" id="close-new-product-modal">
                     <i class="fas fa-times"></i>
                 </button>
@@ -525,11 +525,11 @@
                         <div class="form-group">
                             <label for="new-subcategory">Subcategoría <span class="text-muted">(recomendado)</span></label>
                             <select id="new-subcategory" aria-describedby="new-subcategory-hint">
-                                <option value="">Seleccioná primero una categoría</option>
+                                <option value="">Selecciona primero una categoría</option>
                             </select>
                             <small id="new-subcategory-hint" class="form-text text-muted"
-                                data-default-hint="Si no elegís subcategoría (ej. solo «Bicicletas»), no vas a poder cargar color, talla, etc. Elegí una subcategoría (ej. MTB) cuando exista.">
-                                Elegí categoría y, si aplica, subcategoría. Sin subcategoría no podrás usar atributos como color o talla hasta que existan en catálogo.
+                                data-default-hint="Si no seleccionas una subcategoría (p. ej., solo «Bicicletas»), no podrás asignar atributos como color o talla. Selecciona una subcategoría (p. ej., MTB) cuando exista.">
+                                Selecciona categoría y, si aplica, subcategoría. Sin subcategoría no podrás usar atributos como color o talla hasta que existan en catálogo.
                             </small>
                             <input type="hidden" id="new-parent-category-id" name="parent_category_id" value="">
                             <input type="hidden" id="new-category" name="category_id" value="">
@@ -665,11 +665,11 @@
                         <div class="form-group">
                             <label for="edit-subcategory">Subcategoría <span class="text-muted">(recomendado)</span></label>
                             <select id="edit-subcategory" aria-describedby="edit-subcategory-hint">
-                                <option value="">Seleccioná primero una categoría</option>
+                                <option value="">Selecciona primero una categoría</option>
                             </select>
                             <small id="edit-subcategory-hint" class="form-text text-muted"
-                                data-default-hint="Si no elegís subcategoría (ej. solo «Bicicletas»), no vas a poder cargar color, talla, etc. Elegí una subcategoría (ej. MTB) cuando exista.">
-                                Elegí categoría y, si aplica, subcategoría. Sin subcategoría no podrás usar atributos como color o talla hasta que existan en catálogo.
+                                data-default-hint="Si no seleccionas una subcategoría (p. ej., solo «Bicicletas»), no podrás asignar atributos como color o talla. Selecciona una subcategoría (p. ej., MTB) cuando exista.">
+                                Selecciona categoría y, si aplica, subcategoría. Sin subcategoría no podrás usar atributos como color o talla hasta que existan en catálogo.
                             </small>
                             <input type="hidden" id="edit-parent-category-id" name="parent_category_id" value="">
                             <input type="hidden" id="edit-category" name="category_id" required>

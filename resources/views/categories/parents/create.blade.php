@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Crear categoría - Ciclo Finca 4 Admin</title>
 
-    @vite(['resources/css/admin/suppliers/suppliers.css'])
+    @vite(['resources/css/admin/components/page-header.css', 'resources/css/admin/suppliers/suppliers.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -17,27 +17,26 @@
 
     <main class="admin-main">
         <div class="form-container">
-            <div class="form-header">
-                <h1>Crear categoría</h1>
-                <p>Definí una categoría principal del catálogo; luego podés agregar subcategorías y asignar productos.</p>
-            </div>
+            @component('admin.partials.page-header', ['title' => 'Crear categoría'])
+                <p>Registra una categoría principal para organizar el catálogo y asociar luego subcategorías y productos.
+                </p>
+            @endcomponent
 
             <div class="form-card">
-                <form id="create-category-form" action="{{ route('categories.parents.store') }}" method="POST" class="form-body">
+                <form id="create-category-form" action="{{ route('categories.parents.store') }}" method="POST"
+                    class="form-body">
                     @csrf
 
                     <div class="form-group">
                         <label for="name">Nombre de la categoría *</label>
                         <input type="text" id="name" name="name" value="{{ old('name') }}" required
-                            placeholder="Ej. Iluminación, Llantas"
-                            autocomplete="off">
+                            placeholder="Ej. Iluminación, Llantas" autocomplete="off">
                         <div class="error-message">{{ $errors->first('name') }}</div>
                     </div>
 
                     <div class="form-group">
                         <label for="description">Descripción</label>
-                        <textarea id="description" name="description" rows="3"
-                            placeholder="Opcional.">{{ old('description') }}</textarea>
+                        <textarea id="description" name="description" rows="3" placeholder="Opcional.">{{ old('description') }}</textarea>
                         <div class="error-message">{{ $errors->first('description') }}</div>
                     </div>
 
@@ -56,13 +55,13 @@
     </main>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        (function () {
+        (function() {
             const PRIMARY = '#2e7d32';
             const DANGER = '#dc2626';
 
             const form = document.getElementById('create-category-form');
             if (form) {
-                form.addEventListener('submit', function (event) {
+                form.addEventListener('submit', function(event) {
                     if (form.dataset.confirmed === '1') {
                         return;
                     }
@@ -80,7 +79,7 @@
                         cancelButtonText: 'Cancelar',
                         reverseButtons: true,
                         focusCancel: true,
-                    }).then(function (result) {
+                    }).then(function(result) {
                         if (result.isConfirmed) {
                             form.dataset.confirmed = '1';
                             form.submit();
@@ -100,7 +99,7 @@
                 showConfirmButton: false,
                 timer: 3000,
                 timerProgressBar: true,
-                didOpen: function (toastEl) {
+                didOpen: function(toastEl) {
                     toastEl.addEventListener('mouseenter', Swal.stopTimer);
                     toastEl.addEventListener('mouseleave', Swal.resumeTimer);
                 },

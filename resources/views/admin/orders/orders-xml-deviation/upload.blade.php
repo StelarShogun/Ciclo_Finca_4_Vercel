@@ -80,7 +80,7 @@
 @section('header')
     @component('admin.partials.page-header', [
         'title' => 'Importar XML de proveedor',
-        'description' => 'Cargue el archivo XML recibido del proveedor para analizar los precios de compra.',
+        'description' => 'Carga un archivo XML del proveedor para comparar los precios de compra actuales antes de aplicar cambios.',
     ])
         @slot('actions')
             <div class="sales-header-actions">

@@ -1,6 +1,6 @@
 @extends('admin.layouts.sales')
 
-@section('Titulo pagina', 'Pedidos - Ciclo Finca 4 Admin')
+@section('Titulo pagina', 'Encargos - Ciclo Finca 4 Admin')
 
 @push('styles')
     @vite(['resources/css/admin/sales/sales.css', 'resources/css/admin/orders/orders.css'])
@@ -24,7 +24,7 @@
         $pendingCardUrl = $pendingCardActive
             ? route('admin.orders.index')
             : route('admin.orders.index', ['status' => 'pending']);
-        $pendingCardCta = $pendingCardActive ? 'Ver todo' : 'Ver pedidos pendientes';
+        $pendingCardCta = $pendingCardActive ? 'Ver todo' : 'Ver encargos pendientes';
     @endphp
 
     <div class="sales-container cf4-orders-module">
@@ -33,17 +33,16 @@
             <div class="cf4-orders-flash-success" role="status">{{ session('status') }}</div>
         @endif
 
-        @component('admin.partials.page-header', ['title' => 'Pedidos en línea'])
-            Gestione pedidos del carrito web: marque pedidos como listos para recoger, confirme la venta,
-            rechace el pedido o consulte la factura. Los pedidos pendientes pueden marcarse como listos para
-            recoger o rechazarse. Solo los pedidos listos para recoger pueden confirmarse. Las ventas ya
-            confirmadas están en
-            <a href="{{ route('sales.index') }}">Ventas</a>.
+        @component('admin.partials.page-header', ['title' => 'Encargos en línea'])
+            <p>
+                Gestiona los encargos del carrito web: márcalos como listos para recoger, confirma ventas o rechaza pedidos.
+                Las ventas confirmadas se registran en
+                <a href="{{ route('sales.index') }}">Ventas</a>.
+            </p>
 
             @slot('actions')
                 <div class="sales-header-actions">
-                    <button type="button" class="btn btn-secondary btn-sm orders-settings-link"
-                        id="btn-open-order-expiration-modal">
+                    <button type="button" class="btn btn-secondary btn-sm orders-settings-link" id="btn-open-order-expiration-modal">
                         <i class="fas fa-clock"></i> Plazo de cancelación
                     </button>
                 </div>
@@ -92,7 +91,7 @@
                     <div class="orders-search-field">
                         <i class="fas fa-search" aria-hidden="true"></i>
                         <input type="text" id="orders-search" name="search" value="{{ request('search') }}"
-                            placeholder="Nº pedido, factura o cliente" autocomplete="off">
+                            placeholder="Nº encargo, factura o cliente" autocomplete="off">
                     </div>
                 </div>
 
@@ -108,7 +107,7 @@
                 <table class="sales-table cf4-purchases-table">
                     <thead>
                         <tr>
-                            <th>Pedido / Factura</th>
+                            <th>Encargos / Factura</th>
                             <th>Cliente</th>
                             <th>Productos</th>
                             <th>Fecha</th>
@@ -285,8 +284,9 @@
 
                     <div class="form-group">
                         <label for="ready_to_pickup_expiration_hours">Horas para recoger el pedido</label>
-                        <input type="number" id="ready_to_pickup_expiration_hours" name="ready_to_pickup_expiration_hours" min="1"
-                            max="8760" step="1" required value="{{ old('ready_to_pickup_expiration_hours', $readyToPickupExpirationHours) }}">
+                        <input type="number" id="ready_to_pickup_expiration_hours"
+                            name="ready_to_pickup_expiration_hours" min="1" max="8760" step="1"
+                            required value="{{ old('ready_to_pickup_expiration_hours', $readyToPickupExpirationHours) }}">
                         <p id="order-expiration-form-error" class="form-error" style="display:none;" role="alert"></p>
                         <p class="form-help">Ejemplo: 72 horas (3 días). Mínimo 1, máximo 8760.</p>
                     </div>

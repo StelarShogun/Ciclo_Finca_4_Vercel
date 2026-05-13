@@ -43,21 +43,13 @@
         </nav>
 
         {{-- Product header --}}
-        @component('admin.partials.page-header', ['title' => $product->name])
-            <div class="inventory-movements-header-meta">
-                <span class="inventory-movements-sku">{{ \App\Models\Product::skuFromId($product->product_id) }}</span>
-                @if($product->category)
-                    <span class="inventory-movements-category">{{ $product->category->name }}</span>
-                @endif
-            </div>
-            <p class="inventory-movements-lead">
-                Historial de movimientos de inventario: entradas, salidas y devoluciones registradas.
-                El stock actual es
-                <strong class="stock-badge stock-badge--{{ $product->adminInventoryStockBadgeClass() }}">
-                    {{ number_format($product->stock_current) }} unid.
-                </strong>
-            </p>
-        @endcomponent
+@component('admin.partials.page-header', ['title' => 'Movimientos de inventario de ' . $product->name])
+    <p>
+        Consulta el historial detallado de entradas, salidas, ajustes y devoluciones registradas para este producto.
+        <br>
+        Stock actual: <strong class="stock-badge stock-badge--{{ $product->adminInventoryStockBadgeClass() }}">{{ number_format($product->stock_current) }} unid.</strong>
+    </p>
+@endcomponent
 
         <div class="inv-mov-layout">
 

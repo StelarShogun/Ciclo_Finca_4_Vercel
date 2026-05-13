@@ -31,10 +31,12 @@
     <div class="sales-container cf4-orders-module cf4-supplier-orders-module">
 
         @component('admin.partials.page-header', ['title' => 'Pedidos a Proveedores'])
-            Gestione los pedidos de compra realizados a los proveedores: confirme la recepción,
-            cancele un pedido o consulte el detalle de los productos solicitados.
-            Los pedidos de clientes en línea están en
-            <a href="{{ route('admin.orders.index') }}">Órdenes</a>.
+            <p>
+                Gestiona los pedidos de compra realizados a proveedores: confirma la recepción,
+                cancela pedidos y consulta el detalle de los productos solicitados.
+                Los pedidos de clientes en línea están en
+                <a href="{{ route('admin.orders.index') }}">Órdenes</a>.
+            </p>
 
             @slot('actions')
                 <div class="sales-header-actions">

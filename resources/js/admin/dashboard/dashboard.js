@@ -157,7 +157,7 @@ class Dashboard {
         this.initCharts();
         this.bindEvents();
         this.loadDashboardData();
-        
+
         // Update time every minute
         setInterval(() => this.updateCurrentTime(), 60000);
     }
@@ -173,10 +173,11 @@ class Dashboard {
             hour: '2-digit',
             minute: '2-digit'
         };
-        
+
         const timeElement = document.getElementById('current-time');
         if (timeElement) {
-            timeElement.textContent = now.toLocaleDateString('es-ES', options);
+            const formattedDate = now.toLocaleDateString('es-ES', options);
+            timeElement.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
         }
     }
 
@@ -356,7 +357,7 @@ class Dashboard {
                             borderColor: '#2e7d32',
                             borderWidth: 1,
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     const chart = context.chart;
                                     const ds = context.dataset;
                                     const meta = chart.getDatasetMeta(context.datasetIndex);
@@ -426,11 +427,11 @@ class Dashboard {
             if (!response.ok) throw new Error('Error al cargar datos de ventas');
 
             const data = await response.json();
-            
+
             if (data.success && data.sales) {
                 const labels = this.formatSalesChartLabels(data.sales);
                 const values = data.sales.map(sale => parseFloat(sale.total) || 0);
-                
+
                 return {
                     labels: labels,
                     datasets: [{
@@ -521,7 +522,7 @@ class Dashboard {
             '#2e7d32', '#4caf50', '#81c784', '#a5d6a7', '#1976d2',
             '#ff9800', '#9c27b0', '#f44336', '#00bcd4', '#795548'
         ];
-        
+
         const colors = [];
         for (let i = 0; i < count; i++) {
             colors.push(baseColors[i % baseColors.length]);
@@ -598,7 +599,7 @@ class Dashboard {
             if (!response.ok) throw new Error('Error al cargar datos de ventas');
 
             const data = await response.json();
-            
+
             if (data.success && data.sales) {
                 const labels = this.formatSalesChartLabels(data.sales);
                 const values = data.sales.map(sale => parseFloat(sale.total) || 0);
@@ -628,9 +629,9 @@ class Dashboard {
             if (!response.ok) throw new Error('Error al cargar datos del dashboard');
 
             const data = await response.json();
-            
+
             console.log('Datos recibidos del servidor:', data);
-            
+
             if (data.success) {
                 this.updateKPIs(data);
                 this.animateKPIs();
@@ -670,23 +671,23 @@ class Dashboard {
 
     // Animate KPI numbers counting up
     animateKPIs() {
-    const kpiValues = document.querySelectorAll('.kpi-value');
-    kpiValues.forEach(element => {
-        const finalValue = element.textContent;
+        const kpiValues = document.querySelectorAll('.kpi-value');
+        kpiValues.forEach(element => {
+            const finalValue = element.textContent;
 
-        // Clean the value to extract only numbers, handling currency and formatting
-        const cleaned = finalValue
-            .replace(/[^\d.,]/g, '')   
-            .replace(/\./g, '')        
-            .replace(',', '.');         
+            // Clean the value to extract only numbers, handling currency and formatting
+            const cleaned = finalValue
+                .replace(/[^\d.,]/g, '')
+                .replace(/\./g, '')
+                .replace(',', '.');
 
-        const numericValue = parseFloat(cleaned) || 0;
+            const numericValue = parseFloat(cleaned) || 0;
 
-        if (numericValue > 0) {
-            this.animateNumber(element, 0, numericValue, 1000);
-        }
-    });
-}
+            if (numericValue > 0) {
+                this.animateNumber(element, 0, numericValue, 1000);
+            }
+        });
+    }
 
     // Helper to animate a number increment
     animateNumber(element, start, end, duration) {

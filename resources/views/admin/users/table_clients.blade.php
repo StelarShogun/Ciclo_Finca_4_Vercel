@@ -22,10 +22,10 @@
     <main class="admin-main">
 
         {{-- Page header with total user count --}}
-        @component('admin.partials.page-header', [
-            'title' => 'Gestión de Usuarios',
-            'description' => 'Administra los clientes registrados en la plataforma',
-        ])
+@component('admin.partials.page-header', [
+    'title' => 'Gestión de usuarios',
+    'description' => 'Consulta y administra los clientes registrados en la plataforma, incluyendo su estado de acceso.',
+])
             @slot('actions')
                 <div class="page-header-actions">
                     <span class="clients-count-badge">

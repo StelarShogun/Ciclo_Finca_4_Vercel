@@ -24,6 +24,7 @@
   margin-top: 5px;
   opacity: .9;
   font-size: 1.1rem;
+  color: #fff;
 }
 
 .cf4-admin-page-header__description p {
@@ -45,6 +46,38 @@
   gap: 15px;
   align-items: center;
   flex-shrink: 0;
+}
+
+.cf4-admin-page-header__actions .btn {
+  padding: 9px 18px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+  height: 36px;
+  border: 2px solid;
+  border-radius: 8px;
+}
+
+.cf4-admin-page-header__actions .btn-primary {
+  border-color: var(--color-primary);
+}
+
+.cf4-admin-page-header__actions .btn-secondary {
+  border-color: var(--color-secondary);
+}
+
+.cf4-admin-page-header__actions .btn-success {
+  border-color: var(--color-success);
+}
+
+.cf4-admin-page-header__actions .btn-danger {
+  border-color: var(--color-danger);
+}
+
+.cf4-admin-page-header__actions .btn-sm {
+  padding: 9px 18px;
+  font-size: 0.9rem;
+  height: 36px;
 }
 
 @media (max-width: 768px) {

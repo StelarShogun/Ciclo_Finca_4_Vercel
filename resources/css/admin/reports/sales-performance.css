@@ -67,7 +67,7 @@
     margin: 0;
     font-size: 0.95rem;
     line-height: 1.5;
-    color: var(--color-muted, #5f6368);
+    color: #fff;
     max-width: 40rem;
 }
 
@@ -115,10 +115,10 @@
 
 .period-btn {
     padding: 0.5rem 0.75rem;
-    border: 1px solid rgba(0, 0, 0, 0.12);
+    border: 2px solid rgba(0, 0, 0, 0.12);
     border-radius: 8px;
     background: #fff;
-    font-family: inherit;
+    font-family: 'Poppins', sans-serif;
     font-size: 0.8125rem;
     font-weight: 500;
     cursor: pointer;
@@ -206,11 +206,11 @@
 .sales-apply-btn {
     margin-top: 0.25rem;
     padding: 0.55rem 1rem;
-    border: none;
+    border: 2px solid var(--color-primary, #2e7d32);
     border-radius: 8px;
     background: var(--color-primary, #2e7d32);
     color: #fff;
-    font-family: inherit;
+    font-family: 'Poppins', sans-serif;
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
@@ -505,3 +505,4 @@
         text-align: left;
     }
 }
+
