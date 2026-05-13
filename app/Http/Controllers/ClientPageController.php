@@ -855,7 +855,7 @@ class ClientPageController extends Controller
         $cancelledStatuses = $this->cancelledClientInvoiceStatuses();
 
         if ($tab === 'historial') {
-            $orders = Sale::with(['saleItems.product'])
+            $orders = Sale::query()
                 ->where('client_id', $client->user_id)
                 ->where('status', 'completed')
                 ->orderByDesc('sale_date')
@@ -875,7 +875,7 @@ class ClientPageController extends Controller
                 })
                 ->values();
         } elseif ($tab === 'canceladas') {
-            $orders = Sale::with(['saleItems.product'])
+            $orders = Sale::query()
                 ->where('client_id', $client->user_id)
                 ->whereIn('status', $cancelledStatuses)
                 ->orderByDesc('sale_date')
@@ -883,7 +883,7 @@ class ClientPageController extends Controller
         } else {
             $tab = 'facturas';
 
-            $orders = Sale::with(['saleItems.product'])
+            $orders = Sale::query()
                 ->where('client_id', $client->user_id)
                 ->whereIn('status', $activeStatuses)
                 ->orderByDesc('sale_date')
