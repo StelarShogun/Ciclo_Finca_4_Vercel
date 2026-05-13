@@ -1836,10 +1836,10 @@ document.addEventListener('DOMContentLoaded', function () {
     })();
 
     // ---- Catalog spotlight carousel (Swiper) ----
-    // Renders featured + novelty products with autoplay, navigation arrows,
-    // pagination dots and mobile swipe. Markup lives in catalog.blade.php
-    // behind `[data-catalog-spotlight-carousel]` and is hidden by Blade when
-    // any filter is active or the user is past page 1 of pagination.
+    // Renders featured + novelty products with autoplay, navigation arrows
+    // and mobile swipe. Markup lives in catalog.blade.php behind
+    // `[data-catalog-spotlight-carousel]` and is hidden by Blade when any
+    // filter is active or the user is past page 1 of pagination.
     (function initCatalogSpotlightCarousel() {
         var root = document.querySelector('[data-catalog-spotlight-carousel]');
         if (!root) return;
@@ -1855,16 +1855,15 @@ document.addEventListener('DOMContentLoaded', function () {
         var delay = parseInt(root.getAttribute('data-autoplay-delay'), 10);
         if (!Number.isFinite(delay) || delay <= 0) delay = 4000;
 
-        var prefersReducedMotion = window.matchMedia
-            && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-        var autoplayOption = prefersReducedMotion
-            ? false
-            : {
-                delay: delay,
-                disableOnInteraction: false,
-                pauseOnMouseEnter: true,
-            };
+        // Autoplay is part of the acceptance criteria, so it runs for every
+        // visitor. Manual arrows + swipe are always available for users who
+        // prefer reduced motion. We keep pauseOnMouseEnter so anyone reading
+        // a card can stop the rotation by hovering.
+        var autoplayOption = {
+            delay: delay,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true,
+        };
 
         try {
             new Swiper(swiperEl, {
@@ -1872,7 +1871,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 slidesPerView: 1,
                 spaceBetween: 18,
                 centeredSlides: false,
-                loop: slides.length > 3,
+                loop: slides.length > 1,
                 speed: 600,
                 grabCursor: true,
                 watchOverflow: true,
