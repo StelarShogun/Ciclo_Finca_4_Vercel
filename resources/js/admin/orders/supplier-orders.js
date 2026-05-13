@@ -313,7 +313,7 @@ function viewOrder(id) {
             pending:          { label: 'Pendiente',         icon: 'fa-clock',            color: '#f59e0b' },
             confirmed:        { label: 'Confirmado',        icon: 'fa-check',            color: '#3b82f6' },
             partial_received: { label: 'Recepción parcial', icon: 'fa-clipboard-check',  color: '#f97316' },
-            delivered:        { label: 'Entregado',         icon: 'fa-truck',            color: '#22c55e' },
+            delivered:        { label: 'Entregado',         icon: 'fa-truck',            color: '#235347' },
             cancelled:        { label: 'Cancelado',         icon: 'fa-times',            color: '#ef4444' },
         };
 
@@ -538,7 +538,7 @@ function _orderAction(id, state, confirmCfg, successMsg) {
                     title:              'Listo',
                     text:               data.message || successMsg,
                     icon:               'success',
-                    confirmButtonColor: '#2e7d32',
+                    confirmButtonColor: '#235347',
                     confirmButtonText:  'Entendido',
                 }).then(() => {
                     if (state === 'confirmed' || state === 'delivered') {
@@ -650,7 +650,7 @@ function cancelOrder(id) {
                 confirmBtn.disabled      = !ok;
                 confirmBtn.style.opacity = ok ? '1' : '0.45';
                 confirmBtn.style.cursor  = ok ? '' : 'not-allowed';
-                hint.style.color         = ok ? '#22c55e' : '#9ca3af';
+                hint.style.color         = ok ? '#235347' : '#9ca3af';
                 hint.textContent         = ok ? '✓ Motivo válido.' : 'Escribe al menos 4 caracteres para continuar.';
             });
         },
@@ -692,7 +692,7 @@ function cancelOrder(id) {
                     title:              'Pedido cancelado',
                     text:               data.message || 'El pedido fue cancelado correctamente.',
                     icon:               'success',
-                    confirmButtonColor: '#2e7d32',
+                    confirmButtonColor: '#235347',
                     confirmButtonText:  'Entendido',
                 }).then(() => {
                     updateRowState(String(id), 'cancelled');
