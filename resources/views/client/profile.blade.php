@@ -8,7 +8,8 @@
 
 @section('content')
 
-{{-- Hero banner verde, igual al del catálogo --}}
+<div class="profile-shell">
+{{-- Hero alineado al look del catálogo (CF4) --}}
 <div class="profile-header">
     <div class="container">
         <h1 class="profile-header-title">Mi Perfil</h1>
@@ -19,7 +20,7 @@
 <div class="container">
     <div class="profile-wrapper">
 
-        {{-- Hero: avatar, nombre completo, email y badge de tipo de cuenta --}}
+        {{-- Hero: avatar, datos y accesos (favoritos / notificaciones) en la misma tarjeta --}}
         <div class="profile-hero">
             <div class="profile-avatar">
                 <span id="avatarInitials">
@@ -31,15 +32,28 @@
                     {{ $client->name }} {{ $client->first_surname }} {{ $client->second_surname }}
                 </h1>
                 <p class="profile-email">{{ $client->gmail }}</p>
-                @if ($isGoogleOnly)
-                    <span class="profile-badge profile-badge--google">
-                        <i class="fab fa-google"></i> Cuenta de Google
-                    </span>
-                @else
-                    <span class="profile-badge profile-badge--local">
-                        <i class="fas fa-envelope"></i> Cuenta local
-                    </span>
-                @endif
+                <div class="profile-hero-meta">
+                    @if ($isGoogleOnly)
+                        <span class="profile-badge profile-badge--google">
+                            <i class="fab fa-google"></i> Cuenta de Google
+                        </span>
+                    @else
+                        <span class="profile-badge profile-badge--local">
+                            <i class="fas fa-envelope"></i> Cuenta local
+                        </span>
+                    @endif
+                    <nav class="profile-quick-actions" aria-label="Accesos rápidos">
+                        <button type="button"
+                                class="profile-quick-action profile-quick-action--favorites cf4-favorites-open-trigger">
+                            <i class="fas fa-heart" aria-hidden="true"></i>
+                            <span>Mis favoritos</span>
+                        </button>
+                        <a href="{{ route('clients.notifications') }}" class="profile-quick-action profile-quick-action--notifications">
+                            <i class="fas fa-bell" aria-hidden="true"></i>
+                            <span>Notificaciones</span>
+                        </a>
+                    </nav>
+                </div>
             </div>
         </div>
 
@@ -252,6 +266,8 @@
         </div>{{-- /profile-grid --}}
     </div>{{-- /profile-wrapper --}}
 </div>{{-- /container --}}
+
+</div>{{-- /profile-shell --}}
 
 @endsection
 

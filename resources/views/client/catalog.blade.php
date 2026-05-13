@@ -7,40 +7,48 @@
 @endpush
 
 @section('content')
-<div class="catalog-container">
-    <div class="catalog-header">
-        <div class="container">
-            <h1 class="catalog-title">Catálogo de Productos</h1>
+<section class="catalog-shell">
+    <header class="catalog-hero">
+        <div class="catalog-hero-content">
+            <span class="catalog-kicker">Ciclo Finca 4</span>
+            <h1>Catálogo de Productos</h1>
             <p class="catalog-subtitle">Explora nuestra amplia selección de productos</p>
+            <div class="catalog-hero-stats" aria-label="Resumen del catálogo">
+                <span><strong>{{ number_format((int) $products->total(), 0, ',', '.') }}</strong> productos</span>
+                <span><strong>{{ $categories->count() }}</strong> categorías</span>
+            </div>
         </div>
-    </div>
+    </header>
 
-    <div class="container">
+    <div class="catalog-container">
         @php
             $activeCategoryId = (int) (request('category_id') ?: 0);
         @endphp
 
-        <nav class="catalog-category-sidebar"
-             id="catalog-category-sidebar"
-             aria-label="Navegación por categorías"
-             data-catalog-sidebar-hover-root
-             data-close-delay-ms="150">
-            <div class="catalog-category-sidebar-head">
-                <button id="catalog-category-sidebar-toggle"
-                        class="catalog-category-sidebar-brand"
-                        type="button"
-                        aria-expanded="false"
-                        aria-label="Expandir menú de categorías">
-                    <i class="fas fa-bars" aria-hidden="true"></i>
-                </button>
-                <span class="catalog-category-sidebar-head-label">Categorías</span>
-            </div>
+        <div class="catalog-sidebar-stack">
+        <div class="catalog-rail-wrap">
+            <nav class="category-rail catalog-category-sidebar"
+                 id="catalog-category-sidebar"
+                 aria-label="Categorías del catálogo"
+                 data-catalog-sidebar-hover-root
+                 data-close-delay-ms="150">
+                <div class="category-rail-header">
+                    <button id="catalog-category-sidebar-toggle"
+                            class="category-rail-toggle catalog-category-sidebar-brand"
+                            type="button"
+                            aria-expanded="false"
+                            aria-label="Expandir menú de categorías">
+                        <i class="fas fa-bars" aria-hidden="true"></i>
+                    </button>
+                    <span class="category-rail-title">Categorías</span>
+                </div>
+                <div class="category-rail-scroll">
             <a href="{{ route('clients.catalog', $catalogParams) }}"
                class="catalog-category-sidebar-all catalog-category-item {{ $activeCategoryId === 0 ? 'is-active' : '' }}"
                data-category-id="0"
                title="Todos los productos"
                aria-label="Todos los productos">
-                <span class="catalog-category-item-icon" aria-hidden="true"><i class="fas fa-th-large"></i></span>
+                <span class="catalog-category-item-icon" aria-hidden="true"><i class="fas fa-list"></i></span>
                 <span class="catalog-category-item-label"></span>
             </a>
             @foreach($categories as $cat)
@@ -92,18 +100,11 @@
                     @endif
                 </div>
             @endforeach
-        </nav>
-        <div class="catalog-layout">
-            {{-- Mobile: filter toggle (solo filtros; categorías en panel principal) --}}
-            <button class="btn btn-outline-secondary catalog-filter-toggle" id="catalog-filter-toggle" type="button"
-                    aria-expanded="false" aria-controls="catalog-sidebar"
-                    style="display:none; align-items:center; gap:8px; width:100%; margin-bottom:12px;">
-                <i class="fas fa-filter"></i>
-                <span>Mostrar filtros</span>
-                <i class="fas fa-chevron-down" style="margin-left:auto; font-size:0.8rem; transition:transform 0.25s ease;"></i>
-            </button>
+                </div>
+            </nav>
+        </div>
 
-            <aside class="catalog-sidebar" id="catalog-sidebar">
+        <aside class="catalog-filters catalog-sidebar" id="catalog-sidebar">
                 <div class="filters-card">
                     <h3 class="filters-title">
                         <i class="fas fa-filter"></i>
@@ -112,6 +113,8 @@
 
                     {{-- GET form: category_id se conserva por URL al filtrar desde el menú de categorías --}}
                     <form method="GET" action="{{ route('clients.catalog') }}" id="filter-form" autocomplete="off">
+                        {{-- Búsqueda en el header: sin JS el GET conserva `search`; con JS se sincroniza desde #catalog-nav-search. --}}
+                        <input type="hidden" name="search" id="catalog-filter-search-fallback" value="{{ old('search', request('search', '')) }}">
                         @if(request('category_id'))
                             <input type="hidden" name="category_id" value="{{ request('category_id') }}">
                         @endif
@@ -121,31 +124,6 @@
                                 {{ $errors->first('price_range') }}
                             </div>
                         @endif
-                        <div class="filter-group catalog-search-group"
-                             data-catalog-suggestions
-                             data-suggestions-url="{{ route('api.products.suggestions') }}"
-                             data-trending-url="{{ route('api.catalog.search-trending') }}">
-                            <label for="search">Buscar</label>
-                            <input type="text"
-                                   id="search"
-                                   name="search"
-                                   class="form-control"
-                                   placeholder="Nombre o descripción..."
-                                   autocomplete="off"
-                                   autocorrect="off"
-                                   autocapitalize="off"
-                                   spellcheck="false"
-                                   role="combobox"
-                                   aria-autocomplete="list"
-                                   aria-expanded="false"
-                                   aria-controls="catalog-search-suggestions"
-                                   value="{{ request('search') }}">
-                            <div id="catalog-search-suggestions"
-                                 class="catalog-search-suggestions"
-                                 role="listbox"
-                                 aria-label="Sugerencias de búsqueda"
-                                 aria-hidden="true"></div>
-                        </div>
 
                         <div class="filter-group">
                             <label>Rango de Precio</label>
@@ -182,26 +160,9 @@
                             </select>
                         </div>
 
-                        <div class="filter-group">
-                            <label for="sort">Ordenar por</label>
-                            <select id="sort" name="sort" class="form-control">
-                                <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Más recientes</option>
-                                <option value="price"      {{ request('sort') == 'price'      ? 'selected' : '' }}>Precio</option>
-                                <option value="name"       {{ request('sort') == 'name'       ? 'selected' : '' }}>Nombre</option>
-                            </select>
-                        </div>
-
-                        <div class="filter-group">
-                            <label for="direction">Dirección</label>
-                            <select id="direction" name="direction" class="form-control">
-                                <option value="desc" {{ request('direction') == 'desc' ? 'selected' : '' }}>Descendente</option>
-                                <option value="asc"  {{ request('direction') == 'asc'  ? 'selected' : '' }}>Ascendente</option>
-                            </select>
-                        </div>
-
                         <div class="filter-actions">
                             <button type="submit" class="btn btn-primary btn-block" id="filter-submit-btn">
-                                <i class="fas fa-search"></i>
+                                <i class="fas fa-sliders" aria-hidden="true"></i>
                                 Aplicar Filtros
                             </button>
                             {{-- Navigating to the base URL effectively clears all filters --}}
@@ -213,8 +174,17 @@
                     </form>
                 </div>
             </aside>
+        </div>
 
-            <main class="catalog-content">
+            <main class="catalog-main catalog-content">
+                {{-- Mobile / tablet: filtros colapsables (JS + .open en #catalog-sidebar) --}}
+                <button class="btn btn-outline-secondary catalog-filter-toggle" id="catalog-filter-toggle" type="button"
+                        aria-expanded="false" aria-controls="catalog-sidebar">
+                    <i class="fas fa-filter"></i>
+                    <span>Mostrar filtros</span>
+                    <i class="fas fa-chevron-down catalog-filter-toggle-caret" aria-hidden="true"></i>
+                </button>
+
                 <div class="catalog-category-toolbar">
                     <button type="button"
                             id="catalog-category-trigger"
@@ -316,7 +286,7 @@
                 @endphp
 
                 @if($showCatalogSpotlight)
-                    <section class="catalog-spotlight-section" aria-labelledby="catalog-spotlight-heading">
+                    <section class="catalog-spotlight catalog-spotlight-section" aria-labelledby="catalog-spotlight-heading">
                         <div class="catalog-spotlight-inner">
                             <header class="catalog-spotlight-header">
                                 <h2 id="catalog-spotlight-heading" class="catalog-spotlight-title">Destacados y novedades</h2>
@@ -403,26 +373,55 @@
                 @endif
 
                 <div class="catalog-results">
-                    <div class="results-header">
-                        @if($selectedCategory)
-                            <p class="catalog-breadcrumb">Catálogo / {{ $selectedCategory->name }}</p>
-                        @else
-                            <p class="catalog-breadcrumb">Catálogo</p>
-                        @endif
+                    <div class="catalog-toolbar results-header">
+                        <div class="catalog-toolbar-primary">
+                            @if($selectedCategory)
+                                <p class="catalog-breadcrumb">Catálogo / {{ $selectedCategory->name }}</p>
+                            @endif
 
-                        @if($selectedBrand)
-                            <a href="{{ route('clients.catalog', array_diff_key(request()->query(), ['brand_id' => ''])) }}"
-                               class="catalog-brand-chip"
-                               title="Quitar filtro de marca">
-                                <i class="fas fa-tag" aria-hidden="true"></i>
-                                {{ $selectedBrand->name }}
-                                <i class="fas fa-times catalog-brand-chip-remove" aria-hidden="true"></i>
-                            </a>
-                        @endif
+                            @if($selectedBrand)
+                                <a href="{{ route('clients.catalog', array_diff_key(request()->query(), ['brand_id' => ''])) }}"
+                                   class="catalog-brand-chip"
+                                   title="Quitar filtro de marca">
+                                    <i class="fas fa-tag" aria-hidden="true"></i>
+                                    {{ $selectedBrand->name }}
+                                    <i class="fas fa-times catalog-brand-chip-remove" aria-hidden="true"></i>
+                                </a>
+                            @endif
 
-                        <p class="results-count">
-                            Mostrando {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }} de {{ $products->total() }} productos
-                        </p>
+                            <h2 class="catalog-toolbar-heading">
+                                @if($selectedCategory)
+                                    Productos en {{ $selectedCategory->name }}
+                                @else
+                                    Productos disponibles
+                                @endif
+                            </h2>
+                        </div>
+
+                        <div class="catalog-toolbar-meta">
+                            <div class="catalog-toolbar-sort" aria-label="Ordenar resultados">
+                                <div class="catalog-toolbar-sort-field">
+                                    <label for="sort">Ordenar por</label>
+                                    <select id="sort" name="sort" class="form-control catalog-toolbar-select" form="filter-form"
+                                            onchange="document.getElementById('filter-form') && document.getElementById('filter-form').requestSubmit()">
+                                        <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Más recientes</option>
+                                        <option value="price"      {{ request('sort') == 'price'      ? 'selected' : '' }}>Precio</option>
+                                        <option value="name"       {{ request('sort') == 'name'       ? 'selected' : '' }}>Nombre</option>
+                                    </select>
+                                </div>
+                                <div class="catalog-toolbar-sort-field">
+                                    <label for="direction">Dirección</label>
+                                    <select id="direction" name="direction" class="form-control catalog-toolbar-select" form="filter-form"
+                                            onchange="document.getElementById('filter-form') && document.getElementById('filter-form').requestSubmit()">
+                                        <option value="desc" {{ request('direction') == 'desc' ? 'selected' : '' }}>Descendente</option>
+                                        <option value="asc"  {{ request('direction') == 'asc'  ? 'selected' : '' }}>Ascendente</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <p class="catalog-count results-count">
+                                Mostrando {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }} de {{ $products->total() }} productos
+                            </p>
+                        </div>
                     </div>
 
                     @if($products->total() > 0)
@@ -547,9 +546,8 @@
                     @endif
                 </div>
             </main>
-        </div>
     </div>
-</div>
+</section>
 
 {{-- Quantity selector modal, populated by JS when the user clicks "Agregar" --}}
 <div class="modal" id="add-to-cart-modal">

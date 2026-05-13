@@ -50,20 +50,20 @@ class XmlPriceDeviationController extends Controller
     public function analyse(Request $request)
     {
         $request->validate([
-            'xml_file'  => ['required', 'file', 'mimes:xml,text', 'max:5120'],
+            'xml_file' => ['required', 'file', 'mimes:xml,text', 'max:5120'],
             'threshold' => ['required', 'numeric', 'min:0', 'max:100'],
         ], [
-            'xml_file.required'  => 'Debe seleccionar un archivo XML.',
-            'xml_file.mimes'     => 'El archivo debe ser de tipo XML.',
-            'xml_file.max'       => 'El archivo no puede superar los 5 MB.',
+            'xml_file.required' => 'Debe seleccionar un archivo XML.',
+            'xml_file.mimes' => 'El archivo debe ser de tipo XML.',
+            'xml_file.max' => 'El archivo no puede superar los 5 MB.',
             'threshold.required' => 'Debe indicar el umbral de desvío.',
-            'threshold.min'      => 'El umbral no puede ser negativo.',
-            'threshold.max'      => 'El umbral no puede superar el 100%.',
+            'threshold.min' => 'El umbral no puede ser negativo.',
+            'threshold.max' => 'El umbral no puede superar el 100%.',
         ]);
 
         try {
             $analysis = $this->service->analyse(
-                file:         $request->file('xml_file'),
+                file: $request->file('xml_file'),
                 thresholdPct: (float) $request->input('threshold', 10)
             );
         } catch (\RuntimeException $e) {
@@ -121,11 +121,11 @@ class XmlPriceDeviationController extends Controller
     public function apply(Request $request)
     {
         $request->validate([
-            'updates'          => ['present', 'array'],
-            'updates.*'        => ['integer', 'min:1'],
-            'sale_prices'      => ['nullable', 'array'],
-            'sale_prices.*'    => ['nullable', 'numeric', 'min:0'],
-            'reason'           => ['nullable', 'string', 'max:500'],
+            'updates' => ['present', 'array'],
+            'updates.*' => ['integer', 'min:1'],
+            'sale_prices' => ['nullable', 'array'],
+            'sale_prices.*' => ['nullable', 'numeric', 'min:0'],
+            'reason' => ['nullable', 'string', 'max:500'],
         ]);
 
         $analysis = Session::get(self::SESSION_KEY);
@@ -141,7 +141,7 @@ class XmlPriceDeviationController extends Controller
         // Build the sale_prices map: [product_id (int) => new_sale_price (float|null)]
         // Only keep entries that actually have a non-empty numeric value.
         $salePricesRaw = $request->input('sale_prices', []);
-        $salePrices    = [];
+        $salePrices = [];
 
         foreach ($salePricesRaw as $productId => $value) {
             $productId = (int) $productId;
@@ -152,8 +152,7 @@ class XmlPriceDeviationController extends Controller
 
         // Filter items: must be found in DB and ticked by admin.
         $toUpdate = collect($analysis['items'])
-            ->filter(fn ($item) =>
-                $item['found'] &&
+            ->filter(fn ($item) => $item['found'] &&
                 ! is_null($item['product_id']) &&
                 in_array((int) $item['product_id'], $selectedIds, true)
             )
@@ -164,12 +163,12 @@ class XmlPriceDeviationController extends Controller
 
         if (! empty($toUpdate)) {
             $count = $this->service->applyUpdates(
-                updates:      $toUpdate,
+                updates: $toUpdate,
                 thresholdPct: (float) $analysis['threshold_percentage'],
-                xmlFileName:  $analysis['file_name'],
-                reason:       $request->input('reason'),
-                changedBy:    (int) auth('admin')->id(),
-                salePrices:   $salePrices,      // ← new
+                xmlFileName: $analysis['file_name'],
+                reason: $request->input('reason'),
+                changedBy: (int) auth('admin')->id(),
+                salePrices: $salePrices,      // ← new
             );
 
             $this->logAudit($analysis['file_name'], $count, $selectedIds, $salePrices);
@@ -196,9 +195,9 @@ class XmlPriceDeviationController extends Controller
                 'supplier_orders',
                 "Actualización de precios desde XML: {$fileName}. Productos actualizados: {$count}.",
                 [
-                    'xml_file_name'      => $fileName,
-                    'updated_count'      => $count,
-                    'selected_ids'       => $selectedIds,
+                    'xml_file_name' => $fileName,
+                    'updated_count' => $count,
+                    'selected_ids' => $selectedIds,
                     'sale_price_updates' => $salePrices,
                 ]
             );

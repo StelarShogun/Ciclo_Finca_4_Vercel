@@ -79,7 +79,7 @@ class Product extends Model implements HasMedia
     // Builds the catalog SKU from the product ID.
     public static function skuFromId(int $productId): string
     {
-        return 'BK-' . str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
+        return 'BK-'.str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
     }
 
     // Returns a custom SKU or a generated BK-xxx code.
@@ -118,7 +118,7 @@ class Product extends Model implements HasMedia
         $placeholders = implode(',', array_fill(0, count($ok), '?'));
 
         return $query->whereRaw(
-            'LOWER(TRIM(COALESCE(status, \'\'))) IN (' . $placeholders . ')',
+            'LOWER(TRIM(COALESCE(status, \'\'))) IN ('.$placeholders.')',
             $ok
         );
     }

@@ -2,15 +2,31 @@
    VARIABLES
    =================================================================== */
 :root {
+  /* Altura útil del header cliente (sticky catálogo); alinear con header.css (.header-content ~70px) */
+  --client-header-height: 72px;
+
+  /* CF4-132 — paleta de marca */
+  --brand-darkest:       #051F20;
+  --brand-dark:          #0B2B26;
+  --brand-medium-dark:   #163832;
+  --brand-medium:        #235347;
+  --brand-light:         #8EB69B;
+  --brand-lightest:      #DAF1DE;
+
+  --color-darkest:       var(--brand-darkest);
+  --color-medium-dark:   var(--brand-medium-dark);
+  --color-medium:        var(--brand-medium);
+  --color-lightest:      var(--brand-lightest);
+
   /* Primary colors */
-  --color-primary:       #2e7d32;
-  --color-primary-dark:  #1b5e20;
-  --color-primary-light: #4caf50;
+  --color-primary:       var(--brand-medium);
+  --color-primary-dark:  var(--brand-medium-dark);
+  --color-primary-light: var(--brand-light);
   --color-accent:        #ff6f00;
 
   /* State colors */
-  --color-success:     #2e7d32;
-  --color-success-bg:  #e8f5e9;
+  --color-success:       var(--brand-medium);
+  --color-success-bg:    var(--brand-lightest);
   --color-danger:      #d32f2f;
   --color-danger-bg:   #ffebee;
   --color-warning:     #f57c00;
@@ -30,7 +46,7 @@
   --text-secondary: #666;
 
   /* Backgrounds */
-  --background-main:  #f5f5f5;
+  --background-main:  var(--brand-lightest);
   --background-white: #ffffff;
   --background-light: #f8f9fa;
 

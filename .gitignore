@@ -98,4 +98,5 @@ vendor/composer/autoload_classmap.php
 # Preferencias locales del IDE (plugins, etc.); no versionar
 .cursor/settings.json
 .cursor/skills/
+.cursor/hooks/state/
 .cursor/plans/cf4-112_pdf_service_7ccce6a9.plan.md

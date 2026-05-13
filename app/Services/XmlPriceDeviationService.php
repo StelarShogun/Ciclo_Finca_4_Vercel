@@ -71,10 +71,6 @@ class XmlPriceDeviationService
      *   suggested_sale_price     — sale_price that keeps the same margin with the new cost
      *                              null when xml_price <= current_price (no increase)
      *   sale_price_increase      — suggested_sale_price - current_sale_price
-     *
-     * @param  UploadedFile $file
-     * @param  float        $thresholdPct
-     * @return array
      */
     public function analyse(UploadedFile $file, float $thresholdPct = 10.0): array
     {
@@ -85,19 +81,19 @@ class XmlPriceDeviationService
         $result = [];
 
         foreach ($rawItems as $raw) {
-            $sku      = (string) ($raw['code']     ?? '');
-            $name     = (string) ($raw['name']     ?? '');
-            $quantity = (float)  ($raw['quantity'] ?? 0);
-            $xmlPrice = (float)  ($raw['price']    ?? 0);
+            $sku = (string) ($raw['code'] ?? '');
+            $name = (string) ($raw['name'] ?? '');
+            $quantity = (float) ($raw['quantity'] ?? 0);
+            $xmlPrice = (float) ($raw['price'] ?? 0);
 
             $product = $this->findProduct($sku);
 
             if ($product) {
-                $currentPrice     = (float) $product->purchase_price;
+                $currentPrice = (float) $product->purchase_price;
                 $currentSalePrice = (float) $product->sale_price;
 
                 $differenceAmount = round($xmlPrice - $currentPrice, 2);
-                $differencePct    = $currentPrice > 0
+                $differencePct = $currentPrice > 0
                     ? round((($xmlPrice - $currentPrice) / $currentPrice) * 100, 4)
                     : 100.0;
                 $hasDeviation = abs($differencePct) >= $thresholdPct;
@@ -105,8 +101,8 @@ class XmlPriceDeviationService
                 // ── Sale price suggestion ──────────────────────────────────
                 // Only suggest when the purchase price is actually going UP.
                 $suggestedSalePrice = null;
-                $salePriceIncrease  = null;
-                $currentMarginPct   = 0.0;
+                $salePriceIncrease = null;
+                $currentMarginPct = 0.0;
 
                 if ($xmlPrice > $currentPrice) {
                     // Current margin percentage (markup over cost).
@@ -116,79 +112,77 @@ class XmlPriceDeviationService
 
                     // Apply the same markup to the new cost.
                     $suggestedSalePrice = round($xmlPrice * (1 + $currentMarginPct / 100), 2);
-                    $salePriceIncrease  = round($suggestedSalePrice - $currentSalePrice, 2);
+                    $salePriceIncrease = round($suggestedSalePrice - $currentSalePrice, 2);
                 }
                 // ──────────────────────────────────────────────────────────
 
                 $result[] = [
-                    'product_id'            => (int) $product->product_id,
-                    'sku'                   => $product->displaySku(),
-                    'name'                  => (string) $product->name,
-                    'quantity'              => $quantity,
-                    'xml_price'             => $xmlPrice,
-                    'current_price'         => $currentPrice,
-                    'difference_amount'     => $differenceAmount,
+                    'product_id' => (int) $product->product_id,
+                    'sku' => $product->displaySku(),
+                    'name' => (string) $product->name,
+                    'quantity' => $quantity,
+                    'xml_price' => $xmlPrice,
+                    'current_price' => $currentPrice,
+                    'difference_amount' => $differenceAmount,
                     'difference_percentage' => $differencePct,
-                    'has_deviation'         => $hasDeviation,
-                    'found'                 => true,
+                    'has_deviation' => $hasDeviation,
+                    'found' => true,
                     // Sale price fields:
-                    'current_sale_price'    => $currentSalePrice,
-                    'current_margin_pct'    => $currentMarginPct,
-                    'suggested_sale_price'  => $suggestedSalePrice,
-                    'sale_price_increase'   => $salePriceIncrease,
+                    'current_sale_price' => $currentSalePrice,
+                    'current_margin_pct' => $currentMarginPct,
+                    'suggested_sale_price' => $suggestedSalePrice,
+                    'sale_price_increase' => $salePriceIncrease,
                 ];
             } else {
                 // Product not found in DB – include as unmatched row.
                 $result[] = [
-                    'product_id'            => null,
-                    'sku'                   => $sku,
-                    'name'                  => $name,
-                    'quantity'              => $quantity,
-                    'xml_price'             => $xmlPrice,
-                    'current_price'         => 0.0,
-                    'difference_amount'     => $xmlPrice,
+                    'product_id' => null,
+                    'sku' => $sku,
+                    'name' => $name,
+                    'quantity' => $quantity,
+                    'xml_price' => $xmlPrice,
+                    'current_price' => 0.0,
+                    'difference_amount' => $xmlPrice,
                     'difference_percentage' => 100.0,
-                    'has_deviation'         => true,
-                    'found'                 => false,
+                    'has_deviation' => true,
+                    'found' => false,
                     // Sale price fields (empty for unmatched products):
-                    'current_sale_price'    => 0.0,
-                    'current_margin_pct'    => 0.0,
-                    'suggested_sale_price'  => null,
-                    'sale_price_increase'   => null,
+                    'current_sale_price' => 0.0,
+                    'current_margin_pct' => 0.0,
+                    'suggested_sale_price' => null,
+                    'sale_price_increase' => null,
                 ];
             }
         }
 
         return [
-            'file_name'            => $file->getClientOriginalName(),
+            'file_name' => $file->getClientOriginalName(),
             'threshold_percentage' => $thresholdPct,
-            'items'                => $result,
+            'items' => $result,
         ];
     }
 
     /**
      * Persist the price updates that the admin confirmed.
      *
-     * @param  array       $updates       Items from analysis filtered to those selected.
-     *                                    Each entry must contain: product_id, xml_price,
-     *                                    current_price, difference_amount, difference_percentage.
-     * @param  float       $thresholdPct
-     * @param  string      $xmlFileName
-     * @param  string|null $reason        Optional admin note.
-     * @param  int         $changedBy     Admin user_id.
-     * @param  array       $salePrices    Map of product_id => new_sale_price entered by the
-     *                                    admin in the review form. A null / missing entry means
-     *                                    "do not touch sale_price for this product".
-     *                                    Example: [42 => 15800.00, 99 => 22000.00]
-     * @return int  Number of products whose purchase_price was updated.
+     * @param  array  $updates  Items from analysis filtered to those selected.
+     *                          Each entry must contain: product_id, xml_price,
+     *                          current_price, difference_amount, difference_percentage.
+     * @param  string|null  $reason  Optional admin note.
+     * @param  int  $changedBy  Admin user_id.
+     * @param  array  $salePrices  Map of product_id => new_sale_price entered by the
+     *                             admin in the review form. A null / missing entry means
+     *                             "do not touch sale_price for this product".
+     *                             Example: [42 => 15800.00, 99 => 22000.00]
+     * @return int Number of products whose purchase_price was updated.
      */
     public function applyUpdates(
-        array   $updates,
-        float   $thresholdPct,
-        string  $xmlFileName,
+        array $updates,
+        float $thresholdPct,
+        string $xmlFileName,
         ?string $reason,
-        int     $changedBy,
-        array   $salePrices = [],   // ← new parameter
+        int $changedBy,
+        array $salePrices = [],   // ← new parameter
     ): int {
         $count = 0;
 
@@ -208,14 +202,15 @@ class XmlPriceDeviationService
                     Log::warning('XmlPriceDeviationService: product not found during applyUpdates', [
                         'product_id' => $productId,
                     ]);
+
                     continue;
                 }
 
-                $previousPrice    = (float) $product->purchase_price;
+                $previousPrice = (float) $product->purchase_price;
                 $newPurchasePrice = (float) $item['xml_price'];
 
                 $differenceAmount = round($newPurchasePrice - $previousPrice, 2);
-                $differencePct    = $previousPrice > 0
+                $differencePct = $previousPrice > 0
                     ? round((($newPurchasePrice - $previousPrice) / $previousPrice) * 100, 4)
                     : 100.0;
 
@@ -232,10 +227,11 @@ class XmlPriceDeviationService
                 // Guard: purchase_price must never exceed sale_price.
                 if ($effectiveSalePrice < $newPurchasePrice) {
                     Log::warning('XmlPriceDeviationService: skipped update — new purchase_price would exceed sale_price.', [
-                        'product_id'        => $productId,
-                        'effective_sale'    => $effectiveSalePrice,
-                        'new_purchase'      => $newPurchasePrice,
+                        'product_id' => $productId,
+                        'effective_sale' => $effectiveSalePrice,
+                        'new_purchase' => $newPurchasePrice,
                     ]);
+
                     continue;
                 }
 
@@ -251,16 +247,16 @@ class XmlPriceDeviationService
 
                 // Write history record for the purchase price change.
                 ProductPurchasePriceHistory::create([
-                    'product_id'            => $productId,
-                    'previous_price'        => $previousPrice,
-                    'new_price'             => $newPurchasePrice,
-                    'difference_amount'     => $differenceAmount,
+                    'product_id' => $productId,
+                    'previous_price' => $previousPrice,
+                    'new_price' => $newPurchasePrice,
+                    'difference_amount' => $differenceAmount,
                     'difference_percentage' => $differencePct,
-                    'threshold_percentage'  => $thresholdPct,
-                    'source'                => 'xml_upload',
-                    'xml_file_name'         => $xmlFileName,
-                    'reason'                => $reason,
-                    'changed_by'            => $changedBy,
+                    'threshold_percentage' => $thresholdPct,
+                    'source' => 'xml_upload',
+                    'xml_file_name' => $xmlFileName,
+                    'reason' => $reason,
+                    'changed_by' => $changedBy,
                 ]);
 
                 $count++;
@@ -299,7 +295,7 @@ class XmlPriceDeviationService
 
             libxml_clear_errors();
 
-            throw new \RuntimeException('El archivo XML no es válido: ' . $errors);
+            throw new \RuntimeException('El archivo XML no es válido: '.$errors);
         }
 
         libxml_clear_errors();
@@ -319,6 +315,7 @@ class XmlPriceDeviationService
         // Variant C — Costa Rica electronic invoice: <invoice><line>
         if (isset($xml->line) || $rootTag === 'invoice' || $rootTag === 'factura') {
             $nodes = $xml->line ?? $xml->Linea ?? $xml->LineaDetalle ?? [];
+
             return $this->resolveNodes($nodes, 'cr_invoice');
         }
 
@@ -365,37 +362,37 @@ class XmlPriceDeviationService
     {
         switch ($layout) {
             case 'cr_invoice':
-                $code     = (string) ($node->CodigoComercial
+                $code = (string) ($node->CodigoComercial
                                    ?? $node->Codigo
                                    ?? $node->codigo
                                    ?? '');
-                $name     = (string) ($node->Detalle
+                $name = (string) ($node->Detalle
                                    ?? $node->detalle
                                    ?? $node->descripcion
                                    ?? '');
-                $quantity = (float)  ($node->Cantidad
+                $quantity = (float) ($node->Cantidad
                                    ?? $node->cantidad
                                    ?? 1);
-                $price    = (float)  ($node->PrecioUnitario
+                $price = (float) ($node->PrecioUnitario
                                    ?? $node->precioUnitario
                                    ?? $node->precio
                                    ?? 0);
                 break;
 
             case 'products':
-                $code     = (string) ($node->sku ?? $node->code ?? $node->codigo ?? '');
-                $name     = (string) ($node->description ?? $node->name ?? $node->nombre ?? '');
-                $quantity = (float)  ($node->qty ?? $node->quantity ?? $node->cantidad ?? 1);
-                $price    = (float)  ($node->price ?? $node->unit_price
+                $code = (string) ($node->sku ?? $node->code ?? $node->codigo ?? '');
+                $name = (string) ($node->description ?? $node->name ?? $node->nombre ?? '');
+                $quantity = (float) ($node->qty ?? $node->quantity ?? $node->cantidad ?? 1);
+                $price = (float) ($node->price ?? $node->unit_price
                                    ?? $node->purchase_price ?? $node->precio ?? 0);
                 break;
 
             case 'items':
             default:
-                $code     = (string) ($node->code ?? $node->sku ?? $node->codigo ?? '');
-                $name     = (string) ($node->name ?? $node->nombre ?? $node->description ?? '');
-                $quantity = (float)  ($node->quantity ?? $node->cantidad ?? $node->qty ?? 1);
-                $price    = (float)  ($node->unit_price ?? $node->purchase_price
+                $code = (string) ($node->code ?? $node->sku ?? $node->codigo ?? '');
+                $name = (string) ($node->name ?? $node->nombre ?? $node->description ?? '');
+                $quantity = (float) ($node->quantity ?? $node->cantidad ?? $node->qty ?? 1);
+                $price = (float) ($node->unit_price ?? $node->purchase_price
                                    ?? $node->price ?? $node->precio ?? 0);
                 break;
         }
@@ -442,6 +439,7 @@ class XmlPriceDeviationService
             if ($productId > 0) {
                 return Product::find($productId);
             }
+
             return null; // BK-0 → not found
         }
 

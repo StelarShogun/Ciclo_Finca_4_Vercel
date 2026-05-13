@@ -16,7 +16,7 @@
             <td align="center">
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:620px;background:#ffffff;border:1px solid #dfe3e8;border-radius:8px;overflow:hidden;">
                     <tr>
-                        <td style="background:#14532d;padding:18px 18px;text-align:center;" align="center" valign="middle">
+                        <td style="background:#235347;padding:18px 18px;text-align:center;" align="center" valign="middle">
                             <div style="font-size:28px;line-height:1.2;color:#ffffff;font-weight:700;text-align:center;margin:0 auto;">
                                 Ciclo Finca 4
                             </div>
@@ -49,8 +49,8 @@
                     <tr>
                         <td style="background:#f3f4f6;border-top:1px solid #dfe3e8;padding:14px 28px;color:#374151;">
                             <p style="margin:0 0 8px 0;font-size:16px;"><strong>Contactos Ciclo Finca 4</strong></p>
-                            <p style="margin:0 0 6px 0;font-size:16px;">Correo: <a href="mailto:{{ $mailContact }}" style="color:#14532d;">{{ $mailContact }}</a></p>
-                            <p style="margin:0;font-size:16px;">Sitio web: <a href="{{ $siteUrl }}" style="color:#14532d;">{{ $siteUrl }}</a></p>
+                            <p style="margin:0 0 6px 0;font-size:16px;">Correo: <a href="mailto:{{ $mailContact }}" style="color:#235347;">{{ $mailContact }}</a></p>
+                            <p style="margin:0;font-size:16px;">Sitio web: <a href="{{ $siteUrl }}" style="color:#235347;">{{ $siteUrl }}</a></p>
                         </td>
                     </tr>
                 </table>

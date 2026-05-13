@@ -2,6 +2,7 @@ import {
     buildCf4CheckoutSuccessText,
     getCf4PaymentMethodShortLabel,
 } from './checkout-copy.js';
+import { initHeaderCatalogSearch } from './header-catalog-search.js';
 
 // ============================================================
 // GLOBAL UTILITIES
@@ -709,7 +710,7 @@ function updateStrength(val) {
         { w: '25%',  c: '#d32f2f', t: 'Débil'  },
         { w: '50%',  c: '#f57c00', t: 'Regular' },
         { w: '75%',  c: '#fbc02d', t: 'Buena'   },
-        { w: '100%', c: '#2e7d32', t: 'Fuerte'  }
+        { w: '100%', c: '#235347', t: 'Fuerte'  }
     ];
     var lvl = levels[Math.max(score - 1, 0)];
     if (fill)  { fill.style.width = lvl.w; fill.style.background = lvl.c; }
@@ -1171,6 +1172,7 @@ function sendPassword(form) {
 document.addEventListener('DOMContentLoaded', function () {
     favoritesCache = getInitialFavoritesFromMeta();
 
+    initHeaderCatalogSearch();
 
     // — Initialise cart counter —
     var cartLinkEl  = document.getElementById('cart-link');
@@ -1201,6 +1203,7 @@ document.addEventListener('DOMContentLoaded', function () {
             e.stopPropagation();
             toggleUserDropdown();
         });
+
     }
 
     // — Close user dropdown on outside click —
@@ -1223,15 +1226,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    var favoritesOpenBtn = document.getElementById('favorites-open-btn');
     var favoritesCloseBtn = document.getElementById('favorites-close-btn');
     var favoritesOverlay = document.getElementById('favorites-overlay');
     var favoritesDrawer = document.getElementById('favorites-drawer');
 
-    if (favoritesOpenBtn && favoritesDrawer && favoritesOverlay) {
-        favoritesOpenBtn.addEventListener('click', function () {
-            setFavoritesDrawerOpen(true);
-            loadFavoritesDrawerItems();
+    if (favoritesDrawer && favoritesOverlay) {
+        document.querySelectorAll('.cf4-favorites-open-trigger').forEach(function (favBtn) {
+            favBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                setFavoritesDrawerOpen(true);
+                loadFavoritesDrawerItems();
+            });
         });
     }
 
