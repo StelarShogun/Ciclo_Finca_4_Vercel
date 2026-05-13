@@ -1849,21 +1849,45 @@ document.addEventListener('DOMContentLoaded', function () {
         var nextBtn = root.querySelector('[data-spotlight-next]');
         if (!swiperEl) return;
 
+        var wrapperEl = swiperEl.querySelector('.swiper-wrapper');
         var slides = swiperEl.querySelectorAll('.swiper-slide');
         if (!slides.length) return;
+
+        // Swiper's loop mode requires enough real slides to clone seamlessly.
+        // With slidesPerView up to 3 on desktop we need at least 6 slides
+        // available; otherwise loop silently disables itself and autoplay
+        // gets stuck at the last slide. We duplicate slides as needed.
+        var maxSlidesPerView = 3;
+        var minSlidesForLoop = maxSlidesPerView * 2;
+
+        if (wrapperEl && slides.length > 1 && slides.length < minSlidesForLoop) {
+            var originalSlides = Array.prototype.slice.call(slides);
+            while (wrapperEl.querySelectorAll('.swiper-slide').length < minSlidesForLoop) {
+                originalSlides.forEach(function (slide) {
+                    wrapperEl.appendChild(slide.cloneNode(true));
+                });
+            }
+            slides = swiperEl.querySelectorAll('.swiper-slide');
+        }
 
         var delay = parseInt(root.getAttribute('data-autoplay-delay'), 10);
         if (!Number.isFinite(delay) || delay <= 0) delay = 4000;
 
-        // Autoplay is part of the acceptance criteria, so it runs for every
-        // visitor. Manual arrows + swipe are always available for users who
-        // prefer reduced motion. We keep pauseOnMouseEnter so anyone reading
-        // a card can stop the rotation by hovering.
+        // Autoplay runs continuously for everyone. We do not use
+        // pauseOnMouseEnter: it attaches pointerenter/pointerleave on the Swiper
+        // root and in some browsers/layouts the carousel can appear stuck until
+        // the cursor moves over the track again.
         var autoplayOption = {
+            enabled: true,
             delay: delay,
             disableOnInteraction: false,
-            pauseOnMouseEnter: true,
+            pauseOnMouseEnter: false,
         };
+
+        // Circular (infinite) navigation. Real slide count is guaranteed
+        // to be enough above; we keep loopAdditionalSlides at 0 so Swiper
+        // computes the minimum required duplicates per breakpoint.
+        var enableLoop = slides.length > 1;
 
         try {
             new Swiper(swiperEl, {
@@ -1871,10 +1895,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 slidesPerView: 1,
                 spaceBetween: 18,
                 centeredSlides: false,
-                // `rewind` is preferred over `loop` here: it doesn't require
-                // duplicated slides, so autoplay keeps cycling even when the
-                // backend returns just a handful of featured products.
-                rewind: true,
+                loop: enableLoop,
+                loopAdditionalSlides: 0,
                 speed: 600,
                 grabCursor: true,
                 watchOverflow: true,
