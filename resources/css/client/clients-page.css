@@ -2500,7 +2500,7 @@ body.guest-layout {
 }
 
 .catalog-spotlight-inner {
-  padding: 22px 20px 24px;
+  padding: 16px 18px 18px;
   border-radius: var(--border-radius-large);
   border: 2px solid rgba(46, 125, 50, 0.35);
   background:
@@ -2509,28 +2509,54 @@ body.guest-layout {
 }
 
 .catalog-spotlight-header {
-  margin-bottom: 18px;
+  margin-bottom: 10px;
   text-align: center;
 }
 
 .catalog-spotlight-title {
-  margin: 0 0 6px;
-  font-size: 1.45rem;
+  margin: 0 0 2px;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .catalog-spotlight-subtitle {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   color: var(--text-secondary);
-  line-height: 1.45;
+  line-height: 1.35;
 }
 
 .catalog-spotlight-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 18px;
+}
+
+/* CF4-XXX: Spotlight carousel (Swiper) — autoplay 4s, 1/2/3 items responsive. */
+.catalog-spotlight-carousel {
+  position: relative;
+  padding: 2px 56px 8px;
+}
+
+.catalog-spotlight-carousel .swiper {
+  overflow: hidden;
+  padding: 2px 4px 4px;
+  margin: 0 auto;
+}
+
+.catalog-spotlight-carousel .swiper-wrapper {
+  align-items: stretch;
+}
+
+.catalog-spotlight-carousel .swiper-slide {
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.catalog-spotlight-carousel .swiper-slide.product-card {
+  background: var(--background-card, #fff);
 }
 
 .product-card--catalog-spotlight {
@@ -2540,13 +2566,137 @@ body.guest-layout {
   box-shadow: 0 6px 18px rgba(27, 94, 32, 0.12);
 }
 
+/* Navigation arrows */
+.catalog-spotlight-nav {
+  position: absolute;
+  top: calc(50% - 22px);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-primary, #2e7d32);
+  color: #fff;
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(27, 94, 32, 0.28);
+  transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+  z-index: 3;
+}
+
+.catalog-spotlight-nav:hover {
+  background: var(--color-primary-dark, #1b5e20);
+  transform: scale(1.05);
+}
+
+.catalog-spotlight-nav:focus-visible {
+  outline: 3px solid rgba(46, 125, 50, 0.45);
+  outline-offset: 2px;
+}
+
+.catalog-spotlight-nav.swiper-button-disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
+.catalog-spotlight-nav--prev { left: 4px; }
+.catalog-spotlight-nav--next { right: 4px; }
+
+@media (max-width: 768px) {
+  .catalog-spotlight-carousel {
+    padding: 4px 44px 8px;
+  }
+  .catalog-spotlight-nav {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+  .catalog-spotlight-nav--prev { left: 4px; }
+  .catalog-spotlight-nav--next { right: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-spotlight-carousel .swiper-wrapper {
+    transition: none !important;
+  }
+
+  .catalog-spotlight-slide:hover .product-image img {
+    transform: none;
+  }
+}
+
 .product-card--catalog-spotlight:hover {
   border-color: rgba(46, 125, 50, 0.65);
   box-shadow: 0 10px 26px rgba(27, 94, 32, 0.16);
 }
 
+/* Carrusel spotlight: tarjeta compacta — imagen grande, clic en toda la tarjeta (enlace), favorito aparte */
+.catalog-spotlight-slide {
+  position: relative;
+  overflow: hidden;
+}
+
+.catalog-spotlight-card-link {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.catalog-spotlight-card-link:focus-visible {
+  outline: 2px solid var(--color-primary, #2e7d32);
+  outline-offset: 2px;
+}
+
+.catalog-spotlight-slide .product-favorite-btn.catalog-spotlight-favorite {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 6;
+}
+
+.catalog-spotlight-badge.spotlight-badge {
+  z-index: 6;
+  pointer-events: none;
+}
+
+.catalog-spotlight-slide:hover .product-image img {
+  transform: scale(1.05);
+}
+
 .product-card--catalog-spotlight .product-image {
-  height: 200px;
+  height: 280px;
+}
+
+.catalog-spotlight-carousel .product-card--catalog-spotlight .product-info {
+  padding: 14px 16px 16px;
+}
+
+.catalog-spotlight-carousel .product-stars-inline__meta,
+.catalog-spotlight-carousel .product-stars-inline__label-empty {
+  display: none !important;
+}
+
+.catalog-spotlight-carousel .product-stars-inline {
+  margin-bottom: 10px;
+}
+
+.catalog-spotlight-card-title {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.catalog-spotlight-card-price {
+  margin-top: 4px;
 }
 
 .spotlight-badge {

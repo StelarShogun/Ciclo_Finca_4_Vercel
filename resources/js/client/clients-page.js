@@ -1,3 +1,8 @@
+import Swiper from 'swiper';
+import { Navigation, Autoplay, A11y } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/a11y';
 import {
     buildCf4CheckoutSuccessText,
     getCf4PaymentMethodShortLabel,
@@ -1828,6 +1833,95 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         goTo(0);
+    })();
+
+    // ---- Catalog spotlight carousel (Swiper) ----
+    // Renders featured + novelty products with autoplay, navigation arrows
+    // and mobile swipe. Markup lives in catalog.blade.php behind
+    // `[data-catalog-spotlight-carousel]` and is hidden by Blade when any
+    // filter is active or the user is past page 1 of pagination.
+    (function initCatalogSpotlightCarousel() {
+        var root = document.querySelector('[data-catalog-spotlight-carousel]');
+        if (!root) return;
+
+        var swiperEl = root.querySelector('.swiper');
+        var prevBtn = root.querySelector('[data-spotlight-prev]');
+        var nextBtn = root.querySelector('[data-spotlight-next]');
+        if (!swiperEl) return;
+
+        var wrapperEl = swiperEl.querySelector('.swiper-wrapper');
+        var slides = swiperEl.querySelectorAll('.swiper-slide');
+        if (!slides.length) return;
+
+        // Swiper's loop mode requires enough real slides to clone seamlessly.
+        // With slidesPerView up to 3 on desktop we need at least 6 slides
+        // available; otherwise loop silently disables itself and autoplay
+        // gets stuck at the last slide. We duplicate slides as needed.
+        var maxSlidesPerView = 3;
+        var minSlidesForLoop = maxSlidesPerView * 2;
+
+        if (wrapperEl && slides.length > 1 && slides.length < minSlidesForLoop) {
+            var originalSlides = Array.prototype.slice.call(slides);
+            while (wrapperEl.querySelectorAll('.swiper-slide').length < minSlidesForLoop) {
+                originalSlides.forEach(function (slide) {
+                    wrapperEl.appendChild(slide.cloneNode(true));
+                });
+            }
+            slides = swiperEl.querySelectorAll('.swiper-slide');
+        }
+
+        var delay = parseInt(root.getAttribute('data-autoplay-delay'), 10);
+        if (!Number.isFinite(delay) || delay <= 0) delay = 4000;
+
+        // Autoplay runs continuously for everyone. We do not use
+        // pauseOnMouseEnter: it attaches pointerenter/pointerleave on the Swiper
+        // root and in some browsers/layouts the carousel can appear stuck until
+        // the cursor moves over the track again.
+        var autoplayOption = {
+            enabled: true,
+            delay: delay,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: false,
+        };
+
+        // Circular (infinite) navigation. Real slide count is guaranteed
+        // to be enough above; we keep loopAdditionalSlides at 0 so Swiper
+        // computes the minimum required duplicates per breakpoint.
+        var enableLoop = slides.length > 1;
+
+        try {
+            new Swiper(swiperEl, {
+                modules: [Navigation, Autoplay, A11y],
+                slidesPerView: 1,
+                spaceBetween: 18,
+                centeredSlides: false,
+                loop: enableLoop,
+                loopAdditionalSlides: 0,
+                speed: 600,
+                grabCursor: true,
+                watchOverflow: true,
+                autoplay: autoplayOption,
+                navigation: {
+                    prevEl: prevBtn,
+                    nextEl: nextBtn,
+                    disabledClass: 'swiper-button-disabled',
+                },
+                a11y: {
+                    prevSlideMessage: 'Producto destacado anterior',
+                    nextSlideMessage: 'Siguiente producto destacado',
+                    slideLabelMessage: '{{index}} de {{slidesLength}}',
+                },
+                breakpoints: {
+                    640: { slidesPerView: 2, spaceBetween: 18 },
+                    1024: { slidesPerView: 3, spaceBetween: 22 },
+                },
+            });
+        } catch (err) {
+            // Fail silently — carousel is enhancement; the page already shows the cards.
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('Catalog spotlight carousel failed to init:', err);
+            }
+        }
     })();
 
 }); // end DOMContentLoaded

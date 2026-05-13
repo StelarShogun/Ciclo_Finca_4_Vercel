@@ -301,108 +301,102 @@
 
                 <script type="application/json" id="catalog-category-tree-data">@json($catalogCategoryNav)</script>
 
-                @if($catalogSpotlight->isNotEmpty())
+                @php
+                    // CF4-XXX: spotlight carousel rules — hide when any catalog filter is active
+                    // (search text, category, brand, price range) and only show on page 1.
+                    $hasActiveCatalogFilters = request()->filled('search')
+                        || request()->filled('category_id')
+                        || request()->filled('brand_id')
+                        || request()->filled('min_price')
+                        || request()->filled('max_price');
+                    $catalogIsFirstPage = (int) ($products->currentPage() ?: 1) === 1;
+                    $showCatalogSpotlight = $catalogSpotlight->isNotEmpty()
+                        && ! $hasActiveCatalogFilters
+                        && $catalogIsFirstPage;
+                @endphp
+
+                @if($showCatalogSpotlight)
                     <section class="catalog-spotlight-section" aria-labelledby="catalog-spotlight-heading">
                         <div class="catalog-spotlight-inner">
                             <header class="catalog-spotlight-header">
                                 <h2 id="catalog-spotlight-heading" class="catalog-spotlight-title">Destacados y novedades</h2>
                                 <p class="catalog-spotlight-subtitle">Productos recomendados y recién incorporados al catálogo.</p>
                             </header>
-                            <div class="catalog-spotlight-grid" role="list">
-                                @foreach($catalogSpotlight as $row)
-                                    @php
-                                        /** @var \App\Models\Product $product */
-                                        $product = $row['product'];
-                                        $spotlight = $row['spotlight'];
-                                        $catLabel = $product->clientCatalogStockLabel();
-                                        $canBuy = $product->isPurchasableByClient();
-                                        $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
-                                    @endphp
-                                    <article class="product-card product-card--catalog-spotlight" role="listitem">
-                                        <div class="product-image">
-                                            <button type="button"
-                                                    class="product-favorite-btn {{ $isFavorite ? 'is-active' : '' }}"
-                                                    data-product-favorite-btn
-                                                    data-product-id="{{ $product->product_id }}"
-                                                    aria-pressed="{{ $isFavorite ? 'true' : 'false' }}"
-                                                    aria-label="{{ $isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos' }}">
-                                                <i class="{{ $isFavorite ? 'fas' : 'far' }} fa-heart" aria-hidden="true"></i>
-                                            </button>
-                                            <span @class([
-                                                'spotlight-badge',
-                                                'spotlight-badge--featured' => $spotlight === 'featured',
-                                                'spotlight-badge--novelty' => $spotlight === 'novelty',
-                                            ])>
-                                                {{ $spotlight === 'featured' ? 'Destacado' : 'Novedad' }}
-                                            </span>
-                                            <a href="{{ $product->clientProductUrl() }}">
-                                                @php $spotlightImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')); @endphp
-                                                <img src="{{ $spotlightImgUrl }}"
-                                                     alt="{{ $product->name }}"
-                                                     data-fallback-src="{{ asset('favicon.svg') }}"
-                                                     onerror="this.src=this.dataset.fallbackSrc;">
-                                            </a>
-                                        </div>
-                                        <div class="product-info">
-                                            <div class="product-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
-                                            <h3 class="product-name">
-                                                <a href="{{ $product->clientProductUrl() }}">{{ $product->name }}</a>
-                                            </h3>
-                                            @php $spotRs = $productReviewStats[(int) $product->product_id] ?? null; @endphp
-                                            @include('client.parts.product-stars-inline', [
-                                                'avgStars' => (float) data_get($spotRs, 'avg', 0),
-                                                'reviewCount' => (int) data_get($spotRs, 'count', 0),
-                                                'variant' => 'card',
-                                            ])
-                                            <p @class([
-                                                'product-availability-text',
-                                                'is-available' => $catLabel === 'Disponible',
-                                                'is-low' => $catLabel === 'Quedan pocas unidades',
-                                                'is-out' => $catLabel === 'Agotado',
-                                                'is-na' => $catLabel === 'No disponible',
-                                            ])>{{ $catLabel }}</p>
-                                            @if($canBuy)
-                                                <p class="product-stock-qty">{{ number_format((int) ($product->stock_current ?? 0), 0, ',', '.') }} unidades disponibles</p>
-                                            @endif
-                                            <div class="product-footer product-footer--spotlight-compact">
-                                                <div class="product-price-bar">
-                                                    <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
-                                                </div>
-                                                <div class="product-actions">
-                                                    <a href="{{ $product->clientProductUrl() }}" class="btn-product btn-ver-detalles">
-                                                        <i class="fas fa-arrow-right"></i>
-                                                        Ver detalles
-                                                    </a>
-                                                    @if($canBuy)
-                                                        @auth('clients')
-                                                            <button type="button" class="btn-product btn-agregar add-to-cart-btn"
-                                                                    data-purchasable="1"
-                                                                    data-product-id="{{ $product->product_id }}"
-                                                                    data-product-name="{{ $product->name }}"
-                                                                    data-product-price="{{ $product->sale_price }}"
-                                                                    data-product-stock="{{ $product->stock_current }}">
-                                                                <i class="fas fa-cart-plus"></i>
-                                                                Agregar
-                                                            </button>
-                                                        @else
-                                                            <button type="button" class="btn-product btn-agregar guest-add-btn"
-                                                                    data-purchasable="1"
-                                                                    data-product-stock="{{ $product->stock_current }}">
-                                                                <i class="fas fa-cart-plus"></i>
-                                                                Agregar
-                                                            </button>
-                                                        @endauth
-                                                    @else
-                                                        <button type="button" class="btn-product btn-agotado" disabled>
-                                                            <i class="fas fa-ban"></i>
-                                                            {{ $catLabel === 'Agotado' ? 'Agotado' : 'No disponible' }}
-                                                        </button>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </article>
-                                @endforeach
+                            <div class="catalog-spotlight-carousel"
+                                 data-catalog-spotlight-carousel
+                                 data-autoplay-delay="4000"
+                                 role="region"
+                                 aria-roledescription="carrusel"
+                                 aria-label="Productos destacados y novedades del catálogo">
+                                <div class="swiper catalog-spotlight-swiper">
+                                    <div class="swiper-wrapper">
+                                        @foreach($catalogSpotlight as $row)
+                                            @php
+                                                /** @var \App\Models\Product $product */
+                                                $product = $row['product'];
+                                                $spotlight = $row['spotlight'];
+                                                $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
+                                                $spotlightImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png'));
+                                            @endphp
+                                            <article class="swiper-slide product-card product-card--catalog-spotlight catalog-spotlight-slide"
+                                                     role="group"
+                                                     aria-roledescription="diapositiva"
+                                                     aria-label="{{ $loop->iteration }} de {{ $loop->count }}: {{ $product->name }}">
+                                                <a class="catalog-spotlight-card-link"
+                                                   href="{{ $product->clientProductUrl() }}"
+                                                   aria-label="Ver producto: {{ $product->name }}">
+                                                    <div class="product-image">
+                                                        <img src="{{ $spotlightImgUrl }}"
+                                                             alt=""
+                                                             data-fallback-src="{{ asset('favicon.svg') }}"
+                                                             onerror="this.src=this.dataset.fallbackSrc;">
+                                                    </div>
+                                                    <div class="product-info">
+                                                        <h3 class="product-name catalog-spotlight-card-title">{{ $product->name }}</h3>
+                                                        @php $spotRs = $productReviewStats[(int) $product->product_id] ?? null; @endphp
+                                                        @include('client.parts.product-stars-inline', [
+                                                            'avgStars' => (float) data_get($spotRs, 'avg', 0),
+                                                            'reviewCount' => (int) data_get($spotRs, 'count', 0),
+                                                            'variant' => 'card',
+                                                        ])
+                                                        <div class="product-price-bar catalog-spotlight-card-price">
+                                                            <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                                <button type="button"
+                                                        class="product-favorite-btn catalog-spotlight-favorite {{ $isFavorite ? 'is-active' : '' }}"
+                                                        data-product-favorite-btn
+                                                        data-product-id="{{ $product->product_id }}"
+                                                        aria-pressed="{{ $isFavorite ? 'true' : 'false' }}"
+                                                        aria-label="{{ $isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos' }}">
+                                                    <i class="{{ $isFavorite ? 'fas' : 'far' }} fa-heart" aria-hidden="true"></i>
+                                                </button>
+                                                <span @class([
+                                                    'spotlight-badge',
+                                                    'catalog-spotlight-badge',
+                                                    'spotlight-badge--featured' => $spotlight === 'featured',
+                                                    'spotlight-badge--novelty' => $spotlight === 'novelty',
+                                                ])>
+                                                    {{ $spotlight === 'featured' ? 'Destacado' : 'Novedad' }}
+                                                </span>
+                                            </article>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                <button type="button"
+                                        class="catalog-spotlight-nav catalog-spotlight-nav--prev"
+                                        data-spotlight-prev
+                                        aria-label="Producto destacado anterior">
+                                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                                </button>
+                                <button type="button"
+                                        class="catalog-spotlight-nav catalog-spotlight-nav--next"
+                                        data-spotlight-next
+                                        aria-label="Siguiente producto destacado">
+                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                </button>
                             </div>
                         </div>
                     </section>
