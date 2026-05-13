@@ -15,6 +15,12 @@
 </div>
 
 <div class="cf4-invoices-wrapper">
+    <nav class="breadcrumb" aria-label="Migas de pan">
+        <a href="{{ route('clients.home') }}">Inicio</a>
+        <span>/</span>
+        <span>Notificaciones</span>
+    </nav>
+
     <div class="cf4-invoices-card">
         <div class="sales-table-container">
             <table class="sales-table cf4-purchases-table">

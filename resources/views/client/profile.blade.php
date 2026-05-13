@@ -19,6 +19,12 @@
 <div class="container">
     <div class="profile-wrapper">
 
+        <nav class="breadcrumb" aria-label="Migas de pan">
+            <a href="{{ route('clients.home') }}">Inicio</a>
+            <span>/</span>
+            <span>Mi Perfil</span>
+        </nav>
+
         {{-- Hero: avatar, nombre completo, email y badge de tipo de cuenta --}}
         <div class="profile-hero">
             <div class="profile-avatar">

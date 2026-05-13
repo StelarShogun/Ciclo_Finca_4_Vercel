@@ -17,6 +17,12 @@
 
     <main class="admin-main">
         <div class="form-container">
+            <nav class="admin-breadcrumb" aria-label="Migas de pan">
+                <a href="{{ route('inventory') }}">Inventario</a>
+                <span class="sep">/</span>
+                <span>Crear categoría</span>
+            </nav>
+
             <div class="form-header">
                 <h1>Crear categoría</h1>
                 <p>Definí una categoría principal del catálogo; luego podés agregar subcategorías y asignar productos.</p>

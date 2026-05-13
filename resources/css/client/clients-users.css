@@ -742,7 +742,7 @@ body.guest-layout {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
     color: white;
     padding: 40px 0;
-    margin-bottom: 40px;
+    margin-bottom: 28px;
     text-align: center;
 }
 
@@ -750,7 +750,7 @@ body.guest-layout {
 .profile-header-subtitle { font-size: 1.1rem; opacity: 0.9; margin: 0; }
 
 /* ── Wrapper ── */
-.profile-wrapper { padding: 40px 16px 60px; }
+.profile-wrapper { padding: 0 16px 60px; }
 
 /* ── Hero ── */
 .profile-hero {
@@ -1235,6 +1235,29 @@ body.guest-layout {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 24px 60px;
+}
+
+/* ── Breadcrumb (migas de pan) ── */
+.breadcrumb {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.breadcrumb a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb span {
+    color: var(--text-secondary);
 }
 
 /* ── Card container ── */

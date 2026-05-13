@@ -1,6 +1,26 @@
 @import "../variables-reset.css";
 @import "../sidebar.css";
 
+.cf4-orders-module .orders-breadcrumb {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  color: var(--color-muted, #5f6368);
+}
+
+.cf4-orders-module .orders-breadcrumb a {
+  color: var(--color-primary, #2e7d32);
+  text-decoration: none;
+}
+
+.cf4-orders-module .orders-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.cf4-orders-module .orders-breadcrumb .sep {
+  margin: 0 0.35rem;
+  opacity: 0.6;
+}
+
 /* CF4-21 Pedidos — mismo bloque de cabecera que Ventas (.sales-header en sales.css) */
 .cf4-orders-module .cf4-orders-kpi-grid {
   margin-bottom: 1rem;

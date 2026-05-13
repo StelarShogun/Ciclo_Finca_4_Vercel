@@ -9,6 +9,12 @@
 @section('content')
 <div class="cart-container">
     <div class="container">
+        <nav class="breadcrumb" aria-label="Migas de pan">
+            <a href="{{ route('clients.home') }}">Inicio</a>
+            <span>/</span>
+            <span>Carrito</span>
+        </nav>
+
         @if(session('cart_stock_adjusted'))
             <div class="alert alert-warning mb-3" role="alert">{{ session('cart_stock_adjusted') }}</div>
         @endif
