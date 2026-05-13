@@ -1871,7 +1871,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 slidesPerView: 1,
                 spaceBetween: 18,
                 centeredSlides: false,
-                loop: slides.length > 1,
+                // `rewind` is preferred over `loop` here: it doesn't require
+                // duplicated slides, so autoplay keeps cycling even when the
+                // backend returns just a handful of featured products.
+                rewind: true,
                 speed: 600,
                 grabCursor: true,
                 watchOverflow: true,
