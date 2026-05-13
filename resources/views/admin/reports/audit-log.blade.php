@@ -22,10 +22,11 @@
             <span>Bitácora de auditoría</span>
         </nav>
 
-        <header class="audit-log-header">
-            <h1>Bitácora de auditoría</h1>
-            <p>Acciones administrativas registradas para seguimiento y control.</p>
-        </header>
+        @component('admin.partials.page-header', [
+            'title' => 'Bitácora de auditoría',
+            'description' => 'Acciones administrativas registradas para seguimiento y control.',
+        ])
+        @endcomponent
 
         <section class="audit-log-filters">
             <form method="GET" action="{{ route('admin.reports.audit-log') }}" class="audit-log-filters-grid">

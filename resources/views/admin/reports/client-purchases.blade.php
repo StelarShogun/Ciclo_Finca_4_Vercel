@@ -39,9 +39,8 @@
             <span>Compras por cliente</span>
         </nav>
 
-        <header class="client-purchases-header">
-            <h1>Historial de compras por cliente</h1>
-        </header>
+        @component('admin.partials.page-header', ['title' => 'Historial de compras por cliente'])
+        @endcomponent
 
         <div class="client-purchases-toolbar">
             <div class="period-toggle" role="group" aria-label="Periodo">

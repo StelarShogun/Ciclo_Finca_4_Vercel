@@ -12,16 +12,23 @@
 @section('contenido')
 <div class="sales-container">
 
+    <nav class="reports-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ route('admin.reports.index') }}">Reportes</a>
+        <span class="sep">/</span>
+        <span>Ventas por Categoría</span>
+    </nav>
+
     {{-- ==================== HEADER ==================== --}}
-    <header class="sales-header">
-        <div>
-            <h1>Ventas por Categoría</h1>
-            <p>Análisis de participación por línea de producto.</p>
-        </div>
-        <a href="{{ route('admin.reports.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Volver a Reportes
-        </a>
-    </header>
+    @component('admin.partials.page-header', [
+        'title' => 'Ventas por Categoría',
+        'description' => 'Análisis de participación por línea de producto.',
+    ])
+        @slot('actions')
+            <a href="{{ route('admin.reports.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a Reportes
+            </a>
+        @endslot
+    @endcomponent
 
     {{-- ==================== FILTROS ==================== --}}
     <div class="filters-section">

@@ -36,10 +36,9 @@
             <span>Desempeño de ventas</span>
         </nav>
 
-        <header class="sales-performance-header">
-            <h1>Desempeño de ventas</h1>
+        @component('admin.partials.page-header', ['title' => 'Desempeño de ventas'])
             <p class="sales-performance-lead">Totales de órdenes completadas e ingresos facturados, comparados con el periodo anterior de la misma duración.</p>
-        </header>
+        @endcomponent
 
         <div class="sales-perf-layout">
             <aside class="sales-perf-filters" aria-label="Filtros de periodo">

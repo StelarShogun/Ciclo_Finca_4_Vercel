@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Opciones por tipo de producto - Ciclo Finca 4 Admin</title>
-    @vite(['resources/css/admin/suppliers/suppliers.css'])
+    @vite(['resources/css/admin/components/page-header.css', 'resources/css/admin/suppliers/suppliers.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -16,10 +16,9 @@
 
     <main class="admin-main">
         <div class="form-container">
-            <div class="form-header">
-                <h1>Opciones por tipo de producto</h1>
-                <p>Definís los <strong>atributos</strong> (Color, Talla…) y los <strong>valores</strong> de cada uno por <strong>tipo</strong> de producto (ej. MTB). Al cargar un producto, elegís un valor por atributo.</p>
-            </div>
+            @component('admin.partials.page-header', ['title' => 'Opciones por tipo de producto'])
+                Definís los <strong>atributos</strong> (Color, Talla…) y los <strong>valores</strong> de cada uno por <strong>tipo</strong> de producto (ej. MTB). Al cargar un producto, elegís un valor por atributo.
+            @endcomponent
 
             <div class="form-card">
                 <div class="form-body">

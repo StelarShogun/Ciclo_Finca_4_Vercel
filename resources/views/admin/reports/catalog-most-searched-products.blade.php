@@ -34,10 +34,9 @@
             <span>Productos más buscados</span>
         </nav>
 
-        <header class="csr-page-header">
-            <h1 class="csr-page-title">Productos más buscados</h1>
+        @component('admin.partials.page-header', ['title' => 'Productos más buscados'])
             <p class="csr-page-subtitle">Lo que más aparece en resultados del catálogo público cuando hay búsqueda.</p>
-        </header>
+        @endcomponent
 
         <div class="csr-period-bar">
             <nav class="csr-period-tabs" role="tablist" aria-label="Periodo del reporte">

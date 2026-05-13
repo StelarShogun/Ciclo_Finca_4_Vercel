@@ -13,6 +13,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
+    @vite(['resources/css/admin/components/page-header.css'])
     @vite(['resources/css/admin/brands/brand.css'])
     @stack('styles')
 

@@ -13,18 +13,23 @@
 @section('contenido')
     <div class="sales-container cf4-orders-module cf4-supplier-orders-module">
 
-        <header class="sales-header">
-            <div>
-                <h1>Nuevo pedido a proveedor</h1>
-                <p>Crea un pedido de compra seleccionando proveedor, productos y una fecha estimada de entrega.</p>
-            </div>
-            <div class="sales-actions">
+        <nav class="orders-breadcrumb" aria-label="Breadcrumb">
+            <a href="{{ route('admin.supplier-orders.index') }}">Pedidos a proveedor</a>
+            <span class="sep">/</span>
+            <span>Nuevo pedido</span>
+        </nav>
+
+        @component('admin.partials.page-header', [
+            'title' => 'Nuevo pedido a proveedor',
+            'description' => 'Crea un pedido de compra seleccionando proveedor, productos y una fecha estimada de entrega.',
+        ])
+            @slot('actions')
                 <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i>
                     Volver
                 </a>
-            </div>
-        </header>
+            @endslot
+        @endcomponent
 
         <form id="supplier-order-create-form" method="POST" action="{{ route('admin.supplier-orders.store') }}" class="supplier-order-create">
             @csrf

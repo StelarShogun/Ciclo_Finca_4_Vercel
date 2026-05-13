@@ -12,10 +12,11 @@
 
 @section('contenido')
     <div class="reports-hub">
-        <header class="reports-hub-header">
-            <h1>Reportes</h1>
-            <p>Consultas analíticas para inventario y ventas.</p>
-        </header>
+        @component('admin.partials.page-header', [
+            'title' => 'Reportes',
+            'description' => 'Consultas analíticas para inventario y ventas.',
+        ])
+        @endcomponent
 
         <div class="reports-cards">
             <a href="{{ route('admin.reports.exports').(request()->getQueryString() !== null && request()->getQueryString() !== '' ? '?'.request()->getQueryString() : '') }}" class="report-card">

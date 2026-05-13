@@ -15,7 +15,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
     {{-- Styles & Fonts --}}
-    @vite(['resources/css/admin/products/inventory.css'])
+    @vite(['resources/css/admin/components/page-header.css', 'resources/css/admin/products/inventory.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -37,28 +37,29 @@
         <div class="inventory-container">
 
             {{-- ==================== HEADER ==================== --}}
-            <header class="usuarios-header">
-                <div>
-                    <h1>Gestión de Inventario</h1>
-                    <p>Administra los productos y el stock del sistema</p>
-                </div>
-                <div class="usuarios-actions">
-                    <button class="btn btn-primary" id="open-new-product-modal">
-                        <i class="fas fa-plus"></i> Nuevo Producto
-                    </button>
-                    <a class="btn btn-secondary" href="{{ route('categories.parents.create') }}">
-                        <i class="fas fa-layer-group"></i>
-                        Crear categoría
-                    </a>
-                    <a class="btn btn-secondary" href="{{ route('categories.subcategories.create') }}">
-                        <i class="fas fa-sitemap"></i>
-                        Crear Subcategoría
-                    </a>
-                    <button class="btn btn-secondary" id="import-btn">
-                        <i class="fas fa-upload"></i> Importar
-                    </button>
-                </div>
-            </header>
+            @component('admin.partials.page-header', [
+                'title' => 'Gestión de Inventario',
+                'description' => 'Administra los productos y el stock del sistema',
+            ])
+                @slot('actions')
+                    <div class="usuarios-actions">
+                        <button class="btn btn-primary" id="open-new-product-modal">
+                            <i class="fas fa-plus"></i> Nuevo Producto
+                        </button>
+                        <a class="btn btn-secondary" href="{{ route('categories.parents.create') }}">
+                            <i class="fas fa-layer-group"></i>
+                            Crear categoría
+                        </a>
+                        <a class="btn btn-secondary" href="{{ route('categories.subcategories.create') }}">
+                            <i class="fas fa-sitemap"></i>
+                            Crear Subcategoría
+                        </a>
+                        <button class="btn btn-secondary" id="import-btn">
+                            <i class="fas fa-upload"></i> Importar
+                        </button>
+                    </div>
+                @endslot
+            @endcomponent
 
             <section class="inventory-kpi-grid" aria-label="Resumen de inventario">
                 <a class="inventory-kpi-card" href="{{ $lowStockCardUrl }}">

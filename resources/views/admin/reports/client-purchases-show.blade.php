@@ -42,20 +42,20 @@
             <span>{{ $displayName }}</span>
         </nav>
 
-        <header class="client-purchases-header client-purchases-show-header">
-            <div class="client-purchases-show-heading">
-                <h1>Compras del cliente</h1>
-                <p class="client-purchases-show-meta">
-                    <strong>{{ $displayName }}</strong>
-                    @if ($gmail)
-                        <span class="client-purchases-show-email">{{ $gmail }}</span>
-                    @endif
-                </p>
-            </div>
-            <a href="{{ $listUrl }}" class="btn-back-to-list">
-                <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver al listado
-            </a>
-        </header>
+        @component('admin.partials.page-header', ['title' => 'Compras del cliente'])
+            <p class="client-purchases-show-meta">
+                <strong>{{ $displayName }}</strong>
+                @if ($gmail)
+                    <span class="client-purchases-show-email">{{ $gmail }}</span>
+                @endif
+            </p>
+
+            @slot('actions')
+                <a href="{{ $listUrl }}" class="btn-back-to-list">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver al listado
+                </a>
+            @endslot
+        @endcomponent
 
         <section class="client-purchases-section" aria-labelledby="orders-heading">
             <h2 id="orders-heading" class="section-title">Todas las ventas completadas</h2>

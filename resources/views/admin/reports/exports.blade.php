@@ -368,14 +368,13 @@
             <span>Exportar datos</span>
         </nav>
 
-        <header class="reports-hub-header reports-exports-intro">
-            <h1>Exportar datos</h1>
+        @component('admin.partials.page-header', ['title' => 'Exportar datos'])
             <div class="reports-exports-intro-text">
                 <p><strong>Exportar datos y PDF</strong> desde reportes e inventario.</p>
                 <p>Aquí descarga <strong>informes en PDF</strong>, <strong>Excel</strong> y <strong>archivos de inventario y ventas</strong> desde un solo lugar.</p>
                 <p>Cada enlace abre el resultado en una <strong>nueva pestaña</strong> del navegador.</p>
             </div>
-        </header>
+        @endcomponent
 
         <div class="reports-exports-layout">
 

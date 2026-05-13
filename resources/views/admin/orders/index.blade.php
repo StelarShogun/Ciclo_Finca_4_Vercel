@@ -33,24 +33,22 @@
             <div class="cf4-orders-flash-success" role="status">{{ session('status') }}</div>
         @endif
 
-        <header class="sales-header">
-            <div>
-                <h1>Pedidos en línea</h1>
-                <p>
-                    Gestione pedidos del carrito web: marque pedidos como listos para recoger, confirme la venta,
-                    rechace el pedido o consulte la factura. Los pedidos pendientes pueden marcarse como listos para
-                    recoger o rechazarse. Solo los pedidos listos para recoger pueden confirmarse. Las ventas ya
-                    confirmadas están en
-                    <a href="{{ route('sales.index') }}">Ventas</a>.
-                </p>
-            </div>
-            <div class="sales-header-actions">
-                <button type="button" class="btn btn-secondary btn-sm orders-settings-link"
-                    id="btn-open-order-expiration-modal">
-                    <i class="fas fa-clock"></i> Plazo de cancelación
-                </button>
-            </div>
-        </header>
+        @component('admin.partials.page-header', ['title' => 'Pedidos en línea'])
+            Gestione pedidos del carrito web: marque pedidos como listos para recoger, confirme la venta,
+            rechace el pedido o consulte la factura. Los pedidos pendientes pueden marcarse como listos para
+            recoger o rechazarse. Solo los pedidos listos para recoger pueden confirmarse. Las ventas ya
+            confirmadas están en
+            <a href="{{ route('sales.index') }}">Ventas</a>.
+
+            @slot('actions')
+                <div class="sales-header-actions">
+                    <button type="button" class="btn btn-secondary btn-sm orders-settings-link"
+                        id="btn-open-order-expiration-modal">
+                        <i class="fas fa-clock"></i> Plazo de cancelación
+                    </button>
+                </div>
+            @endslot
+        @endcomponent
 
         <section class="kpi-grid cf4-orders-kpi-grid" aria-label="Resumen de encargos">
             <a class="kpi-card cf4-orders-kpi-card-link" href="{{ $pendingCardUrl }}">

@@ -67,57 +67,57 @@
     <div class="sales-container cf4-orders-module cf4-supplier-orders-module"
          data-supplier-order-num="{{ $order->num_order }}"
          data-supplier-order-state="{{ $order->state }}">
-        <header class="sales-header">
-            <div>
-                <h1>Pedido {{ $po }}</h1>
-                <p>Detalle del pedido de compra al proveedor.</p>
-            </div>
-            <div class="sales-actions" data-supplier-order-actions="{{ $order->num_order }}">
-                <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    Volver
-                </a>
+        @component('admin.partials.page-header', [
+            'title' => "Pedido {$po}",
+            'description' => 'Detalle del pedido de compra al proveedor.',
+        ])
+            @slot('actions')
+                <div class="sales-actions" data-supplier-order-actions="{{ $order->num_order }}">
+                    <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Volver
+                    </a>
 
-                @if($order->state === 'draft')
-                    {{-- draft va directo a confirmed; no existe paso intermedio "pending" para pedidos nuevos. --}}
-                    <button type="button" class="btn btn-primary"
-                            onclick="confirmOrder('{{ $order->num_order }}')"
-                            title="Confirmar pedido">
-                        <i class="fas fa-check"></i>
-                        Confirmar
-                    </button>
-                    <button type="button" class="btn btn-secondary"
-                            onclick="cancelOrder('{{ $order->num_order }}')"
-                            title="Cancelar pedido">
-                        <i class="fas fa-times"></i> Cancelar
-                    </button>
+                    @if($order->state === 'draft')
+                        {{-- draft va directo a confirmed; no existe paso intermedio "pending" para pedidos nuevos. --}}
+                        <button type="button" class="btn btn-primary"
+                                onclick="confirmOrder('{{ $order->num_order }}')"
+                                title="Confirmar pedido">
+                            <i class="fas fa-check"></i>
+                            Confirmar
+                        </button>
+                        <button type="button" class="btn btn-secondary"
+                                onclick="cancelOrder('{{ $order->num_order }}')"
+                                title="Cancelar pedido">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
 
-                @elseif($order->state === 'pending')
-                    {{-- Compatibilidad con pedidos históricos que aún estén en estado pending. --}}
-                    <button type="button" class="btn btn-primary"
-                            onclick="confirmOrder('{{ $order->num_order }}')"
-                            title="Confirmar pedido">
-                        <i class="fas fa-check"></i> Confirmar
-                    </button>
-                    <button type="button" class="btn btn-secondary"
-                            onclick="cancelOrder('{{ $order->num_order }}')"
-                            title="Cancelar pedido">
-                        <i class="fas fa-times"></i> Cancelar
-                    </button>
+                    @elseif($order->state === 'pending')
+                        {{-- Compatibilidad con pedidos históricos que aún estén en estado pending. --}}
+                        <button type="button" class="btn btn-primary"
+                                onclick="confirmOrder('{{ $order->num_order }}')"
+                                title="Confirmar pedido">
+                            <i class="fas fa-check"></i> Confirmar
+                        </button>
+                        <button type="button" class="btn btn-secondary"
+                                onclick="cancelOrder('{{ $order->num_order }}')"
+                                title="Cancelar pedido">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
 
-                @elseif($order->state === 'confirmed')
-                    <button type="button" class="btn btn-primary"
-                            onclick="openReceiveModal()"
-                            title="Registrar recepción de mercancía">
-                        <i class="fas fa-clipboard-check"></i> Registrar recepción
-                    </button>
-                    <button type="button" class="btn btn-secondary"
-                            onclick="cancelOrder('{{ $order->num_order }}')"
-                            title="Cancelar pedido">
-                        <i class="fas fa-times"></i> Cancelar
-                    </button>
+                    @elseif($order->state === 'confirmed')
+                        <button type="button" class="btn btn-primary"
+                                onclick="openReceiveModal()"
+                                title="Registrar recepción de mercancía">
+                            <i class="fas fa-clipboard-check"></i> Registrar recepción
+                        </button>
+                        <button type="button" class="btn btn-secondary"
+                                onclick="cancelOrder('{{ $order->num_order }}')"
+                                title="Cancelar pedido">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
 
-                @elseif($order->state === 'partial_received')
+                    @elseif($order->state === 'partial_received')
                     <button type="button" class="btn btn-primary"
                             onclick="openReceiveModal()"
                             title="Completar recepción de mercancía">
@@ -136,7 +136,8 @@
                     </button>
                 @endif
             </div>
-        </header>
+            @endslot
+        @endcomponent
 
         <div class="detail-grid">
             {{-- Información general --}}

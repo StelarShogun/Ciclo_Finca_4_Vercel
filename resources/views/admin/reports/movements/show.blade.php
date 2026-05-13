@@ -43,14 +43,13 @@
         </nav>
 
         {{-- Product header --}}
-        <header class="inventory-movements-header">
+        @component('admin.partials.page-header', ['title' => $product->name])
             <div class="inventory-movements-header-meta">
                 <span class="inventory-movements-sku">{{ \App\Models\Product::skuFromId($product->product_id) }}</span>
                 @if($product->category)
                     <span class="inventory-movements-category">{{ $product->category->name }}</span>
                 @endif
             </div>
-            <h1>{{ $product->name }}</h1>
             <p class="inventory-movements-lead">
                 Historial de movimientos de inventario: entradas, salidas y devoluciones registradas.
                 El stock actual es
@@ -58,7 +57,7 @@
                     {{ number_format($product->stock_current) }} unid.
                 </strong>
             </p>
-        </header>
+        @endcomponent
 
         <div class="inv-mov-layout">
 

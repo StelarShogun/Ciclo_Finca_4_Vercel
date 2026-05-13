@@ -21,13 +21,12 @@
     </nav>
 
     {{-- Page header --}}
-    <header class="inv-index-header">
-        <h1>Movimientos de inventario</h1>
+    @component('admin.partials.page-header', ['title' => 'Movimientos de inventario'])
         <p class="inv-index-lead">
             Seleccioná un producto para consultar su historial completo de entradas,
             salidas y devoluciones. Podés buscar por nombre o código SKU.
         </p>
-    </header>
+    @endcomponent
 
     {{-- Products table card --}}
     <div class="orders-table-card">

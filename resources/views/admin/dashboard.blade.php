@@ -15,7 +15,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
     {{-- Styles & Fonts --}}
-    @vite(['resources/css/admin/dashboard/dashboard.css'])
+    @vite(['resources/css/admin/components/page-header.css', 'resources/css/admin/dashboard/dashboard.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -33,22 +33,18 @@
         <div class="dashboard-container">
 
             {{-- ==================== HEADER ==================== --}}
-            <header class="dashboard-header">
-                <div class="header-content">
+            @component('admin.partials.page-header', ['title' => '¡Bienvenido al Dashboard!'])
+                <p>Gestión integral del sistema Ciclo Finca 4</p>
+                <div class="current-time" id="current-time"></div>
 
-                    <div class="welcome-section">
-                        <h1>¡Bienvenido al Dashboard!</h1>
-                        <p>Gestión integral del sistema Ciclo Finca 4</p>
-                        <div class="current-time" id="current-time"></div>
-
-                        {{-- Data load error notice --}}
-                        @if(isset($error))
-                            <div class="alert alert-warning alert-inline-error">
-                                <i class="fas fa-exclamation-triangle"></i> {{ $error }}
-                            </div>
-                        @endif
+                {{-- Data load error notice --}}
+                @if(isset($error))
+                    <div class="alert alert-warning alert-inline-error">
+                        <i class="fas fa-exclamation-triangle"></i> {{ $error }}
                     </div>
+                @endif
 
+                @slot('actions')
                     <div class="header-actions">
                         <button class="btn btn-primary" id="refresh-dashboard">
                             <i class="fas fa-sync-alt"></i>
@@ -60,9 +56,8 @@
                             Reporte semanal
                         </button>
                     </div>
-
-                </div>
-            </header>
+                @endslot
+            @endcomponent
 
             {{-- ==================== KPI CARDS ==================== --}}
             <section class="kpis-section">

@@ -17,20 +17,16 @@
     <div class="sales-container">
 
         {{-- Page header --}}
-        <header class="sales-header">
-            <div>
-                <h1>Gestión de Ventas</h1>
-                <p>
-                    Ventas confirmadas y cierre contable. Los pedidos pendientes del carrito web se confirman o rechazan en
-                    <a href="{{ route('admin.orders.index') }}">Pedidos</a>.
-                </p>
-            </div>
-            <div class="sales-actions">
+        @component('admin.partials.page-header', ['title' => 'Gestión de Ventas'])
+            Ventas confirmadas y cierre contable. Los pedidos pendientes del carrito web se confirman o rechazan en
+            <a href="{{ route('admin.orders.index') }}">Pedidos</a>.
+
+            @slot('actions')
                 <button class="btn btn-primary" onclick="openNewSaleModal()">
                     <i class="fas fa-plus"></i> Nueva Venta
                 </button>
-            </div>
-        </header>
+            @endslot
+        @endcomponent
 
         {{-- ==================== KPI CARDS ==================== --}}
         <div class="kpi-grid">

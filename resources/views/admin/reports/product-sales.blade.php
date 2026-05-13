@@ -39,12 +39,11 @@
             <span>Productos más vendidos</span>
         </nav>
 
-        <header class="product-sales-header">
-            <div>
-                <h1>Productos más vendidos</h1>
-                <p>Top 10 por ingresos en el periodo seleccionado. Tabla completa ordenable por unidades o ingresos.</p>
-            </div>
-        </header>
+        @component('admin.partials.page-header', [
+            'title' => 'Productos más vendidos',
+            'description' => 'Top 10 por ingresos en el periodo seleccionado. Tabla completa ordenable por unidades o ingresos.',
+        ])
+        @endcomponent
 
         <div class="product-sales-toolbar">
             <div class="period-toggle" role="group" aria-label="Periodo">

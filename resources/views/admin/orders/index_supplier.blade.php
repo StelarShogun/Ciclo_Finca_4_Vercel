@@ -30,26 +30,24 @@
 
     <div class="sales-container cf4-orders-module cf4-supplier-orders-module">
 
-        <header class="sales-header">
-            <div>
-                <h1>Pedidos a Proveedores</h1>
-                <p>
-                    Gestione los pedidos de compra realizados a los proveedores: confirme la recepción,
-                    cancele un pedido o consulte el detalle de los productos solicitados.
-                    Los pedidos de clientes en línea están en
-                    <a href="{{ route('admin.orders.index') }}">Órdenes</a>.
-                </p>
-            </div>
-            <div class="sales-header-actions">
-                <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-file-import"></i> Analizar XML de proveedor
-                </a>
-                <a href="{{ route('admin.supplier-orders.create') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus"></i>
-                    Nuevo pedido
-                </a>
-            </div>
-        </header>
+        @component('admin.partials.page-header', ['title' => 'Pedidos a Proveedores'])
+            Gestione los pedidos de compra realizados a los proveedores: confirme la recepción,
+            cancele un pedido o consulte el detalle de los productos solicitados.
+            Los pedidos de clientes en línea están en
+            <a href="{{ route('admin.orders.index') }}">Órdenes</a>.
+
+            @slot('actions')
+                <div class="sales-header-actions">
+                    <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-file-import"></i> Analizar XML de proveedor
+                    </a>
+                    <a href="{{ route('admin.supplier-orders.create') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i>
+                        Nuevo pedido
+                    </a>
+                </div>
+            @endslot
+        @endcomponent
 
         <section class="kpi-grid cf4-orders-kpi-grid" aria-label="Resumen de pedidos a proveedores">
             <a class="kpi-card cf4-orders-kpi-card-link" href="{{ $openCardUrl }}">

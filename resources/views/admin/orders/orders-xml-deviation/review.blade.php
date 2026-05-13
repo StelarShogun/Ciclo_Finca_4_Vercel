@@ -248,23 +248,21 @@
 @endsection
 
 @section('header')
-    <header class="sales-header">
-        <div>
-            <h1>Revisión de precios XML</h1>
-            <p>
-                Seleccione los productos a actualizar. Si el precio de compra subió, puede ajustar
-                el precio de venta sugerido o dejarlo en blanco para no modificarlo.
-            </p>
-        </div>
-        <div class="sales-header-actions">
-            <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}" class="btn btn-secondary btn-sm">
-                <i class="fas fa-redo"></i> Cargar otro XML
-            </a>
-            <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-ghost btn-sm">
-                <i class="fas fa-arrow-left"></i> Volver a pedidos
-            </a>
-        </div>
-    </header>
+    @component('admin.partials.page-header', ['title' => 'Revisión de precios XML'])
+        Seleccione los productos a actualizar. Si el precio de compra subió, puede ajustar
+        el precio de venta sugerido o dejarlo en blanco para no modificarlo.
+
+        @slot('actions')
+            <div class="sales-header-actions">
+                <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-redo"></i> Cargar otro XML
+                </a>
+                <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-ghost btn-sm">
+                    <i class="fas fa-arrow-left"></i> Volver a pedidos
+                </a>
+            </div>
+        @endslot
+    @endcomponent
 @endsection
 
 @section('contenido')

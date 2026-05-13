@@ -14,17 +14,16 @@
     <div class="sales-container">
 
         {{-- ==================== HEADER ==================== --}}
-        <header class="sales-header">
-            <div>
-                <h1>Gestión de Proveedores</h1>
-                <p>Administra los proveedores del sistema</p>
-            </div>
-            <div class="sales-actions">
+        @component('admin.partials.page-header', [
+            'title' => 'Gestión de Proveedores',
+            'description' => 'Administra los proveedores del sistema',
+        ])
+            @slot('actions')
                 <button class="btn btn-primary" id="open-new-supplier-modal">
                     <i class="fas fa-plus"></i> Nuevo Proveedor
                 </button>
-            </div>
-        </header>
+            @endslot
+        @endcomponent
 
         @if (session('status'))
             <x-admin-alert type="success" :message="session('status')" dismissible />

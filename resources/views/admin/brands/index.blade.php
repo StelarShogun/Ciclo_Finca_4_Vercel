@@ -10,21 +10,22 @@
     <div class="brands-container">
 
         {{-- ==================== HEADER ==================== --}}
-        <header class="brands-header">
-            <div>
-                <h1>Gestión de Marcas</h1>
-                <p>Administra las marcas de productos</p>
-            </div>
-            <div class="brands-actions">
-                <span class="brands-count-badge">
-                    <i class="fas fa-tags"></i>
-                    {{ $brands->total() }} marca(s)
-                </span>
-                <button class="btn btn-primary" id="btn-nueva-marca">
-                    <i class="fas fa-plus"></i> Nueva Marca
-                </button>
-            </div>
-        </header>
+        @component('admin.partials.page-header', [
+            'title' => 'Gestión de Marcas',
+            'description' => 'Administra las marcas de productos',
+        ])
+            @slot('actions')
+                <div class="brands-actions">
+                    <span class="brands-count-badge">
+                        <i class="fas fa-tags"></i>
+                        {{ $brands->total() }} marca(s)
+                    </span>
+                    <button class="btn btn-primary" id="btn-nueva-marca">
+                        <i class="fas fa-plus"></i> Nueva Marca
+                    </button>
+                </div>
+            @endslot
+        @endcomponent
 
         {{-- ==================== FILTROS --}}
         <div class="filters-section">
