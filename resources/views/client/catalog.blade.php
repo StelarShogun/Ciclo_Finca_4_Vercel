@@ -383,7 +383,6 @@
                                             </article>
                                         @endforeach
                                     </div>
-                                    <div class="swiper-pagination catalog-spotlight-pagination" aria-label="Posición del carrusel"></div>
                                 </div>
 
                                 <button type="button"

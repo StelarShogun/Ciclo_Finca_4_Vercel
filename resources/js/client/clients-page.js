@@ -1,8 +1,7 @@
 import Swiper from 'swiper';
-import { Navigation, Pagination, Autoplay, A11y } from 'swiper/modules';
+import { Navigation, Autoplay, A11y } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 import 'swiper/css/a11y';
 import {
     buildCf4CheckoutSuccessText,
@@ -1848,7 +1847,6 @@ document.addEventListener('DOMContentLoaded', function () {
         var swiperEl = root.querySelector('.swiper');
         var prevBtn = root.querySelector('[data-spotlight-prev]');
         var nextBtn = root.querySelector('[data-spotlight-next]');
-        var paginationEl = root.querySelector('.swiper-pagination');
         if (!swiperEl) return;
 
         var slides = swiperEl.querySelectorAll('.swiper-slide');
@@ -1870,12 +1868,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             new Swiper(swiperEl, {
-                modules: [Navigation, Pagination, Autoplay, A11y],
-                // Show a single product at a time across all viewports.
+                modules: [Navigation, Autoplay, A11y],
                 slidesPerView: 1,
                 spaceBetween: 18,
                 centeredSlides: false,
-                loop: slides.length > 1,
+                loop: slides.length > 3,
                 speed: 600,
                 grabCursor: true,
                 watchOverflow: true,
@@ -1885,17 +1882,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     nextEl: nextBtn,
                     disabledClass: 'swiper-button-disabled',
                 },
-                pagination: {
-                    el: paginationEl,
-                    clickable: true,
-                    bulletClass: 'swiper-pagination-bullet',
-                    bulletActiveClass: 'swiper-pagination-bullet-active',
-                },
                 a11y: {
                     prevSlideMessage: 'Producto destacado anterior',
                     nextSlideMessage: 'Siguiente producto destacado',
-                    paginationBulletMessage: 'Ir al producto destacado {{index}}',
                     slideLabelMessage: '{{index}} de {{slidesLength}}',
+                },
+                breakpoints: {
+                    640: { slidesPerView: 2, spaceBetween: 18 },
+                    1024: { slidesPerView: 3, spaceBetween: 22 },
                 },
             });
         } catch (err) {

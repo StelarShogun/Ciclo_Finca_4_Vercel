@@ -2533,16 +2533,15 @@ body.guest-layout {
   gap: 18px;
 }
 
-/* CF4-XXX: Spotlight carousel (Swiper) — autoplay 4s, single product per view. */
+/* CF4-XXX: Spotlight carousel (Swiper) — autoplay 4s, 1/2/3 items responsive. */
 .catalog-spotlight-carousel {
   position: relative;
-  padding: 2px 56px 32px;
+  padding: 2px 56px 8px;
 }
 
 .catalog-spotlight-carousel .swiper {
   overflow: hidden;
   padding: 2px 4px 4px;
-  max-width: min(440px, 94vw);
   margin: 0 auto;
 }
 
@@ -2606,51 +2605,17 @@ body.guest-layout {
 .catalog-spotlight-nav--prev { left: 4px; }
 .catalog-spotlight-nav--next { right: 4px; }
 
-/* Pagination bullets */
-.catalog-spotlight-pagination.swiper-pagination {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 6px;
-  text-align: center;
-  display: flex;
-  gap: 7px;
-  justify-content: center;
-}
-
-.catalog-spotlight-pagination .swiper-pagination-bullet {
-  width: 10px;
-  height: 10px;
-  background: rgba(46, 125, 50, 0.35);
-  opacity: 1;
-  border-radius: 999px;
-  transition: background 0.18s ease, transform 0.18s ease;
-}
-
-.catalog-spotlight-pagination .swiper-pagination-bullet-active {
-  background: var(--color-primary, #2e7d32);
-  transform: scale(1.2);
-}
-
-.catalog-spotlight-pagination .swiper-pagination-bullet:focus-visible {
-  outline: 2px solid var(--color-primary-dark, #1b5e20);
-  outline-offset: 2px;
-}
-
 @media (max-width: 768px) {
   .catalog-spotlight-carousel {
-    padding: 4px 8px 44px;
+    padding: 4px 44px 8px;
   }
   .catalog-spotlight-nav {
     width: 38px;
     height: 38px;
     font-size: 1rem;
-    top: auto;
-    bottom: -2px;
   }
-  .catalog-spotlight-nav--prev { left: 12px; }
-  .catalog-spotlight-nav--next { right: 12px; }
-  .catalog-spotlight-pagination.swiper-pagination { bottom: 14px; }
+  .catalog-spotlight-nav--prev { left: 4px; }
+  .catalog-spotlight-nav--next { right: 4px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
