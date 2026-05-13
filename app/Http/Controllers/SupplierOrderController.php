@@ -96,7 +96,7 @@ class SupplierOrderController extends Controller
             [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
         }
 
-        $query = Order::with(['supplier', 'orderItems', 'confirmedBy'])
+        $query = Order::with(['supplier', 'orderItems'])
             ->orderBy('orders.date', 'desc');
 
         if ($state) {
@@ -158,7 +158,7 @@ class SupplierOrderController extends Controller
 
     public function detail($id)
     {
-        $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin', 'confirmedBy'])
+        $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin'])
             ->findOrFail($id);
 
         return view('admin.orders.detail_supplier', compact('order'));
@@ -275,7 +275,7 @@ class SupplierOrderController extends Controller
 
     public function show($id)
     {
-        $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin', 'confirmedBy'])
+        $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin'])
             ->findOrFail($id);
 
         $productsPayload = $order->orderItems
@@ -319,8 +319,6 @@ class SupplierOrderController extends Controller
                     ])
                     ->values()
                     ->all(),
-                'confirmed_at' => $order->confirmed_at?->format('d/m/Y H:i'),
-                'confirmed_by_label' => $this->adminDisplayName($order->confirmedBy),
             ],
         ]);
     }
@@ -347,23 +345,6 @@ class SupplierOrderController extends Controller
                 'success' => false,
                 'message' => 'Transición de estado no permitida.',
             ], 422);
-        }
-
-        if ($requestedState === 'confirmed') {
-            $adminId = auth('admin')->id();
-            $updates = [];
-
-            if (! $order->confirmed_at) {
-                $updates['confirmed_at'] = now();
-            }
-
-            if (! $order->confirmed_by && $adminId) {
-                $updates['confirmed_by'] = (int) $adminId;
-            }
-
-            if ($updates !== []) {
-                $order->fill($updates);
-            }
         }
 
         if ($requestedState === 'delivered' && $order->state === 'confirmed') {
@@ -443,7 +424,6 @@ class SupplierOrderController extends Controller
         ]);
 
         $order->refresh();
-        $order->load('confirmedBy');
 
         $this->logAuditAction(
             'supplier_order_state_update',
@@ -462,8 +442,6 @@ class SupplierOrderController extends Controller
             'message' => 'Estado actualizado correctamente.',
             'order' => [
                 'state' => $order->state,
-                'confirmed_at' => $order->confirmed_at?->format('d/m/Y H:i'),
-                'confirmed_by_label' => $this->adminDisplayName($order->confirmedBy),
             ],
         ]);
     }
@@ -729,27 +707,6 @@ class SupplierOrderController extends Controller
                 'products_count' => $supplier->products_count,
             ],
         ]);
-    }
-
-    private function adminDisplayName(?AdminUser $admin): ?string
-    {
-        if (! $admin) {
-            return null;
-        }
-
-        $fullName = trim(implode(' ', array_filter([
-            $admin->name,
-            $admin->first_surname,
-            $admin->second_surname,
-        ])));
-
-        if ($fullName !== '') {
-            return $fullName;
-        }
-
-        $email = trim((string) ($admin->gmail ?? ''));
-
-        return $email !== '' ? $email : null;
     }
 
     private function generatePoNumber(): string
