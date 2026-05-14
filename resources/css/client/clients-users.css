@@ -1,56 +1,10 @@
 @import "../admin/sweetalert2-modal-zindex.css";
 
 /* ===================================================================
-   1. VARIABLES 
+   1. VARIABLES
+   Tokens globales en resources/css/client/variables-reset.css (el layout
+   cliente lo carga antes vía @vite en client/layouts/app).
    =================================================================== */
-:root {
-  /* Primary colors */
-  --color-primary:       #2e7d32;
-  --color-primary-dark:  #1b5e20;
-  --color-primary-light: #4caf50;
-  --color-accent:        #ff6f00;
-
-  /* State colors */
-  --color-success:     #2e7d32;
-  --color-success-bg:  #e8f5e9;
-  --color-danger:      #d32f2f;
-  --color-danger-bg:   #ffebee;
-  --color-warning:     #f57c00;
-  --color-warning-bg:  #fff3e0;
-  --color-info:        #1976d2;
-  --color-info-bg:     #e3f2fd;
-
-  /* Neutral colors */
-  --color-secondary:     #455a64;
-  --color-secondary-bg:  #eceff1;
-  --color-light:         #f8f9fa;
-  --color-dark:          #212529;
-  --color-muted:         #6c757d;
-
-  /* Text colors */
-  --text-primary:   #333;
-  --text-secondary: #666;
-
-  /* Backgrounds */
-  --background-main:  #f5f5f5;
-  --background-white: #ffffff;
-  --background-light: #f8f9fa;
-
-  /* Borders */
-  --border-color:         #e0e0e0;
-  --border-radius:        8px;
-  --border-radius-small:  4px;
-  --border-radius-large:  12px;
-
-  /* Shadows */
-  --shadow-sm:     0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-md:     0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.1);
-  --shadow-lg:     0 10px 15px rgba(0, 0, 0, 0.1);
-
-  /* Transition */
-  --transition: all 0.3s ease;
-}
 
 /* ===================================================================
    2. RESET & BASE
@@ -129,7 +83,7 @@ body.guest-layout {
   outline: none;
 }
 
-.btn:focus   { box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.3); }
+.btn:focus   { box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.3); }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
 
 /* Color variants */
@@ -142,7 +96,7 @@ body.guest-layout {
   background: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+  box-shadow: 0 4px 15px rgba(35, 83, 71, 0.3);
 }
 
 .btn-secondary {
@@ -179,7 +133,7 @@ body.guest-layout {
   background: var(--color-primary);
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+  box-shadow: 0 4px 15px rgba(35, 83, 71, 0.3);
 }
 
 .btn-outline-secondary {
@@ -266,7 +220,7 @@ body.guest-layout {
 .form-control:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.1);
 }
 
 .checkbox-label {
@@ -357,7 +311,7 @@ body.guest-layout {
 }
 
 .login-back-link:hover {
-    color: #2e7d32;
+    color: var(--brand-medium);
     text-decoration: none;
 }
 
@@ -371,7 +325,7 @@ body.guest-layout {
     height: 60px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #2e7d32;
+    border: 2px solid var(--brand-medium);
     padding: 3px;
     background: #fff;
     display: block;
@@ -442,8 +396,8 @@ body.guest-layout {
 
 .login-form-box .form-control:focus {
     outline: none;
-    border-color: #2e7d32;
-    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.12);
+    border-color: var(--brand-medium);
+    box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.12);
 }
 
 .login-form-box .form-control::placeholder {
@@ -475,7 +429,7 @@ body.guest-layout {
     transition: color 0.2s ease;
 }
 
-.login-pass-toggle:hover { color: #2e7d32; }
+.login-pass-toggle:hover { color: var(--brand-medium); }
 
 /* ── reCAPTCHA ── */
 .login-form-box .g-recaptcha {
@@ -486,6 +440,25 @@ body.guest-layout {
 .recaptcha-wrap {
     overflow: hidden;
     width: 100%;
+}
+
+/* ── Checkbox recordarme ── */
+.checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #3c4043;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--brand-medium);
+    cursor: pointer;
+    flex-shrink: 0;
 }
 
 /* ── Botón principal de submit ── */
@@ -507,9 +480,9 @@ body.guest-layout {
     letter-spacing: 0.01em;
     border: none;
     border-radius: 10px;
-    background-color: #2e7d32;
+    background-color: var(--brand-medium);
     color: #fff;
-    box-shadow: 0 4px 14px rgba(46, 125, 50, 0.22);
+    box-shadow: 0 4px 14px rgba(35, 83, 71, 0.22);
     cursor: pointer;
     transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
     -webkit-font-smoothing: antialiased;
@@ -522,26 +495,26 @@ body.guest-layout {
 
 .btn-login-submit:hover {
     background-color: #256428;
-    box-shadow: 0 6px 20px rgba(46, 125, 50, 0.32);
+    box-shadow: 0 6px 20px rgba(35, 83, 71, 0.32);
     transform: translateY(-1px);
     color: #fff;
 }
 
 .btn-login-submit:active {
-    background-color: #1b5e20;
-    box-shadow: 0 2px 6px rgba(46, 125, 50, 0.15);
+    background-color: var(--brand-medium-dark);
+    box-shadow: 0 2px 6px rgba(35, 83, 71, 0.15);
     transform: translateY(2px);
     color: #fff;
 }
 
 .btn-login-submit:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.3);
+    box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.3);
     color: #fff;
 }
 
 .btn-login-submit:disabled {
-    background-color: #4caf50;
+    background-color: var(--brand-light);
     box-shadow: none;
     transform: none;
     opacity: 0.6;
@@ -550,8 +523,8 @@ body.guest-layout {
 
 /* ── Override Bootstrap btn-primary en otros contextos del login ── */
 .login-form-box .btn.btn-primary {
-    background-color: #2e7d32;
-    border-color: #2e7d32;
+    background-color: var(--brand-medium);
+    border-color: var(--brand-medium);
     color: #fff;
 }
 
@@ -562,8 +535,8 @@ body.guest-layout {
 }
 
 .login-form-box .btn.btn-primary:disabled {
-    background-color: #2e7d32;
-    border-color: #2e7d32;
+    background-color: var(--brand-medium);
+    border-color: var(--brand-medium);
     opacity: 0.65;
 }
 
@@ -673,7 +646,7 @@ body.guest-layout {
     border: 1.5px solid #dadce0;
     border-radius: 10px;
     background: #fff;
-    color: #2e7d32;
+    color: var(--brand-medium);
     font-weight: 600;
     font-size: 0.95rem;
     text-decoration: none;
@@ -683,7 +656,7 @@ body.guest-layout {
 
 .login-register-btn:hover {
     background: #f1f8f1;
-    border-color: #2e7d32;
+    border-color: var(--brand-medium);
     text-decoration: none;
 }
 
@@ -723,30 +696,153 @@ body.guest-layout {
    11. MY PROFILE (profile.blade.php)
    =================================================================== */
 
-/* ── Hero banner (igual a .catalog-header) ── */
-.profile-header {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-    color: white;
-    padding: 40px 0;
-    margin-bottom: 40px;
-    text-align: center;
+/* Shell: tipografía y fondo alineados al catálogo CF4 */
+.profile-shell {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    min-height: 100%;
+    background:
+        radial-gradient(circle at top left, rgba(142, 182, 155, 0.22), transparent 28rem),
+        linear-gradient(180deg, var(--brand-lightest), #eef8f0);
 }
 
-.profile-header-title    { font-size: 2.5rem; font-weight: 700; margin-bottom: 8px; }
-.profile-header-subtitle { font-size: 1.1rem; opacity: 0.9; margin: 0; }
+/* ── Hero banner (tokens CF4, coherente con .catalog-hero) ── */
+.profile-header {
+    position: relative;
+    isolation: isolate;
+    margin: clamp(0.65rem, 2vw, 1.25rem) clamp(0.65rem, 2.2vw, 2rem) 0;
+    padding: clamp(2rem, 4vw, 3rem) 0;
+    border-radius: clamp(18px, 2.8vw, 28px);
+    text-align: center;
+    color: #fff;
+    background:
+        radial-gradient(circle at 18% 20%, rgba(142, 182, 155, 0.26), transparent 28rem),
+        radial-gradient(circle at 82% 12%, rgba(218, 241, 222, 0.12), transparent 24rem),
+        linear-gradient(135deg, var(--brand-darkest) 0%, var(--brand-dark) 52%, var(--brand-medium-dark) 100%);
+    border: 1px solid rgba(218, 241, 222, 0.22);
+    box-shadow:
+        0 14px 40px rgba(5, 31, 32, 0.16),
+        0 1px 0 rgba(255, 255, 255, 0.06) inset;
+    margin-bottom: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.profile-header .container {
+    position: relative;
+    z-index: 1;
+}
+
+.profile-header-title {
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    font-weight: 800;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.profile-header-subtitle {
+    font-size: clamp(1rem, 1.2vw, 1.15rem);
+    opacity: 0.92;
+    margin: 0;
+    max-width: 36rem;
+    margin-inline: auto;
+    line-height: 1.45;
+}
+
+/* Fila meta del hero: badge de cuenta + accesos (misma línea, con wrap) */
+.profile-hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem 0.75rem;
+}
+
+/* Accesos rápidos (favoritos / notificaciones) — dentro del hero van como chips junto al badge */
+.profile-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.profile-hero .profile-quick-actions {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: flex-start;
+}
+
+.profile-quick-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.65rem 1.1rem;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid rgba(35, 83, 71, 0.2);
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--brand-darkest);
+    box-shadow: 0 2px 10px rgba(5, 31, 32, 0.06);
+    transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* En la tarjeta del perfil: chips alineados al badge (más compactos) */
+.profile-hero .profile-quick-action {
+    padding: 0.38rem 0.85rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 999px;
+    gap: 0.45rem;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(142, 182, 155, 0.4);
+    box-shadow: none;
+}
+
+.profile-hero .profile-quick-action:hover {
+    transform: none;
+    border-color: rgba(142, 182, 155, 0.75);
+    box-shadow: 0 1px 6px rgba(35, 83, 71, 0.08);
+}
+
+button.profile-quick-action {
+    font: inherit;
+    cursor: pointer;
+}
+
+.profile-quick-action:hover {
+    border-color: rgba(142, 182, 155, 0.65);
+    box-shadow: 0 4px 16px rgba(35, 83, 71, 0.1);
+    transform: translateY(-1px);
+}
+
+.profile-quick-action:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(142, 182, 155, 0.35);
+}
+
+.profile-quick-action--favorites i {
+    color: #c62828;
+}
+
+.profile-quick-action--notifications i {
+    color: var(--brand-medium);
+}
 
 /* ── Wrapper ── */
 .profile-wrapper { padding: 40px 16px 60px; }
 
-/* ── Hero ── */
+/* ── Hero (card principal) ── */
 .profile-hero {
     display: flex;
     align-items: center;
     gap: 24px;
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(142, 182, 155, 0.28);
+    border-radius: 20px;
+    box-shadow:
+        0 8px 28px rgba(5, 31, 32, 0.08),
+        0 1px 0 rgba(255, 255, 255, 0.8) inset;
     padding: 28px 32px;
     margin-bottom: 28px;
 }
@@ -784,22 +880,22 @@ body.guest-layout {
     width: 78px;
     height: 78px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2e7d32, #4caf50);
+    background: linear-gradient(135deg, var(--brand-medium), var(--brand-light));
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.85rem;
     font-weight: 700;
     color: #fff;
-    box-shadow: 0 4px 14px rgba(46, 125, 50, 0.25);
+    box-shadow: 0 4px 14px rgba(35, 83, 71, 0.25);
 }
 
 .profile-hero-info { flex: 1; min-width: 0; }
 
 .profile-hero-info h1 {
     font-size: 1.5rem;
-    font-weight: 700;
-    color: #333;
+    font-weight: 800;
+    color: var(--brand-darkest);
     margin: 0 0 4px;
     white-space: nowrap;
     overflow: hidden;
@@ -824,7 +920,7 @@ body.guest-layout {
 }
 
 .profile-badge--google { background: #fce8e6; color: #ea4335; }
-.profile-badge--local  { background: #e8f5e9; color: #2e7d32; }
+.profile-badge--local  { background: var(--brand-lightest); color: var(--brand-medium); border: 1px solid rgba(142, 182, 155, 0.45); }
 
 /* ── Alert close button (dentro del perfil) ── */
 .profile-alert-close {
@@ -851,10 +947,12 @@ body.guest-layout {
 
 /* ── Cards ── */
 .profile-card {
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(142, 182, 155, 0.22);
+    border-radius: 18px;
+    box-shadow:
+        0 6px 22px rgba(5, 31, 32, 0.06),
+        0 1px 0 rgba(255, 255, 255, 0.85) inset;
     padding: 28px;
     display: flex;
     flex-direction: column;
@@ -867,13 +965,13 @@ body.guest-layout {
     justify-content: space-between;
     gap: 12px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid rgba(35, 83, 71, 0.12);
 }
 
 .profile-card-header h2 {
     font-size: 1.1rem;
-    font-weight: 600;
-    color: #333;
+    font-weight: 700;
+    color: var(--brand-darkest);
     margin: 0;
     display: flex;
     align-items: center;
@@ -925,7 +1023,7 @@ body.guest-layout {
     transition: all 0.3s ease;
 }
 
-.profile-toggle-pass:hover { color: #2e7d32; }
+.profile-toggle-pass:hover { color: var(--brand-medium); }
 
 /* ── Password strength meter ── */
 .profile-strength {
@@ -1008,27 +1106,7 @@ body.guest-layout {
 
 /* ── Tablet / landscape phones (≤ 768 px) ── */
 @media (max-width: 768px) {
-    /* Header: ocultar nombre de usuario */
-    .user-trigger-name { display: none; }
-
-    .header-content {
-        flex-wrap: wrap;
-        height: auto;
-        padding: 12px 0;
-    }
-
-    .main-nav {
-        order: 3;
-        width: 100%;
-        justify-content: flex-start;
-        margin-top: 8px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-    .main-nav::-webkit-scrollbar { display: none; }
-
-    .nav-link { white-space: nowrap; }
+    /* Nota: estilos del header móvil viven en header.css (evitar pisar flex/layout aquí). */
 
     .cliente-main { padding-top: 120px; }
 
@@ -1036,11 +1114,22 @@ body.guest-layout {
     .profile-grid          { grid-template-columns: 1fr; }
     .profile-fields        { grid-template-columns: 1fr; }
     .profile-field-full    { grid-column: 1; }
-    .profile-header           { padding: 28px 0; }
-    .profile-header-title     { font-size: 1.9rem; }
-    .profile-header-subtitle  { font-size: 1rem; }
+    .profile-header {
+        margin-inline: 14px;
+        padding: 1.75rem 1rem;
+    }
+
+    .profile-header-title     { font-size: 1.75rem; }
+    .profile-header-subtitle  { font-size: 0.98rem; }
     .profile-hero          { flex-direction: column; text-align: center; }
     .profile-hero-info h1  { white-space: normal; }
+    .profile-hero-meta {
+        justify-content: center;
+        width: 100%;
+    }
+    .profile-hero .profile-quick-actions {
+        justify-content: center;
+    }
 
     /* Login / auth: pegar arriba en móvil (sin hueco de “header” fantasma) */
     .login-page-center {
@@ -1216,6 +1305,48 @@ body.guest-layout {
     margin: 0;
     font-size: 1rem;
     opacity: 0.9;
+}
+
+.cf4-invoices-escape-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px 14px;
+    margin-top: 18px;
+}
+
+.cf4-invoices-escape-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.cf4-invoices-escape-link:hover {
+    background: rgba(255, 255, 255, 0.24);
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #fff;
+}
+
+.cf4-invoices-escape-link--primary {
+    background: #fff;
+    color: var(--brand-medium);
+    border-color: #fff;
+}
+
+.cf4-invoices-escape-link--primary:hover {
+    background: var(--brand-lightest);
+    color: var(--brand-darkest);
+    border-color: var(--brand-lightest);
 }
 
 /* ── Page wrapper ── */

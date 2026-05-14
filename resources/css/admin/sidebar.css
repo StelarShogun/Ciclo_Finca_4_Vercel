@@ -43,7 +43,7 @@
 }
 
 .sidebar-header-brand:focus-visible {
-    outline: 2px solid var(--color-primary, #2e7d32);
+    outline: 2px solid var(--brand-light);
     outline-offset: 3px;
     border-radius: 0.5rem;
 }
@@ -53,9 +53,9 @@
     height: 4.75rem;
     object-fit: contain;
     padding: 0.35rem;
-    background: #fff;
+    background: var(--brand-lightest);
     border-radius: 50%;
-    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 2px 12px rgba(5, 31, 32, 0.35);
     flex-shrink: 0;
 }
 
@@ -73,7 +73,7 @@
     font-weight: 700;
     letter-spacing: 0.24em;
     text-transform: uppercase;
-    color: rgba(15, 23, 42, 0.5);
+    color: rgba(218, 241, 222, 0.55);
 }
 
 .sidebar-header-title {
@@ -83,9 +83,9 @@
     line-height: 1.2;
     background: linear-gradient(
         115deg,
-        var(--color-primary-dark, #1b5e20) 0%,
-        var(--color-primary, #2e7d32) 45%,
-        var(--color-primary-light, #4caf50) 100%
+        var(--brand-light) 0%,
+        var(--brand-lightest) 55%,
+        #ffffff 100%
     );
     -webkit-background-clip: text;
     background-clip: text;
@@ -130,19 +130,20 @@
  
 .sidebar-nav li a:hover {
     background: var(--sidebar-hover);
-    border-left-color: var(--sidebar-active);
+    border-left-color: var(--brand-light);
+    color: #ffffff;
 }
- 
+
 .sidebar-nav li.active a {
     background: var(--sidebar-active);
-    border-left-color: #ffffff;
-    color: #0f172a;
-    box-shadow: 0 0.125rem 0.375rem rgba(0,0,0,0.08);
+    border-left-color: var(--brand-light);
+    color: #ffffff;
+    box-shadow: 0 0.125rem 0.5rem rgba(5, 31, 32, 0.45);
 }
- 
+
 .sidebar-nav li.active a:hover {
     background: var(--sidebar-active-dark);
-    border-left-color: #ffffff;
+    border-left-color: var(--brand-lightest);
     color: #ffffff;
 }
  
@@ -194,7 +195,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.45rem 0.85rem;
-    background: var(--color-primary, #2e7d32);
+    background: var(--brand-medium);
     color: #fff;
     border-radius: 0.5rem;
     text-decoration: none;
@@ -206,7 +207,7 @@
 }
 
 .sidebar-catalog-btn:hover {
-    background: var(--color-primary-dark, #1b5e20);
+    background: var(--brand-medium-dark);
     transform: translateY(-1px);
     color: #fff;
 }

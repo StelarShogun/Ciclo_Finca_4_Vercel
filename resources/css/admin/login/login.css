@@ -92,7 +92,7 @@
 .form-group input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.1);
+  box-shadow: 0 0 0 2px rgba(35, 83, 71, 0.1);
 }
 
 .form-group input::placeholder {
@@ -260,7 +260,7 @@
 
 .auth-form .form-group input:focus {
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(46, 125, 50, 0.12);
+  box-shadow: 0 3px 8px rgba(35, 83, 71, 0.12);
 }
 
 .auth-form .btn.loading {
@@ -269,7 +269,7 @@
 
 .auth-form .btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
+  box-shadow: 0 4px 12px rgba(35, 83, 71, 0.25);
 }
 
 .auth-form .feedback-message {

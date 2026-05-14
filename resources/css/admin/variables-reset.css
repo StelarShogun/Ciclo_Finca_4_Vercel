@@ -2,16 +2,29 @@
    1. VARIABLES
    ============================================================ */
 :root {
-    /* Colores principales */
-    --color-primary:       #2e7d32;
-    --color-primary-dark:  #1b5e20;
-    --color-primary-light: #4caf50;
+    /* CF4-132 — paleta de marca (no sustituir --color-dark / --color-light: neutros) */
+    --brand-darkest:       #051F20;
+    --brand-dark:          #0B2B26;
+    --brand-medium-dark:   #163832;
+    --brand-medium:        #235347;
+    --brand-light:         #8EB69B;
+    --brand-lightest:      #DAF1DE;
+
+    --color-darkest:       var(--brand-darkest);
+    --color-medium-dark:   var(--brand-medium-dark);
+    --color-medium:        var(--brand-medium);
+    --color-lightest:      var(--brand-lightest);
+
+    /* Colores principales (mapeados a marca) */
+    --color-primary:       var(--brand-medium);
+    --color-primary-dark:  var(--brand-medium-dark);
+    --color-primary-light: var(--brand-light);
     --color-accent:        #ff6f00;
  
     /* Estados */
-    --color-success:      #2e7d32;
-    --color-success-bg:   #e8f5e9;
-    --color-success-light: #e8f5e9;
+    --color-success:       var(--brand-medium);
+    --color-success-bg:    var(--brand-lightest);
+    --color-success-light: #ecf5ee;
     --color-danger:       #d32f2f;
     --color-danger-bg:    #ffebee;
     --color-danger-light: #ffebee;
@@ -30,14 +43,14 @@
     --color-dark:           #212529;
     --color-muted:          #6c757d;
  
-    /* Sidebar */
-    --sidebar-bg:              #ffffff;
-    --sidebar-border:          #e5e7eb;
-    --sidebar-border-strong:   #94a3b8;
-    --sidebar-text:            #0f172a;
-    --sidebar-hover:           #f2f4f7;
-    --sidebar-active:          #60ad5e;
-    --sidebar-active-dark:     #1a7a44;
+    /* Sidebar (tema oscuro CF4-132) */
+    --sidebar-bg:              var(--brand-darkest);
+    --sidebar-border:          rgba(142, 182, 155, 0.22);
+    --sidebar-border-strong:   rgba(142, 182, 155, 0.45);
+    --sidebar-text:            rgba(255, 255, 255, 0.92);
+    --sidebar-hover:           var(--brand-medium-dark);
+    --sidebar-active:          var(--brand-medium);
+    --sidebar-active-dark:     var(--brand-medium-dark);
     --sidebar-width:           250px;
     --sidebar-collapsed-width: 80px;
  
@@ -45,8 +58,8 @@
     --text-primary:   #333;
     --text-secondary: #666;
  
-    /* Fondos */
-    --background-main:  #f5f5f5;
+    /* Fondos (área principal admin; cards suelen ser blancas) */
+    --background-main:  var(--brand-lightest);
     --background-white: #ffffff;
     --background-light: #f8f9fa;
  

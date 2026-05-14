@@ -39,7 +39,7 @@
 }
 
 .reports-breadcrumb a {
-    color: var(--color-primary, #2e7d32);
+    color: var(--color-primary, #235347);
     text-decoration: none;
 }
 
@@ -94,7 +94,7 @@
 }
 
 .period-btn.active {
-    background: var(--color-primary, #2e7d32);
+    background: var(--color-primary, #235347);
     color: #fff;
 }
 
@@ -125,7 +125,7 @@ a.period-btn-link:hover:not(.active) {
 .client-purchases-show-heading h1 {
     margin: 0 0 0.5rem;
     font-size: 1.65rem;
-    color: var(--color-primary-dark, #1b5e20);
+    color: var(--color-primary-dark, #163832);
 }
 
 .client-purchases-show-meta {
@@ -148,20 +148,20 @@ a.period-btn-link:hover:not(.active) {
     font-size: 0.9rem;
     font-weight: 600;
     text-decoration: none;
-    color: var(--color-primary, #2e7d32);
-    border: 1px solid var(--color-primary, #2e7d32);
+    color: var(--color-primary, #235347);
+    border: 1px solid var(--color-primary, #235347);
     border-radius: var(--border-radius, 8px);
     background: #fff;
     transition: background 0.15s ease, color 0.15s ease;
 }
 
 .btn-back-to-list:hover {
-    background: var(--color-primary, #2e7d32);
+    background: var(--color-primary, #235347);
     color: #fff;
 }
 
 .client-purchases-show-table tbody tr:hover {
-    background: rgba(46, 125, 50, 0.06);
+    background: rgba(35, 83, 71, 0.06);
 }
 
 a.btn-client-orders-open {
@@ -231,7 +231,7 @@ a.btn-client-orders-open {
 }
 
 .report-table tbody tr.is-clickable:hover {
-    background: rgba(46, 125, 50, 0.06);
+    background: rgba(35, 83, 71, 0.06);
 }
 
 .nav-sort {
@@ -248,11 +248,11 @@ a.btn-client-orders-open {
 }
 
 .nav-sort:hover {
-    color: var(--color-primary, #2e7d32);
+    color: var(--color-primary, #235347);
 }
 
 .nav-sort.is-active {
-    color: var(--color-primary, #2e7d32);
+    color: var(--color-primary, #235347);
 }
 
 .loading-cell,
@@ -294,7 +294,7 @@ a.btn-client-orders-open {
     border-radius: var(--border-radius-large, 12px);
     padding: 0;
     box-shadow: var(--shadow-heavy, 0 8px 32px rgba(0, 0, 0, 0.18));
-    border-top: 4px solid var(--color-primary, #2e7d32);
+    border-top: 4px solid var(--color-primary, #235347);
     overflow: hidden;
     z-index: 10000;
 }
@@ -320,7 +320,7 @@ a.btn-client-orders-open {
     gap: 1rem;
     margin-bottom: 0.5rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(46, 125, 50, 0.2);
+    border-bottom: 1px solid rgba(35, 83, 71, 0.2);
 }
 
 .client-orders-dialog-title-wrap {
@@ -332,7 +332,7 @@ a.btn-client-orders-open {
     margin: 0 0 0.35rem;
     font-size: 1.2rem;
     font-weight: 700;
-    color: var(--color-primary-dark, #1b5e20);
+    color: var(--color-primary-dark, #163832);
 }
 
 .client-orders-dialog-hint {
@@ -378,7 +378,7 @@ a.btn-client-orders-open {
     padding: 0.5rem 0.75rem;
     background: var(--color-success-bg, #e8f5e9);
     border-radius: var(--border-radius, 8px);
-    border-left: 3px solid var(--color-primary, #2e7d32);
+    border-left: 3px solid var(--color-primary, #235347);
 }
 
 .client-orders-dialog-table-wrap {
@@ -386,16 +386,16 @@ a.btn-client-orders-open {
 }
 
 .client-orders-table.report-table tbody tr:nth-child(even) {
-    background: rgba(46, 125, 50, 0.04);
+    background: rgba(35, 83, 71, 0.04);
 }
 
 .client-orders-table.report-table tbody tr:hover {
-    background: rgba(46, 125, 50, 0.08);
+    background: rgba(35, 83, 71, 0.08);
 }
 
 .client-orders-invoice {
     font-size: 0.88rem;
-    background: rgba(46, 125, 50, 0.08);
+    background: rgba(35, 83, 71, 0.08);
     padding: 0.2rem 0.45rem;
     border-radius: 4px;
 }
@@ -416,20 +416,20 @@ a.btn-client-orders-open {
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    border: 1px solid var(--color-primary, #2e7d32);
+    border: 1px solid var(--color-primary, #235347);
     border-radius: var(--border-radius, 8px);
     background: #fff;
-    color: var(--color-primary, #2e7d32);
+    color: var(--color-primary, #235347);
     transition: background 0.15s ease, color 0.15s ease;
 }
 
 .btn-client-orders-open:hover {
-    background: var(--color-primary, #2e7d32);
+    background: var(--color-primary, #235347);
     color: #fff;
 }
 
 .btn-client-orders-open:focus-visible {
-    outline: 2px solid var(--color-primary, #2e7d32);
+    outline: 2px solid var(--color-primary, #235347);
     outline-offset: 2px;
 }
 
@@ -442,7 +442,7 @@ a.btn-client-orders-open {
     font-weight: 600;
     text-decoration: none;
     border-radius: var(--border-radius-small, 4px);
-    background: var(--color-primary, #2e7d32);
+    background: var(--color-primary, #235347);
     color: #fff;
     border: none;
     cursor: pointer;
@@ -450,12 +450,12 @@ a.btn-client-orders-open {
 }
 
 .btn-ver-venta:hover {
-    background: var(--color-primary-dark, #1b5e20);
+    background: var(--color-primary-dark, #163832);
     filter: brightness(1.02);
 }
 
 .btn-ver-venta:focus-visible {
-    outline: 2px solid var(--color-primary-dark, #1b5e20);
+    outline: 2px solid var(--color-primary-dark, #163832);
     outline-offset: 2px;
 }
 

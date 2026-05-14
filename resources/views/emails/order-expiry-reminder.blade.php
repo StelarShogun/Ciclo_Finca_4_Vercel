@@ -26,7 +26,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
         .header {
-            background-color: #2e7d32;
+            background-color: #235347;
             padding: 28px 40px;
             text-align: center;
         }
@@ -137,7 +137,7 @@
             border-top: 1px solid #e0e0e0;
         }
         .footer a {
-            color: #2e7d32;
+            color: #235347;
             text-decoration: none;
         }
         .divider {
@@ -240,7 +240,7 @@
                 © {{ date('Y') }} <strong>Ciclo Finca 4</strong>. Todos los derechos reservados.
             </p>
             <p style="margin:0 0 8px 0;">
-                <a href="{{ $siteUrl }}" style="color:#2e7d32;">{{ $siteUrl }}</a>
+                <a href="{{ $siteUrl }}" style="color:#235347;">{{ $siteUrl }}</a>
             </p>
             <p style="margin:0;">
                 Este es un correo automático, por favor no respondas directamente a esta dirección.

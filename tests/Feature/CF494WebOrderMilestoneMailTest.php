@@ -244,5 +244,4 @@ class CF494WebOrderMilestoneMailTest extends TestCase
             'status' => 'sent',
         ]);
     }
-
 }

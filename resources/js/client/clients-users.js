@@ -3,6 +3,7 @@ import {
     getCf4PaymentMethodShortLabel,
 } from './checkout-copy.js';
 import './auth-welcome-toast.js';
+import { initHeaderCatalogSearch } from './header-catalog-search.js';
 
 // ============================================================
 // GLOBAL UTILITIES
@@ -316,25 +317,58 @@ function updateCartQuantity(productId, quantity) {
 function showCartEmptyState() {
     var card = document.querySelector('.cart-page-card');
     if (!card) return;
-    var catalogUrl = (card.querySelector('.cart-header a[href]') || {}).href || '/catalog';
+    var catalogLink = card.querySelector('a.btn-ghost-cart[href], a[href*="/catalog"]');
+    var rawHref = (catalogLink && catalogLink.getAttribute('href')) || '/catalog';
+    var catalogBase = rawHref.split('#')[0];
+    var spotlightHref = catalogBase + '#catalog-spotlight-heading';
+    var homeUrl = '/';
     card.innerHTML =
-        '<div class="cart-header">' +
-        '<h1 class="cart-title"><i class="fas fa-shopping-cart"></i> Carrito de Compras</h1>' +
-        '<a href="' + catalogUrl + '" class="btn btn-outline-secondary btn-sm">' +
-        '<i class="fas fa-arrow-left"></i> Continuar Comprando</a>' +
+        '<div class="cart-toolbar">' +
+        '<div class="cart-toolbar-text">' +
+        '<span class="cart-toolbar-label">Resumen rápido</span>' +
         '</div>' +
-        '<div class="cart-empty"><div class="empty-state">' +
-        '<i class="fas fa-shopping-cart"></i>' +
-        '<h2>Tu carrito está vacío</h2>' +
-        '<p>Agrega productos desde nuestro catálogo</p>' +
-        '<a href="' + catalogUrl + '" class="btn btn-primary btn-lg">' +
-        '<i class="fas fa-th"></i> Ver Catálogo</a>' +
+        '<div class="cart-toolbar-actions">' +
+        '<a href="' + catalogBase + '" class="btn btn-ghost-cart">' +
+        '<i class="fas fa-bicycle" aria-hidden="true"></i> Seguir comprando</a>' +
+        '</div></div>' +
+        '<div class="cart-empty">' +
+        '<div class="cart-empty-inner">' +
+        '<div class="cart-empty-icon" aria-hidden="true"><i class="fas fa-cart-shopping"></i></div>' +
+        '<h2 class="cart-empty-title">Tu carrito está vacío</h2>' +
+        '<p class="cart-empty-text">Explorá el catálogo y agregá productos para armar tu solicitud.</p>' +
+        '<div class="cart-empty-actions">' +
+        '<a href="' + catalogBase + '" class="btn btn-primary btn-lg">' +
+        '<i class="fas fa-bicycle" aria-hidden="true"></i> Ir al catálogo</a>' +
+        '<a href="' + spotlightHref + '" class="btn btn-ghost-cart btn-lg">' +
+        '<i class="fas fa-star" aria-hidden="true"></i> Ver destacados</a>' +
+        '</div>' +
+        '<p class="cart-empty-home-link">' +
+        '<a href="' + homeUrl + '" class="cart-empty-home-anchor">Volver al inicio</a></p>' +
         '</div></div>';
 }
 
 // ============================================================
 // USER MENU (profile dropdown)
 // ============================================================
+
+/** Positions the account dropdown on narrow viewports (fixed + --cf4-user-dropdown-top). */
+function syncMobileUserDropdownPosition() {
+    var header = document.querySelector('.cliente-header');
+    var trigger = document.getElementById('user-menu-trigger');
+    if (!header || !trigger) return;
+    if (window.innerWidth > 768) {
+        header.style.removeProperty('--cf4-user-dropdown-top');
+        return;
+    }
+    var wrap = document.getElementById('user-menu');
+    if (!wrap || !wrap.classList.contains('open')) {
+        header.style.removeProperty('--cf4-user-dropdown-top');
+        return;
+    }
+    var rect = trigger.getBoundingClientRect();
+    var gap = 8;
+    header.style.setProperty('--cf4-user-dropdown-top', Math.round(rect.bottom + gap) + 'px');
+}
 
 /** Sets the user menu open/closed state and updates ARIA attributes. */
 function setUserMenuOpen(open) {
@@ -345,6 +379,7 @@ function setUserMenuOpen(open) {
     wrap.classList.toggle('open', open);
     if (panel)   panel.setAttribute('aria-hidden', String(!open));
     if (trigger) trigger.setAttribute('aria-expanded', String(open));
+    syncMobileUserDropdownPosition();
 }
 
 function closeUserDropdown() {
@@ -357,6 +392,10 @@ function toggleUserDropdown() {
     setUserMenuOpen(!isOpen);
 }
 
+window.cf4CloseUserDropdown = closeUserDropdown;
+window.cf4ToggleUserDropdown = toggleUserDropdown;
+window.cf4SyncMobileUserDropdownPosition = syncMobileUserDropdownPosition;
+
 /** Sets mobile header menu open/closed state. */
 function setHeaderMenuOpen(open) {
     var header = document.querySelector('.cliente-header');
@@ -364,6 +403,9 @@ function setHeaderMenuOpen(open) {
     var icon   = toggle ? toggle.querySelector('i') : null;
     if (!header) return;
     header.classList.toggle('menu-open', open);
+    if (!open) {
+        closeUserDropdown();
+    }
     if (toggle) {
         toggle.setAttribute('aria-expanded', String(open));
         toggle.setAttribute('aria-label', open ? 'Cerrar menú de navegación' : 'Abrir menú de navegación');
@@ -371,6 +413,11 @@ function setHeaderMenuOpen(open) {
     if (icon) {
         icon.classList.toggle('fa-bars',  !open);
         icon.classList.toggle('fa-times',  open);
+    }
+    if (open) {
+        requestAnimationFrame(function () {
+            syncMobileUserDropdownPosition();
+        });
     }
 }
 
@@ -710,7 +757,7 @@ function updateStrength(val) {
         { w: '25%',  c: '#d32f2f', t: 'Débil'  },
         { w: '50%',  c: '#f57c00', t: 'Regular' },
         { w: '75%',  c: '#fbc02d', t: 'Buena'   },
-        { w: '100%', c: '#2e7d32', t: 'Fuerte'  }
+        { w: '100%', c: '#235347', t: 'Fuerte'  }
     ];
     var lvl = levels[Math.max(score - 1, 0)];
     if (fill)  { fill.style.width = lvl.w; fill.style.background = lvl.c; }
@@ -1172,6 +1219,7 @@ function sendPassword(form) {
 document.addEventListener('DOMContentLoaded', function () {
     favoritesCache = getInitialFavoritesFromMeta();
 
+    initHeaderCatalogSearch();
 
     // — Initialise cart counter —
     var cartLinkEl  = document.getElementById('cart-link');
@@ -1202,6 +1250,7 @@ document.addEventListener('DOMContentLoaded', function () {
             e.stopPropagation();
             toggleUserDropdown();
         });
+
     }
 
     // — Close user dropdown on outside click —
@@ -1224,15 +1273,20 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    var favoritesOpenBtn = document.getElementById('favorites-open-btn');
     var favoritesCloseBtn = document.getElementById('favorites-close-btn');
     var favoritesOverlay = document.getElementById('favorites-overlay');
     var favoritesDrawer = document.getElementById('favorites-drawer');
 
-    if (favoritesOpenBtn && favoritesDrawer && favoritesOverlay) {
-        favoritesOpenBtn.addEventListener('click', function () {
-            setFavoritesDrawerOpen(true);
-            loadFavoritesDrawerItems();
+    if (favoritesDrawer && favoritesOverlay) {
+        document.querySelectorAll('.cf4-favorites-open-trigger').forEach(function (favBtn) {
+            favBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                setHeaderMenuOpen(false);
+                closeUserDropdown();
+                setFavoritesDrawerOpen(true);
+                loadFavoritesDrawerItems();
+            });
         });
     }
 
@@ -1282,9 +1336,12 @@ document.addEventListener('DOMContentLoaded', function () {
         setHeaderMenuOpen(false);
     });
 
-    // — Keep desktop navbar always collapsed on resize —
+    // — Keep desktop navbar always collapsed on resize; re-sync account dropdown on mobile —
     window.addEventListener('resize', function () {
-        if (window.innerWidth > 768) { setHeaderMenuOpen(false); }
+        if (window.innerWidth > 768) {
+            setHeaderMenuOpen(false);
+        }
+        syncMobileUserDropdownPosition();
     });
 
     // — Login modal —

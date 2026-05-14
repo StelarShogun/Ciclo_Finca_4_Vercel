@@ -11,6 +11,11 @@
     <div class="cf4-invoices-header-inner">
         <h1><i class="fas fa-bell"></i> Mis Notificaciones</h1>
         <p>Historial de avisos enviados por el sistema.</p>
+        <nav class="cf4-invoices-escape-nav" aria-label="Navegación">
+            <a href="{{ route('clients.home') }}" class="cf4-invoices-escape-link">
+                <i class="fas fa-home" aria-hidden="true"></i> Ir al inicio
+            </a>
+        </nav>
     </div>
 </div>
 
