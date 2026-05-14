@@ -1,0 +1,380 @@
+<!doctype html>
+<!-- CF4-131: HyperFrames composition (scene + 404 copy in-frame). Render: npm run render:404 -->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        font-family: "Poppins", system-ui, sans-serif;
+        background: linear-gradient(168deg, #f1f8f4 0%, #dcedc8 38%, #aed581 100%);
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+      .sky {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 90% 55% at 18% 12%, rgba(255, 255, 255, 0.75) 0%, transparent 50%),
+          radial-gradient(ellipse 70% 45% at 82% 8%, rgba(255, 253, 231, 0.5) 0%, transparent 42%);
+        pointer-events: none;
+      }
+      .sun {
+        position: absolute;
+        top: 72px;
+        right: 180px;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #fffde7 0%, #fff9c4 45%, #fdd835 100%);
+        box-shadow: 0 0 80px rgba(253, 216, 53, 0.45);
+        opacity: 0.95;
+      }
+      .cloud {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.88);
+        border-radius: 999px;
+        filter: blur(0.5px);
+        box-shadow: 24px 10px 0 -4px rgba(255, 255, 255, 0.75);
+      }
+      .cloud.c1 {
+        width: 220px;
+        height: 70px;
+        top: 120px;
+        left: 120px;
+      }
+      .cloud.c2 {
+        width: 180px;
+        height: 56px;
+        top: 200px;
+        left: 520px;
+        opacity: 0.85;
+      }
+      .cloud.c3 {
+        width: 260px;
+        height: 78px;
+        top: 90px;
+        left: 1320px;
+        opacity: 0.9;
+      }
+      .road-wrap {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 200px;
+        height: 300px;
+      }
+      .road {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 980px;
+        height: 22px;
+        background: linear-gradient(180deg, #6d4c41 0%, #4e342e 55%, #3e2723 100%);
+        border-radius: 11px;
+        box-shadow: 0 8px 0 rgba(0, 0, 0, 0.15), inset 0 2px 0 rgba(255, 255, 255, 0.08);
+      }
+      .road-dash {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 760px;
+        height: 0;
+        border-top: 7px dashed rgba(255, 255, 255, 0.5);
+      }
+      .road-gap {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%) scaleX(0);
+        width: 160px;
+        height: 48px;
+        background: linear-gradient(168deg, #f1f8f4 0%, #dcedc8 100%);
+        border-radius: 10px;
+        opacity: 0;
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.06);
+      }
+      .crack {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 4px;
+        height: 0;
+        background: #3e2723;
+        transform: translate(-50%, -50%) rotate(12deg);
+        border-radius: 2px;
+        opacity: 0;
+      }
+      .crack.crk2 {
+        transform: translate(-40%, -50%) rotate(-18deg);
+      }
+      .bike-shadow {
+        position: absolute;
+        left: 300px;
+        bottom: 278px;
+        width: 140px;
+        height: 22px;
+        background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.22) 0%, transparent 70%);
+        opacity: 0.55;
+      }
+      .bike {
+        position: absolute;
+        left: 280px;
+        bottom: 300px;
+        width: 220px;
+        height: 150px;
+        z-index: 3;
+        transform-origin: 50% 85%;
+      }
+      .bike svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        filter: drop-shadow(6px 14px 18px rgba(0, 0, 0, 0.2));
+      }
+      .dust {
+        position: absolute;
+        left: 220px;
+        bottom: 308px;
+        width: 100px;
+        height: 48px;
+        opacity: 0;
+        background: radial-gradient(ellipse at center, rgba(93, 64, 55, 0.4) 0%, transparent 72%);
+      }
+      .spark {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #fff59d;
+        opacity: 0;
+        box-shadow: 0 0 12px #ffee58;
+      }
+      .copy {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 36px;
+        z-index: 5;
+        text-align: center;
+        color: #1b5e20;
+        pointer-events: none;
+        text-shadow: 0 2px 18px rgba(255, 255, 255, 0.75), 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+      .copy h1 {
+        font-size: 112px;
+        font-weight: 800;
+        letter-spacing: -4px;
+        line-height: 1;
+        margin: 0;
+        opacity: 0;
+        transform: translateY(28px);
+      }
+      .copy p {
+        margin: 14px 48px 0;
+        font-size: 34px;
+        font-weight: 500;
+        line-height: 1.35;
+        opacity: 0;
+        transform: translateY(20px);
+        color: #2e7d32;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="404-bike"
+      data-start="0"
+      data-duration="8"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div class="sky"></div>
+      <div class="sun" id="sun"></div>
+      <div class="cloud c1" id="cloud1"></div>
+      <div class="cloud c2" id="cloud2"></div>
+      <div class="cloud c3" id="cloud3"></div>
+
+      <div class="road-wrap">
+        <div class="road" id="road"></div>
+        <div class="road-dash"></div>
+        <div class="road-gap" id="road-gap"></div>
+        <div class="crack" id="crack1"></div>
+        <div class="crack crk2" id="crack2"></div>
+      </div>
+
+      <div class="bike-shadow" id="bike-shadow"></div>
+      <div class="dust" id="dust"></div>
+      <div class="spark" id="sp1" style="left: 50%; bottom: 340px"></div>
+      <div class="spark" id="sp2" style="left: 51%; bottom: 352px"></div>
+      <div class="spark" id="sp3" style="left: 49%; bottom: 348px"></div>
+
+      <div class="bike" id="bike">
+        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <g id="wheel-back" transform="translate(42 88)">
+            <circle r="24" fill="none" stroke="#37474f" stroke-width="5" />
+            <circle r="7" fill="#455a64" />
+            <line x1="-20" y1="0" x2="20" y2="0" stroke="#90a4ae" stroke-width="2" />
+            <line x1="0" y1="-20" x2="0" y2="20" stroke="#90a4ae" stroke-width="2" />
+          </g>
+          <g id="wheel-front" transform="translate(152 88)">
+            <circle r="24" fill="none" stroke="#37474f" stroke-width="5" />
+            <circle r="7" fill="#455a64" />
+            <line x1="-20" y1="0" x2="20" y2="0" stroke="#90a4ae" stroke-width="2" />
+            <line x1="0" y1="-20" x2="0" y2="20" stroke="#90a4ae" stroke-width="2" />
+          </g>
+          <path
+            d="M42 88 L95 40 L152 88 M95 40 L86 18 L104 18 L95 40"
+            fill="none"
+            stroke="#1b5e20"
+            stroke-width="5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path d="M95 40 Q122 24 148 36" fill="none" stroke="#2e7d32" stroke-width="4" stroke-linecap="round" />
+        </svg>
+      </div>
+
+      <div class="copy">
+        <h1 id="t404">404</h1>
+        <p id="msg">Parece que esta ruta se salió del camino.</p>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const bike = document.getElementById("bike");
+      const bikeShadow = document.getElementById("bike-shadow");
+      const dust = document.getElementById("dust");
+      const gap = document.getElementById("road-gap");
+      const road = document.getElementById("road");
+      const crack1 = document.getElementById("crack1");
+      const crack2 = document.getElementById("crack2");
+      const sun = document.getElementById("sun");
+      const c1 = document.getElementById("cloud1");
+      const c2 = document.getElementById("cloud2");
+      const c3 = document.getElementById("cloud3");
+      const sp1 = document.getElementById("sp1");
+      const sp2 = document.getElementById("sp2");
+      const sp3 = document.getElementById("sp3");
+      const wheelBack = document.getElementById("wheel-back");
+      const wheelFront = document.getElementById("wheel-front");
+      const t404 = document.getElementById("t404");
+      const msg = document.getElementById("msg");
+
+      const tl = gsap.timeline({ paused: true });
+
+      gsap.set([crack1, crack2], { height: 0, opacity: 0 });
+      gsap.set(t404, { opacity: 0, y: 28 });
+      gsap.set(msg, { opacity: 0, y: 22 });
+
+      tl.to(sun, { scale: 1.06, duration: 4, ease: "sine.inOut", yoyo: true, repeat: 1 }, 0);
+      tl.to(
+        c1,
+        { x: 40, duration: 8, ease: "none" },
+        0
+      );
+      tl.to(c2, { x: -55, duration: 8, ease: "none" }, 0);
+      tl.to(c3, { x: -35, duration: 8, ease: "none" }, 0);
+
+      tl.fromTo(
+        bike,
+        { x: -480, rotation: -5 },
+        { x: 400, rotation: 0, duration: 2.5, ease: "power2.inOut" },
+        0
+      );
+      tl.fromTo(
+        bikeShadow,
+        { x: -480, scaleX: 0.85 },
+        { x: 400, scaleX: 1, duration: 2.5, ease: "power2.inOut" },
+        0
+      );
+
+      tl.to(
+        wheelBack,
+        { rotation: 720, transformOrigin: "50% 50%", duration: 2.5, ease: "none" },
+        0
+      );
+      tl.to(
+        wheelFront,
+        { rotation: 720, transformOrigin: "50% 50%", duration: 2.5, ease: "none" },
+        0
+      );
+
+      tl.fromTo(
+        dust,
+        { opacity: 0, scale: 0.5, x: -20 },
+        { opacity: 0.9, scale: 1.15, x: 0, duration: 0.5, ease: "power2.out" },
+        0.1
+      );
+      tl.to(dust, { opacity: 0, scale: 1.4, duration: 0.55, ease: "power2.in" }, 0.5);
+
+      tl.to(gap, { opacity: 1, scaleX: 1, duration: 0.5, ease: "power3.out" }, 1.75);
+      tl.to(road, { x: "+=6", duration: 0.12, yoyo: true, repeat: 5, ease: "power1.inOut" }, 1.78);
+      tl.to(
+        crack1,
+        { opacity: 1, height: 110, duration: 0.35, ease: "power2.out" },
+        1.95
+      );
+      tl.to(
+        crack2,
+        { opacity: 1, height: 85, duration: 0.32, ease: "power2.out" },
+        2.02
+      );
+
+      tl.to(bike, { y: -10, rotation: 10, duration: 0.32, ease: "power2.out" }, 2.05);
+      tl.to(bikeShadow, { scaleX: 1.15, opacity: 0.35, duration: 0.32, ease: "power2.out" }, 2.05);
+      tl.to(bike, { y: 36, rotation: -14, duration: 0.55, ease: "power2.in" }, 2.32);
+      tl.to(bikeShadow, { opacity: 0.2, scaleX: 1.35, duration: 0.55, ease: "power2.in" }, 2.32);
+
+      tl.fromTo(
+        [sp1, sp2, sp3],
+        { opacity: 0, scale: 0 },
+        { opacity: 1, scale: 1.2, duration: 0.15, stagger: 0.04, ease: "power2.out" },
+        2.15
+      );
+      tl.to([sp1, sp2, sp3], { opacity: 0, y: -30, duration: 0.45, ease: "power2.in" }, 2.25);
+
+      tl.to(wheelBack, { rotation: "+=240", duration: 0.9, ease: "none" }, 2.2);
+      tl.to(wheelFront, { rotation: "+=240", duration: 0.9, ease: "none" }, 2.2);
+
+      tl.to(bike, { x: "+=50", y: 8, rotation: -8, duration: 1.35, ease: "sine.inOut" }, 2.85);
+      tl.to(bikeShadow, { x: "+=50", opacity: 0.5, scaleX: 1, duration: 1.35, ease: "sine.inOut" }, 2.85);
+      tl.to(wheelBack, { rotation: "+=420", duration: 1.35, ease: "none" }, 2.85);
+      tl.to(wheelFront, { rotation: "+=420", duration: 1.35, ease: "none" }, 2.85);
+
+      tl.to(bike, { y: 0, rotation: -2, duration: 1.1, ease: "power2.out" }, 4.1);
+      tl.to(bikeShadow, { y: 0, opacity: 0.52, scaleX: 1, duration: 1.1, ease: "power2.out" }, 4.1);
+      tl.to(wheelBack, { rotation: "+=180", duration: 1.1, ease: "none" }, 4.1);
+      tl.to(wheelFront, { rotation: "+=180", duration: 1.1, ease: "none" }, 4.1);
+
+      tl.to(bike, { y: "+=4", duration: 0.6, ease: "sine.inOut", yoyo: true, repeat: 3 }, 5.2);
+
+      tl.to(
+        [t404, msg],
+        { opacity: 1, y: 0, duration: 0.65, stagger: 0.12, ease: "power3.out" },
+        3.05
+      );
+
+      tl.to({}, { duration: 0.6 }, 7.2);
+
+      window.__timelines["404-bike"] = tl;
+    </script>
+  </body>
+</html>

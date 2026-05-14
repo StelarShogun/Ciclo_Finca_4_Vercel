@@ -11,6 +11,8 @@
 # =========================
 /vendor/
 /node_modules/
+/tools/hyperframes/node_modules/
+/tools/hyperframes/output/
 
 # =========================
 # BUILD / ASSETS (VITE)
