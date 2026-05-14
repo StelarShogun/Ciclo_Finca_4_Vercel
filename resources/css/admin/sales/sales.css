@@ -50,7 +50,7 @@
 }
 
 .btn:focus {
-  box-shadow: 0 0 0 3px rgba(46,125,50,.30);
+  box-shadow: 0 0 0 3px rgba(35,83,71,.30);
   outline: none;
 }
 
@@ -77,9 +77,9 @@
 .btn-warning  { background: var(--color-warning);   color: #fff; border: 2px solid var(--color-warning);   }
 .btn-info     { background: var(--color-info);      color: #fff; border: 2px solid var(--color-info);      }
 
-.btn-primary:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(46,125,50,.30); }
+.btn-primary:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(35,83,71,.30); }
 .btn-secondary:hover:not(:disabled) { background: #37474f; border-color: #37474f; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(69,90,100,.30); }
-.btn-success:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(46,125,50,.30); }
+.btn-success:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(35,83,71,.30); }
 .btn-danger:hover:not(:disabled)    { background: #b71c1c; border-color: #b71c1c; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(211,47,47,.30); }
 .btn-warning:hover:not(:disabled)   { background: #e65100; border-color: #e65100; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(245,124,0,.30);  }
 .btn-info:hover:not(:disabled)      { background: #1565c0; border-color: #1565c0; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(25,118,210,.30); }
@@ -121,13 +121,13 @@
   color: var(--color-primary);
   text-decoration: none;
   white-space: nowrap;
-  border: 1px solid rgba(46, 125, 50, 0.35);
-  background: rgba(46, 125, 50, 0.06);
+  border: 1px solid rgba(35, 83, 71, 0.35);
+  background: rgba(35, 83, 71, 0.06);
   transition: var(--transition);
 }
 
 .action-link-invoice:hover {
-  background: rgba(46, 125, 50, 0.14);
+  background: rgba(35, 83, 71, 0.14);
   border-color: var(--color-primary);
   transform: translateY(-1px);
 }
@@ -185,7 +185,7 @@
   font-size: 0.875rem;
   font-weight: 500;
 }
-.expiry-ok      { background: #e8f5e9; color: #2e7d32; }
+.expiry-ok      { background: var(--brand-lightest); color: var(--brand-medium); }
 .expiry-warning { background: #fff3e0; color: #e65100; }
 .expiry-expired { background: #ffebee; color: #c62828; }
 
@@ -361,7 +361,7 @@
 .filter-group select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(46,125,50,.10);
+  box-shadow: 0 0 0 3px rgba(35,83,71,.10);
 }
 
 .filter-buttons { display: flex; gap: 10px; align-items: center; justify-self: end; }
@@ -378,7 +378,7 @@
   align-items: center;
   margin-bottom: 30px;
   padding: 20px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-darkest) 100%);
   border-radius: 12px;
   color: white;
   box-shadow: var(--shadow-md);
@@ -579,7 +579,7 @@
 .form-group textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(46,125,50,.10);
+  box-shadow: 0 0 0 3px rgba(35,83,71,.10);
 }
 
 .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
@@ -713,11 +713,11 @@
 
 .print-header {
   text-align: center;
-  border-bottom: 2px solid #2e7d32;
+  border-bottom: 2px solid #235347;
   padding-bottom: 20px;
   margin-bottom: 30px;
 }
-.print-header h1 { color: #2e7d32; margin: 0; }
+.print-header h1 { color: #235347; margin: 0; }
 .print-header p  { color: #666; margin: 5px 0; }
 
 .print-sale-info {
@@ -728,7 +728,7 @@
 }
 
 .print-info-section h3 {
-  color: #2e7d32;
+  color: #235347;
   border-bottom: 1px solid #ddd;
   padding-bottom: 10px;
   margin-bottom: 10px;
@@ -754,7 +754,7 @@
 .print-total-final {
   font-size: 1.2em;
   font-weight: bold;
-  border-top: 2px solid #2e7d32;
+  border-top: 2px solid #235347;
   padding-top: 10px;
   margin-top: 10px;
 }

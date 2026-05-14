@@ -113,7 +113,7 @@ class Dashboard {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
                     titleColor: '#ffffff',
                     bodyColor: '#ffffff',
-                    borderColor: '#2e7d32',
+                    borderColor: '#235347',
                     borderWidth: 1,
                     callbacks: {
                         label: (context) => {
@@ -354,7 +354,7 @@ class Dashboard {
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
                             titleColor: '#ffffff',
                             bodyColor: '#ffffff',
-                            borderColor: '#2e7d32',
+                            borderColor: '#235347',
                             borderWidth: 1,
                             callbacks: {
                                 label: function (context) {
@@ -437,12 +437,12 @@ class Dashboard {
                     datasets: [{
                         label: 'Ventas (₡)',
                         data: values,
-                        borderColor: '#2e7d32',
+                        borderColor: '#235347',
                         backgroundColor: 'rgba(46, 125, 50, 0.12)',
                         borderWidth: 3,
                         fill: true,
                         tension: 0.34,
-                        pointBackgroundColor: '#2e7d32',
+                        pointBackgroundColor: '#235347',
                         pointBorderColor: '#ffffff',
                         pointBorderWidth: 2,
                         pointRadius: (ctx) => {
@@ -519,7 +519,7 @@ class Dashboard {
     // Generate a palette of colors for chart segments
     generateColors(count) {
         const baseColors = [
-            '#2e7d32', '#4caf50', '#81c784', '#a5d6a7', '#1976d2',
+            '#235347', '#8EB69B', '#163832', '#DAF1DE', '#1976d2',
             '#ff9800', '#9c27b0', '#f44336', '#00bcd4', '#795548'
         ];
 
@@ -746,7 +746,7 @@ class Dashboard {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: ${type === 'success' ? '#2e7d32' : type === 'error' ? '#d32f2f' : '#1976d2'};
+            background: ${type === 'success' ? '#235347' : type === 'error' ? '#d32f2f' : '#1976d2'};
             color: white;
             padding: 15px 20px;
             border-radius: 8px;

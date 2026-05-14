@@ -20,9 +20,9 @@ return new class extends Migration
 
             $table->unsignedBigInteger('product_id');
             $table->foreign('product_id')
-                  ->references('product_id')
-                  ->on('products')
-                  ->cascadeOnDelete();
+                ->references('product_id')
+                ->on('products')
+                ->cascadeOnDelete();
 
             // Prices at the moment of the change.
             $table->decimal('previous_price', 12, 2);
@@ -34,13 +34,13 @@ return new class extends Migration
 
             // Context of the analysis.
             $table->decimal('threshold_percentage', 8, 4)->default(10.00)
-                  ->comment('Threshold configured when the XML was analysed');
+                ->comment('Threshold configured when the XML was analysed');
 
             // Origin information.
             $table->string('source', 50)->default('xml_upload')
-                  ->comment('Identifies the origin: xml_upload, manual, etc.');
+                ->comment('Identifies the origin: xml_upload, manual, etc.');
             $table->string('xml_file_name', 255)->nullable()
-                  ->comment('Original file name of the XML uploaded by the supplier');
+                ->comment('Original file name of the XML uploaded by the supplier');
 
             // Free-text reason the admin may provide.
             $table->text('reason')->nullable();
@@ -48,9 +48,9 @@ return new class extends Migration
             // Who confirmed the change.
             $table->unsignedBigInteger('changed_by')->nullable();
             $table->foreign('changed_by')
-                  ->references('user_id')
-                  ->on('admins')
-                  ->nullOnDelete();
+                ->references('user_id')
+                ->on('admins')
+                ->nullOnDelete();
 
             $table->timestamps();
         });

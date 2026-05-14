@@ -98,6 +98,14 @@
         <div class="cf4-invoices-header-inner">
             <h1><i class="fas fa-file-invoice"></i> Mis Facturas</h1>
             <p>{{ $headerDescription }}</p>
+            <nav class="cf4-invoices-escape-nav" aria-label="Seguir en la tienda">
+                <a href="{{ route('clients.catalog') }}" class="cf4-invoices-escape-link cf4-invoices-escape-link--primary">
+                    <i class="fas fa-store" aria-hidden="true"></i> Seguir comprando
+                </a>
+                <a href="{{ route('clients.home') }}" class="cf4-invoices-escape-link">
+                    <i class="fas fa-home" aria-hidden="true"></i> Ir al inicio
+                </a>
+            </nav>
         </div>
         <div class="cf4-invoices-tab-selector">
             <div class="cf4-select-wrapper">
@@ -193,7 +201,7 @@
                                             @endif
                                         </p>
                                         <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-th"></i> Ir al catálogo
+                                            <i class="fas fa-bicycle"></i> Ir al catálogo
                                         </a>
                                     </div>
                                 </td>

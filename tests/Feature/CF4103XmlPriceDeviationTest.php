@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\AdminUser;
 use App\Models\Product;
-use App\Models\ProductPurchasePriceHistory;
 use App\Services\XmlPriceDeviationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -26,11 +25,11 @@ class CF4103XmlPriceDeviationTest extends TestCase
         return AdminUser::firstOrCreate(
             ['gmail' => 'admin@ciclofinca.com'],
             [
-                'name'           => 'Administrator',
-                'first_surname'  => 'System',
+                'name' => 'Administrator',
+                'first_surname' => 'System',
                 'second_surname' => null,
-                'password'       => bcrypt('Admin2024!@#'),
-                'last_access'    => null,
+                'password' => bcrypt('Admin2024!@#'),
+                'last_access' => null,
             ]
         );
     }
@@ -42,21 +41,21 @@ class CF4103XmlPriceDeviationTest extends TestCase
     private function getProduct(): Product
     {
         return Product::create([
-            'name'           => 'Producto prueba XML',
-            'description'    => 'Producto creado para pruebas de XML deviation.',
+            'name' => 'Producto prueba XML',
+            'description' => 'Producto creado para pruebas de XML deviation.',
             'purchase_price' => 100_000,
-            'sale_price'     => 150_000,
-            'stock_current'  => 10,
-            'stock_minimum'  => 0,
-            'status'         => 'active',
+            'sale_price' => 150_000,
+            'stock_current' => 10,
+            'stock_minimum' => 0,
+            'status' => 'active',
         ]);
     }
 
     /** Builds a single-item XML UploadedFile for the given product and price. */
     private function xmlFile(Product $product, float $price): UploadedFile
     {
-        $code = 'BK-' . $product->product_id;
-        $xml  = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+        $code = 'BK-'.$product->product_id;
+        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <items>
     <item>
         <code>{$code}</code>
@@ -84,12 +83,12 @@ class CF4103XmlPriceDeviationTest extends TestCase
 
         // +25 % sobre 100 000 → desvío con umbral 10 %
         $analysis = $service->analyse($this->xmlFile($product, 125_000), thresholdPct: 10.0);
-        $item     = $analysis['items'][0];
+        $item = $analysis['items'][0];
 
         $this->assertTrue($item['found']);
         $this->assertTrue($item['has_deviation']);
         $this->assertEquals(25_000, $item['difference_amount']);
-        $this->assertEquals(25.0,   $item['difference_percentage']);
+        $this->assertEquals(25.0, $item['difference_percentage']);
     }
 
     /** A price change below the threshold is not flagged. */
@@ -112,7 +111,7 @@ class CF4103XmlPriceDeviationTest extends TestCase
 
         // +20 % → nueva compra 120k → venta sugerida 120k × 1.5 = 180k
         $analysis = $service->analyse($this->xmlFile($product, 120_000), thresholdPct: 10.0);
-        $item     = $analysis['items'][0];
+        $item = $analysis['items'][0];
 
         $this->assertNotNull($item['suggested_sale_price']);
         $this->assertEquals(180_000.0, $item['suggested_sale_price']);
@@ -127,16 +126,16 @@ class CF4103XmlPriceDeviationTest extends TestCase
     {
         $product = $this->getProduct();
         $service = app(XmlPriceDeviationService::class);
-        $admin   = $this->createAdmin();
+        $admin = $this->createAdmin();
 
         $analysis = $service->analyse($this->xmlFile($product, 130_000), thresholdPct: 10.0);
 
         $count = $service->applyUpdates(
-            updates:      $analysis['items'],
+            updates: $analysis['items'],
             thresholdPct: 10.0,
-            xmlFileName:  'test.xml',
-            reason:       'Test integración',
-            changedBy:    $admin->user_id,
+            xmlFileName: 'test.xml',
+            reason: 'Test integración',
+            changedBy: $admin->user_id,
         );
 
         $this->assertEquals(1, $count);
@@ -148,24 +147,24 @@ class CF4103XmlPriceDeviationTest extends TestCase
     {
         $product = $this->getProduct();
         $service = app(XmlPriceDeviationService::class);
-        $admin   = $this->createAdmin();
+        $admin = $this->createAdmin();
 
         $analysis = $service->analyse($this->xmlFile($product, 120_000), thresholdPct: 10.0);
 
         $service->applyUpdates(
-            updates:      $analysis['items'],
+            updates: $analysis['items'],
             thresholdPct: 10.0,
-            xmlFileName:  'proveedor.xml',
-            reason:       'Alza mayo',
-            changedBy:    $admin->user_id,
+            xmlFileName: 'proveedor.xml',
+            reason: 'Alza mayo',
+            changedBy: $admin->user_id,
         );
 
         $this->assertDatabaseHas('product_purchase_price_histories', [
-            'product_id'     => $product->product_id,
+            'product_id' => $product->product_id,
             'previous_price' => 100_000,
-            'new_price'      => 120_000,
-            'xml_file_name'  => 'proveedor.xml',
-            'reason'         => 'Alza mayo',
+            'new_price' => 120_000,
+            'xml_file_name' => 'proveedor.xml',
+            'reason' => 'Alza mayo',
         ]);
     }
 
@@ -187,7 +186,7 @@ class CF4103XmlPriceDeviationTest extends TestCase
 
         $this->actingAs($this->createAdmin(), 'admin')
             ->post(route('admin.supplier-orders.xml-deviation.analyse'), [
-                'xml_file'  => $this->xmlFile($product, 115_000),
+                'xml_file' => $this->xmlFile($product, 115_000),
                 'threshold' => 10,
             ])
             ->assertRedirect(route('admin.supplier-orders.xml-deviation.review'));

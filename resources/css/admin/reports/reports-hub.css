@@ -78,7 +78,7 @@
     width: 3.25rem;
     height: 3.25rem;
     border-radius: 12px;
-    background: var(--color-primary, #2e7d32);
+    background: var(--color-primary, #235347);
     color: #fff;
     display: flex;
     align-items: center;
@@ -110,7 +110,7 @@
     margin-left: auto;
     align-self: center;
     flex-shrink: 0;
-    color: var(--color-primary, #2e7d32);
+    color: var(--color-primary, #235347);
     font-size: 1.1rem;
 }
 
@@ -197,7 +197,7 @@
     display: inline-block;
     width: 4px;
     height: 1.5rem;
-    background: var(--color-primary, #2e7d32);
+    background: var(--color-primary, #235347);
     border-radius: 999px;
     flex-shrink: 0;
 }
@@ -363,8 +363,8 @@
 
 .inv-index-report .orders-search-field input[type="search"]:focus {
     outline: none;
-    border-color: var(--color-primary, #2e7d32);
-    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.18);
+    border-color: var(--color-primary, #235347);
+    box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.18);
 }
 
 .inv-index-report .orders-toolbar-actions {
@@ -398,16 +398,16 @@
 }
 
 .inv-index-report .orders-toolbar-actions .btn-primary {
-    background: var(--color-primary, #2e7d32);
+    background: var(--color-primary, #235347);
     color: #fff;
-    border-color: var(--color-primary, #2e7d32);
-    box-shadow: 0 1px 4px rgba(46, 125, 50, 0.25);
+    border-color: var(--color-primary, #235347);
+    box-shadow: 0 1px 4px rgba(35, 83, 71, 0.25);
 }
 
 .inv-index-report .orders-toolbar-actions .btn-primary:hover {
-    background: var(--color-primary-dark, #1b5e20);
-    border-color: var(--color-primary-dark, #1b5e20);
-    box-shadow: 0 3px 8px rgba(46, 125, 50, 0.3);
+    background: var(--color-primary-dark, #163832);
+    border-color: var(--color-primary-dark, #163832);
+    box-shadow: 0 3px 8px rgba(35, 83, 71, 0.3);
     transform: translateY(-1px);
 }
 
@@ -668,23 +668,10 @@
     flex-shrink: 0;
 }
 
-.inv-product-stock-dot--success {
-    background: #16a34a;
-}
-
-.inv-product-stock-dot--warning {
-    background: #ca8a04;
-}
-
-.inv-product-stock-dot--danger {
-    background: #dc2626;
-}
-
-.inv-product-stock-dot--secondary {
-    background: #9ca3af;
-}
-
-/* Card body */
+.inv-product-stock-dot--success   { background: #235347; }
+.inv-product-stock-dot--warning   { background: #ca8a04; }
+.inv-product-stock-dot--danger    { background: #dc2626; }
+.inv-product-stock-dot--secondary { background: #9ca3af; }
 
 .inv-product-card-body {
     flex: 1;
@@ -758,21 +745,10 @@
     line-height: 1;
 }
 
-.inv-product-stock-value--success {
-    color: #16a34a;
-}
-
-.inv-product-stock-value--warning {
-    color: #ca8a04;
-}
-
-.inv-product-stock-value--danger {
-    color: #dc2626;
-}
-
-.inv-product-stock-value--secondary {
-    color: var(--color-text-muted, #6b7280);
-}
+.inv-product-stock-value--success   { color: #235347; }
+.inv-product-stock-value--warning   { color: #ca8a04; }
+.inv-product-stock-value--danger    { color: #dc2626; }
+.inv-product-stock-value--secondary { color: var(--color-text-muted, #6b7280); }
 
 .inv-product-stock-label {
     font-size: 0.7rem;
@@ -858,14 +834,10 @@
     font-weight: 700;
 }
 
-.stock-badge--success,
-.stock-badge--warning,
-.stock-badge--danger,
-.stock-badge--secondary {
-    color: #fff;
-}
-
-/* Two-column layout */
+.stock-badge--success   { color: #235347; }
+.stock-badge--warning   { color: #ca8a04; }
+.stock-badge--danger    { color: #dc2626; }
+.stock-badge--secondary { color: var(--color-text-muted, #6b7280); }
 
 .inv-mov-layout {
     display: grid;
@@ -1145,13 +1117,8 @@
     border-radius: 14px 14px 0 0;
 }
 
-.inv-metric-card--entrada::before {
-    background: #16a34a;
-}
-
-.inv-metric-card--salida::before {
-    background: #dc2626;
-}
+.inv-metric-card--entrada::before { background: #235347; }
+.inv-metric-card--salida::before  { background: #dc2626; }
 
 .inv-metric-icon {
     font-size: 1rem;
@@ -1167,7 +1134,7 @@
 }
 
 .inv-metric-card--entrada .inv-metric-icon {
-    color: #16a34a;
+    color: #235347;
     background: #dcfce7;
 }
 
@@ -1194,13 +1161,8 @@
     letter-spacing: -0.02em;
 }
 
-.inv-metric-card--entrada .inv-metric-value {
-    color: #16a34a;
-}
-
-.inv-metric-card--salida .inv-metric-value {
-    color: #dc2626;
-}
+.inv-metric-card--entrada .inv-metric-value { color: #235347; }
+.inv-metric-card--salida  .inv-metric-value { color: #dc2626; }
 
 .inv-metric-hint {
     font-size: 0.775rem;
@@ -1339,7 +1301,7 @@
 }
 
 .inv-qty-positive {
-    color: #16a34a;
+    color: #235347;
     font-weight: 700;
 }
 
