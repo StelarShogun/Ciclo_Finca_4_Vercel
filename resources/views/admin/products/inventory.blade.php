@@ -325,7 +325,7 @@
                                                     data-product-name="{{ $product->name }}"
                                                     data-product-stock="{{ $product->stock_current }}"
                                                     title="Add stock">
-                                                <i class="fas fa-plus-circle" style="color:#16a34a;"></i>
+                                                <i class="fas fa-plus-circle" style="color:#235347;"></i>
                                             </button>
                                             <button class="action-btn stock-adjust"
                                                     data-stock-action="remove"
@@ -442,7 +442,7 @@
                                                 data-product-name="{{ $product->name }}"
                                                 data-product-stock="{{ $product->stock_current }}"
                                                 title="Add stock">
-                                            <i class="fas fa-plus-circle" style="color:#16a34a;"></i>
+                                            <i class="fas fa-plus-circle" style="color:#235347;"></i>
                                         </button>
                                         {{-- Remove stock (red minus) --}}
                                         <button class="action-btn stock-adjust"

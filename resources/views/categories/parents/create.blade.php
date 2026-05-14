@@ -63,7 +63,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         (function () {
-            const PRIMARY = '#2e7d32';
+            const PRIMARY = '#235347';
             const DANGER = '#dc2626';
 
             const form = document.getElementById('create-category-form');

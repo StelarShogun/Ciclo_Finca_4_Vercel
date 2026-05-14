@@ -11,6 +11,11 @@
     <div class="cf4-invoices-header-inner">
         <h1><i class="fas fa-bell"></i> Mis Notificaciones</h1>
         <p>Historial de avisos enviados por el sistema.</p>
+        <nav class="cf4-invoices-escape-nav" aria-label="Navegación">
+            <a href="{{ route('clients.home') }}" class="cf4-invoices-escape-link">
+                <i class="fas fa-home" aria-hidden="true"></i> Ir al inicio
+            </a>
+        </nav>
     </div>
 </div>
 
@@ -34,7 +39,20 @@
                     @forelse($notifications as $notification)
                         <tr>
                             <td>{{ optional($notification->created_at)->format('d/m/Y H:i') }}</td>
-                            <td>{{ data_get($notification->data, 'message', 'Notificación del sistema') }}</td>
+                            <td>
+                                <div class="cf4-notification-message">
+                                    {{ data_get($notification->data, 'message', 'Notificación del sistema') }}
+                                </div>
+                                @php
+                                    $actionUrl = data_get($notification->data, 'action_url');
+                                    $actionLabel = data_get($notification->data, 'action_label', 'Abrir enlace');
+                                @endphp
+                                @if(! empty($actionUrl))
+                                    <div class="cf4-notification-action">
+                                        <a href="{{ $actionUrl }}">{{ $actionLabel }}</a>
+                                    </div>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>

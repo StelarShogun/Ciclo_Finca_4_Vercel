@@ -15,7 +15,7 @@
             <td align="center">
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:620px;background:#ffffff;border:1px solid #dfe3e8;border-radius:8px;overflow:hidden;">
                     <tr>
-                        <td style="background:#14532d;padding:18px 18px;text-align:center;" align="center" valign="middle">
+                        <td style="background:#235347;padding:18px 18px;text-align:center;" align="center" valign="middle">
                             <div style="font-size:28px;line-height:1.2;color:#ffffff;font-weight:700;text-align:center;margin:0 auto;">
                                 Ciclo Finca 4
                             </div>
@@ -48,7 +48,7 @@
 
                             <p style="margin:0;font-size:16px;line-height:1.6;">
                                 Puede consultar el estado de sus pedidos en:<br>
-                                <a href="{{ $historyUrl }}" style="color:#14532d;">{{ $historyUrl }}</a>
+                                <a href="{{ $historyUrl }}" style="color:#235347;">{{ $historyUrl }}</a>
                             </p>
                         </td>
                     </tr>

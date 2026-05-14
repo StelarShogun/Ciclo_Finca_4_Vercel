@@ -7,6 +7,7 @@ use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Notifications\OrderReadyToPickupNotification;
+use App\Notifications\ProductReviewReminderNotification;
 use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\RegistryExcelExport;
@@ -21,7 +22,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -1142,24 +1142,8 @@ class SalesController extends Controller
             return;
         }
 
-        $clientName = trim((string) $client->name) !== '' ? (string) $client->name : 'cliente';
-        $productCount = SaleItem::query()
-            ->where('sale_id', $sale->sale_id)
-            ->distinct('product_id')
-            ->count('product_id');
-
-        $productPhrase = $productCount === 1 ? 'el producto comprado' : 'los productos comprados';
-        $historyUrl = route('clients.invoices', ['tab' => 'historial']);
-        $body = "Estimado {$clientName},\n\n"
-            ."Favor reseñar {$productPhrase}.\n"
-            ."Para esto, acceda a Facturas > Historial de compras:\n{$historyUrl}\n\n"
-            .'Gracias por comprar en Ciclo Finca 4.';
-
         try {
-            Mail::raw($body, function ($message) use ($client): void {
-                $message->to($client->gmail)
-                    ->subject('Reseña de productos comprados - Ciclo Finca 4');
-            });
+            $client->notify(new ProductReviewReminderNotification($sale));
         } catch (\Throwable $e) {
             Log::warning('Could not send product review reminder email.', [
                 'sale_id' => $sale->sale_id ?? null,

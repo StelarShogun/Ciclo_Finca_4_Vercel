@@ -117,7 +117,7 @@
 .pagination input[type="number"]:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(46,125,50,.10);
+  box-shadow: 0 0 0 3px rgba(35,83,71,.10);
   transform: scale(1.05);
 }
 

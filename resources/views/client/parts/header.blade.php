@@ -27,34 +27,97 @@
 
             {{-- Collapsible panel: nav + actions. aria-hidden toggled by JS. --}}
             <div class="header-menu-panel" id="header-menu-panel" aria-hidden="true">
-                {{-- Main navigation --}}
-                <nav class="main-nav">
-                    <a href="{{ route('clients.home') }}"
-                        class="nav-link {{ request()->routeIs('clients.home') ? 'active' : '' }}">
-                        <i class="fas fa-home"></i>
-                        <span>Inicio</span>
-                    </a>
-                    <a href="{{ route('clients.catalog') }}"
-                        class="nav-link {{ request()->routeIs('clients.catalog') ? 'active' : '' }}">
-                        <i class="fas fa-th"></i>
-                        <span>Catálogo</span>
-                    </a>
-                </nav>
+                {{-- Solo Inicio + Catálogo: centrados en la barra (columna media del grid) --}}
+                <div class="header-nav-slot">
+                    <nav class="main-nav">
+                        <a href="{{ route('clients.home') }}"
+                            class="nav-link {{ request()->routeIs('clients.home') ? 'active' : '' }}">
+                            <i class="fas fa-home"></i>
+                            <span>Inicio</span>
+                        </a>
+                        <a href="{{ route('clients.catalog') }}"
+                            class="nav-link {{ request()->routeIs('clients.catalog') ? 'active' : '' }}">
+                            <i class="fas fa-bicycle" aria-hidden="true"></i>
+                            <span>Catálogo</span>
+                        </a>
+                    </nav>
+                </div>
 
-                {{-- Header actions: cart and user menu --}}
-                <div class="header-actions">
+                @php
+                    $cf4SearchSuggestionsUrl = route('api.products.suggestions');
+                    $cf4SearchTrendingUrl = route('api.catalog.search-trending');
+                @endphp
+                {{-- Búsqueda junto al carrito; al expandir crece hacia la izquierda --}}
+                <div class="header-right-cluster">
+                    <div class="header-catalog-search"
+                         data-catalog-suggestions
+                         data-suggestions-url="{{ $cf4SearchSuggestionsUrl }}"
+                         data-trending-url="{{ $cf4SearchTrendingUrl }}">
+                        <div class="header-catalog-search-track">
+                            <button type="button"
+                                    class="header-catalog-search-toggle"
+                                    aria-expanded="false"
+                                    aria-controls="catalog-nav-search-inner"
+                                    aria-label="Abrir búsqueda en catálogo">
+                                <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                                <span class="header-catalog-search-toggle-text">Buscar</span>
+                            </button>
+                            <div class="header-catalog-search-inner" id="catalog-nav-search-inner">
+                                <form class="header-catalog-search-form"
+                                      method="GET"
+                                      action="{{ route('clients.catalog') }}"
+                                      id="catalog-nav-search-form"
+                                      role="search"
+                                      aria-label="Buscar en catálogo">
+                                    @if(request()->routeIs('clients.catalog'))
+                                        @foreach (['category_id', 'brand_id', 'min_price', 'max_price', 'sort', 'direction', 'per_page'] as $catalogNavKey)
+                                            @if(request()->filled($catalogNavKey))
+                                                <input type="hidden" name="{{ $catalogNavKey }}" value="{{ request($catalogNavKey) }}">
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                    <label class="header-catalog-search-label" for="catalog-nav-search">Buscar en catálogo</label>
+                                    <input type="search"
+                                           id="catalog-nav-search"
+                                           name="search"
+                                           class="header-catalog-search-input"
+                                           placeholder="Buscar productos…"
+                                           value="{{ request()->routeIs('clients.catalog') ? request('search', '') : '' }}"
+                                           autocomplete="off"
+                                           autocorrect="off"
+                                           autocapitalize="off"
+                                           spellcheck="false"
+                                           role="combobox"
+                                           aria-autocomplete="list"
+                                           aria-expanded="false"
+                                           aria-controls="catalog-search-suggestions"
+                                           maxlength="200">
+                                    <button type="submit"
+                                            class="header-catalog-search-submit"
+                                            aria-label="Ir al catálogo con esta búsqueda">
+                                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div id="catalog-search-suggestions"
+                             class="catalog-search-suggestions catalog-search-suggestions--header"
+                             role="listbox"
+                             aria-label="Sugerencias de búsqueda"
+                             aria-hidden="true"></div>
+                    </div>
+
+                    {{-- Header actions: cart and user menu --}}
+                    <div class="header-actions">
 
                     @if(auth('clients')->check())
                         @php
                             $pendingInvoiceCount = \App\Models\Sale::where('client_id', auth('clients')->user()->user_id)
                                 ->where('status', 'pending')
                                 ->count();
+                            $unreadNotificationCount = auth('clients')->user()->unreadNotifications()->count();
+                            $notificationBadgeLabel = $unreadNotificationCount > 9 ? '9+' : (string) $unreadNotificationCount;
                         @endphp
-
-                        <button type="button" class="cf4-favorites-btn" id="favorites-open-btn"
-                            title="Mis favoritos" aria-label="Abrir favoritos">
-                            <i class="far fa-heart"></i>
-                        </button>
 
                         {{-- Cart button with item counter --}}
                         <a href="{{ route('clients.cart') }}" class="cart-btn cart-btn-link" id="cart-link"
@@ -78,9 +141,14 @@
                         <div class="user-menu-wrap" id="user-menu">
                             <button class="user-menu-trigger" id="user-menu-trigger" type="button" aria-expanded="false"
                                 aria-haspopup="true" title="Mi cuenta">
-                                <div class="user-avatar-bubble">
-                                    {{ strtoupper(substr(Auth::guard('clients')->user()->name, 0, 1)) }}{{ strtoupper(substr(Auth::guard('clients')->user()->first_surname, 0, 1)) }}
-                                </div>
+                                <span class="user-menu-trigger-avatar-wrap">
+                                    <span class="user-avatar-bubble">
+                                        {{ strtoupper(substr(Auth::guard('clients')->user()->name, 0, 1)) }}{{ strtoupper(substr(Auth::guard('clients')->user()->first_surname, 0, 1)) }}
+                                    </span>
+                                    @if($unreadNotificationCount > 0)
+                                        <span class="cf4-invoice-count user-menu-trigger-notification-badge" id="nav-notification-badge">{{ $notificationBadgeLabel }}</span>
+                                    @endif
+                                </span>
                                 <span class="user-trigger-name">
                                     {{ Auth::guard('clients')->user()->name }}
                                 </span>
@@ -98,11 +166,20 @@
                                     </p>
                                 </div>
                                 <div class="user-dropdown-body">
+                                    <button type="button"
+                                            class="user-dropdown-item cf4-favorites-open-trigger"
+                                            role="menuitem">
+                                        <i class="far fa-heart"></i>
+                                        <span>Mis favoritos</span>
+                                    </button>
                                     <a href="{{ route('clients.notifications') }}"
-                                        class="user-dropdown-item {{ request()->routeIs('clients.notifications') ? 'active' : '' }}"
+                                        class="user-dropdown-item user-dropdown-item--with-badge {{ request()->routeIs('clients.notifications') ? 'active' : '' }}"
                                         role="menuitem">
                                         <i class="fas fa-bell"></i>
-                                        Notificaciones
+                                        <span>Notificaciones</span>
+                                        @if($unreadNotificationCount > 0)
+                                            <span class="cf4-nav-badge cf4-nav-badge--inline">{{ $notificationBadgeLabel }}</span>
+                                        @endif
                                     </a>
                                     <a href="{{ route('clients.profile') }}"
                                         class="user-dropdown-item {{ request()->routeIs('clients.profile') ? 'active' : '' }}"
@@ -195,7 +272,8 @@
                         @endif
                     @endif
 
-                </div>{{-- /header-actions --}}
+                    </div>{{-- /header-actions --}}
+                </div>{{-- /header-right-cluster --}}
             </div>{{-- /header-menu-panel --}}
         </div>
     </div>

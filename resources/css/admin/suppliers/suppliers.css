@@ -70,7 +70,7 @@
 }
 
 .btn:focus {
-  box-shadow: 0 0 0 3px rgba(46,125,50,.30);
+  box-shadow: 0 0 0 3px rgba(35,83,71,.30);
   outline: none;
 }
 
@@ -97,9 +97,9 @@
 .btn-warning  { background: var(--color-warning);   color: #fff; border: 2px solid var(--color-warning);   }
 .btn-info     { background: var(--color-info);      color: #fff; border: 2px solid var(--color-info);      }
 
-.btn-primary:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(46,125,50,.30); }
+.btn-primary:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(35,83,71,.30); }
 .btn-secondary:hover:not(:disabled) { background: #37474f; border-color: #37474f; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(69,90,100,.30); }
-.btn-success:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(46,125,50,.30); }
+.btn-success:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(35,83,71,.30); }
 .btn-danger:hover:not(:disabled)    { background: #b71c1c; border-color: #b71c1c; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(211,47,47,.30); }
 .btn-warning:hover:not(:disabled)   { background: #e65100; border-color: #e65100; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(245,124,0,.30);  }
 .btn-info:hover:not(:disabled)      { background: #1565c0; border-color: #1565c0; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(25,118,210,.30); }
@@ -292,7 +292,7 @@
 .search-input input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(46,125,50,.10);
+  box-shadow: 0 0 0 3px rgba(35,83,71,.10);
 }
 
 .filter-buttons {
@@ -322,7 +322,7 @@
   align-items: center;
   margin-bottom: 30px;
   padding: 20px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-darkest) 100%);
   border-radius: 12px;
   color: white;
   box-shadow: var(--shadow-md);
@@ -628,7 +628,7 @@
 .form-textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(46,125,50,.10);
+  box-shadow: 0 0 0 3px rgba(35,83,71,.10);
 }
 
 .form-group input::placeholder,
