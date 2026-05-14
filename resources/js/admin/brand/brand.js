@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 icon: 'warning',
                 title: 'Marca ya existente',
                 text: `La marca "${data.existing.name}" ya está registrada.`,
-                confirmButtonColor: '#2e7d32',
+                confirmButtonColor: '#235347',
             });
         } else {
             // Different capitalization → offer to edit
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showCancelButton: true,
                 confirmButtonText: 'Sí, editar',
                 cancelButtonText: 'No, cancelar',
-                confirmButtonColor: '#2e7d32',
+                confirmButtonColor: '#235347',
                 cancelButtonColor: '#455a64',
             });
             if (result.isConfirmed) {
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     html: `<p style="margin:0 0 0.5rem">${data.message}</p>
                            <p style="margin:0;font-size:0.875rem;color:#6b7280">Para eliminarla primero debes desvincularla de todos los productos asociados.</p>`,
                     confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#2e7d32',
+                    confirmButtonColor: '#235347',
                 });
             } else {
                 Swal.fire({
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     title: 'No se pudo eliminar',
                     text: data.message || 'Ocurrió un error inesperado.',
                     confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#2e7d32',
+                    confirmButtonColor: '#235347',
                 });
             }
         });

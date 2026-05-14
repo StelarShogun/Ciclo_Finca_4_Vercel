@@ -274,7 +274,7 @@
                             'pending'          => ['label' => 'Pendiente',         'icon' => 'fa-clock',          'color' => '#f59e0b'],
                             'confirmed'        => ['label' => 'Confirmado',        'icon' => 'fa-check',          'color' => '#3b82f6'],
                             'partial_received' => ['label' => 'Recepción parcial', 'icon' => 'fa-clipboard-check','color' => '#f97316'],
-                            'delivered'        => ['label' => 'Entregado',         'icon' => 'fa-truck',          'color' => '#22c55e'],
+                            'delivered'        => ['label' => 'Entregado',         'icon' => 'fa-truck',          'color' => '#235347'],
                             'cancelled'        => ['label' => 'Cancelado',         'icon' => 'fa-times',          'color' => '#ef4444'],
                         ];
                     @endphp
@@ -542,7 +542,7 @@
                         icon:               'success',
                         title:              'Recepción registrada',
                         text:               data.message,
-                        confirmButtonColor: '#2e7d32',
+                        confirmButtonColor: '#235347',
                         confirmButtonText:  'Entendido',
                     });
                 }

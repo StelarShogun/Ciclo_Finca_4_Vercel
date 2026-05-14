@@ -694,6 +694,7 @@ class ClientPageController extends Controller
                     'quantity' => $qty,
                     'stock_available' => $product->stock_current,
                     'subtotal' => $subtotal,
+                    'product_url' => $product->clientProductUrl(),
                 ];
             }
         }

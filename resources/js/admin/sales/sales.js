@@ -452,7 +452,7 @@ function completeSale(id, invoiceNumber) {
         text: 'El encargo pasara a confirmado y quedara registrado como venta con su factura.',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#2e7d32',
+        confirmButtonColor: '#235347',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Si, confirmar',
         cancelButtonText: 'Cancelar'

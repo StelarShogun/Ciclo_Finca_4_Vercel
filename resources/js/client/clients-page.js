@@ -7,6 +7,7 @@ import {
     buildCf4CheckoutSuccessText,
     getCf4PaymentMethodShortLabel,
 } from './checkout-copy.js';
+import { initHeaderCatalogSearch } from './header-catalog-search.js';
 
 // Marker used by clients-users.js to skip the cart/checkout listeners
 // it duplicates. The header (loaded on every page) ships clients-users.js,
@@ -31,461 +32,7 @@ function isClientStockShortMessage(msg) {
     return msg === 'Producto agotado' || msg === 'Stock insuficiente';
 }
 
-// ----------------------------------------------------------------
-// CATALOG: TRENDING + PREDICTIVE SEARCH (CF4-107 / CF4-106)
-// ----------------------------------------------------------------
-(function initCatalogPredictiveSearch() {
-    var root = document.querySelector('[data-catalog-suggestions]');
-    var input = document.getElementById('search');
-    if (!root || !input) return;
-
-    var url = root.getAttribute('data-suggestions-url') || '';
-    var trendingUrl = root.getAttribute('data-trending-url') || '';
-
-    var list = document.getElementById('catalog-search-suggestions');
-    if (!list) return;
-
-    var state = {
-        open: false,
-        loading: false,
-        error: false,
-        items: [],
-        activeIndex: -1,
-        lastQuery: '',
-        mode: 'idle',
-        trendingCache: null,
-        trendingAborter: null,
-        aborter: null,
-        debounceId: null,
-    };
-
-    list.setAttribute('aria-label', 'Tendencias y sugerencias de búsqueda');
-
-    function setOpen(open) {
-        state.open = !!open;
-        list.classList.toggle('is-open', state.open);
-        list.setAttribute('aria-hidden', state.open ? 'false' : 'true');
-        input.setAttribute('aria-expanded', state.open ? 'true' : 'false');
-        if (!state.open) {
-            state.activeIndex = -1;
-        }
-    }
-
-    function abortTrendingFetch() {
-        if (state.trendingAborter) {
-            try { state.trendingAborter.abort(); } catch (err) {}
-        }
-        state.trendingAborter = null;
-    }
-
-    function abortSuggestionsFetch() {
-        if (state.aborter) {
-            try { state.aborter.abort(); } catch (err) {}
-        }
-        state.aborter = null;
-    }
-
-    function trimmedQueryLength() {
-        return String(input.value || '').trim().length;
-    }
-
-    function esc(s) {
-        return String(s)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
-
-    function badgeFor(item) {
-        if (!item) return '';
-        if (item.type === 'category') return 'Categoría';
-        if (item.match_type === 'sku') return 'SKU';
-        if (item.match_type === 'category') return 'En categoría';
-        if (item.match_type === 'trending') return 'Tendencia';
-        if (item.match_type === 'featured') return 'Sugerido';
-        return '';
-    }
-
-    /** @param {{type?: string, match_type?: string, sku?: string, category?: string, name?: string, image_url?: string}} it */
-    function suggestionRowHtml(i, isActive, it) {
-        var active = isActive ? ' is-active' : '';
-        var title = esc(it.name || '');
-        var metaParts = [];
-        if (it.sku) metaParts.push(esc(it.sku));
-        if (it.category) metaParts.push(esc(it.category));
-        var shouldShowMeta = it.match_type !== 'trending_term';
-        var meta = (shouldShowMeta && metaParts.length)
-            ? '<div class="catalog-search-suggestion-meta">' + metaParts.join(' · ') + '</div>'
-            : '';
-        var badge = badgeFor(it);
-        var badgeHtml = badge ? '<div class="catalog-search-suggestion-badge">' + esc(badge) + '</div>' : '';
-        var termThumb =
-            (it.match_type === 'trending_term' || (!it.image_url && (it.type === 'term' || it.match_type === 'trending_term')))
-                ? ' catalog-search-suggestion-thumb--term'
-                : '';
-
-        var thumb = '';
-        if (it.image_url) {
-            thumb = '<div class="catalog-search-suggestion-thumb"><img src="' + esc(it.image_url) + '" alt="" loading="lazy"></div>';
-        } else {
-            thumb = '<div class="catalog-search-suggestion-thumb' + termThumb + '" aria-hidden="true"></div>';
-        }
-
-        return ''
-            + '<div class="catalog-search-suggestion' + active + '"'
-            + ' role="option"'
-            + ' data-suggestion-index="' + i + '"'
-            + ' aria-selected="' + (isActive ? 'true' : 'false') + '">'
-            + thumb
-            + '<div class="catalog-search-suggestion-body">'
-            + '<div class="catalog-search-suggestion-title">' + title + '</div>'
-            + meta
-            + '</div>'
-            + badgeHtml
-            + '</div>';
-    }
-
-    function renderTrending(payload) {
-        state.mode = 'trending';
-
-        var flat = [];
-        var html = '';
-        var idx = 0;
-
-        var products = (payload && Array.isArray(payload.products)) ? payload.products : [];
-        var terms = (payload && !payload.is_fallback && Array.isArray(payload.terms)) ? payload.terms : [];
-        var shouldShowTerms = terms.length > 0;
-
-        if (shouldShowTerms) {
-            var h1 = 'Tendencias de búsqueda';
-            html += '<div class="catalog-search-suggestions-section" role="presentation">' + esc(h1) + '</div>';
-            for (var ti = 0; ti < terms.length; ti++) {
-                html += suggestionRowHtml(idx, idx === state.activeIndex, terms[ti] || {});
-                flat.push(terms[ti]);
-                idx += 1;
-            }
-        } else if (products.length) {
-            var h2 = payload.is_fallback ? 'Productos sugeridos' : 'Productos en tendencia';
-            html += '<div class="catalog-search-suggestions-section" role="presentation">' + esc(h2) + '</div>';
-            for (var pi = 0; pi < products.length; pi++) {
-                html += suggestionRowHtml(idx, idx === state.activeIndex, products[pi] || {});
-                flat.push(products[pi]);
-                idx += 1;
-            }
-        }
-
-        state.items = flat;
-
-        if (!html) {
-            list.innerHTML = '<div class="catalog-search-suggestions-state">' + esc(
-                'Aún no registramos suficientes búsquedas para mostrar tendencias.'
-            ) + '</div>';
-            return;
-        }
-
-        list.innerHTML = html;
-    }
-
-    function render() {
-        if (!state.open) {
-            list.innerHTML = '';
-            return;
-        }
-
-        if (state.loading) {
-            list.innerHTML = '<div class="catalog-search-suggestions-state">' + esc(
-                state.mode === 'trending' ? 'Cargando tendencias...' : 'Cargando sugerencias...'
-            ) + '</div>';
-            return;
-        }
-
-        if (state.error) {
-            list.innerHTML = '<div class="catalog-search-suggestions-state">' + esc(
-                'No pudimos cargar resultados en este momento.'
-            ) + '</div>';
-            return;
-        }
-
-        if (state.mode === 'trending') {
-            if (state.trendingCache) {
-                renderTrending(state.trendingCache);
-                return;
-            }
-            renderTrending({});
-            return;
-        }
-
-        // predictive suggestions
-        if (!state.items || state.items.length === 0) {
-            list.innerHTML = '<div class="catalog-search-suggestions-state">' + esc(
-                'No se encontraron productos relacionados'
-            ) + '</div>';
-            return;
-        }
-
-        var html = '';
-        for (var i = 0; i < state.items.length; i++) {
-            html += suggestionRowHtml(i, i === state.activeIndex, state.items[i] || {});
-        }
-        list.innerHTML = html;
-    }
-
-    function setActiveIndex(next) {
-        var n = state.items ? state.items.length : 0;
-        if (n <= 0) {
-            state.activeIndex = -1;
-            render();
-            return;
-        }
-        if (next < -1) next = -1;
-        if (next >= n) next = n - 1;
-        state.activeIndex = next;
-        render();
-    }
-
-    function close() {
-        setOpen(false);
-    }
-
-    function openIfNeeded() {
-        if (!state.open) setOpen(true);
-    }
-
-    function selectIndex(idx) {
-        var it = state.items && idx >= 0 ? state.items[idx] : null;
-        if (!it || !it.url) return;
-        window.location.href = it.url;
-    }
-
-    function fetchTrending() {
-        if (!trendingUrl) return;
-
-        if (state.trendingCache) {
-            state.mode = 'trending';
-            state.loading = false;
-            state.error = false;
-            state.activeIndex = -1;
-            openIfNeeded();
-            render();
-            return;
-        }
-
-        abortTrendingFetch();
-        state.trendingAborter = new AbortController();
-        state.mode = 'trending';
-        state.loading = true;
-        state.error = false;
-        state.items = [];
-        state.activeIndex = -1;
-        openIfNeeded();
-        render();
-
-        fetch(trendingUrl, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-            signal: state.trendingAborter.signal,
-        })
-            .then(function (res) {
-                if (!res.ok) throw new Error('Trending unavailable');
-                return res.json();
-            })
-            .then(function (data) {
-                if (trimmedQueryLength() >= 2 || state.mode !== 'trending') {
-                    state.loading = false;
-                    state.trendingAborter = null;
-                    return;
-                }
-
-                state.loading = false;
-                state.error = false;
-                state.trendingCache = data && typeof data === 'object' ? data : { products: [], terms: [] };
-                openIfNeeded();
-                render();
-
-                state.trendingAborter = null;
-            })
-            .catch(function (err) {
-                state.trendingAborter = null;
-                if (err && err.name === 'AbortError') return;
-                if (trimmedQueryLength() >= 2 || state.mode !== 'trending') {
-                    state.loading = false;
-                    return;
-                }
-                state.loading = false;
-                state.error = true;
-                state.items = [];
-                openIfNeeded();
-                render();
-            });
-    }
-
-    function tryOpenTrendingOnShortQuery() {
-        if (trimmedQueryLength() >= 2) return;
-        if (!trendingUrl) {
-            close();
-            return;
-        }
-
-        abortSuggestionsFetch();
-
-        fetchTrending();
-    }
-
-    function fetchSuggestions(query) {
-        abortSuggestionsFetch();
-
-        state.aborter = new AbortController();
-        state.loading = true;
-        state.error = false;
-        state.items = [];
-        state.activeIndex = -1;
-        state.mode = 'predictive';
-
-        abortTrendingFetch();
-
-        openIfNeeded();
-        render();
-
-        var reqUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'search=' + encodeURIComponent(query);
-
-        fetch(reqUrl, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-            signal: state.aborter.signal,
-        })
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                if (trimmedQueryLength() < 2 || state.mode !== 'predictive') {
-                    state.loading = false;
-                    return;
-                }
-                state.loading = false;
-                state.error = false;
-                state.items = (data && Array.isArray(data.suggestions)) ? data.suggestions : [];
-                openIfNeeded();
-                render();
-            })
-            .catch(function (err) {
-                if (err && err.name === 'AbortError') return;
-                state.loading = false;
-                state.error = true;
-                state.items = [];
-                openIfNeeded();
-                render();
-            });
-    }
-
-    function schedule(query) {
-        if (!url) return;
-        if (state.debounceId) clearTimeout(state.debounceId);
-        // Shorter debounce + immediate fetch for longer queries keeps perceived latency under ~1s.
-        var delay = query.length >= 4 ? 0 : 160;
-        state.debounceId = setTimeout(function () {
-            state.debounceId = null;
-            fetchSuggestions(query);
-        }, delay);
-    }
-
-    if (!url && !trendingUrl) return;
-
-    input.addEventListener('input', function () {
-        var q = String(input.value || '').trim();
-        state.lastQuery = q;
-
-        if (q.length < 2) {
-            abortSuggestionsFetch();
-            if (state.debounceId) {
-                clearTimeout(state.debounceId);
-                state.debounceId = null;
-            }
-
-            tryOpenTrendingOnShortQuery();
-
-            return;
-        }
-
-        if (!url) {
-            abortTrendingFetch();
-            close();
-            return;
-        }
-
-        state.mode = 'predictive';
-
-        abortTrendingFetch();
-        schedule(q);
-    });
-
-    ['focus', 'pointerdown'].forEach(function (ev) {
-        input.addEventListener(ev, function () {
-            if (trimmedQueryLength() < 2) {
-                tryOpenTrendingOnShortQuery();
-            }
-        });
-    });
-
-    input.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowDown') {
-            if (!state.open) setOpen(true);
-            if (state.open) {
-                e.preventDefault();
-                setActiveIndex(state.activeIndex + 1);
-            }
-            return;
-        }
-
-        if (e.key === 'ArrowUp') {
-            if (state.open) {
-                e.preventDefault();
-                setActiveIndex(state.activeIndex - 1);
-            }
-            return;
-        }
-
-        if (e.key === 'Escape') {
-            if (state.open) {
-                e.preventDefault();
-                close();
-            }
-            return;
-        }
-
-        if (e.key === 'Enter') {
-            // Only intercept Enter when there is an active suggestion / trending row.
-            if (state.open && state.activeIndex >= 0) {
-                e.preventDefault();
-                selectIndex(state.activeIndex);
-            }
-            // Otherwise, allow the normal GET form submit to proceed.
-            return;
-        }
-    });
-
-    list.addEventListener('mousemove', function (e) {
-        var row = e.target && e.target.closest ? e.target.closest('[data-suggestion-index]') : null;
-        if (!row) return;
-        var idx = parseInt(row.getAttribute('data-suggestion-index'), 10);
-        if (!isNaN(idx) && idx !== state.activeIndex) {
-            state.activeIndex = idx;
-            render();
-        }
-    });
-
-    list.addEventListener('mousedown', function (e) {
-        var row = e.target && e.target.closest ? e.target.closest('[data-suggestion-index]') : null;
-        if (!row) return;
-        e.preventDefault(); // prevent input blur before navigation
-        var idx = parseInt(row.getAttribute('data-suggestion-index'), 10);
-        if (!isNaN(idx)) selectIndex(idx);
-    });
-
-    document.addEventListener('mousedown', function (e) {
-        if (!state.open) return;
-        if (root.contains(e.target) || list.contains(e.target) || input.contains(e.target)) return;
-        close();
-    });
-})();
+initHeaderCatalogSearch();
 
 // ----------------------------------------------------------------
 // CART COUNTER (navbar)
@@ -764,47 +311,34 @@ function updateCartQuantity(productId, quantity) {
 function showCartEmptyState() {
     var card = document.querySelector('.cart-page-card');
     if (!card) return;
-    var catalogUrl = (card.querySelector('.cart-header a[href]') || {}).href || '/catalog';
+    var catalogLink = card.querySelector('a.btn-ghost-cart[href], a[href*="/catalog"]');
+    var rawHref = (catalogLink && catalogLink.getAttribute('href')) || '/catalog';
+    var catalogBase = rawHref.split('#')[0];
+    var spotlightHref = catalogBase + '#catalog-spotlight-heading';
+    var homeUrl = '/';
     card.innerHTML =
-        '<div class="cart-header">' +
-        '<h1 class="cart-title"><i class="fas fa-shopping-cart"></i> Carrito de Compras</h1>' +
-        '<a href="' + catalogUrl + '" class="btn btn-outline-secondary btn-sm">' +
-        '<i class="fas fa-arrow-left"></i> Continuar Comprando</a>' +
+        '<div class="cart-toolbar">' +
+        '<div class="cart-toolbar-text">' +
+        '<span class="cart-toolbar-label">Resumen rápido</span>' +
         '</div>' +
-        '<div class="cart-empty"><div class="empty-state">' +
-        '<i class="fas fa-shopping-cart"></i>' +
-        '<h2>Tu carrito está vacío</h2>' +
-        '<p>Agrega productos desde nuestro catálogo</p>' +
-        '<a href="' + catalogUrl + '" class="btn btn-primary btn-lg">' +
-        '<i class="fas fa-th"></i> Ver Catálogo</a>' +
+        '<div class="cart-toolbar-actions">' +
+        '<a href="' + catalogBase + '" class="btn btn-ghost-cart">' +
+        '<i class="fas fa-bicycle" aria-hidden="true"></i> Seguir comprando</a>' +
+        '</div></div>' +
+        '<div class="cart-empty">' +
+        '<div class="cart-empty-inner">' +
+        '<div class="cart-empty-icon" aria-hidden="true"><i class="fas fa-cart-shopping"></i></div>' +
+        '<h2 class="cart-empty-title">Tu carrito está vacío</h2>' +
+        '<p class="cart-empty-text">Explorá el catálogo y agregá productos para armar tu solicitud.</p>' +
+        '<div class="cart-empty-actions">' +
+        '<a href="' + catalogBase + '" class="btn btn-primary btn-lg">' +
+        '<i class="fas fa-bicycle" aria-hidden="true"></i> Ir al catálogo</a>' +
+        '<a href="' + spotlightHref + '" class="btn btn-ghost-cart btn-lg">' +
+        '<i class="fas fa-star" aria-hidden="true"></i> Ver destacados</a>' +
+        '</div>' +
+        '<p class="cart-empty-home-link">' +
+        '<a href="' + homeUrl + '" class="cart-empty-home-anchor">Volver al inicio</a></p>' +
         '</div></div>';
-}
-
-// ----------------------------------------------------------------
-// USER MENU (profile dropdown)
-// ----------------------------------------------------------------
-
-/** Close user dropdown. */
-function closeUserDropdown() {
-    var userDropdown    = document.getElementById('user-dropdown');
-    var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (userDropdown)    userDropdown.classList.remove('active');
-    if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'false');
-}
-
-/** Toggle user dropdown. */
-function toggleUserDropdown() {
-    var userDropdown    = document.getElementById('user-dropdown');
-    var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (!userDropdown) return;
-
-    var willOpen = !userDropdown.classList.contains('active');
-    if (willOpen) {
-        userDropdown.classList.add('active');
-        if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'true');
-    } else {
-        closeUserDropdown();
-    }
 }
 
 /** Close login modal. */
@@ -959,24 +493,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
         });
     }
-
-    // User menu trigger with stopPropagation.
-    var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (userMenuTrigger) {
-        userMenuTrigger.addEventListener('click', function (e) {
-            e.stopPropagation();
-            toggleUserDropdown();
-        });
-    }
-
-    // Close dropdown when clicking outside.
-    document.addEventListener('click', function (e) {
-        var userMenu     = document.getElementById('user-menu');
-        var userDropdown = document.getElementById('user-dropdown');
-        if (!userDropdown || !userDropdown.classList.contains('active')) return;
-        if (userMenu && userMenu.contains(e.target)) return;
-        closeUserDropdown();
-    });
 
     // Delegated: open quantity modal or add directly for add-to-cart buttons.
     document.addEventListener('click', function (e) {
@@ -1303,7 +819,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
         closeLoginModal();
-        closeUserDropdown();
+        if (typeof window.cf4CloseUserDropdown === 'function') {
+            window.cf4CloseUserDropdown();
+        }
         document.querySelectorAll('.modal.active').forEach(function (modal) {
             modal.classList.remove('active');
         });
@@ -1337,6 +855,31 @@ document.addEventListener('DOMContentLoaded', function () {
         if (maxInput) maxInput.addEventListener('input',  checkPriceRange);
         if (maxInput) maxInput.addEventListener('change', checkPriceRange);
         checkPriceRange();
+    })();
+
+    (function initCatalogFilterSearchSync() {
+        var filterForm = document.getElementById('filter-form');
+        var navSearch = document.getElementById('catalog-nav-search');
+        var hiddenSearch = document.getElementById('catalog-filter-search-fallback');
+        if (!filterForm) return;
+
+        function syncHiddenFromNav() {
+            if (!navSearch || !hiddenSearch) return;
+            hiddenSearch.value = String(navSearch.value || '');
+        }
+
+        if (navSearch && hiddenSearch) {
+            navSearch.addEventListener('input', syncHiddenFromNav);
+            navSearch.addEventListener('change', syncHiddenFromNav);
+            syncHiddenFromNav();
+        }
+
+        filterForm.addEventListener('formdata', function (e) {
+            var q = navSearch
+                ? String(navSearch.value || '').trim()
+                : (hiddenSearch ? String(hiddenSearch.value || '').trim() : '');
+            e.formData.set('search', q);
+        });
     })();
 
     (function initCatalogPagination() {
@@ -1539,7 +1082,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     subCol.innerHTML = '<p class="catalog-category-placeholder">Pasá el cursor sobre una categoría para ver subcategorías.</p>';
                     return;
                 }
-                var html = '<a class="catalog-category-ver-todo" href="' + hrefAttr(parentNode.url_parent) + '">Ver todo en ' + esc(parentNode.name) + '</a>';
+                var html = '';
                 var ch = parentNode.children || [];
                 ch.forEach(function (c) {
                     var cls = highlightChildId && c.id === highlightChildId
@@ -1678,6 +1221,80 @@ document.addEventListener('DOMContentLoaded', function () {
         if (sidebar) {
             var sbDelay = parseDelayMs(sidebar, 150);
             var sbLeaveTimer = null;
+            var flyoutPortalEl = null;
+            var activeSidebarItem = null;
+            var portalGlobalBound = false;
+            var portalRepositionRaf = null;
+
+            function clampNumber(value, min, max) {
+                return Math.max(min, Math.min(max, value));
+            }
+
+            function ensureSidebarFlyoutPortal() {
+                if (!flyoutPortalEl) {
+                    flyoutPortalEl = document.getElementById('catalog-category-flyout-portal');
+                    if (!flyoutPortalEl) {
+                        flyoutPortalEl = document.createElement('div');
+                        flyoutPortalEl.id = 'catalog-category-flyout-portal';
+                        flyoutPortalEl.className = 'catalog-category-flyout-portal';
+                        flyoutPortalEl.setAttribute('aria-hidden', 'true');
+                        document.body.appendChild(flyoutPortalEl);
+                    }
+
+                    flyoutPortalEl.addEventListener('mouseenter', function () {
+                        clearSbTimer();
+                    });
+                    flyoutPortalEl.addEventListener('mouseleave', function () {
+                        scheduleSidebarFlyoutClose();
+                    });
+                }
+
+                if (!portalGlobalBound) {
+                    portalGlobalBound = true;
+
+                    function schedulePortalReposition() {
+                        if (!activeSidebarItem || !flyoutPortalEl || !flyoutPortalEl.classList.contains('is-open')) return;
+                        if (portalRepositionRaf) return;
+                        portalRepositionRaf = window.requestAnimationFrame(function () {
+                            portalRepositionRaf = null;
+                            if (activeSidebarItem && flyoutPortalEl && flyoutPortalEl.classList.contains('is-open')) {
+                                positionSidebarFlyoutPortal(activeSidebarItem);
+                            }
+                        });
+                    }
+
+                    window.addEventListener('scroll', schedulePortalReposition, true);
+                    var railScroll = sidebar.querySelector('.category-rail-scroll');
+                    if (railScroll) {
+                        railScroll.addEventListener('scroll', schedulePortalReposition, true);
+                    }
+                    var sidebarStack = sidebar.closest('.catalog-sidebar-stack');
+                    if (sidebarStack) {
+                        sidebarStack.addEventListener('scroll', schedulePortalReposition, true);
+                    }
+
+                    window.addEventListener('resize', function () {
+                        if (!isDesktop()) {
+                            closeSidebarFlyoutPortal();
+                            return;
+                        }
+                        if (activeSidebarItem && flyoutPortalEl && flyoutPortalEl.classList.contains('is-open')) {
+                            positionSidebarFlyoutPortal(activeSidebarItem);
+                        }
+                    });
+
+                    document.addEventListener('keydown', function (ev) {
+                        if (ev.key !== 'Escape') return;
+                        var p = document.getElementById('catalog-category-flyout-portal');
+                        if (p && p.classList.contains('is-open')) {
+                            ev.preventDefault();
+                            closeSidebarFlyoutPortal();
+                        }
+                    });
+                }
+
+                return flyoutPortalEl;
+            }
 
             function clearSbTimer() {
                 if (sbLeaveTimer) {
@@ -1686,7 +1303,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
+            function closeSidebarFlyoutPortal() {
+                clearSbTimer();
+                if (activeSidebarItem) {
+                    activeSidebarItem.classList.remove('is-flyout-open');
+                    var fo = activeSidebarItem.querySelector('.catalog-category-flyout');
+                    if (fo) fo.setAttribute('aria-hidden', 'true');
+                }
+                activeSidebarItem = null;
+                var portal = document.getElementById('catalog-category-flyout-portal');
+                if (portal) {
+                    portal.classList.remove('is-open');
+                    portal.setAttribute('aria-hidden', 'true');
+                    portal.innerHTML = '';
+                    portal.style.left = '';
+                    portal.style.top = '';
+                    portal.style.visibility = '';
+                }
+            }
+
             function closeAllSidebarFlyouts() {
+                closeSidebarFlyoutPortal();
                 sidebar.querySelectorAll('.catalog-category-sidebar-item.is-flyout-open').forEach(function (el) {
                     el.classList.remove('is-flyout-open');
                     var fo = el.querySelector('.catalog-category-flyout');
@@ -1694,25 +1331,86 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
 
-            sidebar.querySelectorAll('.catalog-category-sidebar-item[data-has-children="1"]').forEach(function (item) {
-                var fly = item.querySelector('.catalog-category-flyout');
+            function positionSidebarFlyoutPortal(item) {
+                var portal = ensureSidebarFlyoutPortal();
+                var row = item.querySelector('.catalog-category-sidebar-item-row') || item;
+                var rect = row.getBoundingClientRect();
+                var gap = 12;
+                var viewportPadding = 12;
 
+                portal.style.visibility = 'hidden';
+                portal.classList.add('is-open');
+
+                var portalRect = portal.getBoundingClientRect();
+                var left = rect.right + gap;
+                var top = rect.top;
+
+                if (left + portalRect.width > window.innerWidth - viewportPadding) {
+                    left = rect.left - portalRect.width - gap;
+                }
+
+                left = clampNumber(left, viewportPadding, window.innerWidth - portalRect.width - viewportPadding);
+                top = clampNumber(
+                    top,
+                    viewportPadding,
+                    window.innerHeight - portalRect.height - viewportPadding
+                );
+
+                portal.style.left = left + 'px';
+                portal.style.top = top + 'px';
+                portal.style.visibility = 'visible';
+            }
+
+            function openSidebarFlyoutPortal(item) {
+                if (!isDesktop()) return;
+
+                var sourceFlyout = item.querySelector('.catalog-category-flyout');
+                if (!sourceFlyout) return;
+
+                clearSbTimer();
+                closeAllSidebarFlyouts();
+
+                activeSidebarItem = item;
+                item.classList.add('is-flyout-open');
+                sourceFlyout.setAttribute('aria-hidden', 'false');
+
+                var portal = ensureSidebarFlyoutPortal();
+                portal.innerHTML = sourceFlyout.innerHTML;
+                portal.setAttribute('aria-hidden', 'false');
+
+                positionSidebarFlyoutPortal(item);
+            }
+
+            function scheduleSidebarFlyoutClose() {
+                clearSbTimer();
+                sbLeaveTimer = setTimeout(function () {
+                    sbLeaveTimer = null;
+                    closeSidebarFlyoutPortal();
+                }, sbDelay);
+            }
+
+            sidebar.querySelectorAll('.catalog-category-sidebar-item[data-has-children="1"]').forEach(function (item) {
                 item.addEventListener('mouseenter', function () {
                     if (!isDesktop()) return;
-                    clearSbTimer();
-                    closeAllSidebarFlyouts();
-                    item.classList.add('is-flyout-open');
-                    if (fly) fly.setAttribute('aria-hidden', 'false');
+                    openSidebarFlyoutPortal(item);
                 });
 
                 item.addEventListener('mouseleave', function () {
                     if (!isDesktop()) return;
-                    clearSbTimer();
-                    sbLeaveTimer = setTimeout(function () {
-                        sbLeaveTimer = null;
-                        item.classList.remove('is-flyout-open');
-                        if (fly) fly.setAttribute('aria-hidden', 'true');
-                    }, sbDelay);
+                    scheduleSidebarFlyoutClose();
+                });
+
+                item.addEventListener('focusin', function () {
+                    if (!isDesktop()) return;
+                    openSidebarFlyoutPortal(item);
+                });
+
+                item.addEventListener('focusout', function (ev) {
+                    if (!isDesktop()) return;
+                    var rt = ev.relatedTarget;
+                    var portal = document.getElementById('catalog-category-flyout-portal');
+                    if (portal && rt && portal.contains(rt)) return;
+                    scheduleSidebarFlyoutClose();
                 });
             });
 
@@ -1752,11 +1450,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     e.preventDefault();
                     e.stopPropagation();
                     var expanded = sidebar.classList.toggle('is-expanded');
+                    var catalogContainer = sidebar.closest('.catalog-container');
+                    if (catalogContainer) {
+                        catalogContainer.classList.toggle('rail-expanded', expanded);
+                    }
                     railToggle.setAttribute('aria-expanded', String(expanded));
                     railToggle.setAttribute(
                         'aria-label',
                         expanded ? 'Contraer menú de categorías' : 'Expandir menú de categorías'
                     );
+                    var portalNode = document.getElementById('catalog-category-flyout-portal');
+                    if (activeSidebarItem && portalNode && portalNode.classList.contains('is-open')) {
+                        positionSidebarFlyoutPortal(activeSidebarItem);
+                    }
                 });
             }
         }
@@ -1912,8 +1618,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     slideLabelMessage: '{{index}} de {{slidesLength}}',
                 },
                 breakpoints: {
-                    640: { slidesPerView: 2, spaceBetween: 18 },
-                    1024: { slidesPerView: 3, spaceBetween: 22 },
+                    640: { slidesPerView: 2, spaceBetween: 16 },
+                    1024: { slidesPerView: 3, spaceBetween: 18 },
+                    1280: { slidesPerView: 4, spaceBetween: 20 },
+                    1680: { slidesPerView: 5, spaceBetween: 22 },
                 },
             });
         } catch (err) {
