@@ -1,18 +1,13 @@
 @extends('layouts.error')
 
-@section('title', 'Página no encontrada — Ciclo Finca 4')
-
-@push('styles')
-    @vite(['resources/css/errors/404-page.css'])
-@endpush
+@section('title', 'Sesión expirada — Ciclo Finca 4')
 
 @section('content')
     <x-cf4.state-card
-        class="cf4-error-404-override"
-        eyebrow="Página no encontrada"
-        code="404"
-        title="Esta ruta se salió del camino"
-        message="No encontramos la página que buscabas. Podés volver al catálogo y seguir explorando bicicletas, repuestos y accesorios disponibles."
+        eyebrow="Sesión expirada"
+        code="419"
+        title="Tu sesión se quedó sin aire"
+        message="La página estuvo inactiva demasiado tiempo o el token de seguridad caducó. Iniciá sesión de nuevo o recargá la página para continuar."
         scene="wrong_route"
     >
         <x-slot name="visual">
@@ -28,9 +23,9 @@
             >
         </x-slot>
         <x-slot name="actions">
-            <a href="{{ route('clients.catalog') }}" class="cf4-state-btn-primary">
-                <i class="fas fa-bicycle" aria-hidden="true"></i>
-                Explorar catálogo
+            <a href="{{ route('login.show') }}" class="cf4-state-btn-primary">
+                <i class="fas fa-right-to-bracket" aria-hidden="true"></i>
+                Iniciar sesión
             </a>
             <a href="{{ route('clients.home') }}" class="cf4-state-btn-secondary">
                 <i class="fas fa-home" aria-hidden="true"></i>

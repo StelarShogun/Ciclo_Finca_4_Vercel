@@ -107,8 +107,8 @@
         <aside class="catalog-filters catalog-sidebar" id="catalog-sidebar">
                 <div class="filters-card">
                     <h3 class="filters-title">
-                        <i class="fas fa-filter"></i>
-                        Filtros
+                        <i class="fas fa-filter" aria-hidden="true"></i>
+                        <span class="filters-title-text">Filtros</span>
                     </h3>
 
                     {{-- GET form: category_id se conserva por URL al filtrar desde el menú de categorías --}}
@@ -133,6 +133,8 @@
                                        name="min_price"
                                        class="form-control"
                                        placeholder="Mínimo"
+                                       min="0"
+                                       step="1"
                                        value="{{ old('min_price', request('min_price')) }}">
                                 <span class="price-separator">-</span>
                                 <input type="number"
@@ -140,6 +142,8 @@
                                        name="max_price"
                                        class="form-control"
                                        placeholder="Máximo"
+                                       min="0"
+                                       step="1"
                                        value="{{ old('max_price', request('max_price')) }}">
                             </div>
                         </div>
@@ -163,12 +167,12 @@
                         <div class="filter-actions">
                             <button type="submit" class="btn btn-primary btn-block" id="filter-submit-btn">
                                 <i class="fas fa-sliders" aria-hidden="true"></i>
-                                Aplicar Filtros
+                                <span class="btn-text">Aplicar Filtros</span>
                             </button>
                             {{-- Navigating to the base URL effectively clears all filters --}}
                             <a href="{{ route('clients.catalog') }}" class="btn btn-secondary btn-block">
-                                <i class="fas fa-redo"></i>
-                                Limpiar
+                                <i class="fas fa-redo" aria-hidden="true"></i>
+                                <span class="btn-text">Limpiar</span>
                             </a>
                         </div>
                     </form>
@@ -479,6 +483,26 @@
                                             <div class="product-price-bar">
                                                 <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
                                             </div>
+                                                @if($canBuy)
+                                                    @auth('clients')
+                                                    <div class="product-card-qty-row" data-product-card-qty-row>
+                                                        <span class="product-card-qty-label" id="catalog-card-qty-label-{{ $product->product_id }}">Cant.</span>
+                                                        <div class="product-card-qty" data-product-card-qty>
+                                                            <button type="button" class="product-card-qty-btn" data-qty-step="-1" aria-label="Reducir cantidad">−</button>
+                                                            <input type="number"
+                                                                   id="catalog-card-qty-{{ $product->product_id }}"
+                                                                   class="product-card-qty-input"
+                                                                   min="1"
+                                                                   max="{{ max(1, (int) $product->stock_current) }}"
+                                                                   value="1"
+                                                                   inputmode="numeric"
+                                                                   autocomplete="off"
+                                                                   aria-labelledby="catalog-card-qty-label-{{ $product->product_id }}">
+                                                            <button type="button" class="product-card-qty-btn" data-qty-step="1" aria-label="Aumentar cantidad">+</button>
+                                                        </div>
+                                                    </div>
+                                                    @endauth
+                                                @endif
                                             <div class="product-actions">
                                                 <a href="{{ $product->clientProductUrl() }}" class="btn-product btn-ver-detalles">
                                                     <i class="fas fa-arrow-right"></i>
@@ -520,26 +544,61 @@
                             <x-pagination :paginator="$products" label="productos" />
                         </div>
                     @else
+                        @pushOnce('styles', 'cf4-state-card-css')
+                            @vite(['resources/css/errors/state-card.css'])
+                        @endPushOnce
                         @if($emptyCategoryNoProducts)
-                            <div class="empty-state">
-                                <i class="fas fa-folder-open"></i>
-                                <h3>No hay productos disponibles en esta categoría.</h3>
-                                <p>Probá otra categoría o limpiá los filtros.</p>
-                                <a href="{{ route('clients.catalog', $catalogParams) }}" class="btn btn-primary">
-                                    Ver todas las categorías
-                                </a>
-                            </div>
+                            <x-cf4.state-card
+                                variant="embed"
+                                :bare="true"
+                                title-tag="h3"
+                                eyebrow="Sin resultados"
+                                title="No hay productos en esta categoría"
+                                message="Probá otra categoría o limpiá los filtros para ver más piezas disponibles."
+                            >
+                                <x-slot name="actions">
+                                    <a href="{{ route('clients.catalog', $catalogParams) }}" class="cf4-state-btn-primary">
+                                        Ver todas las categorías
+                                    </a>
+                                    <a href="{{ route('clients.catalog') }}" class="cf4-state-btn-secondary">
+                                        Ir al catálogo
+                                    </a>
+                                </x-slot>
+                            </x-cf4.state-card>
                         @else
-                            <div class="empty-state">
-                                <i class="fas fa-search"></i>
-                                <h3>No se encontraron productos</h3>
-                                <p>
-                                        Intenta ajustar tus filtros de búsqueda
-                                </p>
-                                <a href="{{ route('clients.catalog') }}" class="btn btn-primary">
-                                    Ver Todos los Productos
-                                </a>
-                            </div>
+                            @pushOnce('scripts', 'cf4-scenes-js')
+                                @vite(['resources/js/errors/scenes.js'])
+                            @endPushOnce
+                            <x-cf4.state-card
+                                variant="embed"
+                                :bare="true"
+                                title-tag="h3"
+                                eyebrow="Búsqueda"
+                                title="No encontramos esa pieza"
+                                message="Intentá ajustar filtros o palabras de búsqueda, o volvé al catálogo completo."
+                                scene="wrong_route"
+                            >
+                                <x-slot name="visual">
+                                    @include('errors.partials.404-bike-svg')
+                                </x-slot>
+                                <x-slot name="fallback">
+                                    <img
+                                        class="cf4-error-fallback"
+                                        src="{{ asset('images/errors/404-bike-illustration-orig.png') }}"
+                                        alt=""
+                                        role="presentation"
+                                        loading="lazy"
+                                    >
+                                </x-slot>
+                                <x-slot name="actions">
+                                    <a href="{{ route('clients.catalog') }}" class="cf4-state-btn-primary">
+                                        Ver todos los productos
+                                    </a>
+                                    <a href="{{ route('clients.catalog') }}" class="cf4-state-btn-secondary">
+                                        Catálogo completo
+                                    </a>
+                                </x-slot>
+                            </x-cf4.state-card>
                         @endif
                     @endif
                 </div>
@@ -547,35 +606,6 @@
     </div>
 </section>
 
-{{-- Quantity selector modal, populated by JS when the user clicks "Agregar" --}}
-<div class="modal" id="add-to-cart-modal">
-    <div class="modal-content modal-sm">
-        <div class="modal-header">
-            <h3>Agregar al Carrito</h3>
-            <button class="modal-close" id="close-add-to-cart-modal">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="product-preview" id="product-preview">
-                <img id="preview-image" src="" alt="">
-                <div class="preview-info">
-                    <h4 id="preview-name"></h4>
-                    <p class="preview-price" id="preview-price"></p>
-                    <p class="preview-stock" id="preview-stock"></p>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="cart-quantity">Cantidad:</label>
-                <input type="number" id="cart-quantity" class="form-control" min="1" value="1">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" id="cancel-add-to-cart">Cancelar</button>
-            <button class="btn btn-primary" id="confirm-add-to-cart">Agregar al Carrito</button>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')

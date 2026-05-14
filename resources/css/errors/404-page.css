@@ -1,0 +1,11 @@
+/* 404-only: hero code size */
+.cf4-error-404-override .cf4-state-code {
+    font-size: clamp(96px, 14vw, 172px);
+    letter-spacing: -6px;
+}
+
+@media (max-width: 860px) {
+    .cf4-error-404-override .cf4-state-code {
+        letter-spacing: -4px;
+    }
+}

@@ -17,7 +17,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    @vite(['resources/css/client/variables-reset.css'])
+    @vite([
+        'resources/css/client/variables-reset.css',
+        'resources/css/errors/state-card.css',
+    ])
 
     <style>
         .cf4-error-layout {
@@ -94,6 +97,10 @@
             color: var(--brand-medium-dark);
         }
 
+        .cf4-error-nav-back:active {
+            transform: translateY(0);
+        }
+
         /* ---- main area ---- */
         .cf4-error-main {
             flex: 1;
@@ -112,7 +119,7 @@
 <body class="cf4-error-layout">
 
     <header class="cf4-error-nav">
-        <a href="{{ route('clients.home') }}" class="cf4-error-nav-logo" aria-label="Ir al inicio — Ciclo Finca 4">
+        <a href="{{ route('clients.home') }}" class="cf4-error-nav-logo cf4-transition" aria-label="Ir al inicio — Ciclo Finca 4">
             <img
                 src="{{ asset('assets/images/brand/logo-ciclo-finca-icon-transparent.png') }}"
                 class="cf4-error-nav-icon"

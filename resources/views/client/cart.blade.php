@@ -171,9 +171,7 @@
             @else
                 <div class="cart-empty">
                     <div class="cart-empty-inner">
-                        <div class="cart-empty-icon" aria-hidden="true">
-                            <i class="fas fa-cart-shopping"></i>
-                        </div>
+                        <div class="cart-empty-icon" aria-hidden="true"><i class="fas fa-cart-shopping"></i></div>
                         <h2 class="cart-empty-title">Tu carrito está vacío</h2>
                         <p class="cart-empty-text">Explorá el catálogo y agregá productos para armar tu solicitud.</p>
                         <div class="cart-empty-actions">
