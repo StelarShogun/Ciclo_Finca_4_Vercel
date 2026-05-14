@@ -82,6 +82,10 @@
                 <div class="product-detail-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
                 <h1 class="product-detail-name">{{ $product->name }}</h1>
 
+                @if($product->clientCatalogAssignedSku())
+                    <p class="product-detail-sku">SKU: {{ $product->clientCatalogAssignedSku() }}</p>
+                @endif
+
                 <div class="product-detail-rating-summary">
                     @include('client.parts.product-stars-inline', [
                         'avgStars' => $averageStars ?? 0,
@@ -117,13 +121,13 @@
                         @if($product->clientShowsLowStockWarning())
                             <span class="stock-available stock-available--low">
                                 <i class="fas fa-exclamation-circle"></i>
-                                <span>Quedan pocas unidades</span>
+                                <span>{{ $product->clientCatalogStockLabel() }}</span>
                                 <span class="stock-detail-count">· {{ $product->stock_current }} unidades disponibles</span>
                             </span>
                         @else
                             <span class="stock-available">
                                 <i class="fas fa-check-circle"></i>
-                                <span class="stock-status-word">Disponible</span>
+                                <span class="stock-status-word">{{ $product->clientCatalogStockLabel() }}</span>
                                 <span class="stock-detail-count stock-detail-count--plain">· {{ $product->stock_current }} unidades disponibles</span>
                             </span>
                         @endif
@@ -330,8 +334,9 @@
                         @php
                             $relLabel = $related->clientCatalogStockLabel();
                             $relCanBuy = $related->isPurchasableByClient();
+                            $relSku = $related->clientCatalogAssignedSku();
                         @endphp
-                        <div class="product-card">
+                        <div class="product-card @if($relLabel === 'Agotado') product-card--out-of-stock @endif">
                             <div class="product-image">
                                 <a href="{{ $related->clientProductUrl() }}">
                                     @php $relatedImgUrl = $related->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($related->image ?? 'default.png')); @endphp
@@ -353,10 +358,14 @@
                                     'reviewCount' => (int) data_get($relRs, 'count', 0),
                                     'variant' => 'related',
                                 ])
+                                @if($relSku)
+                                    <p class="product-card-sku">SKU: {{ $relSku }}</p>
+                                @endif
                                 <p @class([
                                     'product-availability-text',
-                                    'is-available' => $relLabel === 'Disponible',
-                                    'is-low' => $relLabel === 'Quedan pocas unidades',
+                                    'product-stock-badge',
+                                    'is-available' => $relLabel === 'En stock',
+                                    'is-low' => $relLabel === 'Últimas unidades',
                                     'is-out' => $relLabel === 'Agotado',
                                     'is-na' => $relLabel === 'No disponible',
                                 ])>{{ $relLabel }}</p>

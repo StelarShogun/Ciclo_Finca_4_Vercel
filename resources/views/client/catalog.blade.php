@@ -307,8 +307,10 @@
                                                 $spotlight = $row['spotlight'];
                                                 $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
                                                 $spotlightImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png'));
+                                                $spotLabel = $product->clientCatalogStockLabel();
+                                                $spotSku = $product->clientCatalogAssignedSku();
                                             @endphp
-                                            <article class="swiper-slide product-card product-card--catalog-spotlight catalog-spotlight-slide"
+                                            <article class="swiper-slide product-card product-card--catalog-spotlight catalog-spotlight-slide @if($spotLabel === 'Agotado') catalog-spotlight-slide--out-of-stock @endif"
                                                      role="group"
                                                      aria-roledescription="diapositiva"
                                                      aria-label="{{ $loop->iteration }} de {{ $loop->count }}: {{ $product->name }}">
@@ -329,6 +331,18 @@
                                                             'reviewCount' => (int) data_get($spotRs, 'count', 0),
                                                             'variant' => 'card',
                                                         ])
+                                                        @if($spotSku)
+                                                            <p class="catalog-spotlight-card-sku">SKU: {{ $spotSku }}</p>
+                                                        @endif
+                                                        <p @class([
+                                                            'product-availability-text',
+                                                            'product-stock-badge',
+                                                            'catalog-spotlight-stock-label',
+                                                            'is-available' => $spotLabel === 'En stock',
+                                                            'is-low' => $spotLabel === 'Últimas unidades',
+                                                            'is-out' => $spotLabel === 'Agotado',
+                                                            'is-na' => $spotLabel === 'No disponible',
+                                                        ])>{{ $spotLabel }}</p>
                                                         <div class="product-price-bar catalog-spotlight-card-price">
                                                             <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
                                                         </div>
@@ -431,8 +445,9 @@
                                     $catLabel = $product->clientCatalogStockLabel();
                                     $canBuy = $product->isPurchasableByClient();
                                     $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
+                                    $cardSku = $product->clientCatalogAssignedSku();
                                 @endphp
-                                <div class="product-card">
+                                <div class="product-card @if($catLabel === 'Agotado') product-card--out-of-stock @endif">
                                     <div class="product-image">
                                         <button type="button"
                                                 class="product-favorite-btn {{ $isFavorite ? 'is-active' : '' }}"
@@ -464,16 +479,17 @@
                                             'reviewCount' => (int) data_get($cardRs, 'count', 0),
                                             'variant' => 'card',
                                         ])
+                                        @if($cardSku)
+                                            <p class="product-card-sku">SKU: {{ $cardSku }}</p>
+                                        @endif
                                         <p @class([
                                             'product-availability-text',
-                                            'is-available' => $catLabel === 'Disponible',
-                                            'is-low' => $catLabel === 'Quedan pocas unidades',
+                                            'product-stock-badge',
+                                            'is-available' => $catLabel === 'En stock',
+                                            'is-low' => $catLabel === 'Últimas unidades',
                                             'is-out' => $catLabel === 'Agotado',
                                             'is-na' => $catLabel === 'No disponible',
                                         ])>{{ $catLabel }}</p>
-                                        @if($canBuy)
-                                            <p class="product-stock-qty">{{ number_format((int) ($product->stock_current ?? 0), 0, ',', '.') }} unidades disponibles</p>
-                                        @endif
                                         @if($product->description)
                                             <p class="product-description">{{ Str::limit($product->description, 100) }}</p>
                                         @endif

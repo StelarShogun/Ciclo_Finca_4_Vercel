@@ -111,8 +111,9 @@
                     @php
                         $stockLabel = $product->clientCatalogStockLabel();
                         $canBuy = $product->isPurchasableByClient();
+                        $homeSku = $product->clientCatalogAssignedSku();
                     @endphp
-                    <div class="product-card">
+                    <div class="product-card @if($stockLabel === 'Agotado') product-card--out-of-stock @endif">
                         <div class="product-image">
                             <!-- Fallback to favicon if product image is missing -->
                             <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}" 
@@ -129,10 +130,14 @@
                                 'reviewCount' => (int) data_get($homeRs, 'count', 0),
                                 'variant' => 'card',
                             ])
+                            @if($homeSku)
+                                <p class="product-card-sku">SKU: {{ $homeSku }}</p>
+                            @endif
                             <p @class([
                                 'product-availability-text',
-                                'is-available' => $stockLabel === 'Disponible',
-                                'is-low' => $stockLabel === 'Quedan pocas unidades',
+                                'product-stock-badge',
+                                'is-available' => $stockLabel === 'En stock',
+                                'is-low' => $stockLabel === 'Últimas unidades',
                                 'is-out' => $stockLabel === 'Agotado',
                                 'is-na' => $stockLabel === 'No disponible',
                             ])>{{ $stockLabel }}</p>
