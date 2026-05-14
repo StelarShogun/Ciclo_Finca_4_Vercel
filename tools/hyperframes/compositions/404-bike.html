@@ -1,199 +1,238 @@
 <!doctype html>
-<!-- CF4-131: HyperFrames composition (scene + 404 copy in-frame). Render: npm run render:404 -->
+<!-- CF4-131: HyperFrames composition — animation only, no copy (text lives in Laravel 404 HTML).
+     Narrative: bike rolls in confidently → spots a wrong-way sign → brakes → wobbles → confused stop.
+     Render: cd tools/hyperframes && npm run render:404 -->
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1920, height=1080" />
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        margin: 0;
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
         width: 1920px;
         height: 1080px;
         overflow: hidden;
-        font-family: "Poppins", system-ui, sans-serif;
-        background: linear-gradient(168deg, #f1f8f4 0%, #dcedc8 38%, #aed581 100%);
+        font-family: system-ui, sans-serif;
+        background: linear-gradient(168deg, #f0f7f2 0%, #d4edda 40%, #a8d5b5 100%);
       }
-      #root {
-        position: relative;
-        width: 100%;
-        height: 100%;
-      }
+      #root { position: relative; width: 100%; height: 100%; }
+
+      /* sky glows */
       .sky {
-        position: absolute;
-        inset: 0;
+        position: absolute; inset: 0; pointer-events: none;
         background:
-          radial-gradient(ellipse 90% 55% at 18% 12%, rgba(255, 255, 255, 0.75) 0%, transparent 50%),
-          radial-gradient(ellipse 70% 45% at 82% 8%, rgba(255, 253, 231, 0.5) 0%, transparent 42%);
-        pointer-events: none;
+          radial-gradient(ellipse 90% 50% at 16% 10%, rgba(255,255,255,0.7) 0%, transparent 50%),
+          radial-gradient(ellipse 65% 40% at 85% 6%, rgba(255,252,220,0.5) 0%, transparent 44%);
       }
+
+      /* sun */
       .sun {
         position: absolute;
-        top: 72px;
-        right: 180px;
-        width: 120px;
-        height: 120px;
+        top: 60px; right: 160px;
+        width: 130px; height: 130px;
         border-radius: 50%;
-        background: radial-gradient(circle at 35% 35%, #fffde7 0%, #fff9c4 45%, #fdd835 100%);
-        box-shadow: 0 0 80px rgba(253, 216, 53, 0.45);
-        opacity: 0.95;
+        background: radial-gradient(circle at 38% 32%, #fffde7 0%, #fff9c4 40%, #ffd54f 100%);
+        box-shadow: 0 0 0 18px rgba(255,213,79,0.12), 0 0 80px rgba(255,213,79,0.4);
       }
+
+      /* sun rays */
+      .sun-rays {
+        position: absolute;
+        top: 60px; right: 160px;
+        width: 130px; height: 130px;
+      }
+      .ray {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 2px; height: 28px;
+        background: rgba(255,213,79,0.45);
+        border-radius: 2px;
+        transform-origin: 50% 0;
+      }
+
+      /* clouds */
       .cloud {
         position: absolute;
-        background: rgba(255, 255, 255, 0.88);
+        background: rgba(255,255,255,0.9);
         border-radius: 999px;
-        filter: blur(0.5px);
-        box-shadow: 24px 10px 0 -4px rgba(255, 255, 255, 0.75);
+        filter: blur(1px);
       }
-      .cloud.c1 {
-        width: 220px;
-        height: 70px;
-        top: 120px;
-        left: 120px;
-      }
-      .cloud.c2 {
-        width: 180px;
-        height: 56px;
-        top: 200px;
-        left: 520px;
-        opacity: 0.85;
-      }
-      .cloud.c3 {
-        width: 260px;
-        height: 78px;
-        top: 90px;
-        left: 1320px;
-        opacity: 0.9;
-      }
-      .road-wrap {
+      .cloud::after {
+        content: '';
         position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 200px;
-        height: 300px;
+        background: rgba(255,255,255,0.75);
+        border-radius: 50%;
       }
+      .c1 { width: 240px; height: 72px; top: 100px; left: 80px; }
+      .c1::after { width: 90px; height: 90px; bottom: 28px; left: 40px; }
+      .c2 { width: 190px; height: 58px; top: 175px; left: 500px; opacity: 0.85; }
+      .c2::after { width: 70px; height: 70px; bottom: 22px; left: 50px; }
+      .c3 { width: 280px; height: 82px; top: 80px; left: 1300px; opacity: 0.88; }
+      .c3::after { width: 100px; height: 100px; bottom: 30px; left: 70px; }
+
+      /* ground / grass strip */
+      .grass {
+        position: absolute;
+        left: 0; right: 0;
+        bottom: 168px;
+        height: 60px;
+        background: linear-gradient(to bottom, #81c784 0%, #66bb6a 100%);
+        border-radius: 4px 4px 0 0;
+      }
+      .grass-line {
+        position: absolute;
+        left: 0; right: 0;
+        bottom: 226px;
+        height: 10px;
+        background: rgba(56,142,60,0.35);
+        filter: blur(2px);
+      }
+
+      /* road */
       .road {
         position: absolute;
-        left: 50%;
+        left: 0; right: 0;
+        bottom: 130px;
+        height: 42px;
+        background: linear-gradient(180deg, #546e7a 0%, #37474f 50%, #263238 100%);
+        box-shadow: 0 10px 0 rgba(0,0,0,0.18), inset 0 3px 0 rgba(255,255,255,0.07);
+      }
+      .road-line {
+        position: absolute;
+        top: 50%; left: 0; right: 0;
+        height: 0;
+        border-top: 5px dashed rgba(255,255,255,0.45);
+        transform: translateY(-50%);
+      }
+
+      /* brake marks (initially invisible) */
+      .brake-mark {
+        position: absolute;
+        bottom: 148px;
+        width: 0px;
+        height: 6px;
+        background: rgba(0,0,0,0.38);
+        border-radius: 3px;
+        opacity: 0;
+      }
+      .bm1 { left: 900px; transform: rotate(-1deg); }
+      .bm2 { left: 950px; transform: rotate(1deg); }
+
+      /* road end — right side fades */
+      .road-end {
+        position: absolute;
+        right: 0; bottom: 130px;
+        width: 320px; height: 42px;
+        background: linear-gradient(to right, transparent 0%, rgba(168,213,181,0.9) 100%);
+      }
+
+      /* warning sign post */
+      .sign-group {
+        position: absolute;
+        bottom: 168px;
+        left: 1020px;
+        opacity: 0;
+        transform-origin: 50% 100%;
+        transform: scaleY(0);
+      }
+      .sign-post {
+        width: 6px;
+        height: 130px;
+        background: linear-gradient(180deg, #9e9e9e 0%, #616161 100%);
+        margin: 0 auto;
+        border-radius: 3px;
+      }
+      .sign-board {
+        position: absolute;
+        top: -4px; left: 50%;
         transform: translateX(-50%);
-        width: 980px;
-        height: 22px;
-        background: linear-gradient(180deg, #6d4c41 0%, #4e342e 55%, #3e2723 100%);
-        border-radius: 11px;
-        box-shadow: 0 8px 0 rgba(0, 0, 0, 0.15), inset 0 2px 0 rgba(255, 255, 255, 0.08);
+        width: 120px; height: 52px;
+        background: #e53935;
+        border-radius: 6px;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        gap: 2px;
       }
-      .road-dash {
+      .sign-board::before {
+        content: '';
         position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        width: 760px;
-        height: 0;
-        border-top: 7px dashed rgba(255, 255, 255, 0.5);
+        inset: -3px;
+        border: 3px solid rgba(255,255,255,0.6);
+        border-radius: 8px;
       }
-      .road-gap {
+      .sign-arrow {
+        width: 0; height: 0;
+        border-top: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+        border-right: 16px solid white;
+        position: relative; left: -4px;
+      }
+      .sign-text {
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        color: #fff;
+        text-transform: uppercase;
+      }
+
+      /* question mark puff (confusion) */
+      .puff {
         position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%) scaleX(0);
-        width: 160px;
-        height: 48px;
-        background: linear-gradient(168deg, #f1f8f4 0%, #dcedc8 100%);
-        border-radius: 10px;
+        bottom: 420px;
+        left: 980px;
+        font-size: 64px;
+        font-weight: 900;
+        color: #1b5e20;
         opacity: 0;
-        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.06);
+        text-shadow: 0 4px 16px rgba(27,94,32,0.25);
+        transform: scale(0.4) translateY(20px);
+        user-select: none;
       }
-      .crack {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 4px;
-        height: 0;
-        background: #3e2723;
-        transform: translate(-50%, -50%) rotate(12deg);
-        border-radius: 2px;
-        opacity: 0;
-      }
-      .crack.crk2 {
-        transform: translate(-40%, -50%) rotate(-18deg);
-      }
+
+      /* bike shadow */
       .bike-shadow {
         position: absolute;
-        left: 300px;
-        bottom: 278px;
-        width: 140px;
-        height: 22px;
-        background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.22) 0%, transparent 70%);
-        opacity: 0.55;
+        bottom: 133px;
+        left: 260px;
+        width: 160px;
+        height: 20px;
+        background: radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, transparent 70%);
+        transform-origin: center;
       }
-      .bike {
-        position: absolute;
-        left: 280px;
-        bottom: 300px;
-        width: 220px;
-        height: 150px;
-        z-index: 3;
-        transform-origin: 50% 85%;
-      }
-      .bike svg {
-        display: block;
-        width: 100%;
-        height: auto;
-        filter: drop-shadow(6px 14px 18px rgba(0, 0, 0, 0.2));
-      }
+
+      /* dust puffs */
       .dust {
         position: absolute;
-        left: 220px;
-        bottom: 308px;
-        width: 100px;
-        height: 48px;
+        bottom: 148px;
+        left: 200px;
+        width: 110px; height: 55px;
         opacity: 0;
-        background: radial-gradient(ellipse at center, rgba(93, 64, 55, 0.4) 0%, transparent 72%);
+        background: radial-gradient(ellipse at center, rgba(84,110,122,0.38) 0%, transparent 68%);
       }
+
+      /* sparks */
       .spark {
         position: absolute;
-        width: 8px;
-        height: 8px;
+        width: 7px; height: 7px;
         border-radius: 50%;
-        background: #fff59d;
+        background: #ffee58;
+        box-shadow: 0 0 10px #ffd600;
         opacity: 0;
-        box-shadow: 0 0 12px #ffee58;
       }
-      .copy {
+
+      /* the bike */
+      .bike {
         position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 36px;
-        z-index: 5;
-        text-align: center;
-        color: #1b5e20;
-        pointer-events: none;
-        text-shadow: 0 2px 18px rgba(255, 255, 255, 0.75), 0 1px 0 rgba(255, 255, 255, 0.9);
+        left: 230px;
+        bottom: 166px;
+        width: 260px;
+        height: 170px;
+        z-index: 4;
+        transform-origin: 50% 90%;
       }
-      .copy h1 {
-        font-size: 112px;
-        font-weight: 800;
-        letter-spacing: -4px;
-        line-height: 1;
-        margin: 0;
-        opacity: 0;
-        transform: translateY(28px);
-      }
-      .copy p {
-        margin: 14px 48px 0;
-        font-size: 34px;
-        font-weight: 500;
-        line-height: 1.35;
-        opacity: 0;
-        transform: translateY(20px);
-        color: #2e7d32;
-      }
+      .bike svg { display: block; width: 100%; height: 100%; overflow: visible; }
     </style>
   </head>
   <body>
@@ -201,178 +240,255 @@
       id="root"
       data-composition-id="404-bike"
       data-start="0"
-      data-duration="8"
+      data-duration="9"
       data-width="1920"
       data-height="1080"
     >
       <div class="sky"></div>
+
       <div class="sun" id="sun"></div>
+      <div class="sun-rays" id="sun-rays">
+        <div class="ray" style="transform: rotate(0deg)   translateX(-50%) translateY(-100%)"></div>
+        <div class="ray" style="transform: rotate(45deg)  translateX(-50%) translateY(-100%)"></div>
+        <div class="ray" style="transform: rotate(90deg)  translateX(-50%) translateY(-100%)"></div>
+        <div class="ray" style="transform: rotate(135deg) translateX(-50%) translateY(-100%)"></div>
+        <div class="ray" style="transform: rotate(180deg) translateX(-50%) translateY(-100%)"></div>
+        <div class="ray" style="transform: rotate(225deg) translateX(-50%) translateY(-100%)"></div>
+        <div class="ray" style="transform: rotate(270deg) translateX(-50%) translateY(-100%)"></div>
+        <div class="ray" style="transform: rotate(315deg) translateX(-50%) translateY(-100%)"></div>
+      </div>
+
       <div class="cloud c1" id="cloud1"></div>
       <div class="cloud c2" id="cloud2"></div>
       <div class="cloud c3" id="cloud3"></div>
 
-      <div class="road-wrap">
-        <div class="road" id="road"></div>
-        <div class="road-dash"></div>
-        <div class="road-gap" id="road-gap"></div>
-        <div class="crack" id="crack1"></div>
-        <div class="crack crk2" id="crack2"></div>
+      <div class="grass-line"></div>
+      <div class="grass"></div>
+      <div class="road" id="road">
+        <div class="road-line"></div>
+      </div>
+      <div class="road-end"></div>
+
+      <div class="brake-mark bm1" id="bm1"></div>
+      <div class="brake-mark bm2" id="bm2"></div>
+
+      <div class="sign-group" id="sign">
+        <div class="sign-board">
+          <div class="sign-arrow"></div>
+          <div class="sign-text">WRONG WAY</div>
+        </div>
+        <div class="sign-post"></div>
       </div>
 
       <div class="bike-shadow" id="bike-shadow"></div>
       <div class="dust" id="dust"></div>
-      <div class="spark" id="sp1" style="left: 50%; bottom: 340px"></div>
-      <div class="spark" id="sp2" style="left: 51%; bottom: 352px"></div>
-      <div class="spark" id="sp3" style="left: 49%; bottom: 348px"></div>
 
+      <div class="spark" id="sp1" style="left: 910px; bottom: 148px;"></div>
+      <div class="spark" id="sp2" style="left: 930px; bottom: 162px;"></div>
+      <div class="spark" id="sp3" style="left: 895px; bottom: 155px;"></div>
+
+      <div class="puff" id="puff">?</div>
+
+      <!-- realistic bike SVG -->
       <div class="bike" id="bike">
-        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <g id="wheel-back" transform="translate(42 88)">
-            <circle r="24" fill="none" stroke="#37474f" stroke-width="5" />
-            <circle r="7" fill="#455a64" />
-            <line x1="-20" y1="0" x2="20" y2="0" stroke="#90a4ae" stroke-width="2" />
-            <line x1="0" y1="-20" x2="0" y2="20" stroke="#90a4ae" stroke-width="2" />
+        <svg viewBox="0 0 260 170" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <radialGradient id="tire-grad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#546e7a"/>
+              <stop offset="100%" stop-color="#263238"/>
+            </radialGradient>
+            <filter id="drop-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="3" dy="6" stdDeviation="5" flood-color="rgba(0,0,0,0.22)"/>
+            </filter>
+          </defs>
+
+          <g filter="url(#drop-sh)">
+            <!-- rear wheel -->
+            <g id="wheel-back" transform="translate(58,120)">
+              <circle r="40" fill="url(#tire-grad)" stroke="#37474f" stroke-width="7"/>
+              <circle r="33" fill="none" stroke="#546e7a" stroke-width="3"/>
+              <circle r="6" fill="#78909c"/>
+              <!-- spokes -->
+              <line x1="0" y1="-33" x2="0" y2="33" stroke="#90a4ae" stroke-width="1.5"/>
+              <line x1="-33" y1="0" x2="33" y2="0" stroke="#90a4ae" stroke-width="1.5"/>
+              <line x1="-23" y1="-23" x2="23" y2="23" stroke="#90a4ae" stroke-width="1.5"/>
+              <line x1="23" y1="-23" x2="-23" y2="23" stroke="#90a4ae" stroke-width="1.5"/>
+            </g>
+
+            <!-- front wheel -->
+            <g id="wheel-front" transform="translate(202,120)">
+              <circle r="40" fill="url(#tire-grad)" stroke="#37474f" stroke-width="7"/>
+              <circle r="33" fill="none" stroke="#546e7a" stroke-width="3"/>
+              <circle r="6" fill="#78909c"/>
+              <line x1="0" y1="-33" x2="0" y2="33" stroke="#90a4ae" stroke-width="1.5"/>
+              <line x1="-33" y1="0" x2="33" y2="0" stroke="#90a4ae" stroke-width="1.5"/>
+              <line x1="-23" y1="-23" x2="23" y2="23" stroke="#90a4ae" stroke-width="1.5"/>
+              <line x1="23" y1="-23" x2="-23" y2="23" stroke="#90a4ae" stroke-width="1.5"/>
+            </g>
+
+            <!-- frame — diamond: BB(128,120) → chainstay→rear(58,120), seatstay, seat-tube(128,120→128,42), top-tube(128,42→190,48), down-tube(128,42→128,120 via head 190,48), fork(190,48→202,120) -->
+            <!-- chain stay -->
+            <line x1="58" y1="120" x2="128" y2="120" stroke="#1b5e20" stroke-width="7" stroke-linecap="round"/>
+            <!-- seat stay -->
+            <line x1="58" y1="120" x2="178" y2="52" stroke="#2e7d32" stroke-width="5" stroke-linecap="round"/>
+            <!-- seat tube -->
+            <line x1="128" y1="120" x2="128" y2="46" stroke="#1b5e20" stroke-width="7" stroke-linecap="round"/>
+            <!-- down tube -->
+            <line x1="128" y1="46" x2="190" y2="58" stroke="#2e7d32" stroke-width="6" stroke-linecap="round"/>
+            <!-- top tube -->
+            <line x1="128" y1="46" x2="178" y2="52" stroke="#388e3c" stroke-width="5" stroke-linecap="round"/>
+            <!-- head tube (connects top-tube end to fork) -->
+            <line x1="178" y1="52" x2="190" y2="58" stroke="#1b5e20" stroke-width="8" stroke-linecap="round"/>
+            <!-- fork -->
+            <line x1="190" y1="58" x2="202" y2="120" stroke="#37474f" stroke-width="5" stroke-linecap="round"/>
+
+            <!-- seat post + saddle -->
+            <line x1="128" y1="46" x2="122" y2="28" stroke="#546e7a" stroke-width="4" stroke-linecap="round"/>
+            <rect x="104" y="22" width="40" height="9" rx="4.5" fill="#263238"/>
+            <rect x="100" y="22" width="48" height="6" rx="3" fill="#455a64"/>
+
+            <!-- chainring -->
+            <circle cx="128" cy="120" r="18" fill="none" stroke="#ffa000" stroke-width="4"/>
+            <circle cx="128" cy="120" r="6" fill="#ff8f00"/>
+
+            <!-- handlebar stem + bars -->
+            <line x1="183" y1="60" x2="183" y2="36" stroke="#546e7a" stroke-width="4" stroke-linecap="round"/>
+            <!-- drop bars -->
+            <path d="M165 36 Q183 30 201 36 Q205 42 200 50" fill="none" stroke="#37474f" stroke-width="4" stroke-linecap="round"/>
+
+            <!-- rider silhouette (simple) -->
+            <!-- torso -->
+            <line x1="128" y1="44" x2="170" y2="30" stroke="#37474f" stroke-width="8" stroke-linecap="round"/>
+            <!-- arm to bars -->
+            <line x1="170" y1="30" x2="193" y2="42" stroke="#546e7a" stroke-width="5" stroke-linecap="round"/>
+            <!-- head -->
+            <circle cx="168" cy="22" r="15" fill="#455a64"/>
+            <!-- helmet hint -->
+            <path d="M155 22 Q168 8 181 22" fill="#2e7d32" stroke="none"/>
+            <!-- legs (pedaling position) -->
+            <line x1="128" y1="116" x2="114" y2="135" stroke="#546e7a" stroke-width="6" stroke-linecap="round"/>
+            <line x1="114" y1="135" x2="108" y2="148" stroke="#455a64" stroke-width="5" stroke-linecap="round"/>
+            <line x1="128" y1="116" x2="142" y2="104" stroke="#546e7a" stroke-width="6" stroke-linecap="round"/>
+            <line x1="142" y1="104" x2="152" y2="96" stroke="#455a64" stroke-width="5" stroke-linecap="round"/>
           </g>
-          <g id="wheel-front" transform="translate(152 88)">
-            <circle r="24" fill="none" stroke="#37474f" stroke-width="5" />
-            <circle r="7" fill="#455a64" />
-            <line x1="-20" y1="0" x2="20" y2="0" stroke="#90a4ae" stroke-width="2" />
-            <line x1="0" y1="-20" x2="0" y2="20" stroke="#90a4ae" stroke-width="2" />
-          </g>
-          <path
-            d="M42 88 L95 40 L152 88 M95 40 L86 18 L104 18 L95 40"
-            fill="none"
-            stroke="#1b5e20"
-            stroke-width="5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path d="M95 40 Q122 24 148 36" fill="none" stroke="#2e7d32" stroke-width="4" stroke-linecap="round" />
         </svg>
       </div>
 
-      <div class="copy">
-        <h1 id="t404">404</h1>
-        <p id="msg">Parece que esta ruta se salió del camino.</p>
-      </div>
     </div>
 
     <script>
       window.__timelines = window.__timelines || {};
-      const bike = document.getElementById("bike");
-      const bikeShadow = document.getElementById("bike-shadow");
-      const dust = document.getElementById("dust");
-      const gap = document.getElementById("road-gap");
-      const road = document.getElementById("road");
-      const crack1 = document.getElementById("crack1");
-      const crack2 = document.getElementById("crack2");
-      const sun = document.getElementById("sun");
-      const c1 = document.getElementById("cloud1");
-      const c2 = document.getElementById("cloud2");
-      const c3 = document.getElementById("cloud3");
-      const sp1 = document.getElementById("sp1");
-      const sp2 = document.getElementById("sp2");
-      const sp3 = document.getElementById("sp3");
-      const wheelBack = document.getElementById("wheel-back");
+
+      const bike       = document.getElementById("bike");
+      const shadow     = document.getElementById("bike-shadow");
+      const dust       = document.getElementById("dust");
+      const sign       = document.getElementById("sign");
+      const bm1        = document.getElementById("bm1");
+      const bm2        = document.getElementById("bm2");
+      const puff       = document.getElementById("puff");
+      const sun        = document.getElementById("sun");
+      const sp1        = document.getElementById("sp1");
+      const sp2        = document.getElementById("sp2");
+      const sp3        = document.getElementById("sp3");
+      const c1         = document.getElementById("cloud1");
+      const c2         = document.getElementById("cloud2");
+      const c3         = document.getElementById("cloud3");
+      const wheelBack  = document.getElementById("wheel-back");
       const wheelFront = document.getElementById("wheel-front");
-      const t404 = document.getElementById("t404");
-      const msg = document.getElementById("msg");
 
       const tl = gsap.timeline({ paused: true });
 
-      gsap.set([crack1, crack2], { height: 0, opacity: 0 });
-      gsap.set(t404, { opacity: 0, y: 28 });
-      gsap.set(msg, { opacity: 0, y: 22 });
+      /* ── ambient ─────────────────────────────────────────────────── */
+      tl.to(sun, { scale: 1.06, duration: 4.5, ease: "sine.inOut", yoyo: true, repeat: 1 }, 0);
+      tl.to(c1, { x:  55, duration: 9, ease: "none" }, 0);
+      tl.to(c2, { x: -65, duration: 9, ease: "none" }, 0);
+      tl.to(c3, { x: -40, duration: 9, ease: "none" }, 0);
 
-      tl.to(sun, { scale: 1.06, duration: 4, ease: "sine.inOut", yoyo: true, repeat: 1 }, 0);
-      tl.to(
-        c1,
-        { x: 40, duration: 8, ease: "none" },
-        0
-      );
-      tl.to(c2, { x: -55, duration: 8, ease: "none" }, 0);
-      tl.to(c3, { x: -35, duration: 8, ease: "none" }, 0);
+      /* ── phase 1: confident ride in (0 → 2.2s) ───────────────────── */
+      tl.fromTo(bike,
+        { x: -540, rotation: -3 },
+        { x: 430, rotation: 0, duration: 2.2, ease: "power1.inOut" }, 0);
+      tl.fromTo(shadow,
+        { x: -540, scaleX: 0.8, opacity: 0.3 },
+        { x: 430, scaleX: 1, opacity: 0.55, duration: 2.2, ease: "power1.inOut" }, 0);
+      tl.to(wheelBack,  { rotation: 800, transformOrigin: "50% 50%", duration: 2.2, ease: "none" }, 0);
+      tl.to(wheelFront, { rotation: 800, transformOrigin: "50% 50%", duration: 2.2, ease: "none" }, 0);
 
-      tl.fromTo(
-        bike,
-        { x: -480, rotation: -5 },
-        { x: 400, rotation: 0, duration: 2.5, ease: "power2.inOut" },
-        0
-      );
-      tl.fromTo(
-        bikeShadow,
-        { x: -480, scaleX: 0.85 },
-        { x: 400, scaleX: 1, duration: 2.5, ease: "power2.inOut" },
-        0
-      );
+      /* initial dust (entry trail) */
+      tl.fromTo(dust,
+        { opacity: 0, scaleX: 0.5, x: -10 },
+        { opacity: 0.7, scaleX: 1.1, x: 0, duration: 0.5, ease: "power1.out" }, 0.1);
+      tl.to(dust, { opacity: 0, scaleX: 1.3, duration: 0.55, ease: "power2.in" }, 0.5);
 
-      tl.to(
-        wheelBack,
-        { rotation: 720, transformOrigin: "50% 50%", duration: 2.5, ease: "none" },
-        0
-      );
-      tl.to(
-        wheelFront,
-        { rotation: 720, transformOrigin: "50% 50%", duration: 2.5, ease: "none" },
-        0
-      );
+      /* ── sign pops up (2.0s) ──────────────────────────────────────── */
+      tl.to(sign, { opacity: 1, scaleY: 1, duration: 0.32, ease: "back.out(2.5)" }, 2.0);
 
-      tl.fromTo(
-        dust,
-        { opacity: 0, scale: 0.5, x: -20 },
-        { opacity: 0.9, scale: 1.15, x: 0, duration: 0.5, ease: "power2.out" },
-        0.1
-      );
-      tl.to(dust, { opacity: 0, scale: 1.4, duration: 0.55, ease: "power2.in" }, 0.5);
+      /* ── phase 2: braking (2.2 → 3.0s) ─────────────────────────────
+           bike slows hard, front dips, skid marks appear               */
+      tl.to(bike,
+        { x: 575, rotation: -5, y: -8, duration: 0.8, ease: "power3.out" }, 2.2);
+      tl.to(shadow,
+        { x: 575, scaleX: 0.85, opacity: 0.4, duration: 0.8, ease: "power3.out" }, 2.2);
+      tl.to(wheelBack,  { rotation: "+=280", duration: 0.8, ease: "power3.out" }, 2.2);
+      tl.to(wheelFront, { rotation: "+=280", duration: 0.8, ease: "power3.out" }, 2.2);
 
-      tl.to(gap, { opacity: 1, scaleX: 1, duration: 0.5, ease: "power3.out" }, 1.75);
-      tl.to(road, { x: "+=6", duration: 0.12, yoyo: true, repeat: 5, ease: "power1.inOut" }, 1.78);
-      tl.to(
-        crack1,
-        { opacity: 1, height: 110, duration: 0.35, ease: "power2.out" },
-        1.95
-      );
-      tl.to(
-        crack2,
-        { opacity: 1, height: 85, duration: 0.32, ease: "power2.out" },
-        2.02
-      );
+      /* brake marks grow */
+      tl.to([bm1, bm2], { width: 110, opacity: 1, duration: 0.45, ease: "power2.out" }, 2.25);
 
-      tl.to(bike, { y: -10, rotation: 10, duration: 0.32, ease: "power2.out" }, 2.05);
-      tl.to(bikeShadow, { scaleX: 1.15, opacity: 0.35, duration: 0.32, ease: "power2.out" }, 2.05);
-      tl.to(bike, { y: 36, rotation: -14, duration: 0.55, ease: "power2.in" }, 2.32);
-      tl.to(bikeShadow, { opacity: 0.2, scaleX: 1.35, duration: 0.55, ease: "power2.in" }, 2.32);
-
-      tl.fromTo(
-        [sp1, sp2, sp3],
+      /* brake sparks */
+      tl.fromTo([sp1,sp2,sp3],
         { opacity: 0, scale: 0 },
-        { opacity: 1, scale: 1.2, duration: 0.15, stagger: 0.04, ease: "power2.out" },
-        2.15
-      );
-      tl.to([sp1, sp2, sp3], { opacity: 0, y: -30, duration: 0.45, ease: "power2.in" }, 2.25);
+        { opacity: 1, scale: 1.3, duration: 0.12, stagger: 0.04, ease: "power1.out" }, 2.3);
+      tl.to([sp1,sp2,sp3], { opacity: 0, y: -28, x: (i) => (i-1)*12, duration: 0.4, ease: "power1.in" }, 2.42);
 
-      tl.to(wheelBack, { rotation: "+=240", duration: 0.9, ease: "none" }, 2.2);
-      tl.to(wheelFront, { rotation: "+=240", duration: 0.9, ease: "none" }, 2.2);
+      /* front dip on hard brake */
+      tl.to(bike, { y: 0, rotation: -2, duration: 0.55, ease: "elastic.out(1, 0.5)" }, 3.0);
 
-      tl.to(bike, { x: "+=50", y: 8, rotation: -8, duration: 1.35, ease: "sine.inOut" }, 2.85);
-      tl.to(bikeShadow, { x: "+=50", opacity: 0.5, scaleX: 1, duration: 1.35, ease: "sine.inOut" }, 2.85);
-      tl.to(wheelBack, { rotation: "+=420", duration: 1.35, ease: "none" }, 2.85);
-      tl.to(wheelFront, { rotation: "+=420", duration: 1.35, ease: "none" }, 2.85);
+      /* ── phase 3: wobble of confusion (3.0 → 5.5s) ─────────────────
+           teetering left and right, very slow wheel spin               */
+      tl.to(wheelBack,  { rotation: "+=50", duration: 1.2, ease: "none" }, 3.0);
+      tl.to(wheelFront, { rotation: "+=50", duration: 1.2, ease: "none" }, 3.0);
 
-      tl.to(bike, { y: 0, rotation: -2, duration: 1.1, ease: "power2.out" }, 4.1);
-      tl.to(bikeShadow, { y: 0, opacity: 0.52, scaleX: 1, duration: 1.1, ease: "power2.out" }, 4.1);
-      tl.to(wheelBack, { rotation: "+=180", duration: 1.1, ease: "none" }, 4.1);
-      tl.to(wheelFront, { rotation: "+=180", duration: 1.1, ease: "none" }, 4.1);
+      /* wobble sequence */
+      tl.to(bike,
+        { rotation:  8, x: "+=12", duration: 0.38, ease: "power1.inOut" }, 3.05);
+      tl.to(bike,
+        { rotation: -7, x: "-=10", duration: 0.40, ease: "power1.inOut" }, 3.43);
+      tl.to(bike,
+        { rotation:  5, x: "+=8",  duration: 0.36, ease: "power1.inOut" }, 3.83);
+      tl.to(bike,
+        { rotation: -4, x: "-=6",  duration: 0.34, ease: "power1.inOut" }, 4.19);
+      tl.to(bike,
+        { rotation:  2, duration: 0.32, ease: "power1.inOut" }, 4.53);
 
-      tl.to(bike, { y: "+=4", duration: 0.6, ease: "sine.inOut", yoyo: true, repeat: 3 }, 5.2);
+      /* shadow mirrors wobble */
+      tl.to(shadow, { scaleX: 1.05, opacity: 0.45, duration: 2.5, ease: "sine.inOut" }, 3.0);
 
-      tl.to(
-        [t404, msg],
-        { opacity: 1, y: 0, duration: 0.65, stagger: 0.12, ease: "power3.out" },
-        3.05
-      );
+      /* question mark puff appears */
+      tl.to(puff,
+        { opacity: 1, scale: 1, y: -20, duration: 0.45, ease: "back.out(2)" }, 3.3);
+      tl.to(puff,
+        { rotation:  8, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 3 }, 3.75);
 
-      tl.to({}, { duration: 0.6 }, 7.2);
+      /* ── phase 4: settle into tilted "confused" stop (5.5 → 9s) ───── */
+      tl.to(bike,
+        { rotation: 6, y: 4, duration: 0.7, ease: "elastic.out(1, 0.6)" }, 5.0);
+      tl.to(shadow,
+        { scaleX: 0.88, opacity: 0.38, duration: 0.7, ease: "power2.out" }, 5.0);
+
+      /* gentle idle bob */
+      tl.to(bike,
+        { y: "+=6", duration: 0.7, ease: "sine.inOut", yoyo: true, repeat: 3 }, 5.7);
+
+      /* puff floats and fades */
+      tl.to(puff,
+        { opacity: 0, y: -60, scale: 1.3, duration: 1.1, ease: "power1.in" }, 5.2);
+
+      /* sign slight sway */
+      tl.to(sign,
+        { rotation: 3, duration: 0.6, ease: "sine.inOut", yoyo: true, repeat: 4 }, 3.5);
+
+      tl.to({}, { duration: 0.5 }, 8.5);
 
       window.__timelines["404-bike"] = tl;
     </script>

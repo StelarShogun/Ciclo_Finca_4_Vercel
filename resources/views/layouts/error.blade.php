@@ -36,12 +36,13 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 24px;
-            height: 64px;
-            background: rgba(255, 255, 255, 0.55);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            padding: 0 28px;
+            height: 68px;
+            background: rgba(255, 255, 255, 0.62);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.72);
+            box-shadow: 0 1px 0 rgba(11, 43, 38, 0.05), 0 4px 16px rgba(11, 43, 38, 0.04);
         }
 
         .cf4-error-nav-logo {
