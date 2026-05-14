@@ -383,7 +383,12 @@ Route::post('/logout', function () {
         ]);
         $request->session()->regenerateToken();
 
-        return redirect()->route('clients.home')->with('status', 'Sesión de cliente cerrada.');
+        return redirect()->route('clients.home')->with('client_success_modal', [
+            'kind' => 'logout',
+            'authIcon' => 'signout',
+            'title' => '¡Sesión cerrada!',
+            'text' => 'Cerraste la sesión de cliente. Tu sesión de administrador sigue activa.',
+        ]);
     }
 
     // Invalidate the full session when no admin session is active.
@@ -391,7 +396,12 @@ Route::post('/logout', function () {
     $request->session()->invalidate();
     $request->session()->regenerateToken();
 
-    return redirect()->route('clients.home')->with('status', 'Session closed successfully.');
+    return redirect()->route('clients.home')->with('client_success_modal', [
+        'kind' => 'logout',
+        'authIcon' => 'signout',
+        'title' => '¡Sesión cerrada!',
+        'text' => 'Has cerrado sesión correctamente.',
+    ]);
 })->name('logout');
 
 // Returns a fresh CSRF token for frontend recovery flows.
