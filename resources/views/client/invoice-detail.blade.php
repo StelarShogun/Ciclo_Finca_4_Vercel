@@ -575,7 +575,7 @@
                         <i class="fas fa-arrow-left"></i> Volver a Mis Facturas
                     </a>
                     <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-th"></i> Seguir comprando
+                        <i class="fas fa-bicycle"></i> Seguir comprando
                     </a>
                 </div>
             </aside>

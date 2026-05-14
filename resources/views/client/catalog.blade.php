@@ -56,7 +56,7 @@
                     $isParentActive = $activeCategoryId === (int) $cat->category_id;
                     $isChildActive = $cat->childCategories->contains('category_id', $activeCategoryId);
                     $navRow = collect($catalogCategoryNav)->firstWhere('id', (int) $cat->category_id);
-                    $iconClass = $navRow['icon'] ?? 'fas fa-layer-group';
+                    $iconClass = $navRow['icon'] ?? 'fas fa-bicycle';
                 @endphp
                 <div class="catalog-category-sidebar-item {{ ($isParentActive || $isChildActive) ? 'has-active' : '' }}"
                      data-parent-id="{{ $cat->category_id }}"
@@ -192,7 +192,7 @@
                             aria-expanded="false"
                             aria-haspopup="dialog"
                             aria-controls="catalog-category-panel">
-                        <i class="fas fa-th-large" aria-hidden="true"></i>
+                        <i class="fas fa-bicycle" aria-hidden="true"></i>
                         Categorías
                     </button>
                 </div>
@@ -223,7 +223,7 @@
                                 @foreach($categories as $cat)
                                     @php
                                         $navRow = collect($catalogCategoryNav)->firstWhere('id', (int) $cat->category_id);
-                                        $iconClass = $navRow['icon'] ?? 'fas fa-layer-group';
+                                        $iconClass = $navRow['icon'] ?? 'fas fa-bicycle';
                                         $isParentActive = $activeCategoryId === (int) $cat->category_id;
                                         $isChildActive = $cat->childCategories->contains('category_id', $activeCategoryId);
                                     @endphp
@@ -247,8 +247,6 @@
                                         </div>
                                         @if($cat->childCategories->isNotEmpty())
                                             <div class="catalog-category-parent-mobile-subs" id="catalog-panel-subs-{{ $cat->category_id }}" hidden>
-                                                <a href="{{ route('clients.catalog', array_merge($catalogParams, ['category_id' => $cat->category_id])) }}"
-                                                   class="catalog-category-ver-todo catalog-category-ver-todo--inline">Ver todo en {{ $cat->name }}</a>
                                                 <ul class="catalog-category-mobile-sub-list">
                                                     @foreach($cat->childCategories as $ch)
                                                         <li>

@@ -1024,6 +1024,7 @@ button.user-dropdown-item {
   }
 
   /* Collapsible menu panel — hidden by default, shown when .menu-open */
+  /* Sin transform en el panel: si no, crea containing block y rompe hijos position:absolute/fixed. */
   .header-menu-panel {
     position: absolute;
     top: 100%;
@@ -1038,16 +1039,15 @@ button.user-dropdown-item {
     background: var(--brand-dark);
     border-top: 1px solid rgba(142, 182, 155, 0.2);
     box-shadow: var(--shadow-md);
+    overflow: visible;
     opacity: 0;
-    transform: translateY(-8px);
     visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.24s ease, transform 0.24s ease, visibility 0.24s ease;
+    transition: opacity 0.22s ease, visibility 0.22s ease;
   }
 
   .cliente-header.menu-open .header-menu-panel {
     opacity: 1;
-    transform: translateY(0);
     visibility: visible;
     pointer-events: auto;
   }
@@ -1063,6 +1063,7 @@ button.user-dropdown-item {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
+    position: relative;
   }
 
   .main-nav {
@@ -1084,6 +1085,14 @@ button.user-dropdown-item {
 
   .header-catalog-search.is-expanded {
     width: min(100%, 320px);
+    /* Sin esto, .header-actions (hermano posterior en el DOM) tapa el listado de sugerencias */
+    position: relative;
+    z-index: 20;
+  }
+
+  .header-catalog-search:has(.catalog-search-suggestions.is-open) {
+    position: relative;
+    z-index: 20;
   }
 
   .header-catalog-search.is-expanded .header-catalog-search-inner {
@@ -1097,31 +1106,103 @@ button.user-dropdown-item {
     padding: 12px 16px;
   }
 
+  /* Drawer móvil: contraste explícito (texto claro sobre brand-dark) */
+  .header-menu-panel .nav-link {
+    color: #ffffff;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+
+  .header-menu-panel .nav-link i {
+    color: rgba(218, 241, 222, 0.95);
+  }
+
+  .header-menu-panel .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-color: rgba(142, 182, 155, 0.35);
+  }
+
+  .header-menu-panel .nav-link.active {
+    background: var(--brand-medium-dark);
+    color: #ffffff;
+    box-shadow: inset 3px 0 0 var(--brand-light);
+  }
+
+  .header-menu-panel .header-catalog-search:not(.is-expanded) .header-catalog-search-toggle {
+    color: var(--brand-lightest);
+  }
+
+  .header-menu-panel .header-catalog-search:not(.is-expanded):hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .header-menu-panel .header-catalog-search.is-expanded {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(218, 241, 222, 0.34);
+  }
+
+  .header-menu-panel .cart-btn,
+  .header-menu-panel .cf4-invoices-btn {
+    border: 1px solid rgba(218, 241, 222, 0.35);
+    flex-shrink: 0;
+  }
+
+  .header-menu-panel .user-menu-trigger {
+    border: 1px solid rgba(218, 241, 222, 0.35);
+    color: var(--brand-lightest);
+  }
+
   .header-actions {
     width: 100%;
     justify-content: flex-start;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 10px;
     padding-bottom: 4px;
+    position: relative;
+    z-index: 1;
+    align-items: center;
   }
 
   .user-trigger-name { display: none; }
 
-  /* Dropdown opens inline inside the mobile panel */
-  .user-dropdown-panel {
-    position: static;
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
-    box-shadow: var(--shadow-sm);
-    margin-top: 6px;
-    display: none;
-    min-width: 0;
-    width: 100%;
+  /* Dropdown en panel hamburguesa: absoluto respecto al wrap (no empuja carrito / facturas) */
+  .header-menu-panel .user-menu-wrap {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
   }
 
-  .user-menu-wrap.open .user-dropdown-panel {
+  .header-menu-panel .user-menu-wrap.open {
+    z-index: 60;
+  }
+
+  /* Fixed + márgenes: evita que el panel (ancho ~viewport) quede cortado a la izquierda con right:0 en un wrap estrecho */
+  .header-menu-panel .user-dropdown-panel {
+    position: fixed;
+    left: max(12px, env(safe-area-inset-left, 0px));
+    right: max(12px, env(safe-area-inset-right, 0px));
+    top: var(--cf4-user-dropdown-top, 112px);
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    max-height: min(70vh, calc(100dvh - var(--cf4-user-dropdown-top, 112px) - 16px));
+    overflow-y: auto;
+    margin-top: 0;
     display: block;
+    box-shadow: var(--shadow-lg);
+    z-index: 1200;
+    opacity: 0;
+    visibility: hidden;
+    transform: none;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+
+  .header-menu-panel .user-menu-wrap.open .user-dropdown-panel {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
   }
 }
 

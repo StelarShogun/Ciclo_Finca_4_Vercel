@@ -1101,27 +1101,7 @@ button.profile-quick-action {
 
 /* ── Tablet / landscape phones (≤ 768 px) ── */
 @media (max-width: 768px) {
-    /* Header: ocultar nombre de usuario */
-    .user-trigger-name { display: none; }
-
-    .header-content {
-        flex-wrap: wrap;
-        height: auto;
-        padding: 12px 0;
-    }
-
-    .main-nav {
-        order: 3;
-        width: 100%;
-        justify-content: flex-start;
-        margin-top: 8px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-    .main-nav::-webkit-scrollbar { display: none; }
-
-    .nav-link { white-space: nowrap; }
+    /* Nota: estilos del header móvil viven en header.css (evitar pisar flex/layout aquí). */
 
     .cliente-main { padding-top: 120px; }
 
@@ -1318,6 +1298,48 @@ button.profile-quick-action {
     margin: 0;
     font-size: 1rem;
     opacity: 0.9;
+}
+
+.cf4-invoices-escape-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px 14px;
+    margin-top: 18px;
+}
+
+.cf4-invoices-escape-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.cf4-invoices-escape-link:hover {
+    background: rgba(255, 255, 255, 0.24);
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #fff;
+}
+
+.cf4-invoices-escape-link--primary {
+    background: #fff;
+    color: var(--brand-medium);
+    border-color: #fff;
+}
+
+.cf4-invoices-escape-link--primary:hover {
+    background: var(--brand-lightest);
+    color: var(--brand-darkest);
+    border-color: var(--brand-lightest);
 }
 
 /* ── Page wrapper ── */
