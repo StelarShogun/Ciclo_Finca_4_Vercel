@@ -7,6 +7,7 @@ import {
     buildCf4CheckoutSuccessText,
     getCf4PaymentMethodShortLabel,
 } from './checkout-copy.js';
+import './auth-welcome-toast.js';
 import { initHeaderCatalogSearch } from './header-catalog-search.js';
 
 // Marker used by clients-users.js to skip the cart/checkout listeners
@@ -311,47 +312,34 @@ function updateCartQuantity(productId, quantity) {
 function showCartEmptyState() {
     var card = document.querySelector('.cart-page-card');
     if (!card) return;
-    var catalogUrl = (card.querySelector('.cart-header a[href]') || {}).href || '/catalog';
+    var catalogLink = card.querySelector('a.btn-ghost-cart[href], a[href*="/catalog"]');
+    var rawHref = (catalogLink && catalogLink.getAttribute('href')) || '/catalog';
+    var catalogBase = rawHref.split('#')[0];
+    var spotlightHref = catalogBase + '#catalog-spotlight-heading';
+    var homeUrl = '/';
     card.innerHTML =
-        '<div class="cart-header">' +
-        '<h1 class="cart-title"><i class="fas fa-shopping-cart"></i> Carrito de Compras</h1>' +
-        '<a href="' + catalogUrl + '" class="btn btn-outline-secondary btn-sm">' +
-        '<i class="fas fa-arrow-left"></i> Continuar Comprando</a>' +
+        '<div class="cart-toolbar">' +
+        '<div class="cart-toolbar-text">' +
+        '<span class="cart-toolbar-label">Resumen rápido</span>' +
         '</div>' +
-        '<div class="cart-empty"><div class="empty-state">' +
-        '<i class="fas fa-shopping-cart"></i>' +
-        '<h2>Tu carrito está vacío</h2>' +
-        '<p>Agrega productos desde nuestro catálogo</p>' +
-        '<a href="' + catalogUrl + '" class="btn btn-primary btn-lg">' +
-        '<i class="fas fa-th"></i> Ver Catálogo</a>' +
+        '<div class="cart-toolbar-actions">' +
+        '<a href="' + catalogBase + '" class="btn btn-ghost-cart">' +
+        '<i class="fas fa-bicycle" aria-hidden="true"></i> Seguir comprando</a>' +
+        '</div></div>' +
+        '<div class="cart-empty">' +
+        '<div class="cart-empty-inner">' +
+        '<div class="cart-empty-icon" aria-hidden="true"><i class="fas fa-cart-shopping"></i></div>' +
+        '<h2 class="cart-empty-title">Tu carrito está vacío</h2>' +
+        '<p class="cart-empty-text">Explorá el catálogo y agregá productos para armar tu solicitud.</p>' +
+        '<div class="cart-empty-actions">' +
+        '<a href="' + catalogBase + '" class="btn btn-primary btn-lg">' +
+        '<i class="fas fa-bicycle" aria-hidden="true"></i> Ir al catálogo</a>' +
+        '<a href="' + spotlightHref + '" class="btn btn-ghost-cart btn-lg">' +
+        '<i class="fas fa-star" aria-hidden="true"></i> Ver destacados</a>' +
+        '</div>' +
+        '<p class="cart-empty-home-link">' +
+        '<a href="' + homeUrl + '" class="cart-empty-home-anchor">Volver al inicio</a></p>' +
         '</div></div>';
-}
-
-// ----------------------------------------------------------------
-// USER MENU (profile dropdown)
-// ----------------------------------------------------------------
-
-/** Close user dropdown. */
-function closeUserDropdown() {
-    var userDropdown    = document.getElementById('user-dropdown');
-    var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (userDropdown)    userDropdown.classList.remove('active');
-    if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'false');
-}
-
-/** Toggle user dropdown. */
-function toggleUserDropdown() {
-    var userDropdown    = document.getElementById('user-dropdown');
-    var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (!userDropdown) return;
-
-    var willOpen = !userDropdown.classList.contains('active');
-    if (willOpen) {
-        userDropdown.classList.add('active');
-        if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'true');
-    } else {
-        closeUserDropdown();
-    }
 }
 
 /** Close login modal. */
@@ -447,15 +435,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .then(function (data) {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Bienvenido!',
-                            text: data.message || 'Inicio de sesión exitoso',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(function () {
-                            window.location.href = data.redirect || '/';
-                        });
+                        if (typeof window.cf4AuthWelcomeToast === 'function') {
+                            window.cf4AuthWelcomeToast({
+                                kind: 'welcome',
+                                authIcon: 'user',
+                                displayName: data.display_name || '',
+                                thenUrl: data.redirect || '/',
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Bienvenido!',
+                                text: data.message || 'Inicio de sesión exitoso',
+                                timer: 4000,
+                                showConfirmButton: false,
+                            }).then(function () {
+                                window.location.href = data.redirect || '/';
+                            });
+                        }
                     } else if (data.redirect) {
                         // Unverified email: offer to send code and redirect to verify.
                         if (submitBtn)   submitBtn.disabled = false;
@@ -506,24 +503,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
         });
     }
-
-    // User menu trigger with stopPropagation.
-    var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (userMenuTrigger) {
-        userMenuTrigger.addEventListener('click', function (e) {
-            e.stopPropagation();
-            toggleUserDropdown();
-        });
-    }
-
-    // Close dropdown when clicking outside.
-    document.addEventListener('click', function (e) {
-        var userMenu     = document.getElementById('user-menu');
-        var userDropdown = document.getElementById('user-dropdown');
-        if (!userDropdown || !userDropdown.classList.contains('active')) return;
-        if (userMenu && userMenu.contains(e.target)) return;
-        closeUserDropdown();
-    });
 
     // Delegated: open quantity modal or add directly for add-to-cart buttons.
     document.addEventListener('click', function (e) {
@@ -850,7 +829,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
         closeLoginModal();
-        closeUserDropdown();
+        if (typeof window.cf4CloseUserDropdown === 'function') {
+            window.cf4CloseUserDropdown();
+        }
         document.querySelectorAll('.modal.active').forEach(function (modal) {
             modal.classList.remove('active');
         });
@@ -1111,7 +1092,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     subCol.innerHTML = '<p class="catalog-category-placeholder">Pasá el cursor sobre una categoría para ver subcategorías.</p>';
                     return;
                 }
-                var html = '<a class="catalog-category-ver-todo" href="' + hrefAttr(parentNode.url_parent) + '">Ver todo en ' + esc(parentNode.name) + '</a>';
+                var html = '';
                 var ch = parentNode.children || [];
                 ch.forEach(function (c) {
                     var cls = highlightChildId && c.id === highlightChildId

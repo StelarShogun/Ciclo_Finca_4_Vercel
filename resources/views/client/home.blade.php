@@ -216,7 +216,7 @@
         </div>
         <div class="categories-top-actions">
             <a href="{{ route('clients.catalog') }}" class="categories-all-link">
-                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                <i class="fas fa-bicycle" aria-hidden="true"></i>
                 Ver todo el catálogo
             </a>
             <span class="categories-swipe-hint">
@@ -395,7 +395,7 @@
             </div>
             <div class="final-cta-actions">
                 <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-th" aria-hidden="true"></i>
+                    <i class="fas fa-bicycle" aria-hidden="true"></i>
                     Ver Catálogo
                 </a>
                 @auth('clients')

@@ -55,6 +55,11 @@ body.guest-layout {
   padding-top: 80px;
 }
 
+/* Login/registro ocultan el header: no reservar franja superior vacía */
+.cliente-main:has(.login-page-center) {
+  padding-top: 0;
+}
+
 /* ===================================================================
    5. BUTTONS (global)
    =================================================================== */
@@ -268,7 +273,7 @@ body.guest-layout {
     justify-content: center;
     min-height: 100vh;
     width: 100%;
-    padding: 24px 16px;
+    padding: 24px 20px;
     background: #f5f5f5;
     box-sizing: border-box;
 }
@@ -278,8 +283,8 @@ body.guest-layout {
     background: #fff;
     border-radius: 16px;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-    padding: 36px 32px 32px;
-    max-width: 460px;
+    padding: 36px 40px 32px;
+    max-width: 540px;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -825,7 +830,12 @@ button.profile-quick-action {
 }
 
 /* ── Wrapper ── */
-.profile-wrapper { padding: 40px 16px 60px; }
+.profile-wrapper {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 24px 60px;
+}
 
 /* ── Hero (card principal) ── */
 .profile-hero {
@@ -842,16 +852,7 @@ button.profile-quick-action {
     margin-bottom: 28px;
 }
 
-/* Contenedor del perfil: ancho máximo y centrado para mejor visualización */
-.profile-wrapper {
-    max-width: 1400px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 24px;
-    padding-right: 24px;
-}
-
-/* En pantallas pequeñas, el wrapper ocupa el ancho completo (sin max-width) 
+/* En pantallas pequeñas, el wrapper ocupa el ancho completo (sin max-width)
    para que el contenido se adapte al padding del contenedor */
 @media (max-width: 1024px) {
     .profile-wrapper {
@@ -1101,27 +1102,7 @@ button.profile-quick-action {
 
 /* ── Tablet / landscape phones (≤ 768 px) ── */
 @media (max-width: 768px) {
-    /* Header: ocultar nombre de usuario */
-    .user-trigger-name { display: none; }
-
-    .header-content {
-        flex-wrap: wrap;
-        height: auto;
-        padding: 12px 0;
-    }
-
-    .main-nav {
-        order: 3;
-        width: 100%;
-        justify-content: flex-start;
-        margin-top: 8px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-    .main-nav::-webkit-scrollbar { display: none; }
-
-    .nav-link { white-space: nowrap; }
+    /* Nota: estilos del header móvil viven en header.css (evitar pisar flex/layout aquí). */
 
     .cliente-main { padding-top: 120px; }
 
@@ -1146,11 +1127,11 @@ button.profile-quick-action {
         justify-content: center;
     }
 
-    /* Login / auth boxes */
+    /* Login / auth: pegar arriba en móvil (sin hueco de “header” fantasma) */
     .login-page-center {
-        padding: 20px 24px;
         align-items: flex-start;
-        padding-top: 32px;
+        justify-content: center;
+        padding: max(10px, env(safe-area-inset-top)) 10px 20px;
     }
 
     .login-form-box {
@@ -1214,7 +1195,9 @@ button.profile-quick-action {
 
 /* ── Small phones (≤ 390 px) ── */
 @media (max-width: 390px) {
-    .login-page-center { padding: 16px 12px; }
+    .login-page-center {
+        padding: max(8px, env(safe-area-inset-top)) 8px 16px;
+    }
 
     .login-form-box {
         padding: 20px 14px 18px;
@@ -1320,11 +1303,76 @@ button.profile-quick-action {
     opacity: 0.9;
 }
 
+.cf4-invoices-escape-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px 14px;
+    margin-top: 18px;
+}
+
+.cf4-invoices-escape-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.cf4-invoices-escape-link:hover {
+    background: rgba(255, 255, 255, 0.24);
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #fff;
+}
+
+.cf4-invoices-escape-link--primary {
+    background: #fff;
+    color: var(--brand-medium);
+    border-color: #fff;
+}
+
+.cf4-invoices-escape-link--primary:hover {
+    background: var(--brand-lightest);
+    color: var(--brand-darkest);
+    border-color: var(--brand-lightest);
+}
+
 /* ── Page wrapper ── */
 .cf4-invoices-wrapper {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 24px 60px;
+}
+
+/* ── Breadcrumb (migas de pan) ── */
+.breadcrumb {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.breadcrumb a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb span {
+    color: var(--text-secondary);
 }
 
 /* ── Card container ── */

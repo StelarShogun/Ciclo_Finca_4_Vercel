@@ -9,18 +9,26 @@
     padding: 0.5rem 0 2rem;
 }
 
-.reports-breadcrumb {
+.audit-log-page .reports-breadcrumb {
     display: flex;
     align-items: center;
     gap: 0.4rem;
     margin-bottom: 0.8rem;
-    color: #6b7280;
+    color: var(--color-muted, #5f6368);
     font-size: 0.9rem;
 }
 
-.reports-breadcrumb a {
-    color: #2563eb;
+.audit-log-page .reports-breadcrumb a {
+    color: var(--color-primary, #2e7d32);
     text-decoration: none;
+}
+
+.audit-log-page .reports-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.audit-log-page .reports-breadcrumb .sep {
+    opacity: 0.6;
 }
 
 .audit-log-header h1 {
@@ -238,7 +246,7 @@
         padding: 0.2rem 0 1rem;
     }
 
-    .reports-breadcrumb {
+    .audit-log-page .reports-breadcrumb {
         margin-bottom: 0.9rem;
     }
 

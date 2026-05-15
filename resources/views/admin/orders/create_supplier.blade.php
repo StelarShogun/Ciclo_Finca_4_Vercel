@@ -13,6 +13,12 @@
 @section('contenido')
     <div class="sales-container cf4-orders-module cf4-supplier-orders-module">
 
+        <nav class="orders-breadcrumb" aria-label="Migas de pan">
+            <a href="{{ route('admin.supplier-orders.index') }}">Pedidos a proveedor</a>
+            <span class="sep">/</span>
+            <span>Nuevo pedido</span>
+        </nav>
+
         <header class="sales-header">
             <div>
                 <h1>Nuevo pedido a proveedor</h1>

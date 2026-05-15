@@ -79,12 +79,6 @@
                 <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
             </div>
 
-            <div class="form-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" name="remember" id="remember">
-                    <span>Recordarme</span>
-                </label>
-            </div>
             <button type="submit" class="btn btn-primary btn-login-submit" id="login-submit-btn">
                 <i class="fas fa-sign-in-alt"></i>
                 <span>Iniciar Sesión</span>
