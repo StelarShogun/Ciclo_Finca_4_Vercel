@@ -17,9 +17,17 @@
 
     <main class="admin-main">
         <div class="form-container">
+            <nav class="admin-breadcrumb" aria-label="Migas de pan">
+                <a href="{{ route('inventory') }}">Inventario</a>
+                <span class="sep">/</span>
+                <span>Crear subcategoría</span>
+            </nav>
+
             @component('admin.partials.page-header', ['title' => 'Crear subcategoría'])
-                <p>Registra una subcategoría dentro de una categoría principal para clasificar los productos con mayor
-                    precisión.</p>
+                <p>
+                    Registra una subcategoría dentro de una categoría principal para clasificar los productos
+                    con mayor precisión.
+                </p>
             @endcomponent
 
             <div class="form-card">
@@ -87,6 +95,7 @@
                     style="padding: 0 0 12px 0; border-bottom: 1px solid var(--border-color); margin-bottom: 12px;">
                     <h3 style="margin: 0;"><i class="fas fa-sitemap"></i> Jerarquía de categorías</h3>
                 </div>
+
                 <div class="sales-table-container">
                     <table class="sales-table">
                         <thead>
@@ -97,7 +106,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($categoriesHierarchy as $row)
+                            @forelse ($categoriesHierarchy as $row)
                                 <tr>
                                     <td>
                                         @if (is_null($row->parent_category_id))
@@ -120,6 +129,7 @@
             </div>
         </div>
     </main>
+
     <script>
         (function() {
             const parentSelect = document.getElementById('parent_category_id');
@@ -128,7 +138,10 @@
 
             function renderSubcategories() {
                 const parentId = parentSelect ? parentSelect.value : '';
-                if (!hintBox) return;
+
+                if (!hintBox) {
+                    return;
+                }
 
                 if (!parentId) {
                     hintBox.innerHTML = '<p>Selecciona una categoría padre para ver sus subcategorías actuales.</p>';
@@ -138,6 +151,7 @@
                 const key = String(parentId);
                 const num = Number(parentId);
                 let subs = tree[key] || tree[parentId] || (Number.isFinite(num) ? tree[num] : []) || [];
+
                 if (!subs.length) {
                     for (const k of Object.keys(tree)) {
                         if (String(k) === key || Number(k) === num) {
@@ -146,6 +160,7 @@
                         }
                     }
                 }
+
                 if (!subs.length) {
                     hintBox.innerHTML = '<p>No hay subcategorías registradas para esta categoría padre.</p>';
                     return;

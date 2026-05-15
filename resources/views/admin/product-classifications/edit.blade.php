@@ -20,18 +20,30 @@
 
     <main class="admin-main">
         <div class="form-container">
+            <nav class="reports-breadcrumb" aria-label="Migas de pan">
+                <a href="{{ route('admin.product-classifications.index') }}">Clasificaciones de productos</a>
+                <span class="sep">/</span>
+                <span>{{ $product->name }}</span>
+            </nav>
+
             @component('admin.partials.page-header', ['title' => $product->name])
                 <p>
-                    Selecciona un <strong>valor</strong> por cada <strong>atributo</strong> (Color, Talla…). Categoría › subcategoría:
+                    Selecciona un <strong>valor</strong> por cada <strong>atributo</strong> (Color, Talla…).
+                    Categoría › subcategoría:
+
                     @if ($product->category)
-                        {{ $product->category->parent->name ?? '' }} › <strong>{{ $product->category->name }}</strong>
+                        {{ $product->category->parent->name ?? '' }} ›
+                        <strong>{{ $product->category->name }}</strong>
                     @endif
                 </p>
             @endcomponent
 
             <div class="form-card">
                 @if ($attributes->isEmpty())
-                    <p>Aún no hay atributos definidos para esta subcategoría. Configúralos en <strong>Opciones por tipo</strong> (menú lateral) y vuelve aquí.</p>
+                    <p>
+                        Aún no hay atributos definidos para esta subcategoría.
+                        Configúralos en <strong>Opciones por tipo</strong> (menú lateral) y vuelve aquí.
+                    </p>
                 @else
                     <form id="product-classifications-form"
                         action="{{ route('admin.products.classifications.update', $product) }}"

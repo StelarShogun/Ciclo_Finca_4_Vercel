@@ -27,6 +27,26 @@
   transition: padding-left 0.2s ease;
 }
 
+.admin-breadcrumb {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  color: var(--color-muted, #5f6368);
+}
+
+.admin-breadcrumb a {
+  color: var(--color-primary, #2e7d32);
+  text-decoration: none;
+}
+
+.admin-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.admin-breadcrumb .sep {
+  margin: 0 0.35rem;
+  opacity: 0.6;
+}
+
 /* ============================================================
   2. BUTTONS
   ============================================================ */
@@ -105,6 +125,31 @@
   display: flex;
   gap: 8px;
   justify-content: center;
+}
+
+.form-container .reports-breadcrumb {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  color: var(--color-muted, #5f6368);
+}
+
+.form-container .reports-breadcrumb a {
+  color: var(--color-primary, #2e7d32);
+  text-decoration: none;
+}
+
+.form-container .reports-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.form-container .reports-breadcrumb .sep {
+  margin: 0 0.35rem;
+  opacity: 0.6;
+}
+
+.form-container .reports-breadcrumb .current {
+  color: var(--color-muted, #5f6368);
+  font-weight: 400;
 }
 
 .action-btn {

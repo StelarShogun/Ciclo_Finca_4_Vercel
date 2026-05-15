@@ -13,7 +13,7 @@
 @section('contenido')
     <div class="sales-container cf4-orders-module cf4-supplier-orders-module">
 
-        <nav class="orders-breadcrumb" aria-label="Breadcrumb">
+        <nav class="orders-breadcrumb" aria-label="Migas de pan">
             <a href="{{ route('admin.supplier-orders.index') }}">Pedidos a proveedor</a>
             <span class="sep">/</span>
             <span>Nuevo pedido</span>
@@ -46,12 +46,13 @@
                         <label for="supplier_id">Proveedor</label>
                         <select id="supplier_id" name="supplier_id" required>
                             <option value="">Selecciona un proveedor…</option>
-                            @foreach($suppliers as $s)
+                            @foreach ($suppliers as $s)
                                 <option value="{{ $s->supplier_id }}" {{ old('supplier_id') == $s->supplier_id ? 'selected' : '' }}>
                                     {{ $s->name }}
                                 </option>
                             @endforeach
                         </select>
+
                         @error('supplier_id')
                             <p class="field-error">{{ $message }}</p>
                         @enderror
@@ -69,7 +70,10 @@
 
                     <div class="form-group">
                         <label for="estimated_delivery_date">Fecha estimada</label>
-                        <input type="date" id="estimated_delivery_date" name="estimated_delivery_date" value="{{ old('estimated_delivery_date') }}" min="{{ now()->addDay()->toDateString() }}" required>
+                        <input type="date" id="estimated_delivery_date" name="estimated_delivery_date"
+                            value="{{ old('estimated_delivery_date') }}"
+                            min="{{ now()->addDay()->toDateString() }}" required>
+
                         @error('estimated_delivery_date')
                             <p class="field-error">{{ $message }}</p>
                         @enderror
@@ -86,8 +90,10 @@
                     <div class="items-toolbar">
                         <div class="product-combobox" id="product-combobox">
                             <input id="product-search" type="text" class="product-combobox-input"
-                                   placeholder="Selecciona un proveedor primero…" autocomplete="off" disabled>
-                            <span class="product-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                placeholder="Selecciona un proveedor primero…" autocomplete="off" disabled>
+                            <span class="product-combobox-chevron">
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </span>
                             <div class="product-combobox-dropdown" id="product-search-dropdown"></div>
                         </div>
                     </div>
@@ -115,6 +121,7 @@
                                 <p class="field-error">{{ $message }}</p>
                             @enderror
                         </div>
+
                         <div class="items-summary">
                             <div class="summary-line">
                                 <span>Líneas</span>
@@ -134,7 +141,10 @@
                     <i class="fas fa-save"></i>
                     Guardar borrador
                 </button>
-                <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary">Cancelar</a>
+
+                <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary">
+                    Cancelar
+                </a>
             </div>
         </form>
     </div>
@@ -146,4 +156,3 @@
         @vite(['resources/js/admin/orders/supplier-order-create.js'])
     @endpush
 @endsection
-

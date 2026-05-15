@@ -17,9 +17,16 @@
 
     <main class="admin-main">
         <div class="form-container">
+            <nav class="admin-breadcrumb" aria-label="Migas de pan">
+                <a href="{{ route('inventory') }}">Inventario</a>
+                <span class="sep">/</span>
+                <span>Crear categoría</span>
+            </nav>
+
             @component('admin.partials.page-header', ['title' => 'Crear categoría'])
                 <p>
-                    Registra una categoría principal para organizar el catálogo y asociar luego subcategorías y productos.
+                    Definí una categoría principal del catálogo para organizar el inventario.
+                    Luego podés agregar subcategorías y asignar productos.
                 </p>
             @endcomponent
 
