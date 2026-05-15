@@ -374,9 +374,37 @@
                                 @endif
                                 <div class="product-footer">
                                     <div class="product-price">₡{{ number_format($related->sale_price, 0, ',', '.') }}</div>
-                                    <a href="{{ $related->clientProductUrl() }}" class="btn btn-primary btn-sm">
-                                        Ver Detalles
-                                    </a>
+                                    <div class="product-actions">
+                                        <a href="{{ $related->clientProductUrl() }}" class="btn-product btn-ver-detalles">
+                                            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                                            Ver detalles
+                                        </a>
+                                        @if($relCanBuy)
+                                            @auth('clients')
+                                                <button type="button" class="btn-product btn-agregar add-to-cart-btn"
+                                                        data-purchasable="1"
+                                                        data-product-id="{{ $related->product_id }}"
+                                                        data-product-name="{{ $related->name }}"
+                                                        data-product-price="{{ $related->sale_price }}"
+                                                        data-product-stock="{{ $related->stock_current }}">
+                                                    <i class="fas fa-cart-plus" aria-hidden="true"></i>
+                                                    Agregar
+                                                </button>
+                                            @else
+                                                <button type="button" class="btn-product btn-agregar guest-add-btn"
+                                                        data-purchasable="1"
+                                                        data-product-stock="{{ $related->stock_current }}">
+                                                    <i class="fas fa-cart-plus" aria-hidden="true"></i>
+                                                    Agregar
+                                                </button>
+                                            @endauth
+                                        @else
+                                            <button type="button" class="btn-product btn-agotado" disabled>
+                                                <i class="fas fa-ban" aria-hidden="true"></i>
+                                                {{ $relLabel === 'Agotado' ? 'Agotado' : 'No disponible' }}
+                                            </button>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
