@@ -16,6 +16,13 @@
 
     <main class="admin-main">
         <div class="form-container">
+
+        <nav class="reports-breadcrumb" aria-label="Migas de pan">
+            <a href="{{ route('admin.classifications.catalog.index') }}">Opciones por tipo</a>
+            <span class="sep">/</span>
+            <span>{{ $category->name }}</span>
+        </nav>
+
             <div class="form-header">
                 <h1>Atributos para: {{ $category->name }}</h1>
                 <p>Un <strong>atributo</strong> es el tipo de dato (Color, Talla…). Cada atributo tiene <strong>valores</strong> (Rojo, M…). {{ optional($category->parent)->name ?? '' }} › <strong>{{ $category->name }}</strong></p>

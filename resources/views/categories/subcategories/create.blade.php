@@ -17,6 +17,12 @@
 
     <main class="admin-main">
         <div class="form-container">
+            <nav class="admin-breadcrumb" aria-label="Migas de pan">
+                <a href="{{ route('inventory') }}">Inventario</a>
+                <span class="sep">/</span>
+                <span>Crear subcategoría</span>
+            </nav>
+
             <div class="form-header">
                 <h1>Crear Subcategoría</h1>
                 <p>Clasifica productos de forma más específica</p>

@@ -23,17 +23,22 @@
         $label        = $stateLabels[$order->state] ?? ucfirst((string) $order->state);
         $po           = $order->po_number ?: ('#' . $order->num_order);
         $supplierName = $order->supplier?->name ?? '—';
-        $confirmedByName = null;
-        if ($order->confirmedBy) {
-            $confirmedByName = trim(implode(' ', array_filter([
-                $order->confirmedBy->name,
-                $order->confirmedBy->first_surname,
-                $order->confirmedBy->second_surname,
+
+        $confirmTimelineEntry = $order->stateTimeline->firstWhere('state', 'confirmed');
+        $confirmAuditAt = $confirmTimelineEntry?->changed_at;
+        $confirmAuditUserLabel = null;
+        if ($confirmTimelineEntry?->admin) {
+            $a = $confirmTimelineEntry->admin;
+            $confirmAuditUserLabel = trim(implode(' ', array_filter([
+                $a->name,
+                $a->first_surname,
+                $a->second_surname,
             ])));
-            if ($confirmedByName === '') {
-                $confirmedByName = $order->confirmedBy->gmail ?: null;
+            if ($confirmAuditUserLabel === '') {
+                $confirmAuditUserLabel = $a->gmail ?: null;
             }
         }
+        $showSupplierConfirmAudit = $confirmTimelineEntry !== null;
 
         $hasReceivedData = $order->orderItems->contains(fn ($it) => $it->received_quantity !== null);
 
@@ -183,18 +188,18 @@
                 </div>
             </section>
 
-            {{-- Auditoría de confirmación (solo visible cuando el pedido fue confirmado) --}}
-            @if($order->confirmed_at)
+            {{-- Auditoría de confirmación desde el historial de estados (transición a confirmado). --}}
+            @if($showSupplierConfirmAudit)
                 <section class="detail-card cf4-supplier-order-audit">
                     <h2><i class="fas fa-user-check"></i> Confirmación con proveedor</h2>
                     <div class="kv">
                         <div class="kv-row">
                             <span>Fecha y hora</span>
-                            <strong>{{ $order->confirmed_at->format('d/m/Y H:i') }}</strong>
+                            <strong>{{ $confirmAuditAt?->format('d/m/Y H:i') ?? '—' }}</strong>
                         </div>
                         <div class="kv-row">
                             <span>Registró</span>
-                            <strong>{{ $confirmedByName ?? '—' }}</strong>
+                            <strong>{{ $confirmAuditUserLabel ?? '—' }}</strong>
                         </div>
                     </div>
                 </section>

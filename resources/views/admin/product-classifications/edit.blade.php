@@ -19,6 +19,13 @@
 
     <main class="admin-main">
         <div class="form-container">
+
+        <nav class="reports-breadcrumb" aria-label="Migas de pan">
+            <a href="{{ route('admin.product-classifications.index') }}">Clasificaciones de productos</a>
+            <span class="sep">/</span>
+            <span>{{ $product->name }}</span>
+        </nav>
+
             <div class="form-header">
                 <h1>{{ $product->name }}</h1>
                 <p>

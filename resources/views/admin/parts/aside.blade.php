@@ -36,7 +36,7 @@
                 </a>
             </li>
 
-            <li class="{{ request()->routeIs('inventory') ? 'active' : '' }}">
+            <li class="{{ request()->routeIs('inventory') || request()->routeIs('categories.*') ? 'active' : '' }}">
                 <a href="{{ route('inventory') }}">
                     <i class="fas fa-box"></i>
                     <span class="sidebar-label">Inventario</span>

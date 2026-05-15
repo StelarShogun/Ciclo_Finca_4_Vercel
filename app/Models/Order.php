@@ -17,14 +17,11 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $estimated_delivery_date
  * @property Carbon|null $received_at
  * @property Carbon|null $delivered_at
- * @property Carbon|null $confirmed_at
- * @property int|null $confirmed_by
  * @property float|int|string $total
  * @property bool $closed_with_shorts
  * @property-read Supplier|null $supplier
  * @property-read Collection<int, OrderItem> $orderItems
  * @property-read Collection<int, OrderStateTimeline> $stateTimeline
- * @property-read AdminUser|null $confirmedBy
  */
 class Order extends Model
 {
@@ -38,8 +35,6 @@ class Order extends Model
         'estimated_delivery_date',
         'date',
         'state',
-        'confirmed_at',
-        'confirmed_by',
         'total',
         'received_at',        // Usado por receiveOrder() — recepción granular con cantidades por línea.
         'delivered_at',       // Usado por updateState('delivered') — transición directa vía InventoryMovementService.
@@ -51,7 +46,6 @@ class Order extends Model
         'estimated_delivery_date' => 'date',
         'received_at' => 'datetime',
         'delivered_at' => 'datetime',
-        'confirmed_at' => 'datetime',
         'closed_with_shorts' => 'boolean',
     ];
 
@@ -110,11 +104,5 @@ class Order extends Model
     {
         return $this->hasMany(OrderStateTimeline::class, 'num_order', 'num_order')
             ->orderBy('changed_at');
-    }
-
-    /** Admin que confirmó el pedido con el proveedor. */
-    public function confirmedBy(): BelongsTo
-    {
-        return $this->belongsTo(AdminUser::class, 'confirmed_by', 'user_id');
     }
 }
