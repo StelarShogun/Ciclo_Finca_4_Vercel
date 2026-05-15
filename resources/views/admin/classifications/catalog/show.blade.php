@@ -16,12 +16,15 @@
 
     <main class="admin-main">
         <div class="form-container">
-            @component('admin.partials.page-header', ['title' => 'Opciones del producto: ' . $product->name])
+            @component('admin.partials.page-header', ['title' => 'Atributos para: ' . $category->name])
                 <p>
-                    Selecciona los valores correspondientes para cada atributo del producto, como color, talla o material.
-                    @if ($product->category)
-                        Categoría: {{ $product->category->parent->name ?? '' }} ›
-                        <strong>{{ $product->category->name }}</strong>
+                    Gestiona los atributos disponibles para esta subcategoría, como color, talla o material.
+
+                    @if ($category->parent)
+                        Categoría: {{ $category->parent->name }} ›
+                        <strong>{{ $category->name }}</strong>
+                    @else
+                        Categoría: <strong>{{ $category->name }}</strong>
                     @endif
                 </p>
             @endcomponent
