@@ -27,6 +27,26 @@
   transition: padding-left 0.2s ease;
 }
 
+.sales-container .reports-breadcrumb {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  color: var(--color-muted, #5f6368);
+}
+
+.sales-container .reports-breadcrumb a {
+  color: var(--color-primary, #2e7d32);
+  text-decoration: none;
+}
+
+.sales-container .reports-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.sales-container .reports-breadcrumb .sep {
+  margin: 0 0.35rem;
+  opacity: 0.6;
+}
+
 /* ============================================================
   2. BUTTONS
   ============================================================ */

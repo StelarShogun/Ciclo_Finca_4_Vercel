@@ -825,7 +825,12 @@ button.profile-quick-action {
 }
 
 /* ── Wrapper ── */
-.profile-wrapper { padding: 40px 16px 60px; }
+.profile-wrapper {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 24px 60px;
+}
 
 /* ── Hero (card principal) ── */
 .profile-hero {
@@ -842,16 +847,7 @@ button.profile-quick-action {
     margin-bottom: 28px;
 }
 
-/* Contenedor del perfil: ancho máximo y centrado para mejor visualización */
-.profile-wrapper {
-    max-width: 1400px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 24px;
-    padding-right: 24px;
-}
-
-/* En pantallas pequeñas, el wrapper ocupa el ancho completo (sin max-width) 
+/* En pantallas pequeñas, el wrapper ocupa el ancho completo (sin max-width)
    para que el contenido se adapte al padding del contenedor */
 @media (max-width: 1024px) {
     .profile-wrapper {
@@ -1347,6 +1343,29 @@ button.profile-quick-action {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 24px 60px;
+}
+
+/* ── Breadcrumb (migas de pan) ── */
+.breadcrumb {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.breadcrumb a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb span {
+    color: var(--text-secondary);
 }
 
 /* ── Card container ── */
