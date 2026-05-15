@@ -2,6 +2,7 @@ import {
     buildCf4CheckoutSuccessText,
     getCf4PaymentMethodShortLabel,
 } from './checkout-copy.js';
+import './auth-welcome-toast.js';
 import { initHeaderCatalogSearch } from './header-catalog-search.js';
 
 // ============================================================
@@ -1394,15 +1395,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .then(function (data) {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Bienvenido!',
-                            text: data.message || 'Inicio de sesión exitoso',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(function () {
-                            window.location.href = data.redirect || '/';
-                        });
+                        if (typeof window.cf4AuthWelcomeToast === 'function') {
+                            window.cf4AuthWelcomeToast({
+                                kind: 'welcome',
+                                authIcon: 'user',
+                                displayName: data.display_name || '',
+                                thenUrl: data.redirect || '/',
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Bienvenido!',
+                                text: data.message || 'Inicio de sesión exitoso',
+                                timer: 4000,
+                                showConfirmButton: false,
+                            }).then(function () {
+                                window.location.href = data.redirect || '/';
+                            });
+                        }
                     } else if (data.redirect) {
                         // Correo no verificado: ofrecer ir a verificar.
                         if (submitBtn)   submitBtn.disabled = false;

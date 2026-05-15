@@ -7,6 +7,7 @@ import {
     buildCf4CheckoutSuccessText,
     getCf4PaymentMethodShortLabel,
 } from './checkout-copy.js';
+import './auth-welcome-toast.js';
 import { initHeaderCatalogSearch } from './header-catalog-search.js';
 
 // Marker used by clients-users.js to skip the cart/checkout listeners
@@ -418,15 +419,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .then(function (data) {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Bienvenido!',
-                            text: data.message || 'Inicio de sesión exitoso',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(function () {
-                            window.location.href = data.redirect || '/';
-                        });
+                        if (typeof window.cf4AuthWelcomeToast === 'function') {
+                            window.cf4AuthWelcomeToast({
+                                kind: 'welcome',
+                                authIcon: 'user',
+                                displayName: data.display_name || '',
+                                thenUrl: data.redirect || '/',
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Bienvenido!',
+                                text: data.message || 'Inicio de sesión exitoso',
+                                timer: 4000,
+                                showConfirmButton: false,
+                            }).then(function () {
+                                window.location.href = data.redirect || '/';
+                            });
+                        }
                     } else if (data.redirect) {
                         // Unverified email: offer to send code and redirect to verify.
                         if (submitBtn)   submitBtn.disabled = false;
@@ -1554,10 +1564,10 @@ document.addEventListener('DOMContentLoaded', function () {
     })();
 
     // ---- Catalog spotlight carousel (Swiper) ----
-    // Renders featured + novelty products with autoplay, navigation arrows,
-    // pagination dots and mobile swipe. Markup lives in catalog.blade.php
-    // behind `[data-catalog-spotlight-carousel]` and is hidden by Blade when
-    // any filter is active or the user is past page 1 of pagination.
+    // Renders featured + novelty products with autoplay, navigation arrows
+    // and mobile swipe. Markup lives in catalog.blade.php behind
+    // `[data-catalog-spotlight-carousel]` and is hidden by Blade when any
+    // filter is active or the user is past page 1 of pagination.
     (function initCatalogSpotlightCarousel() {
         var root = document.querySelector('[data-catalog-spotlight-carousel]');
         if (!root) return;
@@ -1567,22 +1577,45 @@ document.addEventListener('DOMContentLoaded', function () {
         var nextBtn = root.querySelector('[data-spotlight-next]');
         if (!swiperEl) return;
 
+        var wrapperEl = swiperEl.querySelector('.swiper-wrapper');
         var slides = swiperEl.querySelectorAll('.swiper-slide');
         if (!slides.length) return;
+
+        // Swiper's loop mode requires enough real slides to clone seamlessly.
+        // With slidesPerView up to 3 on desktop we need at least 6 slides
+        // available; otherwise loop silently disables itself and autoplay
+        // gets stuck at the last slide. We duplicate slides as needed.
+        var maxSlidesPerView = 3;
+        var minSlidesForLoop = maxSlidesPerView * 2;
+
+        if (wrapperEl && slides.length > 1 && slides.length < minSlidesForLoop) {
+            var originalSlides = Array.prototype.slice.call(slides);
+            while (wrapperEl.querySelectorAll('.swiper-slide').length < minSlidesForLoop) {
+                originalSlides.forEach(function (slide) {
+                    wrapperEl.appendChild(slide.cloneNode(true));
+                });
+            }
+            slides = swiperEl.querySelectorAll('.swiper-slide');
+        }
 
         var delay = parseInt(root.getAttribute('data-autoplay-delay'), 10);
         if (!Number.isFinite(delay) || delay <= 0) delay = 4000;
 
-        var prefersReducedMotion = window.matchMedia
-            && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        // Autoplay runs continuously for everyone. We do not use
+        // pauseOnMouseEnter: it attaches pointerenter/pointerleave on the Swiper
+        // root and in some browsers/layouts the carousel can appear stuck until
+        // the cursor moves over the track again.
+        var autoplayOption = {
+            enabled: true,
+            delay: delay,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: false,
+        };
 
-        var autoplayOption = prefersReducedMotion
-            ? false
-            : {
-                delay: delay,
-                disableOnInteraction: false,
-                pauseOnMouseEnter: true,
-            };
+        // Circular (infinite) navigation. Real slide count is guaranteed
+        // to be enough above; we keep loopAdditionalSlides at 0 so Swiper
+        // computes the minimum required duplicates per breakpoint.
+        var enableLoop = slides.length > 1;
 
         try {
             new Swiper(swiperEl, {
@@ -1590,7 +1623,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 slidesPerView: 1,
                 spaceBetween: 18,
                 centeredSlides: false,
-                loop: slides.length > 3,
+                loop: enableLoop,
+                loopAdditionalSlides: 0,
                 speed: 600,
                 grabCursor: true,
                 watchOverflow: true,

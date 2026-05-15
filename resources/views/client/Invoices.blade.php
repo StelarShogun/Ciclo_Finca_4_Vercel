@@ -121,13 +121,18 @@
 
     <div class="cf4-invoices-wrapper">
 
+        <nav class="breadcrumb" aria-label="Migas de pan">
+            <a href="{{ route('clients.home') }}">Inicio</a>
+            <span>/</span>
+            <span>Mis Facturas</span>
+        </nav>
+
         <div class="cf4-invoices-card">
             <div class="sales-table-container">
                 <table class="sales-table cf4-purchases-table cf4-invoices-list-table">
                     <thead>
                         <tr>
                             <th>Factura</th>
-                            <th>Productos</th>
                             <th>Fecha</th>
                             <th>Estado</th>
                             <th>{{ $tab === 'historial' ? 'Total pagado' : 'Total' }}</th>
@@ -162,17 +167,6 @@
                                         <span class="cf4-invoice-muted">Sin número asignado</span>
                                     @endif
                                 </td>
-                                <td>
-                                    @if($sale->saleItems && $sale->saleItems->count() > 0)
-                                        <div class="cf4-invoice-items">
-                                            @foreach($sale->saleItems as $item)
-                                                <div>{{ $item->quantity }} &times; {{ $item->product->name ?? 'Producto' }}</div>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <span class="cf4-invoice-muted">Sin productos</span>
-                                    @endif
-                                </td>
                                 <td>{{ $sale->sale_date ? $sale->sale_date->format('d/m/Y H:i') : 'Sin fecha' }}</td>
                                 <td>
                                     <span class="cf4-invoice-status-badge {{ $statusClass }}">
@@ -188,7 +182,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6">
+                                <td colspan="5">
                                     <div class="cf4-invoices-empty">
                                         <div class="cf4-invoices-empty-icon"><i class="fas fa-file-invoice"></i></div>
                                         <p>
