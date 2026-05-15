@@ -1,0 +1,63 @@
+/* SweetAlert2 client auth toasts — uses palette from variables-reset.css (:root). */
+
+.swal2-client-auth-toast-popup.swal2-toast {
+  background: var(--background-white) !important;
+  border: 1px solid var(--border-color) !important;
+  border-left: 4px solid var(--color-primary) !important;
+  border-radius: var(--border-radius) !important;
+  box-shadow: var(--shadow-md) !important;
+  padding: 0.85rem 1rem !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.swal2-client-auth-toast-popup .swal2-client-auth-toast-title {
+  color: var(--color-dark) !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  line-height: 1.35 !important;
+  padding: 0 0.25rem !important;
+}
+
+.swal2-client-auth-toast-popup .swal2-client-auth-toast-html {
+  color: var(--text-secondary) !important;
+  font-size: 0.82rem !important;
+  font-weight: 400 !important;
+  line-height: 1.35 !important;
+}
+
+.swal2-client-auth-toast-popup .swal2-timer-progress-bar {
+  background: var(--color-primary) !important;
+}
+
+.swal2-client-auth-toast-popup .swal2-client-auth-toast-progress {
+  background: var(--color-primary) !important;
+}
+
+.swal2-client-auth-toast-popup .swal2-client-auth-toast-icon-wrap {
+  border: none !important;
+  margin: 0 0.65rem 0 0 !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.swal2-client-auth-toast-popup .cf4-auth-toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.swal2-client-auth-toast-popup .cf4-auth-toast-icon--google i {
+  color: #4285f4;
+}
+
+.swal2-client-auth-toast-popup .cf4-auth-toast-icon--user i {
+  color: var(--color-primary);
+}
+
+.swal2-client-auth-toast-popup .cf4-auth-toast-icon--signout i {
+  color: var(--color-secondary);
+}
