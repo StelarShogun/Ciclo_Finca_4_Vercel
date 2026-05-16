@@ -409,36 +409,6 @@
     </div>
 </section>
 
-<!-- Modal: select quantity before adding a product to cart -->
-<!-- Product details are populated dynamically by JS -->
-<div class="modal" id="add-to-cart-modal">
-    <div class="modal-content modal-sm">
-        <div class="modal-header">
-            <h3>Agregar al Carrito</h3>
-            <button class="modal-close" id="close-add-to-cart-modal">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="product-preview" id="product-preview">
-                <img id="preview-image" src="" alt="">
-                <div class="preview-info">
-                    <h4 id="preview-name"></h4>
-                    <p class="preview-price" id="preview-price"></p>
-                    <p class="preview-stock" id="preview-stock"></p>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="cart-quantity">Cantidad:</label>
-                <input type="number" id="cart-quantity" class="form-control" min="1" value="1">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" id="cancel-add-to-cart">Cancelar</button>
-            <button class="btn btn-primary" id="confirm-add-to-cart">Agregar al Carrito</button>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')

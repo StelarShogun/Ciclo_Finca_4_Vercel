@@ -157,12 +157,12 @@ class OrderExpirationSettingsTest extends TestCase
 
         $this->actingAs($client, 'clients');
 
-        $this->get(route('admin.orders.index'))
-            ->assertRedirect(route('admin.login'));
+        // AdminOnly: sesión de cliente no redirige al login de admin; responde prohibido.
+        $this->get(route('admin.orders.index'))->assertForbidden();
 
         $this->put(route('admin.orders.settings.order-expiration.update'), [
             'ready_to_pickup_expiration_hours' => 99,
-        ])->assertRedirect(route('admin.login'));
+        ])->assertForbidden();
 
         $this->assertDatabaseMissing('app_settings', [
             'key' => AppSetting::KEY_READY_TO_PICKUP_EXPIRATION_HOURS,

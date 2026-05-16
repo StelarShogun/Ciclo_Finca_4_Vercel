@@ -108,6 +108,8 @@ class CF4ClientCartTest extends TestCase
         $cartViewRes = $this->get(route('clients.cart'));
         $cartViewRes->assertStatus(200);
         $cartViewRes->assertSee('Tu carrito está vacío', false);
+        $cartViewRes->assertSee('cart-empty-icon', false);
+        $cartViewRes->assertSee('fa-cart-shopping', false);
     }
 
     public function test_checkout_creates_pending_web_cart_sale_and_clears_session_cart(): void
@@ -188,6 +190,8 @@ class CF4ClientCartTest extends TestCase
         $cartViewRes = $this->get(route('clients.cart'));
         $cartViewRes->assertStatus(200);
         $cartViewRes->assertSee('Tu carrito está vacío', false);
+        $cartViewRes->assertSee('cart-empty-title', false);
+        $cartViewRes->assertSee('fa-cart-shopping', false);
     }
 
     public function test_add_to_cart_rejects_out_of_stock_with_message_producto_agotado(): void

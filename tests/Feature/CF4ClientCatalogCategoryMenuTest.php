@@ -36,7 +36,16 @@ class CF4ClientCatalogCategoryMenuTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('id="catalog-category-panel"', false);
         $response->assertSee('id="catalog-category-trigger"', false);
+        $response->assertSee('id="catalog-category-sidebar-toggle"', false);
         $response->assertSee('Categorías', false);
+    }
+
+    public function test_catalog_redirects_when_price_filter_is_negative(): void
+    {
+        $response = $this->from(route('clients.catalog'))
+            ->get(route('clients.catalog', ['min_price' => '-5']));
+        $response->assertRedirect(route('clients.catalog'));
+        $response->assertSessionHasErrors('price_range');
     }
 
     public function test_home_does_not_include_catalog_category_panel(): void
@@ -138,6 +147,6 @@ class CF4ClientCatalogCategoryMenuTest extends TestCase
 
         $response = $this->get(route('clients.catalog', ['category_id' => $emptyParent->category_id]));
         $response->assertStatus(200);
-        $response->assertSee('No hay productos disponibles en esta categoría.', false);
+        $response->assertSee('No hay productos en esta categoría', false);
     }
 }

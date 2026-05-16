@@ -104,7 +104,7 @@ function updateInvoiceCount(count) {
 // ADD TO CART
 // ============================================================
 
-function addToCart(productId, quantity) {
+function addToCart(productId, quantity, triggerBtn) {
     quantity = quantity || 1;
 
     fetch('/cart/add', {
@@ -119,7 +119,6 @@ function addToCart(productId, quantity) {
         .then(function (data) {
             if (data.success) {
                 updateCartCount(data.cart_count);
-                closeModal('add-to-cart-modal');
                 Swal.fire({
                     icon: 'success',
                     title: '¡Agregado!',
@@ -143,50 +142,6 @@ function addToCart(productId, quantity) {
             console.error('Error adding to cart:', err);
             Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al agregar el producto al carrito' });
         });
-}
-
-// ============================================================
-// ADD-TO-CART MODAL (catalog & home)
-// ============================================================
-
-var currentProductId = null;
-
-function openAddToCartModal(btn) {
-    if (btn.dataset.purchasable === '0') {
-        Swal.fire({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
-        return;
-    }
-    var productStock = parseInt(btn.dataset.productStock, 10);
-    if (isNaN(productStock) || productStock < 1) {
-        Swal.fire({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
-        return;
-    }
-
-    currentProductId = btn.dataset.productId;
-    var productName  = btn.dataset.productName;
-    var productPrice = parseFloat(btn.dataset.productPrice);
-
-    var nameEl  = document.getElementById('preview-name');
-    var priceEl = document.getElementById('preview-price');
-    var stockEl = document.getElementById('preview-stock');
-    var qtyEl   = document.getElementById('cart-quantity');
-
-    if (nameEl)  nameEl.textContent  = productName;
-    if (priceEl) priceEl.textContent = '₡' + productPrice.toLocaleString('es-CR');
-    if (stockEl) stockEl.textContent = 'Disponibles: ' + productStock + ' unidades';
-    if (qtyEl) {
-        qtyEl.max   = productStock;
-        qtyEl.value = 1;
-    }
-
-    var productCard  = btn.closest('.product-card');
-    var productImage = productCard ? productCard.querySelector('.product-image img') : null;
-    var previewImg   = document.getElementById('preview-image');
-    if (previewImg && productImage) {
-        previewImg.src = productImage.src;
-    }
-
-    openModal('add-to-cart-modal');
 }
 
 // ============================================================
@@ -1542,12 +1497,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 Swal.fire({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
                 return;
             }
-            var modal = document.getElementById('add-to-cart-modal');
-            if (modal) {
-                openAddToCartModal(addBtn);
-            } else {
-                addToCart(addBtn.dataset.productId, 1);
-            }
+            addToCart(addBtn.dataset.productId, 1, addBtn);
             return;
         }
 
@@ -1565,26 +1515,6 @@ document.addEventListener('DOMContentLoaded', function () {
             e.target.classList.remove('active');
         }
     });
-
-    // — Confirm add-to-cart from modal —
-    var confirmAddBtn = document.getElementById('confirm-add-to-cart');
-    if (confirmAddBtn) {
-        confirmAddBtn.addEventListener('click', function () {
-            var qtyEl    = document.getElementById('cart-quantity');
-            var quantity = parseInt(qtyEl ? qtyEl.value : '1', 10);
-            if (quantity < 1) {
-                Swal.fire('Error', 'La cantidad debe ser mayor a 0', 'error');
-                return;
-            }
-            addToCart(currentProductId, quantity);
-        });
-    }
-
-    var cancelAddBtn = document.getElementById('cancel-add-to-cart');
-    if (cancelAddBtn) cancelAddBtn.addEventListener('click', function () { closeModal('add-to-cart-modal'); });
-
-    var closeAddBtn = document.getElementById('close-add-to-cart-modal');
-    if (closeAddBtn) closeAddBtn.addEventListener('click', function () { closeModal('add-to-cart-modal'); });
 
     // — Remove single cart item (delegated) —
     document.addEventListener('click', function (e) {
@@ -1759,7 +1689,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var detailAddBtn = document.querySelector('.product-detail-actions .add-to-cart-btn');
         if (detailAddBtn) {
             detailAddBtn.addEventListener('click', function () {
-                addToCart(this.dataset.productId, productQty);
+                addToCart(this.dataset.productId, productQty, this);
             });
         }
     }
@@ -1785,6 +1715,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 fetch('/cart/checkout', {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': getCsrfToken(),
@@ -1856,10 +1787,17 @@ document.addEventListener('DOMContentLoaded', function () {
             var max       = parseFloat(maxInput.value);
             var minFilled = minInput.value.trim() !== '';
             var maxFilled = maxInput.value.trim() !== '';
-            var invalid   = minFilled && maxFilled && !isNaN(min) && !isNaN(max) && min > max;
+            var negMin    = minFilled && !isNaN(min) && min < 0;
+            var negMax    = maxFilled && !isNaN(max) && max < 0;
+            var invalid   = negMin || negMax || (minFilled && maxFilled && !isNaN(min) && !isNaN(max) && min > max);
             submitBtn.disabled = invalid;
             if (invalid) {
-                submitBtn.setAttribute('title', 'El precio mínimo debe ser menor o igual al precio máximo.');
+                submitBtn.setAttribute(
+                    'title',
+                    negMin || negMax
+                        ? 'Los precios no pueden ser negativos.'
+                        : 'El precio mínimo debe ser menor o igual al precio máximo.'
+                );
             } else {
                 submitBtn.removeAttribute('title');
             }
