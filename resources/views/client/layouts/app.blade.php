@@ -63,6 +63,16 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @stack('scripts')
+    @if (session('client_success_modal'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (typeof window.cf4AuthWelcomeToast !== 'function') {
+                    return;
+                }
+                window.cf4AuthWelcomeToast(@json(session('client_success_modal')));
+            });
+        </script>
+    @endif
 
 </body>
 </html>

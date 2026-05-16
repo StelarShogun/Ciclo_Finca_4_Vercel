@@ -12,6 +12,12 @@
 @section('contenido')
 <div class="sales-container">
 
+    <nav class="reports-breadcrumb" aria-label="Migas de pan">
+        <a href="{{ route('admin.reports.index') }}">Reportes</a>
+        <span class="sep">/</span>
+        <span>Ventas por Categoría</span>
+    </nav>
+
     {{-- ==================== HEADER ==================== --}}
     <header class="sales-header">
         <div>
