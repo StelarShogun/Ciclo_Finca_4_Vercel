@@ -1596,10 +1596,123 @@ body.guest-layout {
 }
 
 /* ===================================================================
-   PAGINATION (catálogo — base en admin/components/pagination.css)
+   PAGINATION (catálogo)
+   - Base compartida: admin/components/pagination.css (.cf4-pagination-toolbar)
+   - Legacy Dev merge: .pagination-wrapper .pagination (1 / N + #goToPageInput)
    =================================================================== */
+
+/* CF4-138 toolbar (componente x-pagination actual) */
+.catalog-shell .pagination-wrapper .cf4-pagination-toolbar.pagination {
+  width: 100%;
+  margin: 1.25rem 0 0;
+}
+
+/* Legacy — si el merge dejó el Blade de Dev (Mostrando X a Y, 1 / N) */
+.catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0;
+  padding: 0.85rem 1rem;
+  width: 100%;
+  background: linear-gradient(135deg, rgba(218, 241, 222, 0.45) 0%, #fff 55%);
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid color-mix(in srgb, var(--brand-light) 35%, var(--border-color));
+}
+
+.catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) .results-info {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: var(--brand-lightest);
+  border: 1px solid color-mix(in srgb, var(--brand-light) 35%, #fff);
+  border-radius: var(--border-radius);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--brand-dark);
+}
+
+.catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.65rem;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  background: var(--background-white);
+  color: var(--brand-medium-dark);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) .button:hover:not(.is-disabled):not([aria-disabled="true"]) {
+  background: var(--brand-lightest);
+  border-color: var(--color-primary);
+  color: var(--brand-darkest);
+}
+
+.catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) .button.button-primary,
+.catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) .button[aria-label="Previous"],
+.catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) .button[aria-label="Next"] {
+  background: var(--color-primary);
+  border-color: var(--color-primary-dark);
+  color: #fff;
+}
+
+.catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) .button[aria-disabled="true"],
+.catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) .button.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) input[type="number"] {
+  width: 2.85rem;
+  height: 2.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--background-white);
+  color: var(--text-primary);
+}
+
+.catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) input[type="number"]:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-light) 40%, transparent);
+}
+
+.catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) .go-button {
+  background: var(--color-primary);
+  color: #fff;
+  border: 1px solid var(--color-primary-dark);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  height: 2.25rem;
+  transition: var(--transition);
+}
+
+.catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) .go-button:hover {
+  background: var(--color-primary-dark);
+}
+
 @media (max-width: 768px) {
-  .catalog-shell .cf4-pagination-toolbar.pagination {
+  .catalog-shell .cf4-pagination-toolbar.pagination,
+  .catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) {
     flex-direction: column;
     align-items: stretch;
   }
