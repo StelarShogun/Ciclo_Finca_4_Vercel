@@ -1223,6 +1223,30 @@ body.guest-layout {
   border-color: rgba(35, 83, 71, 0.35);
 }
 
+/* CF4-129: out-of-stock cards (catalog / home / related) */
+.product-card--out-of-stock {
+  opacity: 0.6;
+}
+
+.product-card--out-of-stock:hover {
+  transform: translateY(-2px);
+}
+
+.product-card-sku {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.product-detail-sku {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
 .product-image {
   position: relative;
   overflow: hidden;
@@ -1290,10 +1314,39 @@ body.guest-layout {
   line-height: 1.3;
 }
 
-.product-availability-text.is-available { color: var(--color-success); }
-.product-availability-text.is-low { color: var(--color-warning); }
-.product-availability-text.is-out { color: #c62828; }
-.product-availability-text.is-na { color: var(--text-secondary); }
+/* CF4-129: stock pill on catalog / home cards */
+.product-stock-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.product-availability-text.is-available,
+.product-stock-badge.is-available {
+  color: #1b5e20;
+  background: rgba(46, 125, 50, 0.12);
+}
+
+.product-availability-text.is-low,
+.product-stock-badge.is-low {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.18);
+}
+
+.product-availability-text.is-out,
+.product-stock-badge.is-out {
+  color: #b71c1c;
+  background: rgba(211, 47, 47, 0.12);
+}
+
+.product-availability-text.is-na,
+.product-stock-badge.is-na {
+  color: var(--text-secondary);
+  background: rgba(100, 116, 139, 0.12);
+}
 
 /* Cantidad en stock (catálogo, home, relacionados; CF4-62) */
 .product-stock-qty {
@@ -3197,6 +3250,26 @@ body.guest-layout {
 
 .catalog-spotlight-carousel .product-stars-inline {
   margin-bottom: 10px;
+}
+
+.catalog-spotlight-card-sku {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.catalog-spotlight-stock-label {
+  margin: 0 0 8px;
+}
+
+.catalog-spotlight-slide--out-of-stock {
+  opacity: 0.6;
+}
+
+.catalog-spotlight-slide--out-of-stock:hover {
+  opacity: 0.65;
 }
 
 .catalog-spotlight-card-title {

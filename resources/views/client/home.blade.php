@@ -111,8 +111,9 @@
                     @php
                         $stockLabel = $product->clientCatalogStockLabel();
                         $canBuy = $product->isPurchasableByClient();
+                        $homeSku = $product->clientCatalogAssignedSku();
                     @endphp
-                    <div class="product-card">
+                    <div class="product-card @if($stockLabel === 'Agotado') product-card--out-of-stock @endif">
                         <div class="product-image">
                             <a class="product-image__link" href="{{ $product->clientProductUrl() }}"
                                aria-label="Ver producto: {{ $product->name }}">
@@ -132,10 +133,14 @@
                                 'reviewCount' => (int) data_get($homeRs, 'count', 0),
                                 'variant' => 'card',
                             ])
+                            @if($homeSku)
+                                <p class="product-card-sku">SKU: {{ $homeSku }}</p>
+                            @endif
                             <p @class([
                                 'product-availability-text',
-                                'is-available' => $stockLabel === 'Disponible',
-                                'is-low' => $stockLabel === 'Quedan pocas unidades',
+                                'product-stock-badge',
+                                'is-available' => $stockLabel === 'En stock',
+                                'is-low' => $stockLabel === 'Últimas unidades',
                                 'is-out' => $stockLabel === 'Agotado',
                                 'is-na' => $stockLabel === 'No disponible',
                             ])>{{ $stockLabel }}</p>
