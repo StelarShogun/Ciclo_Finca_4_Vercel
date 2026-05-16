@@ -49,7 +49,13 @@ class ClientPageController extends Controller
     public function catalog(Request $request)
     {
         // Base del catálogo cliente: solo productos visibles/publicables para el cliente.
-        $query = Product::with(['category', 'brands'])->activeInClientStore();
+        $query = Product::with([
+            'category',
+            'brands',
+            'media' => static function ($q): void {
+                $q->where('collection_name', 'main_image');
+            },
+        ])->activeInClientStore();
 
         if ($request->filled('search')) {
             $searchTerm = $request->search;
@@ -288,7 +294,12 @@ class ClientPageController extends Controller
         $maxTotal = 12;
         $maxFeatured = 8;
 
-        $featured = Product::with(['category'])
+        $featured = Product::with([
+            'category',
+            'media' => static function ($q): void {
+                $q->where('collection_name', 'main_image');
+            },
+        ])
             ->activeInClientStore()
             ->where('is_featured', true)
             ->orderByDesc('created_at')
@@ -299,7 +310,12 @@ class ClientPageController extends Controller
         $remaining = max(0, $maxTotal - $featured->count());
 
         $novelties = $remaining > 0
-            ? Product::with(['category'])
+            ? Product::with([
+                'category',
+                'media' => static function ($q): void {
+                    $q->where('collection_name', 'main_image');
+                },
+            ])
                 ->activeInClientStore()
                 ->whereNotIn('product_id', $featuredIds)
                 ->orderByDesc('created_at')

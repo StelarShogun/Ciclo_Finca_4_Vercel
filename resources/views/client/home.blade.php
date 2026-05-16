@@ -111,14 +111,18 @@
                     @php
                         $stockLabel = $product->clientCatalogStockLabel();
                         $canBuy = $product->isPurchasableByClient();
+                        $homeSku = $product->clientCatalogAssignedSku();
                     @endphp
-                    <div class="product-card">
+                    <div class="product-card @if($stockLabel === 'Agotado') product-card--out-of-stock @endif">
                         <div class="product-image">
+                            <a class="product-image__link" href="{{ $product->clientProductUrl() }}"
+                               aria-label="Ver producto: {{ $product->name }}">
                             <!-- Fallback to favicon if product image is missing -->
                             <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}" 
                                  alt="{{ $product->name }}"
                                  data-fallback-src="{{ asset('favicon.svg') }}"
                                  onerror="this.src=this.dataset.fallbackSrc;">
+                            </a>
                         </div>
                         <div class="product-info">
                             <div class="product-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
@@ -129,10 +133,14 @@
                                 'reviewCount' => (int) data_get($homeRs, 'count', 0),
                                 'variant' => 'card',
                             ])
+                            @if($homeSku)
+                                <p class="product-card-sku">SKU: {{ $homeSku }}</p>
+                            @endif
                             <p @class([
                                 'product-availability-text',
-                                'is-available' => $stockLabel === 'Disponible',
-                                'is-low' => $stockLabel === 'Quedan pocas unidades',
+                                'product-stock-badge',
+                                'is-available' => $stockLabel === 'En stock',
+                                'is-low' => $stockLabel === 'Últimas unidades',
                                 'is-out' => $stockLabel === 'Agotado',
                                 'is-na' => $stockLabel === 'No disponible',
                             ])>{{ $stockLabel }}</p>
@@ -145,9 +153,11 @@
                             <div class="product-footer">
                                 <div class="product-price">₡{{ number_format($product->sale_price, 0, ',', '.') }}</div>
                                 <div class="product-actions">
-                                    <a href="{{ $product->clientProductUrl() }}" class="btn-product btn-ver-detalles">
+                                    <a href="{{ $product->clientProductUrl() }}"
+                                       class="btn-product btn-ver-detalles"
+                                       title="Ver ficha del producto">
                                         <i class="fas fa-eye" aria-hidden="true"></i>
-                                        Ver detalle
+                                        Ver producto
                                     </a>
                                     <!-- Authenticated users add to cart; guests are prompted to log in via JS -->
                                     @if($canBuy)
