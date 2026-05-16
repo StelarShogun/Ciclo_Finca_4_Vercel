@@ -305,19 +305,27 @@
                                                 $spotlight = $row['spotlight'];
                                                 $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
                                                 $spotlightImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png'));
+                                                $spotlightPriceFormatted = number_format((float) $product->sale_price, 0, ',', '.');
                                             @endphp
-                                            <article class="swiper-slide product-card product-card--catalog-spotlight catalog-spotlight-slide"
+                                            <article class="swiper-slide product-card product-card--catalog-spotlight product-card--catalog-cf128 catalog-spotlight-slide"
                                                      role="group"
                                                      aria-roledescription="diapositiva"
                                                      aria-label="{{ $loop->iteration }} de {{ $loop->count }}: {{ $product->name }}">
                                                 <a class="catalog-spotlight-card-link"
                                                    href="{{ $product->clientProductUrl() }}"
                                                    aria-label="Ver producto: {{ $product->name }}">
-                                                    <div class="product-image">
-                                                        <img src="{{ $spotlightImgUrl }}"
-                                                             alt=""
-                                                             data-fallback-src="{{ asset('favicon.svg') }}"
-                                                             onerror="this.src=this.dataset.fallbackSrc;">
+                                                    <div class="product-image product-image--catalog-cf128">
+                                                        <div class="product-image__frame">
+                                                            <img src="{{ $spotlightImgUrl }}"
+                                                                 alt=""
+                                                                 loading="lazy"
+                                                                 decoding="async"
+                                                                 data-fallback-src="{{ asset('favicon.svg') }}"
+                                                                 onerror="this.src=this.dataset.fallbackSrc;">
+                                                            <div class="product-image__hover-overlay" aria-hidden="true">
+                                                                <span class="product-image__hover-price">₡{{ $spotlightPriceFormatted }}</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                     <div class="product-info">
                                                         <h3 class="product-name catalog-spotlight-card-title">{{ $product->name }}</h3>
@@ -328,7 +336,7 @@
                                                             'variant' => 'card',
                                                         ])
                                                         <div class="product-price-bar catalog-spotlight-card-price">
-                                                            <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
+                                                            <span class="product-price-value">₡{{ $spotlightPriceFormatted }}</span>
                                                         </div>
                                                     </div>
                                                 </a>
@@ -429,9 +437,11 @@
                                     $catLabel = $product->clientCatalogStockLabel();
                                     $canBuy = $product->isPurchasableByClient();
                                     $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
+                                    $cardImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png'));
+                                    $cardPriceFormatted = number_format((float) $product->sale_price, 0, ',', '.');
                                 @endphp
-                                <div class="product-card">
-                                    <div class="product-image">
+                                <div class="product-card product-card--catalog-cf128">
+                                    <div class="product-image product-image--catalog-cf128">
                                         <button type="button"
                                                 class="product-favorite-btn {{ $isFavorite ? 'is-active' : '' }}"
                                                 data-product-favorite-btn
@@ -440,16 +450,22 @@
                                                 aria-label="{{ $isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos' }}">
                                             <i class="{{ $isFavorite ? 'fas' : 'far' }} fa-heart" aria-hidden="true"></i>
                                         </button>
-                                        @php $cardImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')); @endphp
-                                        <a href="{{ $product->clientProductUrl() }}">
-                                            {{-- Fallback to favicon if product image is missing --}}
-                                            <img src="{{ $cardImgUrl }}"
-                                                 alt="{{ $product->name }}"
-                                                 data-fallback-src="{{ asset('favicon.svg') }}"
-                                                 onerror="this.src=this.dataset.fallbackSrc;">
-                                        </a>
+                                        <div class="product-image__frame">
+                                            <a class="product-image__link" href="{{ $product->clientProductUrl() }}">
+                                                {{-- Fallback to favicon if product image is missing --}}
+                                                <img src="{{ $cardImgUrl }}"
+                                                     alt="{{ $product->name }}"
+                                                     loading="lazy"
+                                                     decoding="async"
+                                                     data-fallback-src="{{ asset('favicon.svg') }}"
+                                                     onerror="this.src=this.dataset.fallbackSrc;">
+                                            </a>
+                                            <div class="product-image__hover-overlay" aria-hidden="true">
+                                                <span class="product-image__hover-price">₡{{ $cardPriceFormatted }}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="product-info">
+                                    <div class="product-info product-info--catalog-cf128">
                                         <div class="product-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
                                         <h3 class="product-name">
                                             <a href="{{ $product->clientProductUrl() }}">
@@ -477,12 +493,14 @@
                                         @endif
                                         <div class="product-footer">
                                             <div class="product-price-bar">
-                                                <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
+                                                <span class="product-price-value">₡{{ $cardPriceFormatted }}</span>
                                             </div>
                                             <div class="product-actions">
-                                                <a href="{{ $product->clientProductUrl() }}" class="btn-product btn-ver-detalles">
-                                                    <i class="fas fa-arrow-right"></i>
-                                                    Ver detalles
+                                                <a href="{{ $product->clientProductUrl() }}"
+                                                   class="btn-product btn-ver-detalles"
+                                                   title="Ver ficha del producto">
+                                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                                    Ver producto
                                                 </a>
                                                 @if($canBuy)
                                                     @auth('clients')

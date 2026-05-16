@@ -99,6 +99,21 @@ En distribuciones tipo Arch / CachyOS las extensiones `pdo_mysql` y `mysqli` vie
 
 > **Comprobación rápida**: `PHP_INI_SCAN_DIR=:scripts/php-ini.d php -m | grep -E 'pdo_mysql|mysqli'` debe imprimir ambos.
 
+## Frontend (Vite / npm) en Docker
+
+Si trabajás con el stack en contenedores, compilá assets sin depender del Node del host:
+
+```bash
+./scripts/docker-vite-build.sh
+```
+
+ Equivale a `npm run build` dentro de `app_ciclo` y ajusta permisos de `node_modules` y `public/build`. Otros comandos npm:
+
+```bash
+./scripts/docker-npm.sh ci
+./scripts/docker-npm.sh run dev
+```
+
 ## Producción (Render) — recordatorios
 
 - **`APP_URL`** y opcionalmente **`FRONTEND_URL`**: deben ser la URL pública HTTPS. Los **workers de cola** deben tener las mismas variables o los correos pueden generar enlaces a `localhost`.
