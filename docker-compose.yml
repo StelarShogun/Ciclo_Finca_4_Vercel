@@ -1,4 +1,3 @@
-# Mismo nombre de proyecto que antes = reutiliza el volumen dbdata_ciclo con tus datos
 name: ciclo_finca_4_app
 
 services:
@@ -10,8 +9,6 @@ services:
       - "5173:5173"
     volumes:
       - .:/var/www/html
-    # No inyectar DB_DATABASE / usuario / contraseña: el volumen monta `.env` y en tests
-    # Laravel carga `.env.testing` sin que Compose pise el nombre de BD (p. ej. laravel_test).
     environment:
       - DB_HOST=db_ciclo
       - DB_PORT=3306
@@ -22,8 +19,7 @@ services:
   db_ciclo:
     image: mysql:8.0
     container_name: mysql_db_ciclo
-    restart: always
-    # Permite DB_HOST=db en .env (alias al mismo contenedor que db_ciclo)
+    restart: unless-stopped
     networks:
       default:
         aliases:
@@ -33,7 +29,6 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: root
-    # Puerto 3307 en el host: el 3306 suele estar ocupado por MySQL local u otros contenedores
     ports:
       - "3307:3306"
     volumes:
@@ -42,7 +37,7 @@ services:
   phpmyadmin_ciclo:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin_ciclo
-    restart: always
+    restart: unless-stopped
     environment:
       PMA_HOST: db_ciclo
       PMA_USER: ${DB_USERNAME}

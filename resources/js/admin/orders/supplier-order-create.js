@@ -48,7 +48,6 @@ function init() {
     const form = document.getElementById('supplier-order-create-form');
     const supplierSelect = document.getElementById('supplier_id');
     const supplierPreview = document.getElementById('supplier-preview');
-    const dateInput = document.getElementById('estimated_delivery_date');
     const searchInput = document.getElementById('product-search');
     const comboboxWrapper = document.getElementById('product-combobox');
     const comboboxDropdown = document.getElementById('product-search-dropdown');
@@ -57,7 +56,7 @@ function init() {
     const summaryTotal = document.getElementById('summary-total');
     const itemsErrors = document.getElementById('items-errors');
 
-    if (!form || !supplierSelect || !dateInput || !searchInput || !tbody || !summaryLines || !summaryTotal) return;
+    if (!form || !supplierSelect || !searchInput || !tbody || !summaryLines || !summaryTotal) return;
 
     const suppliers = Array.isArray(window.__CF4_SUPPLIERS__) ? window.__CF4_SUPPLIERS__ : [];
 
@@ -176,27 +175,28 @@ function init() {
                 </button>
             </div>`).join('');
         openCombobox();
-        comboboxDropdown.querySelectorAll('.product-combobox-add-btn').forEach((btn) => {
-            btn.addEventListener('mousedown', (e) => {
+        comboboxDropdown.querySelectorAll('.product-combobox-option').forEach((option) => {
+            option.addEventListener('mousedown', (e) => {
                 e.preventDefault();
-                const idx = Number(btn.getAttribute('data-idx'));
+                const idx = Number(option.getAttribute('data-idx'));
                 const p = list[idx];
                 if (p) addProductToLines(p);
                 searchInput.value = '';
-                const filtered = allProducts;
-                renderSearchDropdown(filtered);
-                searchInput.focus();
+                closeCombobox();
             });
         });
     }
 
-    searchInput.addEventListener('focus', () => {
+    function openDropdownFromInput() {
         const q = searchInput.value.trim().toLowerCase();
         const filtered = q
             ? allProducts.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
             : allProducts;
         renderSearchDropdown(filtered);
-    });
+    }
+
+    searchInput.addEventListener('focus', openDropdownFromInput);
+    searchInput.addEventListener('click', openDropdownFromInput);
 
     searchInput.addEventListener('input', () => {
         const q = searchInput.value.trim().toLowerCase();
@@ -256,6 +256,8 @@ function init() {
     supplierSelect.addEventListener('change', async () => {
         renderSupplierPreview();
         allProducts = [];
+        lines = [];
+        renderLines();
         closeCombobox();
         showItemsError('');
         await loadSupplierProducts();
@@ -265,14 +267,12 @@ function init() {
 
     form.addEventListener('submit', (e) => {
         const supplierOk = !!supplierSelect.value;
-        const dateOk = !!dateInput.value;
         const linesOk = lines.length >= 1 && lines.every((l) => (Number(l.quantity) || 0) >= 1);
 
-        if (!supplierOk || !dateOk || !linesOk) {
+        if (!supplierOk || !linesOk) {
             e.preventDefault();
             const missing = [];
             if (!supplierOk) missing.push('Proveedor');
-            if (!dateOk) missing.push('fecha estimada');
             if (!linesOk) missing.push('al menos un producto con cantidad');
 
             if (!linesOk) {
@@ -281,8 +281,6 @@ function init() {
 
             if (!supplierOk) {
                 supplierSelect.focus();
-            } else if (!dateOk) {
-                dateInput.focus();
             } else if (!linesOk) {
                 searchInput.focus();
             }

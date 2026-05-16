@@ -77,6 +77,7 @@
                     <button type="button" class="btn btn-primary filter-btn" id="btnBuscar">
                         <i class="fas fa-search"></i> Buscar
                     </button>
+
                     {{-- Clear filters button: only shown when filters are active --}}
                     @if (request('name') || request('contact'))
                         <button type="button" class="btn btn-secondary filter-btn" id="limpiarFiltros">
@@ -101,6 +102,7 @@
                         <th>Acciones</th>
                     </tr>
                 </thead>
+
                 <tbody id="tablaProveedores">
                     @forelse($suppliers as $supplier)
                         <tr>
@@ -115,6 +117,7 @@
                                     </div>
                                 </div>
                             </td>
+
                             <td>{{ $supplier->primary_contact }}</td>
                             <td>{{ $supplier->phone }}</td>
                             <td>{{ $supplier->email }}</td>
@@ -127,14 +130,17 @@
                                         class="action-btn view" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </button>
+
                                     <button onclick="loadSupplierForEdit({{ $supplier->supplier_id }})"
                                         class="action-btn edit" title="Editar proveedor">
                                         <i class="fas fa-edit"></i>
                                     </button>
+
                                     <form action="{{ route('suppliers.destroy', $supplier->supplier_id) }}" method="POST"
                                         class="inline js-supplier-delete-form" data-supplier-name="{{ $supplier->name }}">
                                         @csrf
                                         @method('DELETE')
+
                                         <button type="submit" class="action-btn delete" title="Eliminar proveedor">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -168,36 +174,44 @@
                 <h3><i class="fas fa-eye"></i> Detalles del Proveedor</h3>
                 <button onclick="closeModal()" class="modal-close" id="close-proveedor-modal">&times;</button>
             </div>
+
             <div class="modal-body">
                 <div class="sale-details">
                     <div class="detail-section">
                         <h4><i class="fas fa-building"></i> Información General</h4>
+
                         {{-- Fields populated dynamically via viewSupplierDetail() --}}
                         <div class="detail-grid">
                             <div class="detail-item">
                                 <label>Nombre</label>
                                 <span id="modalProveedorNombre">-</span>
                             </div>
+
                             <div class="detail-item">
                                 <label>Correo Electrónico</label>
                                 <span id="modalProveedorEmail">-</span>
                             </div>
+
                             <div class="detail-item">
                                 <label>Teléfono</label>
                                 <span id="modalProveedorTelefono">-</span>
                             </div>
+
                             <div class="detail-item">
                                 <label>Dirección</label>
                                 <span id="modalProveedorDireccion">-</span>
                             </div>
+
                             <div class="detail-item">
                                 <label>Evaluación</label>
                                 <span id="modalProveedorEvaluacion">-</span>
                             </div>
+
                             <div class="detail-item">
                                 <label>Estado</label>
                                 <span id="modalProveedorEstado">-</span>
                             </div>
+
                             <div class="detail-item">
                                 <label>Fecha de Registro</label>
                                 <span id="modalProveedorFechaRegistro">-</span>
@@ -206,6 +220,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">
                     <i class="fas fa-times"></i> Cerrar
@@ -221,45 +236,53 @@
                 <h3><i class="fas fa-plus-circle"></i> Nuevo proveedor</h3>
                 <button class="modal-close" id="close-new-supplier-modal">&times;</button>
             </div>
+
             <div class="modal-body">
                 <form id="new-supplier-form">
                     @csrf
+
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-supplier-nombre">Nombre del Proveedor *</label>
+                            <label for="new-supplier-nombre">Nombre del Proveedor</label>
                             <input type="text" id="new-supplier-nombre" name="name" required>
                             <div class="error-message" id="error-new-name"></div>
                         </div>
+
                         <div class="form-group">
-                            <label for="new-supplier-contacto">Contacto Principal *</label>
+                            <label for="new-supplier-contacto">Contacto Principal</label>
                             <input type="text" id="new-supplier-contacto" name="primary_contact" required>
                             <div class="error-message" id="error-new-primary_contact"></div>
                         </div>
                     </div>
+
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-supplier-telefono">Teléfono *</label>
+                            <label for="new-supplier-telefono">Teléfono</label>
                             <input type="tel" id="new-supplier-telefono" name="phone" required>
                             <div class="error-message" id="error-new-phone"></div>
                         </div>
+
                         <div class="form-group">
-                            <label for="new-supplier-email">Correo Electrónico *</label>
+                            <label for="new-supplier-email">Correo Electrónico</label>
                             <input type="email" id="new-supplier-email" name="email" required>
                             <div class="error-message" id="error-new-email"></div>
                         </div>
                     </div>
+
                     <div class="form-group">
-                        <label for="new-supplier-direccion">Dirección *</label>
+                        <label for="new-supplier-direccion">Dirección</label>
                         <textarea id="new-supplier-direccion" name="address" rows="3" required></textarea>
                         <div class="error-message" id="error-new-address"></div>
                     </div>
+
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-supplier-tiempo">Tiempo de Entrega (días) *</label>
+                            <label for="new-supplier-tiempo">Tiempo de entrega referencial (días) *</label>
                             <input type="number" id="new-supplier-tiempo" name="delivery_time" min="1"
                                 max="365" required>
                             <div class="error-message" id="error-new-delivery_time"></div>
                         </div>
+
                         <div class="form-group">
                             <label for="new-supplier-evaluacion">Evaluación (0-5)</label>
                             <input type="number" id="new-supplier-evaluacion" name="rating" min="0"
@@ -267,10 +290,12 @@
                             <div class="error-message" id="error-new-rating"></div>
                         </div>
                     </div>
+
                     <div style="display:flex; gap:15px; justify-content:flex-end; margin-top:20px;">
                         <button type="button" class="btn btn-secondary" id="cancel-new-supplier">
                             <i class="fas fa-times"></i> Cancelar
                         </button>
+
                         <button type="button" class="btn btn-primary" id="save-new-supplier">
                             <i class="fas fa-save"></i> Guardar Proveedor
                         </button>
@@ -287,41 +312,49 @@
                 <h3><i class="fas fa-edit"></i> Editar Proveedor</h3>
                 <button class="modal-close" id="close-edit-supplier-modal">&times;</button>
             </div>
+
             <div class="modal-body">
                 <form id="edit-supplier-form">
                     @csrf
                     @method('PUT')
+
                     {{-- Hidden field carries the supplier ID for the PUT request --}}
                     <input type="hidden" id="edit-supplier-id" name="supplier_id">
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="edit-supplier-nombre">Nombre del Proveedor *</label>
                             <input type="text" id="edit-supplier-nombre" name="name" required>
                             <div class="error-message" id="error-edit-name"></div>
                         </div>
+
                         <div class="form-group">
                             <label for="edit-supplier-contacto">Contacto Principal *</label>
                             <input type="text" id="edit-supplier-contacto" name="primary_contact" required>
                             <div class="error-message" id="error-edit-primary_contact"></div>
                         </div>
                     </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="edit-supplier-telefono">Teléfono *</label>
                             <input type="tel" id="edit-supplier-telefono" name="phone" required>
                             <div class="error-message" id="error-edit-phone"></div>
                         </div>
+
                         <div class="form-group">
                             <label for="edit-supplier-email">Correo Electrónico *</label>
                             <input type="email" id="edit-supplier-email" name="email" required>
                             <div class="error-message" id="error-edit-email"></div>
                         </div>
                     </div>
+
                     <div class="form-group">
                         <label for="edit-supplier-direccion">Dirección *</label>
                         <textarea id="edit-supplier-direccion" name="address" rows="3" required></textarea>
                         <div class="error-message" id="error-edit-address"></div>
                     </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="edit-supplier-tiempo">Tiempo de Entrega (días) *</label>
@@ -329,6 +362,7 @@
                                 max="365" required>
                             <div class="error-message" id="error-edit-delivery_time"></div>
                         </div>
+
                         <div class="form-group">
                             <label for="edit-supplier-evaluacion">Evaluación (0-5)</label>
                             <input type="number" id="edit-supplier-evaluacion" name="rating" min="0"
@@ -336,10 +370,12 @@
                             <div class="error-message" id="error-edit-rating"></div>
                         </div>
                     </div>
+
                     <div style="display:flex; gap:15px; justify-content:flex-end; margin-top:20px;">
                         <button type="button" class="btn btn-secondary" id="cancel-edit-supplier">
                             <i class="fas fa-times"></i> Cancelar
                         </button>
+
                         <button type="button" class="btn btn-primary" id="save-edit-supplier">
                             <i class="fas fa-save"></i> Actualizar Proveedor
                         </button>

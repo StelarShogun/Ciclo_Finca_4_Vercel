@@ -15,6 +15,8 @@ class AppSetting extends Model
 
     public const KEY_READY_TO_PICKUP_EXPIRATION_HOURS = 'ready_to_pickup_expiration_hours';
 
+    public const KEY_SUPPLIER_ORDER_DEFAULT_DELIVERY_DAYS = 'supplier_order_default_delivery_days';
+
     public const KEY_WEEKLY_REPORT_RECIPIENTS = 'weekly_report_recipients';
 
     public const KEY_WEEKLY_REPORT_DAY = 'weekly_report_day';
@@ -33,6 +35,8 @@ class AppSetting extends Model
     private const DEFAULT_WEEKLY_REPORT_HOUR = 8;
 
     private const DEFAULT_WEEKLY_REPORT_MINUTE = 0;
+
+    private const DEFAULT_SUPPLIER_ORDER_DELIVERY_DAYS = 7;
 
     private static function getSettingValue(string $key): ?string
     {
@@ -124,6 +128,29 @@ class AppSetting extends Model
 
         Cache::forget(self::cacheKeyReadyToPickupExpirationHours());
         Cache::forget(self::cacheKeyReadyToPickupExpirationDays());
+    }
+
+    public static function getSupplierOrderDefaultDeliveryDays(): int
+    {
+        $raw = self::getSettingValue(self::KEY_SUPPLIER_ORDER_DEFAULT_DELIVERY_DAYS);
+
+        if ($raw === null || $raw === '' || ! is_numeric($raw)) {
+            return self::DEFAULT_SUPPLIER_ORDER_DELIVERY_DAYS;
+        }
+
+        $days = (int) $raw;
+
+        return ($days >= 1 && $days <= 365) ? $days : self::DEFAULT_SUPPLIER_ORDER_DELIVERY_DAYS;
+    }
+
+    public static function setSupplierOrderDefaultDeliveryDays(int $days): void
+    {
+        static::updateOrCreate(
+            ['key' => self::KEY_SUPPLIER_ORDER_DEFAULT_DELIVERY_DAYS],
+            ['value' => (string) $days]
+        );
+
+        Cache::forget(self::cacheKeySupplierOrderDefaultDeliveryDays());
     }
 
     public static function getWeeklyReportRecipients(): array
@@ -231,6 +258,11 @@ class AppSetting extends Model
     public static function cacheKeyReadyToPickupExpirationHours(): string
     {
         return 'app_settings.effective_ready_to_pickup_expiration_hours';
+    }
+
+    public static function cacheKeySupplierOrderDefaultDeliveryDays(): string
+    {
+        return 'app_settings.supplier_order_default_delivery_days';
     }
 
     public static function cacheKeyWeeklyReportRecipients(): string
