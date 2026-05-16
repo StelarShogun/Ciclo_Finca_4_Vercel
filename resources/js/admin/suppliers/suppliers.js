@@ -262,22 +262,17 @@ async function viewSupplierDetail(id) {
 
         const s = data.data;
 
-        if (data.success) {
-            // Populate each modal field, defaulting to 'N/A' when data is missing
-            document.getElementById('modalProveedorNombre').textContent       = s.name        || 'N/A';
-            document.getElementById('modalProveedorEmail').textContent        = s.email       || 'N/A';
-            document.getElementById('modalProveedorTelefono').textContent     = s.phone       || 'N/A';
-            document.getElementById('modalProveedorDireccion').textContent    = s.address     || 'N/A';
-            document.getElementById('modalProveedorEvaluacion').textContent   = s.rating      || '0';
-            document.getElementById('modalProveedorEstado').textContent       = s.status      || 'N/A';
-            document.getElementById('modalProveedorFechaRegistro').textContent = s.created_at
-                ? new Date(s.created_at).toLocaleDateString()
-                : 'N/A';
+        document.getElementById('modalProveedorNombre').textContent       = s.name        || 'N/A';
+        document.getElementById('modalProveedorEmail').textContent        = s.email       || 'N/A';
+        document.getElementById('modalProveedorTelefono').textContent     = s.phone       || 'N/A';
+        document.getElementById('modalProveedorDireccion').textContent    = s.address     || 'N/A';
+        document.getElementById('modalProveedorEvaluacion').textContent   = s.rating      || '0';
+        document.getElementById('modalProveedorEstado').textContent       = s.status      || 'N/A';
+        document.getElementById('modalProveedorFechaRegistro').textContent = s.created_at
+            ? new Date(s.created_at).toLocaleDateString()
+            : 'N/A';
 
-            document.getElementById('modalDetalleProveedor').classList.add('active');
-        } else {
-            Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudieron obtener los datos del proveedor' });
-        }
+        document.getElementById('modalDetalleProveedor').classList.add('active');
     } catch (error) {
         console.error('Error:', error);
         Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexión al obtener los datos del proveedor' });

@@ -1724,8 +1724,10 @@ function setModalLoading(modal, isLoading) {
                         detectedParentId = currentCategoryId;
                     }
 
+                    editClassificationPreset = product.classification_value_ids || [];
+
                     if (editParentCategory) {
-                        editParentCategoryCombobox?.setValue(detectedParentId);
+                        editParentCategoryCombobox?.setValue(detectedParentId, { silent: true });
                         fillSubcategoryOptions(
                             editSubcategory,
                             detectedParentId,
@@ -1735,14 +1737,13 @@ function setModalLoading(modal, isLoading) {
                         syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
                         syncParentCategoryHiddenInput(editParentCategory, editParentCategoryHidden);
                     }
-                    editProviderCombobox?.setValue(product.supplier_id || '');
-                    editBrandCombobox?.setValue(product.brand_id || '');
+                    editProviderCombobox?.setValue(product.supplier_id || '', { silent: true });
+                    editBrandCombobox?.setValue(product.brand_id || '', { silent: true });
                     qs('#edit-price-buy').value = product.purchase_price || '';
                     qs('#edit-price-sell').value = product.sale_price || '';
                     qs('#edit-stock').value = product.stock_current || '';
                     qs('#edit-stock-min').value = product.stock_minimum || '';
                     qs('#edit-status').value = product.status || 'active';
-                    editClassificationPreset = product.classification_value_ids || [];
                     refreshClassificationFields(
                         '#edit-classification-fields',
                         editFinalCategory?.value || '',
@@ -3193,9 +3194,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         previewEl.hidden = false;
         previewEl.className = `stock-form-hint stock-form-hint--${currentAction === 'add' ? 'add' : 'remove'}`;
-        previewEl.textContent = currentAction === 'add'
-            ? `Stock resultante: ${result} unidades`
-            : `Stock resultante: ${result} unidades`;
+        previewEl.textContent = `Stock resultante: ${result} unidades`;
     }
 
     // ── Open modal ────────────────────────────────────────────────────────
