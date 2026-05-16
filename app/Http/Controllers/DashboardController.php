@@ -11,6 +11,7 @@ use App\Services\Admin\AdminPdfExportService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -25,7 +26,8 @@ class DashboardController extends Controller
         }
 
         try {
-            $data = $this->gatherDashboardData();
+            $ttl = max(15, (int) config('cf4_performance.admin_dashboard_index_ttl', 60));
+            $data = Cache::remember('cf4:admin:dashboard_index', $ttl, fn () => $this->gatherDashboardData());
 
             $data['weeklyReportDay'] = AppSetting::getWeeklyReportDay();
             $data['weeklyReportHour'] = AppSetting::getWeeklyReportHour();

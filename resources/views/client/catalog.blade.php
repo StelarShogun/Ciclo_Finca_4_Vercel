@@ -107,8 +107,8 @@
         <aside class="catalog-filters catalog-sidebar" id="catalog-sidebar">
                 <div class="filters-card">
                     <h3 class="filters-title">
-                        <i class="fas fa-filter"></i>
-                        Filtros
+                        <i class="fas fa-filter" aria-hidden="true"></i>
+                        <span class="filters-title-text">Filtros</span>
                     </h3>
 
                     {{-- GET form: category_id se conserva por URL al filtrar desde el menú de categorías --}}
@@ -133,6 +133,8 @@
                                        name="min_price"
                                        class="form-control"
                                        placeholder="Mínimo"
+                                       min="0"
+                                       step="1"
                                        value="{{ old('min_price', request('min_price')) }}">
                                 <span class="price-separator">-</span>
                                 <input type="number"
@@ -140,6 +142,8 @@
                                        name="max_price"
                                        class="form-control"
                                        placeholder="Máximo"
+                                       min="0"
+                                       step="1"
                                        value="{{ old('max_price', request('max_price')) }}">
                             </div>
                         </div>
@@ -163,12 +167,12 @@
                         <div class="filter-actions">
                             <button type="submit" class="btn btn-primary btn-block" id="filter-submit-btn">
                                 <i class="fas fa-sliders" aria-hidden="true"></i>
-                                Aplicar Filtros
+                                <span class="btn-text">Aplicar Filtros</span>
                             </button>
                             {{-- Navigating to the base URL effectively clears all filters --}}
                             <a href="{{ route('clients.catalog') }}" class="btn btn-secondary btn-block">
-                                <i class="fas fa-redo"></i>
-                                Limpiar
+                                <i class="fas fa-redo" aria-hidden="true"></i>
+                                <span class="btn-text">Limpiar</span>
                             </a>
                         </div>
                     </form>
@@ -307,19 +311,27 @@
                                                 $spotlightImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png'));
                                                 $spotLabel = $product->clientCatalogStockLabel();
                                                 $spotSku = $product->clientCatalogAssignedSku();
+                                                $spotlightPriceFormatted = number_format((float) $product->sale_price, 0, ',', '.');
                                             @endphp
-                                            <article class="swiper-slide product-card product-card--catalog-spotlight catalog-spotlight-slide @if($spotLabel === 'Agotado') catalog-spotlight-slide--out-of-stock @endif"
+                                            <article class="swiper-slide product-card product-card--catalog-spotlight product-card--catalog-cf128 catalog-spotlight-slide @if($spotLabel === 'Agotado') catalog-spotlight-slide--out-of-stock @endif"
                                                      role="group"
                                                      aria-roledescription="diapositiva"
                                                      aria-label="{{ $loop->iteration }} de {{ $loop->count }}: {{ $product->name }}">
                                                 <a class="catalog-spotlight-card-link"
                                                    href="{{ $product->clientProductUrl() }}"
                                                    aria-label="Ver producto: {{ $product->name }}">
-                                                    <div class="product-image">
-                                                        <img src="{{ $spotlightImgUrl }}"
-                                                             alt=""
-                                                             data-fallback-src="{{ asset('favicon.svg') }}"
-                                                             onerror="this.src=this.dataset.fallbackSrc;">
+                                                    <div class="product-image product-image--catalog-cf128">
+                                                        <div class="product-image__frame">
+                                                            <img src="{{ $spotlightImgUrl }}"
+                                                                 alt=""
+                                                                 loading="lazy"
+                                                                 decoding="async"
+                                                                 data-fallback-src="{{ asset('favicon.svg') }}"
+                                                                 onerror="this.src=this.dataset.fallbackSrc;">
+                                                            <div class="product-image__hover-overlay" aria-hidden="true">
+                                                                <span class="product-image__hover-price">₡{{ $spotlightPriceFormatted }}</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                     <div class="product-info">
                                                         <h3 class="product-name catalog-spotlight-card-title">{{ $product->name }}</h3>
@@ -342,7 +354,7 @@
                                                             'is-na' => $spotLabel === 'No disponible',
                                                         ])>{{ $spotLabel }}</p>
                                                         <div class="product-price-bar catalog-spotlight-card-price">
-                                                            <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
+                                                            <span class="product-price-value">₡{{ $spotlightPriceFormatted }}</span>
                                                         </div>
                                                     </div>
                                                 </a>
@@ -444,9 +456,11 @@
                                     $canBuy = $product->isPurchasableByClient();
                                     $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
                                     $cardSku = $product->clientCatalogAssignedSku();
+                                    $cardImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png'));
+                                    $cardPriceFormatted = number_format((float) $product->sale_price, 0, ',', '.');
                                 @endphp
-                                <div class="product-card @if($catLabel === 'Agotado') product-card--out-of-stock @endif">
-                                    <div class="product-image">
+                                <div class="product-card product-card--catalog-cf128 @if($catLabel === 'Agotado') product-card--out-of-stock @endif">
+                                    <div class="product-image product-image--catalog-cf128">
                                         <button type="button"
                                                 class="product-favorite-btn {{ $isFavorite ? 'is-active' : '' }}"
                                                 data-product-favorite-btn
@@ -455,16 +469,22 @@
                                                 aria-label="{{ $isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos' }}">
                                             <i class="{{ $isFavorite ? 'fas' : 'far' }} fa-heart" aria-hidden="true"></i>
                                         </button>
-                                        @php $cardImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')); @endphp
-                                        <a href="{{ $product->clientProductUrl() }}">
-                                            {{-- Fallback to favicon if product image is missing --}}
-                                            <img src="{{ $cardImgUrl }}"
-                                                 alt="{{ $product->name }}"
-                                                 data-fallback-src="{{ asset('favicon.svg') }}"
-                                                 onerror="this.src=this.dataset.fallbackSrc;">
-                                        </a>
+                                        <div class="product-image__frame">
+                                            <a class="product-image__link" href="{{ $product->clientProductUrl() }}">
+                                                {{-- Fallback to favicon if product image is missing --}}
+                                                <img src="{{ $cardImgUrl }}"
+                                                     alt="{{ $product->name }}"
+                                                     loading="lazy"
+                                                     decoding="async"
+                                                     data-fallback-src="{{ asset('favicon.svg') }}"
+                                                     onerror="this.src=this.dataset.fallbackSrc;">
+                                            </a>
+                                            <div class="product-image__hover-overlay" aria-hidden="true">
+                                                <span class="product-image__hover-price">₡{{ $cardPriceFormatted }}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="product-info">
+                                    <div class="product-info product-info--catalog-cf128">
                                         <div class="product-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
                                         <h3 class="product-name">
                                             <a href="{{ $product->clientProductUrl() }}">
@@ -493,12 +513,14 @@
                                         @endif
                                         <div class="product-footer">
                                             <div class="product-price-bar">
-                                                <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
+                                                <span class="product-price-value">₡{{ $cardPriceFormatted }}</span>
                                             </div>
                                             <div class="product-actions">
-                                                <a href="{{ $product->clientProductUrl() }}" class="btn-product btn-ver-detalles">
-                                                    <i class="fas fa-arrow-right"></i>
-                                                    Ver detalles
+                                                <a href="{{ $product->clientProductUrl() }}"
+                                                   class="btn-product btn-ver-detalles"
+                                                   title="Ver ficha del producto">
+                                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                                    Ver producto
                                                 </a>
                                                 @if($canBuy)
                                                     @auth('clients')
@@ -536,26 +558,61 @@
                             <x-pagination :paginator="$products" label="productos" />
                         </div>
                     @else
+                        @pushOnce('styles', 'cf4-state-card-css')
+                            @vite(['resources/css/errors/state-card.css'])
+                        @endPushOnce
                         @if($emptyCategoryNoProducts)
-                            <div class="empty-state">
-                                <i class="fas fa-folder-open"></i>
-                                <h3>No hay productos disponibles en esta categoría.</h3>
-                                <p>Probá otra categoría o limpiá los filtros.</p>
-                                <a href="{{ route('clients.catalog', $catalogParams) }}" class="btn btn-primary">
-                                    Ver todas las categorías
-                                </a>
-                            </div>
+                            <x-cf4.state-card
+                                variant="embed"
+                                :bare="true"
+                                title-tag="h3"
+                                eyebrow="Sin resultados"
+                                title="No hay productos en esta categoría"
+                                message="Probá otra categoría o limpiá los filtros para ver más piezas disponibles."
+                            >
+                                <x-slot name="actions">
+                                    <a href="{{ route('clients.catalog', $catalogParams) }}" class="cf4-state-btn-primary">
+                                        Ver todas las categorías
+                                    </a>
+                                    <a href="{{ route('clients.catalog') }}" class="cf4-state-btn-secondary">
+                                        Ir al catálogo
+                                    </a>
+                                </x-slot>
+                            </x-cf4.state-card>
                         @else
-                            <div class="empty-state">
-                                <i class="fas fa-search"></i>
-                                <h3>No se encontraron productos</h3>
-                                <p>
-                                        Intenta ajustar tus filtros de búsqueda
-                                </p>
-                                <a href="{{ route('clients.catalog') }}" class="btn btn-primary">
-                                    Ver Todos los Productos
-                                </a>
-                            </div>
+                            @pushOnce('scripts', 'cf4-scenes-js')
+                                @vite(['resources/js/errors/scenes.js'])
+                            @endPushOnce
+                            <x-cf4.state-card
+                                variant="embed"
+                                :bare="true"
+                                title-tag="h3"
+                                eyebrow="Búsqueda"
+                                title="No encontramos esa pieza"
+                                message="Intentá ajustar filtros o palabras de búsqueda, o volvé al catálogo completo."
+                                scene="wrong_route"
+                            >
+                                <x-slot name="visual">
+                                    @include('errors.partials.404-bike-svg')
+                                </x-slot>
+                                <x-slot name="fallback">
+                                    <img
+                                        class="cf4-error-fallback"
+                                        src="{{ asset('images/errors/404-bike-illustration-orig.png') }}"
+                                        alt=""
+                                        role="presentation"
+                                        loading="lazy"
+                                    >
+                                </x-slot>
+                                <x-slot name="actions">
+                                    <a href="{{ route('clients.catalog') }}" class="cf4-state-btn-primary">
+                                        Ver todos los productos
+                                    </a>
+                                    <a href="{{ route('clients.catalog') }}" class="cf4-state-btn-secondary">
+                                        Catálogo completo
+                                    </a>
+                                </x-slot>
+                            </x-cf4.state-card>
                         @endif
                     @endif
                 </div>
@@ -563,35 +620,6 @@
     </div>
 </section>
 
-{{-- Quantity selector modal, populated by JS when the user clicks "Agregar" --}}
-<div class="modal" id="add-to-cart-modal">
-    <div class="modal-content modal-sm">
-        <div class="modal-header">
-            <h3>Agregar al Carrito</h3>
-            <button class="modal-close" id="close-add-to-cart-modal">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="product-preview" id="product-preview">
-                <img id="preview-image" src="" alt="">
-                <div class="preview-info">
-                    <h4 id="preview-name"></h4>
-                    <p class="preview-price" id="preview-price"></p>
-                    <p class="preview-stock" id="preview-stock"></p>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="cart-quantity">Cantidad:</label>
-                <input type="number" id="cart-quantity" class="form-control" min="1" value="1">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" id="cancel-add-to-cart">Cancelar</button>
-            <button class="btn btn-primary" id="confirm-add-to-cart">Agregar al Carrito</button>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')

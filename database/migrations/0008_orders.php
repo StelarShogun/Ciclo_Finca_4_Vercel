@@ -16,7 +16,14 @@ return new class extends Migration
             $table->timestamp('date')->nullable();
             $table->date('estimated_delivery_date')->nullable();
             $table->timestamp('delivered_at')->nullable();
-            $table->enum('state', ['draft', 'pending', 'confirmed', 'delivered', 'cancelled'])->default('pending');
+            $table->enum('state', [
+                'draft',
+                'pending',
+                'confirmed',
+                'partial_received',
+                'delivered',
+                'cancelled',
+            ])->default('pending');
             $table->decimal('total', 12, 2)->default(0);
             $table->timestamps();
 

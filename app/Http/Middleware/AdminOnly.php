@@ -11,6 +11,18 @@ class AdminOnly
     public function handle(Request $request, Closure $next)
     {
         if (! Auth::guard('admin')->check()) {
+            // Sesión de tienda (cliente): no redirigir al login de admin — acceso prohibido.
+            if (Auth::guard('clients')->check()) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'error' => 'Forbidden',
+                        'message' => 'No tenés permiso para acceder al panel de administración.',
+                    ], 403);
+                }
+
+                abort(403, 'No tenés permiso para acceder al panel de administración.');
+            }
+
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'No autenticado'], 401);
             }
