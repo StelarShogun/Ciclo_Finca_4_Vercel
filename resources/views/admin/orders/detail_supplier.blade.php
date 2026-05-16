@@ -156,7 +156,12 @@
                     </div>
                     <div class="kv-row">
                         <span>Entrega estimada</span>
-                        <strong>{{ $order->estimated_delivery_date?->format('d/m/Y') ?? '—' }}</strong>
+                        <strong>
+                            {{ $order->estimated_delivery_date?->format('d/m/Y') ?? '—' }}
+                            @if($order->estimated_delivery_date)
+                                <small style="display:block; font-weight:400; color:#6b7280;">Calculada automáticamente</small>
+                            @endif
+                        </strong>
                     </div>
                     <div class="kv-row">
                         <span>Entregado</span>

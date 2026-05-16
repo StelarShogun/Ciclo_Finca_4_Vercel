@@ -230,36 +230,36 @@
                     @csrf
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-supplier-nombre">Nombre del Proveedor *</label>
+                            <label for="new-supplier-nombre">Nombre del Proveedor </label>
                             <input type="text" id="new-supplier-nombre" name="name" required>
                             <div class="error-message" id="error-new-name"></div>
                         </div>
                         <div class="form-group">
-                            <label for="new-supplier-contacto">Contacto Principal *</label>
+                            <label for="new-supplier-contacto">Contacto Principal </label>
                             <input type="text" id="new-supplier-contacto" name="primary_contact" required>
                             <div class="error-message" id="error-new-primary_contact"></div>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-supplier-telefono">Teléfono *</label>
+                            <label for="new-supplier-telefono">Teléfono </label>
                             <input type="tel" id="new-supplier-telefono" name="phone" required>
                             <div class="error-message" id="error-new-phone"></div>
                         </div>
                         <div class="form-group">
-                            <label for="new-supplier-email">Correo Electrónico *</label>
+                            <label for="new-supplier-email">Correo Electrónico </label>
                             <input type="email" id="new-supplier-email" name="email" required>
                             <div class="error-message" id="error-new-email"></div>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="new-supplier-direccion">Dirección *</label>
+                        <label for="new-supplier-direccion">Dirección </label>
                         <textarea id="new-supplier-direccion" name="address" rows="3" required></textarea>
                         <div class="error-message" id="error-new-address"></div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-supplier-tiempo">Tiempo de Entrega (días) *</label>
+                            <label for="new-supplier-tiempo">Tiempo de entrega referencial (días)</label>
                             <input type="number" id="new-supplier-tiempo" name="delivery_time"
                                 min="1" max="365" required>
                             <div class="error-message" id="error-new-delivery_time"></div>
