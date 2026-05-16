@@ -280,27 +280,6 @@
                                 </a>
                             </p>
                         </div>
-                    </aside>
-                </div>
-            @else
-                <div class="cart-empty">
-                    <div class="cart-empty-inner">
-                        <div class="cart-empty-icon" aria-hidden="true"><i class="fas fa-cart-shopping"></i></div>
-                        <h2 class="cart-empty-title">Tu carrito está vacío</h2>
-                        <p class="cart-empty-text">Explorá el catálogo y agregá productos para armar tu solicitud.</p>
-                        <div class="cart-empty-actions">
-                            <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-bicycle" aria-hidden="true"></i>
-                                Ir al catálogo
-                            </a>
-                            <a href="{{ route('clients.catalog') }}#catalog-spotlight-heading" class="btn btn-ghost-cart btn-lg">
-                                <i class="fas fa-star" aria-hidden="true"></i>
-                                Ver destacados
-                            </a>
-                        </div>
-                        <p class="cart-empty-home-link">
-                            <a href="{{ route('clients.home') }}" class="cart-empty-home-anchor">Volver al inicio</a>
-                        </p>
                     </div>
                 @endif
             </div>
