@@ -3,7 +3,11 @@
 @section('Titulo pagina', 'Nuevo Pedido a Proveedor - Ciclo Finca 4 Admin')
 
 @push('styles')
-    @vite(['resources/css/admin/sales/sales.css', 'resources/css/admin/orders/orders.css', 'resources/css/admin/orders/supplier-order-create.css'])
+    @vite([
+        'resources/css/admin/sales/sales.css',
+        'resources/css/admin/orders/orders.css',
+        'resources/css/admin/orders/supplier-order-create.css'
+    ])
 @endpush
 
 @section('aside')
@@ -22,7 +26,7 @@
         <header class="sales-header">
             <div>
                 <h1>Nuevo pedido a proveedor</h1>
-                <p>Crea un pedido de compra seleccionando proveedor, productos y una fecha estimada de entrega.</p>
+                <p>Crea un pedido de compra seleccionando proveedor y productos.</p>
             </div>
             <div class="sales-actions">
                 <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary">
@@ -61,22 +65,6 @@
                     <div id="supplier-preview" class="supplier-preview" hidden></div>
                 </section>
 
-                {{-- Delivery date --}}
-                <section class="create-card" aria-labelledby="date-card-title">
-                    <div class="create-card-head">
-                        <h2 id="date-card-title"><i class="fas fa-calendar-alt"></i> Entrega estimada</h2>
-                        <span class="required-pill">Obligatorio</span>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="estimated_delivery_date">Fecha estimada</label>
-                        <input type="date" id="estimated_delivery_date" name="estimated_delivery_date" value="{{ old('estimated_delivery_date') }}" min="{{ now()->addDay()->toDateString() }}" required>
-                        @error('estimated_delivery_date')
-                            <p class="field-error">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </section>
-
                 {{-- Items --}}
                 <section class="create-card create-card-wide" aria-labelledby="items-card-title">
                     <div class="create-card-head">
@@ -104,6 +92,7 @@
                                     <th style="width:1%;"></th>
                                 </tr>
                             </thead>
+
                             <tbody id="items-body">
                                 {{-- JS renders rows --}}
                             </tbody>
@@ -121,6 +110,7 @@
                                 <span>Líneas</span>
                                 <strong id="summary-lines">0</strong>
                             </div>
+
                             <div class="summary-line">
                                 <span>Total</span>
                                 <strong id="summary-total">₡0</strong>
@@ -144,6 +134,7 @@
         <script>
             window.__CF4_SUPPLIERS__ = @json($suppliers);
         </script>
+
         @vite(['resources/js/admin/orders/supplier-order-create.js'])
     @endpush
 @endsection

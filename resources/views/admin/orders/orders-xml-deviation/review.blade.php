@@ -321,6 +321,14 @@
 
     <div class="sales-container xml-review-container">
 
+        <nav class="orders-breadcrumb" aria-label="Migas de pan">
+            <a href="{{ route('admin.supplier-orders.index') }}">Pedidos a proveedor</a>
+            <span class="sep">/</span>
+            <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}">Importar XML</a>
+            <span class="sep">/</span>
+            <span>Revisión de precios</span>
+        </nav>
+
         {{-- Meta bar --}}
         <div class="xml-review-meta">
             <span><strong><i class="fas fa-file-alt"></i></strong> {{ $fileName }}</span>

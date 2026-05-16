@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
+use App\Services\SupplierDeliveryEstimator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -168,16 +169,12 @@ class SupplierOrderController extends Controller
     {
         $validated = $request->validate([
             'supplier_id' => ['required', 'integer', 'exists:suppliers,supplier_id'],
-            'estimated_delivery_date' => ['required', 'date', 'after:today'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,product_id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
         ], [
             'supplier_id.required' => 'El proveedor es obligatorio.',
             'supplier_id.exists' => 'El proveedor seleccionado no existe.',
-            'estimated_delivery_date.required' => 'La fecha estimada de entrega es obligatoria.',
-            'estimated_delivery_date.date' => 'La fecha estimada no tiene un formato válido.',
-            'estimated_delivery_date.after' => 'La fecha estimada debe ser posterior al día de hoy.',
             'items.required' => 'Debes agregar al menos un producto.',
             'items.min' => 'Debes agregar al menos un producto.',
             'items.*.product_id.required' => 'Selecciona un producto válido.',
@@ -236,7 +233,7 @@ class SupplierOrderController extends Controller
             $order = Order::create([
                 'po_number' => $this->generatePoNumber(),
                 'supplier_id' => (int) $validated['supplier_id'],
-                'estimated_delivery_date' => $validated['estimated_delivery_date'],
+                'estimated_delivery_date' => null,
                 'date' => now(),
                 'state' => 'draft',
                 'total' => round($total, 2),
@@ -323,8 +320,12 @@ class SupplierOrderController extends Controller
         ]);
     }
 
-    public function updateState(Request $request, int $id, InventoryMovementService $inventoryService)
-    {
+    public function updateState(
+        Request $request,
+        int $id,
+        InventoryMovementService $inventoryService,
+        SupplierDeliveryEstimator $deliveryEstimator,
+    ) {
         $order = Order::findOrFail($id);
         $previousState = (string) $order->state;
 
@@ -402,9 +403,15 @@ class SupplierOrderController extends Controller
             }
         }
 
+        $confirmationDate = now();
+        $estimatedDeliveryDate = $requestedState === 'confirmed'
+            ? $deliveryEstimator->estimateFor($order, $confirmationDate)
+            : $order->estimated_delivery_date;
+
         $updates = [
             'state' => $requestedState,
-            'date' => $requestedState === 'confirmed' ? now() : $order->date,
+            'date' => $requestedState === 'confirmed' ? $confirmationDate : $order->date,
+            'estimated_delivery_date' => $estimatedDeliveryDate,
             'delivered_at' => $requestedState === 'delivered' ? now() : $order->delivered_at,
         ];
 
@@ -434,6 +441,7 @@ class SupplierOrderController extends Controller
                 'from_state' => $previousState,
                 'to_state' => (string) $order->state,
                 'reason' => (string) ($request->input('reason') ?? ''),
+                'estimated_delivery_date' => $order->estimated_delivery_date?->toDateString(),
             ]
         );
 
@@ -442,6 +450,7 @@ class SupplierOrderController extends Controller
             'message' => 'Estado actualizado correctamente.',
             'order' => [
                 'state' => $order->state,
+                'estimated_delivery_date' => $order->estimated_delivery_date?->format('d/m/Y'),
             ],
         ]);
     }
