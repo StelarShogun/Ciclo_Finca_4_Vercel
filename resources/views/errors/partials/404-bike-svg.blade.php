@@ -36,6 +36,7 @@
             <path
                 class="cf4-bike404-road-break js-road-break"
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 d="M458 314 L478 336 M482 312 L500 335"
             />
         </g>
@@ -160,6 +161,38 @@
             <circle cx="205" cy="328" r="2.5"/>
         </g>
 
+=======
+                d="M438 322 L462 348 M470 312 L498 340 M448 334 L474 358"
+            />
+        </g>
+
+        <g class="cf4-bike404-skid js-skid" aria-hidden="true">
+            <path d="M175 332 C210 342, 245 342, 288 332"/>
+            <path d="M188 346 C218 354, 252 352, 278 344"/>
+        </g>
+
+        <g class="cf4-bike404-obstacle js-road-obstacle" aria-hidden="true">
+            <path class="cf4-bike404-crack" d="M455 318 L472 332 L462 344 L485 352"/>
+            <rect class="cf4-bike404-barrier" x="466" y="286" width="68" height="14" rx="7" transform="rotate(-10 500 293)"/>
+            <line class="cf4-bike404-barrier-stripe" x1="478" y1="287" x2="494" y2="300"/>
+            <line class="cf4-bike404-barrier-stripe" x1="508" y1="287" x2="524" y2="300"/>
+        </g>
+
+        <g class="cf4-bike404-sign js-warning-sign">
+            <line class="cf4-bike404-sign-post" x1="488" y1="308" x2="488" y2="208"/>
+            <path class="cf4-bike404-sign-board" d="M488 168 L548 238 L488 308 L428 238 Z"/>
+            <path class="cf4-bike404-sign-arrow" d="M462 238 H514 M496 218 L520 238 L496 258"/>
+            <line class="cf4-bike404-sign-block" x1="440" y1="200" x2="536" y2="276"/>
+        </g>
+
+        <g class="cf4-bike404-dust js-dust">
+            <circle cx="192" cy="312" r="4"/>
+            <circle cx="176" cy="322" r="3"/>
+            <circle cx="160" cy="316" r="2.5"/>
+            <circle cx="205" cy="328" r="2.5"/>
+        </g>
+
+>>>>>>> Stashed changes
         {{-- Story: movimiento GSAP. Float: sombra + filtro drop-shadow en el conjunto. --}}
         <g class="cf4-bike404-bike-story js-bike-story">
             <g class="cf4-bike404-bike-float js-bike-float" filter="url(#cf4-bike-soft-shadow)">
@@ -235,6 +268,9 @@
                 </g>
             </g>
         </g>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     </svg>
 </div>
