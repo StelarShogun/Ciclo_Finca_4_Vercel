@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Valores por atributo — {{ $product->name }} - Ciclo Finca 4 Admin</title>
     @vite([
+        'resources/css/admin/components/page-header.css',
         'resources/css/admin/suppliers/suppliers.css',
         'resources/js/admin/product-classifications/edit.js',
     ])
@@ -19,26 +20,30 @@
 
     <main class="admin-main">
         <div class="form-container">
+            <nav class="reports-breadcrumb" aria-label="Migas de pan">
+                <a href="{{ route('admin.product-classifications.index') }}">Clasificaciones de productos</a>
+                <span class="sep">/</span>
+                <span>{{ $product->name }}</span>
+            </nav>
 
-        <nav class="reports-breadcrumb" aria-label="Migas de pan">
-            <a href="{{ route('admin.product-classifications.index') }}">Clasificaciones de productos</a>
-            <span class="sep">/</span>
-            <span>{{ $product->name }}</span>
-        </nav>
-
-            <div class="form-header">
-                <h1>{{ $product->name }}</h1>
+            @component('admin.partials.page-header', ['title' => $product->name])
                 <p>
-                    Elegí un <strong>valor</strong> por cada <strong>atributo</strong> (Color, Talla…). Categoría › subcategoría:
+                    Selecciona un <strong>valor</strong> por cada <strong>atributo</strong> (Color, Talla…).
+                    Categoría › subcategoría:
+
                     @if ($product->category)
-                        {{ $product->category->parent->name ?? '' }} › <strong>{{ $product->category->name }}</strong>
+                        {{ $product->category->parent->name ?? '' }} ›
+                        <strong>{{ $product->category->name }}</strong>
                     @endif
                 </p>
-            </div>
+            @endcomponent
 
             <div class="form-card">
                 @if ($attributes->isEmpty())
-                    <p>Todavía no hay atributos definidos para esta subcategoría. Configuralos en <strong>Opciones por tipo</strong> (menú lateral) y volvé acá.</p>
+                    <p>
+                        Aún no hay atributos definidos para esta subcategoría.
+                        Configúralos en <strong>Opciones por tipo</strong> (menú lateral) y vuelve aquí.
+                    </p>
                 @else
                     <form id="product-classifications-form"
                         action="{{ route('admin.products.classifications.update', $product) }}"

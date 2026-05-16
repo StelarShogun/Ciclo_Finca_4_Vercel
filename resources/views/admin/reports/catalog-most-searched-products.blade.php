@@ -34,25 +34,23 @@
             <span>Productos más buscados</span>
         </nav>
 
-        <header class="csr-page-header">
-            <h1 class="csr-page-title">Productos más buscados</h1>
-            <p class="csr-page-subtitle">Lo que más aparece en resultados del catálogo público cuando hay búsqueda.</p>
-        </header>
+        @component('admin.partials.page-header', ['title' => 'Productos más buscados'])
+            <p class="csr-page-subtitle">
+                Consulta los productos que aparecen con mayor frecuencia en las búsquedas del catálogo público.
+            </p>
+        @endcomponent
 
         <div class="csr-period-bar">
             <nav class="csr-period-tabs" role="tablist" aria-label="Periodo del reporte">
                 <a href="{{ route('admin.reports.catalog-search-products', ['period' => '7d']) }}"
-                   class="csr-period-tab {{ $period === '7d' ? 'is-active' : '' }}"
-                   role="tab"
-                   aria-selected="{{ $period === '7d' ? 'true' : 'false' }}">7 días</a>
+                    class="csr-period-tab {{ $period === '7d' ? 'is-active' : '' }}" role="tab"
+                    aria-selected="{{ $period === '7d' ? 'true' : 'false' }}">7 días</a>
                 <a href="{{ route('admin.reports.catalog-search-products', ['period' => '30d']) }}"
-                   class="csr-period-tab {{ $period === '30d' ? 'is-active' : '' }}"
-                   role="tab"
-                   aria-selected="{{ $period === '30d' ? 'true' : 'false' }}">30 días</a>
+                    class="csr-period-tab {{ $period === '30d' ? 'is-active' : '' }}" role="tab"
+                    aria-selected="{{ $period === '30d' ? 'true' : 'false' }}">30 días</a>
                 <a href="{{ route('admin.reports.catalog-search-products', ['period' => '90d']) }}"
-                   class="csr-period-tab {{ $period === '90d' ? 'is-active' : '' }}"
-                   role="tab"
-                   aria-selected="{{ $period === '90d' ? 'true' : 'false' }}">90 días</a>
+                    class="csr-period-tab {{ $period === '90d' ? 'is-active' : '' }}" role="tab"
+                    aria-selected="{{ $period === '90d' ? 'true' : 'false' }}">90 días</a>
             </nav>
         </div>
 
@@ -81,10 +79,12 @@
                 <div class="csr-kpi-card-head">
                     <div>
                         <p class="csr-kpi-label">Líder</p>
-                        @if($topProductName)
+                        @if ($topProductName)
                             <p class="csr-kpi-leader-name" title="{{ $topProductName }}">{{ $topProductName }}</p>
                             <p class="csr-kpi-sub csr-kpi-sub--pill">
-                                <span class="csr-hit-pill csr-hit-pill--compact">{{ number_format((int) ($topProductHits ?? 0), 0, ',', '.') }} apariciones</span>
+                                <span
+                                    class="csr-hit-pill csr-hit-pill--compact">{{ number_format((int) ($topProductHits ?? 0), 0, ',', '.') }}
+                                    apariciones</span>
                             </p>
                         @else
                             <p class="csr-kpi-leader-empty">—</p>
@@ -112,9 +112,9 @@
                 <p class="csr-ranking-panel-meta">{{ $periodLabelLong }}</p>
             </div>
 
-            @if($hasRows)
+            @if ($hasRows)
                 <div class="csr-ranking-list" role="list">
-                    @foreach($rows as $idx => $row)
+                    @foreach ($rows as $idx => $row)
                         @php
                             $rank = $idx + 1;
                             $hits = (int) $row->hit_count;
@@ -133,7 +133,8 @@
                             };
                         @endphp
                         <div class="csr-ranking-row {{ $rankClass }}" role="listitem">
-                            <span class="csr-rank-badge {{ $badgeClass }}" aria-label="Puesto {{ $rank }}">{{ $rank }}</span>
+                            <span class="csr-rank-badge {{ $badgeClass }}"
+                                aria-label="Puesto {{ $rank }}">{{ $rank }}</span>
                             <div class="csr-ranking-main">
                                 <p class="csr-ranking-name">{{ $row->name }}</p>
                                 <p class="csr-ranking-sku">{{ \App\Models\Product::skuFromId((int) $row->product_id) }}</p>

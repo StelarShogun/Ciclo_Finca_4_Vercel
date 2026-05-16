@@ -111,14 +111,18 @@
                     @php
                         $stockLabel = $product->clientCatalogStockLabel();
                         $canBuy = $product->isPurchasableByClient();
+                        $homeSku = $product->clientCatalogAssignedSku();
                     @endphp
-                    <div class="product-card">
+                    <div class="product-card @if($stockLabel === 'Agotado') product-card--out-of-stock @endif">
                         <div class="product-image">
+                            <a class="product-image__link" href="{{ $product->clientProductUrl() }}"
+                               aria-label="Ver producto: {{ $product->name }}">
                             <!-- Fallback to favicon if product image is missing -->
                             <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}" 
                                  alt="{{ $product->name }}"
                                  data-fallback-src="{{ asset('favicon.svg') }}"
                                  onerror="this.src=this.dataset.fallbackSrc;">
+                            </a>
                         </div>
                         <div class="product-info">
                             <div class="product-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
@@ -129,10 +133,14 @@
                                 'reviewCount' => (int) data_get($homeRs, 'count', 0),
                                 'variant' => 'card',
                             ])
+                            @if($homeSku)
+                                <p class="product-card-sku">SKU: {{ $homeSku }}</p>
+                            @endif
                             <p @class([
                                 'product-availability-text',
-                                'is-available' => $stockLabel === 'Disponible',
-                                'is-low' => $stockLabel === 'Quedan pocas unidades',
+                                'product-stock-badge',
+                                'is-available' => $stockLabel === 'En stock',
+                                'is-low' => $stockLabel === 'Últimas unidades',
                                 'is-out' => $stockLabel === 'Agotado',
                                 'is-na' => $stockLabel === 'No disponible',
                             ])>{{ $stockLabel }}</p>
@@ -145,9 +153,11 @@
                             <div class="product-footer">
                                 <div class="product-price">₡{{ number_format($product->sale_price, 0, ',', '.') }}</div>
                                 <div class="product-actions">
-                                    <a href="{{ $product->clientProductUrl() }}" class="btn-product btn-ver-detalles">
+                                    <a href="{{ $product->clientProductUrl() }}"
+                                       class="btn-product btn-ver-detalles"
+                                       title="Ver ficha del producto">
                                         <i class="fas fa-eye" aria-hidden="true"></i>
-                                        Ver detalle
+                                        Ver producto
                                     </a>
                                     <!-- Authenticated users add to cart; guests are prompted to log in via JS -->
                                     @if($canBuy)
@@ -409,36 +419,6 @@
     </div>
 </section>
 
-<!-- Modal: select quantity before adding a product to cart -->
-<!-- Product details are populated dynamically by JS -->
-<div class="modal" id="add-to-cart-modal">
-    <div class="modal-content modal-sm">
-        <div class="modal-header">
-            <h3>Agregar al Carrito</h3>
-            <button class="modal-close" id="close-add-to-cart-modal">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="product-preview" id="product-preview">
-                <img id="preview-image" src="" alt="">
-                <div class="preview-info">
-                    <h4 id="preview-name"></h4>
-                    <p class="preview-price" id="preview-price"></p>
-                    <p class="preview-stock" id="preview-stock"></p>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="cart-quantity">Cantidad:</label>
-                <input type="number" id="cart-quantity" class="form-control" min="1" value="1">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" id="cancel-add-to-cart">Cancelar</button>
-            <button class="btn btn-primary" id="confirm-add-to-cart">Agregar al Carrito</button>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')

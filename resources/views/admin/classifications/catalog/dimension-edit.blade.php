@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Editar atributo - Ciclo Finca 4 Admin</title>
-    @vite(['resources/css/admin/suppliers/suppliers.css'])
+    @vite(['resources/css/admin/components/page-header.css', 'resources/css/admin/suppliers/suppliers.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
@@ -15,10 +15,9 @@
 
     <main class="admin-main">
         <div class="form-container">
-            <div class="form-header">
-                <h1>Editar atributo</h1>
+            @component('admin.partials.page-header', ['title' => 'Editar atributo'])
                 <p>{{ optional($dimension->category->parent)->name ?? '' }} › {{ $dimension->category->name ?? '' }}</p>
-            </div>
+            @endcomponent
 
             <div class="form-card">
                 <form action="{{ route('admin.classifications.dimensions.update', $dimension) }}" method="POST" class="form-body">

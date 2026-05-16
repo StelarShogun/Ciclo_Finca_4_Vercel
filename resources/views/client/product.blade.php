@@ -82,6 +82,10 @@
                 <div class="product-detail-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
                 <h1 class="product-detail-name">{{ $product->name }}</h1>
 
+                @if($product->clientCatalogAssignedSku())
+                    <p class="product-detail-sku">SKU: {{ $product->clientCatalogAssignedSku() }}</p>
+                @endif
+
                 <div class="product-detail-rating-summary">
                     @include('client.parts.product-stars-inline', [
                         'avgStars' => $averageStars ?? 0,
@@ -117,13 +121,13 @@
                         @if($product->clientShowsLowStockWarning())
                             <span class="stock-available stock-available--low">
                                 <i class="fas fa-exclamation-circle"></i>
-                                <span>Quedan pocas unidades</span>
+                                <span>{{ $product->clientCatalogStockLabel() }}</span>
                                 <span class="stock-detail-count">· {{ $product->stock_current }} unidades disponibles</span>
                             </span>
                         @else
                             <span class="stock-available">
                                 <i class="fas fa-check-circle"></i>
-                                <span class="stock-status-word">Disponible</span>
+                                <span class="stock-status-word">{{ $product->clientCatalogStockLabel() }}</span>
                                 <span class="stock-detail-count stock-detail-count--plain">· {{ $product->stock_current }} unidades disponibles</span>
                             </span>
                         @endif
@@ -330,10 +334,12 @@
                         @php
                             $relLabel = $related->clientCatalogStockLabel();
                             $relCanBuy = $related->isPurchasableByClient();
+                            $relSku = $related->clientCatalogAssignedSku();
                         @endphp
-                        <div class="product-card">
+                        <div class="product-card @if($relLabel === 'Agotado') product-card--out-of-stock @endif">
                             <div class="product-image">
-                                <a href="{{ $related->clientProductUrl() }}">
+                                <a class="product-image__link" href="{{ $related->clientProductUrl() }}"
+                                   aria-label="Ver producto: {{ $related->name }}">
                                     @php $relatedImgUrl = $related->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($related->image ?? 'default.png')); @endphp
                                     <img src="{{ $relatedImgUrl }}" alt="{{ $related->name }}"
                                          data-fallback-src="{{ asset('favicon.svg') }}"
@@ -353,10 +359,14 @@
                                     'reviewCount' => (int) data_get($relRs, 'count', 0),
                                     'variant' => 'related',
                                 ])
+                                @if($relSku)
+                                    <p class="product-card-sku">SKU: {{ $relSku }}</p>
+                                @endif
                                 <p @class([
                                     'product-availability-text',
-                                    'is-available' => $relLabel === 'Disponible',
-                                    'is-low' => $relLabel === 'Quedan pocas unidades',
+                                    'product-stock-badge',
+                                    'is-available' => $relLabel === 'En stock',
+                                    'is-low' => $relLabel === 'Últimas unidades',
                                     'is-out' => $relLabel === 'Agotado',
                                     'is-na' => $relLabel === 'No disponible',
                                 ])>{{ $relLabel }}</p>
@@ -365,9 +375,37 @@
                                 @endif
                                 <div class="product-footer">
                                     <div class="product-price">₡{{ number_format($related->sale_price, 0, ',', '.') }}</div>
-                                    <a href="{{ $related->clientProductUrl() }}" class="btn btn-primary btn-sm">
-                                        Ver Detalles
-                                    </a>
+                                    <div class="product-actions">
+                                        <a href="{{ $related->clientProductUrl() }}" class="btn-product btn-ver-detalles">
+                                            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                                            Ver detalles
+                                        </a>
+                                        @if($relCanBuy)
+                                            @auth('clients')
+                                                <button type="button" class="btn-product btn-agregar add-to-cart-btn"
+                                                        data-purchasable="1"
+                                                        data-product-id="{{ $related->product_id }}"
+                                                        data-product-name="{{ $related->name }}"
+                                                        data-product-price="{{ $related->sale_price }}"
+                                                        data-product-stock="{{ $related->stock_current }}">
+                                                    <i class="fas fa-cart-plus" aria-hidden="true"></i>
+                                                    Agregar
+                                                </button>
+                                            @else
+                                                <button type="button" class="btn-product btn-agregar guest-add-btn"
+                                                        data-purchasable="1"
+                                                        data-product-stock="{{ $related->stock_current }}">
+                                                    <i class="fas fa-cart-plus" aria-hidden="true"></i>
+                                                    Agregar
+                                                </button>
+                                            @endauth
+                                        @else
+                                            <button type="button" class="btn-product btn-agotado" disabled>
+                                                <i class="fas fa-ban" aria-hidden="true"></i>
+                                                {{ $relLabel === 'Agotado' ? 'Agotado' : 'No disponible' }}
+                                            </button>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>

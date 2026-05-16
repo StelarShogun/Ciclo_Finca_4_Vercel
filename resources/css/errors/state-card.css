@@ -1,0 +1,522 @@
+/* ================================================================
+   CF4 · Shared state card (errors + empty states)
+   Transitions: opacity / transform / filter only; prefers-reduced-motion
+   ================================================================ */
+
+/* ---- transition utilities ---- */
+.cf4-transition {
+    transition:
+        opacity 180ms ease,
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        background-color 180ms ease,
+        border-color 180ms ease;
+}
+
+.cf4-fade-in {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: cf4FadeIn 260ms ease-out forwards;
+}
+
+.cf4-scale-in {
+    opacity: 0;
+    transform: scale(0.97);
+    animation: cf4ScaleIn 220ms ease-out forwards;
+}
+
+.cf4-slide-up {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: cf4SlideUp 240ms ease-out forwards;
+}
+
+.cf4-hover-lift {
+    transition:
+        transform 180ms ease,
+        box-shadow 180ms ease;
+}
+
+.cf4-hover-lift:hover {
+    transform: translateY(-3px);
+}
+
+.cf4-state-card {
+    animation: cf4StateEnter 320ms ease-out both;
+}
+
+.cf4-state-card__visual {
+    animation: cf4VisualEnter 420ms ease-out both;
+    animation-delay: 90ms;
+}
+
+@keyframes cf4StateEnter {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes cf4VisualEnter {
+    from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.96);
+        filter: blur(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes cf4FadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes cf4ScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes cf4SlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cf4-transition,
+    .cf4-hover-lift,
+    .cf4-fade-in,
+    .cf4-scale-in,
+    .cf4-slide-up,
+    .cf4-state-card,
+    .cf4-state-card__visual {
+        transition: none !important;
+        animation: none !important;
+        transform: none !important;
+        filter: none !important;
+    }
+
+    .cf4-fade-in,
+    .cf4-scale-in,
+    .cf4-slide-up {
+        opacity: 1;
+    }
+}
+
+/* ---- error layout shell (nav) — loaded with state-card on error pages ---- */
+.cf4-error-nav-logo.cf4-transition {
+    display: inline-flex;
+}
+
+.cf4-error-nav-logo:hover {
+    transform: translateY(-1px);
+    opacity: 0.94;
+}
+
+.cf4-error-nav-back {
+    transition:
+        transform 180ms ease,
+        background-color 180ms ease,
+        color 180ms ease,
+        border-color 180ms ease,
+        box-shadow 180ms ease;
+}
+
+.cf4-error-nav-back:hover {
+    transform: translateY(-2px);
+}
+
+.cf4-error-nav-back:active {
+    transform: translateY(0);
+}
+
+.cf4-error-nav-back:focus-visible {
+    outline: 3px solid var(--brand-light);
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cf4-error-nav-logo:hover,
+    .cf4-error-nav-back:hover,
+    .cf4-error-nav-back:active {
+        transform: none;
+    }
+}
+
+/* ---- main layout grid (glass card) ---- */
+.cf4-state-layout {
+    width: min(1100px, 100%);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 44px;
+    align-items: center;
+    padding: 56px 56px;
+    border-radius: 32px;
+    background: rgba(255, 255, 255, 0.68);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow:
+        0 2px 0 rgba(255, 255, 255, 0.9) inset,
+        0 32px 80px rgba(11, 43, 38, 0.16),
+        0 8px 24px rgba(11, 43, 38, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.cf4-state-layout--embed {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    grid-template-columns: 1fr;
+    padding: 40px 36px;
+    text-align: center;
+}
+
+.cf4-state-layout--embed .cf4-state-copy {
+    max-width: none;
+}
+
+.cf4-state-layout--embed .cf4-state-actions {
+    justify-content: center;
+}
+
+.cf4-state-layout--embed .cf4-bike-scene {
+    max-width: min(280px, 85vw);
+}
+
+.cf4-state-layout--bare {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 12px 0;
+}
+
+.cf4-state-layout--static-visual .cf4-state-card__visual {
+    animation: cf4VisualEnter 380ms ease-out both;
+    animation-delay: 60ms;
+}
+
+/* ---- copy column ---- */
+.cf4-state-copy {
+    min-width: 0;
+}
+
+.cf4-state-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--brand-medium);
+    background: rgba(142, 182, 155, 0.18);
+    border: 1px solid rgba(142, 182, 155, 0.45);
+    border-radius: 999px;
+    padding: 5px 14px 5px 10px;
+    margin-bottom: 20px;
+}
+
+.cf4-state-eyebrow-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--brand-light);
+}
+
+.cf4-state-code {
+    font-size: clamp(72px, 12vw, 148px);
+    font-weight: 800;
+    line-height: 0.88;
+    margin: 0 0 16px;
+    background: linear-gradient(150deg, var(--brand-darkest) 0%, var(--brand-medium) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -4px;
+}
+
+.cf4-state-title {
+    font-size: clamp(1.25rem, 2.8vw, 1.75rem);
+    font-weight: 700;
+    color: var(--brand-medium-dark);
+    margin: 0 0 14px;
+    line-height: 1.25;
+}
+
+.cf4-state-message {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #3a5244;
+    margin: 0 0 36px;
+    max-width: 420px;
+}
+
+.cf4-state-layout--embed .cf4-state-message {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cf4-state-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* ---- buttons ---- */
+.cf4-state-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 50px;
+    padding: 0 28px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    background: linear-gradient(135deg, var(--brand-medium) 0%, var(--brand-medium-dark) 100%);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(35, 83, 71, 0.38), 0 2px 0 rgba(255, 255, 255, 0.12) inset;
+    transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.cf4-state-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(35, 83, 71, 0.45), 0 2px 0 rgba(255, 255, 255, 0.12) inset;
+}
+
+.cf4-state-btn-primary:active {
+    transform: translateY(0);
+    filter: brightness(0.97);
+}
+
+.cf4-state-btn-primary:focus-visible {
+    outline: 3px solid var(--brand-light);
+    outline-offset: 3px;
+}
+
+.cf4-state-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 50px;
+    padding: 0 24px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1.5px solid rgba(142, 182, 155, 0.55);
+    background: rgba(142, 182, 155, 0.1);
+    color: var(--brand-medium);
+    transition:
+        background 180ms ease,
+        border-color 180ms ease,
+        transform 180ms ease,
+        box-shadow 180ms ease;
+}
+
+.cf4-state-btn-secondary:hover {
+    background: rgba(142, 182, 155, 0.22);
+    border-color: var(--brand-medium);
+    transform: translateY(-1px);
+}
+
+.cf4-state-btn-secondary:active {
+    transform: translateY(0);
+}
+
+.cf4-state-btn-secondary:focus-visible {
+    outline: 3px solid var(--brand-light);
+    outline-offset: 3px;
+}
+
+/* ---- visual column (404 bike, etc.) ---- */
+.cf4-state-visual-wrap {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 360px;
+}
+
+.cf4-state-visual-wrap::before {
+    content: '';
+    position: absolute;
+    width: 90%;
+    height: 75%;
+    border-radius: 999px;
+    background: rgba(200, 130, 80, 0.18);
+    filter: blur(52px);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.cf4-state-layout--embed .cf4-state-visual-wrap {
+    min-height: auto;
+    margin-bottom: 24px;
+}
+
+.cf4-state-layout--embed .cf4-state-visual-wrap::before {
+    display: none;
+}
+
+/* bike / scene box */
+.cf4-bike-scene {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 560px);
+    aspect-ratio: 1;
+    margin: 0 auto;
+    border-radius: 28px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #f3dfd0 0%, #e8b88e 45%, #c49a6c 100%);
+    box-shadow: 0 26px 52px rgba(14, 45, 80, 0.22);
+    transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.cf4-bike-scene--plain {
+    background: transparent;
+}
+
+/* Carrito vacío (embed + plain): sin recorte al flotar la canasta unos px */
+.cf4-state-layout--embed .cf4-bike-scene--plain {
+    overflow: visible;
+}
+
+.cf4-bike-scene svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.cf4-error-fallback {
+    display: none;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 28px;
+    transition: opacity 240ms ease;
+}
+
+/* GSAP overlay priming (wrong_route bike scene) */
+.cf4-bike-scene [id^='note-'],
+.cf4-bike-scene #dust {
+    opacity: 0;
+}
+
+.cf4-bike-scene.is-static:has(.cf4-error-fallback) svg {
+    visibility: hidden;
+    opacity: 0;
+}
+
+.cf4-bike-scene.is-static:has(.cf4-error-fallback) .cf4-error-fallback {
+    display: block;
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cf4-state-btn-primary,
+    .cf4-state-btn-secondary {
+        transition: none;
+    }
+
+    .cf4-state-btn-primary:hover,
+    .cf4-state-btn-secondary:hover,
+    .cf4-state-btn-primary:active,
+    .cf4-state-btn-secondary:active {
+        transform: none;
+    }
+
+    .cf4-bike-scene:has(.cf4-error-fallback) svg {
+        visibility: hidden;
+        opacity: 0;
+    }
+
+    .cf4-bike-scene:has(.cf4-error-fallback) .cf4-error-fallback {
+        display: block;
+        opacity: 1;
+    }
+}
+
+/* ---- responsive ---- */
+@media (max-width: 860px) {
+    .cf4-state-layout:not(.cf4-state-layout--embed) {
+        grid-template-columns: 1fr;
+        padding: 36px 28px 40px;
+        gap: 32px;
+        text-align: center;
+    }
+
+    .cf4-state-message {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .cf4-state-actions {
+        justify-content: center;
+    }
+
+    .cf4-state-code {
+        letter-spacing: -3px;
+    }
+
+    .cf4-state-visual-wrap {
+        order: 2;
+    }
+
+    .cf4-state-copy {
+        order: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .cf4-state-layout {
+        padding: 28px 20px 32px;
+    }
+
+    .cf4-state-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .cf4-state-btn-primary,
+    .cf4-state-btn-secondary {
+        justify-content: center;
+    }
+}
