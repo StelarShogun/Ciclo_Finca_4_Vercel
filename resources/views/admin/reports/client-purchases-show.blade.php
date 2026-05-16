@@ -25,16 +25,13 @@
                 'per_page' => $backParams['back_per_page'] ?? null,
                 'q' => $backParams['back_q'] ?? null,
             ],
-            fn ($v) => $v !== null && $v !== '',
+            fn($v) => $v !== null && $v !== '',
         );
         $listUrl = route('admin.reports.client-purchases', $listQuery);
     @endphp
 
-    <div
-        id="client-purchase-client-show-root"
-        class="client-purchases-report client-purchases-client-show"
-        data-sale-json-url-template="{{ url('/sales') }}/__SALE__"
-    >
+    <div id="client-purchase-client-show-root" class="client-purchases-report client-purchases-client-show"
+        data-sale-json-url-template="{{ url('/sales') }}/__SALE__">
         <nav class="reports-breadcrumb">
             <a href="{{ route('admin.reports.index') }}">Reportes</a>
             <span class="sep">/</span>
@@ -43,20 +40,20 @@
             <span>{{ $displayName }}</span>
         </nav>
 
-        <header class="client-purchases-header client-purchases-show-header">
-            <div class="client-purchases-show-heading">
-                <h1>Compras del cliente</h1>
-                <p class="client-purchases-show-meta">
-                    <strong>{{ $displayName }}</strong>
-                    @if ($gmail)
-                        <span class="client-purchases-show-email">{{ $gmail }}</span>
-                    @endif
-                </p>
-            </div>
-            <a href="{{ $listUrl }}" class="btn-back-to-list">
-                <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver al listado
-            </a>
-        </header>
+        @component('admin.partials.page-header', ['title' => 'Historial de compras del cliente'])
+            <p class="client-purchases-show-meta">
+                Consulta las ventas completadas registradas para <strong>{{ $displayName }}</strong>.
+                @if ($gmail)
+                    <span class="client-purchases-show-email">{{ $gmail }}</span>
+                @endif
+            </p>
+
+            @slot('actions')
+                <a href="{{ $listUrl }}" class="btn-back-to-list">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver al listado
+                </a>
+            @endslot
+        @endcomponent
 
         <section class="client-purchases-section" aria-labelledby="orders-heading">
             <h2 id="orders-heading" class="section-title">Todas las ventas completadas</h2>
@@ -83,7 +80,8 @@
                                     <td>{{ $dt->format('d/m/Y H:i') }}</td>
                                     <td class="num">₡{{ number_format((float) $order->total, 0, ',', '.') }}</td>
                                     <td class="col-actions">
-                                        <button type="button" class="btn-ver-venta btn-open-sale-detail" data-sale-id="{{ (int) $order->sale_id }}">
+                                        <button type="button" class="btn-ver-venta btn-open-sale-detail"
+                                            data-sale-id="{{ (int) $order->sale_id }}">
                                             <i class="fas fa-eye" aria-hidden="true"></i> Ver
                                         </button>
                                     </td>
@@ -95,14 +93,16 @@
             @endif
         </section>
 
-        <dialog id="sale-detail-dialog" class="client-orders-dialog client-sale-detail-dialog" aria-labelledby="sale-detail-dialog-title">
+        <dialog id="sale-detail-dialog" class="client-orders-dialog client-sale-detail-dialog"
+            aria-labelledby="sale-detail-dialog-title">
             <div class="client-orders-dialog-inner">
                 <header class="client-orders-dialog-header">
                     <div class="client-orders-dialog-title-wrap">
                         <h2 id="sale-detail-dialog-title">Detalle de la venta</h2>
                         <p class="client-orders-dialog-hint">Resumen de la factura y líneas de producto.</p>
                     </div>
-                    <button type="button" class="client-orders-dialog-close" id="sale-detail-dialog-close" aria-label="Cerrar">
+                    <button type="button" class="client-orders-dialog-close" id="sale-detail-dialog-close"
+                        aria-label="Cerrar">
                         <i class="fas fa-times" aria-hidden="true"></i>
                     </button>
                 </header>

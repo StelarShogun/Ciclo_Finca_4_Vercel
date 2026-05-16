@@ -14,17 +14,17 @@
     <div class="sales-container">
 
         {{-- ==================== HEADER ==================== --}}
-        <header class="sales-header">
-            <div>
-                <h1>Gestión de Proveedores</h1>
-                <p>Administra los proveedores del sistema</p>
-            </div>
-            <div class="sales-actions">
+        @component('admin.partials.page-header', [
+            'title' => 'Gestión de proveedores',
+            'description' =>
+                'Administra la información de proveedores, contactos, tiempos de entrega y evaluaciones del sistema.',
+        ])
+            @slot('actions')
                 <button class="btn btn-primary" id="open-new-supplier-modal">
-                    <i class="fas fa-plus"></i> Nuevo Proveedor
+                    <i class="fas fa-plus"></i> Nuevo proveedor
                 </button>
-            </div>
-        </header>
+            @endslot
+        @endcomponent
 
         @if (session('status'))
             <x-admin-alert type="success" :message="session('status')" dismissible />
@@ -78,7 +78,7 @@
                         <i class="fas fa-search"></i> Buscar
                     </button>
                     {{-- Clear filters button: only shown when filters are active --}}
-                    @if(request('name') || request('contact'))
+                    @if (request('name') || request('contact'))
                         <button type="button" class="btn btn-secondary filter-btn" id="limpiarFiltros">
                             <i class="fas fa-times"></i> Limpiar
                         </button>
@@ -133,12 +133,8 @@
                                         class="action-btn edit" title="Editar proveedor">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <form
-                                        action="{{ route('suppliers.destroy', $supplier->supplier_id) }}"
-                                        method="POST"
-                                        class="inline js-supplier-delete-form"
-                                        data-supplier-name="{{ $supplier->name }}"
-                                    >
+                                    <form action="{{ route('suppliers.destroy', $supplier->supplier_id) }}" method="POST"
+                                        class="inline js-supplier-delete-form" data-supplier-name="{{ $supplier->name }}">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="action-btn delete" title="Eliminar proveedor">
@@ -224,7 +220,7 @@
     <div id="new-supplier-modal" class="modal-overlay">
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
-                <h3><i class="fas fa-plus-circle"></i> Nuevo Proveedor</h3>
+                <h3><i class="fas fa-plus-circle"></i> Nuevo proveedor</h3>
                 <button class="modal-close" id="close-new-supplier-modal">&times;</button>
             </div>
             <div class="modal-body">
@@ -262,14 +258,14 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="new-supplier-tiempo">Tiempo de Entrega (días) *</label>
-                            <input type="number" id="new-supplier-tiempo" name="delivery_time"
-                                min="1" max="365" required>
+                            <input type="number" id="new-supplier-tiempo" name="delivery_time" min="1"
+                                max="365" required>
                             <div class="error-message" id="error-new-delivery_time"></div>
                         </div>
                         <div class="form-group">
                             <label for="new-supplier-evaluacion">Evaluación (0-5)</label>
-                            <input type="number" id="new-supplier-evaluacion" name="rating"
-                                min="0" max="5" step="0.1">
+                            <input type="number" id="new-supplier-evaluacion" name="rating" min="0"
+                                max="5" step="0.1">
                             <div class="error-message" id="error-new-rating"></div>
                         </div>
                     </div>
@@ -331,14 +327,14 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="edit-supplier-tiempo">Tiempo de Entrega (días) *</label>
-                            <input type="number" id="edit-supplier-tiempo" name="delivery_time"
-                                min="1" max="365" required>
+                            <input type="number" id="edit-supplier-tiempo" name="delivery_time" min="1"
+                                max="365" required>
                             <div class="error-message" id="error-edit-delivery_time"></div>
                         </div>
                         <div class="form-group">
                             <label for="edit-supplier-evaluacion">Evaluación (0-5)</label>
-                            <input type="number" id="edit-supplier-evaluacion" name="rating"
-                                min="0" max="5" step="0.1">
+                            <input type="number" id="edit-supplier-evaluacion" name="rating" min="0"
+                                max="5" step="0.1">
                             <div class="error-message" id="error-edit-rating"></div>
                         </div>
                     </div>

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Valores del atributo {{ $dimension->label }} - Ciclo Finca 4 Admin</title>
-    @vite(['resources/css/admin/suppliers/suppliers.css', 'resources/js/admin/classifications/catalog.js'])
+    @vite(['resources/css/admin/components/page-header.css', 'resources/css/admin/suppliers/suppliers.css', 'resources/js/admin/classifications/catalog.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
@@ -15,10 +15,15 @@
 
     <main class="admin-main">
         <div class="form-container">
-            <div class="form-header">
-                <h1>Valores del atributo «{{ $dimension->label }}»</h1>
-                <p>{{ optional($dimension->category->parent)->name ?? '' }} › {{ $dimension->category->name ?? '' }}</p>
-            </div>
+            @component('admin.partials.page-header', [
+                'title' => 'Valores del atributo «' . $dimension->label . '»',
+            ])
+                <p>
+                    Administra los valores disponibles para este atributo dentro de
+                    {{ optional($dimension->category->parent)->name ?? 'la categoría' }} ›
+                    {{ $dimension->category->name ?? 'el tipo de producto' }}.
+                </p>
+            @endcomponent
 
             @if (session('status'))
                 <x-admin-alert type="success" :message="session('status')" dismissible />
@@ -26,7 +31,8 @@
 
             <div class="form-card" style="margin-bottom:1.5rem;">
                 <h2 style="font-size:1.1rem; margin-bottom:1rem;">Añadir valor</h2>
-                <form action="{{ route('admin.classifications.values.store', $dimension) }}" method="POST" class="form-body">
+                <form action="{{ route('admin.classifications.values.store', $dimension) }}" method="POST"
+                    class="form-body">
                     @csrf
                     @if ($errors->any())
                         <x-admin-alert type="error" title="Revisa los campos marcados antes de continuar.">
@@ -40,7 +46,8 @@
                     <div class="form-row" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
                         <div class="form-group">
                             <label for="value">Valor (lo que verá el cliente) *</label>
-                            <input type="text" id="value" name="value" value="{{ old('value') }}" required maxlength="255" placeholder="Rojo">
+                            <input type="text" id="value" name="value" value="{{ old('value') }}" required
+                                maxlength="255" placeholder="Rojo">
                             <div class="error-message">{{ $errors->first('value') }}</div>
                         </div>
                         <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Añadir</button>
@@ -63,7 +70,8 @@
                         </thead>
                         <tbody>
                             @foreach ($dimension->values as $val)
-                                <tr style="border-bottom:1px solid #f3f4f6; {{ $val->trashed() ? 'opacity:0.5;' : '' }}">
+                                <tr
+                                    style="border-bottom:1px solid #f3f4f6; {{ $val->trashed() ? 'opacity:0.5;' : '' }}">
                                     <td style="padding:0.5rem;">{{ $val->value }}</td>
                                     <td style="padding:0.5rem;">
                                         @if ($val->trashed())
@@ -73,29 +81,27 @@
                                         @endif
                                     </td>
                                     <td style="padding:0.5rem;">
-                                        @if (! $val->trashed())
-                                            <a href="{{ route('admin.classifications.values.edit', $val) }}" class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.85rem;">Editar</a>
-                                            <form action="{{ route('admin.classifications.values.destroy', $val) }}" method="POST" style="display:inline;">
+                                        @if (!$val->trashed())
+                                            <a href="{{ route('admin.classifications.values.edit', $val) }}"
+                                                class="btn btn-secondary"
+                                                style="padding:0.25rem 0.5rem; font-size:0.85rem;">Editar</a>
+                                            <form action="{{ route('admin.classifications.values.destroy', $val) }}"
+                                                method="POST" style="display:inline;">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-secondary"
+                                                <button type="button" class="btn btn-secondary"
                                                     style="padding:0.25rem 0.5rem; font-size:0.85rem; color:#b91c1c;"
                                                     data-confirm-title="¿Deseas desactivar este valor?"
-                                                    data-confirm="Se desactivará este valor. Los productos que ya lo tenían siguen igual."
-                                                >Desactivar</button>
+                                                    data-confirm="Se desactivará este valor. Los productos que ya lo tenían siguen igual.">Desactivar</button>
                                             </form>
                                         @else
-                                            <form action="{{ route('admin.classifications.values.restore', $val) }}" method="POST" style="display:inline;">
+                                            <form action="{{ route('admin.classifications.values.restore', $val) }}"
+                                                method="POST" style="display:inline;">
                                                 @csrf
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-primary"
+                                                <button type="button" class="btn btn-primary"
                                                     style="padding:0.25rem 0.5rem; font-size:0.85rem;"
                                                     data-confirm-title="¿Deseas activar este valor?"
-                                                    data-confirm="Se activará de nuevo este valor."
-                                                >Activar</button>
+                                                    data-confirm="Se activará de nuevo este valor.">Activar</button>
                                             </form>
                                         @endif
                                     </td>
@@ -107,7 +113,8 @@
             </div>
 
             <div style="margin-top:1.5rem;">
-                <a href="{{ route('admin.classifications.catalog.show', $dimension->category) }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver a los atributos de este tipo</a>
+                <a href="{{ route('admin.classifications.catalog.show', $dimension->category) }}"
+                    class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver a los atributos de este tipo</a>
             </div>
         </div>
     </main>

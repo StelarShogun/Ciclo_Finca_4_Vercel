@@ -22,39 +22,36 @@
         $q = $q ?? '';
     @endphp
 
-    <div
-        id="product-sales-root"
-        class="product-sales-report"
-        data-table-url="{{ route('admin.reports.product-sales.table') }}"
-        data-page-url="{{ url('/reports/productos-vendidos') }}"
-        data-period="{{ e($period) }}"
-        data-sort="{{ e($sort) }}"
-        data-dir="{{ e($dir) }}"
-        data-top10="{{ e($top10 ?? 'revenue') }}"
-        data-initial-q="{{ e($q) }}"
-    >
+    <div id="product-sales-root" class="product-sales-report" data-table-url="{{ route('admin.reports.product-sales.table') }}"
+        data-page-url="{{ url('/reports/productos-vendidos') }}" data-period="{{ e($period) }}"
+        data-sort="{{ e($sort) }}" data-dir="{{ e($dir) }}" data-top10="{{ e($top10 ?? 'revenue') }}"
+        data-initial-q="{{ e($q) }}">
         <nav class="reports-breadcrumb">
             <a href="{{ route('admin.reports.index') }}">Reportes</a>
             <span class="sep">/</span>
             <span>Productos más vendidos</span>
         </nav>
 
-        <header class="product-sales-header">
-            <div>
-                <h1>Productos más vendidos</h1>
-                <p>Top 10 por ingresos en el periodo seleccionado. Tabla completa ordenable por unidades o ingresos.</p>
-            </div>
-        </header>
+        @component('admin.partials.page-header', [
+            'title' => 'Productos más vendidos',
+            'description' =>
+                'Analiza los productos con mayor rendimiento por ingresos o unidades vendidas en el periodo seleccionado.',
+        ])
+        @endcomponent
 
         <div class="product-sales-toolbar">
             <div class="period-toggle" role="group" aria-label="Periodo">
-                <button type="button" class="period-btn {{ $period === '7d' ? 'active' : '' }}" data-period="7d">7 días</button>
-                <button type="button" class="period-btn {{ $period === '30d' ? 'active' : '' }}" data-period="30d">30 días</button>
-                <button type="button" class="period-btn {{ $period === '90d' ? 'active' : '' }}" data-period="90d">90 días</button>
+                <button type="button" class="period-btn {{ $period === '7d' ? 'active' : '' }}" data-period="7d">7
+                    días</button>
+                <button type="button" class="period-btn {{ $period === '30d' ? 'active' : '' }}" data-period="30d">30
+                    días</button>
+                <button type="button" class="period-btn {{ $period === '90d' ? 'active' : '' }}" data-period="90d">90
+                    días</button>
             </div>
             <div class="search-wrap">
                 <label for="product-sales-search" class="sr-only">Filtrar por nombre o SKU</label>
-                <input type="search" id="product-sales-search" class="product-sales-search" placeholder="Filtrar por nombre o SKU…" value="{{ e($q) }}" autocomplete="off">
+                <input type="search" id="product-sales-search" class="product-sales-search"
+                    placeholder="Filtrar por nombre o SKU…" value="{{ e($q) }}" autocomplete="off">
             </div>
         </div>
 
@@ -62,11 +59,15 @@
             <div class="top10-header">
                 <h2 id="top10-heading" class="section-title">Top 10</h2>
                 <div class="top10-toggle" role="group" aria-label="Top 10 por">
-                    <button type="button" class="top10-btn {{ ($top10 ?? 'revenue') === 'revenue' ? 'is-active' : '' }}" data-top10="revenue">Ingresos</button>
-                    <button type="button" class="top10-btn {{ ($top10 ?? 'revenue') === 'units' ? 'is-active' : '' }}" data-top10="units">Unidades</button>
+                    <button type="button" class="top10-btn {{ ($top10 ?? 'revenue') === 'revenue' ? 'is-active' : '' }}"
+                        data-top10="revenue">Ingresos</button>
+                    <button type="button" class="top10-btn {{ ($top10 ?? 'revenue') === 'units' ? 'is-active' : '' }}"
+                        data-top10="units">Unidades</button>
                 </div>
             </div>
-            <p class="section-hint">Top 10 por <span id="top10-metric-label">{{ ($top10 ?? 'revenue') === 'units' ? 'unidades' : 'ingresos' }}</span> en el periodo.</p>
+            <p class="section-hint">Top 10 por <span
+                    id="top10-metric-label">{{ ($top10 ?? 'revenue') === 'units' ? 'unidades' : 'ingresos' }}</span> en el
+                periodo.</p>
             <div class="table-wrap">
                 <table class="report-table">
                     <thead>
@@ -79,7 +80,9 @@
                         </tr>
                     </thead>
                     <tbody id="top10-body">
-                        <tr><td colspan="5" class="loading-cell">Cargando…</td></tr>
+                        <tr>
+                            <td colspan="5" class="loading-cell">Cargando…</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -94,7 +97,8 @@
                             <th>Producto</th>
                             <th>SKU</th>
                             <th class="num">
-                                <button type="button" class="nav-sort {{ $sort === 'units' ? 'is-active' : '' }}" data-sort="units">
+                                <button type="button" class="nav-sort {{ $sort === 'units' ? 'is-active' : '' }}"
+                                    data-sort="units">
                                     Unidades
                                     @if ($sort === 'units')
                                         <i class="fas fa-sort-{{ $dir === 'asc' ? 'up' : 'down' }}" aria-hidden="true"></i>
@@ -102,7 +106,8 @@
                                 </button>
                             </th>
                             <th class="num">
-                                <button type="button" class="nav-sort {{ $sort === 'revenue' ? 'is-active' : '' }}" data-sort="revenue">
+                                <button type="button" class="nav-sort {{ $sort === 'revenue' ? 'is-active' : '' }}"
+                                    data-sort="revenue">
                                     Ingresos
                                     @if ($sort === 'revenue')
                                         <i class="fas fa-sort-{{ $dir === 'asc' ? 'up' : 'down' }}" aria-hidden="true"></i>
@@ -112,14 +117,17 @@
                         </tr>
                     </thead>
                     <tbody id="full-table-body">
-                        <tr><td colspan="4" class="loading-cell">Cargando…</td></tr>
+                        <tr>
+                            <td colspan="4" class="loading-cell">Cargando…</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
             <div id="full-table-pagination" class="pagination-wrapper" aria-live="polite"></div>
-            <p id="product-sales-empty" class="empty-msg" hidden>No hay ventas completadas en este periodo para los criterios seleccionados.</p>
+            <p id="product-sales-empty" class="empty-msg" hidden>No hay ventas completadas en este periodo para los
+                criterios seleccionados.</p>
 
-            
+
         </section>
     </div>
 @endsection

@@ -55,11 +55,11 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  border: none;
+  border: 2px solid;
   border-radius: var(--border-radius);
   font-size: 0.95rem;
   font-weight: 500;
-  font-family: inherit;
+  font-family: 'Poppins', sans-serif;
   text-decoration: none;
   cursor: pointer;
   transition: var(--transition);
@@ -361,6 +361,7 @@
   margin: 5px 0 0 0;
   opacity: .9;
   font-size: 1.1rem;
+  color: white;
 }
 .sales-actions {
   display: flex;

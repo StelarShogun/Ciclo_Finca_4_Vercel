@@ -16,10 +16,13 @@
 
     <main class="admin-main">
         <div class="form-container">
-            <div class="form-header">
-                <h1>Características por producto</h1>
-                <p>Cada producto puede tener un <strong>valor</strong> por <strong>atributo</strong> (ej. Color: Rojo). Solo aparecen productos en <strong>subcategoría</strong> (ej. «MTB», no solo «Bicicletas»).</p>
-            </div>
+            @component('admin.partials.page-header', ['title' => 'Características por producto'])
+                <p>
+                    Consulta y administra los valores asignados a cada producto según sus atributos, como color, talla o
+                    material.
+                    Solo se muestran productos asociados a un tipo concreto dentro del catálogo.
+                </p>
+            @endcomponent
 
             @if (session('status'))
                 <x-admin-alert type="success" :message="session('status')" dismissible />
@@ -33,8 +36,12 @@
                     @if ($products->isEmpty())
                         <x-admin-alert type="info" title="No hay registros disponibles para mostrar." dismissible>
                             <div>
-                                <p style="margin: 0;"><strong>No hay nada mal:</strong> solo faltan productos bien ubicados en el catálogo. En <strong>Inventario</strong>, al crear o editar, completá la categoría padre <em>y</em> el tipo concreto (ej. Bicicletas → MTB). Así podés usar color, talla, etc.</p>
-                                <p style="margin: 0.75rem 0 0;">Si el producto queda solo en la categoría padre (sin tipo concreto), no entra en esta lista.</p>
+                                <p style="margin: 0;"><strong>Todo está bien:</strong> solo faltan productos
+                                    correctamente ubicados en el catálogo. En <strong>Inventario</strong>, al crear o
+                                    editar un producto, completa la categoría padre <em>y</em> el tipo concreto (p. ej.,
+                                    Bicicletas → MTB). Esto habilita atributos como color, talla, etc.</p>
+                                <p style="margin: 0.75rem 0 0;">Si el producto queda solo en la categoría padre (sin
+                                    tipo concreto), no entra en esta lista.</p>
                             </div>
                         </x-admin-alert>
                     @else
@@ -66,14 +73,17 @@
                                             <td style="padding: 0.75rem; font-size: 0.9rem;">
                                                 @forelse ($product->classificationValues as $cv)
                                                     <span style="display: inline-block; margin-right: 0.5rem;">
-                                                        <strong>{{ $cv->dimension->label ?? '—' }}:</strong> {{ $cv->value }}
+                                                        <strong>{{ $cv->dimension->label ?? '—' }}:</strong>
+                                                        {{ $cv->value }}
                                                     </span>
                                                 @empty
                                                     <em>Sin asignar</em>
                                                 @endforelse
                                             </td>
                                             <td style="padding: 0.75rem;">
-                                                <a href="{{ route('admin.products.classifications.edit', $product) }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem; text-decoration: none; border-radius: 6px;">
+                                                <a href="{{ route('admin.products.classifications.edit', $product) }}"
+                                                    class="btn btn-primary"
+                                                    style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem; text-decoration: none; border-radius: 6px;">
                                                     <i class="fas fa-sliders-h"></i> Editar
                                                 </a>
                                             </td>
