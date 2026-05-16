@@ -339,19 +339,22 @@
     </div>
 
     {{-- Modal: Order details --}}
-    <div id="view-order-modal" class="modal-overlay">
-        <div class="modal-content modal-auto-size">
+    <div     <div id="view-order-modal" class="edit-modal">
+        <div class="modal-backdrop" onclick="closeViewOrderModal()"></div>
+        <div class="modal-content modal-auto-size modal-content--detail">
             <div class="modal-header">
                 <h3><i class="fas fa-box"></i> Detalles del pedido</h3>
-                <button type="button" class="modal-close" onclick="closeViewOrderModal()">&times;</button>
+                <button type="button" class="modal-close" onclick="closeViewOrderModal()" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body" id="view-order-body">
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--color-primary);"></i>
+                <div class="cf-detail-loading" role="status">
+                    <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
                     <p>Cargando detalles…</p>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer"><div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeViewOrderModal()">
                     <i class="fas fa-times"></i> Cerrar
                 </button>
@@ -360,15 +363,18 @@
     </div>
 
     {{-- Modal: Supplier details --}}
-    <div id="view-supplier-modal" class="modal-overlay">
-        <div class="modal-content modal-auto-size">
+    <div id="view-supplier-modal" class="edit-modal">
+        <div class="modal-backdrop" onclick="closeViewSupplierModal()"></div>
+        <div class="modal-content modal-auto-size modal-content--detail">
             <div class="modal-header">
                 <h3><i class="fas fa-truck"></i> Datos del proveedor</h3>
-                <button type="button" class="modal-close" onclick="closeViewSupplierModal()">&times;</button>
+                <button type="button" class="modal-close" onclick="closeViewSupplierModal()" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body" id="view-supplier-body">
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--color-primary);"></i>
+                <div class="cf-detail-loading" role="status">
+                    <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
                     <p>Cargando datos del proveedor…</p>
                 </div>
             </div>

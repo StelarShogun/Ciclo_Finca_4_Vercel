@@ -1,6 +1,8 @@
 @import "../variables-reset.css";
 @import "../utilities.css";
 @import "../sidebar.css";
+@import "../../shared/components/buttons.css";
+@import "../../shared/components/form-layout.css";
 
 /* ============================================================
   1. FORM COMPONENTS
@@ -108,40 +110,8 @@
   border-top: 1px solid var(--border-color);
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  min-width: 90px;
-  position: relative;
-  overflow: hidden;
-  user-select: none;
-}
-
-.btn-primary {
-  background: var(--color-primary);
-  color: #fff;
+.form-actions .btn-primary {
   flex: 2;
-}
-
-.btn-primary:hover {
-  background: var(--color-primary-dark);
-  transform: translateY(-1px);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none !important;
 }
 
 .btn.loading {

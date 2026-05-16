@@ -44,15 +44,15 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="supplier_id">Proveedor</label>
-                        <select id="supplier_id" name="supplier_id" required>
-                            <option value="">Selecciona un proveedor…</option>
-                            @foreach($suppliers as $s)
-                                <option value="{{ $s->supplier_id }}" {{ old('supplier_id') == $s->supplier_id ? 'selected' : '' }}>
-                                    {{ $s->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <label for="supplier-search">Proveedor</label>
+                        <div class="brand-combobox" id="supplier-combobox">
+                            <input type="text" id="supplier-search" class="brand-combobox-input"
+                                   placeholder="Escribe para buscar un proveedor…" autocomplete="off"
+                                   aria-label="Proveedor del pedido">
+                            <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                            <div class="brand-combobox-dropdown" id="supplier-dropdown" role="listbox"></div>
+                        </div>
+                        <input type="hidden" id="supplier_id" name="supplier_id" value="{{ old('supplier_id') }}" required>
                         @error('supplier_id')
                             <p class="field-error">{{ $message }}</p>
                         @enderror

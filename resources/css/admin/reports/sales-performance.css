@@ -1,6 +1,8 @@
 @import "../variables-reset.css";
 @import "../utilities.css";
 @import "../sidebar.css";
+@import "../../shared/components/buttons.css";
+@import "../../shared/components/form-layout.css";
 
 /* [hidden] debe ganar a display:flex (p. ej. fila de fechas) sin afectar todo el admin */
 .sales-performance-report [hidden] {

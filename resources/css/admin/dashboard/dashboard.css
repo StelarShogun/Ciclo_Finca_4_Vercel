@@ -2,6 +2,8 @@
 @import "../utilities.css";
 @import "../sidebar.css";
 @import "../../components/modals.css";
+@import "../../shared/components/buttons.css";
+@import "../../shared/components/form-layout.css";
 
 /* Layout base: el aside es position:fixed; sin este offset el contenido queda debajo del sidebar (solo existía padding en breakpoints ≤1024px). */
 .admin-layout {
@@ -22,65 +24,6 @@
   box-sizing: border-box;
   min-width: 0;
   overflow-x: auto;
-}
-
-/* ============================================================
-  1. BUTTONS
-  ============================================================ */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  transition: var(--transition);
-  position: relative;
-  overflow: hidden;
-  white-space: nowrap;
-  user-select: none;
-  outline: none;
-}
-
-.btn:focus {
-  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.3);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-/* Botones por defecto: legibles sobre fondos claros (modales, tablas, tarjetas). */
-.btn-primary {
-  background: var(--color-primary, #235347);
-  color: #fff;
-  border: 2px solid var(--color-primary, #235347);
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-dark, #163832);
-  border-color: var(--color-primary-dark, #163832);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(35, 83, 71, 0.35);
-}
-
-.btn-secondary {
-  background: #f1f5f9;
-  color: #1e293b;
-  border: 2px solid #cbd5e1;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #e2e8f0;
-  border-color: #94a3b8;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
 }
 
 /* Encabezado verde del dashboard: estilo «cristal» sobre fondo oscuro */

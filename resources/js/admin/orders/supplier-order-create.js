@@ -1,3 +1,5 @@
+import { initStaticSearchCombobox } from '../shared/static-search-combobox.js';
+
 function getCSRFToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
 }
@@ -32,11 +34,8 @@ async function fetchProducts(q, supplierId) {
     if (!res.ok) {
         const msg = data?.message || `No se pudo buscar productos (HTTP ${res.status}).`;
         const err = new Error(msg);
-        // @ts-ignore
         err.status = res.status;
-        // @ts-ignore
         err.data = data;
-        // @ts-ignore
         err.raw = text;
         throw err;
     }
@@ -46,7 +45,7 @@ async function fetchProducts(q, supplierId) {
 
 function init() {
     const form = document.getElementById('supplier-order-create-form');
-    const supplierSelect = document.getElementById('supplier_id');
+    const supplierHidden = document.getElementById('supplier_id');
     const supplierPreview = document.getElementById('supplier-preview');
     const dateInput = document.getElementById('estimated_delivery_date');
     const searchInput = document.getElementById('product-search');
@@ -57,9 +56,31 @@ function init() {
     const summaryTotal = document.getElementById('summary-total');
     const itemsErrors = document.getElementById('items-errors');
 
-    if (!form || !supplierSelect || !dateInput || !searchInput || !tbody || !summaryLines || !summaryTotal) return;
+    if (!form || !supplierHidden || !dateInput || !searchInput || !tbody || !summaryLines || !summaryTotal) {
+        return;
+    }
 
     const suppliers = Array.isArray(window.__CF4_SUPPLIERS__) ? window.__CF4_SUPPLIERS__ : [];
+    const supplierOptions = suppliers.map((s) => ({
+        id: s.supplier_id,
+        name: s.name,
+    }));
+
+    const supplierCombobox = initStaticSearchCombobox({
+        searchInputId: 'supplier-search',
+        hiddenInputId: 'supplier_id',
+        dropdownId: 'supplier-dropdown',
+        wrapperId: 'supplier-combobox',
+        options: supplierOptions,
+        getId: (s) => s.id,
+        getLabel: (s) => s.name,
+        placeholder: 'Escribe para buscar un proveedor…',
+    });
+
+    const oldSupplierId = supplierHidden.value;
+    if (oldSupplierId) {
+        supplierCombobox?.setValue(oldSupplierId);
+    }
 
     /** @type {Array<{product_id:number,name:string,sku:string,unit_price:number,quantity:number}>} */
     let lines = [];
@@ -67,8 +88,12 @@ function init() {
     /** @type {Array<{product_id:number,name:string,sku:string,unit_price:number}>} */
     let allProducts = [];
 
+    function getSupplierId() {
+        return Number(supplierHidden.value || 0);
+    }
+
     function renderSupplierPreview() {
-        const id = Number(supplierSelect.value || 0);
+        const id = getSupplierId();
         const s = suppliers.find((x) => Number(x.supplier_id) === id);
         if (!s) {
             supplierPreview.hidden = true;
@@ -162,7 +187,8 @@ function init() {
             return;
         }
         comboboxDropdown.innerHTML = list
-            .map((p, i) => `
+            .map(
+                (p, i) => `
             <div class="product-combobox-option" data-idx="${i}">
                 <div class="product-combobox-option-info">
                     <div class="product-combobox-option-name">${esc(p.name)}</div>
@@ -174,7 +200,9 @@ function init() {
                 <button type="button" class="product-combobox-add-btn" data-idx="${i}" title="Agregar">
                     <i class="fas fa-plus"></i> Agregar
                 </button>
-            </div>`).join('');
+            </div>`
+            )
+            .join('');
         openCombobox();
         comboboxDropdown.querySelectorAll('.product-combobox-add-btn').forEach((btn) => {
             btn.addEventListener('mousedown', (e) => {
@@ -183,8 +211,7 @@ function init() {
                 const p = list[idx];
                 if (p) addProductToLines(p);
                 searchInput.value = '';
-                const filtered = allProducts;
-                renderSearchDropdown(filtered);
+                renderSearchDropdown(allProducts);
                 searchInput.focus();
             });
         });
@@ -193,7 +220,9 @@ function init() {
     searchInput.addEventListener('focus', () => {
         const q = searchInput.value.trim().toLowerCase();
         const filtered = q
-            ? allProducts.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
+            ? allProducts.filter(
+                  (p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
+              )
             : allProducts;
         renderSearchDropdown(filtered);
     });
@@ -201,7 +230,9 @@ function init() {
     searchInput.addEventListener('input', () => {
         const q = searchInput.value.trim().toLowerCase();
         const filtered = q
-            ? allProducts.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
+            ? allProducts.filter(
+                  (p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
+              )
             : allProducts;
         renderSearchDropdown(filtered);
     });
@@ -235,7 +266,7 @@ function init() {
     });
 
     async function loadSupplierProducts() {
-        const supplierId = Number(supplierSelect.value || 0);
+        const supplierId = getSupplierId();
         if (!supplierId) {
             allProducts = [];
             searchInput.disabled = true;
@@ -253,18 +284,28 @@ function init() {
         }
     }
 
-    supplierSelect.addEventListener('change', async () => {
+    async function onSupplierChanged() {
+        lines = [];
+        renderLines();
         renderSupplierPreview();
         allProducts = [];
+        searchInput.value = '';
         closeCombobox();
         showItemsError('');
         await loadSupplierProducts();
+    }
+
+    supplierCombobox?.onChange(() => {
+        onSupplierChanged();
     });
+
     renderSupplierPreview();
-    loadSupplierProducts();
+    if (getSupplierId()) {
+        loadSupplierProducts();
+    }
 
     form.addEventListener('submit', (e) => {
-        const supplierOk = !!supplierSelect.value;
+        const supplierOk = !!supplierHidden.value;
         const dateOk = !!dateInput.value;
         const linesOk = lines.length >= 1 && lines.every((l) => (Number(l.quantity) || 0) >= 1);
 
@@ -276,11 +317,13 @@ function init() {
             if (!linesOk) missing.push('al menos un producto con cantidad');
 
             if (!linesOk) {
-                showItemsError('Agrega al menos un producto y asegúrate de que todas las cantidades sean mayores a 0.');
+                showItemsError(
+                    'Agrega al menos un producto y asegúrate de que todas las cantidades sean mayores a 0.'
+                );
             }
 
             if (!supplierOk) {
-                supplierSelect.focus();
+                document.getElementById('supplier-search')?.focus();
             } else if (!dateOk) {
                 dateInput.focus();
             } else if (!linesOk) {
@@ -310,4 +353,3 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
-

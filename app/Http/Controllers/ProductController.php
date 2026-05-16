@@ -588,6 +588,10 @@ class ProductController extends Controller
             'categories' => $categories,
             'subcategoriesByParent' => $subcategoriesByParent,
             'brands' => Brand::orderBy('name')->get(['id', 'name']),
+            'suppliers' => Supplier::query()
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get(['supplier_id', 'name']),
             'inventoryExportsQuery' => AdminInventoryExportQuery::queryStringFromRequest($request),
             'classificationFilters' => $classificationFilters,
             'hasClassificationSelections' => $hasClassificationSelections,

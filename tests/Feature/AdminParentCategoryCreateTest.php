@@ -198,4 +198,30 @@ class AdminParentCategoryCreateTest extends TestCase
         $created = Category::whereNull('parent_category_id')->where('name', $name)->firstOrFail();
         $response->assertSee('value="'.$created->category_id.'"', false);
     }
+
+    public function test_subcategory_create_hierarchy_table_is_paginated(): void
+    {
+        $this->loginAdmin();
+
+        $parent = Category::create([
+            'name' => 'Padre paginación '.uniqid(),
+            'parent_category_id' => null,
+        ]);
+
+        for ($i = 0; $i < 18; $i++) {
+            Category::create([
+                'name' => 'Sub paginación '.$i.' '.uniqid(),
+                'parent_category_id' => $parent->category_id,
+            ]);
+        }
+
+        $pageOne = $this->get(route('categories.subcategories.create', ['hierarchy_page' => 1, 'per_page' => 10]));
+        $pageOne->assertOk();
+        $pageOne->assertSee('Mostrando 1 a 10 de', false);
+
+        $pageTwo = $this->get(route('categories.subcategories.create', ['hierarchy_page' => 2, 'per_page' => 10]));
+        $pageTwo->assertOk();
+        $pageTwo->assertSee('Mostrando 11 a 20 de', false);
+        $pageTwo->assertSee('hierarchy_page=2', false);
+    }
 }
