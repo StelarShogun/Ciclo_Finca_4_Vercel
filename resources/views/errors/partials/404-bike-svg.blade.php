@@ -1,65 +1,132 @@
-<svg id="scene" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+<div class="cf4-bike404-scene" data-cf4-error-scene="wrong_route" aria-hidden="true">
+    <svg
+        class="cf4-bike404-svg"
+        viewBox="0 0 640 420"
+        xmlns="http://www.w3.org/2000/svg"
+        role="img"
+        aria-labelledby="cf4-bike404-title cf4-bike404-desc"
+    >
+        <title id="cf4-bike404-title">Bicicleta en ruta equivocada</title>
+        <desc id="cf4-bike404-desc">
+            Una bicicleta animada avanza por una ruta y se detiene al encontrar un camino equivocado.
+        </desc>
 
-    {{-- ══════════════════════════════════════════════════════════════
-         Ilustración 1024×1024 en viewBox cuadrado = mismo aspecto que
-         el PNG: sin letterboxing ni slice; cubre todo el contenedor.
+        <defs>
+            <filter id="cf4-bike-soft-shadow" x="-40%" y="-40%" width="180%" height="180%">
+                <feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#0f172a" flood-opacity="0.18"/>
+            </filter>
 
-         Ruedas (coords en espacio fuente): trasera ~(242, 732), delantera ~(710, 732)
-    ══════════════════════════════════════════════════════════════ --}}
+            <linearGradient id="cf4-bike-frame-gradient" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stop-color="#22c55e"/>
+                <stop offset="100%" stop-color="#15803d"/>
+            </linearGradient>
+        </defs>
 
-    <g id="bike-group">
+        <circle class="cf4-bike404-glow js-bike-glow" cx="320" cy="210" r="150"/>
 
-        <image
-            href="{{ asset('images/errors/404-bike-illustration-orig.png') }}"
-            x="0" y="0" width="1024" height="1024"
-            preserveAspectRatio="xMidYMid meet"
-        />
-
-        {{-- Rueda trasera --}}
-        <g id="back-wheel" transform="translate(242, 731.5)">
-            <circle r="145"
-                    fill="none"
-                    stroke="#d4a83a"
-                    stroke-width="6"
-                    stroke-dasharray="16 22"
-                    opacity="0.42"/>
-            <circle r="14" fill="#2c2c2c" opacity="0.48"/>
-            <circle r="6"  fill="#a0a0a0" opacity="0.48"/>
+        <g class="cf4-bike404-road js-bike-road">
+            <path
+                class="cf4-bike404-road-base"
+                d="M80 326 C180 300, 260 350, 365 322 C440 302, 500 310, 575 330"
+            />
+            <path
+                class="cf4-bike404-road-dash js-road-dash"
+                d="M80 326 C180 300, 260 350, 365 322 C440 302, 500 310, 575 330"
+            />
+            <path
+                class="cf4-bike404-road-break js-road-break"
+                d="M458 314 L478 336 M482 312 L500 335"
+            />
         </g>
 
-        {{-- Rueda delantera --}}
-        <g id="front-wheel" transform="translate(709.5, 731.5)">
-            <circle r="145"
-                    fill="none"
-                    stroke="#d4a83a"
-                    stroke-width="6"
-                    stroke-dasharray="16 22"
-                    opacity="0.42"/>
-            <circle r="14" fill="#2c2c2c" opacity="0.48"/>
-            <circle r="6"  fill="#a0a0a0" opacity="0.48"/>
+        <g class="cf4-bike404-sign js-warning-sign">
+            <line class="cf4-bike404-sign-post" x1="492" y1="302" x2="492" y2="230"/>
+            <path class="cf4-bike404-sign-board" d="M492 198 L535 222 L492 246 L449 222 Z"/>
+            <path class="cf4-bike404-sign-arrow" d="M477 222 H507 M497 212 L509 222 L497 232"/>
         </g>
 
-        <g id="music-notes">
-            <text id="note-1"
-                  x="560" y="238"
-                  font-size="38" font-family="Georgia, 'Times New Roman', serif"
-                  fill="#2d4a73">♪</text>
-            <text id="note-2"
-                  x="602" y="210"
-                  font-size="32" font-family="Georgia, 'Times New Roman', serif"
-                  fill="#3a5d94">♫</text>
-            <text id="note-3"
-                  x="636" y="228"
-                  font-size="35" font-family="Georgia, 'Times New Roman', serif"
-                  fill="#4a6fa5">♩</text>
+        <g class="cf4-bike404-dust js-dust">
+            <circle cx="192" cy="312" r="4"/>
+            <circle cx="176" cy="322" r="3"/>
+            <circle cx="160" cy="316" r="2.5"/>
+            <circle cx="205" cy="328" r="2.5"/>
         </g>
 
-        <g id="dust" transform="translate(124, 902)">
-            <ellipse cx="0"   cy="0"   rx="32" ry="14" fill="#c4a35a" opacity="0.72"/>
-            <ellipse cx="46"  cy="-10" rx="20" ry="10" fill="#b8924a" opacity="0.56"/>
-            <ellipse cx="-26" cy="-6"  rx="16" ry="9"  fill="#c4a35a" opacity="0.50"/>
+        {{-- Story: solo movimiento GSAP (sin filter aquí: evita bugs de composición SVG+transform).
+             Float: bobbing + sombra; filter en float para que la bici entera comparta el mismo stacking. --}}
+        <g class="cf4-bike404-bike-story js-bike-story">
+            <g class="cf4-bike404-bike-float js-bike-float" filter="url(#cf4-bike-soft-shadow)">
+                {{--
+                  Orden: sombra → rueda trasera → rueda delantera → cuadro → asiento → manubrio → pedalier.
+                  Cada *.js-wheel-spin / .js-crank-spin sólo debe usar rotate(angle 0 0) en el atributo transform (coords locales del grupo ya trasladado).
+                --}}
+                <ellipse class="cf4-bike404-shadow js-bike-shadow" cx="318" cy="326" rx="170" ry="22"/>
+
+                <g class="cf4-bike404-wheel-position cf4-bike404-wheel-back" transform="translate(210 286)">
+                    <g class="cf4-bike404-wheel-spin js-wheel-spin" transform="rotate(0 0 0)">
+                        <circle class="wheel-tire" r="58"/>
+                        <circle class="wheel-inner" r="45"/>
+                        <g class="wheel-spokes">
+                            <line x1="0" y1="0" x2="0" y2="-52"/>
+                            <line x1="0" y1="0" x2="0" y2="52"/>
+                            <line x1="0" y1="0" x2="52" y2="0"/>
+                            <line x1="0" y1="0" x2="-52" y2="0"/>
+                            <line x1="0" y1="0" x2="37" y2="-37"/>
+                            <line x1="0" y1="0" x2="-37" y2="37"/>
+                            <line x1="0" y1="0" x2="-37" y2="-37"/>
+                            <line x1="0" y1="0" x2="37" y2="37"/>
+                        </g>
+                        <circle class="wheel-hub" r="7"/>
+                    </g>
+                </g>
+
+                <g class="cf4-bike404-wheel-position cf4-bike404-wheel-front" transform="translate(430 286)">
+                    <g class="cf4-bike404-wheel-spin js-wheel-spin" transform="rotate(0 0 0)">
+                        <circle class="wheel-tire" r="58"/>
+                        <circle class="wheel-inner" r="45"/>
+                        <g class="wheel-spokes">
+                            <line x1="0" y1="0" x2="0" y2="-52"/>
+                            <line x1="0" y1="0" x2="0" y2="52"/>
+                            <line x1="0" y1="0" x2="52" y2="0"/>
+                            <line x1="0" y1="0" x2="-52" y2="0"/>
+                            <line x1="0" y1="0" x2="37" y2="-37"/>
+                            <line x1="0" y1="0" x2="-37" y2="37"/>
+                            <line x1="0" y1="0" x2="-37" y2="-37"/>
+                            <line x1="0" y1="0" x2="37" y2="37"/>
+                        </g>
+                        <circle class="wheel-hub" r="7"/>
+                    </g>
+                </g>
+
+                <g class="cf4-bike404-frame js-bike-frame">
+                    <path class="frame-line frame-main" d="M210 286 L284 205 L336 286 Z"/>
+                    <path class="frame-line" d="M284 205 L402 205 L336 286"/>
+                    <path class="frame-line" d="M402 205 L430 286"/>
+                    <path class="frame-line" d="M284 205 L264 170"/>
+                    <path class="frame-line" d="M402 205 L430 164"/>
+                    <path class="frame-line fork-line" d="M430 164 L430 286"/>
+                </g>
+
+                <g class="cf4-bike404-seat js-seat">
+                    <path d="M235 158 C258 148, 288 150, 305 160 C295 170, 260 173, 235 166 Z"/>
+                    <line x1="264" y1="170" x2="284" y2="205"/>
+                </g>
+
+                <g class="cf4-bike404-handlebar js-handlebar">
+                    <line x1="430" y1="164" x2="462" y2="142"/>
+                    <path d="M462 142 C488 132, 502 146, 486 160"/>
+                </g>
+
+                <g class="cf4-bike404-crank-position" transform="translate(336 286)">
+                    <g class="cf4-bike404-crank-spin js-crank-spin" transform="rotate(0 0 0)">
+                        <circle class="crank-center" r="11"/>
+                        <line class="crank-arm" x1="0" y1="0" x2="0" y2="-34"/>
+                        <line class="crank-arm" x1="0" y1="0" x2="0" y2="34"/>
+                        <rect class="pedal" x="-18" y="-42" width="36" height="8" rx="4"/>
+                        <rect class="pedal" x="-18" y="34" width="36" height="8" rx="4"/>
+                    </g>
+                </g>
+            </g>
         </g>
-
-    </g>
-
-</svg>
+    </svg>
+</div>
