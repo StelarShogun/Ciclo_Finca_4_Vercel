@@ -56,38 +56,107 @@
 .cf4-bike404-road-break {
     fill: none;
     stroke: #ef4444;
+<<<<<<< Updated upstream
     stroke-width: 6;
+=======
+    stroke-width: 8;
+>>>>>>> Stashed changes
     stroke-linecap: round;
     opacity: 0;
 }
 
+<<<<<<< Updated upstream
+=======
+.cf4-bike404-skid {
+    opacity: 0;
+}
+
+.cf4-bike404-skid path {
+    fill: none;
+    stroke: rgba(15, 23, 42, 0.26);
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-dasharray: 18 12;
+}
+
+.cf4-bike404-obstacle {
+    opacity: 0;
+}
+
+.cf4-bike404-crack {
+    fill: none;
+    stroke: #ef4444;
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.cf4-bike404-barrier {
+    fill: #fef2f2;
+    stroke: #ef4444;
+    stroke-width: 4;
+}
+
+.cf4-bike404-barrier-stripe {
+    stroke: #ef4444;
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+>>>>>>> Stashed changes
 .cf4-bike404-sign {
     opacity: 0;
 }
 
 .cf4-bike404-sign-post {
     stroke: #64748b;
+<<<<<<< Updated upstream
     stroke-width: 7;
+=======
+    stroke-width: 8;
+>>>>>>> Stashed changes
     stroke-linecap: round;
 }
 
 .cf4-bike404-sign-board {
+<<<<<<< Updated upstream
     fill: #fef2f2;
     stroke: #ef4444;
     stroke-width: 6;
+=======
+    fill: #fff7ed;
+    stroke: #ef4444;
+    stroke-width: 7;
+>>>>>>> Stashed changes
     stroke-linejoin: round;
 }
 
 .cf4-bike404-sign-arrow {
     fill: none;
     stroke: #ef4444;
+<<<<<<< Updated upstream
     stroke-width: 7;
+=======
+    stroke-width: 8;
+>>>>>>> Stashed changes
     stroke-linecap: round;
     stroke-linejoin: round;
 }
 
+<<<<<<< Updated upstream
 .cf4-bike404-dust circle {
     fill: rgba(148, 163, 184, 0.8);
+=======
+.cf4-bike404-sign-block {
+    fill: none;
+    stroke: rgba(239, 68, 68, 0.85);
+    stroke-width: 6;
+    stroke-linecap: round;
+}
+
+.cf4-bike404-dust circle {
+    fill: rgba(148, 163, 184, 0.85);
+>>>>>>> Stashed changes
     opacity: 0;
 }
 
@@ -95,8 +164,11 @@
     fill: rgba(15, 23, 42, 0.16);
 }
 
+<<<<<<< Updated upstream
 /* Ruedas: posición solo vía atributo translate en el SVG; rotación solo con GSAP + data-cf4-svg-origin */
 
+=======
+>>>>>>> Stashed changes
 .wheel-tire {
     fill: #f8fafc;
     stroke: #0f172a;
@@ -160,16 +232,38 @@
     stroke-linecap: round;
 }
 
+<<<<<<< Updated upstream
+=======
+.crank-arm-back {
+    stroke: #0f172a;
+    stroke-width: 5;
+    stroke-linecap: round;
+}
+
+>>>>>>> Stashed changes
 .pedal {
     fill: #22c55e;
 }
 
+<<<<<<< Updated upstream
+=======
+.pedal-back {
+    fill: #15803d;
+}
+
+>>>>>>> Stashed changes
 .js-bike-story,
 .js-bike-float,
 .js-handlebar,
 .js-bike-shadow,
 .js-warning-sign,
+<<<<<<< Updated upstream
 .js-road-break {
+=======
+.js-road-break,
+.js-road-obstacle,
+.js-skid {
+>>>>>>> Stashed changes
     transform-box: fill-box;
 }
 
@@ -185,7 +279,12 @@
 
 .dark .cf4-bike404-svg .cf4-bike404-handlebar line,
 .dark .cf4-bike404-svg .cf4-bike404-handlebar path,
+<<<<<<< Updated upstream
 .dark .cf4-bike404-svg .crank-arm {
+=======
+.dark .cf4-bike404-svg .crank-arm,
+.dark .cf4-bike404-svg .crank-arm-back {
+>>>>>>> Stashed changes
     stroke: #e5e7eb;
 }
 
@@ -215,7 +314,12 @@
 
     .cf4-bike404-svg .cf4-bike404-handlebar line,
     .cf4-bike404-svg .cf4-bike404-handlebar path,
+<<<<<<< Updated upstream
     .cf4-bike404-svg .crank-arm {
+=======
+    .cf4-bike404-svg .crank-arm,
+    .cf4-bike404-svg .crank-arm-back {
+>>>>>>> Stashed changes
         stroke: #e5e7eb;
     }
 
