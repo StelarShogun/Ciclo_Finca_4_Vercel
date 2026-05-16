@@ -3,14 +3,7 @@
         class="cf4-bike404-svg"
         viewBox="0 28 640 348"
         xmlns="http://www.w3.org/2000/svg"
-        role="img"
-        aria-labelledby="cf4-bike404-title cf4-bike404-desc"
     >
-        <title id="cf4-bike404-title">Bicicleta en ruta equivocada</title>
-        <desc id="cf4-bike404-desc">
-            Una bicicleta animada avanza por una ruta y se detiene al encontrar un camino equivocado.
-        </desc>
-
         <defs>
             <linearGradient id="cf4-bike-frame-gradient" x1="0" x2="1" y1="0" y2="1">
                 <stop offset="0%" stop-color="#22c55e"/>

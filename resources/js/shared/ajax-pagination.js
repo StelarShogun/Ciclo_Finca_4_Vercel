@@ -16,7 +16,48 @@ function scrollToFragment(fragmentId) {
     scrollRoot.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-async function loadListFragment(url, root) {
+/**
+ * Keeps filter/toolbar forms outside the swapped fragment aligned with the current URL.
+ */
+function syncPaginationQueryFromUrl(url, root) {
+    const parsed = new URL(url, window.location.origin);
+    const page = parsed.searchParams.get('page') || '1';
+    const perPage = parsed.searchParams.get('per_page');
+    const fragment = document.getElementById(getFragmentId(root));
+
+    const catalogPage = document.getElementById('catalog-list-page');
+    if (catalogPage) {
+        catalogPage.value = page;
+    }
+
+    const isInsideFragment = (node) => fragment && fragment.contains(node);
+
+    if (perPage) {
+        document.querySelectorAll('input[name="per_page"]').forEach((input) => {
+            if (!isInsideFragment(input)) {
+                input.value = perPage;
+            }
+        });
+        document.querySelectorAll('select[name="per_page"]').forEach((select) => {
+            if (!isInsideFragment(select)) {
+                select.value = perPage;
+            }
+        });
+    }
+
+    document.querySelectorAll('input[type="hidden"][name="page"]').forEach((input) => {
+        if (isInsideFragment(input)) {
+            return;
+        }
+        if (input.closest('.cf4-pagination-toolbar')) {
+            return;
+        }
+        input.value = page;
+    });
+}
+
+async function loadListFragment(url, root, options = {}) {
+    const { pushState = true } = options;
     const fragmentId = getFragmentId(root);
     const current = document.getElementById(fragmentId);
     if (!current) {
@@ -50,17 +91,15 @@ async function loadListFragment(url, root) {
 
         current.innerHTML = next.innerHTML;
 
-        const pageHidden = document.getElementById('catalog-list-page');
-        if (pageHidden) {
-            const pageFromUrl = new URL(url, window.location.origin).searchParams.get('page') || '1';
-            pageHidden.value = pageFromUrl;
-        }
+        syncPaginationQueryFromUrl(url, root);
 
-        window.history.pushState({ cf4AjaxPagination: true }, '', url);
+        if (pushState) {
+            window.history.pushState({ cf4AjaxPagination: true }, '', url);
+        }
         scrollToFragment(fragmentId);
         document.dispatchEvent(
             new CustomEvent('cf4:ajax-pagination:loaded', {
-                detail: { url, fragmentId, root },
+                detail: { url, fragmentId, root, pushState },
             }),
         );
     } catch {
@@ -187,7 +226,7 @@ function initAllAjaxPagination() {
             if (!root) {
                 return;
             }
-            void loadListFragment(window.location.href, root);
+            void loadListFragment(window.location.href, root, { pushState: false });
         });
     }
 }

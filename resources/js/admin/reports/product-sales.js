@@ -1,6 +1,8 @@
 /**
  * CF4-30 — productos más vendidos: carga tabla vía JSON, filtro con debounce.
  */
+import { normalizeAdminPerPage, readPaginationLastPage } from '../../shared/admin-per-page.js';
+
 function formatColones(value) {
     const n = Math.round(Number(value));
     return `₡${n.toLocaleString('es-CR')}`;
@@ -10,13 +12,6 @@ function esc(text) {
     const d = document.createElement('div');
     d.textContent = String(text);
     return d.innerHTML;
-}
-
-const ADMIN_PER_PAGE_OPTIONS = [10, 25, 50, 100];
-
-function normalizeAdminPerPage(value) {
-    const n = parseInt(String(value ?? '10'), 10);
-    return ADMIN_PER_PAGE_OPTIONS.includes(n) ? n : 10;
 }
 
 function buildTableRows(rows, { rank = false } = {}) {
@@ -194,10 +189,7 @@ function initProductSalesReport() {
         });
 
         function goToPage() {
-            const lastPage = Math.max(
-                1,
-                parseInt(String(wrapper.getAttribute('data-last-page') || '1'), 10) || 1,
-            );
+            const lastPage = readPaginationLastPage(wrapper);
             let target = parseInt(String(goInput?.value || '1').trim(), 10);
             if (Number.isNaN(target)) target = 1;
             target = Math.max(1, Math.min(lastPage, target));
