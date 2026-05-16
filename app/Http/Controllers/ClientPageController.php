@@ -11,6 +11,7 @@ use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Services\Catalog\CatalogProductSearchTelemetry;
+use App\Services\CartService;
 use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -526,6 +527,11 @@ class ClientPageController extends Controller
 
         Session::put('cart', $cart);
 
+        $authClient = Auth::guard('clients')->user();
+        if ($authClient) {
+            CartService::saveToDb($authClient->user_id, $cart);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Producto agregado al carrito',
@@ -579,6 +585,10 @@ class ClientPageController extends Controller
 
         if ($needsPut) {
             Session::put('cart', $synced);
+            $authClient = Auth::guard('clients')->user();
+            if ($authClient) {
+                CartService::saveToDb($authClient->user_id, $synced);
+            }
         }
 
         if ($adjustedNames !== []) {
@@ -699,6 +709,11 @@ class ClientPageController extends Controller
 
         Session::put('cart', $cart);
 
+        $authClient = Auth::guard('clients')->user();
+        if ($authClient) {
+            CartService::saveToDb($authClient->user_id, $cart);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Carrito actualizado',
@@ -766,6 +781,11 @@ class ClientPageController extends Controller
 
         Session::put('cart', $cart);
 
+        $authClient = Auth::guard('clients')->user();
+        if ($authClient) {
+            CartService::saveToDb($authClient->user_id, $cart);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Producto eliminado del carrito',
@@ -778,6 +798,11 @@ class ClientPageController extends Controller
     public function clearCart()
     {
         Session::put('cart', []);
+
+        $authClient = Auth::guard('clients')->user();
+        if ($authClient) {
+            CartService::saveToDb($authClient->user_id, []);
+        }
 
         return response()->json([
             'success' => true,
@@ -892,6 +917,9 @@ class ClientPageController extends Controller
             }
 
             Session::forget('cart');
+            if ($client) {
+                CartService::saveToDb($client->user_id, []);
+            }
             DB::commit();
 
             return response()->json([
