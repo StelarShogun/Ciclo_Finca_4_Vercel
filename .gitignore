@@ -104,3 +104,7 @@ vendor/composer/autoload_classmap.php
 .cursor/skills/
 .cursor/hooks/state/
 .cursor/plans/cf4-112_pdf_service_7ccce6a9.plan.md
+
+# Agent skills from `npx skills add` (e.g. heygen-com/hyperframes bundle); third-party, per-machine
+.agents/
+/skills-lock.json

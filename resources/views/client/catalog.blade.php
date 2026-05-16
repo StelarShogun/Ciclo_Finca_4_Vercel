@@ -483,26 +483,6 @@
                                             <div class="product-price-bar">
                                                 <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
                                             </div>
-                                                @if($canBuy)
-                                                    @auth('clients')
-                                                    <div class="product-card-qty-row" data-product-card-qty-row>
-                                                        <span class="product-card-qty-label" id="catalog-card-qty-label-{{ $product->product_id }}">Cant.</span>
-                                                        <div class="product-card-qty" data-product-card-qty>
-                                                            <button type="button" class="product-card-qty-btn" data-qty-step="-1" aria-label="Reducir cantidad">−</button>
-                                                            <input type="number"
-                                                                   id="catalog-card-qty-{{ $product->product_id }}"
-                                                                   class="product-card-qty-input"
-                                                                   min="1"
-                                                                   max="{{ max(1, (int) $product->stock_current) }}"
-                                                                   value="1"
-                                                                   inputmode="numeric"
-                                                                   autocomplete="off"
-                                                                   aria-labelledby="catalog-card-qty-label-{{ $product->product_id }}">
-                                                            <button type="button" class="product-card-qty-btn" data-qty-step="1" aria-label="Aumentar cantidad">+</button>
-                                                        </div>
-                                                    </div>
-                                                    @endauth
-                                                @endif
                                             <div class="product-actions">
                                                 <a href="{{ $product->clientProductUrl() }}" class="btn-product btn-ver-detalles">
                                                     <i class="fas fa-arrow-right"></i>

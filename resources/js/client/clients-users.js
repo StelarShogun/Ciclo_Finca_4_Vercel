@@ -104,36 +104,6 @@ function updateInvoiceCount(count) {
 // ADD TO CART
 // ============================================================
 
-function readProductCardQuantity(addBtn) {
-    if (!addBtn) return 1;
-    var root = addBtn.closest('.product-footer') || addBtn.closest('.product-card');
-    if (!root) return 1;
-    var inp = root.querySelector('.product-card-qty-input');
-    if (!inp) return 1;
-    var max = parseInt(inp.getAttribute('max'), 10);
-    var v = parseInt(String(inp.value || '1').trim(), 10);
-    if (isNaN(v) || v < 1) v = 1;
-    if (!isNaN(max) && max >= 1 && v > max) v = max;
-    return v;
-}
-
-function clampProductCardQtyInput(inp) {
-    if (!inp) return;
-    var max = parseInt(inp.getAttribute('max'), 10);
-    var v = parseInt(String(inp.value || '1').trim(), 10);
-    if (isNaN(v) || v < 1) v = 1;
-    if (!isNaN(max) && max >= 1 && v > max) v = max;
-    inp.value = String(v);
-}
-
-function resetProductCardQtyAfterAdd(triggerBtn) {
-    if (!triggerBtn) return;
-    var root = triggerBtn.closest('.product-footer') || triggerBtn.closest('.product-card');
-    if (!root) return;
-    var inp = root.querySelector('.product-card-qty-input');
-    if (inp) inp.value = '1';
-}
-
 function addToCart(productId, quantity, triggerBtn) {
     quantity = quantity || 1;
 
@@ -149,7 +119,6 @@ function addToCart(productId, quantity, triggerBtn) {
         .then(function (data) {
             if (data.success) {
                 updateCartCount(data.cart_count);
-                resetProductCardQtyAfterAdd(triggerBtn);
                 Swal.fire({
                     icon: 'success',
                     title: '¡Agregado!',
@@ -1521,37 +1490,14 @@ document.addEventListener('DOMContentLoaded', function () {
     // Pages that render cart UI (cart, catalog, product, home) load clients-page.js,
     // which already binds these handlers. Avoid double-binding here.
     if (!window.__cf4ClientPageJsLoaded) {
-    document.addEventListener('change', function (e) {
-        var inp = e.target.closest('.product-card-qty-input');
-        if (inp) clampProductCardQtyInput(inp);
-    });
-
     document.addEventListener('click', function (e) {
-        var qtyBtn = e.target.closest('.product-card-qty-btn');
-        if (qtyBtn && qtyBtn.closest('.product-card-qty')) {
-            e.preventDefault();
-            var wrap = qtyBtn.closest('.product-card-qty');
-            var inp = wrap ? wrap.querySelector('.product-card-qty-input') : null;
-            if (!inp) return;
-            var step = parseInt(qtyBtn.getAttribute('data-qty-step') || '0', 10);
-            var max = parseInt(inp.getAttribute('max'), 10);
-            var v = parseInt(String(inp.value || '1').trim(), 10);
-            if (isNaN(v) || v < 1) v = 1;
-            v += step;
-            if (v < 1) v = 1;
-            if (!isNaN(max) && max >= 1 && v > max) v = max;
-            inp.value = String(v);
-            return;
-        }
-
         var addBtn = e.target.closest('.add-to-cart-btn');
         if (addBtn) {
             if (addBtn.dataset.purchasable === '0' || parseInt(addBtn.dataset.productStock, 10) < 1) {
                 Swal.fire({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
                 return;
             }
-            var qty = readProductCardQuantity(addBtn);
-            addToCart(addBtn.dataset.productId, qty, addBtn);
+            addToCart(addBtn.dataset.productId, 1, addBtn);
             return;
         }
 
