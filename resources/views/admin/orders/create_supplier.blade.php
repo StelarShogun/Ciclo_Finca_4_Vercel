@@ -65,29 +65,6 @@
                     <div id="supplier-preview" class="supplier-preview" hidden></div>
                 </section>
 
-                {{-- Delivery date --}}
-                <section class="create-card" aria-labelledby="date-card-title">
-                    <div class="create-card-head">
-                        <h2 id="date-card-title"><i class="fas fa-calendar-alt"></i> Entrega estimada</h2>
-                        <span class="required-pill">Obligatorio</span>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="estimated_delivery_date">Fecha estimada</label>
-                        <input 
-                            type="date" 
-                            id="estimated_delivery_date" 
-                            name="estimated_delivery_date"
-                            value="{{ old('estimated_delivery_date') }}"
-                            min="{{ now()->addDay()->toDateString() }}" 
-                            required
-                        >
-
-                        @error('estimated_delivery_date')
-                            <p class="field-error">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </section>
 
                 {{-- Items --}}
                 <section class="create-card create-card-wide" aria-labelledby="items-card-title">
