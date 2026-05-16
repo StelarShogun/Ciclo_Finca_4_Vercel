@@ -333,7 +333,8 @@
                         @endphp
                         <div class="product-card">
                             <div class="product-image">
-                                <a href="{{ $related->clientProductUrl() }}">
+                                <a class="product-image__link" href="{{ $related->clientProductUrl() }}"
+                                   aria-label="Ver producto: {{ $related->name }}">
                                     @php $relatedImgUrl = $related->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($related->image ?? 'default.png')); @endphp
                                     <img src="{{ $relatedImgUrl }}" alt="{{ $related->name }}"
                                          data-fallback-src="{{ asset('favicon.svg') }}"

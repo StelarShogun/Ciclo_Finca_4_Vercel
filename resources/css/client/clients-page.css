@@ -1194,8 +1194,16 @@ body.guest-layout {
    =================================================================== */
 .products-grid {
   display: grid;
+  align-items: stretch;
   grid-template-columns: repeat(auto-fill, minmax(clamp(160px, 15vw, 240px), 1fr));
   gap: clamp(1rem, 1.5vw, 1.5rem);
+}
+
+.products-grid > .product-card {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .product-card {
@@ -1220,6 +1228,16 @@ body.guest-layout {
   overflow: hidden;
   height: clamp(140px, 14vw, 200px);
   background: var(--background-light);
+  flex-shrink: 0;
+}
+
+/* Imagen clicable (home, mismas rutas que catálogo: tocar foto → ficha). */
+.product-image .product-image__link {
+  display: block;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .product-favorite-btn {
@@ -1309,6 +1327,8 @@ body.guest-layout {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .product-category {
@@ -1414,7 +1434,7 @@ body.guest-layout {
 .product-footer {
   display: flex;
   flex-direction: column;
-  margin-top: 10px;
+  margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid var(--border-color);
   gap: 8px;
@@ -1467,18 +1487,39 @@ body.guest-layout {
   flex: 1;
 }
 
-/* Botón "Ver detalles" — secundario (fondo blanco, texto gris) */
+/* Botón secundario “Ver producto” — icono ojo (ver ficha), texto en una línea en layouts estrechos */
 .btn-ver-detalles {
   background: #ffffff;
-  color: #475569;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  color: var(--brand-medium-dark, var(--color-primary-dark, #163832));
+  border: 1.5px solid var(--brand-medium, var(--color-primary, #235347));
+  box-shadow:
+    0 1px 3px rgba(5, 31, 32, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+  gap: 0.35rem;
+  padding-inline: clamp(0.4rem, 1.8vw, 0.65rem);
+  font-size: clamp(0.7rem, 2.6vw, 0.78rem);
+  min-width: 0;
+}
+
+.btn-ver-detalles i {
+  flex-shrink: 0;
+  font-size: 0.92em;
+  opacity: 0.88;
+  color: var(--brand-medium, var(--color-primary, #235347));
 }
 
 .btn-ver-detalles:hover {
   background: var(--color-primary-dark);
   color: #ffffff;
+  border-color: var(--color-primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(22,163,74,0.25);
+  box-shadow: 0 8px 20px rgba(5, 31, 32, 0.2), 0 2px 6px rgba(35, 83, 71, 0.15);
+}
+
+.btn-ver-detalles:hover i {
+  color: #ffffff;
+  opacity: 1;
 }
 
 /* Botón "Agregar" — primario (verde original del sitio) */
@@ -3102,10 +3143,6 @@ body.guest-layout {
   .catalog-spotlight-carousel .swiper-wrapper {
     transition: none !important;
   }
-
-  .catalog-spotlight-slide:hover .product-image img {
-    transform: none;
-  }
 }
 
 .product-card--catalog-spotlight:hover {
@@ -3143,10 +3180,6 @@ body.guest-layout {
 .catalog-spotlight-badge.spotlight-badge {
   z-index: 6;
   pointer-events: none;
-}
-
-.catalog-spotlight-slide:hover .product-image img {
-  transform: scale(1.05);
 }
 
 .product-card--catalog-spotlight .product-image {
@@ -3340,6 +3373,7 @@ select.catalog-toolbar-select:focus,
 /* Catálogo: grid de productos (refina sección 15 en esta vista) */
 .catalog-main .products-grid {
   display: grid;
+  align-items: stretch;
   grid-template-columns: repeat(auto-fill, minmax(clamp(170px, 15vw, 235px), 1fr));
   gap: clamp(1rem, 1.4vw, 1.5rem);
 }
@@ -3351,6 +3385,10 @@ select.catalog-toolbar-select:focus,
   overflow: hidden;
   box-shadow: 0 14px 36px rgba(5, 31, 32, 0.08);
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .catalog-main .product-card:hover {
@@ -3365,6 +3403,185 @@ select.catalog-toolbar-select:focus,
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* --------------------------------------------------------------------------
+   CF4-128 — Catálogo: card reposo ordenado + hover (solo imagen + precio en overlay).
+   Overlay no cubre footer: botones siguen clicables. Solo donde el UA reporta hover real
+   (hover: hover). En móvil real suele ser hover:none — no overlay. Emulador móvil + ratón puede variar.
+   -------------------------------------------------------------------------- */
+.catalog-main .product-card--catalog-cf128 .product-image--catalog-cf128 {
+  display: block;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  background: linear-gradient(145deg, rgba(218, 241, 222, 0.5), rgba(255, 255, 255, 0.95));
+}
+
+.catalog-main .product-card--catalog-cf128 .product-image__frame {
+  position: relative;
+  width: 100%;
+  /* Más altura que 4/3: la foto “ocupa” más la card (HU: exploración visual). */
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 18px 18px 0 0;
+}
+
+.catalog-main .product-card--catalog-cf128 .product-image__link {
+  position: absolute;
+  inset: 0;
+  display: block;
+  z-index: 1;
+}
+
+.catalog-main .product-card--catalog-cf128 .product-image__link img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scale(1);
+  transition: transform 0.28s ease;
+}
+
+.catalog-main .product-card--catalog-cf128 .product-image__hover-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.85rem 0.75rem 1.1rem;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.28s ease, visibility 0.28s ease;
+  background: linear-gradient(
+    to top,
+    rgba(5, 31, 32, 0.9) 0%,
+    rgba(5, 31, 32, 0.45) 42%,
+    rgba(5, 31, 32, 0) 72%
+  );
+}
+
+.catalog-main .product-card--catalog-cf128 .product-image__hover-price {
+  font-size: clamp(1.15rem, 3.2vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--brand-lightest, #daf1de);
+  text-shadow: 0 2px 12px rgba(5, 31, 32, 0.85);
+  line-height: 1.2;
+}
+
+.catalog-main .product-card--catalog-cf128 .product-favorite-btn {
+  z-index: 5;
+}
+
+/* Reposición “vista limpia”: solo ritmo y espaciado (sin ocultar bloques). */
+.catalog-main .product-info--catalog-cf128 {
+  gap: 0.4rem;
+  padding: 0.75rem 0.95rem 0.95rem;
+}
+
+.catalog-main .product-card--catalog-cf128 .product-category {
+  margin-top: 0.1rem;
+}
+
+.catalog-main .product-card--catalog-cf128 .product-name {
+  margin: 0;
+}
+
+.catalog-main .product-card--catalog-cf128 .product-stars-inline {
+  margin-top: 0.15rem;
+}
+
+/* Un solo precio “en foco”: con overlay visible se oculta la barra del footer (catálogo y carrusel destacados). */
+.catalog-main .product-card--catalog-cf128 .product-price-bar {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.28s ease, visibility 0.28s ease;
+}
+
+/* Sin (pointer: fine): en DevTools móvil + ratón a veces se puede probar hover; iOS real sigue hover:none. */
+@media (hover: hover) {
+  @media (prefers-reduced-motion: no-preference) {
+    .catalog-main .product-card--catalog-cf128:hover .product-image__hover-overlay {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .catalog-main .product-card--catalog-cf128:hover .product-image__frame img {
+      transform: scale(1.08);
+    }
+
+    .catalog-main .product-card--catalog-cf128:hover .product-price-bar {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+}
+
+/* Táctil: sin hover persistente; “peek” al mantener pulsada la zona de imagen (mismo overlay + zoom). */
+@media (hover: none) {
+  .catalog-main .product-card--catalog-cf128 .product-image__frame {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .catalog-main .product-card--catalog-cf128 .product-image__hover-overlay {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.22s ease, visibility 0.22s ease;
+  }
+
+  .catalog-main .product-card--catalog-cf128 .product-image__frame .product-image__link img {
+    transform: none;
+  }
+
+  .catalog-main .product-card--catalog-cf128 .product-image__frame:active .product-image__hover-overlay {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .catalog-main .product-card--catalog-cf128 .product-image__frame:active .product-image__link img {
+    transform: scale(1.08);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* frame / enlace / img: cubre rejilla (link en frame) y destacados (img directa en frame). */
+    .catalog-main .product-card--catalog-cf128:has(.product-image__frame:active) .product-price-bar,
+    .catalog-main .product-card--catalog-cf128:has(.product-image__link:active) .product-price-bar,
+    .catalog-main .product-card--catalog-cf128:has(.product-image__frame img:active) .product-price-bar {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-main .product-card--catalog-cf128 .product-image__link img,
+  .catalog-main .product-card--catalog-cf128 .product-image__hover-overlay,
+  .catalog-main .product-card--catalog-cf128 {
+    transition-duration: 0.01ms !important;
+  }
+
+  .catalog-main .product-card--catalog-cf128:hover .product-image__frame img {
+    transform: none !important;
+  }
+
+  .catalog-main .product-card--catalog-cf128:hover .product-image__hover-overlay {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .catalog-main .product-card--catalog-cf128 .product-image__frame:active .product-image__hover-overlay {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .catalog-main .product-card--catalog-cf128 .product-image__frame:active .product-image__link img {
+    transform: none !important;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -4907,6 +5124,43 @@ select.catalog-toolbar-select:focus,
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
   }
+
+  /* Móvil: sin botón “Ver producto” (imagen + título llevan a ficha, patrón tipo marketplace). Solo Agregar / estado. */
+  .product-footer {
+    gap: 10px;
+    padding-top: 10px;
+    padding-bottom: 4px;
+    margin-top: auto;
+  }
+
+  .product-footer .btn-ver-detalles {
+    display: none !important;
+  }
+
+  .product-footer .product-actions {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .product-footer .product-actions .btn-product {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    height: auto;
+    padding: 0.55rem 0.9rem;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .product-footer .btn-agregar {
+    gap: 0.45rem;
+  }
+
+  .product-footer .btn-agregar i {
+    font-size: 0.92em;
+  }
+
   .categories-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
 
   /* Product detail */
