@@ -339,9 +339,9 @@
     </div>
 
     {{-- Modal: Order details --}}
-    <div     <div id="view-order-modal" class="edit-modal">
+    <div id="view-order-modal" class="edit-modal">
         <div class="modal-backdrop" onclick="closeViewOrderModal()"></div>
-        <div class="modal-content modal-auto-size modal-content--detail">
+        <div class="modal-content modal-auto-size">
             <div class="modal-header">
                 <h3><i class="fas fa-box"></i> Detalles del pedido</h3>
                 <button type="button" class="modal-close" onclick="closeViewOrderModal()" aria-label="Cerrar">
@@ -349,12 +349,12 @@
                 </button>
             </div>
             <div class="modal-body" id="view-order-body">
-                <div class="cf-detail-loading" role="status">
+                <div class="loading-spinner" role="status">
                     <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
                     <p>Cargando detalles…</p>
                 </div>
             </div>
-            <div class="modal-footer"><div class="modal-footer">
+            <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeViewOrderModal()">
                     <i class="fas fa-times"></i> Cerrar
                 </button>
@@ -365,7 +365,7 @@
     {{-- Modal: Supplier details --}}
     <div id="view-supplier-modal" class="edit-modal">
         <div class="modal-backdrop" onclick="closeViewSupplierModal()"></div>
-        <div class="modal-content modal-auto-size modal-content--detail">
+        <div class="modal-content modal-auto-size">
             <div class="modal-header">
                 <h3><i class="fas fa-truck"></i> Datos del proveedor</h3>
                 <button type="button" class="modal-close" onclick="closeViewSupplierModal()" aria-label="Cerrar">
@@ -373,7 +373,7 @@
                 </button>
             </div>
             <div class="modal-body" id="view-supplier-body">
-                <div class="cf-detail-loading" role="status">
+                <div class="loading-spinner" role="status">
                     <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
                     <p>Cargando datos del proveedor…</p>
                 </div>

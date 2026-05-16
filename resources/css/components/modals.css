@@ -2,6 +2,12 @@
 /* Este archivo contiene todos los estilos compartidos para modales */
 @import "../admin/sweetalert2-modal-zindex.css";
 
+/* Con scrollbar-gutter: stable en html, bloquear scroll no deberÃ­a encoger el layout. */
+html:has(.edit-modal.active),
+html:has(.modal-overlay.active) {
+  overflow: hidden;
+}
+
 /* ===== MODAL BASE ===== */
 .edit-modal {
   display: none;
@@ -78,11 +84,7 @@
   max-width: min(90vw, 900px) !important;
 }
 
-/* Excepci?n: modal de importaci?n NO debe usar el max-width limitado */
-#import-modal .modal-content.modal-auto-size {
-  max-width: min(95vw, 1000px) !important;
-  min-width: 800px !important;
-}
+/* Import modal sizing: inventory.css (#import-modal compact). */
 
 /* ===== HEADER DEL MODAL ===== */
 .modal-header {
@@ -127,6 +129,21 @@
   color: white;
 }
 
+/* Shared loading state for view-detail modals (markup is per-module). */
+.loading-spinner {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--color-muted, #6c757d);
+}
+
+.loading-spinner i {
+  color: var(--color-primary, #235347);
+}
+
+.loading-spinner p {
+  margin: 0.75rem 0 0;
+}
+
 /* ===== BODY DEL MODAL ===== */
 .modal-body {
   padding: 1.5rem;
@@ -155,7 +172,7 @@
   flex-shrink: 0;
 }
 
-/* ===== TAMAÿÿOS ESPECÿÿFICOS POR MODAL ===== */
+/* ===== TAMAï¿½ï¿½OS ESPECï¿½ï¿½FICOS POR MODAL ===== */
 /* Modales de productos */
 #new-product-modal .modal-content,
 #edit-modal .modal-content {
@@ -170,24 +187,7 @@
   max-width: min(90vw, 700px) !important;
 }
 
-/* Modales de importaci?n/exportaci?n */
-#import-modal .modal-content {
-  min-width: 800px !important;
-  width: fit-content !important;
-  max-width: min(95vw, 1000px) !important; 
-}
-
-/* Sobrescribir modal-auto-size para el modal de importaci?n */
-#import-modal .modal-content.modal-auto-size {
-  min-width: 800px !important;
-  width: fit-content !important;
-  max-width: min(95vw, 1000px) !important;
-}
-
-/* Ajustar padding del body del modal de importaci?n para mejor distribuci?n */
-#import-modal .modal-body {
-  padding: 1.5rem 2rem;
-}
+/* Import modal sizing lives in inventory.css (compact). */
 
 /* Modales de ventas */
 #new-sale-modal .modal-content {
@@ -267,13 +267,6 @@
     min-width: 300px !important;
     max-width: 95vw !important;
     margin: 1rem;
-  }
-
-  /* Modal de importaci?n mantiene m?s ancho incluso en m?viles */
-  #import-modal .modal-content,
-  #import-modal .modal-content.modal-auto-size {
-    min-width: 95vw !important;
-    max-width: 95vw !important;
   }
 
   .modal-header {

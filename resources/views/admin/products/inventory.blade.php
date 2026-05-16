@@ -801,8 +801,9 @@
                             <span>Imágenes</span>
                             <i class="fas fa-chevron-down" aria-hidden="true"></i>
                         </button>
-                        <div class="form-section__body">
-                            <div id="current-image-preview" class="cf-file-upload-current-preview"></div>
+                        <div class="form-section__body form-section__body--images">
+                            <input type="hidden" id="edit-remove-main-image" name="remove_main_image" value="0">
+                            <div id="current-image-preview" class="cf-product-current-image" hidden></div>
                             <x-cf-file-upload
                                 id="edit-image"
                                 name="image"
@@ -942,86 +943,35 @@
                       enctype="multipart/form-data" id="import-form">
                     @csrf
 
+                    <p class="import-modal-intro">
+                        Subí un archivo de catálogo o planilla. Al elegirlo, detectamos el formato y validamos que sea legible antes de importar.
+                    </p>
+
+                    <div class="import-format-hints" aria-label="Formatos admitidos">
+                        <span class="import-format-chip import-format-chip--xml"><i class="fas fa-file-code"></i> XML</span>
+                        <span class="import-format-chip import-format-chip--csv"><i class="fas fa-file-csv"></i> CSV / TXT</span>
+                        <span class="import-format-chip import-format-chip--json"><i class="fas fa-file-alt"></i> JSON</span>
+                    </div>
+
                     <x-cf-file-upload
                         id="import_file"
                         name="import_file"
-                        label="Archivo de importación"
+                        label="Archivo"
                         accept=".xml,.csv,.json,.txt"
                         :required="true"
                         icon="fa-cloud-upload-alt"
-                        meta-id="import_file-meta">
-                        Arrastra tu archivo aquí o haz clic para seleccionar
+                        meta-id="import_file-meta"
+                        hint="Tamaño máximo: 10 MB.">
+                        Seleccioná o arrastrá el archivo
                     </x-cf-file-upload>
 
-                    <div id="format-detected" class="cf-import-format-alert cf-import-format-alert--success hidden">
-                        <i class="fas fa-check-circle"></i>
-                        <div>
-                            <strong>Formato detectado:</strong> <span id="detected-format-text"></span>
-                            <small class="format-help-text"></small>
-                        </div>
-                    </div>
+                    <p class="import-modal-requirements">
+                        <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                        Cada producto debe traer al menos <strong>nombre</strong>, <strong>categoría</strong> y <strong>precio de venta</strong>.
+                        Si el archivo incluye SKU o código, se usan para actualizar registros existentes.
+                    </p>
 
-                    <section class="form-section" data-section="import-formats">
-                        <button type="button" class="form-section__toggle" aria-expanded="true">
-                            <span>Formatos soportados</span>
-                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
-                        </button>
-                        <div class="form-section__body">
-                        <div class="alert alert-info">
-                            <div class="alert-header">
-                                <i class="fas fa-info-circle"></i>
-                                <strong>Formatos soportados</strong>
-                            </div>
-                            <div class="formats-guide">
-                                <div class="format-item">
-                                    <i class="fas fa-file-code format-icon xml"></i>
-                                    <div>
-                                        <strong>XML</strong>
-                                        <small>Formato estructurado con etiquetas</small>
-                                    </div>
-                                </div>
-                                <div class="format-item">
-                                    <i class="fas fa-file-csv format-icon csv"></i>
-                                    <div>
-                                        <strong>CSV</strong>
-                                        <small>Compatible con Excel y hojas de cálculo</small>
-                                    </div>
-                                </div>
-                                <div class="format-item">
-                                    <i class="fas fa-file-alt format-icon json"></i>
-                                    <div>
-                                        <strong>JSON</strong>
-                                        <small>Formato ligero para aplicaciones web</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        </div>
-                    </section>
-
-                    <section class="form-section" data-section="import-fields">
-                        <button type="button" class="form-section__toggle" aria-expanded="true">
-                            <span>Campos requeridos en el archivo</span>
-                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
-                        </button>
-                        <div class="form-section__body">
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <div>
-                                <strong>Campos requeridos en el archivo:</strong>
-                                <ul class="required-fields-list">
-                                    <li><code>nombre</code> - Nombre del producto</li>
-                                    <li><code>categoria</code> - Nombre de la categoría (debe existir)</li>
-                                    <li><code>proveedor</code> - Nombre del proveedor (debe existir)</li>
-                                    <li><code>precio_compra</code> - Precio de compra</li>
-                                    <li><code>precio_venta</code> - Precio de venta</li>
-                                    <li><code>stock_actual</code> - Cantidad en stock</li>
-                                    <li><code>stock_minimo</code> - Stock mínimo</li>
-                                </ul>
-                            </div>
-                        </div>
-                        </div>
-                    </section>
+                    <div id="import-file-summary" class="import-file-summary hidden" aria-live="polite"></div>
 
                 </form>
             </div>
@@ -1041,7 +991,7 @@
     {{-- Body content injected dynamically by inventory.js --}}
     <div class="edit-modal" id="view-product-modal">
         <div class="modal-backdrop" id="view-product-modal-backdrop"></div>
-        <div class="modal-content modal-auto-size modal-content--detail">
+        <div class="modal-content modal-auto-size">
             <div class="modal-header">
                 <h3><i class="fas fa-eye"></i> Detalles del Producto</h3>
                 <button type="button" class="modal-close" id="close-view-product-modal" aria-label="Cerrar">
@@ -1049,7 +999,7 @@
                 </button>
             </div>
             <div class="modal-body" id="view-product-body">
-                <div class="cf-detail-loading" role="status">
+                <div class="loading-spinner" role="status">
                     <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
                     <p>Cargando detalles…</p>
                 </div>
@@ -1073,7 +1023,7 @@
          aria-labelledby="stock-modal-title">
         <div class="stock-modal-backdrop"></div>
 
-        <div class="stock-modal-box">
+        <div class="stock-modal-box" id="stock-modal-box">
 
             {{-- Header --}}
             <div class="stock-modal-header">
@@ -1089,10 +1039,13 @@
 
             {{-- Product info strip --}}
             <div class="stock-modal-product-info">
-                <div>
+                <div class="stock-modal-product-info__icon" aria-hidden="true">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div class="stock-modal-product-info__body">
                     <div class="product-name" id="stock-modal-product-name">—</div>
                     <div class="product-stock">
-                        Stock actual:
+                        <span class="product-stock__label">Stock actual</span>
                         <span class="stock-pill" id="stock-modal-product-stock">—</span>
                     </div>
                 </div>
@@ -1115,21 +1068,27 @@
                     <label for="stock-modal-qty">Cantidad *</label>
                     <input type="number"
                            id="stock-modal-qty"
+                           class="stock-form-control"
                            min="1"
                            step="1"
-                           placeholder="Ej: 10">
+                           inputmode="numeric"
+                           placeholder="Ej: 10"
+                           required>
+                    <p class="stock-form-hint" id="stock-modal-preview" hidden></p>
                     <span class="stock-field-error" id="stock-modal-qty-error"></span>
                 </div>
 
                 {{-- Reason --}}
                 <div class="stock-form-group">
                     <label for="stock-modal-reason">Motivo *</label>
-                    <input type="text"
-                           id="stock-modal-reason"
-                           class="stock-form-control"
-                           placeholder="Describe el motivo del ajuste…"
-                           maxlength="500"
-                           autocomplete="off">
+                    <textarea id="stock-modal-reason"
+                              class="stock-form-control stock-form-control--textarea"
+                              rows="3"
+                              placeholder="Describe el motivo del ajuste…"
+                              maxlength="500"
+                              autocomplete="off"
+                              required></textarea>
+                    <span class="stock-form-charcount" id="stock-modal-reason-count">0 / 500</span>
                     <span class="stock-field-error" id="stock-modal-reason-error"></span>
                 </div>
 

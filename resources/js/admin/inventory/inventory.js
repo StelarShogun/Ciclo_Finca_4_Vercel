@@ -1,14 +1,6 @@
 import { initStaticSearchCombobox, setComboboxFieldError } from '../shared/static-search-combobox.js';
+import { createDropdownPortal } from '../shared/combobox-dropdown-portal.js';
 import { initFileUploadZone } from '../shared/file-upload-zone.js';
-import {
-    detailError,
-    detailGrid,
-    detailItem,
-    detailLoading,
-    detailSection,
-    detailView,
-    escapeHtml,
-} from '../shared/admin-detail-view.js';
 
 // Selector shortcuts
 const qs = (s, r = document) => r.querySelector(s);
@@ -53,6 +45,38 @@ function escapeHtml(raw) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function setEditCurrentProductImage(url) {
+    const block = qs('#current-image-preview');
+    const removeInput = qs('#edit-remove-main-image');
+    if (!block) return;
+
+    if (!url) {
+        block.hidden = true;
+        block.innerHTML = '';
+        return;
+    }
+
+    if (removeInput) removeInput.value = '0';
+    block.hidden = false;
+    const safeUrl = escapeHtml(url);
+    block.innerHTML =
+        '<div class="cf-product-current-image__media">' +
+        '<img src="' + safeUrl + '" alt="Imagen actual del producto" class="cf-product-current-image__thumb">' +
+        '</div>' +
+        '<div class="cf-product-current-image__actions">' +
+        '<p class="cf-product-current-image__label">Imagen principal actual</p>' +
+        '<button type="button" class="btn btn-secondary btn-sm js-remove-current-image">' +
+        '<i class="fas fa-trash-alt" aria-hidden="true"></i> Eliminar imagen' +
+        '</button>' +
+        '</div>';
+}
+
+function markEditMainImageForRemoval() {
+    setEditCurrentProductImage(null);
+    const removeInput = qs('#edit-remove-main-image');
+    if (removeInput) removeInput.value = '1';
 }
 
 function escapeHtmlAttr(raw) {
@@ -372,11 +396,13 @@ function setupClassificationDimensionCard(card, dimension, initialValueId) {
             ? Number(initialValueId)
             : null;
     let open = false;
+    const listPortal = createDropdownPortal(searchInput, listEl);
 
     card.addEventListener('cf-force-close', () => {
         open = false;
         if (listEl) listEl.hidden = true;
         card.classList.remove('is-dropdown-open');
+        listPortal.unmount();
     });
 
     function setError(msg) {
@@ -472,6 +498,11 @@ function setupClassificationDimensionCard(card, dimension, initialValueId) {
         const visible = open && hasRows;
         listEl.hidden = !visible;
         card.classList.toggle('is-dropdown-open', Boolean(visible));
+        if (visible) {
+            listPortal.mount();
+        } else {
+            listPortal.unmount();
+        }
     }
 
     async function createValueApi(raw) {
@@ -912,6 +943,7 @@ function initProductSearchCombobox({ searchInputId, hiddenInputId, dropdownId, w
     const chevron = wrapper?.querySelector('.brand-combobox-chevron');
     if (!searchInput || !hiddenInput || !dropdown || !wrapper) return null;
 
+    const dropdownPortal = createDropdownPortal(wrapper, dropdown);
     let isOpen = false;
     let activeIndex = -1;
     let lastResults = [];
@@ -933,6 +965,7 @@ function initProductSearchCombobox({ searchInputId, hiddenInputId, dropdownId, w
         dropdown.classList.add('open');
         wrapper.classList.add('open');
         isOpen = true;
+        dropdownPortal.mount();
         if (chevron) chevron.classList.add('rotated');
     }
 
@@ -941,6 +974,7 @@ function initProductSearchCombobox({ searchInputId, hiddenInputId, dropdownId, w
         wrapper.classList.remove('open');
         isOpen = false;
         activeIndex = -1;
+        dropdownPortal.unmount();
         if (chevron) chevron.classList.remove('rotated');
     }
 
@@ -1338,18 +1372,6 @@ function setModalLoading(modal, isLoading) {
     }
 }
 
-// Smooth scroll to top
-function smoothScrollTop() {
-    try {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    } catch {
-        window.scrollTo(0, 0);
-    }
-}
-
 // Sidebar toggle with state persistence
 (function initSidebarToggle() {
     const btn = qs('#sidebarToggle');
@@ -1679,12 +1701,9 @@ function smoothScrollTop() {
                     editProductForm.action = `/products/${productId}`;
                     editImageUpload?.reset();
                     editGalleryUpload?.reset();
-                    const currentImagePreview = qs('#current-image-preview');
-                    if (currentImagePreview) {
-                        currentImagePreview.innerHTML = product.media_main
-                            ? `<img src="${product.media_main}" alt="Imagen actual del producto">`
-                            : '';
-                    }
+                    setEditCurrentProductImage(product.media_main || null);
+                    const removeMainInput = qs('#edit-remove-main-image');
+                    if (removeMainInput) removeMainInput.value = '0';
                     qs('#edit-name').value = product.name || '';
                     qs('#edit-description').value = product.description || '';
                     const currentCategoryId = String(product.category_id || '');
@@ -1893,6 +1912,19 @@ function smoothScrollTop() {
         metaId: 'edit-image-meta',
         triggerId: 'edit-image-trigger',
         imagePreview: true,
+        onChange(file) {
+            if (file) {
+                const removeInput = qs('#edit-remove-main-image');
+                if (removeInput) removeInput.value = '0';
+            }
+        },
+    });
+
+    qs('#current-image-preview')?.addEventListener('click', (e) => {
+        if (!e.target.closest('.js-remove-current-image')) return;
+        e.preventDefault();
+        markEditMainImageForRemoval();
+        editImageUpload?.reset();
     });
     const editGalleryUpload = initFileUploadZone({
         inputId: 'edit-images',
@@ -2315,6 +2347,43 @@ function smoothScrollTop() {
     const cancelViewProductBtn = qs('#cancel-view-product');
     const viewProductBody = qs('#view-product-body');
 
+    function productDetailField(label, iconClass, valueHtml, fullWidth = false) {
+        const wide = fullWidth ? ' product-detail-field--full' : '';
+        return `<div class="form-group product-detail-field${wide}">
+            <label><i class="fas ${iconClass}" aria-hidden="true"></i> ${label}</label>
+            <div class="product-details-value">${valueHtml}</div>
+        </div>`;
+    }
+
+    function productDetailSection(title, sectionKey, bodyHtml) {
+        return `<section class="form-section product-details-section" data-section="${sectionKey}">
+            <button type="button" class="form-section__toggle" aria-expanded="true">
+                <span>${title}</span>
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </button>
+            <div class="form-section__body">${bodyHtml}</div>
+        </section>`;
+    }
+
+    function buildClassificationFieldsHtml(product) {
+        const values = product.classification_values || product.classificationValues || [];
+        if (!Array.isArray(values) || values.length === 0) {
+            return '';
+        }
+        return values.map((cv) => {
+            const dimName = cv.dimension?.name || 'Clasificación';
+            const val = cv.value ?? '—';
+            return productDetailField(dimName, 'fa-tags', escapeHtml(String(val)));
+        }).join('');
+    }
+
+    function wrapProductDetailMedia(innerHtml) {
+        if (innerHtml.includes('product-details-carousel-outer')) {
+            return `<div class="product-details-media">${innerHtml}</div>`;
+        }
+        return `<div class="product-details-media"><div class="product-details-media-frame">${innerHtml}</div></div>`;
+    }
+
     function initAdminViewCarousel() {
         var track = document.getElementById('admin-carousel-track');
         if (!track) return;
@@ -2361,7 +2430,13 @@ function smoothScrollTop() {
     viewDetailsBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             setActionButtonLoading(btn, true, 'Ver detalles');
-            if (viewProductBody) viewProductBody.innerHTML = detailLoading('Cargando detalles…');
+            if (viewProductBody) {
+                viewProductBody.innerHTML = `
+                    <div class="loading-spinner" role="status">
+                        <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
+                        <p>Cargando detalles…</p>
+                    </div>`;
+            }
             setModalLoading(viewProductModal, true);
             const productId = btn.dataset.productId;
             smartFetch(`/products/${productId}`, {
@@ -2384,9 +2459,9 @@ function smoothScrollTop() {
 
                     let imageHtml;
                     if (!allImages.length) {
-                        imageHtml = '<p>No hay imagen</p>';
+                        imageHtml = '<p class="product-details-empty">No hay imagen</p>';
                     } else if (allImages.length === 1) {
-                        imageHtml = `<img src="${allImages[0]}" alt="${product.name}" style="max-width:100%;height:auto;border-radius:var(--border-radius);margin-top:10px;">`;
+                        imageHtml = `<img src="${allImages[0]}" alt="${escapeHtmlAttr(product.name)}">`;
                     } else {
                         const slides = allImages.map(url =>
                             `<div class="carousel-slide"><img src="${url}" alt="${product.name}"></div>`
@@ -2395,13 +2470,17 @@ function smoothScrollTop() {
                             `<button class="carousel-dot${i === 0 ? ' active' : ''}" aria-label="Imagen ${i + 1}"></button>`
                         ).join('');
                         imageHtml = `
-                            <div class="admin-product-carousel" style="margin-top:10px;">
-                                <div class="carousel-viewport">
-                                    <div class="carousel-track" id="admin-carousel-track">${slides}</div>
+                            <div class="product-details-carousel-outer">
+                                <button type="button" class="carousel-btn carousel-btn--prev" id="admin-carousel-prev" disabled aria-label="Anterior">&#8249;</button>
+                                <div class="product-details-media-frame">
+                                    <div class="admin-product-carousel">
+                                        <div class="carousel-viewport">
+                                            <div class="carousel-track" id="admin-carousel-track">${slides}</div>
+                                        </div>
+                                        <div class="carousel-dots" id="admin-carousel-dots">${dots}</div>
+                                    </div>
                                 </div>
-                                <button class="carousel-btn carousel-btn--prev" id="admin-carousel-prev" disabled aria-label="Anterior">&#8249;</button>
-                                <button class="carousel-btn carousel-btn--next" id="admin-carousel-next" aria-label="Siguiente">&#8250;</button>
-                                <div class="carousel-dots" id="admin-carousel-dots">${dots}</div>
+                                <button type="button" class="carousel-btn carousel-btn--next" id="admin-carousel-next" aria-label="Siguiente">&#8250;</button>
                             </div>`;
                     }
 
@@ -2411,25 +2490,34 @@ function smoothScrollTop() {
                         out_of_stock: 'Agotado',
                         discontinued: 'Descontinuado',
                     };
-                    const infoSection = detailGrid(
-                        detailItem('Nombre', escapeHtml(product.name), 'fa-tag')
-                        + detailItem('Descripción', escapeHtml(product.description || '—'), 'fa-align-left')
-                        + detailItem('Categoría', escapeHtml(categoryPath(product.category)), 'fa-boxes')
-                        + detailItem('Proveedor', escapeHtml(product.supplier?.name || '—'), 'fa-truck')
-                    );
-                    const pricingSection = detailGrid(
-                        detailItem('Precio de compra', `₡${escapeHtml(product.purchase_price)}`, 'fa-dollar-sign')
-                        + detailItem('Precio de venta', `₡${escapeHtml(product.sale_price)}`, 'fa-money-bill-wave')
-                        + detailItem('Stock actual', escapeHtml(product.stock_current), 'fa-warehouse')
-                        + detailItem('Stock mínimo', escapeHtml(product.stock_minimum), 'fa-minus-circle')
-                        + detailItem('Estado', escapeHtml(statusLabels[product.status] || product.status), 'fa-info-circle')
-                        + detailItem('Destacado en tienda', product.is_featured ? 'Sí (inicio y catálogo)' : 'No', 'fa-star')
-                    );
-                    viewProductBody.innerHTML = detailView(
-                        detailSection('Imagen', 'fa-image', `<div class="cf-detail-grid">${detailItem('Vista previa', imageHtml, 'fa-image')}</div>`)
-                        + detailSection('Información general', 'fa-info-circle', infoSection)
-                        + detailSection('Precios y stock', 'fa-calculator', pricingSection)
-                    ).replace(/<div/g, '<div').replace(/<\/motion>/g, '</div>');
+                    const featuredLabel = product.is_featured
+                        ? 'Sí (inicio y catálogo)'
+                        : 'No';
+
+                    viewProductBody.innerHTML = `
+                        <div class="product-details-view">
+                            ${productDetailSection('Imágenes', 'images', wrapProductDetailMedia(imageHtml))}
+                            ${productDetailSection('Datos básicos', 'basic', `
+                                <div class="product-details-fields">
+                                    ${productDetailField('Nombre', 'fa-tag', escapeHtml(product.name))}
+                                    ${productDetailField('Categoría', 'fa-boxes', escapeHtml(categoryPath(product.category)))}
+                                    ${productDetailField('Descripción', 'fa-align-left', escapeHtml(product.description || '-'), true)}
+                                    ${productDetailField('Proveedor', 'fa-truck', escapeHtml(product.supplier?.name || '-'))}
+                                    ${buildClassificationFieldsHtml(product)}
+                                    ${productDetailField('Destacado en tienda', 'fa-star', featuredLabel)}
+                                </div>
+                            `)}
+                            ${productDetailSection('Precios y stock', 'pricing', `
+                                <div class="product-details-fields">
+                                    ${productDetailField('Precio de Compra', 'fa-dollar-sign', `₡${escapeHtml(product.purchase_price)}`)}
+                                    ${productDetailField('Precio de Venta', 'fa-money-bill-wave', `₡${escapeHtml(product.sale_price)}`)}
+                                    ${productDetailField('Stock Actual', 'fa-warehouse', escapeHtml(product.stock_current))}
+                                    ${productDetailField('Stock Mínimo', 'fa-minus-circle', escapeHtml(product.stock_minimum))}
+                                    ${productDetailField('Estado', 'fa-info-circle', escapeHtml(statusLabels[product.status] || product.status))}
+                                </div>
+                            `)}
+                        </div>`;
+                    initCollapsibleFormSections(viewProductModal);
                     initAdminViewCarousel();
                     viewProductModal.classList.add('active');
                 } else {
@@ -2453,17 +2541,18 @@ function smoothScrollTop() {
         });
     });
 
+    const viewProductBackdrop = qs('#view-product-modal-backdrop');
+    const closeViewProductModal = () => viewProductModal?.classList.remove('active');
+
     if (closeViewProductModalBtn) {
-        closeViewProductModalBtn.addEventListener('click', () => {
-            viewProductModal.classList.remove('active');
-        });
+        closeViewProductModalBtn.addEventListener('click', closeViewProductModal);
     }
 
     if (cancelViewProductBtn) {
-        cancelViewProductBtn.addEventListener('click', () => {
-            viewProductModal.classList.remove('active');
-        });
+        cancelViewProductBtn.addEventListener('click', closeViewProductModal);
     }
+
+    viewProductBackdrop?.addEventListener('click', closeViewProductModal);
 
     // Modal: Import products
     const importModal = qs('#import-modal');
@@ -2477,7 +2566,6 @@ function smoothScrollTop() {
         openImportModalBtn.addEventListener('click', () => {
             importUpload?.reset();
             resetImportUi();
-            initCollapsibleFormSections(importModal);
             importModal.classList.add('active');
         });
     }
@@ -2519,12 +2607,11 @@ function smoothScrollTop() {
     }
 
     const fileInput = qs('#import_file');
-    const formatDetected = qs('#format-detected');
-    const detectedFormatText = qs('#detected-format-text');
-    const formatHelpText = qs('.format-help-text');
+    const importSummary = qs('#import-file-summary');
 
     function resetImportUi() {
-        formatDetected?.classList.add('hidden');
+        importSummary?.classList.add('hidden');
+        if (importSummary) importSummary.innerHTML = '';
         if (confirmImportBtn) confirmImportBtn.disabled = true;
     }
 
@@ -2537,7 +2624,7 @@ function smoothScrollTop() {
         if (!detected) {
             Swal.fire({
                 title: 'Formato no soportado',
-                text: 'Por favor selecciona un archivo XML, CSV o JSON.',
+                text: 'Usá un archivo XML, CSV o JSON.',
                 icon: 'error',
                 confirmButtonText: 'Entendido',
             });
@@ -2545,11 +2632,10 @@ function smoothScrollTop() {
             resetImportUi();
             return;
         }
-        if (detectedFormatText) detectedFormatText.textContent = detected.name;
-        if (formatHelpText) {
-            formatHelpText.textContent = `El sistema detectó automáticamente que tu archivo es ${detected.name}. No necesitas seleccionar el formato manualmente.`;
+        if (importSummary) {
+            importSummary.innerHTML = `<span class="import-summary-name">${escapeHtml(file.name)}</span><span class="import-summary-meta">${detected.name} · ${formatFileSize(file.size)}</span>`;
+            importSummary.classList.remove('hidden');
         }
-        formatDetected?.classList.remove('hidden');
         if (confirmImportBtn) confirmImportBtn.disabled = false;
     }
 
@@ -2777,15 +2863,6 @@ function smoothScrollTop() {
         }
     });
 
-    // Optional: smooth scroll when clicking page links
-    qsa('.pagination .button[aria-label]', wrapper).forEach((a) => {
-        a.addEventListener('click', (e) => {
-            const dp = a.dataset.page;
-            if (!dp || a.getAttribute('aria-disabled') === 'true') return;
-            smoothScrollTop();
-        });
-    });
-
     // Navigate to a specific page
     function goToPage() {
         const totalSpan = qs('.pagination .button.button-primary', wrapper);
@@ -2801,7 +2878,6 @@ function smoothScrollTop() {
 
         const url = new URL(window.location.href);
         url.searchParams.set('page', String(target));
-        smoothScrollTop();
         window.location.assign(url.toString());
     }
 
@@ -3029,6 +3105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Current state
     let currentAction = 'add'; // 'add' | 'remove'
     let currentProductId = null;
+    let currentStock = 0;
 
     // ── Bootstrap ─────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
@@ -3086,7 +3163,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ── Confirm ───────────────────────────────────────────────────────
         confirmBtn.addEventListener('click', submitAdjustment);
+
+        qtyInput?.addEventListener('input', updateStockPreview);
+        reasonInput?.addEventListener('input', updateReasonCharCount);
     });
+
+    function updateReasonCharCount() {
+        const reasonCountEl = document.getElementById('stock-modal-reason-count');
+        if (!reasonCountEl || !reasonInput) return;
+        const len = (reasonInput.value || '').length;
+        reasonCountEl.textContent = `${len} / 500`;
+    }
+
+    function updateStockPreview() {
+        const previewEl = document.getElementById('stock-modal-preview');
+        if (!previewEl || !qtyInput) return;
+
+        const qty = parseInt(qtyInput.value, 10);
+        if (!qtyInput.value || Number.isNaN(qty) || qty < 1) {
+            previewEl.hidden = true;
+            previewEl.textContent = '';
+            previewEl.className = 'stock-form-hint';
+            return;
+        }
+
+        const result = currentAction === 'add'
+            ? currentStock + qty
+            : Math.max(0, currentStock - qty);
+
+        previewEl.hidden = false;
+        previewEl.className = `stock-form-hint stock-form-hint--${currentAction === 'add' ? 'add' : 'remove'}`;
+        previewEl.textContent = currentAction === 'add'
+            ? `Stock resultante: ${result} unidades`
+            : `Stock resultante: ${result} unidades`;
+    }
 
     // ── Open modal ────────────────────────────────────────────────────────
     function openModal(action, triggerEl) {
@@ -3094,14 +3204,21 @@ document.addEventListener('DOMContentLoaded', () => {
         currentProductId = triggerEl.dataset.productId;
 
         const name  = triggerEl.dataset.productName  || 'Producto';
-        const stock = triggerEl.dataset.productStock !== undefined
-            ? triggerEl.dataset.productStock
-            : '—';
+        const stockRaw = triggerEl.dataset.productStock;
+        const stockNum = stockRaw !== undefined && stockRaw !== '' ? parseInt(stockRaw, 10) : NaN;
+        currentStock = Number.isNaN(stockNum) ? 0 : stockNum;
+        const stockLabel = stockRaw !== undefined && stockRaw !== '' ? String(stockRaw) : '—';
+
+        const modalBox = document.getElementById('stock-modal-box');
+        if (modalBox) {
+            modalBox.classList.remove('is-add', 'is-remove');
+            modalBox.classList.add(action === 'add' ? 'is-add' : 'is-remove');
+        }
 
         // Populate info strip
         productIdInput.value  = currentProductId;
         productNameEl.textContent  = name;
-        productStockEl.textContent = stock;
+        productStockEl.textContent = stockLabel;
 
         // Title & icon
         if (action === 'add') {
@@ -3114,6 +3231,15 @@ document.addEventListener('DOMContentLoaded', () => {
             modalTitle.textContent   = 'Retirar Stock';
             confirmBtn.className     = 'stock-btn stock-btn-confirm-remove';
             confirmBtnText.textContent = 'Confirmar retiro';
+            if (!Number.isNaN(stockNum) && stockNum > 0) {
+                qtyInput.max = String(stockNum);
+            } else {
+                qtyInput.removeAttribute('max');
+            }
+        }
+
+        if (action === 'add') {
+            qtyInput.removeAttribute('max');
         }
 
         // Reset form state
@@ -3140,6 +3266,12 @@ document.addEventListener('DOMContentLoaded', () => {
         qtyError.textContent   = '';
         reasonError.classList.remove('visible');
         reasonError.textContent = '';
+        const previewEl = document.getElementById('stock-modal-preview');
+        if (previewEl) {
+            previewEl.hidden = true;
+            previewEl.textContent = '';
+        }
+        updateReasonCharCount();
         hideAlert();
         setLoading(false);
     }
@@ -3152,6 +3284,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!qtyInput.value || isNaN(qty) || qty < 1 || !Number.isInteger(qty)) {
             qtyInput.classList.add('is-invalid');
             qtyError.textContent = 'Ingresa una cantidad entera mayor a 0.';
+            qtyError.classList.add('visible');
+            valid = false;
+        } else if (currentAction === 'remove' && qty > currentStock) {
+            qtyInput.classList.add('is-invalid');
+            qtyError.textContent = `No podés retirar más de ${currentStock} unidad(es).`;
             qtyError.classList.add('visible');
             valid = false;
         } else {

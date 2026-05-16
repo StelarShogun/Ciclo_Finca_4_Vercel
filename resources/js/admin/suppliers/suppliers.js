@@ -244,17 +244,25 @@ async function viewSupplierDetail(id) {
         const response = await fetch(`/suppliers/${id}`, {
             headers: {
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-            }
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+            },
         });
 
-        if (!response.ok) throw new Error('Error fetching supplier data');
+        const data = await response.json().catch(() => null);
 
-        const data = await response.json();
+        if (!response.ok || !data?.success) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data?.message || 'No se pudieron obtener los datos del proveedor',
+            });
+            return;
+        }
+
+        const s = data.data;
 
         if (data.success) {
-            const s = data.data;
-
             // Populate each modal field, defaulting to 'N/A' when data is missing
             document.getElementById('modalProveedorNombre').textContent       = s.name        || 'N/A';
             document.getElementById('modalProveedorEmail').textContent        = s.email       || 'N/A';
@@ -367,42 +375,46 @@ function closeNewSupplierModal() {
 // Fetches supplier data by ID and pre-fills the edit modal form
 async function loadSupplierForEdit(id) {
     try {
+        const editModal = document.getElementById('edit-supplier-modal');
+        if (!editModal) return;
+
+        editModal.classList.add('active');
+
         const response = await fetch(`/suppliers/${id}`, {
             headers: {
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-            }
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+            },
         });
 
-        if (!response.ok) throw new Error('Error fetching supplier data');
+        const data = await response.json().catch(() => null);
 
-        const data = await response.json();
-
-        if (data.success) {
-            const s = data.data;
-
-            // Map API fields to their corresponding form inputs
-            document.getElementById('edit-supplier-id').value        = s.supplier_id   || '';
-            document.getElementById('edit-supplier-nombre').value    = s.name          || '';
-            document.getElementById('edit-supplier-contacto').value  = s.primary_contact || '';
-            document.getElementById('edit-supplier-telefono').value  = s.phone         || '';
-            document.getElementById('edit-supplier-email').value     = s.email         || '';
-            document.getElementById('edit-supplier-direccion').value = s.address       || '';
-            document.getElementById('edit-supplier-tiempo').value    = s.delivery_time || '';
-            document.getElementById('edit-supplier-evaluacion').value = s.rating       || '';
-
-            // Clear previous error messages before showing the modal
-            document.querySelectorAll('#edit-supplier-form .error-message').forEach(el => {
-                el.textContent = '';
-                el.style.display = 'none';
-            });
-
-            document.getElementById('edit-supplier-modal').classList.add('active');
-        } else {
-            Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudieron obtener los datos del proveedor' });
+        if (!response.ok || !data?.success) {
+            editModal.classList.remove('active');
+            const message = data?.message || 'No se pudieron obtener los datos del proveedor';
+            Swal.fire({ icon: 'error', title: 'Error', text: message });
+            return;
         }
+
+        const s = data.data;
+
+        document.getElementById('edit-supplier-id').value        = s.supplier_id   || '';
+        document.getElementById('edit-supplier-nombre').value    = s.name          || '';
+        document.getElementById('edit-supplier-contacto').value  = s.primary_contact || '';
+        document.getElementById('edit-supplier-telefono').value  = s.phone         || '';
+        document.getElementById('edit-supplier-email').value     = s.email         || '';
+        document.getElementById('edit-supplier-direccion').value = s.address       || '';
+        document.getElementById('edit-supplier-tiempo').value    = s.delivery_time || '';
+        document.getElementById('edit-supplier-evaluacion').value = s.rating       || '';
+
+        document.querySelectorAll('#edit-supplier-form .error-message').forEach(el => {
+            el.textContent = '';
+            el.style.display = 'none';
+        });
     } catch (error) {
         console.error('Error:', error);
+        document.getElementById('edit-supplier-modal')?.classList.remove('active');
         Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexión al obtener los datos del proveedor' });
     }
 }
@@ -516,7 +528,15 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
         backdrop.addEventListener('click', function (e) {
             if (e.target === this) {
-                this.closest('.edit-modal').classList.remove('active');
+                this.closest('.edit-modal')?.classList.remove('active');
+            }
+        });
+    });
+
+    document.querySelectorAll('.modal-overlay').forEach((overlay) => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove('active');
             }
         });
     });

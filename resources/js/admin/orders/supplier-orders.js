@@ -244,8 +244,8 @@ function viewOrder(id) {
     if (!modal || !body) return;
 
     body.innerHTML = `
-        <div class="loading-spinner">
-            <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--color-primary);"></i>
+        <div class="loading-spinner" role="status">
+            <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
             <p>Cargando detalles…</p>
         </div>`;
     modal.classList.add('active');
@@ -363,7 +363,8 @@ function viewOrder(id) {
         body.innerHTML = `
             <div class="sale-details">
                 <div class="detail-section">
-                    <h4><i class="fas fa-info-circle"></i> Información general</h4>
+                    <h4><i class="fas fa-info-circle"></i>Información general</h4>
+                    
                     <div class="detail-grid">
                         <div class="detail-item"><label>Nº Pedido:</label><span><strong>${escapeHtml(order.po_number || ('#' + order.num_order))}</strong></span></div>
                         <div class="detail-item"><label>Proveedor:</label><span>${escapeHtml(supplierName)}</span></div>
@@ -383,7 +384,8 @@ function viewOrder(id) {
                 ${confirmAuditHtml}
                 ${productsHtml ? `
                 <div class="detail-section">
-                    <h4><i class="fas fa-box"></i> Productos pedidos</h4>
+                    <h4><i class="fas fa-box"></i>Productos pedidos</h4>
+                    
                     <table class="sale-products-table">
                         <thead>
                             <tr>
@@ -437,8 +439,8 @@ function viewSupplier(id) {
     if (!modal || !body) return;
 
     body.innerHTML = `
-        <div class="loading-spinner">
-            <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--color-primary);"></i>
+        <div class="loading-spinner" role="status">
+            <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
             <p>Cargando datos del proveedor…</p>
         </div>`;
     modal.classList.add('active');

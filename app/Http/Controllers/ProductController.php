@@ -143,7 +143,7 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            $product = Product::with(['category.parent', 'supplier', 'brands', 'classificationValues', 'variants'])->findOrFail($id);
+            $product = Product::with(['category.parent', 'supplier', 'brands', 'classificationValues.dimension', 'variants'])->findOrFail($id);
 
             if (request()->wantsJson() || request()->ajax()) {
                 $productData = $product->toArray();
@@ -326,6 +326,14 @@ class ProductController extends Controller
                 mkdir($folderPath, 0755, true);
             }
             $slug = Str::slug($product->name, '_');
+
+            // Remove main image when requested (no replacement file)
+            if ($request->boolean('remove_main_image') && ! $request->hasFile('image')) {
+                foreach (glob($folderPath.'/'.$slug.'_main.*') ?: [] as $old) {
+                    @unlink($old);
+                }
+                $product->clearMediaCollection('main_image');
+            }
 
             // Replace the main image when a new file is uploaded
             if ($request->hasFile('image')) {

@@ -168,49 +168,46 @@
     {{-- ==================== MODAL: SUPPLIER DETAIL ==================== --}}
     <div id="modalDetalleProveedor" class="edit-modal">
         <div class="modal-backdrop" onclick="closeModal()"></div>
-        <div class="modal-content modal-auto-size modal-content--detail">
+        <div class="modal-content modal-auto-size">
             <div class="modal-header">
                 <h3><i class="fas fa-eye"></i> Detalles del Proveedor</h3>
                 <button type="button" onclick="closeModal()" class="modal-close" id="close-proveedor-modal" aria-label="Cerrar"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <div class="cf-detail-view">
-                    <section class="cf-detail-section">
-                        <h4 class="cf-detail-section__title"><i class="fas fa-building"></i><span>Información general</span></h4>
-                        {{-- Fields populated dynamically via viewSupplierDetail() --}}
-                        <div class="cf-detail-section__body">
-                            <div class="cf-detail-grid">
-                            <div class="cf-detail-item">
-                                <span class="cf-detail-item__label">Nombre</span>
-                                <div class="cf-detail-item__value" id="modalProveedorNombre">-</div>
+                <div class="supplier-detail-view">
+                    <div class="detail-section">
+                        <h4><i class="fas fa-building"></i> Información general</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <label>Nombre</label>
+                                <span id="modalProveedorNombre">-</span>
                             </div>
-                            <div class="cf-detail-item">
-                                <span class="cf-detail-item__label">Correo electrónico</span>
-                                <div class="cf-detail-item__value" id="modalProveedorEmail">-</div>
+                            <div class="detail-item">
+                                <label>Correo electrónico</label>
+                                <span id="modalProveedorEmail">-</span>
                             </div>
-                            <div class="cf-detail-item">
-                                <span class="cf-detail-item__label">Teléfono</span>
-                                <div class="cf-detail-item__value" id="modalProveedorTelefono">-</div>
+                            <div class="detail-item">
+                                <label>Teléfono</label>
+                                <span id="modalProveedorTelefono">-</span>
                             </div>
-                            <div class="cf-detail-item">
-                                <span class="cf-detail-item__label">Dirección</span>
-                                <div class="cf-detail-item__value" id="modalProveedorDireccion">-</div>
+                            <div class="detail-item">
+                                <label>Dirección</label>
+                                <span id="modalProveedorDireccion">-</span>
                             </div>
-                            <div class="cf-detail-item">
-                                <span class="cf-detail-item__label">Evaluación</span>
-                                <div class="cf-detail-item__value" id="modalProveedorEvaluacion">-</div>
+                            <div class="detail-item">
+                                <label>Evaluación</label>
+                                <span id="modalProveedorEvaluacion">-</span>
                             </div>
-                            <div class="cf-detail-item">
-                                <span class="cf-detail-item__label">Estado</span>
-                                <div class="cf-detail-item__value" id="modalProveedorEstado">-</div>
+                            <div class="detail-item">
+                                <label>Estado</label>
+                                <span id="modalProveedorEstado">-</span>
                             </div>
-                            <div class="cf-detail-item">
-                                <span class="cf-detail-item__label">Fecha de registro</span>
-                                <div class="cf-detail-item__value" id="modalProveedorFechaRegistro">-</div>
-                            </div>
+                            <div class="detail-item">
+                                <label>Fecha de registro</label>
+                                <span id="modalProveedorFechaRegistro">-</span>
                             </div>
                         </div>
-                    </section>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

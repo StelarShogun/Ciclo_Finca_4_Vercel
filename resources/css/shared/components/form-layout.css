@@ -1,5 +1,4 @@
 /* Shared form layout (sections, actions, field errors). */
-@import "./detail-view.css";
 
 .form-section {
   border: 1px solid var(--border-color, #e5e7eb);

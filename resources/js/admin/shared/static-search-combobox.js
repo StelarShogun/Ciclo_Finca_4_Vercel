@@ -2,6 +2,8 @@
  * Searchable static combobox for admin forms (brands, suppliers, categories, etc.).
  */
 
+import { createDropdownPortal } from './combobox-dropdown-portal.js';
+
 const comboboxInstances = new Set();
 let documentClickBound = false;
 
@@ -10,7 +12,9 @@ function bindDocumentClickClose() {
     documentClickBound = true;
     document.addEventListener('click', (e) => {
         comboboxInstances.forEach((instance) => {
-            if (!instance.wrapper.contains(e.target)) {
+            const inWrapper = instance.wrapper.contains(e.target);
+            const inDropdown = instance.dropdown?.contains(e.target);
+            if (!inWrapper && !inDropdown) {
                 instance.restoreLabelIfInvalid();
                 instance.close();
             }
@@ -44,6 +48,7 @@ export function initStaticSearchCombobox({
     let isOpen = false;
     let activeIndex = -1;
     const changeListeners = [];
+    const dropdownPortal = createDropdownPortal(wrapper, dropdown);
 
     if (placeholder) {
         searchInput.setAttribute('placeholder', placeholder);
@@ -150,6 +155,7 @@ export function initStaticSearchCombobox({
         dropdown.classList.add('open');
         wrapper.classList.add('open');
         isOpen = true;
+        dropdownPortal.mount();
         setAriaExpanded(true);
         if (chevron) chevron.classList.add('rotated');
     }
@@ -159,6 +165,7 @@ export function initStaticSearchCombobox({
         wrapper.classList.remove('open');
         isOpen = false;
         activeIndex = -1;
+        dropdownPortal.unmount();
         setAriaExpanded(false);
         searchInput.removeAttribute('aria-activedescendant');
         if (chevron) chevron.classList.remove('rotated');
@@ -276,6 +283,7 @@ export function initStaticSearchCombobox({
 
     const instance = {
         wrapper,
+        dropdown,
         restoreLabelIfInvalid,
         close,
         getValue: () => hiddenInput.value,
