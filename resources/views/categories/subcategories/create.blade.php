@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Crear Subcategoría - Ciclo Finca 4 Admin</title>
 
-    @vite(['resources/css/admin/suppliers/suppliers.css'])
+    @vite(['resources/css/admin/components/page-header.css', 'resources/css/admin/suppliers/suppliers.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -23,10 +23,12 @@
                 <span>Crear subcategoría</span>
             </nav>
 
-            <div class="form-header">
-                <h1>Crear Subcategoría</h1>
-                <p>Clasifica productos de forma más específica</p>
-            </div>
+            @component('admin.partials.page-header', ['title' => 'Crear subcategoría'])
+                <p>
+                    Registra una subcategoría dentro de una categoría principal para clasificar los productos
+                    con mayor precisión.
+                </p>
+            @endcomponent
 
             <div class="form-card">
                 @if (session('status'))
@@ -55,10 +57,9 @@
                     <div class="form-group">
                         <label for="parent_category_id">Categoría padre *</label>
                         <select id="parent_category_id" name="parent_category_id" required>
-                            <option value="">Seleccione una categoría padre</option>
+                            <option value="">Selecciona una categoría padre</option>
                             @foreach ($categories as $category)
-                                <option value="{{ $category->category_id }}"
-                                    @selected(old('parent_category_id') == $category->category_id)>
+                                <option value="{{ $category->category_id }}" @selected(old('parent_category_id') == $category->category_id)>
                                     {{ $category->name }}
                                 </option>
                             @endforeach
@@ -73,7 +74,7 @@
                     <div class="form-group optional">
                         <label>Subcategorías actuales del padre seleccionado</label>
                         <div id="parent-subcategories-hint" class="info-section">
-                            <p>Seleccione una categoría padre para ver sus subcategorías actuales.</p>
+                            <p>Selecciona una categoría padre para ver sus subcategorías actuales.</p>
                         </div>
                     </div>
 
@@ -90,9 +91,11 @@
             </div>
 
             <div class="form-card" style="margin-top: 18px;">
-                <div class="table-header" style="padding: 0 0 12px 0; border-bottom: 1px solid var(--border-color); margin-bottom: 12px;">
+                <div class="table-header"
+                    style="padding: 0 0 12px 0; border-bottom: 1px solid var(--border-color); margin-bottom: 12px;">
                     <h3 style="margin: 0;"><i class="fas fa-sitemap"></i> Jerarquía de categorías</h3>
                 </div>
+
                 <div class="sales-table-container">
                     <table class="sales-table">
                         <thead>
@@ -103,7 +106,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($categoriesHierarchy as $row)
+                            @forelse ($categoriesHierarchy as $row)
                                 <tr>
                                     <td>
                                         @if (is_null($row->parent_category_id))
@@ -131,24 +134,29 @@
             </div>
         </div>
     </main>
+
     <script>
-        (function () {
+        (function() {
             const parentSelect = document.getElementById('parent_category_id');
             const hintBox = document.getElementById('parent-subcategories-hint');
             const tree = @json($subcategoriesByParent);
 
             function renderSubcategories() {
                 const parentId = parentSelect ? parentSelect.value : '';
-                if (!hintBox) return;
+
+                if (!hintBox) {
+                    return;
+                }
 
                 if (!parentId) {
-                    hintBox.innerHTML = '<p>Seleccione una categoría padre para ver sus subcategorías actuales.</p>';
+                    hintBox.innerHTML = '<p>Selecciona una categoría padre para ver sus subcategorías actuales.</p>';
                     return;
                 }
 
                 const key = String(parentId);
                 const num = Number(parentId);
                 let subs = tree[key] || tree[parentId] || (Number.isFinite(num) ? tree[num] : []) || [];
+
                 if (!subs.length) {
                     for (const k of Object.keys(tree)) {
                         if (String(k) === key || Number(k) === num) {
@@ -157,6 +165,7 @@
                         }
                     }
                 }
+
                 if (!subs.length) {
                     hintBox.innerHTML = '<p>No hay subcategorías registradas para esta categoría padre.</p>';
                     return;
@@ -211,4 +220,3 @@
 </body>
 
 </html>
-

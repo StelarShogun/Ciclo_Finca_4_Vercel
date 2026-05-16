@@ -337,7 +337,7 @@
   box-shadow: var(--shadow-md);
 }
 .sales-header h1 { margin: 0; font-size: 2rem; font-weight: 600; }
-.sales-header p  { margin: 5px 0 0 0; opacity: .9; font-size: 1.1rem; }
+.sales-header p  { margin: 5px 0 0 0; opacity: .9; font-size: 1.1rem; color: white; }
 .sales-header a {
   color: #fff;
   font-weight: 600;

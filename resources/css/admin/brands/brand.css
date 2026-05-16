@@ -92,6 +92,7 @@
     display: flex;
     gap: 15px;
     align-items: center;
+    height: 36px;
 }
 
 .brands-count-badge {
@@ -100,11 +101,13 @@
     gap: 0.5rem;
     font-weight: 600;
     color: white;
-    font-size: 1rem;
+    font-size: 0.9rem;
     background: rgba(255,255,255,0.2);
-    padding: 0.5rem 1rem;
+    padding: 0 1rem;
     border-radius: var(--border-radius-large);
     backdrop-filter: blur(4px);
+    height: 36px;
+    line-height: 36px;
 }
 
 /* ============================================================

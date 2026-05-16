@@ -78,17 +78,18 @@
 @endsection
 
 @section('header')
-    <header class="sales-header">
-        <div>
-            <h1>Importar XML de proveedor</h1>
-            <p>Cargue el archivo XML recibido del proveedor para analizar los precios de compra.</p>
-        </div>
-        <div class="sales-header-actions">
-            <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary btn-sm">
-                <i class="fas fa-arrow-left"></i> Volver a pedidos
-            </a>
-        </div>
-    </header>
+    @component('admin.partials.page-header', [
+        'title' => 'Importar XML de proveedor',
+        'description' => 'Carga un archivo XML del proveedor para comparar los precios de compra actuales antes de aplicar cambios.',
+    ])
+        @slot('actions')
+            <div class="sales-header-actions">
+                <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Volver a pedidos
+                </a>
+            </div>
+        @endslot
+    @endcomponent
 @endsection
 
 @section('contenido')

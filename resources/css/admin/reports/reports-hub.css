@@ -6,17 +6,7 @@
 @import "../../shared/components/form-layout.css";
 @import "./catalog-most-searched-report.css";
 
-/* ════════════════════════════════════════════════════════════════════════════
-   reports-hub.css
-   Estilos unificados para el módulo de reportes:
-     · Hub principal (reports-hub)
-     · Índice de movimientos de inventario (inv-index)
-     · Detalle de movimientos de inventario (inventory-movements)
-     · CF4-108 — Productos más buscados en catálogo (import en cabecera)
-   ════════════════════════════════════════════════════════════════════════════ */
-
-
-/* ── Layout raíz (admin) ─────────────────────────────────────────────────── */
+/* Shared report styles */
 
 .admin-layout {
     display: flex;
@@ -35,10 +25,7 @@
     min-width: 0;
 }
 
-
-/* ══════════════════════════════════════════════════════════════════════════
-   1. REPORTS HUB — página de entrada con tarjetas de reportes
-   ══════════════════════════════════════════════════════════════════════════ */
+/* Reports hub */
 
 .reports-hub-header h1 {
     font-size: 1.75rem;
@@ -129,10 +116,7 @@
     font-size: 1.1rem;
 }
 
-
-/* ══════════════════════════════════════════════════════════════════════════
-   2. BREADCRUMB — token compartido por todos los sub-reportes
-   ══════════════════════════════════════════════════════════════════════════ */
+/* Breadcrumb */
 
 .reports-breadcrumb {
     display: flex;
@@ -148,16 +132,37 @@
     text-decoration: none;
 }
 
-.reports-breadcrumb a:hover { text-decoration: underline; }
+.reports-breadcrumb a:hover {
+    text-decoration: underline;
+}
 
-.reports-breadcrumb .sep { opacity: 0.4; }
+.reports-breadcrumb .sep {
+    opacity: 0.4;
+}
 
+/* Catalog report header */
 
-/* ══════════════════════════════════════════════════════════════════════════
-   3. INVENTORY MOVEMENTS INDEX — lista/grid de productos
-   ══════════════════════════════════════════════════════════════════════════ */
+.catalog-search-report .page-header,
+.catalog-search-report .page-header h1,
+.catalog-search-report .page-header h2,
+.catalog-search-report .page-header p,
+.catalog-search-report .admin-page-header,
+.catalog-search-report .admin-page-header h1,
+.catalog-search-report .admin-page-header h2,
+.catalog-search-report .admin-page-header p,
+.catalog-search-report [class*="page-header"],
+.catalog-search-report [class*="page-header"] h1,
+.catalog-search-report [class*="page-header"] h2,
+.catalog-search-report [class*="page-header"] p {
+    color: #fff !important;
+}
 
-/* ── Layout raíz ──────────────────────────────────────────────────────────── */
+.catalog-search-report .csr-page-subtitle {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Inventory index layout */
+
 .inv-index-report {
     padding: 1.5rem 2rem 3rem;
     max-width: 1100px;
@@ -165,10 +170,13 @@
 }
 
 @media (max-width: 640px) {
-    .inv-index-report { padding: 1rem 1rem 3rem; }
+    .inv-index-report {
+        padding: 1rem 1rem 3rem;
+    }
 }
 
-/* ── Header ───────────────────────────────────────────────────────────────── */
+/* Inventory index header */
+
 .inv-index-header {
     margin-bottom: 1.75rem;
     padding-bottom: 1.5rem;
@@ -204,7 +212,8 @@
     line-height: 1.55;
 }
 
-/* ── Buscador ─────────────────────────────────────────────────────────────── */
+/* Search form */
+
 .inv-index-search-form {
     display: flex;
     gap: 0.5rem;
@@ -239,7 +248,9 @@
     box-sizing: border-box;
 }
 
-.inv-index-search-input::placeholder { color: var(--color-text-muted, #9ca3af); }
+.inv-index-search-input::placeholder {
+    color: var(--color-text-muted, #9ca3af);
+}
 
 .inv-index-search-input:focus {
     outline: none;
@@ -260,7 +271,9 @@
     transition: color 0.15s;
 }
 
-.inv-index-search-clear:hover { color: var(--color-text, #374151); }
+.inv-index-search-clear:hover {
+    color: var(--color-text, #374151);
+}
 
 .inv-index-search-btn {
     padding: 0.5rem 1rem;
@@ -275,9 +288,12 @@
     transition: background 0.15s;
 }
 
-.inv-index-search-btn:hover { background: var(--color-primary-dark, #1d4ed8); }
+.inv-index-search-btn:hover {
+    background: var(--color-primary-dark, #1d4ed8);
+}
 
-/* ── Tarjeta contenedora de tabla (reutiliza patrón de orders.css) ───────── */
+/* Table card */
+
 .inv-index-report .orders-table-card {
     background: #fff;
     border: 1px solid rgba(0, 0, 0, 0.08);
@@ -286,7 +302,8 @@
     overflow: hidden;
 }
 
-/* ── Toolbar / barra de búsqueda ──────────────────────────────────────────── */
+/* Toolbar */
+
 .inv-index-report .orders-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -360,7 +377,8 @@
     margin-left: auto;
 }
 
-/* ── Botones de acción en la toolbar del índice ───────────────────────────── */
+/* Toolbar buttons */
+
 .inv-index-report .orders-toolbar-actions .btn {
     display: inline-flex;
     align-items: center;
@@ -418,7 +436,8 @@
     border-radius: 8px;
 }
 
-/* ── Tabla principal ──────────────────────────────────────────────────────── */
+/* Main table */
+
 .inv-index-report .sales-table-container {
     padding: 0;
     border: none;
@@ -447,7 +466,9 @@
     white-space: nowrap;
 }
 
-.inv-index-report .sales-table thead th.text-end { text-align: right; }
+.inv-index-report .sales-table thead th.text-end {
+    text-align: right;
+}
 
 .inv-index-report .sales-table tbody tr {
     transition: background 0.12s ease;
@@ -464,18 +485,24 @@
     color: var(--color-text, #111827);
 }
 
-.inv-index-report .sales-table tbody tr:last-child td { border-bottom: none; }
+.inv-index-report .sales-table tbody tr:last-child td {
+    border-bottom: none;
+}
 
-.inv-index-report .sales-table tbody td.text-end { text-align: right; }
+.inv-index-report .sales-table tbody td.text-end {
+    text-align: right;
+}
 
-/* ── PO / SKU número ──────────────────────────────────────────────────────── */
+/* Item code */
+
 .inv-index-report .po-number {
     white-space: nowrap;
     font-size: 0.92rem;
     letter-spacing: 0.01em;
 }
 
-/* ── Pills de estado de stock ─────────────────────────────────────────────── */
+/* Status pills */
+
 .inv-index-report .order-status-pill {
     display: inline-flex;
     align-items: center;
@@ -500,7 +527,8 @@
     color: var(--color-danger, #991b1b);
 }
 
-/* ── Contenedor de acciones ───────────────────────────────────────────────── */
+/* Actions */
+
 .inv-index-report .actions-container {
     display: flex;
     align-items: center;
@@ -513,7 +541,8 @@
     flex: 0 0 auto;
 }
 
-/* ── Estado vacío ─────────────────────────────────────────────────────────── */
+/* Empty state */
+
 .inv-index-report .orders-empty {
     text-align: center;
     padding: 3rem 1.5rem;
@@ -526,7 +555,8 @@
     opacity: 0.5;
 }
 
-/* ── Paginación ───────────────────────────────────────────────────────────── */
+/* Pagination */
+
 .inv-index-report .orders-pagination-wrap {
     padding: 1rem 1.25rem;
     border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -538,23 +568,24 @@
     gap: 0.75rem;
 }
 
-/* Etiqueta "Mostrando X–Y de Z productos" — hermano del componente x-pagination */
 .inv-index-pagination-info {
     font-size: 0.8125rem;
     color: var(--color-text-muted, #6b7280);
     white-space: nowrap;
 }
 
-/* ── Label de resultados ──────────────────────────────────────────────────── */
+/* Results label */
+
 .inv-index-results-label {
     font-size: 0.8125rem;
     color: var(--color-text-muted, #6b7280);
     margin: 0 0 1rem;
 }
 
-.inv-index-results-label strong { color: var(--color-text, #111827); }
+.inv-index-results-label strong {
+    color: var(--color-text, #111827);
+}
 
-/* ── Estado vacío ─────────────────────────────────────────────────────────── */
 .inv-index-empty {
     text-align: center;
     padding: 4rem 1rem;
@@ -568,9 +599,13 @@
     display: block;
 }
 
-.inv-index-empty p { font-size: 0.9375rem; margin: 0; }
+.inv-index-empty p {
+    font-size: 0.9375rem;
+    margin: 0;
+}
 
-/* ── Grid de productos ────────────────────────────────────────────────────── */
+/* Product grid */
+
 .inv-index-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -578,10 +613,13 @@
 }
 
 @media (max-width: 480px) {
-    .inv-index-grid { grid-template-columns: 1fr; }
+    .inv-index-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-/* ── Tarjeta de producto ──────────────────────────────────────────────────── */
+/* Product card */
+
 .inv-product-card {
     display: flex;
     align-items: center;
@@ -620,7 +658,8 @@
     background: var(--color-primary, #2563eb);
 }
 
-/* Dot de stock */
+/* Stock dot */
+
 .inv-product-stock-dot {
     position: absolute;
     top: 0.75rem;
@@ -636,7 +675,6 @@
 .inv-product-stock-dot--danger    { background: #dc2626; }
 .inv-product-stock-dot--secondary { background: #9ca3af; }
 
-/* Cuerpo de la tarjeta */
 .inv-product-card-body {
     flex: 1;
     min-width: 0;
@@ -688,9 +726,12 @@
     gap: 0.3rem;
 }
 
-.inv-product-supplier i { font-size: 0.7rem; }
+.inv-product-supplier i {
+    font-size: 0.7rem;
+}
 
-/* Stock actual */
+/* Stock value */
+
 .inv-product-stock {
     display: flex;
     flex-direction: column;
@@ -718,7 +759,8 @@
     letter-spacing: 0.04em;
 }
 
-/* Flecha */
+/* Card arrow */
+
 .inv-product-card-arrow {
     font-size: 0.7rem;
     color: var(--color-text-muted, #d1d5db);
@@ -731,7 +773,8 @@
     transform: translateX(2px);
 }
 
-/* ── Paginación del índice ────────────────────────────────────────────────── */
+/* Index pagination */
+
 .inv-index-pagination {
     display: flex;
     align-items: center;
@@ -748,12 +791,8 @@
     color: var(--color-text-muted, #9ca3af);
 }
 
+/* Movement detail layout */
 
-/* ══════════════════════════════════════════════════════════════════════════
-   4. INVENTORY MOVEMENTS DETAIL — vista de movimientos de un producto
-   ══════════════════════════════════════════════════════════════════════════ */
-
-/* ── Layout raíz ─────────────────────────────────────────────────────────── */
 .inventory-movements-report {
     padding: 1.5rem 2rem 3rem;
     max-width: 1400px;
@@ -761,42 +800,17 @@
 }
 
 @media (max-width: 768px) {
-    .inventory-movements-report { padding: 1rem 1rem 3rem; }
+    .inventory-movements-report {
+        padding: 1rem 1rem 3rem;
+    }
 }
 
-/* ── Header ──────────────────────────────────────────────────────────────── */
+/* Movement detail header */
+
 .inventory-movements-header {
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--color-border, #e5e7eb);
-}
-
-.inventory-movements-header-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 0.5rem;
-}
-
-.inventory-movements-sku {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--color-text-muted, #6b7280);
-    background: var(--color-surface-alt, #f3f4f6);
-    border: 1px solid var(--color-border, #e5e7eb);
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-}
-
-.inventory-movements-category {
-    font-size: 0.8rem;
-    color: var(--color-text-muted, #9ca3af);
-    background: transparent;
-    padding: 0.2rem 0.5rem;
-    border: 1px solid var(--color-border, #e5e7eb);
-    border-radius: 999px;
 }
 
 .inventory-movements-header h1 {
@@ -815,7 +829,8 @@
     line-height: 1.55;
 }
 
-/* Badges de stock inline en el lead */
+/* Inline stock badges */
+
 .stock-badge {
     font-size: inherit;
     font-weight: 700;
@@ -826,7 +841,6 @@
 .stock-badge--danger    { color: #dc2626; }
 .stock-badge--secondary { color: var(--color-text-muted, #6b7280); }
 
-/* ── Layout dos columnas ─────────────────────────────────────────────────── */
 .inv-mov-layout {
     display: grid;
     grid-template-columns: 220px 1fr;
@@ -835,10 +849,13 @@
 }
 
 @media (max-width: 768px) {
-    .inv-mov-layout { grid-template-columns: 1fr; }
+    .inv-mov-layout {
+        grid-template-columns: 1fr;
+    }
 }
 
-/* ── Aside: filtros ──────────────────────────────────────────────────────── */
+/* Filters panel */
+
 .inv-mov-filters {
     position: sticky;
     top: 1.5rem;
@@ -864,8 +881,11 @@
     border-top: 1px solid var(--color-border, #f3f4f6);
 }
 
-/* Toggle de botones */
-.inv-mov-toggle-wrap { width: 100%; }
+/* Filter toggle */
+
+.inv-mov-toggle-wrap {
+    width: 100%;
+}
 
 .inv-mov-toggle {
     display: flex;
@@ -887,7 +907,9 @@
     line-height: 1.3;
 }
 
-.inv-mov-btn:hover { background: var(--color-surface-alt, #f3f4f6); }
+.inv-mov-btn:hover {
+    background: var(--color-surface-alt, #f3f4f6);
+}
 
 .inv-mov-btn.active,
 .inv-mov-btn[aria-pressed="true"] {
@@ -896,8 +918,11 @@
     font-weight: 600;
 }
 
-/* Inputs de fecha */
-.inv-mov-date-block { margin-bottom: 0.65rem; }
+/* Date inputs */
+
+.inv-mov-date-block {
+    margin-bottom: 0.65rem;
+}
 
 .inv-mov-date-label {
     display: block;
@@ -925,7 +950,9 @@
     transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
-.inv-mov-num-part--year { width: 3.4rem; }
+.inv-mov-num-part--year {
+    width: 3.4rem;
+}
 
 .inv-mov-num-part:focus {
     outline: none;
@@ -941,7 +968,8 @@
     flex-shrink: 0;
 }
 
-/* Botones de acción del aside */
+/* Filter actions */
+
 .inv-mov-apply-btn {
     width: 100%;
     margin-top: 0.75rem;
@@ -963,7 +991,10 @@
     transform: translateY(-1px);
 }
 
-.inv-mov-apply-btn:active { transform: translateY(0); box-shadow: none; }
+.inv-mov-apply-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
 
 .inv-mov-clear-btn {
     width: 100%;
@@ -984,7 +1015,8 @@
     color: var(--color-text, #374151);
 }
 
-/* ── Main: estados ───────────────────────────────────────────────────────── */
+/* Loading states */
+
 .inventory-movements-error {
     background: #fef2f2;
     border: 1px solid #fca5a5;
@@ -1014,8 +1046,16 @@
 }
 
 @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: 0.4; transform: scale(0.7); }
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.4;
+        transform: scale(0.7);
+    }
 }
 
 .inv-empty-state {
@@ -1037,7 +1077,8 @@
     margin: 0 auto;
 }
 
-/* ── Tarjetas de métricas ────────────────────────────────────────────────── */
+/* Metric cards */
+
 .inv-metrics-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1046,7 +1087,9 @@
 }
 
 @media (max-width: 640px) {
-    .inv-metrics-grid { grid-template-columns: 1fr; }
+    .inv-metrics-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .inv-metric-card {
@@ -1129,7 +1172,8 @@
     margin: 0;
 }
 
-/* ── Tabla de movimientos ────────────────────────────────────────────────── */
+/* Movements table */
+
 .inv-table-section {
     background: #fff;
     border: 1px solid var(--color-border, #e5e7eb);
@@ -1198,7 +1242,9 @@
     background: var(--color-surface-alt, #f9fafb);
 }
 
-.inv-table th.text-end { text-align: right; }
+.inv-table th.text-end {
+    text-align: right;
+}
 
 .inv-table td {
     padding: 0.7rem 1rem;
@@ -1207,11 +1253,20 @@
     vertical-align: middle;
 }
 
-.inv-table td.text-end { text-align: right; }
-.inv-table tbody tr:last-child td { border-bottom: none; }
-.inv-table tbody tr:hover td { background: var(--color-surface-alt, #f9fafb); }
+.inv-table td.text-end {
+    text-align: right;
+}
 
-/* Badges de tipo de movimiento */
+.inv-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.inv-table tbody tr:hover td {
+    background: var(--color-surface-alt, #f9fafb);
+}
+
+/* Movement badges */
+
 .inv-type-badge {
     display: inline-block;
     font-size: 0.72rem;
@@ -1222,22 +1277,68 @@
     border-radius: 999px;
 }
 
-.inv-type-badge--entrada    { background: #dcfce7; color: #166534; }
-.inv-type-badge--salida     { background: #fee2e2; color: #991b1b; }
-.inv-type-badge--devolucion { background: #dbeafe; color: #1e40af; }
-.inv-type-badge--ajuste     { background: #fef9c3; color: #854d0e; }
-.inv-type-badge--default    { background: var(--color-surface-alt, #f3f4f6); color: var(--color-text-muted, #6b7280); }
+.inv-type-badge--entrada {
+    background: #dcfce7;
+    color: #166534;
+}
 
-.inv-qty-positive { color: #235347; font-weight: 700; }
-.inv-qty-negative { color: #dc2626; font-weight: 700; }
+.inv-type-badge--salida {
+    background: #fee2e2;
+    color: #991b1b;
+}
 
-.inv-date-main  { font-weight: 600; white-space: nowrap; }
-.inv-date-time  { font-size: 0.78rem; color: var(--color-text-muted, #6b7280); }
-.inv-ref-id     { font-size: 0.78rem; color: var(--color-text-muted, #9ca3af); }
-.inv-notes-cell { font-size: 0.8125rem; color: var(--color-text-muted, #6b7280); max-width: 180px; }
-.inv-admin-cell { font-size: 0.8125rem; }
+.inv-type-badge--devolucion {
+    background: #dbeafe;
+    color: #1e40af;
+}
 
-/* ── Paginación del detalle (envuelve el mismo .pagination.is-compact que x-pagination) ── */
+.inv-type-badge--ajuste {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.inv-type-badge--default {
+    background: var(--color-surface-alt, #f3f4f6);
+    color: var(--color-text-muted, #6b7280);
+}
+
+.inv-qty-positive {
+    color: #235347;
+    font-weight: 700;
+}
+
+.inv-qty-negative {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.inv-date-main {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.inv-date-time {
+    font-size: 0.78rem;
+    color: var(--color-text-muted, #6b7280);
+}
+
+.inv-ref-id {
+    font-size: 0.78rem;
+    color: var(--color-text-muted, #9ca3af);
+}
+
+.inv-notes-cell {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted, #6b7280);
+    max-width: 180px;
+}
+
+.inv-admin-cell {
+    font-size: 0.8125rem;
+}
+
+/* Detail pagination */
+
 .inv-pagination {
     padding: 0.85rem 1.25rem;
     border-top: 1px solid var(--color-border, #e5e7eb);
@@ -1249,5 +1350,7 @@
 }
 
 @media (max-width: 480px) {
-    .inv-pagination { padding: 0.75rem 1rem; }
+    .inv-pagination {
+        padding: 0.75rem 1rem;
+    }
 }

@@ -17,20 +17,20 @@
     <div class="sales-container">
 
         {{-- Page header --}}
-        <header class="sales-header">
-            <div>
-                <h1>Gestión de Ventas</h1>
-                <p>
-                    Ventas confirmadas y cierre contable. Los pedidos pendientes del carrito web se confirman o rechazan en
-                    <a href="{{ route('admin.orders.index') }}">Pedidos</a>.
-                </p>
-            </div>
-            <div class="sales-actions">
+        @component('admin.partials.page-header', ['title' => 'Gestión de ventas'])
+            <p>
+                Administra las ventas confirmadas, registra devoluciones y crea nuevas ventas desde el
+                módulo administrativo.
+                Los encargos pendientes del carrito web se gestionan en
+                <a href="{{ route('admin.orders.index') }}">Encargos</a>.
+            </p>
+
+            @slot('actions')
                 <button class="btn btn-primary" onclick="openNewSaleModal()">
-                    <i class="fas fa-plus"></i> Nueva Venta
+                    <i class="fas fa-plus"></i> Nueva venta
                 </button>
-            </div>
-        </header>
+            @endslot
+        @endcomponent
 
         {{-- ==================== KPI CARDS ==================== --}}
         <div class="kpi-grid">
@@ -165,18 +165,18 @@
         {{-- ==================== SALES TABLE ==================== --}}
         @php
             $statusLabels = [
-                'pending'         => 'Pendiente',
+                'pending' => 'Pendiente',
                 'ready_to_pickup' => 'Por recoger',
-                'completed'       => 'Confirmada',
-                'cancelled'       => 'Rechazado',
-                'refunded'        => 'Reembolsada',
-                'returned'        => 'Devuelta',
+                'completed' => 'Confirmada',
+                'cancelled' => 'Rechazado',
+                'refunded' => 'Reembolsada',
+                'returned' => 'Devuelta',
             ];
             $paymentLabels = ['cash' => 'Efectivo', 'sinpe' => 'SINPE Móvil', 'transfer' => 'Transferencia'];
 
             $isCustomRange = request('date_range') == 'custom';
-            $hasDateFrom   = request('date_from');
-            $hasDateTo     = request('date_to');
+            $hasDateFrom = request('date_from');
+            $hasDateTo = request('date_to');
             $isDateFiltered =
                 in_array(request('date_range'), ['today', 'week', 'month']) ||
                 ($isCustomRange && ($hasDateFrom || $hasDateTo));
@@ -324,15 +324,15 @@
     </div>
 
     {{-- Route URLs exposed via meta tags; read by sales.js (avoids inline JS) --}}
-    <meta name="sales-route-store"     content="{{ route('sales.store') }}">
+    <meta name="sales-route-store" content="{{ route('sales.store') }}">
     <meta name="sales-route-heartbeat" content="{{ route('sales.history.heartbeat') }}">
-    <meta name="sales-route-return"    content="{{ url('/sales') }}">
+    <meta name="sales-route-return" content="{{ url('/sales') }}">
 
     {{-- ==================== MODAL: NEW SALE ==================== --}}
     <div id="new-sale-modal" class="modal-overlay">
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
-                <h3><i class="fas fa-plus-circle"></i> Nueva Venta</h3>
+                <h3><i class="fas fa-plus-circle"></i> Nueva venta</h3>
                 <button class="modal-close" onclick="closeNewSaleModal()">&times;</button>
             </div>
             <div class="modal-body">
@@ -354,7 +354,7 @@
                         <div class="form-group">
                             <label for="payment_method">Método de Pago *</label>
                             <select id="payment_method" name="payment_method" required>
-                                <option value="">Seleccione un método</option>
+                                <option value="">Selecciona un método</option>
                                 <option value="cash">Efectivo</option>
                                 <option value="sinpe">SINPE Móvil</option>
                                 <option value="transfer">Transferencia Bancaria</option>
@@ -376,7 +376,7 @@
                                 <div class="form-group">
                                     <label>Producto</label>
                                     <select name="items[0][product_id]" class="product-select" required>
-                                        <option value="">Seleccione un producto</option>
+                                        <option value="">Selecciona un producto</option>
                                         @foreach (\App\Models\Product::where('status', 'active')->get() as $product)
                                             <option value="{{ $product->product_id }}"
                                                 data-precio="{{ $product->sale_price }}"
@@ -487,13 +487,8 @@
                     <label for="return-reason-input">
                         Motivo de la devolución <span style="color: var(--color-danger);">*</span>
                     </label>
-                    <textarea
-                        id="return-reason-input"
-                        rows="4"
-                        maxlength="500"
-                        placeholder="Describa el motivo de la devolución (obligatorio)..."
-                        style="width: 100%; resize: vertical;"
-                    ></textarea>
+                    <textarea id="return-reason-input" rows="4" maxlength="500"
+                        placeholder="Describa el motivo de la devolución (obligatorio)..." style="width: 100%; resize: vertical;"></textarea>
                     <small id="return-reason-error" class="text-danger" style="display:none;">
                         <i class="fas fa-exclamation-circle"></i>
                         El motivo es obligatorio y debe tener al menos 3 caracteres.

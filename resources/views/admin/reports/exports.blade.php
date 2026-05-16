@@ -22,10 +22,14 @@
         // Construir opciones de categorías padre
         $parentCatOptions = array_merge(
             [['value' => '', 'label' => 'Todas']],
-            $parentCategories->map(fn ($c) => [
-                'value' => (string) $c->category_id,
-                'label' => $c->name,
-            ])->all()
+            $parentCategories
+                ->map(
+                    fn($c) => [
+                        'value' => (string) $c->category_id,
+                        'label' => $c->name,
+                    ],
+                )
+                ->all(),
         );
 
         // Construir mapa de subcategorías: { parentId: [{value, label}, ...] }
@@ -33,20 +37,28 @@
         foreach ($subcatsByParent as $parentId => $subcats) {
             $subcatOptionsMap[(string) $parentId] = array_merge(
                 [['value' => '', 'label' => 'Todas']],
-                collect($subcats)->map(fn ($s) => [
-                    'value' => (string) $s['category_id'],
-                    'label' => $s['name'],
-                ])->all()
+                collect($subcats)
+                    ->map(
+                        fn($s) => [
+                            'value' => (string) $s['category_id'],
+                            'label' => $s['name'],
+                        ],
+                    )
+                    ->all(),
             );
         }
 
         // Opciones de proveedores para el filtro de selección
         $supplierOptions = array_merge(
             [['value' => '', 'label' => 'Todos']],
-            $suppliers->map(fn ($s) => [
-                'value' => $s->name,
-                'label' => $s->name,
-            ])->all()
+            $suppliers
+                ->map(
+                    fn($s) => [
+                        'value' => $s->name,
+                        'label' => $s->name,
+                    ],
+                )
+                ->all(),
         );
 
         // Datos de autorrelleno por nombre de proveedor: { name: {contact, phone, email} }
@@ -60,19 +72,28 @@
         // Estados de pedidos a proveedores
         $orderStateOptions = array_merge(
             [['value' => '', 'label' => 'Todos']],
-            collect(\App\Models\Order::STATE_LABELS)->map(fn ($label, $key) => [
-                'value' => $key,
-                'label' => $label,
-            ])->values()->all()
+            collect(\App\Models\Order::STATE_LABELS)
+                ->map(
+                    fn($label, $key) => [
+                        'value' => $key,
+                        'label' => $label,
+                    ],
+                )
+                ->values()
+                ->all(),
         );
 
         // Marcas
         $brandOptions = array_merge(
             [['value' => '', 'label' => 'Todas']],
-            $brands->map(fn ($b) => [
-                'value' => $b->name,
-                'label' => $b->name,
-            ])->all()
+            $brands
+                ->map(
+                    fn($b) => [
+                        'value' => $b->name,
+                        'label' => $b->name,
+                    ],
+                )
+                ->all(),
         );
 
         $exportsConfig = [
@@ -112,7 +133,12 @@
                     ],
                     'initialValues' => request()->only(\App\Services\Admin\AdminInventoryExportQuery::QUERY_KEYS),
                     'filters' => [
-                        ['name' => 'search', 'label' => 'Búsqueda', 'type' => 'text', 'placeholder' => 'Nombre o descripción'],
+                        [
+                            'name' => 'search',
+                            'label' => 'Búsqueda',
+                            'type' => 'text',
+                            'placeholder' => 'Nombre o descripción',
+                        ],
                         [
                             'name' => 'parent_category_id',
                             'label' => 'Categoría',
@@ -160,7 +186,10 @@
                         'excel' => route('sales.export'),
                     ],
                     'staticParams' => [],
-                    'initialValues' => array_merge(['status' => 'completed', 'date_range' => 'month'], request()->only(['status', 'date_range', 'date_from', 'date_to', 'payment_method', 'search'])),
+                    'initialValues' => array_merge(
+                        ['status' => 'completed', 'date_range' => 'month'],
+                        request()->only(['status', 'date_range', 'date_from', 'date_to', 'payment_method', 'search']),
+                    ),
                     'filters' => [
                         [
                             'name' => 'status',
@@ -186,8 +215,18 @@
                         ],
                         ['name' => 'date_from', 'label' => 'Desde', 'type' => 'date'],
                         ['name' => 'date_to', 'label' => 'Hasta', 'type' => 'date'],
-                        ['name' => 'payment_method', 'label' => 'Método de pago', 'type' => 'text', 'placeholder' => 'efectivo, tarjeta, ...'],
-                        ['name' => 'search', 'label' => 'Buscar', 'type' => 'text', 'placeholder' => 'Factura, cliente, ...'],
+                        [
+                            'name' => 'payment_method',
+                            'label' => 'Método de pago',
+                            'type' => 'text',
+                            'placeholder' => 'efectivo, tarjeta, ...',
+                        ],
+                        [
+                            'name' => 'search',
+                            'label' => 'Buscar',
+                            'type' => 'text',
+                            'placeholder' => 'Factura, cliente, ...',
+                        ],
                     ],
                 ],
                 'productSales' => [
@@ -199,12 +238,15 @@
                         'pdf' => route('admin.reports.product-sales.pdf'),
                         'excel' => route('admin.reports.product-sales.excel'),
                     ],
-                    'initialValues' => array_merge([
-                        'period' => '30d',
-                        'sort' => 'revenue',
-                        'dir' => 'desc',
-                        'top10' => 'revenue',
-                    ], request()->only(['period', 'sort', 'dir', 'q', 'top10'])),
+                    'initialValues' => array_merge(
+                        [
+                            'period' => '30d',
+                            'sort' => 'revenue',
+                            'dir' => 'desc',
+                            'top10' => 'revenue',
+                        ],
+                        request()->only(['period', 'sort', 'dir', 'q', 'top10']),
+                    ),
                     'filters' => [
                         [
                             'name' => 'period',
@@ -255,7 +297,9 @@
                         'pdf' => route('admin.reports.exports.registry', ['slug' => 'proveedores']),
                         'excel' => route('admin.reports.exports.registry', ['slug' => 'proveedores']),
                     ],
-                    'initialValues' => request()->only(\App\Services\Admin\AdminSuppliersCatalogExportQuery::QUERY_KEYS),
+                    'initialValues' => request()->only(
+                        \App\Services\Admin\AdminSuppliersCatalogExportQuery::QUERY_KEYS,
+                    ),
                     'filters' => [
                         [
                             'name' => 'name',
@@ -310,7 +354,12 @@
                             'type' => 'select',
                             'options' => $orderStateOptions,
                         ],
-                        ['name' => 'search', 'label' => 'Buscar', 'type' => 'text', 'placeholder' => 'Proveedor, número de pedido, ...'],
+                        [
+                            'name' => 'search',
+                            'label' => 'Buscar',
+                            'type' => 'text',
+                            'placeholder' => 'Proveedor, número de pedido, ...',
+                        ],
                         ['name' => 'date_from', 'label' => 'Desde', 'type' => 'date'],
                         ['name' => 'date_to', 'label' => 'Hasta', 'type' => 'date'],
                     ],
@@ -350,7 +399,12 @@
                                 ['value' => 'cancelled', 'label' => 'Cancelado'],
                             ],
                         ],
-                        ['name' => 'search', 'label' => 'Buscar', 'type' => 'text', 'placeholder' => 'Nombre, correo, ...'],
+                        [
+                            'name' => 'search',
+                            'label' => 'Buscar',
+                            'type' => 'text',
+                            'placeholder' => 'Nombre, correo, ...',
+                        ],
                     ],
                 ],
             ],
@@ -368,14 +422,17 @@
             <span>Exportar datos</span>
         </nav>
 
-        <header class="reports-hub-header reports-exports-intro">
-            <h1>Exportar datos</h1>
-            <div class="reports-exports-intro-text">
-                <p><strong>Exportar datos y PDF</strong> desde reportes e inventario.</p>
-                <p>Aquí descarga <strong>informes en PDF</strong>, <strong>Excel</strong> y <strong>archivos de inventario y ventas</strong> desde un solo lugar.</p>
-                <p>Cada enlace abre el resultado en una <strong>nueva pestaña</strong> del navegador.</p>
+        @component('admin.partials.page-header', ['title' => 'Exportación de datos'])
+            <div 
+                <p>
+                    Descarga reportes y listados administrativos en PDF, Excel o XML desde un solo lugar.
+                </p>
+                <p>
+                    Puedes exportar información del dashboard, inventario, ventas, productos más vendidos y registros
+                    administrativos.
+                </p>
             </div>
-        </header>
+        @endcomponent
 
         <div class="reports-exports-layout">
 
@@ -387,35 +444,40 @@
                     <li>
                         <span class="exports-item-label">Dashboard</span>
                         <span class="exports-item-actions">
-                            <a href="#"
-                               class="exports-chip exports-chip-primary"
-                               data-export-id="dashboard"
-                               data-export-format="pdf">PDF</a>
+                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="dashboard"
+                                data-export-format="pdf">PDF</a>
                         </span>
                     </li>
 
                     <li>
                         <span class="exports-item-label">Inventario</span>
                         <span class="exports-item-actions">
-                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="inventory" data-export-format="pdf">PDF</a>
-                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="inventory" data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
-                            <a href="#" class="exports-chip" data-export-id="inventory" data-export-format="xml">XML</a>
+                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="inventory"
+                                data-export-format="pdf">PDF</a>
+                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="inventory"
+                                data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
+                            <a href="#" class="exports-chip" data-export-id="inventory"
+                                data-export-format="xml">XML</a>
                         </span>
                     </li>
 
                     <li>
                         <span class="exports-item-label">Productos más vendidos</span>
                         <span class="exports-item-actions">
-                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="productSales" data-export-format="pdf">PDF</a>
-                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="productSales" data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
+                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="productSales"
+                                data-export-format="pdf">PDF</a>
+                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="productSales"
+                                data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
                         </span>
                     </li>
 
                     <li>
                         <span class="exports-item-label">Ventas</span>
                         <span class="exports-item-actions">
-                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="sales" data-export-format="pdf">PDF</a>
-                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="sales" data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
+                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="sales"
+                                data-export-format="pdf">PDF</a>
+                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="sales"
+                                data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
                         </span>
                     </li>
 
@@ -425,46 +487,59 @@
             {{-- ── LISTADOS ADMINISTRATIVOS ─────────────────────────────────── --}}
             <section class="exports-section exports-section--registry" aria-labelledby="exports-registry-title">
                 <h2 id="exports-registry-title" class="exports-section-title">Listados administrativos</h2>
-                <p class="exports-hint">Proveedores, marcas, pedidos a proveedores, usuarios y encargos. Excel o PDF; en pedidos y encargos valen los mismos filtros que en sus pantallas.</p>
+                <p class="exports-hint">Proveedores, marcas, pedidos a proveedores, usuarios y encargos. Excel o PDF; en
+                    pedidos y encargos valen los mismos filtros que en sus pantallas.</p>
                 <ul class="exports-link-list exports-link-list--compact">
 
                     <li>
                         <span class="exports-item-label">Proveedores</span>
                         <span class="exports-item-actions">
-                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="registry.suppliers" data-export-format="pdf">PDF</a>
-                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="registry.suppliers" data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
+                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="registry.suppliers"
+                                data-export-format="pdf">PDF</a>
+                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="registry.suppliers"
+                                data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
                         </span>
                     </li>
 
                     <li>
                         <span class="exports-item-label">Marcas</span>
                         <span class="exports-item-actions">
-                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="registry.brands" data-export-format="pdf">PDF</a>
-                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="registry.brands" data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
+                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="registry.brands"
+                                data-export-format="pdf">PDF</a>
+                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="registry.brands"
+                                data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
                         </span>
                     </li>
 
                     <li>
                         <span class="exports-item-label">Pedidos a proveedores</span>
                         <span class="exports-item-actions">
-                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="registry.supplierOrders" data-export-format="pdf">PDF</a>
-                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="registry.supplierOrders" data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
+                            <a href="#" class="exports-chip exports-chip-primary"
+                                data-export-id="registry.supplierOrders" data-export-format="pdf">PDF</a>
+                            <a href="#" class="exports-chip exports-chip--excel"
+                                data-export-id="registry.supplierOrders" data-export-format="excel"><i
+                                    class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
                         </span>
                     </li>
 
                     <li>
                         <span class="exports-item-label">Usuarios</span>
                         <span class="exports-item-actions">
-                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="registry.users" data-export-format="pdf">PDF</a>
-                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="registry.users" data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
+                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="registry.users"
+                                data-export-format="pdf">PDF</a>
+                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="registry.users"
+                                data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
                         </span>
                     </li>
 
                     <li>
                         <span class="exports-item-label">Encargos</span>
                         <span class="exports-item-actions">
-                            <a href="#" class="exports-chip exports-chip-primary" data-export-id="registry.clientOrders" data-export-format="pdf">PDF</a>
-                            <a href="#" class="exports-chip exports-chip--excel" data-export-id="registry.clientOrders" data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
+                            <a href="#" class="exports-chip exports-chip-primary"
+                                data-export-id="registry.clientOrders" data-export-format="pdf">PDF</a>
+                            <a href="#" class="exports-chip exports-chip--excel"
+                                data-export-id="registry.clientOrders" data-export-format="excel"><i
+                                    class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>
                         </span>
                     </li>
 
@@ -474,7 +549,8 @@
         </div>
 
         <p class="exports-footnote">
-            Para importar productos use el botón <strong>Importar</strong> en <a href="{{ route('inventory') }}">Inventario</a>.
+            Para importar productos use el botón <strong>Importar</strong> en <a
+                href="{{ route('inventory') }}">Inventario</a>.
         </p>
     </div>
 

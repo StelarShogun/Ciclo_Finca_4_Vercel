@@ -36,11 +36,11 @@
     align-items: center;
     gap: 8px;
     padding: 10px 20px;
-    border: none;
+    border: 2px solid;
     border-radius: var(--border-radius);
     font-size: 0.95rem;
     font-weight: 500;
-    font-family: inherit;
+    font-family: 'Poppins', sans-serif;
     text-decoration: none;
     cursor: pointer;
     transition: var(--transition);
@@ -133,10 +133,10 @@
 }
 
 .page-header-actions {
-    background: rgba(255,255,255,0.2);
-    padding: 0.5rem 1rem;
-    border-radius: var(--border-radius-large);
-    backdrop-filter: blur(4px);
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    height: 36px;
 }
 
 .clients-count-badge {
@@ -145,7 +145,13 @@
     gap: 0.5rem;
     font-weight: 600;
     color: white;
-    font-size: 1rem;
+    font-size: 0.9rem;
+    background: rgba(255,255,255,0.2);
+    padding: 0 1rem;
+    border-radius: var(--border-radius-large);
+    backdrop-filter: blur(4px);
+    height: 36px;
+    line-height: 36px;
 }
 
 .clients-count-badge i {
