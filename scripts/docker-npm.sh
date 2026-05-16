@@ -7,6 +7,7 @@
 #   ./scripts/docker-npm.sh run build
 #   ./scripts/docker-npm.sh run dev
 #   ./scripts/docker-vite-build.sh   # shortcut → npm run build
+#   ./scripts/docker-install.sh      # composer + npm ci + build + chown (onboarding)
 #
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

@@ -99,9 +99,17 @@ En distribuciones tipo Arch / CachyOS las extensiones `pdo_mysql` y `mysqli` vie
 
 > **Comprobación rápida**: `PHP_INI_SCAN_DIR=:scripts/php-ini.d php -m | grep -E 'pdo_mysql|mysqli'` debe imprimir ambos.
 
+## Dependencias y assets en Docker (onboarding)
+
+Tras clonar y configurar `.env`, levantá el stack e instalá todo **dentro del contenedor** (Composer + `npm ci` + Vite build) y corregí permisos en el volumen montado:
+
+```bash
+./scripts/docker-install.sh
+```
+
 ## Frontend (Vite / npm) en Docker
 
-Si trabajás con el stack en contenedores, compilá assets sin depender del Node del host:
+Solo recompilar assets (sin reinstalar):
 
 ```bash
 ./scripts/docker-vite-build.sh
