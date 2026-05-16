@@ -1,3 +1,5 @@
+import '../../shared/ajax-pagination.js';
+
 // Validates all fields in a supplier form; returns { valid, errors[] }
 function validateForm(form, type) {
     const errors = [];

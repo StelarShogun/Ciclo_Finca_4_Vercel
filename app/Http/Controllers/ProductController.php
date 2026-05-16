@@ -19,6 +19,7 @@ use App\Services\Admin\ReportExcelFilename;
 use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\ProductClassificationAssignmentService;
+use App\Support\AdminPerPage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         if ($request->wantsJson() || $request->ajax()) {
-            $perPage = $request->get('per_page', 10);
+            $perPage = AdminPerPage::resolve($request->get('per_page', 10));
             $products = Product::with(['category', 'supplier'])
                 ->orderBy('product_id', 'desc')
                 ->paginate($perPage);
@@ -546,8 +547,8 @@ class ProductController extends Controller
             ? $this->inventoryClassificationFilters($request)
             : [];
 
-        $perPage = $request->get('per_page', 10);
-        $paginator = $query->paginate($perPage);
+        $perPage = AdminPerPage::resolve($request->get('per_page', 10));
+        $paginator = $query->paginate($perPage)->withQueryString();
 
         // Normalize products into the structure expected by the view
         $products = collect($paginator->items())->map(function ($product) {

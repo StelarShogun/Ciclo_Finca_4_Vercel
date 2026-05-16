@@ -89,6 +89,7 @@
             <div class="filters-section">
                 <h2 class="filters-title">Filtros de Búsqueda</h2>
                 <form class="filter-form">
+                    <input type="hidden" name="per_page" value="{{ \App\Support\AdminPerPage::resolve(request('per_page', 10)) }}">
                     <div class="filters-grid">
 
                         <div class="filter-group">
@@ -199,13 +200,14 @@
             </div>
 
             {{-- ==================== PRODUCT LIST ==================== --}}
-            <section class="products-section">
+            <section class="products-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
 
                 {{-- Loading overlay shown during async operations --}}
                 <div class="loading-spinner-overlay">
                     <div class="spinner"></div>
                 </div>
 
+                <div id="cf4-list-fragment">
                 {{-- View toggle: table / grid --}}
                 <div class="products-header">
                     <div class="products-count">
@@ -469,7 +471,8 @@
                 </div>
 
                 {{-- Pagination component --}}
-                <x-pagination :paginator="$paginator" label="inventory" />
+                <x-admin.pagination :paginator="$paginator" label="inventario" />
+                </div>
 
             </section>
         </div>

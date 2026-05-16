@@ -114,6 +114,9 @@ class FavoriteListTest extends TestCase
             $response->assertOk();
             $this->assertTrue($response->json('success'));
             $this->assertSame([], $response->json('favorites'));
+            $response->assertJsonStructure([
+                'pagination' => ['current_page', 'last_page', 'per_page', 'total'],
+            ]);
         } finally {
             $client->delete();
         }

@@ -115,6 +115,7 @@
                     <form method="GET" action="{{ route('clients.catalog') }}" id="filter-form" autocomplete="off">
                         {{-- Búsqueda en el header: sin JS el GET conserva `search`; con JS se sincroniza desde #catalog-nav-search. --}}
                         <input type="hidden" name="search" id="catalog-filter-search-fallback" value="{{ old('search', request('search', '')) }}">
+                        <input type="hidden" name="page" id="catalog-list-page" value="{{ max(1, (int) request('page', 1)) }}">
                         @if(request('category_id'))
                             <input type="hidden" name="category_id" value="{{ request('category_id') }}">
                         @endif
@@ -374,7 +375,8 @@
                     </section>
                 @endif
 
-                <div class="catalog-results">
+                <div class="catalog-results" data-cf4-ajax-pagination data-cf4-ajax-scroll>
+                    <div id="cf4-list-fragment">
                     <div class="catalog-toolbar results-header">
                         <div class="catalog-toolbar-primary">
                             @if($selectedCategory)
@@ -419,9 +421,18 @@
                                         <option value="asc"  {{ request('direction') == 'asc'  ? 'selected' : '' }}>Ascendente</option>
                                     </select>
                                 </div>
+                                <div class="catalog-toolbar-sort-field">
+                                    <label for="catalog-per-page">Por página</label>
+                                    <select id="catalog-per-page" name="per_page" class="form-control catalog-toolbar-select" form="filter-form"
+                                            onchange="(function(){var p=document.getElementById('catalog-list-page');if(p){p.value='1';}var f=document.getElementById('filter-form');if(f){if(f.requestSubmit){f.requestSubmit();}else{f.submit();}}})();">
+                                        @foreach (\App\Support\AdminPerPage::ALLOWED as $size)
+                                            <option value="{{ $size }}" @selected(\App\Support\AdminPerPage::resolve(request('per_page', 10)) === $size)>{{ $size }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
                             <p class="catalog-count results-count">
-                                Mostrando {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }} de {{ $products->total() }} productos
+                                {{ number_format((int) $products->total(), 0, ',', '.') }} productos
                             </p>
                         </div>
                     </div>
@@ -581,6 +592,7 @@
                             </x-cf4.state-card>
                         @endif
                     @endif
+                    </div>
                 </div>
             </main>
     </div>

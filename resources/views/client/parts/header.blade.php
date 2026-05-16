@@ -287,28 +287,12 @@
     $favoritesToggleUrl = \Illuminate\Support\Facades\Route::has('clients.favorites.toggle')
         ? route('clients.favorites.toggle')
         : url('/favorites/toggle');
-    $initialFavorites = \App\Models\FavoriteProduct::query()
+    $initialFavoritesPaginator = \App\Models\FavoriteProduct::query()
         ->with(['product.category'])
         ->where('user_id', auth('clients')->id())
         ->latest('id')
-        ->get()
-        ->filter(fn (\App\Models\FavoriteProduct $favorite) => $favorite->product !== null)
-        ->map(function (\App\Models\FavoriteProduct $favorite) {
-            $product = $favorite->product;
-
-            return [
-                'product_id' => (int) $product->product_id,
-                'name' => (string) $product->name,
-                'category' => (string) ($product->category->name ?? 'Sin categoría'),
-                'price' => (float) $product->sale_price,
-                'price_formatted' => '₡'.number_format((float) $product->sale_price, 0, ',', '.'),
-                'stock_label' => (string) $product->clientCatalogStockLabel(),
-                'url' => (string) $product->clientProductUrl(),
-                'image_url' => (string) ($product->getFirstMediaUrl('main_image')
-                    ?: asset('assets/images/products/'.($product->image ?? 'default.png'))),
-            ];
-        })
-        ->values();
+        ->paginate(\App\Support\AdminPerPage::resolve(10));
+    $initialFavorites = \App\Support\ClientFavoriteFormatter::collect($initialFavoritesPaginator->items());
 @endphp
 <div class="cf4-favorites-overlay" id="favorites-overlay" hidden></div>
 <aside class="cf4-favorites-drawer" id="favorites-drawer" aria-hidden="true">
@@ -324,6 +308,17 @@
             <p>Aún no tienes productos guardados.<br>¡Explora el catálogo!</p>
         </div>
     </div>
+    <footer class="cf4-favorites-drawer-footer" id="favorites-drawer-pagination" hidden>
+        <p class="cf4-favorites-pagination-info" id="favorites-pagination-info" aria-live="polite"></p>
+        <div class="cf4-favorites-pagination-nav">
+            <button type="button" class="cf4-favorites-page-btn" id="favorites-page-prev" disabled>
+                <i class="fas fa-chevron-left" aria-hidden="true"></i> Anterior
+            </button>
+            <button type="button" class="cf4-favorites-page-btn" id="favorites-page-next" disabled>
+                Siguiente <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
+        </div>
+    </footer>
 </aside>
 
 <meta name="cf4-favorites-index-url" content="{{ $favoritesIndexUrl }}">

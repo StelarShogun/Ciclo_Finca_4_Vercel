@@ -81,6 +81,7 @@
                 <h2 class="filters-title">Filtros de Búsqueda</h2>
             </div>
             <form method="GET" action="{{ route('sales.index') }}" id="filters-form">
+                <input type="hidden" name="per_page" value="{{ \App\Support\AdminPerPage::resolve(request('per_page', 10)) }}">
                 <div class="filters-grid">
 
                     <div class="filter-group">
@@ -182,6 +183,8 @@
                 ($isCustomRange && ($hasDateFrom || $hasDateTo));
         @endphp
 
+        <div data-cf4-ajax-pagination data-cf4-ajax-scroll>
+        <div id="cf4-list-fragment">
         <div class="sales-table-container">
             <table class="sales-table">
                 <thead>
@@ -319,7 +322,9 @@
         </div>
 
         {{-- Pagination component --}}
-        <x-pagination :paginator="$sales" label="ventas" />
+        <x-admin.pagination :paginator="$sales" label="ventas" />
+        </div>
+        </div>
 
     </div>
 

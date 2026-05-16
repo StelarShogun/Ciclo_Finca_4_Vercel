@@ -1,3 +1,5 @@
+import '../../shared/ajax-pagination.js';
+
 // Selector shortcuts
 const qs = (s, r = document) => r.querySelector(s);
 const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -2712,65 +2714,6 @@ function smoothScrollTop() {
 })();
 
 
-
-// Pagination controls with disabled state handling and smooth scrolling
-(function initPagination() {
-    const wrapper = qs('.pagination');
-    if (!wrapper) return;
-
-    const goInput = qs('#goToPageInput', wrapper);
-    const goBtn = qs('#goToPageBtn', wrapper);
-
-    // Prevent navigation on disabled prev/next buttons
-    qsa('.pagination .button[aria-label]', wrapper).forEach((a) => {
-        const disabled = a.getAttribute('aria-disabled') === 'true';
-        if (disabled) {
-            a.addEventListener('click', (e) => e.preventDefault());
-            a.classList.add('is-disabled');
-        }
-    });
-
-    // Optional: smooth scroll when clicking page links
-    qsa('.pagination .button[aria-label]', wrapper).forEach((a) => {
-        a.addEventListener('click', (e) => {
-            const dp = a.dataset.page;
-            if (!dp || a.getAttribute('aria-disabled') === 'true') return;
-            smoothScrollTop();
-        });
-    });
-
-    // Navigate to a specific page
-    function goToPage() {
-        const totalSpan = qs('.pagination .button.button-primary', wrapper);
-        if (!totalSpan) return;
-
-        const parts = totalSpan.textContent.trim().split('/');
-        const lastPage = Math.max(1, parseInt((parts[1] || '1').trim(), 10));
-        let target = parseInt((goInput?.value || '1').trim(), 10);
-
-        if (isNaN(target)) target = 1;
-        if (target < 1) target = 1;
-        if (target > lastPage) target = lastPage;
-
-        const url = new URL(window.location.href);
-        url.searchParams.set('page', String(target));
-        smoothScrollTop();
-        window.location.assign(url.toString());
-    }
-
-    if (goBtn) {
-        goBtn.addEventListener('click', goToPage);
-    }
-
-    if (goInput) {
-        goInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                goToPage();
-            }
-        });
-    }
-})();
 
 // Initial loading spinner and filter form behavior
 document.addEventListener('DOMContentLoaded', () => {

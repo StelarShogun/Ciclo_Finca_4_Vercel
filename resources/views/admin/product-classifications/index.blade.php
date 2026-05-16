@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Características por producto - Ciclo Finca 4 Admin</title>
-    @vite(['resources/css/admin/suppliers/suppliers.css'])
+    @vite(['resources/css/admin/suppliers/suppliers.css', 'resources/js/shared/ajax-pagination.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -38,6 +38,8 @@
                             </div>
                         </x-admin-alert>
                     @else
+                        <div data-cf4-ajax-pagination data-cf4-ajax-scroll>
+                        <div id="cf4-list-fragment">
                         <div style="overflow-x: auto;">
                             <table class="table" style="width: 100%; border-collapse: collapse;">
                                 <thead>
@@ -81,7 +83,9 @@
                             </table>
                         </div>
                         <div style="margin-top: 1rem;">
-                            {{ $products->links() }}
+                            <x-admin.pagination :paginator="$products" label="productos" />
+                        </div>
+                        </div>
                         </div>
                     @endif
                 </div>

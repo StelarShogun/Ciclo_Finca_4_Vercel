@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
 use App\Models\Sale;
+use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
 
 class AdminOrderController extends Controller
@@ -36,7 +37,8 @@ class AdminOrderController extends Controller
             });
         }
 
-        $orders = $query->orderBy('sale_date', 'desc')->paginate(10)->withQueryString();
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+        $orders = $query->orderBy('sale_date', 'desc')->paginate($perPage)->withQueryString();
 
         $basePurchasesQuery = (clone $baseWebOrdersQuery)
             ->whereIn('status', ['pending', 'completed']);

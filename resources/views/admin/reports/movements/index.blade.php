@@ -6,6 +6,10 @@
     @vite(['resources/css/admin/reports/reports-hub.css'])
 @endpush
 
+@push('vite-body')
+    @vite(['resources/js/shared/ajax-pagination.js'])
+@endpush
+
 @section('aside')
     @include('admin.parts.aside')
 @endsection
@@ -30,11 +34,12 @@
     </header>
 
     {{-- Products table card --}}
-    <div class="orders-table-card">
+    <div class="orders-table-card" data-cf4-ajax-pagination data-cf4-ajax-scroll>
 
         {{-- Search toolbar --}}
         <form method="GET" action="{{ route('admin.inventory.movements.index') }}"
               class="orders-toolbar" role="search">
+            <input type="hidden" name="per_page" value="{{ \App\Support\AdminPerPage::resolve(request('per_page', 10)) }}">
             <div class="filter-group orders-search-wrap">
                 <label for="inv-search-input">Buscar producto</label>
                 <div class="orders-search-field">
@@ -74,6 +79,7 @@
             </p>
         @endif
 
+        <div id="cf4-list-fragment">
         {{-- Products table --}}
         <div class="sales-table-container">
             <table class="sales-table">
@@ -165,16 +171,12 @@
             </table>
         </div>
 
-        {{-- Shared pagination component --}}
-        @if($products->hasPages())
-            <div class="orders-pagination-wrap">
-                <small class="inv-index-pagination-info">
-                    Mostrando {{ $products->firstItem() }}–{{ $products->lastItem() }}
-                    de {{ $products->total() }} productos
-                </small>
-                <x-pagination :paginator="$products" label="productos" />
-            </div>
-        @endif
+        {{-- Shared pagination --}}
+        <div class="orders-pagination-wrap">
+            <x-admin.pagination :paginator="$products" label="productos" />
+        </div>
+
+        </div>{{-- /#cf4-list-fragment --}}
 
     </div>{{-- /.orders-table-card --}}
 

@@ -1,3 +1,5 @@
+import '../../shared/ajax-pagination.js';
+
 // Retrieve CSRF token from meta tag
 function getCSRFToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';

@@ -10,6 +10,10 @@
     @vite(['resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/audit-log.css'])
 @endpush
 
+@push('vite-body')
+    @vite(['resources/js/shared/ajax-pagination.js'])
+@endpush
+
 @section('aside')
     @include('admin.parts.aside')
 @endsection
@@ -29,6 +33,7 @@
 
         <section class="audit-log-filters">
             <form method="GET" action="{{ route('admin.reports.audit-log') }}" class="audit-log-filters-grid">
+                <input type="hidden" name="per_page" value="{{ \App\Support\AdminPerPage::resolve(request('per_page', 10)) }}">
                 <label class="filter-field">
                     <span>Usuario</span>
                     <input type="text" name="user" value="{{ $filters['user'] }}" placeholder="Correo o nombre del admin">
@@ -83,7 +88,7 @@
             </form>
         </section>
 
-        <section class="audit-log-results">
+        <section class="audit-log-results" data-cf4-ajax-pagination data-cf4-ajax-scroll>
             @if ($logs->isEmpty())
                 <div class="audit-empty-state">
                     <i class="fas fa-clipboard-list" aria-hidden="true"></i>
@@ -91,6 +96,7 @@
                     <p>Probá cambiar usuario, módulo, tipo de acción o rango de fechas.</p>
                 </div>
             @else
+                <div id="cf4-list-fragment">
                 <div class="table-wrap">
                     <table class="audit-log-table">
                         <thead>
@@ -123,7 +129,8 @@
                     </table>
                 </div>
 
-                <x-pagination :paginator="$logs" label="auditoría" />
+                <x-admin.pagination :paginator="$logs" label="auditoría" />
+                </div>
             @endif
         </section>
     </div>

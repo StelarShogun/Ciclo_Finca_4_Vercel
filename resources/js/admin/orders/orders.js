@@ -1,3 +1,5 @@
+import '../../shared/ajax-pagination.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('order-expiration-modal');
     const openBtn = document.getElementById('btn-open-order-expiration-modal');

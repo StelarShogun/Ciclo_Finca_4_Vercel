@@ -89,6 +89,8 @@
         </div>
 
         {{-- ==================== SUPPLIERS TABLE ==================== --}}
+        <div data-cf4-ajax-pagination data-cf4-ajax-scroll>
+        <div id="cf4-list-fragment">
         <div class="sales-table-container">
             <table class="sales-table">
                 <thead>
@@ -161,9 +163,9 @@
         </div>
 
         {{-- Pagination component --}}
-        <x-pagination :paginator="$suppliers" label="de proveedores" />
-
-    </div>
+        <x-admin.pagination :paginator="$suppliers" label="proveedores" />
+        </div>
+        </div>
 
     {{-- ==================== MODAL: SUPPLIER DETAIL ==================== --}}
     <div id="modalDetalleProveedor" class="modal-overlay">

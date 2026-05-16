@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 @import "../admin/sweetalert2-modal-zindex.css";
+@import "../admin/components/pagination.css";
 
 /* ===================================================================
    1. VARIABLES 
@@ -1501,166 +1502,16 @@ body.guest-layout {
 }
 
 /* ===================================================================
-   PAGINATION (catalog — same structure as admin)
+   PAGINATION (catálogo — base en admin/components/pagination.css)
    =================================================================== */
-.pagination-wrapper .pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 2rem 0;
-  padding: 1rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e2e8f0;
-}
-
-.pagination-wrapper .pagination .results-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #000000;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.pagination-wrapper .pagination .button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 0.75rem;
-  min-width: 2.25rem;
-  height: 2.25rem;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  text-decoration: none;
-  background: #ffffff;
-  color: #475569;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.pagination-wrapper .pagination .button:hover:not(.is-disabled):not([aria-disabled="true"]) {
-  background: var(--color-primary-dark);
-  color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(22, 163, 74, 0.3);
-}
-
-.pagination-wrapper .pagination .button.button-primary {
-  background: #09a170;
-  color: #000000;
-  box-shadow: 0 4px 12px rgba(9, 161, 112, 0.3);
-}
-
-.pagination-wrapper .pagination .button[aria-label="Previous"],
-.pagination-wrapper .pagination .button[aria-label="Next"] {
-  background: #09a170;
-  color: #000000;
-  box-shadow: 0 4px 12px rgba(9, 161, 112, 0.3);
-}
-
-.pagination-wrapper .pagination .button[aria-label="Previous"]:hover:not(.is-disabled),
-.pagination-wrapper .pagination .button[aria-label="Next"]:hover:not(.is-disabled) {
-  background: #09a170;
-  color: #000000;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(9, 161, 112, 0.4);
-}
-
-.pagination-wrapper .pagination .button.is-disabled,
-.pagination-wrapper .pagination .button[aria-disabled="true"] {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.pagination-wrapper .pagination input[type="number"] {
-  width: 3rem;
-  height: 2.25rem;
-  padding: 0.5rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 0.5rem;
-  text-align: center;
-  font-size: 0.8rem;
-  font-weight: 600;
-  background: #ffffff;
-  color: #475569;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.pagination-wrapper .pagination input[type="number"]:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.1);
-}
-
-.pagination-wrapper .pagination .go-button {
-  background: #09a170;
-  color: #000000;
-  border: none;
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  height: 2.25rem;
-  box-shadow: 0 4px 12px rgba(9, 161, 112, 0.3);
-}
-
-.pagination-wrapper .pagination .go-button:hover {
-  background: #078059;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(9, 161, 112, 0.4);
-}
-
-.pagination-wrapper .pagination .sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 @media (max-width: 768px) {
-  .pagination-wrapper .pagination {
-    gap: 0.25rem;
-    padding: 0.5rem;
+  .catalog-shell .cf4-pagination-toolbar.pagination {
+    flex-direction: column;
+    align-items: stretch;
   }
-  .pagination-wrapper .pagination .button {
-    padding: 0.375rem 0.5rem;
-    min-width: 2rem;
-    height: 2rem;
-    font-size: 0.7rem;
-  }
-  .pagination-wrapper .pagination .results-info {
-    padding: 0.375rem 0.5rem;
-    font-size: 0.7rem;
-  }
-  .pagination-wrapper .pagination input[type="number"] {
-    width: 2.5rem;
-    height: 2rem;
-    font-size: 0.7rem;
-  }
-  .pagination-wrapper .pagination .go-button {
-    height: 2rem;
-    padding: 0.375rem 0.75rem;
-    font-size: 0.7rem;
+
+  .catalog-shell .cf4-pagination-toolbar .admin-pagination-nav {
+    justify-content: center;
   }
 }
 
@@ -3334,7 +3185,12 @@ select.catalog-toolbar-select:focus,
 }
 
 .pagination-wrapper {
-  margin-top: 30px;
+  margin-top: 1.25rem;
+  width: 100%;
+}
+
+.catalog-shell .pagination-wrapper {
+  margin-top: 0.75rem;
 }
 
 /* Catálogo: grid de productos (refina sección 15 en esta vista) */

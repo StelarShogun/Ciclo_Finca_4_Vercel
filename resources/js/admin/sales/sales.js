@@ -1,3 +1,5 @@
+import '../../shared/ajax-pagination.js';
+
 // Helper to get meta tag content safely
 const meta   = name => document.querySelector(`meta[name="${name}"]`)?.content ?? '';
 // Route definitions used for API calls

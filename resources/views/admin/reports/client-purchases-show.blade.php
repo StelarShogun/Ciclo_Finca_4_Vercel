@@ -22,6 +22,7 @@
                 'sort' => $backParams['back_sort'] ?? null,
                 'dir' => $backParams['back_dir'] ?? null,
                 'page' => $backParams['back_page'] ?? null,
+                'per_page' => $backParams['back_per_page'] ?? null,
                 'q' => $backParams['back_q'] ?? null,
             ],
             fn ($v) => $v !== null && $v !== '',

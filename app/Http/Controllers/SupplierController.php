@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
+use App\Support\AdminPerPage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,21 +12,22 @@ use Illuminate\Support\Facades\Validator;
 
 class SupplierController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $query = Supplier::query();
 
-        if (request('name')) {
-            $query->where('name', 'like', '%'.request('name').'%');
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%'.$request->input('name').'%');
         }
 
-        if (request('contact')) {
-            $query->where('primary_contact', 'like', '%'.request('contact').'%');
+        if ($request->filled('contact')) {
+            $query->where('primary_contact', 'like', '%'.$request->input('contact').'%');
         }
 
         // Average is computed before pagination to reflect the full filtered result set
         $averageRating = $query->avg('rating');
-        $suppliers = $query->paginate(10);
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+        $suppliers = $query->paginate($perPage)->withQueryString();
 
         return view('admin.suppliers.index', compact('suppliers', 'averageRating'));
     }

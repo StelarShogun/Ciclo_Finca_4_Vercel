@@ -3,20 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Brand;
+use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class BrandController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $query = Brand::query();
 
-        if (request('name')) {
-            $query->where('name', 'like', '%'.request('name').'%');
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%'.$request->input('name').'%');
         }
 
-        $brands = $query->orderBy('name')->paginate(15);
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+        $brands = $query->orderBy('name')->paginate($perPage)->withQueryString();
 
         return view('admin.brands.index', compact('brands'));
     }

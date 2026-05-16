@@ -2,6 +2,7 @@
 @import "../utilities.css";
 @import "../sidebar.css";
 @import "../sweetalert2-modal-zindex.css";
+@import "../components/pagination.css";
 
 /* ============================================================
    1. MAIN LAYOUT

@@ -30,6 +30,7 @@
         <div class="filters-section">
             <h2 class="filters-title">Filtros</h2>
             <form method="GET" action="{{ route('brands.index') }}" class="filters-grid">
+                <input type="hidden" name="per_page" value="{{ \App\Support\AdminPerPage::resolve(request('per_page', 10)) }}">
                 <div class="filter-group">
                     <label for="buscarNombre">Nombre de la Marca</label>
                     <input type="text" id="buscarNombre" name="name"
@@ -43,7 +44,8 @@
         </div>
 
         {{-- ==================== TABLA --}}
-        <div class="table-section">
+        <div class="table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
+            <div id="cf4-list-fragment">
             <table class="brands-table">
                 <thead>
                     <tr>
@@ -78,11 +80,10 @@
                 </tbody>
             </table>
 
-            @if ($brands->hasPages())
             <div class="pagination-wrapper">
-                {{ $brands->appends(request()->query())->links() }}
+                <x-admin.pagination :paginator="$brands" label="marcas" />
             </div>
-            @endif
+            </div>
         </div>
 
     </div>

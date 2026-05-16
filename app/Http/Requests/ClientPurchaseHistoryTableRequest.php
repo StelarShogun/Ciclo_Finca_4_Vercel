@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Services\Admin\ClientPurchaseHistoryQuery;
+use App\Support\AdminPerPage;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,6 +20,7 @@ class ClientPurchaseHistoryTableRequest extends FormRequest
         $q = ClientPurchaseHistoryQuery::normalizeSearchInput(is_string($raw) ? $raw : null);
         $this->merge([
             'page' => $this->input('page', 1),
+            'per_page' => $this->input('per_page', 10),
             'q' => $q,
         ]);
     }
@@ -31,6 +33,7 @@ class ClientPurchaseHistoryTableRequest extends FormRequest
             'sort' => ['required', 'string', Rule::in(ClientPurchaseHistoryQuery::SORTS)],
             'dir' => ['required', 'string', Rule::in(['asc', 'desc'])],
             'page' => ['integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', Rule::in(AdminPerPage::ALLOWED)],
         ];
     }
 }

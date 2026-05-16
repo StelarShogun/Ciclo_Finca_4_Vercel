@@ -13,12 +13,20 @@ function esc(text) {
     return d.innerHTML;
 }
 
-function syncReportUrl(pageUrl, { period, sort, dir, q, page }) {
+const ADMIN_PER_PAGE_OPTIONS = [10, 25, 50, 100];
+
+function normalizeAdminPerPage(value) {
+    const n = parseInt(String(value ?? '10'), 10);
+    return ADMIN_PER_PAGE_OPTIONS.includes(n) ? n : 10;
+}
+
+function syncReportUrl(pageUrl, { period, sort, dir, q, page, perPage }) {
     const u = new URL(pageUrl, window.location.origin);
     u.searchParams.set('period', period);
     u.searchParams.set('sort', sort);
     u.searchParams.set('dir', dir);
     u.searchParams.set('page', String(page || 1));
+    u.searchParams.set('per_page', String(perPage || 10));
     const trimmed = String(q || '').trim();
     if (trimmed) {
         u.searchParams.set('q', trimmed);
@@ -50,8 +58,14 @@ function updatePeriodUI(root, activePeriod) {
     });
 }
 
-async function fetchTable(tableUrl, { period, sort, dir, q, page }) {
-    const params = new URLSearchParams({ period, sort, dir, page: String(page || 1) });
+async function fetchTable(tableUrl, { period, sort, dir, q, page, perPage }) {
+    const params = new URLSearchParams({
+        period,
+        sort,
+        dir,
+        page: String(page || 1),
+        per_page: String(perPage || 10),
+    });
     const trimmed = q.trim();
     if (trimmed) {
         params.set('q', trimmed);
@@ -75,10 +89,12 @@ function initClientPurchasesReport() {
     const tableUrl = root.dataset.tableUrl;
     const pageUrl = root.dataset.pageUrl;
     const showUrlTemplate = root.dataset.showUrlTemplate || '';
+    const initialParams = new URLSearchParams(window.location.search);
     let period = root.dataset.period || '30d';
     let sort = root.dataset.sort || 'total_purchased';
     let dir = root.dataset.dir || 'desc';
-    let page = 1;
+    let page = Math.max(1, parseInt(initialParams.get('page') || '1', 10) || 1);
+    let perPage = normalizeAdminPerPage(initialParams.get('per_page'));
 
     const searchInput = document.getElementById('client-purchases-search');
     const tbody = document.getElementById('client-purchases-body');
@@ -101,6 +117,7 @@ function initClientPurchasesReport() {
         u.searchParams.set('back_sort', sort);
         u.searchParams.set('back_dir', dir);
         u.searchParams.set('back_page', String(page));
+        u.searchParams.set('back_per_page', String(perPage));
         const tq = searchInput.value.trim();
         if (tq) {
             u.searchParams.set('back_q', tq);
@@ -159,14 +176,14 @@ function initClientPurchasesReport() {
 
     async function loadPage(nextPage) {
         page = Math.max(1, Number(nextPage || 1));
-        syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page });
+        syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, perPage });
         void loadFromApi();
     }
 
     async function loadFromApi() {
         const q = searchInput.value;
         try {
-            const data = await fetchTable(tableUrl, { period, sort, dir, q, page });
+            const data = await fetchTable(tableUrl, { period, sort, dir, q, page, perPage });
             if (!data.success) {
                 throw new Error('Invalid response');
             }
@@ -194,10 +211,10 @@ function initClientPurchasesReport() {
     }
 
     function wirePagination(wrapper) {
-        const goInput = wrapper.querySelector('#goToPageInput');
-        const goBtn = wrapper.querySelector('#goToPageBtn');
+        const goInput = wrapper.querySelector('.pagination-go-input');
+        const goBtn = wrapper.querySelector('.pagination-go-button');
 
-        wrapper.querySelectorAll('.button[aria-label]').forEach((a) => {
+        wrapper.querySelectorAll('a.button[data-page]').forEach((a) => {
             const disabled = a.getAttribute('aria-disabled') === 'true';
             if (disabled) {
                 a.addEventListener('click', (e) => e.preventDefault());
@@ -207,16 +224,16 @@ function initClientPurchasesReport() {
             a.addEventListener('click', (e) => {
                 e.preventDefault();
                 const dp = a.getAttribute('data-page');
-                if (!dp) return;
+                if (dp === null || dp === '') return;
                 loadPage(dp);
             });
         });
 
         function goToPage() {
-            const totalSpan = wrapper.querySelector('.button.button-primary');
-            if (!totalSpan) return;
-            const parts = totalSpan.textContent.trim().split('/');
-            const lastPage = Math.max(1, parseInt((parts[1] || '1').trim(), 10));
+            const lastPage = Math.max(
+                1,
+                parseInt(String(wrapper.getAttribute('data-last-page') || '1'), 10) || 1,
+            );
             let target = parseInt(String(goInput?.value || '1').trim(), 10);
             if (Number.isNaN(target)) target = 1;
             target = Math.max(1, Math.min(lastPage, target));
@@ -234,6 +251,16 @@ function initClientPurchasesReport() {
                 }
             });
         }
+
+        const perSel = wrapper.querySelector('.admin-pagination-per-page-select');
+        if (perSel) {
+            perSel.addEventListener('change', () => {
+                perPage = normalizeAdminPerPage(perSel.value);
+                page = 1;
+                syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, perPage });
+                void loadFromApi();
+            });
+        }
     }
 
     root.querySelectorAll('.period-btn').forEach((btn) => {
@@ -244,7 +271,7 @@ function initClientPurchasesReport() {
             }
             period = next;
             page = 1;
-            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page });
+            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, perPage });
             updatePeriodUI(root, period);
             void loadFromApi();
         });
@@ -263,7 +290,7 @@ function initClientPurchasesReport() {
                 dir = 'desc';
             }
             page = 1;
-            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page });
+            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, perPage });
             updateSortHeaderUI(root, sort, dir);
             void loadFromApi();
         });
@@ -273,7 +300,7 @@ function initClientPurchasesReport() {
         window.clearTimeout(debounceTimer);
         debounceTimer = window.setTimeout(() => {
             page = 1;
-            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page });
+            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, perPage });
             void loadFromApi();
         }, debounceMs);
     });
