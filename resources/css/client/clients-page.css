@@ -2136,20 +2136,29 @@ body.guest-layout {
   transition: grid-template-columns 220ms ease;
 }
 
-.catalog-shell > .catalog-container.rail-expanded {
-  grid-template-columns: minmax(300px, min(46vw, 460px)) minmax(0, 1fr);
-}
-
 .catalog-sidebar-stack {
   min-width: 0;
   width: 100%;
   align-self: start;
+  position: relative;
 }
 
 .catalog-rail-wrap {
   min-width: 0;
   align-self: stretch;
   width: 100%;
+}
+
+@keyframes cf4-catalog-rail-sheet-in {
+  from {
+    opacity: 0.78;
+    transform: translateX(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @media (min-width: 1024px) {
@@ -2169,8 +2178,58 @@ body.guest-layout {
     padding-right: 0.2rem;
   }
 
-  .catalog-shell > .catalog-container.rail-expanded .catalog-sidebar-stack {
-    grid-template-columns: 260px minmax(240px, 300px);
+  /* Rail expandido: el bloque de categorías se superpone al panel de filtros (misma rejilla, sin mover filtros). */
+  .catalog-shell > .catalog-container.rail-expanded .catalog-sidebar-stack .catalog-rail-wrap {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    width: auto;
+    pointer-events: auto;
+    animation: cf4-catalog-rail-sheet-in 0.24s ease-out;
+  }
+
+  .catalog-shell > .catalog-container.rail-expanded .catalog-sidebar-stack .category-rail.catalog-category-sidebar {
+    height: 100%;
+    min-height: 100%;
+    max-height: calc(100dvh - var(--client-header-height, 72px) - 2rem);
+    width: 100%;
+    position: relative;
+    top: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow:
+      0 22px 56px rgba(5, 31, 32, 0.2),
+      0 0 0 1px rgba(142, 182, 155, 0.42);
+  }
+
+  .catalog-shell > .catalog-container.rail-expanded .catalog-sidebar-stack .category-rail-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .catalog-shell > .catalog-container.rail-expanded .catalog-sidebar-stack .catalog-filters.catalog-sidebar {
+    position: relative;
+    z-index: 1;
+    opacity: 0.9;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .catalog-shell > .catalog-container.rail-expanded .catalog-sidebar-stack .catalog-filters.catalog-sidebar {
+      transition: none;
+    }
+
+    .catalog-shell > .catalog-container.rail-expanded .catalog-sidebar-stack .catalog-rail-wrap {
+      animation: none;
+    }
   }
 
   .catalog-sidebar-stack .catalog-rail-wrap {
@@ -2247,7 +2306,15 @@ body.guest-layout {
   -webkit-backdrop-filter: blur(14px);
   transition:
     box-shadow 220ms ease,
-    background 220ms ease;
+    background 220ms ease,
+    transform 0.22s ease,
+    opacity 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .category-rail.catalog-category-sidebar {
+    transition: box-shadow 220ms ease, background 220ms ease;
+  }
 }
 
 .category-rail.catalog-category-sidebar.is-expanded {
@@ -3520,10 +3587,6 @@ select.catalog-toolbar-select:focus,
 @media (max-width: 1100px) {
   .catalog-shell > .catalog-container {
     grid-template-columns: minmax(260px, min(44vw, 360px)) minmax(0, 1fr);
-  }
-
-  .catalog-shell > .catalog-container.rail-expanded {
-    grid-template-columns: minmax(280px, min(50vw, 420px)) minmax(0, 1fr);
   }
 }
 

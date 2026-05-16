@@ -1,0 +1,18 @@
+{
+  "name": "cf4-hyperframes-assets",
+  "private": true,
+  "type": "module",
+  "description": "Isolated HyperFrames toolchain for CF4-131 — generate MP4s from HTML compositions. Requires Node >= 22 and FFmpeg on PATH.",
+  "scripts": {
+    "dev": "hyperframes preview",
+    "check": "hyperframes lint && hyperframes compositions",
+    "render": "hyperframes render",
+    "render:404": "hyperframes render -c compositions/404-bike.html -o output/404-bike.mp4 -f 30 -q standard --docker"
+  },
+  "devDependencies": {
+    "hyperframes": "^0.6.6"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

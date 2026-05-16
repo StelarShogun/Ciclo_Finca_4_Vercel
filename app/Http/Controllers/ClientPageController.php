@@ -15,6 +15,7 @@ use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -33,12 +34,7 @@ class ClientPageController extends Controller
             ->limit(8)
             ->get();
 
-        $categories = Category::whereNull('parent_category_id')
-            ->with(['childCategories' => function ($q) {
-                $q->orderBy('name');
-            }])
-            ->orderBy('name')
-            ->get();
+        $categories = $this->cachedClientRootCategories();
 
         $cartCount = $this->getCartCount();
 
@@ -110,6 +106,14 @@ class ClientPageController extends Controller
         $minPrice = $request->filled('min_price') ? $request->input('min_price') : null;
         $maxPrice = $request->filled('max_price') ? $request->input('max_price') : null;
 
+        $minNegative = is_numeric($minPrice) && (float) $minPrice < 0;
+        $maxNegative = is_numeric($maxPrice) && (float) $maxPrice < 0;
+        if ($minNegative || $maxNegative) {
+            return redirect()->route('clients.catalog', $request->except(['min_price', 'max_price', 'page']))
+                ->withInput()
+                ->withErrors(['price_range' => 'Los precios del filtro no pueden ser negativos.']);
+        }
+
         // Reject invalid price ranges before applying filters.
         if (is_numeric($minPrice) && is_numeric($maxPrice) && (float) $minPrice > (float) $maxPrice) {
             return redirect()->route('clients.catalog', $request->except(['min_price', 'max_price', 'page']))
@@ -141,17 +145,12 @@ class ClientPageController extends Controller
             CatalogProductSearchTelemetry::recordSearchResultsPage((string) $request->input('search'), $products);
         }
 
-        $categories = Category::whereNull('parent_category_id')
-            ->with(['childCategories' => function ($q) {
-                $q->orderBy('name');
-            }])
-            ->orderBy('name')
-            ->get();
+        $categories = $this->cachedClientRootCategories();
 
-        $brands = Brand::has('products')->orderBy('name')->get();
+        $brands = $this->cachedClientBrandsForCatalog();
 
         $cartCount = $this->getCartCount();
-        $catalogSpotlight = $this->catalogSpotlightProductRows();
+        $catalogSpotlight = $this->cachedCatalogSpotlightProductRows();
         $favoriteProductIds = collect();
 
         if (Auth::guard('clients')->check()) {
@@ -253,8 +252,43 @@ class ClientPageController extends Controller
         return 'fas fa-layer-group';
     }
 
+    /** Árbol de categorías raíz + hijos (compartido entre inicio y catálogo). */
+    private function cachedClientRootCategories(): Collection
+    {
+        $ttl = (int) config('cf4_performance.client_root_categories_ttl', 600);
+
+        return Cache::remember('cf4:client:root_categories', max(30, $ttl), function () {
+            return Category::whereNull('parent_category_id')
+                ->with(['childCategories' => function ($q) {
+                    $q->orderBy('name');
+                }])
+                ->orderBy('name')
+                ->get();
+        });
+    }
+
+    /** Marcas que tienen al menos un producto (rail del catálogo). */
+    private function cachedClientBrandsForCatalog(): Collection
+    {
+        $ttl = (int) config('cf4_performance.client_brands_catalog_ttl', 300);
+
+        return Cache::remember('cf4:client:catalog_brands', max(30, $ttl), function () {
+            return Brand::has('products')->orderBy('name')->get();
+        });
+    }
+
+    /** Spotlight del catálogo (destacados + novedades). */
+    private function cachedCatalogSpotlightProductRows(): Collection
+    {
+        $ttl = (int) config('cf4_performance.client_catalog_spotlight_ttl', 120);
+
+        return Cache::remember('cf4:client:catalog_spotlight', max(30, $ttl), function () {
+            return $this->catalogSpotlightProductRowsUncached();
+        });
+    }
+
     // Returns spotlight rows using featured products first, then recent products.
-    private function catalogSpotlightProductRows(): Collection
+    private function catalogSpotlightProductRowsUncached(): Collection
     {
         $maxTotal = 12;
         $maxFeatured = 8;
@@ -737,6 +771,19 @@ class ClientPageController extends Controller
             'message' => 'Producto eliminado del carrito',
             'cart_count' => $this->getCartCount(),
             'cart_total' => $this->getCartTotal(),
+        ]);
+    }
+
+    /** Empty the session cart (AJAX from cart page). */
+    public function clearCart()
+    {
+        Session::put('cart', []);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Carrito vaciado',
+            'cart_count' => 0,
+            'cart_total' => 0.0,
         ]);
     }
 
