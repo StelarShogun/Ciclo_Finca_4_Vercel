@@ -95,6 +95,12 @@
 @section('contenido')
 <div class="sales-container" style="padding-top: 1.5rem;">
 
+    <nav class="orders-breadcrumb" aria-label="Migas de pan">
+        <a href="{{ route('admin.supplier-orders.index') }}">Pedidos a proveedor</a>
+        <span class="sep">/</span>
+        <span>Importar XML</span>
+    </nav>
+
     <div class="xml-upload-card">
         <h2><i class="fas fa-file-import" style="color:var(--color-primary,#2563eb);margin-right:.4rem;"></i>Seleccionar archivo XML</h2>
         <p class="subtitle">
