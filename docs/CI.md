@@ -77,6 +77,7 @@ Ejemplo corregido: `SupplierOrderCreateTest` ya no exige `estimated_delivery_dat
 | Síntoma | Acción |
 |---------|--------|
 | Muchos `skipped` | Usar `./scripts/test-mysql-docker.sh`, no solo `composer run test` |
+| CI falla con “248 passed” y exit 1 | `php artisan test` trata skips como fallo; `composer run test:mysql` usa PHPUnit directo (igual que el script Docker) |
 | `Connection refused` MySQL | `docker compose up -d` y esperar ~15 s |
 | Pint falla | `docker compose exec app_ciclo ./vendor/bin/pint` |
 | Aviso git `dubious ownership` en Docker | Cosmético; no afecta PHPUnit |

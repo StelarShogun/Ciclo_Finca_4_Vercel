@@ -73,7 +73,7 @@
             "Composer\\Config::disableProcessTimeout",
             "@putenv PHP_INI_SCAN_DIR=:scripts/php-ini.d",
             "@php artisan config:clear --ansi",
-            "@php artisan test --configuration=phpunit.mysql.xml"
+            "@php ./vendor/bin/phpunit -c phpunit.mysql.xml"
         ],
         "lint": [
             "@php ./vendor/bin/pint --test"
