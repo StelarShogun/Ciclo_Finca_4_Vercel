@@ -74,6 +74,7 @@ class UpdateProductRequest extends FormRequest
             'stock_minimum' => ['required', 'integer', 'min:0'],
             'status' => ['required', 'in:active,inactive,out_of_stock,discontinued'],
             'is_featured' => ['boolean'],
+            'remove_main_image' => ['sometimes', 'boolean'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp,avif', 'max:10240'],
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'mimes:jpeg,png,jpg,gif,svg,webp,avif', 'max:10240'],

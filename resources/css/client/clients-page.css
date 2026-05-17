@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 @import "../admin/sweetalert2-modal-zindex.css";
 @import "../admin/components/pagination.css";
+@import "../shared/components/buttons.css";
+@import "../shared/components/form-layout.css";
 
 /* ===================================================================
    1. VARIABLES 
@@ -126,67 +128,8 @@ body.guest-layout {
 }
 
 /* ===================================================================
-   8. BUTTONS
+   8. BUTTONS (base: shared/components/buttons.css; hero overrides below)
    =================================================================== */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: none;
-  border-radius: var(--border-radius);
-  font-size: 0.95rem;
-  font-weight: 500;
-  font-family: inherit;
-  text-decoration: none;
-  cursor: pointer;
-  transition: var(--transition);
-  position: relative;
-  overflow: hidden;
-  white-space: nowrap;
-  user-select: none;
-  outline: none;
-}
-
-.btn:focus   { box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.3); }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
-
-/* Color variants */
-.btn-primary {
-  background: var(--color-primary);
-  color: white;
-  border: 2px solid var(--color-primary);
-}
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(35, 83, 71, 0.3);
-}
-
-.btn-secondary {
-  background: var(--color-secondary);
-  color: white;
-  border: 2px solid var(--color-secondary);
-}
-.btn-secondary:hover:not(:disabled) {
-  background: #37474f;
-  border-color: #37474f;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(69, 90, 100, 0.3);
-}
-
-.btn-danger {
-  background: var(--color-danger);
-  color: white;
-  border: 2px solid var(--color-danger);
-}
-.btn-danger:hover:not(:disabled) {
-  background: #b71c1c;
-  border-color: #b71c1c;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
-}
 
 /* Outline variants */
 .btn-outline-secondary {
@@ -211,30 +154,10 @@ body.guest-layout {
   transform: translateY(-2px);
 }
 
-/* Sizes */
+/* Client form sizing */
 .btn-sm  { padding: 8px 12px;  font-size: 0.85rem; gap: 6px; }
 .btn-lg  { padding: 16px 28px; font-size: 1.1rem;  gap: 10px; }
 .btn-block { width: 100%; justify-content: center; }
-
-/* Loading state */
-.btn.loading {
-  color: transparent;
-  pointer-events: none;
-  opacity: 0.8;
-}
-.btn.loading::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 16px;
-  height: 16px;
-  margin: -8px 0 0 -8px;
-  border: 2px solid white;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
 
 /* Inline spinner inside the button during loading */
 .btn-loading          { display: none; }

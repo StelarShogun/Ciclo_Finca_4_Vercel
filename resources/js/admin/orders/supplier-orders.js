@@ -246,8 +246,8 @@ function viewOrder(id) {
     if (!modal || !body) return;
 
     body.innerHTML = `
-        <div class="loading-spinner">
-            <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--color-primary);"></i>
+        <div class="loading-spinner" role="status">
+            <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
             <p>Cargando detalles…</p>
         </div>`;
     modal.classList.add('active');
@@ -439,8 +439,8 @@ function viewSupplier(id) {
     if (!modal || !body) return;
 
     body.innerHTML = `
-        <div class="loading-spinner">
-            <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--color-primary);"></i>
+        <div class="loading-spinner" role="status">
+            <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
             <p>Cargando datos del proveedor…</p>
         </div>`;
     modal.classList.add('active');

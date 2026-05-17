@@ -15,7 +15,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
     {{-- Styles & Fonts --}}
-    @vite(['resources/css/admin/components/page-header.css', 'resources/css/admin/products/inventory.css'])
+    @vite(['resources/css/admin/products/inventory.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -37,29 +37,28 @@
         <div class="inventory-container">
 
             {{-- ==================== HEADER ==================== --}}
-            @component('admin.partials.page-header', [
-                'title' => 'Gestión de Inventario',
-                    'description' => 'Administra productos, categorías, stock, disponibilidad y precios del inventario.',
-            ])
-                @slot('actions')
-                    <div class="usuarios-actions">
-                        <button class="btn btn-primary" id="open-new-product-modal">
-                            <i class="fas fa-plus"></i> Nuevo producto
-                        </button>
-                        <a class="btn btn-secondary" href="{{ route('categories.parents.create') }}">
-                            <i class="fas fa-layer-group"></i>
-                            Crear categoría
-                        </a>
-                        <a class="btn btn-secondary" href="{{ route('categories.subcategories.create') }}">
-                            <i class="fas fa-sitemap"></i>
-                            Crear subcategoría
-                        </a>
-                        <button class="btn btn-secondary" id="import-btn">
-                            <i class="fas fa-upload"></i> Importar
-                        </button>
-                    </div>
-                @endslot
-            @endcomponent
+            <header class="usuarios-header">
+                <div>
+                    <h1>Gestión de Inventario</h1>
+                    <p>Administra los productos y el stock del sistema</p>
+                </div>
+                <div class="usuarios-actions">
+                    <button class="btn btn-primary" id="open-new-product-modal">
+                        <i class="fas fa-plus"></i> Nuevo Producto
+                    </button>
+                    <a class="btn btn-secondary" href="{{ route('categories.parents.create') }}">
+                        <i class="fas fa-layer-group"></i>
+                        Crear categoría
+                    </a>
+                    <a class="btn btn-secondary" href="{{ route('categories.subcategories.create') }}">
+                        <i class="fas fa-sitemap"></i>
+                        Crear Subcategoría
+                    </a>
+                    <button class="btn btn-secondary" id="import-btn">
+                        <i class="fas fa-upload"></i> Importar
+                    </button>
+                </div>
+            </header>
 
             <section class="inventory-kpi-grid" aria-label="Resumen de inventario">
                 <a class="inventory-kpi-card" href="{{ $lowStockCardUrl }}">
@@ -484,7 +483,7 @@
         <div class="modal-backdrop"></div>
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
-                <h3><i class="fas fa-plus-circle"></i> Nuevo producto</h3>
+                <h3><i class="fas fa-plus-circle"></i> Nuevo Producto</h3>
                 <button class="modal-close" id="close-new-product-modal">
                     <i class="fas fa-times"></i>
                 </button>
@@ -492,6 +491,13 @@
             <div class="modal-body">
                 <form id="new-product-form" action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
+
+                    <section class="form-section" data-section="basic">
+                        <button type="button" class="form-section__toggle" aria-expanded="true">
+                            <span>Datos básicos</span>
+                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <div class="form-section__body">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="new-name">Nombre del Producto *</label>
@@ -503,48 +509,45 @@
                                       placeholder="e.g., High quality off-road tire"></textarea>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="new-image">Imagen del Producto</label>
-                        <input type="file" id="new-image" name="image" accept="image/*">
-                    </div>
-                    {{-- Multiple images rendered as a carousel on the product page --}}
-                    <div class="form-group">
-                        <label for="new-images">Imágenes adicionales (carrusel)</label>
-                        <input type="file" id="new-images" name="images[]" accept="image/*" multiple webkitdirectory>
-                        <small class="form-text text-muted">
-                            Opcional. Selecciona una carpeta o varios archivos. Las imágenes se mostrarán en un carrusel en la ficha del producto.
-                        </small>
-                    </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="new-parent-category">Categoría *</label>
-                            <select id="new-parent-category" required>
-                                <option value="">Seleccionar categoría</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->category_id }}">{{ $category->name }}</option>
-                                @endforeach
-                            </select>
+                            <label for="new-parent-category-search">Categoría *</label>
+                            <div class="brand-combobox" id="new-parent-category-combobox">
+                                <input type="text" id="new-parent-category-search" class="brand-combobox-input"
+                                       placeholder="Escribe para buscar una categoría..." autocomplete="off"
+                                       aria-label="Categoría del producto">
+                                <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                <div class="brand-combobox-dropdown" id="new-parent-category-dropdown" role="listbox"></div>
+                            </div>
+                            <input type="hidden" id="new-parent-category" value="" required>
                         </div>
                         <div class="form-group">
-                            <label for="new-subcategory">Subcategoría <span class="text-muted">(recomendado)</span></label>
-                            <select id="new-subcategory" aria-describedby="new-subcategory-hint">
-                                <option value="">Selecciona primero una categoría</option>
-                            </select>
+                            <label for="new-subcategory-search">Subcategoría <span class="text-muted">(recomendado)</span></label>
+                            <input type="hidden" id="new-subcategory" value="">
+                            <div class="brand-combobox admin-search-combobox" id="new-subcategory-combobox">
+                                <input type="text" id="new-subcategory-search" class="brand-combobox-input"
+                                       placeholder="Seleccioná primero una categoría" autocomplete="off"
+                                       aria-label="Subcategoría del producto" aria-describedby="new-subcategory-hint">
+                                <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                <div class="brand-combobox-dropdown" id="new-subcategory-dropdown" role="listbox"></div>
+                            </div>
                             <small id="new-subcategory-hint" class="form-text text-muted"
-                                data-default-hint="Si no seleccionas una subcategoría (p. ej., solo «Bicicletas»), no podrás asignar atributos como color o talla. Selecciona una subcategoría (p. ej., MTB) cuando exista.">
-                                Selecciona categoría y, si aplica, subcategoría. Sin subcategoría no podrás usar atributos como color o talla hasta que existan en catálogo.
+                                data-default-hint="Si no elegís subcategoría (ej. solo «Bicicletas»), no vas a poder cargar color, talla, etc. Elegí una subcategoría (ej. MTB) cuando exista.">
+                                Elegí categoría y, si aplica, subcategoría. Sin subcategoría no podrás usar atributos como color o talla hasta que existan en catálogo.
                             </small>
                             <input type="hidden" id="new-parent-category-id" name="parent_category_id" value="">
                             <input type="hidden" id="new-category" name="category_id" value="">
                         </div>
                         <div class="form-group">
-                            <label for="new-provider">Proveedor *</label>
-                            <select id="new-provider" name="supplier_id" required>
-                                <option value="">Seleccionar proveedor</option>
-                                @foreach(\App\Models\Supplier::where('status', 'active')->get() as $supplier)
-                                    <option value="{{ $supplier->supplier_id }}">{{ $supplier->name }}</option>
-                                @endforeach
-                            </select>
+                            <label for="new-provider-search">Proveedor *</label>
+                            <div class="brand-combobox" id="new-provider-combobox">
+                                <input type="text" id="new-provider-search" class="brand-combobox-input"
+                                       placeholder="Escribe para buscar un proveedor..." autocomplete="off"
+                                       aria-label="Proveedor del producto">
+                                <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                <div class="brand-combobox-dropdown" id="new-provider-dropdown" role="listbox"></div>
+                            </div>
+                            <input type="hidden" id="new-provider" name="supplier_id" value="" required>
                         </div>
                     </div>
                     <div class="form-row">
@@ -559,6 +562,15 @@
                             <input type="hidden" id="new-brand" name="brand_id">
                         </div>
                     </div>
+                        </div>
+                    </section>
+
+                    <section class="form-section" data-section="pricing">
+                        <button type="button" class="form-section__toggle" aria-expanded="true">
+                            <span>Precios y stock</span>
+                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <div class="form-section__body">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="new-price-buy">Precio de Compra (₡) *</label>
@@ -592,6 +604,46 @@
                             <option value="discontinued">Descontinuado</option>
                         </select>
                     </div>
+                        </div>
+                    </section>
+
+                    <section class="form-section" data-section="images">
+                        <button type="button" class="form-section__toggle" aria-expanded="true">
+                            <span>Imágenes</span>
+                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <div class="form-section__body">
+                            <x-cf-file-upload
+                                id="new-image"
+                                name="image"
+                                label="Imagen del Producto"
+                                accept="image/*"
+                                variant="compact"
+                                icon="fa-image"
+                                meta-id="new-image-meta">
+                                Haz clic o arrastra la imagen principal
+                            </x-cf-file-upload>
+                            <x-cf-file-upload
+                                id="new-images"
+                                name="images[]"
+                                label="Imágenes adicionales (carrusel)"
+                                accept="image/*"
+                                :multiple="true"
+                                :webkitdirectory="true"
+                                hint="Opcional. Carpeta o varios archivos para el carrusel en la ficha del producto."
+                                meta-id="new-images-meta"
+                                icon="fa-images">
+                                Seleccioná una carpeta o varios archivos
+                            </x-cf-file-upload>
+                        </div>
+                    </section>
+
+                    <section class="form-section" data-section="classification">
+                        <button type="button" class="form-section__toggle" aria-expanded="true">
+                            <span>Clasificación y destacado</span>
+                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <div class="form-section__body">
                     <div class="form-group" id="new-classification-section">
                         <label id="new-classification-heading">Atributos (color, talla…)</label>
                         <div id="new-classification-fields" aria-labelledby="new-classification-heading"></div>
@@ -607,6 +659,8 @@
                             </label>
                         </div>
                     </div>
+                        </div>
+                    </section>
                 </form>
             </div>
             <div class="modal-footer">
@@ -634,6 +688,13 @@
                     @csrf
                     {{-- Spoofs PUT method since HTML forms only support GET/POST --}}
                     <input type="hidden" name="_method" value="PUT">
+
+                    <section class="form-section" data-section="basic">
+                        <button type="button" class="form-section__toggle" aria-expanded="true">
+                            <span>Datos básicos</span>
+                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <div class="form-section__body">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="edit-name">Nombre del Producto *</label>
@@ -644,47 +705,45 @@
                             <textarea id="edit-description" name="description" rows="3"></textarea>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="edit-image">Imagen del Producto</label>
-                        <input type="file" id="edit-image" name="image" accept="image/*">
-                        <div id="current-image-preview" style="margin-top: 10px;"></div>
-                    </div>
-                    {{-- Uploading new images replaces the existing carousel set --}}
-                    <div class="form-group">
-                        <label for="edit-images">Imágenes adicionales (carrusel)</label>
-                        <input type="file" id="edit-images" name="images[]" accept="image/*" multiple webkitdirectory>
-                        <small class="form-text text-muted">Opcional. Selecciona una carpeta o varios archivos. Al subir nuevas, reemplazan las actuales del carrusel.</small>
-                    </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="edit-parent-category">Categoría *</label>
-                            <select id="edit-parent-category" required>
-                                <option value="">Seleccionar categoría</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->category_id }}">{{ $category->name }}</option>
-                                @endforeach
-                            </select>
+                            <label for="edit-parent-category-search">Categoría *</label>
+                            <div class="brand-combobox" id="edit-parent-category-combobox">
+                                <input type="text" id="edit-parent-category-search" class="brand-combobox-input"
+                                       placeholder="Escribe para buscar una categoría..." autocomplete="off"
+                                       aria-label="Categoría del producto">
+                                <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                <div class="brand-combobox-dropdown" id="edit-parent-category-dropdown" role="listbox"></div>
+                            </div>
+                            <input type="hidden" id="edit-parent-category" value="" required>
                         </div>
                         <div class="form-group">
-                            <label for="edit-subcategory">Subcategoría <span class="text-muted">(recomendado)</span></label>
-                            <select id="edit-subcategory" aria-describedby="edit-subcategory-hint">
-                                <option value="">Selecciona primero una categoría</option>
-                            </select>
+                            <label for="edit-subcategory-search">Subcategoría <span class="text-muted">(recomendado)</span></label>
+                            <input type="hidden" id="edit-subcategory" value="">
+                            <div class="brand-combobox admin-search-combobox" id="edit-subcategory-combobox">
+                                <input type="text" id="edit-subcategory-search" class="brand-combobox-input"
+                                       placeholder="Seleccioná primero una categoría" autocomplete="off"
+                                       aria-label="Subcategoría del producto" aria-describedby="edit-subcategory-hint">
+                                <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                <div class="brand-combobox-dropdown" id="edit-subcategory-dropdown" role="listbox"></div>
+                            </div>
                             <small id="edit-subcategory-hint" class="form-text text-muted"
-                                data-default-hint="Si no seleccionas una subcategoría (p. ej., solo «Bicicletas»), no podrás asignar atributos como color o talla. Selecciona una subcategoría (p. ej., MTB) cuando exista.">
-                                Selecciona categoría y, si aplica, subcategoría. Sin subcategoría no podrás usar atributos como color o talla hasta que existan en catálogo.
+                                data-default-hint="Si no elegís subcategoría (ej. solo «Bicicletas»), no vas a poder cargar color, talla, etc. Elegí una subcategoría (ej. MTB) cuando exista.">
+                                Elegí categoría y, si aplica, subcategoría. Sin subcategoría no podrás usar atributos como color o talla hasta que existan en catálogo.
                             </small>
                             <input type="hidden" id="edit-parent-category-id" name="parent_category_id" value="">
                             <input type="hidden" id="edit-category" name="category_id" required>
                         </div>
                         <div class="form-group">
-                            <label for="edit-provider">Proveedor *</label>
-                            <select id="edit-provider" name="supplier_id" required>
-                                <option value="">Seleccionar proveedor</option>
-                                @foreach(\App\Models\Supplier::where('status', 'active')->get() as $supplier)
-                                    <option value="{{ $supplier->supplier_id }}">{{ $supplier->name }}</option>
-                                @endforeach
-                            </select>
+                            <label for="edit-provider-search">Proveedor *</label>
+                            <div class="brand-combobox" id="edit-provider-combobox">
+                                <input type="text" id="edit-provider-search" class="brand-combobox-input"
+                                       placeholder="Escribe para buscar un proveedor..." autocomplete="off"
+                                       aria-label="Proveedor del producto">
+                                <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                <div class="brand-combobox-dropdown" id="edit-provider-dropdown" role="listbox"></div>
+                            </div>
+                            <input type="hidden" id="edit-provider" name="supplier_id" value="" required>
                         </div>
                     </div>
                     <div class="form-row">
@@ -699,6 +758,15 @@
                             <input type="hidden" id="edit-brand" name="brand_id">
                         </div>
                     </div>
+                        </div>
+                    </section>
+
+                    <section class="form-section" data-section="pricing">
+                        <button type="button" class="form-section__toggle" aria-expanded="true">
+                            <span>Precios y stock</span>
+                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <div class="form-section__body">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="edit-price-buy">Precio de Compra (₡) *</label>
@@ -728,6 +796,48 @@
                             <option value="discontinued">Descontinuado</option>
                         </select>
                     </div>
+                        </div>
+                    </section>
+
+                    <section class="form-section" data-section="images">
+                        <button type="button" class="form-section__toggle" aria-expanded="true">
+                            <span>Imágenes</span>
+                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <div class="form-section__body form-section__body--images">
+                            <input type="hidden" id="edit-remove-main-image" name="remove_main_image" value="0">
+                            <div id="current-image-preview" class="cf-product-current-image" hidden></div>
+                            <x-cf-file-upload
+                                id="edit-image"
+                                name="image"
+                                label="Imagen del Producto"
+                                accept="image/*"
+                                variant="compact"
+                                icon="fa-image"
+                                meta-id="edit-image-meta">
+                                Haz clic o arrastra para reemplazar la imagen principal
+                            </x-cf-file-upload>
+                            <x-cf-file-upload
+                                id="edit-images"
+                                name="images[]"
+                                label="Imágenes adicionales (carrusel)"
+                                accept="image/*"
+                                :multiple="true"
+                                :webkitdirectory="true"
+                                hint="Opcional. Al subir nuevas, reemplazan las actuales del carrusel."
+                                meta-id="edit-images-meta"
+                                icon="fa-images">
+                                Seleccioná una carpeta o varios archivos
+                            </x-cf-file-upload>
+                        </div>
+                    </section>
+
+                    <section class="form-section" data-section="classification">
+                        <button type="button" class="form-section__toggle" aria-expanded="true">
+                            <span>Clasificación, destacado y variantes</span>
+                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <div class="form-section__body">
                     <div class="form-group" id="edit-classification-section">
                         <label id="edit-classification-heading">Atributos (color, talla…)</label>
                         <div id="edit-classification-fields" aria-labelledby="edit-classification-heading"></div>
@@ -769,6 +879,8 @@
                             Eliminá solo una variante sin afectar el producto base. No se permite si la variante tiene pedidos activos o pendientes.
                         </small>
                     </div>
+                        </div>
+                    </section>
                 </form>
             </div>
             <div class="modal-footer">
@@ -834,89 +946,35 @@
                       enctype="multipart/form-data" id="import-form">
                     @csrf
 
-                    {{-- File drop zone; visibility toggled by inventory.js --}}
-                    <div class="form-group">
-                        <label for="import_file" class="file-upload-label">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <span>Arrastra tu archivo aquí o haz clic para seleccionar</span>
-                        </label>
-                        <input type="file" id="import_file" name="import_file"
-                               accept=".xml,.csv,.json,.txt" required style="display:none;">
-                        <div id="file-info" class="file-info hidden">
-                            <div class="file-info-content">
-                                <i class="fas fa-file" id="file-icon"></i>
-                                <div class="file-details">
-                                    <strong id="file-name"></strong>
-                                    <span id="file-format" class="file-format-badge"></span>
-                                    <small id="file-size"></small>
-                                </div>
-                                <button type="button" class="btn-remove-file" id="remove-file">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
+                    <p class="import-modal-intro">
+                        Subí un archivo de catálogo o planilla. Al elegirlo, detectamos el formato y validamos que sea legible antes de importar.
+                    </p>
+
+                    <div class="import-format-hints" aria-label="Formatos admitidos">
+                        <span class="import-format-chip import-format-chip--xml"><i class="fas fa-file-code"></i> XML</span>
+                        <span class="import-format-chip import-format-chip--csv"><i class="fas fa-file-csv"></i> CSV / TXT</span>
+                        <span class="import-format-chip import-format-chip--json"><i class="fas fa-file-alt"></i> JSON</span>
                     </div>
 
-                    {{-- Shown after a file is selected; populated by inventory.js --}}
-                    <div id="format-detected" class="alert alert-success hidden">
-                        <i class="fas fa-check-circle"></i>
-                        <div>
-                            <strong>Formato detectado:</strong> <span id="detected-format-text"></span>
-                            <small class="format-help-text"></small>
-                        </div>
-                    </div>
+                    <x-cf-file-upload
+                        id="import_file"
+                        name="import_file"
+                        label="Archivo"
+                        accept=".xml,.csv,.json,.txt"
+                        :required="true"
+                        icon="fa-cloud-upload-alt"
+                        meta-id="import_file-meta"
+                        hint="Tamaño máximo: 10 MB.">
+                        Seleccioná o arrastrá el archivo
+                    </x-cf-file-upload>
 
-                    {{-- Supported file formats guide --}}
-                    <div class="form-group">
-                        <div class="alert alert-info">
-                            <div class="alert-header">
-                                <i class="fas fa-info-circle"></i>
-                                <strong>Formatos soportados</strong>
-                            </div>
-                            <div class="formats-guide">
-                                <div class="format-item">
-                                    <i class="fas fa-file-code format-icon xml"></i>
-                                    <div>
-                                        <strong>XML</strong>
-                                        <small>Formato estructurado con etiquetas</small>
-                                    </div>
-                                </div>
-                                <div class="format-item">
-                                    <i class="fas fa-file-csv format-icon csv"></i>
-                                    <div>
-                                        <strong>CSV</strong>
-                                        <small>Compatible con Excel y hojas de cálculo</small>
-                                    </div>
-                                </div>
-                                <div class="format-item">
-                                    <i class="fas fa-file-alt format-icon json"></i>
-                                    <div>
-                                        <strong>JSON</strong>
-                                        <small>Formato ligero para aplicaciones web</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <p class="import-modal-requirements">
+                        <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                        Cada producto debe traer al menos <strong>nombre</strong>, <strong>categoría</strong> y <strong>precio de venta</strong>.
+                        Si el archivo incluye SKU o código, se usan para actualizar registros existentes.
+                    </p>
 
-                    {{-- Required fields reference for the import file --}}
-                    <div class="form-group">
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <div>
-                                <strong>Campos requeridos en el archivo:</strong>
-                                <ul class="required-fields-list">
-                                    <li><code>nombre</code> - Nombre del producto</li>
-                                    <li><code>categoria</code> - Nombre de la categoría (debe existir)</li>
-                                    <li><code>proveedor</code> - Nombre del proveedor (debe existir)</li>
-                                    <li><code>precio_compra</code> - Precio de compra</li>
-                                    <li><code>precio_venta</code> - Precio de venta</li>
-                                    <li><code>stock_actual</code> - Cantidad en stock</li>
-                                    <li><code>stock_minimo</code> - Stock mínimo</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="import-file-summary" class="import-file-summary hidden" aria-live="polite"></div>
 
                 </form>
             </div>
@@ -935,15 +993,20 @@
     {{-- ==================== MODAL: VIEW PRODUCT DETAILS ==================== --}}
     {{-- Body content injected dynamically by inventory.js --}}
     <div class="edit-modal" id="view-product-modal">
-        <div class="modal-backdrop"></div>
+        <div class="modal-backdrop" id="view-product-modal-backdrop"></div>
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
                 <h3><i class="fas fa-eye"></i> Detalles del Producto</h3>
-                <button class="modal-close" id="close-view-product-modal">
+                <button type="button" class="modal-close" id="close-view-product-modal" aria-label="Cerrar">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body" id="view-product-body"></div>
+            <div class="modal-body" id="view-product-body">
+                <div class="loading-spinner" role="status">
+                    <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
+                    <p>Cargando detalles…</p>
+                </div>
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="cancel-view-product">Cerrar</button>
             </div>
@@ -954,6 +1017,8 @@
     <script>
         window.inventoryCategoryTree = @json($subcategoriesByParent ?? []);
         window.inventoryBrands = @json($brands->map(fn($b) => ['id' => $b->id, 'name' => $b->name]) ?? []);
+        window.inventoryParentCategories = @json($categories->map(fn($c) => ['id' => $c->category_id, 'name' => $c->name]));
+        window.inventorySuppliers = @json($suppliers->map(fn($s) => ['id' => $s->supplier_id, 'name' => $s->name]));
     </script>
 
     {{-- ==================== MODAL: STOCK ADJUSTMENT ==================== --}}
@@ -961,7 +1026,7 @@
          aria-labelledby="stock-modal-title">
         <div class="stock-modal-backdrop"></div>
 
-        <div class="stock-modal-box">
+        <div class="stock-modal-box" id="stock-modal-box">
 
             {{-- Header --}}
             <div class="stock-modal-header">
@@ -977,10 +1042,13 @@
 
             {{-- Product info strip --}}
             <div class="stock-modal-product-info">
-                <div>
+                <div class="stock-modal-product-info__icon" aria-hidden="true">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div class="stock-modal-product-info__body">
                     <div class="product-name" id="stock-modal-product-name">—</div>
                     <div class="product-stock">
-                        Stock actual:
+                        <span class="product-stock__label">Stock actual</span>
                         <span class="stock-pill" id="stock-modal-product-stock">—</span>
                     </div>
                 </div>
@@ -1003,21 +1071,27 @@
                     <label for="stock-modal-qty">Cantidad *</label>
                     <input type="number"
                            id="stock-modal-qty"
+                           class="stock-form-control"
                            min="1"
                            step="1"
-                           placeholder="Ej: 10">
+                           inputmode="numeric"
+                           placeholder="Ej: 10"
+                           required>
+                    <p class="stock-form-hint" id="stock-modal-preview" hidden></p>
                     <span class="stock-field-error" id="stock-modal-qty-error"></span>
                 </div>
 
                 {{-- Reason --}}
                 <div class="stock-form-group">
                     <label for="stock-modal-reason">Motivo *</label>
-                    <input type="text"
-                           id="stock-modal-reason"
-                           class="stock-form-control"
-                           placeholder="Describe el motivo del ajuste…"
-                           maxlength="500"
-                           autocomplete="off">
+                    <textarea id="stock-modal-reason"
+                              class="stock-form-control stock-form-control--textarea"
+                              rows="3"
+                              placeholder="Describe el motivo del ajuste…"
+                              maxlength="500"
+                              autocomplete="off"
+                              required></textarea>
+                    <span class="stock-form-charcount" id="stock-modal-reason-count">0 / 500</span>
                     <span class="stock-field-error" id="stock-modal-reason-error"></span>
                 </div>
 

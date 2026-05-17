@@ -102,9 +102,9 @@ class SupplierController extends Controller
         }
     }
 
-    public function show(Request $request, string $id)
+    public function show(Request $request, string $supplier)
     {
-        $supplier = Supplier::find($id);
+        $supplier = Supplier::find($supplier);
         if (! $supplier) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Proveedor no encontrado.'], 404);
@@ -137,9 +137,9 @@ class SupplierController extends Controller
         return redirect()->route('suppliers.index');
     }
 
-    public function edit(string $id)
+    public function edit(string $supplier)
     {
-        $supplier = Supplier::find($id);
+        $supplier = Supplier::find($supplier);
         if (! $supplier) {
             return redirect()->back()->with('error', 'Proveedor no encontrado.');
         }
@@ -147,9 +147,9 @@ class SupplierController extends Controller
         return view('admin.suppliers.edit', compact('supplier'));
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $supplier)
     {
-        $supplier = Supplier::find($id);
+        $supplier = Supplier::find($supplier);
         if (! $supplier) {
             return response()->json(['success' => false, 'message' => 'Proveedor no encontrado.'], 404);
         }
@@ -218,9 +218,9 @@ class SupplierController extends Controller
         }
     }
 
-    public function destroy(Request $request, string $id): RedirectResponse|JsonResponse
+    public function destroy(Request $request, string $supplier): RedirectResponse|JsonResponse
     {
-        $supplier = Supplier::find($id);
+        $supplier = Supplier::find($supplier);
         if (! $supplier) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Proveedor no encontrado.'], 404);
@@ -244,7 +244,7 @@ class SupplierController extends Controller
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 Log::error('Supplier delete failed', [
-                    'supplier_id' => $id,
+                    'supplier_id' => $supplier->supplier_id,
                     'exception' => $e,
                 ]);
 

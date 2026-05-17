@@ -453,16 +453,19 @@
     </div>
 
     {{-- ==================== MODAL: VIEW SALE DETAILS ==================== --}}
-    <div id="view-sale-modal" class="modal-overlay">
+    <div id="view-sale-modal" class="edit-modal">
+        <div class="modal-backdrop" onclick="closeViewSaleModal()"></div>
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
                 <h3><i class="fas fa-eye"></i> Detalles de la Venta</h3>
-                <button class="modal-close" onclick="closeViewSaleModal()">&times;</button>
+                <button type="button" class="modal-close" onclick="closeViewSaleModal()" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body" id="view-sale-body">
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner fa-spin fa-3x spinner-primary"></i>
-                    <p>Cargando detalles...</p>
+                <div class="loading-spinner" role="status">
+                    <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
+                    <p>Cargando detalles…</p>
                 </div>
             </div>
             <div class="modal-footer">

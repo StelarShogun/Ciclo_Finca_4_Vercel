@@ -282,9 +282,9 @@ function viewSale(id) {
     if (!modal || !body) return;
 
     body.innerHTML = `
-        <div class="loading-spinner">
-            <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--color-primary);"></i>
-            <p>Cargando detalles...</p>
+        <div class="loading-spinner" role="status">
+            <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
+            <p>Cargando detalles…</p>
         </div>`;
     modal.classList.add('active');
 
@@ -294,7 +294,7 @@ function viewSale(id) {
     .then(r => r.json())
     .then(data => {
         if (!data.success || !data.sale) {
-            body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> No se pudieron cargar los detalles</div>';
+            body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> No se pudieron cargar los detalles.</div>';
             return;
         }
 
@@ -388,7 +388,7 @@ function viewSale(id) {
 
         body.innerHTML = '<div class="sale-details">'
             + '<div class="detail-section">'
-            + '<h4><i class="fas fa-info-circle"></i> Informacion general</h4>'
+            + '<h4><i class="fas fa-info-circle"></i> Información general</h4>'
             + '<div class="detail-grid">'
             + '<div class="detail-item"><label>Factura:</label><span><strong>' + (sale.invoice_number || '#' + sale.sale_id) + '</strong></span></div>'
             + '<div class="detail-item"><label>Fecha:</label><span>' + fecha + '</span></div>'
@@ -416,7 +416,7 @@ function viewSale(id) {
             + '</div>';
     })
     .catch(() => {
-        body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Error de conexion al cargar los detalles</div>';
+        body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Error de conexión al cargar los detalles.</div>';
     });
 }
 
