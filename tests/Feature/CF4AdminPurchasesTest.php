@@ -219,6 +219,8 @@ class CF4AdminPurchasesTest extends TestCase
         $heartbeatRes1 = $this->getJson('/sales/history/heartbeat?since='.$sale1->sale_id);
         $heartbeatRes1->assertStatus(200);
         $this->assertFalse($heartbeatRes1->json('hasNew'));
+        $this->assertSame(0, $heartbeatRes1->json('newCount'));
+        $this->assertArrayHasKey('pendingCount', $heartbeatRes1->json());
 
         // Crear una nueva compra para que heartbeat detecte cambios.
         $sale2 = Sale::create([
@@ -248,5 +250,37 @@ class CF4AdminPurchasesTest extends TestCase
         $heartbeatRes2 = $this->getJson('/sales/history/heartbeat?since='.$sale1->sale_id);
         $heartbeatRes2->assertStatus(200);
         $this->assertTrue($heartbeatRes2->json('hasNew'));
+        $this->assertSame(1, $heartbeatRes2->json('newCount'));
+        $this->assertGreaterThanOrEqual(2, $heartbeatRes2->json('pendingCount'));
+    }
+
+    public function test_admin_orders_index_includes_auto_refresh_markup(): void
+    {
+        $webClient = Client::create([
+            'name' => 'Admin',
+            'first_surname' => 'Test',
+            'second_surname' => null,
+            'gmail' => 'admin-orders-refresh@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $adminUser = AdminUser::create([
+            'name' => 'Admin',
+            'first_surname' => 'Test',
+            'second_surname' => null,
+            'gmail' => 'admin-orders-refresh-guard@example.com',
+            'password' => bcrypt('password'),
+            'last_access' => now(),
+        ]);
+
+        $this->authenticateAdmin($webClient, $adminUser);
+
+        $response = $this->get(route('admin.orders.index'));
+        $response->assertStatus(200);
+        $response->assertSee('data-cf4-orders-heartbeat', false);
+        $response->assertSee('id="cf4-orders-new-banner"', false);
+        $response->assertSee('cf4-latest-purchase-sale-id', false);
+        $response->assertSee('data-cf4-orders-pending-badge', false);
     }
 }

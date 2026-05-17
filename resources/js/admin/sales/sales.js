@@ -538,9 +538,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Heartbeat: reload if new purchases arrive
+    // Heartbeat on Ventas only (Encargos uses orders.js — 45s, banner, no interrupt).
     const latestEl = document.getElementById('cf4-latest-purchase-sale-id');
-    if (latestEl) {
+    if (latestEl && !document.querySelector('[data-cf4-orders-heartbeat]')) {
         let latestPurchaseSaleId = parseInt(latestEl.dataset.value, 10) || 0;
 
         async function heartbeatCheck() {

@@ -1,4 +1,147 @@
-document.addEventListener('DOMContentLoaded', () => {
+const ORDERS_HEARTBEAT_INTERVAL_MS = 45000;
+
+const metaContent = (name) => document.querySelector(`meta[name="${name}"]`)?.content ?? '';
+
+function formatPendingCount(value) {
+    return new Intl.NumberFormat('es-CR').format(Math.max(0, Number(value) || 0));
+}
+
+function isOrdersAdminBusy() {
+    if (window.cf4OrdersActionInProgress) {
+        return true;
+    }
+
+    if (document.querySelector('.modal-overlay.active')) {
+        return true;
+    }
+
+    const swal = window.Swal;
+
+    if (swal?.isVisible?.() && (swal.isLoading?.() || document.querySelector('.swal2-container'))) {
+        return true;
+    }
+
+    return false;
+}
+
+function updateOrdersPendingBadges(pendingCount) {
+    const count = Math.max(0, Number(pendingCount) || 0);
+    const formatted = formatPendingCount(count);
+
+    const kpiEl = document.querySelector('[data-cf4-orders-pending-kpi]');
+
+    if (kpiEl) {
+        kpiEl.textContent = formatted;
+    }
+
+    const sidebarBadge = document.querySelector('[data-cf4-orders-pending-badge]');
+
+    if (sidebarBadge) {
+        if (count > 0) {
+            sidebarBadge.textContent = count > 99 ? '99+' : String(count);
+            sidebarBadge.hidden = false;
+            sidebarBadge.setAttribute('aria-label', `${count} encargo(s) pendiente(s)`);
+        } else {
+            sidebarBadge.textContent = '';
+            sidebarBadge.hidden = true;
+            sidebarBadge.removeAttribute('aria-label');
+        }
+    }
+}
+
+function showOrdersNewBanner(newCount) {
+    const banner = document.getElementById('cf4-orders-new-banner');
+    const textEl = document.querySelector('[data-cf4-orders-new-banner-text]');
+
+    if (!banner || !textEl) {
+        return;
+    }
+
+    const count = Math.max(1, Number(newCount) || 1);
+    const label = count === 1
+        ? 'Hay 1 nuevo encargo'
+        : `Hay ${formatPendingCount(count)} nuevos encargos`;
+
+    textEl.textContent = `${label}. Los filtros actuales se mantienen al actualizar.`;
+    banner.hidden = false;
+}
+
+function hideOrdersNewBanner() {
+    const banner = document.getElementById('cf4-orders-new-banner');
+
+    if (banner) {
+        banner.hidden = true;
+    }
+}
+
+function initOrdersHeartbeat() {
+    const root = document.querySelector('[data-cf4-orders-heartbeat]');
+    const latestEl = document.getElementById('cf4-latest-purchase-sale-id');
+    const heartbeatUrl = metaContent('sales-route-heartbeat');
+
+    if (!root || !latestEl || !heartbeatUrl) {
+        return;
+    }
+
+    let latestPurchaseSaleId = parseInt(latestEl.dataset.value, 10) || 0;
+    let bannerDismissed = false;
+
+    const kpiEl = document.querySelector('[data-cf4-orders-pending-kpi]');
+
+    if (kpiEl) {
+        const initialPending = Number(kpiEl.textContent.replace(/[^\d]/g, '')) || 0;
+        updateOrdersPendingBadges(initialPending);
+    }
+
+    const refreshBtn = document.querySelector('[data-cf4-orders-refresh-btn]');
+    const dismissBtn = document.querySelector('[data-cf4-orders-dismiss-banner]');
+
+    refreshBtn?.addEventListener('click', () => {
+        window.location.reload();
+    });
+
+    dismissBtn?.addEventListener('click', () => {
+        bannerDismissed = true;
+        hideOrdersNewBanner();
+    });
+
+    async function heartbeatCheck() {
+        if (document.visibilityState === 'hidden') {
+            return;
+        }
+
+        try {
+            const res = await fetch(`${heartbeatUrl}?since=${latestPurchaseSaleId}`, {
+                headers: { Accept: 'application/json' },
+            });
+
+            if (!res.ok) {
+                return;
+            }
+
+            const data = await res.json();
+
+            if (typeof data.latestSaleId !== 'undefined') {
+                latestPurchaseSaleId = data.latestSaleId;
+            }
+
+            if (typeof data.pendingCount !== 'undefined') {
+                updateOrdersPendingBadges(data.pendingCount);
+            }
+
+            if (data.hasNew && !bannerDismissed) {
+                showOrdersNewBanner(data.newCount);
+            }
+        } catch {
+            /* fail silently */
+        }
+    }
+
+    heartbeatCheck();
+    window.setInterval(heartbeatCheck, ORDERS_HEARTBEAT_INTERVAL_MS);
+}
+
+function initOrderExpirationModal() {
     const modal = document.getElementById('order-expiration-modal');
     const openBtn = document.getElementById('btn-open-order-expiration-modal');
     const form = document.getElementById('order-expiration-form');
@@ -89,6 +232,11 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = false;
         }
     });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initOrderExpirationModal();
+    initOrdersHeartbeat();
 });
 
 async function parseResponsePayload(response) {
@@ -155,6 +303,8 @@ async function doOrderAction(url, {
     const csrf = getCsrfToken();
     const controller = new AbortController();
 
+    window.cf4OrdersActionInProgress = true;
+
     const timeoutId = window.setTimeout(() => {
         controller.abort();
     }, 15000);
@@ -206,10 +356,13 @@ async function doOrderAction(url, {
                 window.alert(text || 'Acción realizada correctamente.');
             }
 
+            window.cf4OrdersActionInProgress = false;
             window.location.reload();
 
             return;
         }
+
+        window.cf4OrdersActionInProgress = false;
 
         const message = data.message || `No se pudo completar la acción. Código: ${res.status}`;
 
@@ -225,6 +378,7 @@ async function doOrderAction(url, {
         }
     } catch (error) {
         window.clearTimeout(timeoutId);
+        window.cf4OrdersActionInProgress = false;
 
         const isTimeout = error.name === 'AbortError';
         const title = isTimeout ? 'Tiempo de espera agotado' : 'Error de red';

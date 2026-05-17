@@ -239,6 +239,58 @@
 }
 
 /* CF4-61 — plazo cancelación (botón cabecera + modal) */
+.cf4-orders-new-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(35, 83, 71, 0.22);
+  background: rgba(35, 83, 71, 0.08);
+  color: var(--color-dark, #1a1a1a);
+}
+
+.cf4-orders-new-banner[hidden] {
+  display: none !important;
+}
+
+.cf4-orders-new-banner__text {
+  flex: 1 1 12rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.cf4-orders-new-banner__dismiss {
+  margin-left: auto;
+}
+
+.cf4-sidebar-orders-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  margin-left: 0.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--color-danger, #c62828);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.cf4-sidebar-orders-badge[hidden] {
+  display: none !important;
+}
+
+.admin-sidebar .sidebar-nav a {
+  position: relative;
+}
+
 .cf4-orders-module .cf4-orders-flash-success {
   margin-bottom: 1rem;
   padding: 0.85rem 1rem;

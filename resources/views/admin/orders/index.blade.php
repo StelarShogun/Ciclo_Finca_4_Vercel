@@ -27,7 +27,7 @@
         $pendingCardCta = $pendingCardActive ? 'Ver todo' : 'Ver encargos pendientes';
     @endphp
 
-    <div class="sales-container cf4-orders-module">
+    <div class="sales-container cf4-orders-module" data-cf4-orders-heartbeat>
 
         @if (session('status'))
             <div class="cf4-orders-flash-success" role="status">{{ session('status') }}</div>
@@ -55,12 +55,25 @@
                     <h3 class="kpi-title">Pendientes web</h3>
                     <div class="kpi-icon info"><i class="fas fa-clock"></i></div>
                 </div>
-                <p class="kpi-value">{{ number_format((int) ($pendingWebOrdersCount ?? 0), 0, ',', '.') }}</p>
+                <p class="kpi-value" id="cf4-orders-pending-kpi" data-cf4-orders-pending-kpi>
+                    {{ number_format((int) ($pendingWebOrdersCount ?? 0), 0, ',', '.') }}
+                </p>
                 <div class="kpi-trend {{ $pendingCardActive ? 'trend-down cf4-kpi-reset-text' : 'trend-up' }}">
                     <i class="fas fa-arrow-right"></i> {{ $pendingCardCta }}
                 </div>
             </a>
         </section>
+
+        <div id="cf4-orders-new-banner" class="cf4-orders-new-banner" role="status" aria-live="polite" hidden>
+            <span class="cf4-orders-new-banner__text" data-cf4-orders-new-banner-text></span>
+            <button type="button" class="btn btn-primary btn-sm" data-cf4-orders-refresh-btn>
+                <i class="fas fa-sync-alt" aria-hidden="true"></i> Actualizar tabla
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm cf4-orders-new-banner__dismiss" data-cf4-orders-dismiss-banner
+                aria-label="Cerrar aviso">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
 
         <div class="orders-table-card">
             <form method="GET" action="{{ route('admin.orders.index') }}" class="orders-toolbar" id="orders-filters-form">
