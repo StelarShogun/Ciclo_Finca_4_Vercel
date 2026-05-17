@@ -176,7 +176,7 @@ php artisan serve
 
 ### CI / calidad antes de push (rama `Dev`)
 
-GitHub Actions ejecuta los mismos checks que en local. Ver guía completa: [CI.md](CI.md).
+GitHub Actions ejecuta los mismos checks que en local. Ver guías: [GUIA_EQUIPO_CI.md](GUIA_EQUIPO_CI.md) (equipo, antes de merge) y [CI.md](CI.md) (técnica).
 
 ```bash
 docker compose exec app_ciclo composer run check

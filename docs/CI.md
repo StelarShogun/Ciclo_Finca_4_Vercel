@@ -81,6 +81,124 @@ Ejemplo corregido: `SupplierOrderCreateTest` ya no exige `estimated_delivery_dat
 | Pint falla | `docker compose exec app_ciclo ./vendor/bin/pint` |
 | Aviso git `dubious ownership` en Docker | Cosmético; no afecta PHPUnit |
 
+## Guía para el equipo (antes de mergear a `Dev`)
+
+### Regla práctica
+
+| Si… | Entonces… |
+|-----|-----------|
+| No pasa **CI en GitHub** (checks rojos en el PR) | **No mergear** a `Dev` hasta corregir |
+| Solo probaste en el navegador | **No basta** — hay que correr los mismos checks que CI |
+| Quieres ir rápido local | Mínimo: `./scripts/ci-check-docker.sh` |
+
+GitHub ejecuta lo de [`.github/workflows/ci-dev.yml`](../.github/workflows/ci-dev.yml): **Pint + PHPUnit (MySQL) + PHPStan + `npm run build`**.
+
+No hay CD automático en este repo: mergear a `Dev` **no despliega** solo; el deploy es aparte (Render/Docker manual).
+
+### Checklist antes de abrir PR o pedir merge
+
+```bash
+cd ~/inge/Ciclo_Finca_4_App
+git checkout tu-rama
+git pull origin Dev    # traer último Dev
+docker compose up -d   # primera vez o si estaba apagado
+./scripts/ci-check-docker.sh
+```
+
+Si todo termina con `CI parity checks passed` y en GitHub los checks están verdes → OK para merge.
+
+### Un solo comando (= lo mismo que CI local)
+
+```bash
+./scripts/ci-check-docker.sh
+```
+
+Hace en orden: **Pint** → **tests MySQL completos** → **PHPStan** → **npm ci + build**.
+
+### Comandos por paso (si quieren depurar)
+
+Desde la raíz del proyecto, con Docker levantado:
+
+```bash
+# 1) Estilo de código (debe pasar sin cambios pendientes)
+docker compose exec app_ciclo composer run lint
+# Arreglar automático:
+docker compose exec app_ciclo ./vendor/bin/pint
+
+# 2) Tests completos con MySQL (obligatorio antes de merge — no uses solo composer run test)
+./scripts/test-mysql-docker.sh
+
+# 3) Análisis estático
+docker compose exec app_ciclo composer run phpstan
+
+# 4) Frontend compila
+docker compose exec app_ciclo npm ci
+docker compose exec app_ciclo npm run build
+```
+
+Atajos Composer (dentro del contenedor):
+
+```bash
+docker compose exec app_ciclo composer run check       # lint + test SQLite + phpstan (rápido, muchos skipped)
+docker compose exec app_ciclo composer run check:full # lint + test:mysql + phpstan (sin npm build)
+```
+
+### Tests específicos (un archivo, clase o método)
+
+Siempre con **MySQL** (misma config que CI):
+
+```bash
+# Un archivo de test
+./scripts/test-mysql-docker.sh tests/Feature/SupplierOrderCreateTest.php
+
+# Un método concreto
+./scripts/test-mysql-docker.sh --filter=test_cp03_01_create_supplier_order_success
+
+# Una carpeta
+./scripts/test-mysql-docker.sh tests/Feature/
+
+# Suite Unit solamente
+./scripts/test-mysql-docker.sh tests/Unit/
+```
+
+Equivalente manual (si ya exportaste variables de `.env`):
+
+```bash
+docker compose exec \
+  -e APP_ENV=testing -e DB_CONNECTION=mysql -e DB_HOST=db_ciclo \
+  -e DB_DATABASE="${DB_DATABASE}_test" \
+  -e DB_USERNAME="${DB_USERNAME}" -e DB_PASSWORD="${DB_PASSWORD}" \
+  app_ciclo ./vendor/bin/phpunit -c phpunit.mysql.xml --filter=NombreDelTest
+```
+
+### Qué significa el resultado de tests
+
+| Salida | Significado | ¿Merge? |
+|--------|-------------|---------|
+| `OK` / verde en GitHub | Todo pasó | Sí (si review OK) |
+| `FAILURES` | Test roto — corregir código o test | **No** |
+| `Skipped: 6` (CF497) | Normal — faltan marcas de demo en BD test | Sí si no hay failures |
+| `Skipped: 142` con `composer run test` | Usaste SQLite — **vuelve a correr** `./scripts/test-mysql-docker.sh` | No confiar hasta MySQL |
+
+### Errores frecuentes
+
+| Problema | Solución |
+|----------|----------|
+| Pint falla | `docker compose exec app_ciclo ./vendor/bin/pint` y commitear |
+| Muchos skipped | No usar solo `composer run test`; usar `./scripts/test-mysql-docker.sh` |
+| MySQL connection refused | `docker compose up -d` y esperar ~15 s |
+| `dubious ownership` en Docker | Ignorar; no afecta tests |
+| CI rojo en GitHub pero local OK | `git pull origin Dev`, `./scripts/ci-check-docker.sh`, push de nuevo |
+
+### Protección en GitHub (recomendado para admins del repo)
+
+En **Settings → Branches → rule for `Dev`**:
+
+- Require status checks: **PHP — lint, tests, static analysis** y **Frontend — Vite production build**
+- Require pull request before merging
+
+Así nadie mergea si los checks no pasan.
+
 ## Cambios recientes (CI + tests)
 
 - CI en GitHub usa **MySQL** para PHPUnit (menos skips).
