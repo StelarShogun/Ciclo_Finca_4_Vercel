@@ -23,6 +23,14 @@ class OrderSeeder extends Seeder
 
     public function run(): void
     {
+        if (DB::table('orders')->exists()) {
+            $this->command?->warn(
+                'OrderSeeder: ya hay pedidos; se omite. Usa migrate:fresh --seed o db:setup para repoblar desde cero.'
+            );
+
+            return;
+        }
+
         $adminId = AdminUser::query()->value('user_id');
 
         if ($adminId === null) {

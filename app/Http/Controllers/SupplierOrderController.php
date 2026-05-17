@@ -157,7 +157,7 @@ class SupplierOrderController extends Controller
         return view('admin.orders.create_supplier', compact('suppliers'));
     }
 
-    public function detail($id)
+    public function detail(int $id)
     {
         $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin'])
             ->findOrFail($id);
@@ -270,7 +270,7 @@ class SupplierOrderController extends Controller
         });
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin'])
             ->findOrFail($id);
@@ -539,7 +539,7 @@ class SupplierOrderController extends Controller
         });
     }
 
-    public function receiveOrder(Request $request, $id)
+    public function receiveOrder(Request $request, int $id)
     {
         $order = Order::with('orderItems')->findOrFail($id);
         $previousState = (string) $order->state;
@@ -696,7 +696,7 @@ class SupplierOrderController extends Controller
         });
     }
 
-    public function supplierDetails($id)
+    public function supplierDetails(int $id)
     {
         $supplier = Supplier::withCount(['products' => fn ($query) => $query->where('status', 'active')])
             ->findOrFail($id);
