@@ -4,11 +4,15 @@ namespace Tests\Feature;
 
 use App\Models\AdminUser;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
 class CF4116SalesDateRangeFilterTest extends TestCase
 {
+    use InteractsWithMysqlTestDatabase;
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         try {
@@ -16,17 +20,22 @@ class CF4116SalesDateRangeFilterTest extends TestCase
         } catch (\Throwable $e) {
             $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
         }
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('SalesDateRangeFilterTest requiere MySQL.');
-        }
-        if (! Schema::hasTable('sales')) {
-            $this->markTestSkipped('Falta la tabla requerida (sales).');
-        }
+
+        $this->skipUnlessMysqlTestDatabase(['sales', 'admins']);
     }
 
     private function getAdmin(): AdminUser
     {
-        return AdminUser::where('gmail', 'admin@cicloperez.com')->firstOrFail();
+        return AdminUser::firstOrCreate(
+            ['gmail' => 'admin-cf4116@example.com'],
+            [
+                'name' => 'Admin',
+                'first_surname' => 'CF4116',
+                'second_surname' => null,
+                'password' => bcrypt('password'),
+                'last_access' => now(),
+            ]
+        );
     }
 
     /** Applies date range filter and returns the view without errors. */

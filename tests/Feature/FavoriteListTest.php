@@ -6,7 +6,8 @@ use App\Models\Client;
 use App\Models\FavoriteProduct;
 use App\Models\Product;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
 /**
@@ -31,19 +32,18 @@ use Tests\TestCase;
  */
 class FavoriteListTest extends TestCase
 {
+    use InteractsWithMysqlTestDatabase;
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
-        parent::setUp();
-
         try {
-            foreach (['client_table', 'products', 'favorite_products'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Tabla requerida no existe: '.$table);
-                }
-            }
+            parent::setUp();
         } catch (\Throwable $e) {
             $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
         }
+
+        $this->skipUnlessMysqlTestDatabase(['client_table', 'products', 'favorite_products']);
     }
 
     private function createIsolatedClient(): Client

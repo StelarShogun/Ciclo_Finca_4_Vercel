@@ -80,7 +80,7 @@ class SupplierDeliveryEstimator
 
                 return max(1, (int) ceil($hours / 24));
             })
-            ->filter(fn (?int $days) => $days !== null && $days > 0)
+            ->filter(fn (?int $days) => $days !== null)
             ->values();
 
         if ($deliveryDays->isEmpty()) {

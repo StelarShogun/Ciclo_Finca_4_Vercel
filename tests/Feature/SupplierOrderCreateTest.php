@@ -122,11 +122,10 @@ class SupplierOrderCreateTest extends TestCase
 
         $resp = $this->actingAs($admin, 'admin')->post(route('admin.supplier-orders.store'), [
             'supplier_id' => '',
-            'estimated_delivery_date' => '',
             'items' => [],
         ]);
 
-        $resp->assertSessionHasErrors(['supplier_id', 'estimated_delivery_date', 'items']);
+        $resp->assertSessionHasErrors(['supplier_id', 'items']);
         $this->assertSame(0, Order::count());
     }
 

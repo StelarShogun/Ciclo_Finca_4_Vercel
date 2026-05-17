@@ -7,13 +7,18 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
 class ReviewTest extends TestCase
 {
+    use InteractsWithMysqlTestDatabase;
+    use RefreshDatabase;
+
     private string $runSuffix;
 
     protected function setUp(): void
@@ -22,16 +27,14 @@ class ReviewTest extends TestCase
             parent::setUp();
             $this->runSuffix = (string) now()->format('YmdHisv').'-'.bin2hex(random_bytes(3));
 
-            $driver = Schema::getConnection()->getDriverName();
-            if ($driver !== 'mysql') {
-                $this->markTestSkipped('ReviewTest requiere MySQL para el esquema actual.');
-            }
-
-            foreach (['admins', 'client_table', 'products', 'sales', 'sale_items', 'product_reviews'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Tabla requerida no existe: '.$table);
-                }
-            }
+            $this->skipUnlessMysqlTestDatabase([
+                'admins',
+                'client_table',
+                'products',
+                'sales',
+                'sale_items',
+                'product_reviews',
+            ]);
 
             Config::set('sales.order_expiration_days', 30);
         } catch (\Throwable $e) {
@@ -52,7 +55,8 @@ class ReviewTest extends TestCase
             'seller_admin_id' => null,
             'sale_date' => now(),
             'payment_method' => 'cash',
-            'status' => 'pending',
+            'status' => 'ready_to_pickup',
+            'ready_at' => now(),
             'subtotal' => 200,
             'iva' => 0,
             'discount' => 0,
@@ -121,7 +125,7 @@ class ReviewTest extends TestCase
         ]);
         $second->assertRedirect();
 
-        $this->assertSame(1, \DB::table('product_reviews')
+        $this->assertSame(1, DB::table('product_reviews')
             ->where('client_id', $client->user_id)
             ->where('product_id', $product->product_id)
             ->count());
@@ -144,7 +148,7 @@ class ReviewTest extends TestCase
         ]);
 
         $response->assertStatus(403);
-        $this->assertSame(0, \DB::table('product_reviews')
+        $this->assertSame(0, DB::table('product_reviews')
             ->where('client_id', $client->user_id)
             ->where('product_id', $product->product_id)
             ->count());

@@ -174,6 +174,15 @@ php artisan serve
 
 ## Comandos útiles
 
+### CI / calidad antes de push (rama `Dev`)
+
+GitHub Actions ejecuta los mismos checks que en local. Ver guía completa: [CI.md](CI.md).
+
+```bash
+docker compose exec app_ciclo composer run check
+docker compose exec app_ciclo npm ci && npm run build
+```
+
 ### Limpiar base de datos
 ```bash
 php artisan db:clean

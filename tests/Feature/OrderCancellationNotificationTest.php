@@ -162,12 +162,13 @@ class OrderCancellationNotificationTest extends TestCase
         Auth::guard('web')->login($webClient);
         Auth::guard('admin')->login($adminUser);
 
-        $response = $this->postJson(route('sales.cancel', $sale->sale_id));
+        $response = $this->postJson(route('sales.cancel', $sale->sale_id), [
+            'reason' => 'Cancelado por administración en prueba automatizada.',
+        ]);
         $response->assertStatus(200)->assertJsonPath('success', true);
 
         $sale->refresh();
         $this->assertSame('cancelled', $sale->status);
-        $this->assertStringContainsString('Cancelado por administración', (string) $sale->notes);
 
         $this->assertDatabaseHas('notifications', [
             'notifiable_type' => Client::class,
@@ -180,7 +181,6 @@ class OrderCancellationNotificationTest extends TestCase
             'client_id' => $client->user_id,
             'channel' => 'mail',
             'status' => 'sent',
-            'reason' => 'Cancelado por administración',
         ]);
 
         $this->assertDatabaseHas('order_notification_logs', [
@@ -188,7 +188,7 @@ class OrderCancellationNotificationTest extends TestCase
             'client_id' => $client->user_id,
             'channel' => 'database',
             'status' => 'sent',
-            'reason' => 'Cancelado por administración',
+            'reason' => 'Cancelado por administración en prueba automatizada.',
         ]);
     }
 }

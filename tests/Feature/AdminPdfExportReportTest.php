@@ -68,7 +68,8 @@ class AdminPdfExportReportTest extends TestCase
         $response = $this->get('/reports/exportaciones');
 
         $response->assertOk();
-        $response->assertSee('Exportar datos y PDF', false);
+        $response->assertSee('Exportar datos', false);
+        $response->assertSee('Reportes en PDF y Excel', false);
         $response->assertSee('cf4-export-config', false);
         $response->assertSee(route('dashboard.export'), false);
         $response->assertSee('Listados administrativos', false);
