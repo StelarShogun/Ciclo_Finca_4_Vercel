@@ -3,6 +3,7 @@
 @import "../sidebar.css";
 @import "../sweetalert2-modal-zindex.css";
 @import "../components/pagination.css";
+@import "../components/filters.css";
 
 /* ============================================================
   1. MAIN LAYOUT
@@ -259,49 +260,19 @@
 .trend-up    { color: var(--color-success); }
 .trend-down  { color: var(--color-danger);  }
 
-/* ============================================================
-  4. FILTERS
-  ============================================================ */
-.filters-section {
-  background: white;
-  border-radius: 12px;
-  padding: 25px;
-  margin-bottom: 30px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-}
-
-.filters-title {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--color-primary);
-}
-
-.filters-grid,
-.filters-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  align-items: end;
-}
-
-.filter-group,
+/* Supplier-specific filter helpers (base styles in components/filters.css) */
+.filters-container,
 .search-input {
   display: flex;
   flex-direction: column;
 }
-.filter-group label,
+
 .search-input label {
   font-weight: 500;
   color: var(--color-dark);
   margin-bottom: 8px;
 }
 
-.filter-group input,
-.filter-group select,
 .search-input input {
   width: 100%;
   padding: 10px 15px;
@@ -312,28 +283,14 @@
   transition: var(--transition);
 }
 
-.filter-group input:focus,
-.filter-group select:focus,
 .search-input input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(35,83,71,.10);
-}
-
-.filter-buttons {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-.filter-btn {
-  min-width: 110px;
-  justify-content: center;
-  white-space: nowrap;
-  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.1);
 }
 
 /* ============================================================
-  5. CONTAINER AND HEADER
+  4. CONTAINER AND HEADER
   ============================================================ */
 .sales-container {
   padding: 20px;

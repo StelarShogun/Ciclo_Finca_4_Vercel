@@ -3,6 +3,7 @@
 @import "../sidebar.css";
 @import "../sweetalert2-modal-zindex.css";
 @import "../components/pagination.css";
+@import "../components/filters.css";
 
 /* ============================================================
   1. MAIN LAYOUT
@@ -332,63 +333,7 @@
 .trend-down { color: var(--color-danger);  }
 
 /* ============================================================
-  5. FILTERS
-  ============================================================ */
-.filters-section {
-  background: white;
-  border-radius: 12px;
-  padding: 25px;
-  margin-bottom: 30px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-}
-
-.filters-title {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  margin: 0;
-}
-
-/* Filters header: carries the bottom border that used to be on the title */
-.filters-header {
-  border-bottom: 2px solid var(--color-primary);
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-}
-
-.filters-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  align-items: end;
-}
-
-.filter-group { display: flex; flex-direction: column; }
-.filter-group label { font-weight: 500; color: var(--color-dark); margin-bottom: 8px; }
-
-.filter-group input,
-.filter-group select {
-  padding: 10px 15px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  font-size: 1rem;
-  font-family: inherit;
-  transition: var(--transition);
-}
-
-.filter-group input:focus,
-.filter-group select:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(35,83,71,.10);
-}
-
-.filter-buttons { display: flex; gap: 10px; align-items: center; justify-self: end; }
-.filter-btn     { min-width: 110px; justify-content: center; white-space: nowrap; flex-shrink: 0; }
-
-/* ============================================================
-  6. SALES CONTAINER AND HEADER
+  5. SALES CONTAINER AND HEADER
   ============================================================ */
 .sales-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
 
@@ -852,7 +797,6 @@
   .sales-actions { flex-wrap: wrap; justify-content: center; }
 
   .kpi-grid      { grid-template-columns: 1fr; }
-  .filters-grid  { grid-template-columns: 1fr; }
   .detail-grid   { grid-template-columns: 1fr; }
   .form-row      { grid-template-columns: 1fr; }
 

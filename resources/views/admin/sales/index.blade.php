@@ -76,12 +76,12 @@
         </div>
 
         {{-- ==================== FILTERS ==================== --}}
-        <div class="filters-section">
-            <div class="filters-header">
-                <h2 class="filters-title">Filtros de Búsqueda</h2>
-            </div>
-            <form method="GET" action="{{ route('sales.index') }}" id="filters-form">
-                <div class="filters-grid">
+        @component('admin.partials.filters', [
+            'action' => route('sales.index'),
+            'clearUrl' => route('sales.index'),
+            'formId' => 'filters-form',
+        ])
+            @slot('fields')
 
                     <div class="filter-group">
                         <label for="status">Estado</label>
@@ -144,23 +144,15 @@
                             value="{{ request('search') }}">
                     </div>
 
-                    <div class="filter-group filter-buttons">
-                        <button type="submit" class="btn btn-primary filter-btn" id="apply-filters-btn">
-                            <i class="fas fa-search"></i> Aplicar Filtros
-                        </button>
-                        <a href="{{ route('sales.index') }}" class="btn btn-primary filter-btn">
-                            <i class="fas fa-times"></i> Limpiar
-                        </a>
-                    </div>
+            @endslot
 
-                </div>
-
-                <div id="date-range-error" class="alert alert-danger" style="display:none; margin-top: 0.5rem;">
+            @slot('footer')
+                <div id="date-range-error" class="alert alert-danger" style="display:none;">
                     <i class="fas fa-exclamation-circle"></i>
                     <span id="date-range-error-msg">El rango de fechas no es válido.</span>
                 </div>
-            </form>
-        </div>
+            @endslot
+        @endcomponent
 
         {{-- ==================== SALES TABLE ==================== --}}
         @php

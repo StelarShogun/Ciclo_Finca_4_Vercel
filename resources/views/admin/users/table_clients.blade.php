@@ -36,6 +36,28 @@
             @endslot
         @endcomponent
 
+        @component('admin.partials.filters', [
+            'action' => route('admin.clients.index'),
+            'clearUrl' => route('admin.clients.index'),
+        ])
+            @slot('fields')
+                <div class="filter-group">
+                    <label for="client-search">Buscar</label>
+                    <input type="text" id="client-search" name="search" placeholder="Nombre, apellido o correo…"
+                        value="{{ request('search') }}">
+                </div>
+
+                <div class="filter-group">
+                    <label for="client-status">Estado</label>
+                    <select id="client-status" name="status">
+                        <option value="">Todos los estados</option>
+                        <option value="active" @selected(request('status') === 'active')>Activo</option>
+                        <option value="banned" @selected(request('status') === 'banned')>Baneado</option>
+                    </select>
+                </div>
+            @endslot
+        @endcomponent
+
         {{-- ==================== USERS TABLE ==================== --}}
         <div class="clients-container">
             <div class="clients-table-wrapper">
@@ -90,7 +112,13 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="clients-empty">No hay usuarios registrados.</td>
+                                <td colspan="7" class="clients-empty">
+                                    @if (request()->hasAny(['search', 'status']))
+                                        No hay usuarios para los filtros seleccionados.
+                                    @else
+                                        No hay usuarios registrados.
+                                    @endif
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>

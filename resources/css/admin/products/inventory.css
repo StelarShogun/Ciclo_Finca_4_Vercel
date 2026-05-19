@@ -3,6 +3,7 @@
 @import "../sidebar.css";
 @import "../sweetalert2-modal-zindex.css";
 @import "../components/pagination.css";
+@import "../components/filters.css";
 
 /* ============================================================
   1. MAIN LAYOUT
@@ -299,38 +300,8 @@
 }
 
 /* ============================================================
-  6. FILTERS
+  6. INVENTORY FILTER EXTENSIONS
   ============================================================ */
-.filters-section {
-  background: white;
-  border-radius: 12px;
-  padding: 25px;
-  margin-bottom: 30px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-}
-
-.filters-title {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--color-primary);
-}
-
-.filters-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(170px, 22vw, 240px), 1fr));
-  gap: 14px;
-  align-items: end;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-}
-
 .filter-group--full {
   grid-column: 1 / -1;
 }
@@ -338,36 +309,6 @@
 .filter-group--classification {
   grid-column: span 2;
   min-width: 0;
-}
-
-.filter-group label {
-  font-weight: 500;
-  color: var(--color-dark);
-  margin-bottom: 6px;
-  font-size: 0.92rem;
-}
-
-.filter-group input,
-.filter-group select {
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 0.95rem;
-  min-height: 42px;
-  transition: all 0.3s ease;
-}
-
-.filter-group input:focus,
-.filter-group select:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.1);
-}
-
-.filters-section .btn {
-  min-height: 42px;
-  padding: 8px 14px;
-  font-size: 0.92rem;
 }
 
 .btn-classification-toggle {

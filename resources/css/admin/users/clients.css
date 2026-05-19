@@ -2,6 +2,7 @@
 @import "../utilities.css";
 @import "../sidebar.css";
 @import "../sweetalert2-modal-zindex.css";
+@import "../components/filters.css";
 
 /* ============================================================
     1. MAIN LAYOUT

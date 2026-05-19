@@ -64,61 +64,56 @@
             </a>
         </section>
 
-        <div class="orders-table-card">
-            <form method="GET" action="{{ route('admin.supplier-orders.index') }}" class="orders-toolbar" id="supplier-orders-filters-form">
+        @php
+            $base = request()->except('state', 'page');
+            $activeState = (string) request('state', '');
+            $pill = function (string $value, string $label) use ($base, $activeState) {
+                $qs = array_merge($base, $value !== '' ? ['state' => $value] : []);
+                $url = route('admin.supplier-orders.index', $qs);
+                $isActive = $activeState === $value;
+
+                return '<a href="'.$url.'" class="btn btn-sm '.($isActive ? 'btn-primary' : 'btn-secondary').'">'.$label.'</a>';
+            };
+        @endphp
+
+        @component('admin.partials.filters', [
+            'action' => route('admin.supplier-orders.index'),
+            'clearUrl' => route('admin.supplier-orders.index'),
+            'formId' => 'supplier-orders-filters-form',
+        ])
+            @slot('fields')
                 <div class="filter-group">
                     <label for="supplier-orders-state">Estado</label>
                     <select id="supplier-orders-state" name="state">
                         <option value="">Todos</option>
-                        <option value="open"             {{ request('state') === 'open'             ? 'selected' : '' }}>Abiertas (no finales)</option>
-                        <option value="draft"            {{ request('state') === 'draft'            ? 'selected' : '' }}>Borrador</option>
-                        <option value="pending"          {{ request('state') === 'pending'          ? 'selected' : '' }}>Pendiente</option>
-                        <option value="confirmed"        {{ request('state') === 'confirmed'        ? 'selected' : '' }}>Confirmado</option>
+                        <option value="open" {{ request('state') === 'open' ? 'selected' : '' }}>Abiertas (no finales)</option>
+                        <option value="draft" {{ request('state') === 'draft' ? 'selected' : '' }}>Borrador</option>
+                        <option value="pending" {{ request('state') === 'pending' ? 'selected' : '' }}>Pendiente</option>
+                        <option value="confirmed" {{ request('state') === 'confirmed' ? 'selected' : '' }}>Confirmado</option>
                         <option value="partial_received" {{ request('state') === 'partial_received' ? 'selected' : '' }}>Recepción parcial</option>
-                        <option value="delivered"        {{ request('state') === 'delivered'        ? 'selected' : '' }}>Entregado</option>
-                        <option value="cancelled"        {{ request('state') === 'cancelled'        ? 'selected' : '' }}>Cancelado</option>
+                        <option value="delivered" {{ request('state') === 'delivered' ? 'selected' : '' }}>Entregado</option>
+                        <option value="cancelled" {{ request('state') === 'cancelled' ? 'selected' : '' }}>Cancelado</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="date_from">Desde</label>
+                    <label for="date_from">Fecha inicial</label>
                     <input type="date" id="date_from" name="date_from" value="{{ request('date_from') }}">
                 </div>
                 <div class="filter-group">
-                    <label for="date_to">Hasta</label>
+                    <label for="date_to">Fecha final</label>
                     <input type="date" id="date_to" name="date_to" value="{{ request('date_to') }}">
                 </div>
-                <div class="filter-group orders-search-wrap">
-                    <label for="supplier-orders-search">Buscar (PO / proveedor / producto)</label>
-                    <div class="orders-search-field">
-                        <i class="fas fa-search" aria-hidden="true"></i>
-                        <input type="text" id="supplier-orders-search" name="search" value="{{ request('search') }}"
-                               placeholder="Ej: PO-2026-0001, Trek, grasa…" autocomplete="off">
-                    </div>
+                <div class="filter-group">
+                    <label for="supplier-orders-search">Buscar</label>
+                    <input type="text" id="supplier-orders-search" name="search" value="{{ request('search') }}"
+                        placeholder="PO, proveedor o producto…" autocomplete="off">
                 </div>
-                <div class="orders-toolbar-actions">
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="fas fa-filter"></i> Aplicar
-                    </button>
-                    <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary btn-sm">Limpiar</a>
-                </div>
-            </form>
+            @endslot
 
-            @php
-                $base = request()->except('state', 'page');
-                $activeState = (string) request('state', '');
-                $pill = function (string $value, string $label) use ($base, $activeState) {
-                    $qs = array_merge($base, $value !== '' ? ['state' => $value] : []);
-                    $url = route('admin.supplier-orders.index', $qs);
-                    $isActive = $activeState === $value;
-
-                    return '<a href="'.$url.'" class="btn btn-sm '.($isActive ? 'btn-primary' : 'btn-secondary').'" style="margin-right:6px; margin-bottom:6px;">'.$label.'</a>';
-                };
-            @endphp
-
-            <div class="orders-toolbar" style="padding-top:0; border-top:none;">
-                <div class="filter-group" style="flex:1;">
-                    <label style="opacity:.8;">Filtros rápidos</label>
-                    <div>
+            @slot('after')
+                <div class="filters-quick">
+                    <span class="filters-quick-label">Filtros rápidos</span>
+                    <div class="filters-quick-pills">
                         {!! $pill('', 'Todos') !!}
                         {!! $pill('open', 'Abiertas') !!}
                         {!! $pill('draft', 'Borrador') !!}
@@ -129,8 +124,10 @@
                         {!! $pill('cancelled', 'Cancelado') !!}
                     </div>
                 </div>
-            </div>
+            @endslot
+        @endcomponent
 
+        <div class="orders-table-card">
             <div class="sales-table-container">
                 <table class="sales-table cf4-purchases-table">
                     <thead>

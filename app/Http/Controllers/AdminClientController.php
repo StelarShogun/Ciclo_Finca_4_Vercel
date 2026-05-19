@@ -10,7 +10,25 @@ class AdminClientController extends Controller
 {
     public function index()
     {
-        $clients = Client::orderBy('name')->get();
+        $query = Client::query();
+
+        if ($search = trim((string) request('search', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('first_surname', 'like', "%{$search}%")
+                    ->orWhere('second_surname', 'like', "%{$search}%")
+                    ->orWhere('gmail', 'like', "%{$search}%");
+            });
+        }
+
+        $status = request('status');
+        if ($status === 'active') {
+            $query->where('active', true);
+        } elseif ($status === 'banned') {
+            $query->where('active', false);
+        }
+
+        $clients = $query->orderBy('name')->get();
 
         return view('admin.users.table_clients', compact('clients'));
     }
