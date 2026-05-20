@@ -6,6 +6,7 @@ use App\Http\Requests\UpdateProductClassificationsRequest;
 use App\Models\ClassificationDimension;
 use App\Models\Product;
 use App\Services\ProductClassificationAssignmentService;
+use App\Support\AdminPerPage;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class ProductClassificationController extends Controller
 {
     public function index(Request $request): View
     {
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
         $products = Product::query()
             ->whereHas('category', fn ($q) => $q->whereNotNull('parent_category_id'))
             ->with([
@@ -25,7 +27,7 @@ class ProductClassificationController extends Controller
                 'classificationValues' => fn ($q) => $q->with('dimension'),
             ])
             ->orderByDesc('product_id')
-            ->paginate(20)
+            ->paginate($perPage)
             ->withQueryString();
 
         return view('admin.product-classifications.index', compact('products'));

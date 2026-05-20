@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ClientPurchaseHistoryTableRequest;
 use App\Models\Client;
 use App\Services\Admin\ClientPurchaseHistoryQuery;
+use App\Support\AdminPerPage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -65,6 +66,7 @@ class ClientPurchaseHistoryController extends Controller
             'back_dir' => $request->query('back_dir'),
             'back_page' => $request->query('back_page'),
             'back_q' => $request->query('back_q'),
+            'back_per_page' => $request->query('back_per_page'),
         ], fn ($v) => $v !== null && $v !== '');
 
         return view('admin.reports.client-purchases-show', [
@@ -84,6 +86,7 @@ class ClientPurchaseHistoryController extends Controller
         $sort = $validated['sort'];
         $dir = $validated['dir'];
         $page = max(1, (int) ($validated['page'] ?? 1));
+        $perPage = AdminPerPage::resolve($validated['per_page'] ?? 10);
 
         [$start, $end] = ClientPurchaseHistoryQuery::periodBounds($period);
 
@@ -93,7 +96,6 @@ class ClientPurchaseHistoryController extends Controller
         $sorted = ClientPurchaseHistoryQuery::baseAggregates($start, $end, $q);
         ClientPurchaseHistoryQuery::applySort($sorted, $sort, $dir);
 
-        $perPage = 15;
         $results = $sorted
             ->offset(($page - 1) * $perPage)
             ->limit($perPage)
@@ -111,7 +113,9 @@ class ClientPurchaseHistoryController extends Controller
                 'pageName' => 'page',
             ]
         );
-        $paginator->appends($request->query());
+        $paginator->appends(array_merge($request->query(), [
+            'per_page' => $perPage,
+        ]));
 
         return response()->json([
             'success' => true,
@@ -126,9 +130,10 @@ class ClientPurchaseHistoryController extends Controller
                 'total' => $paginator->total(),
                 'last_page' => $paginator->lastPage(),
             ],
-            'pagination_html' => view('components.pagination', [
+            'pagination_html' => view('components.admin.pagination', [
                 'paginator' => $paginator,
                 'label' => 'clientes',
+                'perPageSubmit' => false,
             ])->render(),
         ]);
     }

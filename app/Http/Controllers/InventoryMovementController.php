@@ -6,6 +6,7 @@ use App\Enums\MovementType;
 use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Services\InventoryMovementService;
+use App\Support\AdminPerPage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -29,7 +30,8 @@ class InventoryMovementController extends Controller
             });
         }
 
-        $products = $query->paginate(20)->withQueryString();
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+        $products = $query->paginate($perPage)->withQueryString();
 
         return view('admin.reports.movements.index', compact('products'));
     }
@@ -68,7 +70,7 @@ class InventoryMovementController extends Controller
             ->with('adminUser')
             ->orderBy('created_at', 'desc');
 
-        $perPage = min((int) $request->get('per_page', 30), 100);
+        $perPage = AdminPerPage::resolve($request->get('per_page', 10));
         $movements = $query->paginate($perPage)->withQueryString();
 
         // Reuses the filtered base query to calculate summary metrics.

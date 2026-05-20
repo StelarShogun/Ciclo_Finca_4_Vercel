@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
+use App\Support\AdminPerPage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,21 +12,22 @@ use Illuminate\Support\Facades\Validator;
 
 class SupplierController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $query = Supplier::query();
 
-        if (request('name')) {
-            $query->where('name', 'like', '%'.request('name').'%');
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%'.$request->input('name').'%');
         }
 
-        if (request('contact')) {
-            $query->where('primary_contact', 'like', '%'.request('contact').'%');
+        if ($request->filled('contact')) {
+            $query->where('primary_contact', 'like', '%'.$request->input('contact').'%');
         }
 
         // Average is computed before pagination to reflect the full filtered result set
         $averageRating = $query->avg('rating');
-        $suppliers = $query->paginate(10);
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+        $suppliers = $query->paginate($perPage)->withQueryString();
 
         return view('admin.suppliers.index', compact('suppliers', 'averageRating'));
     }
@@ -100,9 +102,9 @@ class SupplierController extends Controller
         }
     }
 
-    public function show(Request $request, string $id)
+    public function show(Request $request, string $supplier)
     {
-        $supplier = Supplier::find($id);
+        $supplier = Supplier::find($supplier);
         if (! $supplier) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Proveedor no encontrado.'], 404);
@@ -135,9 +137,9 @@ class SupplierController extends Controller
         return redirect()->route('suppliers.index');
     }
 
-    public function edit(string $id)
+    public function edit(string $supplier)
     {
-        $supplier = Supplier::find($id);
+        $supplier = Supplier::find($supplier);
         if (! $supplier) {
             return redirect()->back()->with('error', 'Proveedor no encontrado.');
         }
@@ -145,9 +147,9 @@ class SupplierController extends Controller
         return view('admin.suppliers.edit', compact('supplier'));
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $supplier)
     {
-        $supplier = Supplier::find($id);
+        $supplier = Supplier::find($supplier);
         if (! $supplier) {
             return response()->json(['success' => false, 'message' => 'Proveedor no encontrado.'], 404);
         }
@@ -216,9 +218,9 @@ class SupplierController extends Controller
         }
     }
 
-    public function destroy(Request $request, string $id): RedirectResponse|JsonResponse
+    public function destroy(Request $request, string $supplier): RedirectResponse|JsonResponse
     {
-        $supplier = Supplier::find($id);
+        $supplier = Supplier::find($supplier);
         if (! $supplier) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Proveedor no encontrado.'], 404);
@@ -242,7 +244,7 @@ class SupplierController extends Controller
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 Log::error('Supplier delete failed', [
-                    'supplier_id' => $id,
+                    'supplier_id' => $supplier->supplier_id,
                     'exception' => $e,
                 ]);
 

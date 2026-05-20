@@ -1,4 +1,7 @@
 @import "../admin/sweetalert2-modal-zindex.css";
+@import "../admin/components/pagination.css";
+@import "../shared/components/buttons.css";
+@import "../shared/components/form-layout.css";
 
 /* ===================================================================
    1. VARIABLES
@@ -85,31 +88,6 @@ body.guest-layout {
 
 .btn:focus   { box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.3); }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
-
-/* Color variants */
-.btn-primary {
-  background: var(--color-primary);
-  color: white;
-  border: 2px solid var(--color-primary);
-}
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(35, 83, 71, 0.3);
-}
-
-.btn-secondary {
-  background: var(--color-secondary);
-  color: white;
-  border: 2px solid var(--color-secondary);
-}
-.btn-secondary:hover:not(:disabled) {
-  background: #37474f;
-  border-color: #37474f;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(69, 90, 100, 0.3);
-}
 
 .btn-danger {
   background: var(--color-danger);

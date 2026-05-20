@@ -92,7 +92,11 @@
     box-sizing: border-box;
 }
  
-html { font-size: 16px; }
+html {
+    font-size: 16px;
+    /* Evita que el contenido “salte” al aparecer/desaparecer la barra de scroll. */
+    scrollbar-gutter: stable;
+}
  
 body {
     font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif;

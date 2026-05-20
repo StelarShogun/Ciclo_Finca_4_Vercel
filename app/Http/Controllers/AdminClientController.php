@@ -4,13 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Services\AuditLogger;
+use App\Support\AdminPerPage;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class AdminClientController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $clients = Client::orderBy('name')->get();
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+        $clients = Client::query()
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString();
 
         return view('admin.users.table_clients', compact('clients'));
     }

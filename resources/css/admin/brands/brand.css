@@ -2,6 +2,10 @@
 @import "../utilities.css";
 @import "../sidebar.css";
 @import "../sweetalert2-modal-zindex.css";
+@import "../components/pagination.css";
+@import "../../shared/components/buttons.css";
+@import "../../shared/components/file-upload.css";
+@import "../../shared/components/form-layout.css";
 
 /* ============================================================
    1. MAIN LAYOUT
@@ -25,58 +29,7 @@
     transition: padding-left 0.2s ease;
 }
 
-/* ============================================================
-   2. BUTTONS
-   ============================================================ */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    border: 2px solid;
-    border-radius: var(--border-radius);
-    font-size: 0.95rem;
-    font-weight: 500;
-    font-family: 'Poppins', sans-serif;
-    text-decoration: none;
-    cursor: pointer;
-    transition: var(--transition);
-    white-space: nowrap;
-    user-select: none;
-    position: relative;
-    overflow: hidden;
-}
-
-.btn:focus {
-    box-shadow: 0 0 0 3px rgba(35,83,71,.30);
-    outline: none;
-}
-
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-.btn::before {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%;
-    width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.20), transparent);
-    transition: left 0.5s;
-}
-.btn:hover::before { left: 100%; }
-
-.btn-primary   { background: var(--color-primary);   color: #fff; border: 2px solid var(--color-primary);   }
-.btn-secondary { background: var(--color-secondary); color: #fff; border: 2px solid var(--color-secondary); }
-.btn-danger    { background: var(--color-danger);    color: #fff; border: 2px solid var(--color-danger);    }
-
-.btn-primary:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(35,83,71,.30); }
-.btn-secondary:hover:not(:disabled) { background: #37474f; border-color: #37474f; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(69,90,100,.30); }
-.btn-danger:hover:not(:disabled)    { background: #b71c1c; border-color: #b71c1c; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(211,47,47,.30); }
-
-.btn-sm { padding: 6px 12px; font-size: 0.85rem; }
+/* Buttons: shared/components/buttons.css */
 
 /* Icon action buttons inside table */
 .btn-icon {

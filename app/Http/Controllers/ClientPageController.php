@@ -12,6 +12,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Services\Catalog\CatalogProductSearchTelemetry;
 use App\Services\InventoryMovementService;
+use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -138,7 +139,7 @@ class ClientPageController extends Controller
             default => $query->orderBy('created_at', $order),
         };
 
-        $perPage = $request->get('per_page', 12);
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
         $products = $query->paginate($perPage)->withQueryString();
 
         if ($request->filled('search')) {
@@ -918,12 +919,15 @@ class ClientPageController extends Controller
         $activeStatuses = $this->activeClientInvoiceStatuses();
         $cancelledStatuses = $this->cancelledClientInvoiceStatuses();
 
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+
         if ($tab === 'historial') {
             $orders = Sale::query()
                 ->where('client_id', $client->user_id)
                 ->where('status', 'completed')
                 ->orderByDesc('sale_date')
-                ->get();
+                ->paginate($perPage)
+                ->withQueryString();
 
             $pendingReviewProducts = ProductReview::query()
                 ->with('product:product_id,name')
@@ -943,7 +947,8 @@ class ClientPageController extends Controller
                 ->where('client_id', $client->user_id)
                 ->whereIn('status', $cancelledStatuses)
                 ->orderByDesc('sale_date')
-                ->get();
+                ->paginate($perPage)
+                ->withQueryString();
         } else {
             $tab = 'facturas';
 
@@ -951,7 +956,8 @@ class ClientPageController extends Controller
                 ->where('client_id', $client->user_id)
                 ->whereIn('status', $activeStatuses)
                 ->orderByDesc('sale_date')
-                ->get();
+                ->paginate($perPage)
+                ->withQueryString();
         }
 
         $cartCount = $this->getCartCount();
@@ -981,7 +987,7 @@ class ClientPageController extends Controller
         return response()->json(['count' => $count]);
     }
 
-    public function notifications()
+    public function notifications(Request $request)
     {
         /** @var Client $client */
         $client = Auth::guard('clients')->user();
@@ -991,7 +997,8 @@ class ClientPageController extends Controller
 
         $notifications = $client->notifications()
             ->latest()
-            ->paginate(20);
+            ->paginate(AdminPerPage::resolve($request->input('per_page', 10)))
+            ->withQueryString();
 
         return view('client.notifications', compact('notifications', 'cartCount'));
     }

@@ -386,6 +386,14 @@ function setFavoritesDrawerOpen(open) {
 }
 
 var favoritesCache = [];
+var favoritesPagination = {
+    current_page: 1,
+    last_page: 1,
+    per_page: 10,
+    total: 0,
+    from: null,
+    to: null
+};
 
 function getInitialFavoritesFromMeta() {
     var meta = document.querySelector('meta[name="cf4-favorites-initial"]');
@@ -443,6 +451,42 @@ function upsertFavoriteCacheItem(productId) {
     }
 }
 
+function renderFavoritesPaginationFooter(meta) {
+    var footer = document.getElementById('favorites-drawer-pagination');
+    var info = document.getElementById('favorites-pagination-info');
+    var prevBtn = document.getElementById('favorites-page-prev');
+    var nextBtn = document.getElementById('favorites-page-next');
+    if (!footer || !info || !prevBtn || !nextBtn) return;
+
+    var lastPage = Math.max(1, parseInt(String(meta && meta.last_page ? meta.last_page : 1), 10) || 1);
+    var currentPage = Math.max(1, parseInt(String(meta && meta.current_page ? meta.current_page : 1), 10) || 1);
+    var total = parseInt(String(meta && meta.total ? meta.total : 0), 10) || 0;
+    var from = meta && meta.from != null ? meta.from : null;
+    var to = meta && meta.to != null ? meta.to : null;
+
+    favoritesPagination = {
+        current_page: currentPage,
+        last_page: lastPage,
+        per_page: parseInt(String(meta && meta.per_page ? meta.per_page : 10), 10) || 10,
+        total: total,
+        from: from,
+        to: to
+    };
+
+    if (total === 0 || lastPage <= 1) {
+        footer.hidden = true;
+        info.textContent = '';
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        return;
+    }
+
+    footer.hidden = false;
+    info.textContent = 'Mostrando ' + from + '–' + to + ' de ' + total + ' favoritos';
+    prevBtn.disabled = currentPage <= 1;
+    nextBtn.disabled = currentPage >= lastPage;
+}
+
 function renderFavoritesDrawerItems(items) {
     var body = document.getElementById('favorites-drawer-body');
     if (!body) return;
@@ -472,7 +516,19 @@ function renderFavoritesDrawerItems(items) {
     }).join('');
 }
 
-function loadFavoritesDrawerItems() {
+function buildFavoritesIndexUrl(page) {
+    var indexMeta = document.querySelector('meta[name="cf4-favorites-index-url"]');
+    if (!indexMeta) return null;
+
+    var url = new URL(indexMeta.getAttribute('content'), window.location.origin);
+    var targetPage = Math.max(1, parseInt(String(page || favoritesPagination.current_page || 1), 10) || 1);
+    url.searchParams.set('page', String(targetPage));
+    url.searchParams.set('per_page', String(favoritesPagination.per_page || 10));
+
+    return url.toString();
+}
+
+function loadFavoritesDrawerItems(page) {
     var body = document.getElementById('favorites-drawer-body');
     var indexMeta = document.querySelector('meta[name="cf4-favorites-index-url"]');
     if (!body) return Promise.resolve();
@@ -481,10 +537,18 @@ function loadFavoritesDrawerItems() {
 
     if (!indexMeta) {
         renderFavoritesDrawerItems(favoritesCache);
+        renderFavoritesPaginationFooter(favoritesPagination);
         return Promise.resolve();
     }
 
-    return fetch(indexMeta.getAttribute('content'), {
+    var requestUrl = buildFavoritesIndexUrl(page);
+    if (!requestUrl) {
+        renderFavoritesDrawerItems(favoritesCache);
+        renderFavoritesPaginationFooter(favoritesPagination);
+        return Promise.resolve();
+    }
+
+    return fetch(requestUrl, {
         headers: {
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
@@ -497,9 +561,11 @@ function loadFavoritesDrawerItems() {
             }
             favoritesCache = Array.isArray(data.favorites) ? data.favorites : [];
             renderFavoritesDrawerItems(favoritesCache);
+            renderFavoritesPaginationFooter(data.pagination || favoritesPagination);
         })
         .catch(function () {
             renderFavoritesDrawerItems(favoritesCache);
+            renderFavoritesPaginationFooter(favoritesPagination);
         });
 }
 
@@ -529,7 +595,11 @@ function toggleFavoriteFromDrawer(productId) {
                 });
             }
             syncFavoriteButtonsState(String(productId), !removed);
-            return loadFavoritesDrawerItems();
+            var reloadPage = favoritesPagination.current_page || 1;
+            if (removed && favoritesCache.length === 0 && reloadPage > 1) {
+                reloadPage -= 1;
+            }
+            return loadFavoritesDrawerItems(reloadPage);
         })
         .catch(function (err) {
             Swal.fire({
@@ -1257,6 +1327,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    var favoritesPagePrev = document.getElementById('favorites-page-prev');
+    var favoritesPageNext = document.getElementById('favorites-page-next');
+    if (favoritesPagePrev) {
+        favoritesPagePrev.addEventListener('click', function () {
+            var page = (favoritesPagination.current_page || 1) - 1;
+            if (page < 1) return;
+            loadFavoritesDrawerItems(page);
+        });
+    }
+    if (favoritesPageNext) {
+        favoritesPageNext.addEventListener('click', function () {
+            var page = (favoritesPagination.current_page || 1) + 1;
+            if (page > (favoritesPagination.last_page || 1)) return;
+            loadFavoritesDrawerItems(page);
+        });
+    }
+
     window.addEventListener('cf4:favorites:changed', function (event) {
         var detail = event && event.detail ? event.detail : {};
         var pid = String(detail.product_id || '');
@@ -1274,7 +1361,7 @@ document.addEventListener('DOMContentLoaded', function () {
         syncFavoriteButtonsState(pid, isFav);
 
         if (favoritesDrawer && favoritesDrawer.classList.contains('is-open')) {
-            renderFavoritesDrawerItems(favoritesCache);
+            loadFavoritesDrawerItems(favoritesPagination.current_page || 1);
         }
     });
 
@@ -1810,42 +1897,7 @@ document.addEventListener('DOMContentLoaded', function () {
         checkPriceRange();
     })();
 
-    // — Catalog pagination —
-    (function initCatalogPagination() {
-        var wrapper = document.querySelector('.pagination-wrapper .pagination');
-        if (!wrapper) return;
-
-        var goInput = wrapper.querySelector('#goToPageInput');
-        var goBtn   = wrapper.querySelector('#goToPageBtn');
-
-        wrapper.querySelectorAll('.button[aria-label]').forEach(function (a) {
-            if (a.getAttribute('aria-disabled') === 'true') {
-                a.addEventListener('click', function (e) { e.preventDefault(); });
-                a.classList.add('is-disabled');
-            }
-        });
-
-        function goToPage() {
-            var totalSpan = wrapper.querySelector('.button.button-primary');
-            if (!totalSpan) return;
-            var parts    = totalSpan.textContent.trim().split('/');
-            var lastPage = Math.max(1, parseInt((parts[1] || '1').trim(), 10));
-            var target   = parseInt((goInput && goInput.value) ? goInput.value.trim() : '1', 10);
-            if (isNaN(target)) target = 1;
-            if (target < 1)    target = 1;
-            if (target > lastPage) target = lastPage;
-            var url = new URL(window.location.href);
-            url.searchParams.set('page', String(target));
-            window.location.assign(url.toString());
-        }
-
-        if (goBtn)   goBtn.addEventListener('click', goToPage);
-        if (goInput) {
-            goInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') { e.preventDefault(); goToPage(); }
-            });
-        }
-    })();
+    // Catálogo: paginación vía ajax-pagination.js (clients-page.js). Legacy #goToPageBtn solo si queda Blade de Dev.
 
 }); // end DOMContentLoaded
 

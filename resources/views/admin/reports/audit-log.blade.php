@@ -10,6 +10,10 @@
     @vite(['resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/audit-log.css'])
 @endpush
 
+@push('vite-body')
+    @vite(['resources/js/shared/ajax-pagination.js'])
+@endpush
+
 @section('aside')
     @include('admin.parts.aside')
 @endsection
@@ -29,13 +33,13 @@
         ])
     @endcomponent
 
-    <section class="audit-log-filters">
-        <form method="GET" action="{{ route('admin.reports.audit-log') }}" class="audit-log-filters-grid">
-            <label class="filter-field">
-                <span>Usuario</span>
-                <input type="text" name="user" value="{{ $filters['user'] }}"
-                    placeholder="Correo o nombre del admin">
-            </label>
+        <section class="audit-log-filters">
+            <form method="GET" action="{{ route('admin.reports.audit-log') }}" class="audit-log-filters-grid">
+                <input type="hidden" name="per_page" value="{{ \App\Support\AdminPerPage::resolve(request('per_page', 10)) }}">
+                <label class="filter-field">
+                    <span>Usuario</span>
+                    <input type="text" name="user" value="{{ $filters['user'] }}" placeholder="Correo o nombre del admin">
+                </label>
 
             <label class="filter-field">
                 <span>Tipo de acción</span>
@@ -88,27 +92,18 @@
         </form>
     </section>
 
-    <section class="audit-log-results">
-        @if ($logs->isEmpty())
-            <div class="audit-empty-state">
-                <i class="fas fa-clipboard-list" aria-hidden="true"></i>
-                <h2>Sin registros para los filtros aplicados</h2>
-                <p>Probá cambiar usuario, módulo, tipo de acción o rango de fechas.</p>
-            </div>
-        @else
-            <div class="table-wrap">
-                <table class="audit-log-table">
-                    <thead>
-                        <tr>
-                            <th>Fecha y hora</th>
-                            <th>Usuario</th>
-                            <th>Tipo de acción</th>
-                            <th>Módulo</th>
-                            <th>Descripción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($logs as $log)
+        <section class="audit-log-results" data-cf4-ajax-pagination data-cf4-ajax-scroll>
+            @if ($logs->isEmpty())
+                <div class="audit-empty-state">
+                    <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+                    <h2>Sin registros para los filtros aplicados</h2>
+                    <p>Probá cambiar usuario, módulo, tipo de acción o rango de fechas.</p>
+                </div>
+            @else
+                <div id="cf4-list-fragment">
+                <div class="table-wrap">
+                    <table class="audit-log-table">
+                        <thead>
                             <tr>
                                 <td data-label="Fecha y hora">{{ optional($log->created_at)->format('d/m/Y H:i:s') }}
                                 </td>
@@ -134,8 +129,9 @@
                 </table>
             </div>
 
-            <x-pagination :paginator="$logs" label="auditoría" />
-        @endif
-    </section>
-</div>
+                <x-admin.pagination :paginator="$logs" label="auditoría" />
+                </div>
+            @endif
+        </section>
+    </div>
 @endsection

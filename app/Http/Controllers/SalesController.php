@@ -15,6 +15,7 @@ use App\Services\Admin\ReportExcelFilename;
 use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\OrderCancellationNotifier;
+use App\Support\AdminPerPage;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -37,7 +38,8 @@ class SalesController extends Controller
         $query = Sale::with(['client', 'sellerAdmin', 'saleItems.product']);
         $this->applySalesAdminListFilters($query, $request);
 
-        $sales = $query->orderBy('sale_date', 'desc')->paginate(15)->withQueryString();
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+        $sales = $query->orderBy('sale_date', 'desc')->paginate($perPage)->withQueryString();
 
         $dailySales = $this->calculateDailySales();
         $dailySalesTrend = $this->calculateDailySalesTrend();

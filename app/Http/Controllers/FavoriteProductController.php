@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\FavoriteProduct;
+use App\Support\AdminPerPage;
+use App\Support\ClientFavoriteFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
 class FavoriteProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if (! Schema::hasTable('favorite_products')) {
             return response()->json([
@@ -19,33 +21,27 @@ class FavoriteProductController extends Controller
         }
 
         $clientId = (int) Auth::guard('clients')->id();
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
 
-        $favorites = FavoriteProduct::query()
+        $paginator = FavoriteProduct::query()
             ->with(['product.category'])
             ->where('user_id', $clientId)
             ->latest('id')
-            ->get()
-            ->filter(fn (FavoriteProduct $favorite) => $favorite->product !== null)
-            ->map(function (FavoriteProduct $favorite) {
-                $product = $favorite->product;
+            ->paginate($perPage);
 
-                return [
-                    'product_id' => (int) $product->product_id,
-                    'name' => (string) $product->name,
-                    'category' => (string) ($product->category->name ?? 'Sin categoría'),
-                    'price' => (float) $product->sale_price,
-                    'price_formatted' => '₡'.number_format((float) $product->sale_price, 0, ',', '.'),
-                    'stock_label' => (string) $product->clientCatalogStockLabel(),
-                    'url' => (string) $product->clientProductUrl(),
-                    'image_url' => (string) ($product->getFirstMediaUrl('main_image')
-                        ?: asset('assets/images/products/'.($product->image ?? 'default.png'))),
-                ];
-            })
-            ->values();
+        $favorites = ClientFavoriteFormatter::collect($paginator->items());
 
         return response()->json([
             'success' => true,
             'favorites' => $favorites,
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'from' => $paginator->firstItem(),
+                'to' => $paginator->lastItem(),
+            ],
         ]);
     }
 

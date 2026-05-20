@@ -23,11 +23,11 @@ class SupplierOrderCreateTest extends TestCase
         } catch (\Throwable $e) {
             $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
         }
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('SupplierOrderCreateTest requiere MySQL.');
-        }
-        if (! Schema::hasTable('orders') || ! Schema::hasTable('products') || ! Schema::hasTable('suppliers')) {
-            $this->markTestSkipped('Faltan tablas requeridas (orders/products/suppliers).');
+
+        foreach (['orders', 'products', 'suppliers'] as $table) {
+            if (! Schema::hasTable($table)) {
+                $this->markTestSkipped("Falta la tabla requerida ({$table}).");
+            }
         }
     }
 
@@ -98,7 +98,6 @@ class SupplierOrderCreateTest extends TestCase
 
         $resp = $this->actingAs($admin, 'admin')->post(route('admin.supplier-orders.store'), [
             'supplier_id' => $supplier->supplier_id,
-            'estimated_delivery_date' => '2026-04-20',
             'items' => [
                 ['product_id' => $p1->product_id, 'quantity' => 2],
                 ['product_id' => $p2->product_id, 'quantity' => 3],
@@ -113,6 +112,7 @@ class SupplierOrderCreateTest extends TestCase
         $this->assertSame('draft', $order->state);
         $this->assertNotNull($order->po_number);
         $this->assertMatchesRegularExpression('/^PO-2026-[0-9]{4}$/', $order->po_number);
+        $this->assertNull($order->estimated_delivery_date);
     }
 
     /** CP03-02: faltan campos obligatorios => errores por campo y no persiste. */
@@ -137,7 +137,6 @@ class SupplierOrderCreateTest extends TestCase
 
         $resp = $this->actingAs($admin, 'admin')->post(route('admin.supplier-orders.store'), [
             'supplier_id' => $supplier->supplier_id,
-            'estimated_delivery_date' => '2026-04-20',
             'items' => [
                 ['product_id' => $p1->product_id, 'quantity' => 0],
             ],

@@ -23,17 +23,18 @@
             <span>Nuevo pedido</span>
         </nav>
 
-        @component('admin.partials.page-header', [
-            'title' => 'Nuevo pedido a proveedor',
-            'description' => 'Crea un pedido de compra seleccionando proveedor, productos y una fecha estimada de entrega.',
-        ])
-            @slot('actions')
+        <header class="sales-header">
+            <div>
+                <h1>Nuevo pedido a proveedor</h1>
+                <p>Crea un pedido de compra seleccionando proveedor y productos.</p>
+            </div>
+            <div class="sales-actions">
                 <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i>
                     Volver
                 </a>
-            @endslot
-        @endcomponent
+            </div>
+        </header>
 
         <form id="supplier-order-create-form" method="POST" action="{{ route('admin.supplier-orders.store') }}" class="supplier-order-create">
             @csrf
@@ -47,16 +48,15 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="supplier_id">Proveedor</label>
-                        <select id="supplier_id" name="supplier_id" required>
-                            <option value="">Selecciona un proveedor…</option>
-                            @foreach ($suppliers as $s)
-                                <option value="{{ $s->supplier_id }}" {{ old('supplier_id') == $s->supplier_id ? 'selected' : '' }}>
-                                    {{ $s->name }}
-                                </option>
-                            @endforeach
-                        </select>
-
+                        <label for="supplier-search">Proveedor</label>
+                        <div class="brand-combobox" id="supplier-combobox">
+                            <input type="text" id="supplier-search" class="brand-combobox-input"
+                                   placeholder="Escribe para buscar un proveedor…" autocomplete="off"
+                                   aria-label="Proveedor del pedido">
+                            <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                            <div class="brand-combobox-dropdown" id="supplier-dropdown" role="listbox"></div>
+                        </div>
+                        <input type="hidden" id="supplier_id" name="supplier_id" value="{{ old('supplier_id') }}" required>
                         @error('supplier_id')
                             <p class="field-error">{{ $message }}</p>
                         @enderror
@@ -64,7 +64,6 @@
 
                     <div id="supplier-preview" class="supplier-preview" hidden></div>
                 </section>
-
 
                 {{-- Items --}}
                 <section class="create-card create-card-wide" aria-labelledby="items-card-title">
@@ -75,19 +74,9 @@
 
                     <div class="items-toolbar">
                         <div class="product-combobox" id="product-combobox">
-                            <input 
-                                id="product-search" 
-                                type="text" 
-                                class="product-combobox-input"
-                                placeholder="Selecciona un proveedor primero…" 
-                                autocomplete="off" 
-                                disabled
-                            >
-
-                            <span class="product-combobox-chevron">
-                                <i class="fa-solid fa-chevron-down"></i>
-                            </span>
-
+                            <input id="product-search" type="text" class="product-combobox-input"
+                                   placeholder="Selecciona un proveedor primero…" autocomplete="off" disabled>
+                            <span class="product-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
                             <div class="product-combobox-dropdown" id="product-search-dropdown"></div>
                         </div>
                     </div>
@@ -116,7 +105,6 @@
                                 <p class="field-error">{{ $message }}</p>
                             @enderror
                         </div>
-
                         <div class="items-summary">
                             <div class="summary-line">
                                 <span>Líneas</span>
@@ -137,10 +125,7 @@
                     <i class="fas fa-save"></i>
                     Guardar borrador
                 </button>
-
-                <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary">
-                    Cancelar
-                </a>
+                <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary">Cancelar</a>
             </div>
         </form>
     </div>
@@ -153,3 +138,4 @@
         @vite(['resources/js/admin/orders/supplier-order-create.js'])
     @endpush
 @endsection
+

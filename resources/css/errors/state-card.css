@@ -434,12 +434,6 @@
     transition: opacity 240ms ease;
 }
 
-/* GSAP overlay priming (wrong_route bike scene) */
-.cf4-bike-scene [id^='note-'],
-.cf4-bike-scene #dust {
-    opacity: 0;
-}
-
 .cf4-bike-scene.is-static:has(.cf4-error-fallback) svg {
     visibility: hidden;
     opacity: 0;

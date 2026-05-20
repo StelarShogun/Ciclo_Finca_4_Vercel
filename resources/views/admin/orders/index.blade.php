@@ -62,8 +62,9 @@
             </a>
         </section>
 
-        <div class="orders-table-card">
+        <div class="orders-table-card" data-cf4-ajax-pagination data-cf4-ajax-scroll>
             <form method="GET" action="{{ route('admin.orders.index') }}" class="orders-toolbar" id="orders-filters-form">
+                <input type="hidden" name="per_page" value="{{ \App\Support\AdminPerPage::resolve(request('per_page', 10)) }}">
                 <div class="filter-group">
                     <label for="orders-status">Estado</label>
                     <select id="orders-status" name="status">
@@ -103,6 +104,7 @@
                 </div>
             </form>
 
+            <div id="cf4-list-fragment">
             <div class="sales-table-container">
                 <table class="sales-table cf4-purchases-table">
                     <thead>
@@ -245,11 +247,10 @@
                 </table>
             </div>
 
-            @if ($orders->count() > 0)
-                <div class="orders-pagination-wrap">
-                    <x-pagination :paginator="$orders" label="pedidos" />
-                </div>
-            @endif
+            <div class="orders-pagination-wrap">
+                <x-admin.pagination :paginator="$orders" label="pedidos" />
+            </div>
+            </div>
         </div>
     </div>
 
@@ -307,20 +308,21 @@
 
     <meta name="order-expiration-update-url" content="{{ route('admin.orders.settings.order-expiration.update') }}">
 
-    <div id="view-sale-modal" class="modal-overlay">
+    <div id="view-sale-modal" class="edit-modal">
+        <div class="modal-backdrop" onclick="closeViewSaleModal()"></div>
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
                 <h3><i class="fas fa-eye"></i> Detalles del pedido</h3>
-                <button type="button" class="modal-close" onclick="closeViewSaleModal()">&times;</button>
+                <button type="button" class="modal-close" onclick="closeViewSaleModal()" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-
             <div class="modal-body" id="view-sale-body">
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--color-primary);"></i>
+                <div class="loading-spinner" role="status">
+                    <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
                     <p>Cargando detalles…</p>
                 </div>
             </div>
-
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeViewSaleModal()">
                     <i class="fas fa-times"></i> Cerrar
