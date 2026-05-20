@@ -1,59 +1,72 @@
 @props([
     'paginator',
-    // Texto de contexto opcional: ej. "inventario"
     'label' => null,
 ])
 
 @php
-    // Cálculos seguros para "Mostrando X–Y de Z"
-    $total      = $paginator->total();
-    $perPage    = $paginator->perPage();
-    $current    = max(1, $paginator->currentPage());
-    $from       = $total ? (($current - 1) * $perPage) + 1 : 0;
-    $to         = $total ? min($total, $current * $perPage) : 0;
-
-    // Siempre mostramos el bloque, aunque sea 1 página
-    $hasPrev = $current > 1;
-    $hasNext = $current < max(1, $paginator->lastPage());
+    $uid = 'cpg-'.spl_object_id($paginator);
+    $paginator->onEachSide(1);
+    $linkRows = $paginator->linkCollection();
+    $total = (int) $paginator->total();
+    $lastPage = max(1, (int) $paginator->lastPage());
 @endphp
 
-<div class="pagination is-compact" role="navigation" aria-label="Paginación {{ $label ?? '' }}">
-    {{-- Info --}}
+<div
+    class="cf4-pagination-toolbar pagination is-compact catalog-pagination"
+    data-last-page="{{ $lastPage }}"
+    role="navigation"
+    aria-label="Paginación {{ $label ?? '' }}"
+>
     <div class="results-info" aria-live="polite">
-        Mostrando {{ $from }} a {{ $to }} de {{ $total }} resultados
+        @if ($total === 0)
+            Mostrando 0 resultados
+        @else
+            Mostrando {{ $paginator->firstItem() }}–{{ $paginator->lastItem() }} de {{ $total }} resultados
+        @endif
     </div>
 
-    {{-- Prev --}}
-    <a
-        class="button"
-        aria-label="Previous"
-        href="{{ $hasPrev ? $paginator->previousPageUrl() : '#' }}"
-        @if(!$hasPrev) aria-disabled="true" tabindex="-1" @endif
-        data-page="{{ $current - 1 }}"
-    >
-        {{-- Flecha izquierda (SVG minimal) --}}
-        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </a>
+    <div class="admin-pagination-nav">
+        @foreach ($linkRows as $link)
+            @if ($loop->first)
+                <a
+                    class="button"
+                    aria-label="Anterior"
+                    href="{{ $link['url'] ?? '#' }}"
+                    @if ($link['url'] === null) aria-disabled="true" tabindex="-1" @endif
+                    data-page="{{ $link['page'] }}"
+                >
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+            @elseif ($loop->last)
+                <a
+                    class="button"
+                    aria-label="Siguiente"
+                    href="{{ $link['url'] ?? '#' }}"
+                    @if ($link['url'] === null) aria-disabled="true" tabindex="-1" @endif
+                    data-page="{{ $link['page'] }}"
+                >
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+            @elseif (($link['label'] ?? '') === '...')
+                <span class="button admin-pagination-ellipsis" aria-hidden="true">…</span>
+            @elseif (! empty($link['active']))
+                <span class="button button-primary" aria-current="page">{{ $link['label'] }}</span>
+            @else
+                <a class="button" href="{{ $link['url'] ?? '#' }}" data-page="{{ $link['page'] }}">{{ $link['label'] }}</a>
+            @endif
+        @endforeach
+    </div>
 
-    {{-- Página actual / total --}}
-    <span class="button button-primary" aria-current="page">
-        {{ $current }} / {{ max(1, $paginator->lastPage()) }}
-    </span>
-
-    {{-- Next --}}
-    <a
-        class="button"
-        aria-label="Next"
-        href="{{ $hasNext ? $paginator->nextPageUrl() : '#' }}"
-        @if(!$hasNext) aria-disabled="true" tabindex="-1" @endif
-        data-page="{{ $current + 1 }}"
-    >
-        {{-- Flecha derecha (SVG minimal) --}}
-        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </a>
-
-    {{-- Ir a página --}}
-    <label class="sr-only" for="goToPageInput">Ir a página</label>
-    <input id="goToPageInput" type="number" min="1" step="1" value="{{ $current }}" inputmode="numeric" />
-    <button class="go-button" id="goToPageBtn" type="button">Ir</button>
+    <label class="sr-only" for="goToPageInput-{{ $uid }}">Ir a página</label>
+    <input
+        id="goToPageInput-{{ $uid }}"
+        class="pagination-go-input"
+        type="number"
+        min="1"
+        max="{{ $lastPage }}"
+        step="1"
+        value="{{ (int) $paginator->currentPage() }}"
+        inputmode="numeric"
+    />
+    <button class="go-button pagination-go-button" type="button">Ir</button>
 </div>

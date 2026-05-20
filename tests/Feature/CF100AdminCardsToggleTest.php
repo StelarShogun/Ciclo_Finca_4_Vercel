@@ -80,7 +80,7 @@ class CF100AdminCardsToggleTest extends TestCase
 
         $baseResponse = $this->get(route('admin.orders.index'));
         $baseResponse->assertStatus(200);
-        $baseResponse->assertSee('Ver pedidos pendientes');
+        $baseResponse->assertSee('Ver encargos pendientes');
         $baseResponse->assertSee(route('admin.orders.index', ['status' => 'pending']), false);
 
         $filteredResponse = $this->get(route('admin.orders.index', ['status' => 'pending']));

@@ -164,19 +164,20 @@ class SalesOrderExpiryTest extends TestCase
             'total' => 113,
             'payment_method' => 'cash',
             'payment_reference' => null,
-            'status' => 'completed',
+            'status' => 'pending',
             'notes' => null,
             'sale_date' => now()->subDays(28),
         ]);
 
         $this->assertTrue($sale->is_expiry_warning);
-        $response = $this->actingAs($this->adminUser, 'admin')->get(route('sales.index'));
-        $response->assertStatus(200);
-        $response->assertSee('expiry-warning', false);
-        $response->assertSee('exclamation-triangle', false);
+
+        $responseJson = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
+        $responseJson->assertOk();
+        $responseJson->assertJsonPath('sale.is_expiry_warning', true);
+        $responseJson->assertJsonPath('sale.days_remaining_until_expiration', 2);
     }
 
-    /** CP5: Si el pedido supera el tiempo límite, el sistema lo elimina (comando). */
+    /** CP5: Si el pedido pendiente supera el tiempo límite, el comando lo cancela automáticamente. */
     public function test_expired_orders_are_deleted_by_command(): void
     {
         $oldDate = now()->subDays(31);
@@ -190,14 +191,17 @@ class SalesOrderExpiryTest extends TestCase
             'total' => 113,
             'payment_method' => 'cash',
             'payment_reference' => null,
-            'status' => 'completed',
+            'status' => 'pending',
             'notes' => null,
             'sale_date' => $oldDate,
         ]);
         $id = $sale->sale_id;
 
         $this->artisan('sales:delete-expired')->assertSuccessful();
-        $this->assertNull(Sale::find($id));
+
+        $sale->refresh();
+        $this->assertSame('cancelled', $sale->status);
+        $this->assertStringContainsString('Cancelado automáticamente', (string) $sale->notes);
     }
 
     /** CP6: Pedido recién creado muestra el tiempo completo restante. */

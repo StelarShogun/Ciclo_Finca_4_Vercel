@@ -1,3 +1,5 @@
+import '../../shared/ajax-pagination.js';
+
 // Toggle sidebar collapse on click
 document.addEventListener("DOMContentLoaded", () => {
     const toggle = document.querySelector(".toggle-sidebar");

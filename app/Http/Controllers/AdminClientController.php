@@ -4,13 +4,37 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Services\AuditLogger;
+use App\Support\AdminPerPage;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class AdminClientController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $clients = Client::orderBy('name')->get();
+        $query = Client::query();
+
+        if ($search = trim((string) $request->input('search', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('first_surname', 'like', "%{$search}%")
+                    ->orWhere('second_surname', 'like', "%{$search}%")
+                    ->orWhere('gmail', 'like', "%{$search}%");
+            });
+        }
+
+        $status = $request->input('status');
+        if ($status === 'active') {
+            $query->where('active', true);
+        } elseif ($status === 'banned') {
+            $query->where('active', false);
+        }
+
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+        $clients = $query
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString();
 
         return view('admin.users.table_clients', compact('clients'));
     }

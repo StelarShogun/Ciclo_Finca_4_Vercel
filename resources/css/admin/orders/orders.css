@@ -1,5 +1,8 @@
 @import "../variables-reset.css";
 @import "../sidebar.css";
+@import "../../shared/components/buttons.css";
+@import "../../shared/components/file-upload.css";
+@import "../../shared/components/form-layout.css";
 
 .cf4-orders-module .orders-breadcrumb {
   font-size: 0.9rem;

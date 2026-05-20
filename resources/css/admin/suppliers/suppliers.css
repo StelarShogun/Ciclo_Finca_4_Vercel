@@ -3,6 +3,11 @@
 @import "../sidebar.css";
 @import "../sweetalert2-modal-zindex.css";
 @import "../components/pagination.css";
+@import "../components/filters.css";
+@import "../../shared/components/buttons.css";
+@import "../../shared/components/file-upload.css";
+@import "../../shared/components/form-layout.css";
+@import "../../components/modals.css";
 
 /* ============================================================
   1. MAIN LAYOUT
@@ -47,78 +52,7 @@
   opacity: 0.6;
 }
 
-/* ============================================================
-  2. BUTTONS
-  ============================================================ */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border: 2px solid;
-  border-radius: var(--border-radius);
-  font-size: 0.95rem;
-  font-weight: 500;
-  font-family: 'Poppins', sans-serif;
-  text-decoration: none;
-  cursor: pointer;
-  transition: var(--transition);
-  white-space: nowrap;
-  user-select: none;
-  position: relative;
-  overflow: hidden;
-}
-
-.btn:focus {
-  box-shadow: 0 0 0 3px rgba(35,83,71,.30);
-  outline: none;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.btn::before {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%;
-  width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.20), transparent);
-  transition: left 0.5s;
-}
-.btn:hover::before { left: 100%; }
-
-.btn-primary  { background: var(--color-primary);   color: #fff; border: 2px solid var(--color-primary);   }
-.btn-secondary{ background: var(--color-secondary); color: #fff; border: 2px solid var(--color-secondary); }
-.btn-success  { background: var(--color-success);   color: #fff; border: 2px solid var(--color-success);   }
-.btn-danger   { background: var(--color-danger);    color: #fff; border: 2px solid var(--color-danger);    }
-.btn-warning  { background: var(--color-warning);   color: #fff; border: 2px solid var(--color-warning);   }
-.btn-info     { background: var(--color-info);      color: #fff; border: 2px solid var(--color-info);      }
-
-.btn-primary:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(35,83,71,.30); }
-.btn-secondary:hover:not(:disabled) { background: #37474f; border-color: #37474f; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(69,90,100,.30); }
-.btn-success:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(35,83,71,.30); }
-.btn-danger:hover:not(:disabled)    { background: #b71c1c; border-color: #b71c1c; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(211,47,47,.30); }
-.btn-warning:hover:not(:disabled)   { background: #e65100; border-color: #e65100; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(245,124,0,.30);  }
-.btn-info:hover:not(:disabled)      { background: #1565c0; border-color: #1565c0; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(25,118,210,.30); }
-
-.btn-sm { padding: 6px 12px;  font-size: 0.85rem; }
-.btn-lg { padding: 15px 30px; font-size: 1.1rem;  }
-
-.btn.loading { color: transparent; pointer-events: none; }
-.btn.loading::after {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 16px; height: 16px;
-  margin: -8px 0 0 -8px;
-  border: 2px solid transparent;
-  border-top-color: currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
+/* Buttons: shared/components/buttons.css */
 
 /* Table actions */
 .actions-container {
@@ -259,49 +193,19 @@
 .trend-up    { color: var(--color-success); }
 .trend-down  { color: var(--color-danger);  }
 
-/* ============================================================
-  4. FILTERS
-  ============================================================ */
-.filters-section {
-  background: white;
-  border-radius: 12px;
-  padding: 25px;
-  margin-bottom: 30px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-}
-
-.filters-title {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--color-primary);
-}
-
-.filters-grid,
-.filters-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  align-items: end;
-}
-
-.filter-group,
+/* Supplier-specific filter helpers (base styles in components/filters.css) */
+.filters-container,
 .search-input {
   display: flex;
   flex-direction: column;
 }
-.filter-group label,
+
 .search-input label {
   font-weight: 500;
   color: var(--color-dark);
   margin-bottom: 8px;
 }
 
-.filter-group input,
-.filter-group select,
 .search-input input {
   width: 100%;
   padding: 10px 15px;
@@ -312,28 +216,14 @@
   transition: var(--transition);
 }
 
-.filter-group input:focus,
-.filter-group select:focus,
 .search-input input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(35,83,71,.10);
-}
-
-.filter-buttons {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-.filter-btn {
-  min-width: 110px;
-  justify-content: center;
-  white-space: nowrap;
-  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.1);
 }
 
 /* ============================================================
-  5. CONTAINER AND HEADER
+  4. CONTAINER AND HEADER
   ============================================================ */
 .sales-container {
   padding: 20px;
@@ -474,7 +364,7 @@
 }
 .modal-overlay.active { display: flex; }
 
-.modal-content {
+.modal-overlay .modal-content {
   background: white;
   border-radius: 12px;
   width: 90vw;
@@ -486,13 +376,13 @@
   position: relative;
 }
 
-.modal-content.modal-auto-size {
+.modal-overlay .modal-content.modal-auto-size {
   width: fit-content;
   min-width: 600px;
   max-width: 900px;
 }
 
-.modal-header {
+.modal-overlay .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -502,15 +392,15 @@
   border-radius: 12px 12px 0 0;
 }
 
-.modal-header h3,
-.modal-title {
+.modal-overlay .modal-header h3,
+.modal-overlay .modal-title {
   margin: 0;
   font-size: 1.3rem;
   font-weight: 600;
   color: var(--color-dark);
 }
 
-.modal-close {
+.modal-overlay .modal-close {
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -520,11 +410,11 @@
   padding: 0;
   transition: color 0.2s;
 }
-.modal-close:hover { color: var(--color-danger); }
+.modal-overlay .modal-close:hover { color: var(--color-danger); }
 
-.modal-body   { padding: 25px; }
+.modal-overlay .modal-body   { padding: 25px; }
 
-.modal-footer {
+.modal-overlay .modal-footer {
   padding: 20px 25px;
   border-top: 1px solid var(--border-color);
   display: flex;
@@ -755,62 +645,51 @@
 .admin-alert__close:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 
 /* ============================================================
-  11. SUPPLIER DETAILS (MODAL)
+  11. SUPPLIER DETAIL (view modal — suppliers module only)
   ============================================================ */
-.sale-details {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-}
-
-.detail-section {
-  background: var(--color-light);
-  border-radius: 8px;
-  padding: 20px;
+.supplier-detail-view .detail-section {
   border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1rem 1.25rem;
+  background: var(--background-white);
 }
 
-.detail-section h4 {
-  margin: 0 0 15px 0;
+.supplier-detail-view .detail-section h4 {
+  margin: 0 0 0.85rem;
   color: var(--color-primary);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
-.detail-grid {
+.supplier-detail-view .detail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem 1rem;
 }
-.detail-item {
+
+.supplier-detail-view .detail-item {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 0.25rem;
 }
-.detail-item label {
+
+.supplier-detail-view .detail-item label {
   font-weight: 600;
+  font-size: 0.85rem;
   color: var(--color-muted);
-  font-size: 0.9rem;
 }
-.detail-item span {
-  color: var(--color-dark);
-  font-size: 1rem;
+
+.supplier-detail-view .detail-item span {
+  color: var(--text-primary, var(--color-dark));
+  font-size: 0.95rem;
 }
 
 /* ============================================================
   12. EMPTY STATE AND LOADING
   ============================================================ */
-.loading-spinner {
-  text-align: center;
-  padding: 40px;
-}
-.loading-spinner p {
-  margin-top: 12px;
-  color: var(--color-muted);
-}
 
 .empty-state {
   text-align: center;

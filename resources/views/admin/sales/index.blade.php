@@ -76,14 +76,13 @@
         </div>
 
         {{-- ==================== FILTERS ==================== --}}
-        <div class="filters-section">
-            <div class="filters-header">
-                <h2 class="filters-title">Filtros de Búsqueda</h2>
-            </div>
-            <form method="GET" action="{{ route('sales.index') }}" id="filters-form">
-                <div class="filters-grid">
-
-                    <div class="filter-group">
+        @component('admin.partials.filters', [
+            'action' => route('sales.index'),
+            'clearUrl' => route('sales.index'),
+            'formId' => 'filters-form',
+        ])
+            @slot('fields')
+                <div class="filter-group">
                         <label for="status">Estado</label>
                         <select id="status" name="status">
                             <option value="completed"
@@ -144,23 +143,15 @@
                             value="{{ request('search') }}">
                     </div>
 
-                    <div class="filter-group filter-buttons">
-                        <button type="submit" class="btn btn-primary filter-btn" id="apply-filters-btn">
-                            <i class="fas fa-search"></i> Aplicar Filtros
-                        </button>
-                        <a href="{{ route('sales.index') }}" class="btn btn-primary filter-btn">
-                            <i class="fas fa-times"></i> Limpiar
-                        </a>
-                    </div>
+            @endslot
 
-                </div>
-
-                <div id="date-range-error" class="alert alert-danger" style="display:none; margin-top: 0.5rem;">
+            @slot('footer')
+                <div id="date-range-error" class="alert alert-danger" style="display:none;">
                     <i class="fas fa-exclamation-circle"></i>
                     <span id="date-range-error-msg">El rango de fechas no es válido.</span>
                 </div>
-            </form>
-        </div>
+            @endslot
+        @endcomponent
 
         {{-- ==================== SALES TABLE ==================== --}}
         @php
@@ -182,6 +173,8 @@
                 ($isCustomRange && ($hasDateFrom || $hasDateTo));
         @endphp
 
+        <div data-cf4-ajax-pagination data-cf4-ajax-scroll>
+        <div id="cf4-list-fragment">
         <div class="sales-table-container">
             <table class="sales-table">
                 <thead>
@@ -319,7 +312,9 @@
         </div>
 
         {{-- Pagination component --}}
-        <x-pagination :paginator="$sales" label="ventas" />
+        <x-admin.pagination :paginator="$sales" label="ventas" />
+        </div>
+        </div>
 
     </div>
 
@@ -448,16 +443,19 @@
     </div>
 
     {{-- ==================== MODAL: VIEW SALE DETAILS ==================== --}}
-    <div id="view-sale-modal" class="modal-overlay">
+    <div id="view-sale-modal" class="edit-modal">
+        <div class="modal-backdrop" onclick="closeViewSaleModal()"></div>
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
                 <h3><i class="fas fa-eye"></i> Detalles de la Venta</h3>
-                <button class="modal-close" onclick="closeViewSaleModal()">&times;</button>
+                <button type="button" class="modal-close" onclick="closeViewSaleModal()" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body" id="view-sale-body">
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner fa-spin fa-3x spinner-primary"></i>
-                    <p>Cargando detalles...</p>
+                <div class="loading-spinner" role="status">
+                    <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
+                    <p>Cargando detalles…</p>
                 </div>
             </div>
             <div class="modal-footer">

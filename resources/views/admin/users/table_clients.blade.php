@@ -30,14 +30,37 @@
                 <div class="page-header-actions">
                     <span class="clients-count-badge">
                         <i class="fas fa-users"></i>
-                        {{ $clients->count() }} usuario(s)
+                        {{ $clients->total() }} usuario(s)
                     </span>
                 </div>
             @endslot
         @endcomponent
 
+        @component('admin.partials.filters', [
+            'action' => route('admin.clients.index'),
+            'clearUrl' => route('admin.clients.index'),
+        ])
+            @slot('fields')
+                <div class="filter-group">
+                    <label for="client-search">Buscar</label>
+                    <input type="text" id="client-search" name="search" placeholder="Nombre, apellido o correo…"
+                        value="{{ request('search') }}">
+                </div>
+
+                <div class="filter-group">
+                    <label for="client-status">Estado</label>
+                    <select id="client-status" name="status">
+                        <option value="">Todos los estados</option>
+                        <option value="active" @selected(request('status') === 'active')>Activo</option>
+                        <option value="banned" @selected(request('status') === 'banned')>Baneado</option>
+                    </select>
+                </div>
+            @endslot
+        @endcomponent
+
         {{-- ==================== USERS TABLE ==================== --}}
-        <div class="clients-container">
+        <div class="clients-container" data-cf4-ajax-pagination data-cf4-ajax-scroll>
+            <div id="cf4-list-fragment">
             <div class="clients-table-wrapper">
                 <table class="clients-table">
                     <thead>
@@ -54,7 +77,7 @@
                     <tbody>
                         @forelse ($clients as $client)
                             <tr id="client-row-{{ $client->user_id }}">
-                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ ($clients->firstItem() ?? 0) + $loop->index }}</td>
                                 <td>{{ $client->name }}</td>
                                 <td>{{ $client->first_surname }}</td>
                                 <td>{{ $client->second_surname ?? '—' }}</td>
@@ -90,11 +113,22 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="clients-empty">No hay usuarios registrados.</td>
+                                <td colspan="7" class="clients-empty">
+                                    @if (request()->hasAny(['search', 'status']))
+                                        No hay usuarios para los filtros seleccionados.
+                                    @else
+                                        No hay usuarios registrados.
+                                    @endif
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            <div class="clients-pagination-wrapper">
+                <x-admin.pagination :paginator="$clients" label="usuarios" />
+            </div>
             </div>
         </div>
 

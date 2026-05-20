@@ -216,6 +216,7 @@ class ProductSalesReportTest extends TestCase
                 'period' => '30d',
                 'sort' => 'revenue',
                 'dir' => 'desc',
+                'q' => 'RepTest-',
             ]));
         $without->assertOk();
         $this->assertSame(15, (int) $without->json('pagination.total'));

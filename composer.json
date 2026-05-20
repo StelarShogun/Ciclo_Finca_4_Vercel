@@ -69,6 +69,12 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "test:mysql": [
+            "Composer\\Config::disableProcessTimeout",
+            "@putenv PHP_INI_SCAN_DIR=:scripts/php-ini.d",
+            "@php artisan config:clear --ansi",
+            "@php ./vendor/bin/phpunit -c phpunit.mysql.xml"
+        ],
         "lint": [
             "@php ./vendor/bin/pint --test"
         ],
@@ -78,6 +84,11 @@
         "check": [
             "@lint",
             "@test",
+            "@phpstan"
+        ],
+        "check:full": [
+            "@lint",
+            "@test:mysql",
             "@phpstan"
         ]
     },

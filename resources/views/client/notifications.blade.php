@@ -68,9 +68,11 @@
             </table>
         </div>
 
-        <div style="margin-top:16px;">
-            {{ $notifications->links() }}
-        </div>
+        @if($notifications->hasPages())
+            <div class="cf4-invoices-pagination-wrap">
+                <x-pagination :paginator="$notifications" label="notificaciones" />
+            </div>
+        @endif
     </div>
 </div>
 @endsection

@@ -2,6 +2,10 @@
 @import "../utilities.css";
 @import "../sidebar.css";
 @import "../sweetalert2-modal-zindex.css";
+@import "../components/pagination.css";
+@import "../components/filters.css";
+@import "../../shared/components/buttons.css";
+@import "../../shared/components/form-layout.css";
 
 /* ============================================================
     1. MAIN LAYOUT
@@ -68,18 +72,6 @@
     transition: left 0.5s;
 }
 .btn:hover::before { left: 100%; }
-
-.btn-primary  { background: var(--color-primary);   color: #fff; border: 2px solid var(--color-primary);   }
-.btn-secondary{ background: var(--color-secondary); color: #fff; border: 2px solid var(--color-secondary); }
-.btn-success  { background: var(--color-success);   color: #fff; border: 2px solid var(--color-success);   }
-.btn-danger   { background: var(--color-danger);    color: #fff; border: 2px solid var(--color-danger);    }
-.btn-warning  { background: var(--color-warning);   color: #fff; border: 2px solid var(--color-warning);   }
-.btn-info     { background: var(--color-info);      color: #fff; border: 2px solid var(--color-info);      }
-
-.btn-primary:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(35,83,71,.30); }
-.btn-secondary:hover:not(:disabled) { background: #37474f; border-color: #37474f; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(69,90,100,.30); }
-.btn-success:hover:not(:disabled)   { background: var(--color-primary-dark); border-color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(35,83,71,.30); }
-.btn-danger:hover:not(:disabled)    { background: #b71c1c; border-color: #b71c1c; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(211,47,47,.30); }
 
 .btn-sm { padding: 6px 12px;  font-size: 0.85rem; }
 
@@ -241,6 +233,10 @@
     padding: 3rem !important;
     color: var(--color-muted);
     font-style: italic;
+}
+
+.clients-pagination-wrapper {
+    margin-top: 1rem;
 }
 
 /* ============================================================

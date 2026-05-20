@@ -126,6 +126,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($categoriesHierarchy->total() > 0)
+                    <div class="category-hierarchy-pagination" style="margin-top: 12px;">
+                        <x-pagination :paginator="$categoriesHierarchy" label="categorías" />
+                    </div>
+                @endif
             </div>
         </div>
     </main>
@@ -173,6 +178,42 @@
             if (parentSelect) {
                 parentSelect.addEventListener('change', renderSubcategories);
                 renderSubcategories();
+            }
+
+            const pagination = document.querySelector('.category-hierarchy-pagination .pagination');
+            if (pagination) {
+                const goInput = pagination.querySelector('#goToPageInput');
+                const goBtn = pagination.querySelector('#goToPageBtn');
+                const pageParam = 'hierarchy_page';
+
+                pagination.querySelectorAll('.button[aria-label]').forEach((link) => {
+                    if (link.getAttribute('aria-disabled') === 'true') {
+                        link.addEventListener('click', (e) => e.preventDefault());
+                    }
+                });
+
+                function goToPage() {
+                    const totalSpan = pagination.querySelector('.button.button-primary');
+                    if (!totalSpan || !goInput) return;
+
+                    const parts = totalSpan.textContent.trim().split('/');
+                    const lastPage = Math.max(1, parseInt((parts[1] || '1').trim(), 10));
+                    let target = parseInt(String(goInput.value || '1').trim(), 10);
+                    if (Number.isNaN(target)) target = 1;
+                    target = Math.min(Math.max(1, target), lastPage);
+
+                    const url = new URL(window.location.href);
+                    url.searchParams.set(pageParam, String(target));
+                    window.location.assign(url.toString());
+                }
+
+                goBtn?.addEventListener('click', goToPage);
+                goInput?.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        goToPage();
+                    }
+                });
             }
         })();
     </script>

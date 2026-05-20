@@ -6,7 +6,8 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
 /**
@@ -20,19 +21,18 @@ use Tests\TestCase;
  */
 class ClientInvoiceDetailTest extends TestCase
 {
+    use InteractsWithMysqlTestDatabase;
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
-        parent::setUp();
-
         try {
-            foreach (['client_table', 'products', 'sales', 'sale_items'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Tabla requerida no existe: '.$table);
-                }
-            }
+            parent::setUp();
         } catch (\Throwable $e) {
             $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
         }
+
+        $this->skipUnlessMysqlTestDatabase(['client_table', 'products', 'sales', 'sale_items']);
     }
 
     private function createIsolatedClient(string $emailHint = 'invoice-detail'): Client
