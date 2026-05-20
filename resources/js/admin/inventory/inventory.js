@@ -3000,14 +3000,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        const clearFiltersBtn = qs('#clear-filters');
-        if (clearFiltersBtn) {
-            clearFiltersBtn.addEventListener('click', () => {
-                qsa('.filter-form select').forEach(select => select.value = '');
-                qsa('.filter-form input[type="text"]').forEach(input => input.value = '');
-                filterForm.submit();
-            });
-        }
     }
 });
 

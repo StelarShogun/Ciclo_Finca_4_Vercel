@@ -28,21 +28,19 @@
         @endcomponent
 
         {{-- ==================== FILTROS --}}
-        <div class="filters-section">
-            <h2 class="filters-title">Filtros</h2>
-            <form method="GET" action="{{ route('brands.index') }}" class="filters-grid">
-                <input type="hidden" name="per_page" value="{{ \App\Support\AdminPerPage::resolve(request('per_page', 10)) }}">
+        @component('admin.partials.filters', [
+            'action' => route('brands.index'),
+            'clearUrl' => route('brands.index'),
+            'title' => 'Filtros',
+        ])
+            @slot('fields')
                 <div class="filter-group">
                     <label for="buscarNombre">Nombre de la Marca</label>
                     <input type="text" id="buscarNombre" name="name"
                         placeholder="Buscar por nombre..." value="{{ request('name') }}">
                 </div>
-                <div class="filter-actions">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
-                    <a href="{{ route('brands.index') }}" class="btn btn-secondary"><i class="fas fa-times"></i> Limpiar</a>
-                </div>
-            </form>
-        </div>
+            @endslot
+        @endcomponent
 
         {{-- ==================== TABLA --}}
         <div class="table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>

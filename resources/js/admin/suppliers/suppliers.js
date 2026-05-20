@@ -538,38 +538,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Reads filter inputs and reloads the page with updated query params
-    function applyFilters() {
-        const name    = document.getElementById('buscarNombre')?.value.trim()   || '';
-        const contact = document.getElementById('buscarContacto')?.value.trim() || '';
-
-        const url = new URL(window.location.href);
-        url.searchParams.set('page', '1'); // Reset to first page whenever filters change
-
-        name    ? url.searchParams.set('name', name)       : url.searchParams.delete('name');
-        contact ? url.searchParams.set('contact', contact) : url.searchParams.delete('contact');
-
-        window.location.href = url.toString();
-    }
-
-    document.getElementById('btnBuscar')?.addEventListener('click', applyFilters);
-
-    // Allow pressing Enter in either search field to trigger the filter
-    ['buscarNombre', 'buscarContacto'].forEach(id => {
-        document.getElementById(id)?.addEventListener('keydown', e => {
-            if (e.key === 'Enter') applyFilters();
-        });
-    });
-
-    // Removes all active filters and returns to page 1
-    document.getElementById('limpiarFiltros')?.addEventListener('click', function () {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('name');
-        url.searchParams.delete('contact');
-        url.searchParams.set('page', '1');
-        window.location.href = url.toString();
-    });
-
 });
 
 // Expose public functions to global scope for inline event handlers

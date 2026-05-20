@@ -57,37 +57,24 @@
         </div>
 
         {{-- ==================== FILTERS ==================== --}}
-        <div class="filters-section">
-            <h2 class="filters-title">Filtros de Búsqueda</h2>
-            <div class="filters-grid">
-
+        @component('admin.partials.filters', [
+            'action' => route('suppliers.index'),
+            'clearUrl' => route('suppliers.index'),
+        ])
+            @slot('fields')
                 <div class="filter-group">
                     <label for="buscarNombre">Nombre del Proveedor</label>
-                    <input type="text" id="buscarNombre" placeholder="Buscar por nombre..."
+                    <input type="text" id="buscarNombre" name="name" placeholder="Buscar por nombre..."
                         value="{{ request('name') }}">
                 </div>
 
                 <div class="filter-group">
                     <label for="buscarContacto">Contacto Principal</label>
-                    <input type="text" id="buscarContacto" placeholder="Buscar por contacto..."
+                    <input type="text" id="buscarContacto" name="contact" placeholder="Buscar por contacto..."
                         value="{{ request('contact') }}">
                 </div>
-
-                <div class="filter-group filter-buttons">
-                    <button type="button" class="btn btn-primary filter-btn" id="btnBuscar">
-                        <i class="fas fa-search"></i> Buscar
-                    </button>
-
-                    {{-- Clear filters button: only shown when filters are active --}}
-                    @if (request('name') || request('contact'))
-                        <button type="button" class="btn btn-secondary filter-btn" id="limpiarFiltros">
-                            <i class="fas fa-times"></i> Limpiar
-                        </button>
-                    @endif
-                </div>
-
-            </div>
-        </div>
+            @endslot
+        @endcomponent
 
         {{-- ==================== SUPPLIERS TABLE ==================== --}}
         <div data-cf4-ajax-pagination data-cf4-ajax-scroll>

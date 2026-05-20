@@ -12,8 +12,26 @@ class AdminClientController extends Controller
 {
     public function index(Request $request)
     {
+        $query = Client::query();
+
+        if ($search = trim((string) $request->input('search', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('first_surname', 'like', "%{$search}%")
+                    ->orWhere('second_surname', 'like', "%{$search}%")
+                    ->orWhere('gmail', 'like', "%{$search}%");
+            });
+        }
+
+        $status = $request->input('status');
+        if ($status === 'active') {
+            $query->where('active', true);
+        } elseif ($status === 'banned') {
+            $query->where('active', false);
+        }
+
         $perPage = AdminPerPage::resolve($request->input('per_page', 10));
-        $clients = Client::query()
+        $clients = $query
             ->orderBy('name')
             ->paginate($perPage)
             ->withQueryString();

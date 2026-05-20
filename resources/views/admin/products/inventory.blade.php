@@ -86,12 +86,12 @@
             @endif
 
             {{-- ==================== FILTERS ==================== --}}
-            <div class="filters-section">
-                <h2 class="filters-title">Filtros de Búsqueda</h2>
-                <form class="filter-form">
-                    <input type="hidden" name="per_page" value="{{ \App\Support\AdminPerPage::resolve(request('per_page', 10)) }}">
-                    <div class="filters-grid">
-
+            @component('admin.partials.filters', [
+                'action' => route('inventory'),
+                'clearUrl' => route('inventory'),
+                'formClass' => 'filter-form',
+            ])
+                @slot('fields')
                         <div class="filter-group">
                             <label for="parent-category-filter">Categoría</label>
                             <select id="parent-category-filter" name="parent_category_id">
@@ -138,18 +138,6 @@
                                    placeholder="Nombre o código" value="{{ request('search') }}">
                         </div>
 
-                        <div class="filter-group">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search"></i> Aplicar Filtros
-                            </button>
-                        </div>
-
-                        <div class="filter-group">
-                            <button type="button" class="btn btn-primary" id="clear-filters">
-                                <i class="fas fa-times"></i> Limpiar
-                            </button>
-                        </div>
-
                         <div class="filter-group filter-group--classification">
                             <button
                                 type="button"
@@ -161,9 +149,9 @@
                                 Más filtros por clasificación
                             </button>
                         </div>
+                @endslot
 
-                    </div>
-
+                @slot('footer')
                     <div
                         id="classification-filters-panel"
                         class="classification-filters-panel{{ ($hasClassificationSelections ?? false) ? ' is-open' : '' }}"
@@ -196,8 +184,8 @@
                             @endforeach
                         </div>
                     </div>
-                </form>
-            </div>
+                @endslot
+            @endcomponent
 
             {{-- ==================== PRODUCT LIST ==================== --}}
             <section class="products-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>

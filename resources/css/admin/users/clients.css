@@ -3,6 +3,7 @@
 @import "../sidebar.css";
 @import "../sweetalert2-modal-zindex.css";
 @import "../components/pagination.css";
+@import "../components/filters.css";
 @import "../../shared/components/buttons.css";
 @import "../../shared/components/form-layout.css";
 
