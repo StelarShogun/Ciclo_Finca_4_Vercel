@@ -144,6 +144,9 @@ class CF4AdminPurchasesTest extends TestCase
         $response->assertSee('Pendiente', false);
         $response->assertSee('Producto Admin', false);
         $response->assertSee('Confirmado', false);
+        $response->assertSee('Fecha de pedido', false);
+        $response->assertSee('Fecha listo para recoger', false);
+        $response->assertSee('Fecha de confirmación', false);
     }
 
     public function test_admin_purchases_heartbeat_detects_new_web_cart_sale(): void
