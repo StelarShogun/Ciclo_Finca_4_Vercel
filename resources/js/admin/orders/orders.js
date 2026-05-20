@@ -1,4 +1,4 @@
-const ORDERS_HEARTBEAT_INTERVAL_MS = 45000;
+const ORDERS_HEARTBEAT_INTERVAL_MS = 30000;
 
 const metaContent = (name) => document.querySelector(`meta[name="${name}"]`)?.content ?? '';
 
@@ -74,6 +74,68 @@ function hideOrdersNewBanner() {
     }
 }
 
+let ordersTableRefreshInFlight = false;
+
+function flashOrdersTableRegion() {
+    const region = document.querySelector('[data-cf4-orders-table-region]');
+
+    if (!region) {
+        return;
+    }
+
+    region.classList.remove('cf4-orders-table-region--updated');
+    window.requestAnimationFrame(() => {
+        region.classList.add('cf4-orders-table-region--updated');
+        window.setTimeout(() => region.classList.remove('cf4-orders-table-region--updated'), 1200);
+    });
+}
+
+async function refreshOrdersTable() {
+    if (ordersTableRefreshInFlight) {
+        return false;
+    }
+
+    const region = document.querySelector('[data-cf4-orders-table-region]');
+
+    if (!region) {
+        return false;
+    }
+
+    ordersTableRefreshInFlight = true;
+
+    try {
+        const url = `${window.location.pathname}${window.location.search}`;
+        const res = await fetch(url, {
+            headers: {
+                Accept: 'text/html',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        });
+
+        if (!res.ok) {
+            return false;
+        }
+
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const incoming = doc.querySelector('[data-cf4-orders-table-region]');
+
+        if (!incoming) {
+            return false;
+        }
+
+        region.replaceWith(document.importNode(incoming, true));
+        flashOrdersTableRegion();
+
+        return true;
+    } catch {
+        return false;
+    } finally {
+        ordersTableRefreshInFlight = false;
+    }
+}
+
 function initOrdersHeartbeat() {
     const root = document.querySelector('[data-cf4-orders-heartbeat]');
     const latestEl = document.getElementById('cf4-latest-purchase-sale-id');
@@ -85,6 +147,7 @@ function initOrdersHeartbeat() {
 
     let latestPurchaseSaleId = parseInt(latestEl.dataset.value, 10) || 0;
     let bannerDismissed = false;
+    let pendingTableRefresh = false;
 
     const kpiEl = document.querySelector('[data-cf4-orders-pending-kpi]');
 
@@ -96,14 +159,46 @@ function initOrdersHeartbeat() {
     const refreshBtn = document.querySelector('[data-cf4-orders-refresh-btn]');
     const dismissBtn = document.querySelector('[data-cf4-orders-dismiss-banner]');
 
-    refreshBtn?.addEventListener('click', () => {
-        window.location.reload();
+    refreshBtn?.addEventListener('click', async () => {
+        hideOrdersNewBanner();
+        bannerDismissed = false;
+        pendingTableRefresh = false;
+
+        if (!(await refreshOrdersTable())) {
+            window.location.reload();
+        }
     });
 
     dismissBtn?.addEventListener('click', () => {
         bannerDismissed = true;
         hideOrdersNewBanner();
     });
+
+    async function applyNewOrders(newCount) {
+        if (isOrdersAdminBusy()) {
+            pendingTableRefresh = true;
+
+            if (!bannerDismissed) {
+                showOrdersNewBanner(newCount);
+            }
+
+            return false;
+        }
+
+        pendingTableRefresh = false;
+        hideOrdersNewBanner();
+        bannerDismissed = false;
+
+        if (await refreshOrdersTable()) {
+            return true;
+        }
+
+        if (!bannerDismissed) {
+            showOrdersNewBanner(newCount);
+        }
+
+        return false;
+    }
 
     async function heartbeatCheck() {
         if (document.visibilityState === 'hidden') {
@@ -121,16 +216,29 @@ function initOrdersHeartbeat() {
 
             const data = await res.json();
 
-            if (typeof data.latestSaleId !== 'undefined') {
-                latestPurchaseSaleId = data.latestSaleId;
-            }
-
             if (typeof data.pendingCount !== 'undefined') {
                 updateOrdersPendingBadges(data.pendingCount);
             }
 
-            if (data.hasNew && !bannerDismissed) {
-                showOrdersNewBanner(data.newCount);
+            if (data.hasNew) {
+                const applied = await applyNewOrders(data.newCount);
+
+                if (applied && typeof data.latestSaleId !== 'undefined') {
+                    latestPurchaseSaleId = data.latestSaleId;
+                }
+            } else {
+                if (typeof data.latestSaleId !== 'undefined') {
+                    latestPurchaseSaleId = data.latestSaleId;
+                }
+
+                if (pendingTableRefresh && !isOrdersAdminBusy()) {
+                    pendingTableRefresh = false;
+                    hideOrdersNewBanner();
+
+                    if (await refreshOrdersTable() && typeof data.latestSaleId !== 'undefined') {
+                        latestPurchaseSaleId = data.latestSaleId;
+                    }
+                }
             }
         } catch {
             /* fail silently */
@@ -139,6 +247,12 @@ function initOrdersHeartbeat() {
 
     heartbeatCheck();
     window.setInterval(heartbeatCheck, ORDERS_HEARTBEAT_INTERVAL_MS);
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            heartbeatCheck();
+        }
+    });
 }
 
 function initOrderExpirationModal() {

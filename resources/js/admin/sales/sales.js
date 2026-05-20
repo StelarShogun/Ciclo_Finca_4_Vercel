@@ -538,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Heartbeat on Ventas only (Encargos uses orders.js — 45s, banner, no interrupt).
+    // Heartbeat on Ventas only (Encargos uses orders.js — 30s poll + auto table refresh).
     const latestEl = document.getElementById('cf4-latest-purchase-sale-id');
     if (latestEl && !document.querySelector('[data-cf4-orders-heartbeat]')) {
         let latestPurchaseSaleId = parseInt(latestEl.dataset.value, 10) || 0;

@@ -116,6 +116,7 @@
                 </div>
             </form>
 
+            <div data-cf4-orders-table-region id="cf4-orders-table-region">
             <div class="sales-table-container">
                 <table class="sales-table cf4-purchases-table">
                     <thead>
@@ -263,6 +264,7 @@
                     <x-pagination :paginator="$orders" label="pedidos" />
                 </div>
             @endif
+            </div>
         </div>
     </div>
 
