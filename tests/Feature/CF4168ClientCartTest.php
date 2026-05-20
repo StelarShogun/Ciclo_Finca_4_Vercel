@@ -9,35 +9,18 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Tests\TestCase;
 
-class CF4ClientCartTest extends TestCase
+class CF4168ClientCartTest extends TestCase
 {
     use RefreshDatabase;
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
+        parent::setUp();
 
-            $driver = Schema::getConnection()->getDriverName();
-            if ($driver !== 'mysql') {
-                $this->markTestSkipped('CF4 carrito/checkout requiere MySQL para el esquema en inglés.');
-            }
-
-            foreach (['client_table', 'products', 'sales', 'sale_items'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Tabla requerida no existe: '.$table);
-                }
-            }
-
-            // Asegurar que pedidos recientes cuenten como "no expirados" en ventas.
-            Config::set('sales.order_expiration_days', 30);
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
+        Config::set('sales.order_expiration_days', 30);
     }
 
     public function test_client_cart_add_update_remove_and_empty_state(): void
@@ -361,6 +344,7 @@ class CF4ClientCartTest extends TestCase
             'gmail' => 'cliente-carga@example.com',
             'password' => bcrypt('password'),
             'provider' => 'local',
+            'email_verified' => true,
         ]);
 
         $product = Product::create([
@@ -402,6 +386,7 @@ class CF4ClientCartTest extends TestCase
             'gmail' => 'cliente-fusion@example.com',
             'password' => bcrypt('password'),
             'provider' => 'local',
+            'email_verified' => true,
         ]);
 
         $dbProduct = Product::create([
