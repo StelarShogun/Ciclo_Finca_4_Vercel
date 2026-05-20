@@ -1,6 +1,8 @@
 /**
  * CF4-30 — productos más vendidos: carga tabla vía JSON, filtro con debounce.
  */
+import { normalizeAdminPerPage, readPaginationLastPage } from '../../shared/admin-per-page.js';
+
 function formatColones(value) {
     const n = Math.round(Number(value));
     return `₡${n.toLocaleString('es-CR')}`;
@@ -31,12 +33,13 @@ function buildTableRows(rows, { rank = false } = {}) {
 }
 
 /** Actualiza la URL sin recargar (compartir / refrescar conserva estado). */
-function syncReportUrl(pageUrl, { period, sort, dir, q, page, top10 }) {
+function syncReportUrl(pageUrl, { period, sort, dir, q, page, top10, perPage }) {
     const u = new URL(pageUrl, window.location.origin);
     u.searchParams.set('period', period);
     u.searchParams.set('sort', sort);
     u.searchParams.set('dir', dir);
     u.searchParams.set('page', String(page || 1));
+    u.searchParams.set('per_page', String(perPage || 10));
     u.searchParams.set('top10', top10 || 'revenue');
     const trimmed = String(q || '').trim();
     if (trimmed) {
@@ -69,8 +72,15 @@ function updatePeriodUI(root, activePeriod) {
     });
 }
 
-async function fetchTable(tableUrl, { period, sort, dir, q, page, top10 }) {
-    const params = new URLSearchParams({ period, sort, dir, page: String(page || 1), top10: top10 || 'revenue' });
+async function fetchTable(tableUrl, { period, sort, dir, q, page, top10, perPage }) {
+    const params = new URLSearchParams({
+        period,
+        sort,
+        dir,
+        page: String(page || 1),
+        per_page: String(perPage || 10),
+        top10: top10 || 'revenue',
+    });
     const trimmed = q.trim();
     if (trimmed) {
         params.set('q', trimmed);
@@ -93,11 +103,13 @@ function initProductSalesReport() {
 
     const tableUrl = root.dataset.tableUrl;
     const pageUrl = root.dataset.pageUrl;
+    const initialParams = new URLSearchParams(window.location.search);
     let period = root.dataset.period || '30d';
     let sort = root.dataset.sort || 'revenue';
     let dir = root.dataset.dir || 'desc';
-    let page = 1;
+    let page = Math.max(1, parseInt(initialParams.get('page') || '1', 10) || 1);
     let top10 = root.dataset.top10 || 'revenue';
+    let perPage = normalizeAdminPerPage(initialParams.get('per_page'));
     const searchInput = document.getElementById('product-sales-search');
     const top10Body = document.getElementById('top10-body');
     const top10MetricLabel = document.getElementById('top10-metric-label');
@@ -121,14 +133,14 @@ function initProductSalesReport() {
 
     async function loadPage(nextPage) {
         page = Math.max(1, Number(nextPage || 1));
-        syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, top10 });
+        syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, top10, perPage });
         void loadFromApi();
     }
 
     async function loadFromApi() {
         const q = searchInput.value;
         try {
-            const data = await fetchTable(tableUrl, { period, sort, dir, q, page, top10 });
+            const data = await fetchTable(tableUrl, { period, sort, dir, q, page, top10, perPage });
             if (!data.success) {
                 throw new Error('Invalid response');
             }
@@ -158,10 +170,10 @@ function initProductSalesReport() {
     }
 
     function wirePagination(wrapper) {
-        const goInput = wrapper.querySelector('#goToPageInput');
-        const goBtn = wrapper.querySelector('#goToPageBtn');
+        const goInput = wrapper.querySelector('.pagination-go-input');
+        const goBtn = wrapper.querySelector('.pagination-go-button');
 
-        wrapper.querySelectorAll('.button[aria-label]').forEach((a) => {
+        wrapper.querySelectorAll('a.button[data-page]').forEach((a) => {
             const disabled = a.getAttribute('aria-disabled') === 'true';
             if (disabled) {
                 a.addEventListener('click', (e) => e.preventDefault());
@@ -171,16 +183,13 @@ function initProductSalesReport() {
             a.addEventListener('click', (e) => {
                 e.preventDefault();
                 const dp = a.getAttribute('data-page');
-                if (!dp) return;
+                if (dp === null || dp === '') return;
                 loadPage(dp);
             });
         });
 
         function goToPage() {
-            const totalSpan = wrapper.querySelector('.button.button-primary');
-            if (!totalSpan) return;
-            const parts = totalSpan.textContent.trim().split('/');
-            const lastPage = Math.max(1, parseInt((parts[1] || '1').trim(), 10));
+            const lastPage = readPaginationLastPage(wrapper);
             let target = parseInt(String(goInput?.value || '1').trim(), 10);
             if (Number.isNaN(target)) target = 1;
             target = Math.max(1, Math.min(lastPage, target));
@@ -198,6 +207,16 @@ function initProductSalesReport() {
                 }
             });
         }
+
+        const perSel = wrapper.querySelector('.admin-pagination-per-page-select');
+        if (perSel) {
+            perSel.addEventListener('change', () => {
+                perPage = normalizeAdminPerPage(perSel.value);
+                page = 1;
+                syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, top10, perPage });
+                void loadFromApi();
+            });
+        }
     }
 
     root.querySelectorAll('.period-btn').forEach((btn) => {
@@ -208,7 +227,7 @@ function initProductSalesReport() {
             }
             period = next;
             page = 1;
-            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, top10 });
+            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, top10, perPage });
             updatePeriodUI(root, period);
             void loadFromApi();
         });
@@ -227,7 +246,7 @@ function initProductSalesReport() {
                 dir = 'desc';
             }
             page = 1;
-            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, top10 });
+            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, top10, perPage });
             updateSortHeaderUI(root, sort, dir);
             void loadFromApi();
         });
@@ -237,7 +256,7 @@ function initProductSalesReport() {
         window.clearTimeout(debounceTimer);
         debounceTimer = window.setTimeout(() => {
             page = 1;
-            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, top10 });
+            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, top10, perPage });
             void loadFromApi();
         }, debounceMs);
     });
@@ -249,7 +268,7 @@ function initProductSalesReport() {
             top10 = next;
             root.querySelectorAll('.top10-btn').forEach((b) => b.classList.toggle('is-active', b === btn));
             updateTop10Hint();
-            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, top10 });
+            syncReportUrl(pageUrl, { period, sort, dir, q: searchInput.value, page, top10, perPage });
             void loadFromApi();
         });
     });

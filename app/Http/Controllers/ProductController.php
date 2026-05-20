@@ -19,6 +19,7 @@ use App\Services\Admin\ReportExcelFilename;
 use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\ProductClassificationAssignmentService;
+use App\Support\AdminPerPage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         if ($request->wantsJson() || $request->ajax()) {
-            $perPage = $request->get('per_page', 10);
+            $perPage = AdminPerPage::resolve($request->get('per_page', 10));
             $products = Product::with(['category', 'supplier'])
                 ->orderBy('product_id', 'desc')
                 ->paginate($perPage);
@@ -143,7 +144,7 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            $product = Product::with(['category.parent', 'supplier', 'brands', 'classificationValues', 'variants'])->findOrFail($id);
+            $product = Product::with(['category.parent', 'supplier', 'brands', 'classificationValues.dimension', 'variants'])->findOrFail($id);
 
             if (request()->wantsJson() || request()->ajax()) {
                 $productData = $product->toArray();
@@ -326,6 +327,14 @@ class ProductController extends Controller
                 mkdir($folderPath, 0755, true);
             }
             $slug = Str::slug($product->name, '_');
+
+            // Remove main image when requested (no replacement file)
+            if ($request->boolean('remove_main_image') && ! $request->hasFile('image')) {
+                foreach (glob($folderPath.'/'.$slug.'_main.*') ?: [] as $old) {
+                    @unlink($old);
+                }
+                $product->clearMediaCollection('main_image');
+            }
 
             // Replace the main image when a new file is uploaded
             if ($request->hasFile('image')) {
@@ -546,8 +555,8 @@ class ProductController extends Controller
             ? $this->inventoryClassificationFilters($request)
             : [];
 
-        $perPage = $request->get('per_page', 10);
-        $paginator = $query->paginate($perPage);
+        $perPage = AdminPerPage::resolve($request->get('per_page', 10));
+        $paginator = $query->paginate($perPage)->withQueryString();
 
         // Normalize products into the structure expected by the view
         $products = collect($paginator->items())->map(function ($product) {
@@ -588,6 +597,10 @@ class ProductController extends Controller
             'categories' => $categories,
             'subcategoriesByParent' => $subcategoriesByParent,
             'brands' => Brand::orderBy('name')->get(['id', 'name']),
+            'suppliers' => Supplier::query()
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get(['supplier_id', 'name']),
             'inventoryExportsQuery' => AdminInventoryExportQuery::queryStringFromRequest($request),
             'classificationFilters' => $classificationFilters,
             'hasClassificationSelections' => $hasClassificationSelections,

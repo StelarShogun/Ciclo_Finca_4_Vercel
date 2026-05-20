@@ -31,6 +31,7 @@
         @component('admin.partials.filters', [
             'action' => route('brands.index'),
             'clearUrl' => route('brands.index'),
+            'title' => 'Filtros',
         ])
             @slot('fields')
                 <div class="filter-group">
@@ -42,7 +43,8 @@
         @endcomponent
 
         {{-- ==================== TABLA --}}
-        <div class="table-section">
+        <div class="table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
+            <div id="cf4-list-fragment">
             <table class="brands-table">
                 <thead>
                     <tr>
@@ -77,11 +79,10 @@
                 </tbody>
             </table>
 
-            @if ($brands->hasPages())
             <div class="pagination-wrapper">
-                {{ $brands->appends(request()->query())->links() }}
+                <x-admin.pagination :paginator="$brands" label="marcas" />
             </div>
-            @endif
+            </div>
         </div>
 
     </div>

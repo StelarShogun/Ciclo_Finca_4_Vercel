@@ -126,18 +126,17 @@
 
             <div class="xml-field-group">
 
-                {{-- File input --}}
-                <div>
-                    <label for="xml_file">Archivo XML del proveedor <span style="color:#ef4444;">*</span></label>
-                    <input
-                        type="file"
-                        id="xml_file"
-                        name="xml_file"
-                        accept=".xml,text/xml,application/xml"
-                        required
-                    >
-                    <p class="field-hint">Tamaño máximo: 5 MB. Solo archivos <code>.xml</code>.</p>
-                </div>
+                <x-cf-file-upload
+                    id="xml_file"
+                    name="xml_file"
+                    label="Archivo XML del proveedor"
+                    accept=".xml,text/xml,application/xml"
+                    :required="true"
+                    icon="fa-file-code"
+                    meta-id="xml_file-meta"
+                    hint="Tamaño máximo: 5 MB. Solo archivos .xml.">
+                    Haz clic o arrastra el archivo XML aquí
+                </x-cf-file-upload>
 
                 {{-- Threshold --}}
                 <div>

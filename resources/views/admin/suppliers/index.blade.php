@@ -77,6 +77,8 @@
         @endcomponent
 
         {{-- ==================== SUPPLIERS TABLE ==================== --}}
+        <div data-cf4-ajax-pagination data-cf4-ajax-scroll>
+        <div id="cf4-list-fragment">
         <div class="sales-table-container">
             <table class="sales-table">
                 <thead>
@@ -150,24 +152,23 @@
         </div>
 
         {{-- Pagination component --}}
-        <x-pagination :paginator="$suppliers" label="de proveedores" />
-
-    </div>
+        <x-admin.pagination :paginator="$suppliers" label="proveedores" />
+        </div>
+        </div>
 
     {{-- ==================== MODAL: SUPPLIER DETAIL ==================== --}}
-    <div id="modalDetalleProveedor" class="modal-overlay">
+    <div id="modalDetalleProveedor" class="edit-modal">
+        <div class="modal-backdrop" onclick="closeModal()"></div>
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
                 <h3><i class="fas fa-eye"></i> Detalles del Proveedor</h3>
-                <button onclick="closeModal()" class="modal-close" id="close-proveedor-modal">&times;</button>
+                <button type="button" onclick="closeModal()" class="modal-close" id="close-proveedor-modal" aria-label="Cerrar"><i class="fas fa-times"></i></button>
             </div>
 
             <div class="modal-body">
-                <div class="sale-details">
+                <div class="supplier-detail-view">
                     <div class="detail-section">
-                        <h4><i class="fas fa-building"></i> Información General</h4>
-
-                        {{-- Fields populated dynamically via viewSupplierDetail() --}}
+                        <h4><i class="fas fa-building"></i> Información general</h4>
                         <div class="detail-grid">
                             <div class="detail-item">
                                 <label>Nombre</label>
@@ -175,7 +176,7 @@
                             </div>
 
                             <div class="detail-item">
-                                <label>Correo Electrónico</label>
+                                <label>Correo electrónico</label>
                                 <span id="modalProveedorEmail">-</span>
                             </div>
 
@@ -200,7 +201,7 @@
                             </div>
 
                             <div class="detail-item">
-                                <label>Fecha de Registro</label>
+                                <label>Fecha de registro</label>
                                 <span id="modalProveedorFechaRegistro">-</span>
                             </div>
                         </div>

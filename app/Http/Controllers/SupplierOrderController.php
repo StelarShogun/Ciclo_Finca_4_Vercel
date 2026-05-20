@@ -11,6 +11,7 @@ use App\Models\Supplier;
 use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\SupplierDeliveryEstimator;
+use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -140,7 +141,8 @@ class SupplierOrderController extends Controller
                 });
         }
 
-        $orders = $query->paginate(10)->withQueryString();
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+        $orders = $query->paginate($perPage)->withQueryString();
         $openSupplierOrdersCount = Order::query()
             ->whereNotIn('state', self::FINAL_STATES)
             ->count();

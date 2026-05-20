@@ -204,6 +204,12 @@
                     </tbody>
                 </table>
             </div>
+
+            @if($orders->hasPages())
+                <div class="cf4-invoices-pagination-wrap">
+                    <x-pagination :paginator="$orders" label="facturas" />
+                </div>
+            @endif
         </div>
 
     </div>

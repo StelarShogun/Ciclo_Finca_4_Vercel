@@ -9,3 +9,460 @@
         letter-spacing: -4px;
     }
 }
+
+/* ---- bicicleta SVG por partes (wrong_route) ---- */
+.cf4-error-404-override {
+    position: relative;
+}
+
+.cf4-bike404-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    margin-inline: auto;
+    isolation: isolate;
+    background: #e8f7ee;
+}
+
+.cf4-bike404-svg {
+    width: 100%;
+    height: auto;
+    max-height: min(78vh, 440px);
+    min-height: 240px;
+    overflow: visible;
+    display: block;
+}
+
+/* Fondo diurno uniforme — mismo fill que el contenedor (incluso en dark mode del sitio) */
+.cf4-bike404-sky,
+.cf4-bike404-svg rect.cf4-bike404-sky {
+    fill: #e8f7ee;
+}
+
+.cf4-bike404-sun {
+    color: rgba(245, 158, 11, 0.75);
+}
+
+.cf4-bike404-sun-core {
+    fill: #fbbf24;
+    stroke: rgba(254, 243, 199, 0.65);
+    stroke-width: 2;
+}
+
+.cf4-bike404-sun-rays {
+    stroke: rgba(251, 191, 36, 0.4);
+    stroke-width: 3;
+}
+
+.cf4-bike404-cloud path {
+    fill: rgba(255, 255, 255, 0.82);
+}
+
+.cf4-bike404-cloud--2 path {
+    fill: rgba(255, 255, 255, 0.72);
+}
+
+.cf4-bike404-cloud--3 path {
+    fill: rgba(255, 255, 255, 0.65);
+}
+
+.cf4-bike404-tree line {
+    stroke: rgba(22, 101, 52, 0.45);
+    stroke-width: 8;
+    stroke-linecap: round;
+}
+
+.cf4-bike404-tree circle,
+.cf4-bike404-tree path {
+    fill: rgba(34, 197, 94, 0.38);
+}
+
+.cf4-bike404-tree--sm circle {
+    fill: rgba(34, 197, 94, 0.32);
+}
+
+.cf4-bike404-road-base {
+    fill: none;
+    stroke: rgba(148, 163, 184, 0.42);
+    stroke-width: 12;
+    stroke-linecap: round;
+}
+
+.cf4-bike404-road-dash {
+    fill: none;
+    stroke: rgba(34, 197, 94, 0.92);
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-dasharray: 14 18;
+}
+
+.cf4-bike404-road-break {
+    opacity: 0;
+}
+
+.cf4-bike404-curb-pad {
+    fill: rgba(100, 116, 139, 0.28);
+}
+
+.cf4-bike404-curb-body {
+    fill: #f8fafc;
+    stroke: #94a3b8;
+    stroke-width: 1.25;
+}
+
+.cf4-bike404-curb-cap {
+    fill: #dc2626;
+    stroke: #991b1b;
+    stroke-width: 1;
+}
+
+.cf4-bike404-curb-mark {
+    fill: #f8fafc;
+}
+
+.cf4-bike404-skid {
+    opacity: 0;
+}
+
+.cf4-bike404-skid path {
+    fill: none;
+    stroke: rgba(15, 23, 42, 0.22);
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-dasharray: 18 12;
+}
+
+.cf4-bike404-obstacle {
+    opacity: 0;
+}
+
+.cf4-bike404-barrier {
+    fill: #fff7f7;
+    stroke: #dc2626;
+    stroke-width: 2.5;
+}
+
+.cf4-bike404-barrier-stripe {
+    stroke: #b91c1c;
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.cf4-bike404-sign {
+    opacity: 0;
+}
+
+.cf4-bike404-sign-anchor {
+    pointer-events: none;
+}
+
+.cf4-bike404-sign-post {
+    stroke: #57534e;
+    stroke-width: 7;
+    stroke-linecap: round;
+}
+
+.cf4-bike404-sign-cap {
+    fill: #57534e;
+    stroke: #292524;
+    stroke-width: 1.5;
+}
+
+.cf4-bike404-sign-board-wrap {
+    filter: drop-shadow(0 6px 12px rgba(15, 23, 42, 0.12));
+}
+
+.cf4-bike404-sign-panel-outer {
+    fill: #f8fafc;
+    stroke: #78716c;
+    stroke-width: 2;
+}
+
+.cf4-bike404-sign-panel-inner {
+    fill: #ffffff;
+    stroke: #b91c1c;
+    stroke-width: 3;
+}
+
+.cf4-bike404-sign-panel-highlight {
+    fill: rgba(255, 255, 255, 0.42);
+    stroke: none;
+}
+
+.cf4-bike404-sign-bolt {
+    fill: #cbd5e1;
+    stroke: #64748b;
+    stroke-width: 1;
+}
+
+.cf4-bike404-sign-no-entry {
+    fill: none;
+    stroke: #dc2626;
+    stroke-width: 5;
+    stroke-linecap: round;
+}
+
+.cf4-bike404-sign-slash {
+    stroke: #dc2626;
+    stroke-width: 5;
+    stroke-linecap: round;
+}
+
+.cf4-bike404-frame-weld {
+    fill: #15803d;
+    stroke: #14532d;
+    stroke-width: 3;
+}
+
+.cf4-bike404-dust circle {
+    fill: rgba(148, 163, 184, 0.85);
+    opacity: 0;
+}
+
+.cf4-bike404-shadow {
+    fill: rgba(15, 23, 42, 0.14);
+}
+
+.wheel-tire {
+    fill: #f8fafc;
+    stroke: #0f172a;
+    stroke-width: 10;
+}
+
+.wheel-inner {
+    fill: #cbd5e1;
+    stroke: rgba(71, 85, 105, 0.55);
+    stroke-width: 2.5;
+}
+
+.wheel-spokes line {
+    stroke: rgba(100, 116, 139, 0.6);
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+.wheel-hub {
+    fill: #22c55e;
+    stroke: #f8fafc;
+    stroke-width: 3;
+}
+
+.cf4-bike404-frame .frame-line {
+    fill: none;
+    stroke: url("#cf4-bike-frame-gradient");
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.cf4-bike404-seat-rail {
+    fill: none;
+    stroke: #334155;
+    stroke-width: 4.5;
+    stroke-linecap: square;
+    stroke-linejoin: miter;
+}
+
+.cf4-bike404-seat-shell {
+    fill: url("#cf4-bike404-seat-surface");
+    stroke: #042f2e;
+    stroke-width: 1.75;
+    stroke-linejoin: miter;
+}
+
+.cf4-bike404-seat-top {
+    fill: rgba(5, 46, 22, 0.2);
+    stroke: none;
+}
+
+.cf4-bike404-seat-highlight {
+    fill: rgba(255, 255, 255, 0.18);
+    stroke: none;
+}
+
+.cf4-bike404-seat-crease {
+    fill: none;
+    stroke: rgba(5, 46, 22, 0.35);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+}
+
+.cf4-bike404-handlebar line,
+.cf4-bike404-handlebar path {
+    fill: none;
+    stroke: #14532d;
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.bb-shell-fixed {
+    fill: #15803d;
+    stroke: #052e16;
+    stroke-width: 2.5;
+}
+
+.crank-arm {
+    stroke: #0f172a;
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.crank-arm-back {
+    opacity: 0.55;
+}
+
+.pedal {
+    fill: #22c55e;
+    stroke: #0f172a;
+    stroke-width: 1.5;
+}
+
+/*
+ * transform-box solo en nodos donde GSAP anima x/y/scale/rotation en el plano SVG.
+ * No incluir .js-crank-spin ni .js-crank-position ni .js-wheel-spin.
+ */
+.js-bike-shadow,
+.js-warning-sign,
+.js-road-break,
+.js-road-obstacle,
+.js-skid {
+    transform-box: fill-box;
+}
+
+.dark .cf4-bike404-scene {
+    background: #e8f7ee;
+}
+
+.dark .cf4-bike404-sky,
+.dark .cf4-bike404-svg rect.cf4-bike404-sky {
+    fill: #e8f7ee;
+}
+
+.dark .cf4-bike404-svg .wheel-tire {
+    fill: #111827;
+    stroke: #e5e7eb;
+}
+
+.dark .cf4-bike404-svg .wheel-inner {
+    fill: #475569;
+    stroke: rgba(30, 41, 59, 0.85);
+}
+
+.dark .cf4-bike404-svg .wheel-spokes line {
+    stroke: rgba(51, 65, 85, 0.85);
+}
+
+.dark .cf4-bike404-svg .cf4-bike404-handlebar line,
+.dark .cf4-bike404-svg .cf4-bike404-handlebar path,
+.dark .cf4-bike404-svg .crank-arm {
+    stroke: #14532d;
+}
+
+.dark .cf4-bike404-svg .cf4-bike404-seat-shell {
+    stroke: #022c22;
+}
+
+.dark .cf4-bike404-svg .cf4-bike404-seat-top {
+    fill: rgba(15, 23, 42, 0.22);
+}
+
+.dark .cf4-bike404-svg .cf4-bike404-seat-rail {
+    stroke: #1e293b;
+}
+
+.dark .cf4-bike404-svg .cf4-bike404-seat-crease {
+    stroke: rgba(15, 118, 110, 0.55);
+}
+
+.dark .cf4-bike404-svg .bb-shell-fixed {
+    fill: #166534;
+    stroke: #052e16;
+}
+
+.dark .cf4-bike404-svg .cf4-bike404-frame-weld {
+    fill: #166534;
+    stroke: #052e16;
+}
+
+.dark .cf4-bike404-svg .pedal {
+    stroke: #052e16;
+}
+
+.dark .cf4-bike404-svg .cf4-bike404-shadow {
+    fill: rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+    .cf4-bike404-scene {
+        background: #e8f7ee;
+    }
+
+    .cf4-bike404-sky,
+    .cf4-bike404-svg rect.cf4-bike404-sky {
+        fill: #e8f7ee;
+    }
+
+    .cf4-bike404-svg .wheel-tire {
+        fill: #111827;
+        stroke: #e5e7eb;
+    }
+
+    .cf4-bike404-svg .wheel-inner {
+        fill: #475569;
+        stroke: rgba(30, 41, 59, 0.85);
+    }
+
+    .cf4-bike404-svg .wheel-spokes line {
+        stroke: rgba(51, 65, 85, 0.85);
+    }
+
+    .cf4-bike404-svg .cf4-bike404-handlebar line,
+    .cf4-bike404-svg .cf4-bike404-handlebar path,
+    .cf4-bike404-svg .crank-arm {
+        stroke: #14532d;
+    }
+
+    .cf4-bike404-svg .cf4-bike404-seat-shell {
+        stroke: #022c22;
+    }
+
+    .cf4-bike404-svg .cf4-bike404-seat-top {
+        fill: rgba(15, 23, 42, 0.22);
+    }
+
+    .cf4-bike404-svg .cf4-bike404-seat-rail {
+        stroke: #1e293b;
+    }
+
+    .cf4-bike404-svg .cf4-bike404-seat-crease {
+        stroke: rgba(15, 118, 110, 0.55);
+    }
+
+    .cf4-bike404-svg .bb-shell-fixed {
+        fill: #166534;
+        stroke: #052e16;
+    }
+
+    .cf4-bike404-svg .cf4-bike404-frame-weld {
+        fill: #166534;
+        stroke: #052e16;
+    }
+
+    .cf4-bike404-svg .pedal {
+        stroke: #052e16;
+    }
+
+    .cf4-bike404-svg .cf4-bike404-shadow {
+        fill: rgba(0, 0, 0, 0.35);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cf4-bike404-svg * {
+        animation: none !important;
+        transition: none !important;
+    }
+}

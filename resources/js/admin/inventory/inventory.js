@@ -1,3 +1,8 @@
+import '../../shared/ajax-pagination.js';
+import { initStaticSearchCombobox, setComboboxFieldError } from '../shared/static-search-combobox.js';
+import { createDropdownPortal } from '../shared/combobox-dropdown-portal.js';
+import { initFileUploadZone } from '../shared/file-upload-zone.js';
+
 // Selector shortcuts
 const qs = (s, r = document) => r.querySelector(s);
 const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -41,6 +46,38 @@ function escapeHtml(raw) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function setEditCurrentProductImage(url) {
+    const block = qs('#current-image-preview');
+    const removeInput = qs('#edit-remove-main-image');
+    if (!block) return;
+
+    if (!url) {
+        block.hidden = true;
+        block.innerHTML = '';
+        return;
+    }
+
+    if (removeInput) removeInput.value = '0';
+    block.hidden = false;
+    const safeUrl = escapeHtml(url);
+    block.innerHTML =
+        '<div class="cf-product-current-image__media">' +
+        '<img src="' + safeUrl + '" alt="Imagen actual del producto" class="cf-product-current-image__thumb">' +
+        '</div>' +
+        '<div class="cf-product-current-image__actions">' +
+        '<p class="cf-product-current-image__label">Imagen principal actual</p>' +
+        '<button type="button" class="btn btn-secondary btn-sm js-remove-current-image">' +
+        '<i class="fas fa-trash-alt" aria-hidden="true"></i> Eliminar imagen' +
+        '</button>' +
+        '</div>';
+}
+
+function markEditMainImageForRemoval() {
+    setEditCurrentProductImage(null);
+    const removeInput = qs('#edit-remove-main-image');
+    if (removeInput) removeInput.value = '1';
 }
 
 function escapeHtmlAttr(raw) {
@@ -151,31 +188,9 @@ function syncFeaturedStarButtons(productId, isFeatured) {
  * Rellena el select de subcategorías según el padre.
  * En el filtro (#subcategory-filter), si no hay padre, lista todas las subcategorías (para poder filtrar solo por sub).
  */
-function fillSubcategoryOptions(subSelect, parentId, selectedId = '') {
-    if (!subSelect) return;
+function resolveSubcategoriesForParent(parentId, isFilter) {
     const tree = window.inventoryCategoryTree || {};
-    const isFilter = subSelect.id === 'subcategory-filter';
-    const isModalSub =
-        subSelect.id === 'new-subcategory' || subSelect.id === 'edit-subcategory';
     const hasParent = parentId !== '' && parentId !== null && parentId !== undefined;
-
-    let firstOptText;
-    if (isFilter) {
-        firstOptText = 'Todos los tipos';
-    } else if (isModalSub) {
-        firstOptText = hasParent
-            ? 'Sin subcategoría (solo esta categoría)'
-            : 'Seleccioná primero una categoría';
-    } else {
-        firstOptText = 'Sin subcategoría (solo esta categoría)';
-    }
-
-    subSelect.innerHTML = '';
-    const opt0 = document.createElement('option');
-    opt0.value = '';
-    opt0.textContent = firstOptText;
-    subSelect.appendChild(opt0);
-
     let subs = [];
 
     if (!hasParent && isFilter) {
@@ -198,6 +213,77 @@ function fillSubcategoryOptions(subSelect, parentId, selectedId = '') {
         }
     }
 
+    return subs;
+}
+
+function fillSubcategoryOptions(subSelect, parentId, selectedId = '', subCombobox = null) {
+    if (!subSelect && !subCombobox) return;
+    const subId = subSelect?.id || subCombobox?.element?.id || '';
+    const isFilter = subId === 'subcategory-filter';
+    const isModalSub = subId === 'new-subcategory' || subId === 'edit-subcategory';
+    const hasParent = parentId !== '' && parentId !== null && parentId !== undefined;
+
+    let firstOptText;
+    if (isFilter) {
+        firstOptText = 'Todos los tipos';
+    } else if (isModalSub) {
+        firstOptText = hasParent
+            ? 'Sin subcategoría (solo esta categoría)'
+            : 'Seleccioná primero una categoría';
+    } else {
+        firstOptText = 'Sin subcategoría (solo esta categoría)';
+    }
+
+    const subs = resolveSubcategoriesForParent(parentId, isFilter);
+
+    if (subCombobox && isModalSub) {
+        const hintId = subId === 'new-subcategory' ? 'new-subcategory-hint' : 'edit-subcategory-hint';
+        const hintEl = document.getElementById(hintId);
+        const defaultHint =
+            hintEl?.getAttribute('data-default-hint')?.trim() ||
+            'Si no elegís subcategoría, no vas a poder cargar color, talla, etc. Elegí una subcategoría cuando exista.';
+
+        const optionList = [
+            { id: '', name: firstOptText },
+            ...subs.map((sub) => ({ id: sub.category_id, name: sub.name })),
+        ];
+
+        const disabled = !hasParent || subs.length === 0;
+        subCombobox.setOptions(optionList, {
+            disabled,
+            placeholder: hasParent ? 'Escribe para buscar subcategoría…' : firstOptText,
+        });
+
+        if (selectedId !== '' && selectedId !== undefined) {
+            subCombobox.setValue(selectedId, { silent: true });
+        } else {
+            subCombobox.reset();
+        }
+
+        if (!hasParent) {
+            if (hintEl) {
+                hintEl.textContent =
+                    'Elegí primero una categoría para ver las subcategorías disponibles.';
+            }
+        } else if (subs.length === 0) {
+            if (hintEl) {
+                hintEl.textContent =
+                    'Esta categoría no tiene subcategorías registradas. Podés guardar el producto clasificado solo en la categoría. Para atributos como color o talla, creá subcategorías en administración de categorías.';
+            }
+        } else if (hintEl) {
+            hintEl.textContent = defaultHint;
+        }
+        return;
+    }
+
+    if (!subSelect || subSelect.tagName !== 'SELECT') return;
+
+    subSelect.innerHTML = '';
+    const opt0 = document.createElement('option');
+    opt0.value = '';
+    opt0.textContent = firstOptText;
+    subSelect.appendChild(opt0);
+
     subs.forEach((sub) => {
         const opt = document.createElement('option');
         opt.value = String(sub.category_id);
@@ -209,8 +295,7 @@ function fillSubcategoryOptions(subSelect, parentId, selectedId = '') {
     });
 
     if (isModalSub) {
-        const hintId =
-            subSelect.id === 'new-subcategory' ? 'new-subcategory-hint' : 'edit-subcategory-hint';
+        const hintId = subId === 'new-subcategory' ? 'new-subcategory-hint' : 'edit-subcategory-hint';
         const hintEl = document.getElementById(hintId);
         const defaultHint =
             hintEl?.getAttribute('data-default-hint')?.trim() ||
@@ -218,24 +303,18 @@ function fillSubcategoryOptions(subSelect, parentId, selectedId = '') {
 
         if (!hasParent) {
             subSelect.disabled = true;
-            subSelect.setAttribute(
-                'aria-label',
-                'Subcategoría: seleccioná primero una categoría'
-            );
             if (hintEl) {
                 hintEl.textContent =
                     'Elegí primero una categoría para ver las subcategorías disponibles.';
             }
         } else if (subs.length === 0) {
             subSelect.disabled = true;
-            subSelect.removeAttribute('aria-label');
             if (hintEl) {
                 hintEl.textContent =
                     'Esta categoría no tiene subcategorías registradas. Podés guardar el producto clasificado solo en la categoría. Para atributos como color o talla, creá subcategorías en administración de categorías.';
             }
         } else {
             subSelect.disabled = false;
-            subSelect.removeAttribute('aria-label');
             if (hintEl) {
                 hintEl.textContent = defaultHint;
             }
@@ -318,11 +397,13 @@ function setupClassificationDimensionCard(card, dimension, initialValueId) {
             ? Number(initialValueId)
             : null;
     let open = false;
+    const listPortal = createDropdownPortal(searchInput, listEl);
 
     card.addEventListener('cf-force-close', () => {
         open = false;
         if (listEl) listEl.hidden = true;
         card.classList.remove('is-dropdown-open');
+        listPortal.unmount();
     });
 
     function setError(msg) {
@@ -418,6 +499,11 @@ function setupClassificationDimensionCard(card, dimension, initialValueId) {
         const visible = open && hasRows;
         listEl.hidden = !visible;
         card.classList.toggle('is-dropdown-open', Boolean(visible));
+        if (visible) {
+            listPortal.mount();
+        } else {
+            listPortal.unmount();
+        }
     }
 
     async function createValueApi(raw) {
@@ -771,10 +857,16 @@ function syncParentCategoryHiddenInput(parentSelect, parentHiddenInput) {
     parentHiddenInput.value = parentSelect.value || '';
 }
 
-function bindDependentCategorySelectors({ parentSelect, subSelect, hiddenCategoryInput, parentCategoryHiddenInput }) {
+function bindDependentCategorySelectors({
+    parentSelect,
+    subSelect,
+    hiddenCategoryInput,
+    parentCategoryHiddenInput,
+    subCombobox = null,
+}) {
     if (!parentSelect || !subSelect || !hiddenCategoryInput) return;
     parentSelect.addEventListener('change', () => {
-        fillSubcategoryOptions(subSelect, parentSelect.value);
+        fillSubcategoryOptions(subSelect, parentSelect.value, '', subCombobox);
         syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput);
         syncParentCategoryHiddenInput(parentSelect, parentCategoryHiddenInput);
     });
@@ -782,102 +874,62 @@ function bindDependentCategorySelectors({ parentSelect, subSelect, hiddenCategor
         syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput);
         syncParentCategoryHiddenInput(parentSelect, parentCategoryHiddenInput);
     });
+    if (subCombobox) {
+        subCombobox.onChange(() => {
+            syncFinalCategory(parentSelect, subSelect, hiddenCategoryInput);
+            syncParentCategoryHiddenInput(parentSelect, parentCategoryHiddenInput);
+        });
+    }
 }
 
-/**
- * Custom combobox for brand selection.
- * Renders a filterable dropdown from window.inventoryBrands.
- */
-function initBrandCombobox(searchInputId, hiddenInputId, dropdownId, wrapperId) {
-    const searchInput = qs('#' + searchInputId);
-    const hiddenInput = qs('#' + hiddenInputId);
-    const dropdown   = qs('#' + dropdownId);
-    const wrapper    = qs('#' + wrapperId);
-    const chevron    = wrapper?.querySelector('.brand-combobox-chevron');
-    if (!searchInput || !hiddenInput || !dropdown || !wrapper) return null;
+function initCollapsibleFormSections(root = document) {
+    root.querySelectorAll('.form-section__toggle').forEach((btn) => {
+        if (btn.dataset.cfSectionBound === '1') return;
+        btn.dataset.cfSectionBound = '1';
+        const section = btn.closest('.form-section');
+        btn.addEventListener('click', () => {
+            section?.classList.toggle('is-collapsed');
+            const expanded = !section?.classList.contains('is-collapsed');
+            btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    });
+}
 
-    let isOpen = false;
-    const brands = window.inventoryBrands || [];
-
-    function renderOptions(query) {
-        const q = (query || '').toLowerCase().trim();
-        const filtered = q ? brands.filter(b => b.name.toLowerCase().includes(q)) : brands;
-        dropdown.innerHTML = '';
-        if (!filtered.length) {
-            const noResult = document.createElement('div');
-            noResult.className = 'brand-combobox-no-result';
-            noResult.textContent = 'Sin resultados';
-            dropdown.appendChild(noResult);
+function applyServerFieldErrors(form, errors) {
+    if (!form || !errors) return;
+    Object.keys(errors).forEach((field) => {
+        const msg = errors[field]?.[0];
+        if (!msg) return;
+        const input = qs(`[name="${field}"]`, form);
+        if (!input) return;
+        const combobox = input.closest('.form-group')?.querySelector('.brand-combobox');
+        if (combobox) {
+            setComboboxFieldError(combobox, msg);
             return;
         }
-        filtered.forEach(brand => {
-            const item = document.createElement('div');
-            item.className = 'brand-combobox-option';
-            if (String(brand.id) === String(hiddenInput.value)) item.classList.add('selected');
-            item.textContent = brand.name;
-            item.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                selectBrand(brand.id, brand.name);
-            });
-            dropdown.appendChild(item);
-        });
-    }
-
-    function selectBrand(id, name) {
-        hiddenInput.value = id;
-        searchInput.value = name;
-        wrapper.classList.remove('error');
-        close();
-    }
-
-    function open() {
-        renderOptions(searchInput.value);
-        dropdown.classList.add('open');
-        wrapper.classList.add('open');
-        isOpen = true;
-        if (chevron) chevron.classList.add('rotated');
-    }
-
-    function close() {
-        dropdown.classList.remove('open');
-        wrapper.classList.remove('open');
-        isOpen = false;
-        if (chevron) chevron.classList.remove('rotated');
-    }
-
-    function reset() {
-        hiddenInput.value = '';
-        searchInput.value = '';
-        close();
-    }
-
-    function setValue(id) {
-        const brand = brands.find(b => String(b.id) === String(id));
-        if (brand) selectBrand(brand.id, brand.name);
-        else reset();
-    }
-
-    searchInput.addEventListener('focus', () => open());
-    searchInput.addEventListener('input', () => {
-        hiddenInput.value = '';
-        if (!isOpen) open();
-        else renderOptions(searchInput.value);
+        const group = input.closest('.form-group');
+        if (!group) return;
+        let err = group.querySelector('.js-server-field-error');
+        if (!err) {
+            err = document.createElement('p');
+            err.className = 'field-error js-server-field-error';
+            group.appendChild(err);
+        }
+        err.textContent = msg;
     });
-    searchInput.addEventListener('blur', () => {
-        setTimeout(() => {
-            if (!hiddenInput.value) searchInput.value = '';
-            close();
-        }, 150);
-    });
-    if (chevron) {
-        chevron.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            if (isOpen) close();
-            else { searchInput.focus(); open(); }
-        });
-    }
+}
 
-    return { selectBrand, setValue, open, close, reset };
+function initBrandCombobox(searchInputId, hiddenInputId, dropdownId, wrapperId) {
+    return initStaticSearchCombobox({
+        searchInputId,
+        hiddenInputId,
+        dropdownId,
+        wrapperId,
+        options: window.inventoryBrands || [],
+        getId: (b) => b.id,
+        getLabel: (b) => b.name,
+        placeholder: 'Escribe para buscar una marca...',
+    });
 }
 
 /**
@@ -892,6 +944,7 @@ function initProductSearchCombobox({ searchInputId, hiddenInputId, dropdownId, w
     const chevron = wrapper?.querySelector('.brand-combobox-chevron');
     if (!searchInput || !hiddenInput || !dropdown || !wrapper) return null;
 
+    const dropdownPortal = createDropdownPortal(wrapper, dropdown);
     let isOpen = false;
     let activeIndex = -1;
     let lastResults = [];
@@ -913,6 +966,7 @@ function initProductSearchCombobox({ searchInputId, hiddenInputId, dropdownId, w
         dropdown.classList.add('open');
         wrapper.classList.add('open');
         isOpen = true;
+        dropdownPortal.mount();
         if (chevron) chevron.classList.add('rotated');
     }
 
@@ -921,6 +975,7 @@ function initProductSearchCombobox({ searchInputId, hiddenInputId, dropdownId, w
         wrapper.classList.remove('open');
         isOpen = false;
         activeIndex = -1;
+        dropdownPortal.unmount();
         if (chevron) chevron.classList.remove('rotated');
     }
 
@@ -1318,18 +1373,6 @@ function setModalLoading(modal, isLoading) {
     }
 }
 
-// Smooth scroll to top
-function smoothScrollTop() {
-    try {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    } catch {
-        window.scrollTo(0, 0);
-    }
-}
-
 // Sidebar toggle with state persistence
 (function initSidebarToggle() {
     const btn = qs('#sidebarToggle');
@@ -1444,14 +1487,19 @@ function smoothScrollTop() {
     const newImagesInput  = qs('#new-images');
     const editImagesInput = qs('#edit-images');
 
+    function galleryHintForInput(inputEl) {
+        return (
+            inputEl?.closest('.cf-file-upload-field')?.querySelector('.cf-file-upload__hint')
+            || inputEl?.closest('.form-group')?.querySelector('small')
+        );
+    }
+
     newImagesInput?.addEventListener('change', function () {
-        const hint = this.closest('.form-group')?.querySelector('small');
-        validateGalleryInput(this, hint);
+        validateGalleryInput(this, galleryHintForInput(this));
     });
 
     editImagesInput?.addEventListener('change', function () {
-        const hint = this.closest('.form-group')?.querySelector('small');
-        validateGalleryInput(this, hint);
+        validateGalleryInput(this, galleryHintForInput(this));
     });
 
     if (openNewProductModalBtn) {
@@ -1459,10 +1507,12 @@ function smoothScrollTop() {
             if (newProductForm) {
                 newProductForm.reset();
             }
-            if (newSubcategory) {
-                fillSubcategoryOptions(newSubcategory, '');
-            }
+            fillSubcategoryOptions(newSubcategory, '', '', newSubcategoryCombobox);
             newBrandCombobox?.reset();
+            newParentCategoryCombobox?.reset();
+            newProviderCombobox?.reset();
+            newImageUpload?.reset();
+            newGalleryUpload?.reset();
             newProductModal.classList.add('active');
             syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
             syncParentCategoryHiddenInput(newParentCategory, newParentCategoryHidden);
@@ -1505,16 +1555,16 @@ function smoothScrollTop() {
 
             if (!qs('#new-brand')?.value) {
                 const cb = qs('#new-brand-combobox');
-                if (cb) { cb.classList.add('error'); cb.querySelector('input')?.focus(); }
+                setComboboxFieldError(cb, 'Seleccioná una marca antes de guardar el producto.');
+                cb?.querySelector('input')?.focus();
                 Swal.fire({ title: 'Marca requerida', text: 'Selecciona una marca antes de guardar el producto.', icon: 'warning', confirmButtonText: 'Entendido' });
                 return;
             }
-            qs('#new-brand-combobox')?.classList.remove('error');
+            setComboboxFieldError(qs('#new-brand-combobox'), '');
 
             // Validate gallery: if a folder was selected, ensure it has at least one image
             if (newImagesInput?.files?.length > 0) {
-                const hint = newImagesInput.closest('.form-group')?.querySelector('small');
-                if (!validateGalleryInput(newImagesInput, hint)) return;
+                if (!validateGalleryInput(newImagesInput, galleryHintForInput(newImagesInput))) return;
             }
 
             setButtonLoading(saveNewProductBtn, true);
@@ -1555,40 +1605,30 @@ function smoothScrollTop() {
                         showConfirmButton: false,
                     }).then(() => { location.reload(); });
                 } else if (data.errors) {
-                    // Remove previous error messages
-                    qsa('.error-message', newProductForm).forEach(el => el.remove());
+                    qsa('.error-message', newProductForm).forEach((el) => el.remove());
+                    qsa('.js-server-field-error', newProductForm).forEach((el) => el.remove());
+                    qsa('.brand-combobox.error', newProductForm).forEach((el) => el.classList.remove('error'));
+                    applyServerFieldErrors(newProductForm, data.errors);
 
-                    for (const field in data.errors) {
-                        const input = qs(`[name="${field}"]`, newProductForm);
-                        if (input) {
-                            const error = document.createElement('div');
-                            error.classList.add('error-message');
-                            error.style.color = 'red';
-                            error.style.fontSize = '12px';
-                            error.textContent = data.errors[field][0];
-                            input.parentNode.appendChild(error);
-                        }
-                    }
-                    
                     if (data.csrf_token) {
                         const metaTag = document.querySelector('meta[name="csrf-token"]');
                         if (metaTag) {
                             metaTag.setAttribute('content', data.csrf_token);
                         }
                     }
-                    
+
                     Swal.fire({
                         title: 'Error de validación',
                         text: jsonValidationMessage(data) || data.message || 'Revisa los campos del formulario.',
                         icon: 'error',
-                        confirmButtonText: 'Entendido'
+                        confirmButtonText: 'Entendido',
                     });
                 } else {
                     Swal.fire({
                         title: 'Error',
                         text: data.message || 'Ocurrió un error al crear el producto.',
                         icon: 'error',
-                        confirmButtonText: 'Entendido'
+                        confirmButtonText: 'Entendido',
                     });
                 }
             })
@@ -1601,7 +1641,7 @@ function smoothScrollTop() {
                         ? 'Ha excedido la capacidad de imágenes que puedes cargar.'
                         : 'Ocurrió un error inesperado. Por favor, revisa los logs.',
                     icon: 'error',
-                    confirmButtonText: 'Entendido'
+                    confirmButtonText: 'Entendido',
                 });
             });
         });
@@ -1660,6 +1700,11 @@ function smoothScrollTop() {
                     if (editVariantAddBtn) editVariantAddBtn.disabled = true;
 
                     editProductForm.action = `/products/${productId}`;
+                    editImageUpload?.reset();
+                    editGalleryUpload?.reset();
+                    setEditCurrentProductImage(product.media_main || null);
+                    const removeMainInput = qs('#edit-remove-main-image');
+                    if (removeMainInput) removeMainInput.value = '0';
                     qs('#edit-name').value = product.name || '';
                     qs('#edit-description').value = product.description || '';
                     const currentCategoryId = String(product.category_id || '');
@@ -1680,20 +1725,26 @@ function smoothScrollTop() {
                         detectedParentId = currentCategoryId;
                     }
 
+                    editClassificationPreset = product.classification_value_ids || [];
+
                     if (editParentCategory) {
-                        editParentCategory.value = detectedParentId;
-                        fillSubcategoryOptions(editSubcategory, detectedParentId, detectedSubcategoryId);
+                        editParentCategoryCombobox?.setValue(detectedParentId, { silent: true });
+                        fillSubcategoryOptions(
+                            editSubcategory,
+                            detectedParentId,
+                            detectedSubcategoryId,
+                            editSubcategoryCombobox
+                        );
                         syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
                         syncParentCategoryHiddenInput(editParentCategory, editParentCategoryHidden);
                     }
-                    qs('#edit-provider').value = product.supplier_id || '';
-                    editBrandCombobox?.setValue(product.brand_id || '');
+                    editProviderCombobox?.setValue(product.supplier_id || '', { silent: true });
+                    editBrandCombobox?.setValue(product.brand_id || '', { silent: true });
                     qs('#edit-price-buy').value = product.purchase_price || '';
                     qs('#edit-price-sell').value = product.sale_price || '';
                     qs('#edit-stock').value = product.stock_current || '';
                     qs('#edit-stock-min').value = product.stock_minimum || '';
                     qs('#edit-status').value = product.status || 'active';
-                    editClassificationPreset = product.classification_value_ids || [];
                     refreshClassificationFields(
                         '#edit-classification-fields',
                         editFinalCategory?.value || '',
@@ -1739,20 +1790,6 @@ function smoothScrollTop() {
         });
     }
 
-    bindDependentCategorySelectors({
-        parentSelect: newParentCategory,
-        subSelect: newSubcategory,
-        hiddenCategoryInput: newFinalCategory,
-        parentCategoryHiddenInput: newParentCategoryHidden,
-    });
-
-    bindDependentCategorySelectors({
-        parentSelect: editParentCategory,
-        subSelect: editSubcategory,
-        hiddenCategoryInput: editFinalCategory,
-        parentCategoryHiddenInput: editParentCategoryHidden,
-    });
-
     /** CF4-84 — al cambiar categoría en edición se limpian selecciones previas */
     let editClassificationPreset = [];
 
@@ -1780,8 +1817,126 @@ function smoothScrollTop() {
         }, 0);
     });
 
-    const newBrandCombobox  = initBrandCombobox('new-brand-search',  'new-brand',  'new-brand-dropdown',  'new-brand-combobox');
+    const newBrandCombobox = initBrandCombobox('new-brand-search', 'new-brand', 'new-brand-dropdown', 'new-brand-combobox');
     const editBrandCombobox = initBrandCombobox('edit-brand-search', 'edit-brand', 'edit-brand-dropdown', 'edit-brand-combobox');
+
+    const newParentCategoryCombobox = initStaticSearchCombobox({
+        searchInputId: 'new-parent-category-search',
+        hiddenInputId: 'new-parent-category',
+        dropdownId: 'new-parent-category-dropdown',
+        wrapperId: 'new-parent-category-combobox',
+        options: window.inventoryParentCategories || [],
+        getId: (c) => c.id,
+        getLabel: (c) => c.name,
+        placeholder: 'Escribe para buscar una categoría...',
+    });
+    const editParentCategoryCombobox = initStaticSearchCombobox({
+        searchInputId: 'edit-parent-category-search',
+        hiddenInputId: 'edit-parent-category',
+        dropdownId: 'edit-parent-category-dropdown',
+        wrapperId: 'edit-parent-category-combobox',
+        options: window.inventoryParentCategories || [],
+        getId: (c) => c.id,
+        getLabel: (c) => c.name,
+        placeholder: 'Escribe para buscar una categoría...',
+    });
+    const newProviderCombobox = initStaticSearchCombobox({
+        searchInputId: 'new-provider-search',
+        hiddenInputId: 'new-provider',
+        dropdownId: 'new-provider-dropdown',
+        wrapperId: 'new-provider-combobox',
+        options: window.inventorySuppliers || [],
+        getId: (s) => s.id,
+        getLabel: (s) => s.name,
+        placeholder: 'Escribe para buscar un proveedor...',
+    });
+    const editProviderCombobox = initStaticSearchCombobox({
+        searchInputId: 'edit-provider-search',
+        hiddenInputId: 'edit-provider',
+        dropdownId: 'edit-provider-dropdown',
+        wrapperId: 'edit-provider-combobox',
+        options: window.inventorySuppliers || [],
+        getId: (s) => s.id,
+        getLabel: (s) => s.name,
+        placeholder: 'Escribe para buscar un proveedor...',
+    });
+
+    const newSubcategoryCombobox = initStaticSearchCombobox({
+        searchInputId: 'new-subcategory-search',
+        hiddenInputId: 'new-subcategory',
+        dropdownId: 'new-subcategory-dropdown',
+        wrapperId: 'new-subcategory-combobox',
+        options: [{ id: '', name: 'Seleccioná primero una categoría' }],
+        getId: (o) => o.id,
+        getLabel: (o) => o.name,
+        placeholder: 'Seleccioná primero una categoría',
+    });
+    const editSubcategoryCombobox = initStaticSearchCombobox({
+        searchInputId: 'edit-subcategory-search',
+        hiddenInputId: 'edit-subcategory',
+        dropdownId: 'edit-subcategory-dropdown',
+        wrapperId: 'edit-subcategory-combobox',
+        options: [{ id: '', name: 'Seleccioná primero una categoría' }],
+        getId: (o) => o.id,
+        getLabel: (o) => o.name,
+        placeholder: 'Seleccioná primero una categoría',
+    });
+
+    bindDependentCategorySelectors({
+        parentSelect: newParentCategory,
+        subSelect: newSubcategory,
+        hiddenCategoryInput: newFinalCategory,
+        parentCategoryHiddenInput: newParentCategoryHidden,
+        subCombobox: newSubcategoryCombobox,
+    });
+
+    bindDependentCategorySelectors({
+        parentSelect: editParentCategory,
+        subSelect: editSubcategory,
+        hiddenCategoryInput: editFinalCategory,
+        parentCategoryHiddenInput: editParentCategoryHidden,
+        subCombobox: editSubcategoryCombobox,
+    });
+
+    const newImageUpload = initFileUploadZone({
+        inputId: 'new-image',
+        metaId: 'new-image-meta',
+        triggerId: 'new-image-trigger',
+        imagePreview: true,
+    });
+    const newGalleryUpload = initFileUploadZone({
+        inputId: 'new-images',
+        metaId: 'new-images-meta',
+        triggerId: 'new-images-trigger',
+    });
+    const editImageUpload = initFileUploadZone({
+        inputId: 'edit-image',
+        metaId: 'edit-image-meta',
+        triggerId: 'edit-image-trigger',
+        imagePreview: true,
+        onChange(file) {
+            if (file) {
+                const removeInput = qs('#edit-remove-main-image');
+                if (removeInput) removeInput.value = '0';
+            }
+        },
+    });
+
+    qs('#current-image-preview')?.addEventListener('click', (e) => {
+        if (!e.target.closest('.js-remove-current-image')) return;
+        e.preventDefault();
+        markEditMainImageForRemoval();
+        editImageUpload?.reset();
+    });
+    const editGalleryUpload = initFileUploadZone({
+        inputId: 'edit-images',
+        metaId: 'edit-images-meta',
+        triggerId: 'edit-images-trigger',
+    });
+
+    initCollapsibleFormSections(newProductModal);
+    initCollapsibleFormSections(editModal);
+
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener('click', () => {
             editModal.classList.remove('active');
@@ -1877,16 +2032,16 @@ function smoothScrollTop() {
 
             if (!qs('#edit-brand')?.value) {
                 const cb = qs('#edit-brand-combobox');
-                if (cb) { cb.classList.add('error'); cb.querySelector('input')?.focus(); }
+                setComboboxFieldError(cb, 'Seleccioná una marca antes de guardar el producto.');
+                cb?.querySelector('input')?.focus();
                 Swal.fire({ title: 'Marca requerida', text: 'Selecciona una marca antes de guardar el producto.', icon: 'warning', confirmButtonText: 'Entendido' });
                 return;
             }
-            qs('#edit-brand-combobox')?.classList.remove('error');
+            setComboboxFieldError(qs('#edit-brand-combobox'), '');
 
             // Validate gallery: if a folder was selected, ensure it has at least one image
             if (editImagesInput?.files?.length > 0) {
-                const hint = editImagesInput.closest('.form-group')?.querySelector('small');
-                if (!validateGalleryInput(editImagesInput, hint)) return;
+                if (!validateGalleryInput(editImagesInput, galleryHintForInput(editImagesInput))) return;
             }
 
             setButtonLoading(saveEditBtn, true);
@@ -1928,20 +2083,11 @@ function smoothScrollTop() {
                         showConfirmButton: false,
                     }).then(() => { location.reload(); });
                 } else if (data.errors) {
-                    qsa('.error-message', editProductForm).forEach(el => el.remove());
+                    qsa('.error-message', editProductForm).forEach((el) => el.remove());
+                    qsa('.js-server-field-error', editProductForm).forEach((el) => el.remove());
+                    qsa('.brand-combobox.error', editProductForm).forEach((el) => el.classList.remove('error'));
+                    applyServerFieldErrors(editProductForm, data.errors);
 
-                    for (const field in data.errors) {
-                        const input = qs(`[name="${field}"]`, editProductForm);
-                        if (input) {
-                            const error = document.createElement('div');
-                            error.classList.add('error-message');
-                            error.style.color = 'red';
-                            error.style.fontSize = '12px';
-                            error.textContent = data.errors[field][0];
-                            input.parentNode.appendChild(error);
-                        }
-                    }
-                    
                     if (data.csrf_token) {
                         const metaTag = document.querySelector('meta[name="csrf-token"]');
                         if (metaTag) {
@@ -2203,6 +2349,43 @@ function smoothScrollTop() {
     const cancelViewProductBtn = qs('#cancel-view-product');
     const viewProductBody = qs('#view-product-body');
 
+    function productDetailField(label, iconClass, valueHtml, fullWidth = false) {
+        const wide = fullWidth ? ' product-detail-field--full' : '';
+        return `<div class="form-group product-detail-field${wide}">
+            <label><i class="fas ${iconClass}" aria-hidden="true"></i> ${label}</label>
+            <div class="product-details-value">${valueHtml}</div>
+        </div>`;
+    }
+
+    function productDetailSection(title, sectionKey, bodyHtml) {
+        return `<section class="form-section product-details-section" data-section="${sectionKey}">
+            <button type="button" class="form-section__toggle" aria-expanded="true">
+                <span>${title}</span>
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </button>
+            <div class="form-section__body">${bodyHtml}</div>
+        </section>`;
+    }
+
+    function buildClassificationFieldsHtml(product) {
+        const values = product.classification_values || product.classificationValues || [];
+        if (!Array.isArray(values) || values.length === 0) {
+            return '';
+        }
+        return values.map((cv) => {
+            const dimName = cv.dimension?.name || 'Clasificación';
+            const val = cv.value ?? '—';
+            return productDetailField(dimName, 'fa-tags', escapeHtml(String(val)));
+        }).join('');
+    }
+
+    function wrapProductDetailMedia(innerHtml) {
+        if (innerHtml.includes('product-details-carousel-outer')) {
+            return `<div class="product-details-media">${innerHtml}</div>`;
+        }
+        return `<div class="product-details-media"><div class="product-details-media-frame">${innerHtml}</div></div>`;
+    }
+
     function initAdminViewCarousel() {
         var track = document.getElementById('admin-carousel-track');
         if (!track) return;
@@ -2249,6 +2432,13 @@ function smoothScrollTop() {
     viewDetailsBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             setActionButtonLoading(btn, true, 'Ver detalles');
+            if (viewProductBody) {
+                viewProductBody.innerHTML = `
+                    <div class="loading-spinner" role="status">
+                        <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
+                        <p>Cargando detalles…</p>
+                    </div>`;
+            }
             setModalLoading(viewProductModal, true);
             const productId = btn.dataset.productId;
             smartFetch(`/products/${productId}`, {
@@ -2271,9 +2461,9 @@ function smoothScrollTop() {
 
                     let imageHtml;
                     if (!allImages.length) {
-                        imageHtml = '<p>No hay imagen</p>';
+                        imageHtml = '<p class="product-details-empty">No hay imagen</p>';
                     } else if (allImages.length === 1) {
-                        imageHtml = `<img src="${allImages[0]}" alt="${product.name}" style="max-width:100%;height:auto;border-radius:var(--border-radius);margin-top:10px;">`;
+                        imageHtml = `<img src="${allImages[0]}" alt="${escapeHtmlAttr(product.name)}">`;
                     } else {
                         const slides = allImages.map(url =>
                             `<div class="carousel-slide"><img src="${url}" alt="${product.name}"></div>`
@@ -2282,64 +2472,54 @@ function smoothScrollTop() {
                             `<button class="carousel-dot${i === 0 ? ' active' : ''}" aria-label="Imagen ${i + 1}"></button>`
                         ).join('');
                         imageHtml = `
-                            <div class="admin-product-carousel" style="margin-top:10px;">
-                                <div class="carousel-viewport">
-                                    <div class="carousel-track" id="admin-carousel-track">${slides}</div>
+                            <div class="product-details-carousel-outer">
+                                <button type="button" class="carousel-btn carousel-btn--prev" id="admin-carousel-prev" disabled aria-label="Anterior">&#8249;</button>
+                                <div class="product-details-media-frame">
+                                    <div class="admin-product-carousel">
+                                        <div class="carousel-viewport">
+                                            <div class="carousel-track" id="admin-carousel-track">${slides}</div>
+                                        </div>
+                                        <div class="carousel-dots" id="admin-carousel-dots">${dots}</div>
+                                    </div>
                                 </div>
-                                <button class="carousel-btn carousel-btn--prev" id="admin-carousel-prev" disabled aria-label="Anterior">&#8249;</button>
-                                <button class="carousel-btn carousel-btn--next" id="admin-carousel-next" aria-label="Siguiente">&#8250;</button>
-                                <div class="carousel-dots" id="admin-carousel-dots">${dots}</div>
+                                <button type="button" class="carousel-btn carousel-btn--next" id="admin-carousel-next" aria-label="Siguiente">&#8250;</button>
                             </div>`;
                     }
 
+                    const statusLabels = {
+                        active: 'Activo',
+                        inactive: 'Inactivo',
+                        out_of_stock: 'Agotado',
+                        discontinued: 'Descontinuado',
+                    };
+                    const featuredLabel = product.is_featured
+                        ? 'Sí (inicio y catálogo)'
+                        : 'No';
+
                     viewProductBody.innerHTML = `
-                        <div class="product-details-grid">
-                            <div class="product-details-item">
-                                <label><i class="fas fa-image icon"></i> Imagen:</label>
-                                ${imageHtml}
-                            </div>
-                            <div class="product-details-item">
-                                <label><i class="fas fa-tag icon"></i> Nombre:</label>
-                                <p>${product.name}</p>
-                            </div>
-                            <div class="product-details-item">
-                                <label><i class="fas fa-align-left icon"></i> Descripción:</label>
-                                <p>${product.description || '-'}</p>
-                            </div>
-                            <div class="product-details-item">
-                                <label><i class="fas fa-boxes icon"></i> Categoría:</label>
-                                <p>${categoryPath(product.category)}</p>
-                            </div>
-                            <div class="product-details-item">
-                                <label><i class="fas fa-truck icon"></i> Proveedor:</label>
-                                <p>${product.supplier?.name || '-'}</p>
-                            </div>
-                            <div class="product-details-item">
-                                <label><i class="fas fa-dollar-sign icon"></i> Precio de Compra:</label>
-                                <p>₡${product.purchase_price}</p>
-                            </div>
-                            <div class="product-details-item">
-                                <label><i class="fas fa-money-bill-wave icon"></i> Precio de Venta:</label>
-                                <p>₡${product.sale_price}</p>
-                            </div>
-                            <div class="product-details-item">
-                                <label><i class="fas fa-warehouse icon"></i> Stock Actual:</label>
-                                <p>${product.stock_current}</p>
-                            </div>
-                            <div class="product-details-item">
-                                <label><i class="fas fa-minus-circle icon"></i> Stock Mínimo:</label>
-                                <p>${product.stock_minimum}</p>
-                            </div>
-                            <div class="product-details-item">
-                                <label><i class="fas fa-info-circle icon"></i> Estado:</label>
-                                <p>${product.status}</p>
-                            </div>
-                            <div class="product-details-item">
-                                <label><i class="fas fa-star icon"></i> Destacado en tienda:</label>
-                                <p>${product.is_featured ? 'Sí (inicio y catálogo)' : 'No'}</p>
-                            </div>
-                        </div>
-                    `;
+                        <div class="product-details-view">
+                            ${productDetailSection('Imágenes', 'images', wrapProductDetailMedia(imageHtml))}
+                            ${productDetailSection('Datos básicos', 'basic', `
+                                <div class="product-details-fields">
+                                    ${productDetailField('Nombre', 'fa-tag', escapeHtml(product.name))}
+                                    ${productDetailField('Categoría', 'fa-boxes', escapeHtml(categoryPath(product.category)))}
+                                    ${productDetailField('Descripción', 'fa-align-left', escapeHtml(product.description || '-'), true)}
+                                    ${productDetailField('Proveedor', 'fa-truck', escapeHtml(product.supplier?.name || '-'))}
+                                    ${buildClassificationFieldsHtml(product)}
+                                    ${productDetailField('Destacado en tienda', 'fa-star', featuredLabel)}
+                                </div>
+                            `)}
+                            ${productDetailSection('Precios y stock', 'pricing', `
+                                <div class="product-details-fields">
+                                    ${productDetailField('Precio de Compra', 'fa-dollar-sign', `₡${escapeHtml(product.purchase_price)}`)}
+                                    ${productDetailField('Precio de Venta', 'fa-money-bill-wave', `₡${escapeHtml(product.sale_price)}`)}
+                                    ${productDetailField('Stock Actual', 'fa-warehouse', escapeHtml(product.stock_current))}
+                                    ${productDetailField('Stock Mínimo', 'fa-minus-circle', escapeHtml(product.stock_minimum))}
+                                    ${productDetailField('Estado', 'fa-info-circle', escapeHtml(statusLabels[product.status] || product.status))}
+                                </div>
+                            `)}
+                        </div>`;
+                    initCollapsibleFormSections(viewProductModal);
                     initAdminViewCarousel();
                     viewProductModal.classList.add('active');
                 } else {
@@ -2363,17 +2543,18 @@ function smoothScrollTop() {
         });
     });
 
+    const viewProductBackdrop = qs('#view-product-modal-backdrop');
+    const closeViewProductModal = () => viewProductModal?.classList.remove('active');
+
     if (closeViewProductModalBtn) {
-        closeViewProductModalBtn.addEventListener('click', () => {
-            viewProductModal.classList.remove('active');
-        });
+        closeViewProductModalBtn.addEventListener('click', closeViewProductModal);
     }
 
     if (cancelViewProductBtn) {
-        cancelViewProductBtn.addEventListener('click', () => {
-            viewProductModal.classList.remove('active');
-        });
+        cancelViewProductBtn.addEventListener('click', closeViewProductModal);
     }
+
+    viewProductBackdrop?.addEventListener('click', closeViewProductModal);
 
     // Modal: Import products
     const importModal = qs('#import-modal');
@@ -2385,6 +2566,8 @@ function smoothScrollTop() {
 
     if (openImportModalBtn) {
         openImportModalBtn.addEventListener('click', () => {
+            importUpload?.reset();
+            resetImportUi();
             importModal.classList.add('active');
         });
     }
@@ -2426,92 +2609,44 @@ function smoothScrollTop() {
     }
 
     const fileInput = qs('#import_file');
-    const fileInfo = qs('#file-info');
-    const fileName = qs('#file-name');
-    const fileFormat = qs('#file-format');
-    const fileSize = qs('#file-size');
-    const fileIcon = qs('#file-icon');
-    const formatDetected = qs('#format-detected');
-    const detectedFormatText = qs('#detected-format-text');
-    const formatHelpText = qs('.format-help-text');
-    const fileUploadLabel = qs('.file-upload-label');
-    const removeFileBtn = qs('#remove-file');
+    const importSummary = qs('#import-file-summary');
 
-    if (fileInput) {
-        if (fileUploadLabel) {
-            fileUploadLabel.addEventListener('click', () => {
-                fileInput.click();
-            });
-        }
-
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const detected = detectFileFormat(file);
-                
-                if (detected) {
-                    fileName.textContent = file.name;
-                    fileFormat.textContent = detected.name;
-                    fileSize.textContent = formatFileSize(file.size);
-                    fileIcon.className = `fas ${detected.icon}`;
-                    fileIcon.style.color = detected.color;
-                    
-                    detectedFormatText.textContent = detected.name;
-                    formatHelpText.textContent = `El sistema detectó automáticamente que tu archivo es ${detected.name}. No necesitas seleccionar el formato manualmente.`;
-                    
-                    fileInfo.classList.remove('hidden');
-                    formatDetected.classList.remove('hidden');
-                    fileUploadLabel.style.display = 'none';
-                    
-                    confirmImportBtn.disabled = false;
-                } else {
-                    Swal.fire({
-                        title: 'Formato no soportado',
-                        text: 'Por favor selecciona un archivo XML, CSV o JSON.',
-                        icon: 'error',
-                        confirmButtonText: 'Entendido'
-                    });
-                    fileInput.value = '';
-                }
-            }
-        });
-
-        if (fileUploadLabel) {
-            fileUploadLabel.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                fileUploadLabel.style.borderColor = '#10b981';
-                fileUploadLabel.style.backgroundColor = '#f0fdf4';
-            });
-
-            fileUploadLabel.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                fileUploadLabel.style.borderColor = '#d1d5db';
-                fileUploadLabel.style.backgroundColor = '#f9fafb';
-            });
-
-            fileUploadLabel.addEventListener('drop', (e) => {
-                e.preventDefault();
-                fileUploadLabel.style.borderColor = '#d1d5db';
-                fileUploadLabel.style.backgroundColor = '#f9fafb';
-                
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    fileInput.files = files;
-                    fileInput.dispatchEvent(new Event('change'));
-                }
-            });
-        }
-
-        if (removeFileBtn) {
-            removeFileBtn.addEventListener('click', () => {
-                fileInput.value = '';
-                fileInfo.classList.add('hidden');
-                formatDetected.classList.add('hidden');
-                fileUploadLabel.style.display = 'flex';
-                confirmImportBtn.disabled = true;
-            });
-        }
+    function resetImportUi() {
+        importSummary?.classList.add('hidden');
+        if (importSummary) importSummary.innerHTML = '';
+        if (confirmImportBtn) confirmImportBtn.disabled = true;
     }
+
+    function handleImportFileSelected(file) {
+        if (!file) {
+            resetImportUi();
+            return;
+        }
+        const detected = detectFileFormat(file);
+        if (!detected) {
+            Swal.fire({
+                title: 'Formato no soportado',
+                text: 'Usá un archivo XML, CSV o JSON.',
+                icon: 'error',
+                confirmButtonText: 'Entendido',
+            });
+            importUpload?.reset();
+            resetImportUi();
+            return;
+        }
+        if (importSummary) {
+            importSummary.innerHTML = `<span class="import-summary-name">${escapeHtml(file.name)}</span><span class="import-summary-meta">${detected.name} · ${formatFileSize(file.size)}</span>`;
+            importSummary.classList.remove('hidden');
+        }
+        if (confirmImportBtn) confirmImportBtn.disabled = false;
+    }
+
+    const importUpload = initFileUploadZone({
+        inputId: 'import_file',
+        metaId: 'import_file-meta',
+        triggerId: 'import_file-trigger',
+        onChange: (file) => handleImportFileSelected(file),
+    });
 
     if (confirmImportBtn) {
         confirmImportBtn.addEventListener('click', () => {
@@ -2711,66 +2846,6 @@ function smoothScrollTop() {
     });
 })();
 
-
-
-// Pagination controls with disabled state handling and smooth scrolling
-(function initPagination() {
-    const wrapper = qs('.pagination');
-    if (!wrapper) return;
-
-    const goInput = qs('#goToPageInput', wrapper);
-    const goBtn = qs('#goToPageBtn', wrapper);
-
-    // Prevent navigation on disabled prev/next buttons
-    qsa('.pagination .button[aria-label]', wrapper).forEach((a) => {
-        const disabled = a.getAttribute('aria-disabled') === 'true';
-        if (disabled) {
-            a.addEventListener('click', (e) => e.preventDefault());
-            a.classList.add('is-disabled');
-        }
-    });
-
-    // Optional: smooth scroll when clicking page links
-    qsa('.pagination .button[aria-label]', wrapper).forEach((a) => {
-        a.addEventListener('click', (e) => {
-            const dp = a.dataset.page;
-            if (!dp || a.getAttribute('aria-disabled') === 'true') return;
-            smoothScrollTop();
-        });
-    });
-
-    // Navigate to a specific page
-    function goToPage() {
-        const totalSpan = qs('.pagination .button.button-primary', wrapper);
-        if (!totalSpan) return;
-
-        const parts = totalSpan.textContent.trim().split('/');
-        const lastPage = Math.max(1, parseInt((parts[1] || '1').trim(), 10));
-        let target = parseInt((goInput?.value || '1').trim(), 10);
-
-        if (isNaN(target)) target = 1;
-        if (target < 1) target = 1;
-        if (target > lastPage) target = lastPage;
-
-        const url = new URL(window.location.href);
-        url.searchParams.set('page', String(target));
-        smoothScrollTop();
-        window.location.assign(url.toString());
-    }
-
-    if (goBtn) {
-        goBtn.addEventListener('click', goToPage);
-    }
-
-    if (goInput) {
-        goInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                goToPage();
-            }
-        });
-    }
-})();
 
 // Initial loading spinner and filter form behavior
 document.addEventListener('DOMContentLoaded', () => {
@@ -2974,6 +3049,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Current state
     let currentAction = 'add'; // 'add' | 'remove'
     let currentProductId = null;
+    let currentStock = 0;
 
     // ── Bootstrap ─────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
@@ -3031,7 +3107,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ── Confirm ───────────────────────────────────────────────────────
         confirmBtn.addEventListener('click', submitAdjustment);
+
+        qtyInput?.addEventListener('input', updateStockPreview);
+        reasonInput?.addEventListener('input', updateReasonCharCount);
     });
+
+    function updateReasonCharCount() {
+        const reasonCountEl = document.getElementById('stock-modal-reason-count');
+        if (!reasonCountEl || !reasonInput) return;
+        const len = (reasonInput.value || '').length;
+        reasonCountEl.textContent = `${len} / 500`;
+    }
+
+    function updateStockPreview() {
+        const previewEl = document.getElementById('stock-modal-preview');
+        if (!previewEl || !qtyInput) return;
+
+        const qty = parseInt(qtyInput.value, 10);
+        if (!qtyInput.value || Number.isNaN(qty) || qty < 1) {
+            previewEl.hidden = true;
+            previewEl.textContent = '';
+            previewEl.className = 'stock-form-hint';
+            return;
+        }
+
+        const result = currentAction === 'add'
+            ? currentStock + qty
+            : Math.max(0, currentStock - qty);
+
+        previewEl.hidden = false;
+        previewEl.className = `stock-form-hint stock-form-hint--${currentAction === 'add' ? 'add' : 'remove'}`;
+        previewEl.textContent = `Stock resultante: ${result} unidades`;
+    }
 
     // ── Open modal ────────────────────────────────────────────────────────
     function openModal(action, triggerEl) {
@@ -3039,14 +3146,21 @@ document.addEventListener('DOMContentLoaded', () => {
         currentProductId = triggerEl.dataset.productId;
 
         const name  = triggerEl.dataset.productName  || 'Producto';
-        const stock = triggerEl.dataset.productStock !== undefined
-            ? triggerEl.dataset.productStock
-            : '—';
+        const stockRaw = triggerEl.dataset.productStock;
+        const stockNum = stockRaw !== undefined && stockRaw !== '' ? parseInt(stockRaw, 10) : NaN;
+        currentStock = Number.isNaN(stockNum) ? 0 : stockNum;
+        const stockLabel = stockRaw !== undefined && stockRaw !== '' ? String(stockRaw) : '—';
+
+        const modalBox = document.getElementById('stock-modal-box');
+        if (modalBox) {
+            modalBox.classList.remove('is-add', 'is-remove');
+            modalBox.classList.add(action === 'add' ? 'is-add' : 'is-remove');
+        }
 
         // Populate info strip
         productIdInput.value  = currentProductId;
         productNameEl.textContent  = name;
-        productStockEl.textContent = stock;
+        productStockEl.textContent = stockLabel;
 
         // Title & icon
         if (action === 'add') {
@@ -3059,6 +3173,15 @@ document.addEventListener('DOMContentLoaded', () => {
             modalTitle.textContent   = 'Retirar Stock';
             confirmBtn.className     = 'stock-btn stock-btn-confirm-remove';
             confirmBtnText.textContent = 'Confirmar retiro';
+            if (!Number.isNaN(stockNum) && stockNum > 0) {
+                qtyInput.max = String(stockNum);
+            } else {
+                qtyInput.removeAttribute('max');
+            }
+        }
+
+        if (action === 'add') {
+            qtyInput.removeAttribute('max');
         }
 
         // Reset form state
@@ -3085,6 +3208,12 @@ document.addEventListener('DOMContentLoaded', () => {
         qtyError.textContent   = '';
         reasonError.classList.remove('visible');
         reasonError.textContent = '';
+        const previewEl = document.getElementById('stock-modal-preview');
+        if (previewEl) {
+            previewEl.hidden = true;
+            previewEl.textContent = '';
+        }
+        updateReasonCharCount();
         hideAlert();
         setLoading(false);
     }
@@ -3097,6 +3226,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!qtyInput.value || isNaN(qty) || qty < 1 || !Number.isInteger(qty)) {
             qtyInput.classList.add('is-invalid');
             qtyError.textContent = 'Ingresa una cantidad entera mayor a 0.';
+            qtyError.classList.add('visible');
+            valid = false;
+        } else if (currentAction === 'remove' && qty > currentStock) {
+            qtyInput.classList.add('is-invalid');
+            qtyError.textContent = `No podés retirar más de ${currentStock} unidad(es).`;
             qtyError.classList.add('visible');
             valid = false;
         } else {

@@ -16,6 +16,7 @@ use App\Services\Admin\ProductSalesReportQuery;
 use App\Services\Admin\ReportExcelFilename;
 use App\Services\SalesPerformanceDateRangeService;
 use App\Services\SalesPerformanceMetricsService;
+use App\Support\AdminPerPage;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
@@ -186,7 +187,7 @@ class ReportsController extends Controller
         $q = $this->normalizeQuery($request->query('q'));
         $top10Metric = $this->normalizeTop10Metric($request->query('top10'));
         $page = max(1, (int) $request->query('page', 1));
-        $perPage = 10;
+        $perPage = AdminPerPage::resolve($request->query('per_page', 10));
 
         $start = $this->periodStart($period);
 
@@ -203,13 +204,14 @@ class ReportsController extends Controller
             ->paginate($perPage, ['*'], 'page', $page);
 
         // Attach stable URLs with the current filter state to all paginator links.
-        $paginator->setPath(route('admin.reports.product-sales'));
+        $paginator->setPath(route('admin.reports.product-sales.table'));
         $paginator->appends([
             'period' => $period,
             'sort' => $sort,
             'dir' => $dir,
             'q' => $q !== '' ? $q : null,
             'top10' => $top10Metric,
+            'per_page' => $perPage,
         ]);
 
         $formatRow = function ($row) {
@@ -232,9 +234,10 @@ class ReportsController extends Controller
                 'last_page' => $paginator->lastPage(),
             ],
             // Pre-rendered pagination HTML consumed directly by the frontend.
-            'pagination_html' => view('components.pagination', [
+            'pagination_html' => view('components.admin.pagination', [
                 'paginator' => $paginator,
                 'label' => 'reporte',
+                'perPageSubmit' => false,
             ])->render(),
         ]);
     }

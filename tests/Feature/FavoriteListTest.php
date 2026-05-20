@@ -29,6 +29,7 @@ use Tests\TestCase;
  * | F-07 | No duplicados: la BD rechaza segunda fila mismo usuario/producto | Regla negocio | test_database_rejects_duplicate_favorite_row |
  * | F-08 | product_id inválido rechazado (validación) | Validación | test_toggle_rejects_invalid_product_id |
  * | F-09 | Varios productos: ambos aparecen en la lista tras toggle | Funcional | test_two_products_both_listed_in_favorites |
+ * | F-10 | API pagina con ?page=2 y per_page=10 | API | test_favorites_index_returns_requested_page |
  */
 class FavoriteListTest extends TestCase
 {
@@ -114,6 +115,9 @@ class FavoriteListTest extends TestCase
             $response->assertOk();
             $this->assertTrue($response->json('success'));
             $this->assertSame([], $response->json('favorites'));
+            $response->assertJsonStructure([
+                'pagination' => ['current_page', 'last_page', 'per_page', 'total'],
+            ]);
         } finally {
             $client->delete();
         }
@@ -273,6 +277,40 @@ class FavoriteListTest extends TestCase
                 ->delete();
             $productA->delete();
             $productB->delete();
+            $client->delete();
+        }
+    }
+
+    public function test_favorites_index_returns_requested_page(): void
+    {
+        $client = $this->createIsolatedClient();
+        $products = [];
+
+        try {
+            $this->actingAs($client, 'clients');
+
+            for ($i = 0; $i < 12; $i++) {
+                $products[] = $this->createIsolatedProduct('Fav Page '.$i);
+                $this->postJson(route('clients.favorites.toggle'), [
+                    'product_id' => $products[$i]->product_id,
+                ])->assertOk();
+            }
+
+            $page1 = $this->getJson(route('clients.favorites.index', ['per_page' => 10, 'page' => 1]));
+            $page1->assertOk();
+            $this->assertCount(10, (array) $page1->json('favorites'));
+            $this->assertSame(1, (int) $page1->json('pagination.current_page'));
+            $this->assertSame(12, (int) $page1->json('pagination.total'));
+
+            $page2 = $this->getJson(route('clients.favorites.index', ['per_page' => 10, 'page' => 2]));
+            $page2->assertOk();
+            $this->assertCount(2, (array) $page2->json('favorites'));
+            $this->assertSame(2, (int) $page2->json('pagination.current_page'));
+        } finally {
+            FavoriteProduct::query()->where('user_id', $client->user_id)->delete();
+            foreach ($products as $product) {
+                $product->delete();
+            }
             $client->delete();
         }
     }

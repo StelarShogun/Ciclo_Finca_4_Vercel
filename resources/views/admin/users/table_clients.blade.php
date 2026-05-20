@@ -30,7 +30,7 @@
                 <div class="page-header-actions">
                     <span class="clients-count-badge">
                         <i class="fas fa-users"></i>
-                        {{ $clients->count() }} usuario(s)
+                        {{ $clients->total() }} usuario(s)
                     </span>
                 </div>
             @endslot
@@ -59,7 +59,8 @@
         @endcomponent
 
         {{-- ==================== USERS TABLE ==================== --}}
-        <div class="clients-container">
+        <div class="clients-container" data-cf4-ajax-pagination data-cf4-ajax-scroll>
+            <div id="cf4-list-fragment">
             <div class="clients-table-wrapper">
                 <table class="clients-table">
                     <thead>
@@ -76,7 +77,7 @@
                     <tbody>
                         @forelse ($clients as $client)
                             <tr id="client-row-{{ $client->user_id }}">
-                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ ($clients->firstItem() ?? 0) + $loop->index }}</td>
                                 <td>{{ $client->name }}</td>
                                 <td>{{ $client->first_surname }}</td>
                                 <td>{{ $client->second_surname ?? '—' }}</td>
@@ -123,6 +124,11 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            <div class="clients-pagination-wrapper">
+                <x-admin.pagination :paginator="$clients" label="usuarios" />
+            </div>
             </div>
         </div>
 

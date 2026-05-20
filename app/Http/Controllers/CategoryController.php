@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
@@ -45,7 +46,7 @@ class CategoryController extends Controller
             ->with('status', 'Categoría creada correctamente.');
     }
 
-    public function createSubcategory()
+    public function createSubcategory(Request $request)
     {
         // Avoid duplicated names in the parent selector (seeders may have inserted repeated roots).
         $categories = Category::query()
@@ -55,7 +56,21 @@ class CategoryController extends Controller
             ->orderBy('name')
             ->get();
 
-        $categoriesHierarchy = Category::hierarchyRowsForAdminDisplay();
+        $perPage = max(5, min(50, $request->integer('per_page', 15)));
+        $currentPage = LengthAwarePaginator::resolveCurrentPage('hierarchy_page');
+        $hierarchyRows = Category::hierarchyRowsForAdminDisplay();
+
+        $categoriesHierarchy = new LengthAwarePaginator(
+            $hierarchyRows->forPage($currentPage, $perPage)->values(),
+            $hierarchyRows->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'pageName' => 'hierarchy_page',
+            ]
+        );
+        $categoriesHierarchy->withQueryString();
 
         $subcategoriesByParent = Category::subcategoriesGroupedByCanonicalParent();
 

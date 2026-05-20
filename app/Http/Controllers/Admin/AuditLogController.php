@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Support\AdminPerPage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -83,6 +84,7 @@ class AuditLogController extends Controller
         $to = $this->normalizeDate($request->query('to'));
         $dir = $this->normalizeDir($request->query('dir'));
 
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
         $logs = AuditLog::query()
             ->with('adminUser')
             ->when($user !== '', function ($query) use ($user) {
@@ -101,7 +103,7 @@ class AuditLogController extends Controller
             ->when($from !== null, fn ($query) => $query->where('created_at', '>=', $from->copy()->startOfDay()))
             ->when($to !== null, fn ($query) => $query->where('created_at', '<=', $to->copy()->endOfDay()))
             ->orderBy('created_at', $dir)
-            ->paginate(20)
+            ->paginate($perPage)
             ->withQueryString();
 
         $actionTypes = AuditLog::query()

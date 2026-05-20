@@ -7,6 +7,7 @@
     @param string $method     HTTP method (default: GET).
     @param string|null $formId Optional form id for page scripts.
     @param string $formClass   Extra classes on the form element.
+    @param bool $preservePerPage Include hidden per_page field (default: true).
     @slot fields              Filter inputs (filter-group markup).
     @slot footer              Optional content inside the form (e.g. date validation alert).
     @slot after               Optional content after the form (e.g. quick-filter pills).
@@ -24,6 +25,10 @@
 
     <form method="{{ $method }}" action="{{ $action }}" @if (!empty($formId)) id="{{ $formId }}" @endif
         class="{{ $formClass }}">
+        @if ($preservePerPage ?? true)
+            <input type="hidden" name="per_page"
+                value="{{ \App\Support\AdminPerPage::resolve(request('per_page', 10)) }}">
+        @endif
         <div class="filters-grid">
             {{ $fields }}
 
