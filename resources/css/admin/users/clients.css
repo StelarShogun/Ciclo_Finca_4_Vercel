@@ -2,6 +2,7 @@
 @import "../utilities.css";
 @import "../sidebar.css";
 @import "../sweetalert2-modal-zindex.css";
+@import "../components/pagination.css";
 @import "../../shared/components/buttons.css";
 @import "../../shared/components/form-layout.css";
 
@@ -231,6 +232,10 @@
     padding: 3rem !important;
     color: var(--color-muted);
     font-style: italic;
+}
+
+.clients-pagination-wrapper {
+    margin-top: 1rem;
 }
 
 /* ============================================================
