@@ -79,7 +79,7 @@ class Product extends Model implements HasMedia
     // Builds the catalog SKU from the product ID.
     public static function skuFromId(int $productId): string
     {
-        return 'BK-' . str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
+        return 'BK-'.str_pad((string) $productId, 3, '0', STR_PAD_LEFT);
     }
 
     // Returns a custom SKU or a generated BK-xxx code.
@@ -118,7 +118,7 @@ class Product extends Model implements HasMedia
         $placeholders = implode(',', array_fill(0, count($ok), '?'));
 
         return $query->whereRaw(
-            'LOWER(TRIM(COALESCE(status, \'\'))) IN (' . $placeholders . ')',
+            'LOWER(TRIM(COALESCE(status, \'\'))) IN ('.$placeholders.')',
             $ok
         );
     }
@@ -189,7 +189,7 @@ class Product extends Model implements HasMedia
         )->withPivot('classification_dimension_id');
     }
 
-    // Returns the stock label shown in client listings.
+    // Returns the stock label shown in client listings (CF4-129: fixed tiers by quantity).
     public function clientCatalogStockLabel(): string
     {
         $st = $this->effectiveStatus();
@@ -202,11 +202,19 @@ class Product extends Model implements HasMedia
             return 'No disponible';
         }
 
-        if ((int) $this->stock_minimum > 0 && $this->stock_current <= (int) $this->stock_minimum) {
-            return 'Quedan pocas unidades';
+        if ($this->stock_current > 5) {
+            return 'En stock';
         }
 
-        return 'Disponible';
+        return 'Últimas unidades';
+    }
+
+    // SKU typed in admin only (no auto-generated BK-xxx fallback for storefront cards).
+    public function clientCatalogAssignedSku(): ?string
+    {
+        $s = trim((string) ($this->attributes['sku'] ?? ''));
+
+        return $s !== '' ? $s : null;
     }
 
     // Purchase price change history for this product.
@@ -240,13 +248,12 @@ class Product extends Model implements HasMedia
         return 'No disponible';
     }
 
-    // Indicates whether the client UI should show a low-stock warning.
+    // Indicates whether the client UI should show a low-stock warning (CF4-129: 1–5 units).
     public function clientShowsLowStockWarning(): bool
     {
         return $this->effectiveStatus() === 'active'
             && $this->stock_current > 0
-            && (int) $this->stock_minimum > 0
-            && $this->stock_current <= (int) $this->stock_minimum;
+            && $this->stock_current <= 5;
     }
 
     // Indicates whether the product can be purchased by the client.

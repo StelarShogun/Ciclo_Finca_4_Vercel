@@ -16,7 +16,7 @@
   --inv-muted: #64748b;
   --inv-text: #0f172a;
   --inv-sheet-bg: #fff;
-  --inv-tint: rgba(46, 125, 50, 0.06);
+  --inv-tint: rgba(35, 83, 71, 0.06);
   max-width: 900px;
   margin: 0 auto;
   font-family: Poppins, system-ui, sans-serif;
@@ -284,7 +284,7 @@
 .invoice-doc__chip--status-ok {
   background: var(--color-success-bg);
   color: var(--color-success);
-  border-color: rgba(46, 125, 50, 0.25);
+  border-color: rgba(35, 83, 71, 0.25);
 }
 
 .invoice-doc__chip--status-ok span {

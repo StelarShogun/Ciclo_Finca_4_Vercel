@@ -32,10 +32,11 @@
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  border: none;
+  border: 2px solid;
   border-radius: 8px;
   font-size: 0.95rem;
   font-weight: 500;
+  font-family: 'Poppins', sans-serif;
   text-decoration: none;
   cursor: pointer;
   transition: var(--transition);
@@ -47,7 +48,7 @@
 }
 
 .btn:focus {
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.3);
+  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.3);
 }
 
 .btn:disabled {
@@ -58,16 +59,16 @@
 
 /* Botones por defecto: legibles sobre fondos claros (modales, tablas, tarjetas). */
 .btn-primary {
-  background: var(--color-primary, #2e7d32);
+  background: var(--color-primary, #235347);
   color: #fff;
-  border: 2px solid var(--color-primary, #2e7d32);
+  border: 2px solid var(--color-primary, #235347);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-dark, #1b5e20);
-  border-color: var(--color-primary-dark, #1b5e20);
+  background: var(--color-primary-dark, #163832);
+  border-color: var(--color-primary-dark, #163832);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.35);
+  box-shadow: 0 4px 15px rgba(35, 83, 71, 0.35);
 }
 
 .btn-secondary {
@@ -112,14 +113,14 @@
 
 .btn-outline-primary {
   background: transparent;
-  color: var(--color-primary, #2e7d32);
-  border: 2px solid var(--color-primary, #2e7d32);
+  color: var(--color-primary, #235347);
+  border: 2px solid var(--color-primary, #235347);
 }
 
 .btn-outline-primary:hover:not(:disabled) {
-  background: rgba(46, 125, 50, 0.08);
-  color: var(--color-primary-dark, #1b5e20);
-  border-color: var(--color-primary-dark, #1b5e20);
+  background: rgba(35, 83, 71, 0.08);
+  color: var(--color-primary-dark, #163832);
+  border-color: var(--color-primary-dark, #163832);
   transform: translateY(-1px);
 }
 
@@ -158,7 +159,7 @@
   background: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+  box-shadow: 0 4px 15px rgba(35, 83, 71, 0.3);
 }
 
 .btn-info {
@@ -237,7 +238,7 @@
 }
 
 .dashboard-header {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-darkest) 100%);
   border-radius: 16px;
   padding: 30px;
   margin-bottom: 30px;
@@ -1125,14 +1126,14 @@
   width: 46px;
   height: 46px;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--color-primary, #2e7d32) 0%, #4caf50 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--brand-light) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   font-size: 1.1rem;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+  box-shadow: 0 4px 12px rgba(35, 83, 71, 0.3);
 }
 
 .wr-modal-header__title {
@@ -1199,7 +1200,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
-  color: var(--color-primary, #2e7d32);
+  color: var(--color-primary, #235347);
   margin-bottom: 16px;
 }
 
@@ -1243,8 +1244,8 @@
 
 .wr-input:focus,
 .wr-select:focus {
-  border-color: var(--color-primary, #2e7d32);
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+  border-color: var(--color-primary, #235347);
+  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.15);
 }
 
 .wr-input--error {
@@ -1364,10 +1365,10 @@
   align-items: center;
   gap: 8px;
   padding: 9px 16px;
-  border: 1.5px dashed var(--color-primary, #2e7d32);
+  border: 1.5px dashed var(--color-primary, #235347);
   border-radius: 10px;
   background: transparent;
-  color: var(--color-primary, #2e7d32);
+  color: var(--color-primary, #235347);
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
@@ -1376,7 +1377,7 @@
 }
 
 .wr-add-btn:hover {
-  background: rgba(46, 125, 50, 0.07);
+  background: rgba(35, 83, 71, 0.07);
   border-style: solid;
 }
 
@@ -1464,7 +1465,7 @@
   pointer-events: auto;
 }
 
-.cf4-toast--success { border-left-color: #22c55e; }
+.cf4-toast--success { border-left-color: #235347; }
 .cf4-toast--error   { border-left-color: #ef4444; }
 
 .cf4-toast__icon-wrap {
@@ -1478,7 +1479,7 @@
   font-size: 16px;
 }
 
-.cf4-toast--success .cf4-toast__icon-wrap { background: #dcfce7; color: #16a34a; }
+.cf4-toast--success .cf4-toast__icon-wrap { background: var(--brand-lightest); color: var(--brand-medium); }
 .cf4-toast--error   .cf4-toast__icon-wrap { background: #fee2e2; color: #dc2626; }
 
 .cf4-toast__body { flex: 1; min-width: 0; }

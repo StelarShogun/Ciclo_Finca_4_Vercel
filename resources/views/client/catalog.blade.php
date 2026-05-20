@@ -7,40 +7,48 @@
 @endpush
 
 @section('content')
-<div class="catalog-container">
-    <div class="catalog-header">
-        <div class="container">
-            <h1 class="catalog-title">Catálogo de Productos</h1>
+<section class="catalog-shell">
+    <header class="catalog-hero">
+        <div class="catalog-hero-content">
+            <span class="catalog-kicker">Ciclo Finca 4</span>
+            <h1>Catálogo de Productos</h1>
             <p class="catalog-subtitle">Explora nuestra amplia selección de productos</p>
+            <div class="catalog-hero-stats" aria-label="Resumen del catálogo">
+                <span><strong>{{ number_format((int) $products->total(), 0, ',', '.') }}</strong> productos</span>
+                <span><strong>{{ $categories->count() }}</strong> categorías</span>
+            </div>
         </div>
-    </div>
+    </header>
 
-    <div class="container">
+    <div class="catalog-container">
         @php
             $activeCategoryId = (int) (request('category_id') ?: 0);
         @endphp
 
-        <nav class="catalog-category-sidebar"
-             id="catalog-category-sidebar"
-             aria-label="Navegación por categorías"
-             data-catalog-sidebar-hover-root
-             data-close-delay-ms="150">
-            <div class="catalog-category-sidebar-head">
-                <button id="catalog-category-sidebar-toggle"
-                        class="catalog-category-sidebar-brand"
-                        type="button"
-                        aria-expanded="false"
-                        aria-label="Expandir menú de categorías">
-                    <i class="fas fa-bars" aria-hidden="true"></i>
-                </button>
-                <span class="catalog-category-sidebar-head-label">Categorías</span>
-            </div>
+        <div class="catalog-sidebar-stack">
+        <div class="catalog-rail-wrap">
+            <nav class="category-rail catalog-category-sidebar"
+                 id="catalog-category-sidebar"
+                 aria-label="Categorías del catálogo"
+                 data-catalog-sidebar-hover-root
+                 data-close-delay-ms="150">
+                <div class="category-rail-header">
+                    <button id="catalog-category-sidebar-toggle"
+                            class="category-rail-toggle catalog-category-sidebar-brand"
+                            type="button"
+                            aria-expanded="false"
+                            aria-label="Expandir menú de categorías">
+                        <i class="fas fa-bars" aria-hidden="true"></i>
+                    </button>
+                    <span class="category-rail-title">Categorías</span>
+                </div>
+                <div class="category-rail-scroll">
             <a href="{{ route('clients.catalog', $catalogParams) }}"
                class="catalog-category-sidebar-all catalog-category-item {{ $activeCategoryId === 0 ? 'is-active' : '' }}"
                data-category-id="0"
                title="Todos los productos"
                aria-label="Todos los productos">
-                <span class="catalog-category-item-icon" aria-hidden="true"><i class="fas fa-th-large"></i></span>
+                <span class="catalog-category-item-icon" aria-hidden="true"><i class="fas fa-list"></i></span>
                 <span class="catalog-category-item-label"></span>
             </a>
             @foreach($categories as $cat)
@@ -48,7 +56,7 @@
                     $isParentActive = $activeCategoryId === (int) $cat->category_id;
                     $isChildActive = $cat->childCategories->contains('category_id', $activeCategoryId);
                     $navRow = collect($catalogCategoryNav)->firstWhere('id', (int) $cat->category_id);
-                    $iconClass = $navRow['icon'] ?? 'fas fa-layer-group';
+                    $iconClass = $navRow['icon'] ?? 'fas fa-bicycle';
                 @endphp
                 <div class="catalog-category-sidebar-item {{ ($isParentActive || $isChildActive) ? 'has-active' : '' }}"
                      data-parent-id="{{ $cat->category_id }}"
@@ -92,26 +100,21 @@
                     @endif
                 </div>
             @endforeach
-        </nav>
-        <div class="catalog-layout">
-            {{-- Mobile: filter toggle (solo filtros; categorías en panel principal) --}}
-            <button class="btn btn-outline-secondary catalog-filter-toggle" id="catalog-filter-toggle" type="button"
-                    aria-expanded="false" aria-controls="catalog-sidebar"
-                    style="display:none; align-items:center; gap:8px; width:100%; margin-bottom:12px;">
-                <i class="fas fa-filter"></i>
-                <span>Mostrar filtros</span>
-                <i class="fas fa-chevron-down" style="margin-left:auto; font-size:0.8rem; transition:transform 0.25s ease;"></i>
-            </button>
+                </div>
+            </nav>
+        </div>
 
-            <aside class="catalog-sidebar" id="catalog-sidebar">
+        <aside class="catalog-filters catalog-sidebar" id="catalog-sidebar">
                 <div class="filters-card">
                     <h3 class="filters-title">
-                        <i class="fas fa-filter"></i>
-                        Filtros
+                        <i class="fas fa-filter" aria-hidden="true"></i>
+                        <span class="filters-title-text">Filtros</span>
                     </h3>
 
                     {{-- GET form: category_id se conserva por URL al filtrar desde el menú de categorías --}}
                     <form method="GET" action="{{ route('clients.catalog') }}" id="filter-form" autocomplete="off">
+                        {{-- Búsqueda en el header: sin JS el GET conserva `search`; con JS se sincroniza desde #catalog-nav-search. --}}
+                        <input type="hidden" name="search" id="catalog-filter-search-fallback" value="{{ old('search', request('search', '')) }}">
                         @if(request('category_id'))
                             <input type="hidden" name="category_id" value="{{ request('category_id') }}">
                         @endif
@@ -121,31 +124,6 @@
                                 {{ $errors->first('price_range') }}
                             </div>
                         @endif
-                        <div class="filter-group catalog-search-group"
-                             data-catalog-suggestions
-                             data-suggestions-url="{{ route('api.products.suggestions') }}"
-                             data-trending-url="{{ route('api.catalog.search-trending') }}">
-                            <label for="search">Buscar</label>
-                            <input type="text"
-                                   id="search"
-                                   name="search"
-                                   class="form-control"
-                                   placeholder="Nombre o descripción..."
-                                   autocomplete="off"
-                                   autocorrect="off"
-                                   autocapitalize="off"
-                                   spellcheck="false"
-                                   role="combobox"
-                                   aria-autocomplete="list"
-                                   aria-expanded="false"
-                                   aria-controls="catalog-search-suggestions"
-                                   value="{{ request('search') }}">
-                            <div id="catalog-search-suggestions"
-                                 class="catalog-search-suggestions"
-                                 role="listbox"
-                                 aria-label="Sugerencias de búsqueda"
-                                 aria-hidden="true"></div>
-                        </div>
 
                         <div class="filter-group">
                             <label>Rango de Precio</label>
@@ -155,6 +133,8 @@
                                        name="min_price"
                                        class="form-control"
                                        placeholder="Mínimo"
+                                       min="0"
+                                       step="1"
                                        value="{{ old('min_price', request('min_price')) }}">
                                 <span class="price-separator">-</span>
                                 <input type="number"
@@ -162,6 +142,8 @@
                                        name="max_price"
                                        class="form-control"
                                        placeholder="Máximo"
+                                       min="0"
+                                       step="1"
                                        value="{{ old('max_price', request('max_price')) }}">
                             </div>
                         </div>
@@ -182,39 +164,31 @@
                             </select>
                         </div>
 
-                        <div class="filter-group">
-                            <label for="sort">Ordenar por</label>
-                            <select id="sort" name="sort" class="form-control">
-                                <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Más recientes</option>
-                                <option value="price"      {{ request('sort') == 'price'      ? 'selected' : '' }}>Precio</option>
-                                <option value="name"       {{ request('sort') == 'name'       ? 'selected' : '' }}>Nombre</option>
-                            </select>
-                        </div>
-
-                        <div class="filter-group">
-                            <label for="direction">Dirección</label>
-                            <select id="direction" name="direction" class="form-control">
-                                <option value="desc" {{ request('direction') == 'desc' ? 'selected' : '' }}>Descendente</option>
-                                <option value="asc"  {{ request('direction') == 'asc'  ? 'selected' : '' }}>Ascendente</option>
-                            </select>
-                        </div>
-
                         <div class="filter-actions">
                             <button type="submit" class="btn btn-primary btn-block" id="filter-submit-btn">
-                                <i class="fas fa-search"></i>
-                                Aplicar Filtros
+                                <i class="fas fa-sliders" aria-hidden="true"></i>
+                                <span class="btn-text">Aplicar Filtros</span>
                             </button>
                             {{-- Navigating to the base URL effectively clears all filters --}}
                             <a href="{{ route('clients.catalog') }}" class="btn btn-secondary btn-block">
-                                <i class="fas fa-redo"></i>
-                                Limpiar
+                                <i class="fas fa-redo" aria-hidden="true"></i>
+                                <span class="btn-text">Limpiar</span>
                             </a>
                         </div>
                     </form>
                 </div>
             </aside>
+        </div>
 
-            <main class="catalog-content">
+            <main class="catalog-main catalog-content">
+                {{-- Mobile / tablet: filtros colapsables (JS + .open en #catalog-sidebar) --}}
+                <button class="btn btn-outline-secondary catalog-filter-toggle" id="catalog-filter-toggle" type="button"
+                        aria-expanded="false" aria-controls="catalog-sidebar">
+                    <i class="fas fa-filter"></i>
+                    <span>Mostrar filtros</span>
+                    <i class="fas fa-chevron-down catalog-filter-toggle-caret" aria-hidden="true"></i>
+                </button>
+
                 <div class="catalog-category-toolbar">
                     <button type="button"
                             id="catalog-category-trigger"
@@ -222,7 +196,7 @@
                             aria-expanded="false"
                             aria-haspopup="dialog"
                             aria-controls="catalog-category-panel">
-                        <i class="fas fa-th-large" aria-hidden="true"></i>
+                        <i class="fas fa-bicycle" aria-hidden="true"></i>
                         Categorías
                     </button>
                 </div>
@@ -253,7 +227,7 @@
                                 @foreach($categories as $cat)
                                     @php
                                         $navRow = collect($catalogCategoryNav)->firstWhere('id', (int) $cat->category_id);
-                                        $iconClass = $navRow['icon'] ?? 'fas fa-layer-group';
+                                        $iconClass = $navRow['icon'] ?? 'fas fa-bicycle';
                                         $isParentActive = $activeCategoryId === (int) $cat->category_id;
                                         $isChildActive = $cat->childCategories->contains('category_id', $activeCategoryId);
                                     @endphp
@@ -277,8 +251,6 @@
                                         </div>
                                         @if($cat->childCategories->isNotEmpty())
                                             <div class="catalog-category-parent-mobile-subs" id="catalog-panel-subs-{{ $cat->category_id }}" hidden>
-                                                <a href="{{ route('clients.catalog', array_merge($catalogParams, ['category_id' => $cat->category_id])) }}"
-                                                   class="catalog-category-ver-todo catalog-category-ver-todo--inline">Ver todo en {{ $cat->name }}</a>
                                                 <ul class="catalog-category-mobile-sub-list">
                                                     @foreach($cat->childCategories as $ch)
                                                         <li>
@@ -301,134 +273,179 @@
 
                 <script type="application/json" id="catalog-category-tree-data">@json($catalogCategoryNav)</script>
 
-                @if($catalogSpotlight->isNotEmpty())
-                    <section class="catalog-spotlight-section" aria-labelledby="catalog-spotlight-heading">
+                @php
+                    // CF4-XXX: spotlight carousel rules — hide when any catalog filter is active
+                    // (search text, category, brand, price range) and only show on page 1.
+                    $hasActiveCatalogFilters = request()->filled('search')
+                        || request()->filled('category_id')
+                        || request()->filled('brand_id')
+                        || request()->filled('min_price')
+                        || request()->filled('max_price');
+                    $catalogIsFirstPage = (int) ($products->currentPage() ?: 1) === 1;
+                    $showCatalogSpotlight = $catalogSpotlight->isNotEmpty()
+                        && ! $hasActiveCatalogFilters
+                        && $catalogIsFirstPage;
+                @endphp
+
+                @if($showCatalogSpotlight)
+                    <section class="catalog-spotlight catalog-spotlight-section" aria-labelledby="catalog-spotlight-heading">
                         <div class="catalog-spotlight-inner">
                             <header class="catalog-spotlight-header">
                                 <h2 id="catalog-spotlight-heading" class="catalog-spotlight-title">Destacados y novedades</h2>
                                 <p class="catalog-spotlight-subtitle">Productos recomendados y recién incorporados al catálogo.</p>
                             </header>
-                            <div class="catalog-spotlight-grid" role="list">
-                                @foreach($catalogSpotlight as $row)
-                                    @php
-                                        /** @var \App\Models\Product $product */
-                                        $product = $row['product'];
-                                        $spotlight = $row['spotlight'];
-                                        $catLabel = $product->clientCatalogStockLabel();
-                                        $canBuy = $product->isPurchasableByClient();
-                                        $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
-                                    @endphp
-                                    <article class="product-card product-card--catalog-spotlight" role="listitem">
-                                        <div class="product-image">
-                                            <button type="button"
-                                                    class="product-favorite-btn {{ $isFavorite ? 'is-active' : '' }}"
-                                                    data-product-favorite-btn
-                                                    data-product-id="{{ $product->product_id }}"
-                                                    aria-pressed="{{ $isFavorite ? 'true' : 'false' }}"
-                                                    aria-label="{{ $isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos' }}">
-                                                <i class="{{ $isFavorite ? 'fas' : 'far' }} fa-heart" aria-hidden="true"></i>
-                                            </button>
-                                            <span @class([
-                                                'spotlight-badge',
-                                                'spotlight-badge--featured' => $spotlight === 'featured',
-                                                'spotlight-badge--novelty' => $spotlight === 'novelty',
-                                            ])>
-                                                {{ $spotlight === 'featured' ? 'Destacado' : 'Novedad' }}
-                                            </span>
-                                            <a href="{{ $product->clientProductUrl() }}">
-                                                @php $spotlightImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')); @endphp
-                                                <img src="{{ $spotlightImgUrl }}"
-                                                     alt="{{ $product->name }}"
-                                                     data-fallback-src="{{ asset('favicon.svg') }}"
-                                                     onerror="this.src=this.dataset.fallbackSrc;">
-                                            </a>
-                                        </div>
-                                        <div class="product-info">
-                                            <div class="product-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
-                                            <h3 class="product-name">
-                                                <a href="{{ $product->clientProductUrl() }}">{{ $product->name }}</a>
-                                            </h3>
-                                            @php $spotRs = $productReviewStats[(int) $product->product_id] ?? null; @endphp
-                                            @include('client.parts.product-stars-inline', [
-                                                'avgStars' => (float) data_get($spotRs, 'avg', 0),
-                                                'reviewCount' => (int) data_get($spotRs, 'count', 0),
-                                                'variant' => 'card',
-                                            ])
-                                            <p @class([
-                                                'product-availability-text',
-                                                'is-available' => $catLabel === 'Disponible',
-                                                'is-low' => $catLabel === 'Quedan pocas unidades',
-                                                'is-out' => $catLabel === 'Agotado',
-                                                'is-na' => $catLabel === 'No disponible',
-                                            ])>{{ $catLabel }}</p>
-                                            @if($canBuy)
-                                                <p class="product-stock-qty">{{ number_format((int) ($product->stock_current ?? 0), 0, ',', '.') }} unidades disponibles</p>
-                                            @endif
-                                            <div class="product-footer product-footer--spotlight-compact">
-                                                <div class="product-price-bar">
-                                                    <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
-                                                </div>
-                                                <div class="product-actions">
-                                                    <a href="{{ $product->clientProductUrl() }}" class="btn-product btn-ver-detalles">
-                                                        <i class="fas fa-arrow-right"></i>
-                                                        Ver detalles
-                                                    </a>
-                                                    @if($canBuy)
-                                                        @auth('clients')
-                                                            <button type="button" class="btn-product btn-agregar add-to-cart-btn"
-                                                                    data-purchasable="1"
-                                                                    data-product-id="{{ $product->product_id }}"
-                                                                    data-product-name="{{ $product->name }}"
-                                                                    data-product-price="{{ $product->sale_price }}"
-                                                                    data-product-stock="{{ $product->stock_current }}">
-                                                                <i class="fas fa-cart-plus"></i>
-                                                                Agregar
-                                                            </button>
-                                                        @else
-                                                            <button type="button" class="btn-product btn-agregar guest-add-btn"
-                                                                    data-purchasable="1"
-                                                                    data-product-stock="{{ $product->stock_current }}">
-                                                                <i class="fas fa-cart-plus"></i>
-                                                                Agregar
-                                                            </button>
-                                                        @endauth
-                                                    @else
-                                                        <button type="button" class="btn-product btn-agotado" disabled>
-                                                            <i class="fas fa-ban"></i>
-                                                            {{ $catLabel === 'Agotado' ? 'Agotado' : 'No disponible' }}
-                                                        </button>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </article>
-                                @endforeach
+                            <div class="catalog-spotlight-carousel"
+                                 data-catalog-spotlight-carousel
+                                 data-autoplay-delay="4000"
+                                 role="region"
+                                 aria-roledescription="carrusel"
+                                 aria-label="Productos destacados y novedades del catálogo">
+                                <div class="swiper catalog-spotlight-swiper">
+                                    <div class="swiper-wrapper">
+                                        @foreach($catalogSpotlight as $row)
+                                            @php
+                                                /** @var \App\Models\Product $product */
+                                                $product = $row['product'];
+                                                $spotlight = $row['spotlight'];
+                                                $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
+                                                $spotlightImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png'));
+                                                $spotLabel = $product->clientCatalogStockLabel();
+                                                $spotSku = $product->clientCatalogAssignedSku();
+                                                $spotlightPriceFormatted = number_format((float) $product->sale_price, 0, ',', '.');
+                                            @endphp
+                                            <article class="swiper-slide product-card product-card--catalog-spotlight product-card--catalog-cf128 catalog-spotlight-slide @if($spotLabel === 'Agotado') catalog-spotlight-slide--out-of-stock @endif"
+                                                     role="group"
+                                                     aria-roledescription="diapositiva"
+                                                     aria-label="{{ $loop->iteration }} de {{ $loop->count }}: {{ $product->name }}">
+                                                <a class="catalog-spotlight-card-link"
+                                                   href="{{ $product->clientProductUrl() }}"
+                                                   aria-label="Ver producto: {{ $product->name }}">
+                                                    <div class="product-image product-image--catalog-cf128">
+                                                        <div class="product-image__frame">
+                                                            <img src="{{ $spotlightImgUrl }}"
+                                                                 alt=""
+                                                                 loading="lazy"
+                                                                 decoding="async"
+                                                                 data-fallback-src="{{ asset('favicon.svg') }}"
+                                                                 onerror="this.src=this.dataset.fallbackSrc;">
+                                                            <div class="product-image__hover-overlay" aria-hidden="true">
+                                                                <span class="product-image__hover-price">₡{{ $spotlightPriceFormatted }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="product-info">
+                                                        <h3 class="product-name catalog-spotlight-card-title">{{ $product->name }}</h3>
+                                                        @php $spotRs = $productReviewStats[(int) $product->product_id] ?? null; @endphp
+                                                        @include('client.parts.product-stars-inline', [
+                                                            'avgStars' => (float) data_get($spotRs, 'avg', 0),
+                                                            'reviewCount' => (int) data_get($spotRs, 'count', 0),
+                                                            'variant' => 'card',
+                                                        ])
+                                                        @if($spotSku)
+                                                            <p class="catalog-spotlight-card-sku">SKU: {{ $spotSku }}</p>
+                                                        @endif
+                                                        <p @class([
+                                                            'product-availability-text',
+                                                            'product-stock-badge',
+                                                            'catalog-spotlight-stock-label',
+                                                            'is-available' => $spotLabel === 'En stock',
+                                                            'is-low' => $spotLabel === 'Últimas unidades',
+                                                            'is-out' => $spotLabel === 'Agotado',
+                                                            'is-na' => $spotLabel === 'No disponible',
+                                                        ])>{{ $spotLabel }}</p>
+                                                        <div class="product-price-bar catalog-spotlight-card-price">
+                                                            <span class="product-price-value">₡{{ $spotlightPriceFormatted }}</span>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                                <button type="button"
+                                                        class="product-favorite-btn catalog-spotlight-favorite {{ $isFavorite ? 'is-active' : '' }}"
+                                                        data-product-favorite-btn
+                                                        data-product-id="{{ $product->product_id }}"
+                                                        aria-pressed="{{ $isFavorite ? 'true' : 'false' }}"
+                                                        aria-label="{{ $isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos' }}">
+                                                    <i class="{{ $isFavorite ? 'fas' : 'far' }} fa-heart" aria-hidden="true"></i>
+                                                </button>
+                                                <span @class([
+                                                    'spotlight-badge',
+                                                    'catalog-spotlight-badge',
+                                                    'spotlight-badge--featured' => $spotlight === 'featured',
+                                                    'spotlight-badge--novelty' => $spotlight === 'novelty',
+                                                ])>
+                                                    {{ $spotlight === 'featured' ? 'Destacado' : 'Novedad' }}
+                                                </span>
+                                            </article>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                <button type="button"
+                                        class="catalog-spotlight-nav catalog-spotlight-nav--prev"
+                                        data-spotlight-prev
+                                        aria-label="Producto destacado anterior">
+                                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                                </button>
+                                <button type="button"
+                                        class="catalog-spotlight-nav catalog-spotlight-nav--next"
+                                        data-spotlight-next
+                                        aria-label="Siguiente producto destacado">
+                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                </button>
                             </div>
                         </div>
                     </section>
                 @endif
 
                 <div class="catalog-results">
-                    <div class="results-header">
-                        @if($selectedCategory)
-                            <p class="catalog-breadcrumb">Catálogo / {{ $selectedCategory->name }}</p>
-                        @else
-                            <p class="catalog-breadcrumb">Catálogo</p>
-                        @endif
+                    <div class="catalog-toolbar results-header">
+                        <div class="catalog-toolbar-primary">
+                            @if($selectedCategory)
+                                <p class="catalog-breadcrumb">Catálogo / {{ $selectedCategory->name }}</p>
+                            @endif
 
-                        @if($selectedBrand)
-                            <a href="{{ route('clients.catalog', array_diff_key(request()->query(), ['brand_id' => ''])) }}"
-                               class="catalog-brand-chip"
-                               title="Quitar filtro de marca">
-                                <i class="fas fa-tag" aria-hidden="true"></i>
-                                {{ $selectedBrand->name }}
-                                <i class="fas fa-times catalog-brand-chip-remove" aria-hidden="true"></i>
-                            </a>
-                        @endif
+                            @if($selectedBrand)
+                                <a href="{{ route('clients.catalog', array_diff_key(request()->query(), ['brand_id' => ''])) }}"
+                                   class="catalog-brand-chip"
+                                   title="Quitar filtro de marca">
+                                    <i class="fas fa-tag" aria-hidden="true"></i>
+                                    {{ $selectedBrand->name }}
+                                    <i class="fas fa-times catalog-brand-chip-remove" aria-hidden="true"></i>
+                                </a>
+                            @endif
 
-                        <p class="results-count">
-                            Mostrando {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }} de {{ $products->total() }} productos
-                        </p>
+                            <h2 class="catalog-toolbar-heading">
+                                @if($selectedCategory)
+                                    Productos en {{ $selectedCategory->name }}
+                                @else
+                                    Productos disponibles
+                                @endif
+                            </h2>
+                        </div>
+
+                        <div class="catalog-toolbar-meta">
+                            <div class="catalog-toolbar-sort" aria-label="Ordenar resultados">
+                                <div class="catalog-toolbar-sort-field">
+                                    <label for="sort">Ordenar por</label>
+                                    <select id="sort" name="sort" class="form-control catalog-toolbar-select" form="filter-form"
+                                            onchange="document.getElementById('filter-form') && document.getElementById('filter-form').requestSubmit()">
+                                        <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Más recientes</option>
+                                        <option value="price"      {{ request('sort') == 'price'      ? 'selected' : '' }}>Precio</option>
+                                        <option value="name"       {{ request('sort') == 'name'       ? 'selected' : '' }}>Nombre</option>
+                                    </select>
+                                </div>
+                                <div class="catalog-toolbar-sort-field">
+                                    <label for="direction">Dirección</label>
+                                    <select id="direction" name="direction" class="form-control catalog-toolbar-select" form="filter-form"
+                                            onchange="document.getElementById('filter-form') && document.getElementById('filter-form').requestSubmit()">
+                                        <option value="desc" {{ request('direction') == 'desc' ? 'selected' : '' }}>Descendente</option>
+                                        <option value="asc"  {{ request('direction') == 'asc'  ? 'selected' : '' }}>Ascendente</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <p class="catalog-count results-count">
+                                Mostrando {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }} de {{ $products->total() }} productos
+                            </p>
+                        </div>
                     </div>
 
                     @if($products->total() > 0)
@@ -438,9 +455,12 @@
                                     $catLabel = $product->clientCatalogStockLabel();
                                     $canBuy = $product->isPurchasableByClient();
                                     $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
+                                    $cardSku = $product->clientCatalogAssignedSku();
+                                    $cardImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png'));
+                                    $cardPriceFormatted = number_format((float) $product->sale_price, 0, ',', '.');
                                 @endphp
-                                <div class="product-card">
-                                    <div class="product-image">
+                                <div class="product-card product-card--catalog-cf128 @if($catLabel === 'Agotado') product-card--out-of-stock @endif">
+                                    <div class="product-image product-image--catalog-cf128">
                                         <button type="button"
                                                 class="product-favorite-btn {{ $isFavorite ? 'is-active' : '' }}"
                                                 data-product-favorite-btn
@@ -449,16 +469,22 @@
                                                 aria-label="{{ $isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos' }}">
                                             <i class="{{ $isFavorite ? 'fas' : 'far' }} fa-heart" aria-hidden="true"></i>
                                         </button>
-                                        @php $cardImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')); @endphp
-                                        <a href="{{ $product->clientProductUrl() }}">
-                                            {{-- Fallback to favicon if product image is missing --}}
-                                            <img src="{{ $cardImgUrl }}"
-                                                 alt="{{ $product->name }}"
-                                                 data-fallback-src="{{ asset('favicon.svg') }}"
-                                                 onerror="this.src=this.dataset.fallbackSrc;">
-                                        </a>
+                                        <div class="product-image__frame">
+                                            <a class="product-image__link" href="{{ $product->clientProductUrl() }}">
+                                                {{-- Fallback to favicon if product image is missing --}}
+                                                <img src="{{ $cardImgUrl }}"
+                                                     alt="{{ $product->name }}"
+                                                     loading="lazy"
+                                                     decoding="async"
+                                                     data-fallback-src="{{ asset('favicon.svg') }}"
+                                                     onerror="this.src=this.dataset.fallbackSrc;">
+                                            </a>
+                                            <div class="product-image__hover-overlay" aria-hidden="true">
+                                                <span class="product-image__hover-price">₡{{ $cardPriceFormatted }}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="product-info">
+                                    <div class="product-info product-info--catalog-cf128">
                                         <div class="product-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
                                         <h3 class="product-name">
                                             <a href="{{ $product->clientProductUrl() }}">
@@ -471,27 +497,30 @@
                                             'reviewCount' => (int) data_get($cardRs, 'count', 0),
                                             'variant' => 'card',
                                         ])
+                                        @if($cardSku)
+                                            <p class="product-card-sku">SKU: {{ $cardSku }}</p>
+                                        @endif
                                         <p @class([
                                             'product-availability-text',
-                                            'is-available' => $catLabel === 'Disponible',
-                                            'is-low' => $catLabel === 'Quedan pocas unidades',
+                                            'product-stock-badge',
+                                            'is-available' => $catLabel === 'En stock',
+                                            'is-low' => $catLabel === 'Últimas unidades',
                                             'is-out' => $catLabel === 'Agotado',
                                             'is-na' => $catLabel === 'No disponible',
                                         ])>{{ $catLabel }}</p>
-                                        @if($canBuy)
-                                            <p class="product-stock-qty">{{ number_format((int) ($product->stock_current ?? 0), 0, ',', '.') }} unidades disponibles</p>
-                                        @endif
                                         @if($product->description)
                                             <p class="product-description">{{ Str::limit($product->description, 100) }}</p>
                                         @endif
                                         <div class="product-footer">
                                             <div class="product-price-bar">
-                                                <span class="product-price-value">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
+                                                <span class="product-price-value">₡{{ $cardPriceFormatted }}</span>
                                             </div>
                                             <div class="product-actions">
-                                                <a href="{{ $product->clientProductUrl() }}" class="btn-product btn-ver-detalles">
-                                                    <i class="fas fa-arrow-right"></i>
-                                                    Ver detalles
+                                                <a href="{{ $product->clientProductUrl() }}"
+                                                   class="btn-product btn-ver-detalles"
+                                                   title="Ver ficha del producto">
+                                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                                    Ver producto
                                                 </a>
                                                 @if($canBuy)
                                                     @auth('clients')
@@ -529,63 +558,68 @@
                             <x-pagination :paginator="$products" label="productos" />
                         </div>
                     @else
+                        @pushOnce('styles', 'cf4-state-card-css')
+                            @vite(['resources/css/errors/state-card.css'])
+                        @endPushOnce
                         @if($emptyCategoryNoProducts)
-                            <div class="empty-state">
-                                <i class="fas fa-folder-open"></i>
-                                <h3>No hay productos disponibles en esta categoría.</h3>
-                                <p>Probá otra categoría o limpiá los filtros.</p>
-                                <a href="{{ route('clients.catalog', $catalogParams) }}" class="btn btn-primary">
-                                    Ver todas las categorías
-                                </a>
-                            </div>
+                            <x-cf4.state-card
+                                variant="embed"
+                                :bare="true"
+                                title-tag="h3"
+                                eyebrow="Sin resultados"
+                                title="No hay productos en esta categoría"
+                                message="Probá otra categoría o limpiá los filtros para ver más piezas disponibles."
+                            >
+                                <x-slot name="actions">
+                                    <a href="{{ route('clients.catalog', $catalogParams) }}" class="cf4-state-btn-primary">
+                                        Ver todas las categorías
+                                    </a>
+                                    <a href="{{ route('clients.catalog') }}" class="cf4-state-btn-secondary">
+                                        Ir al catálogo
+                                    </a>
+                                </x-slot>
+                            </x-cf4.state-card>
                         @else
-                            <div class="empty-state">
-                                <i class="fas fa-search"></i>
-                                <h3>No se encontraron productos</h3>
-                                <p>
-                                        Intenta ajustar tus filtros de búsqueda
-                                </p>
-                                <a href="{{ route('clients.catalog') }}" class="btn btn-primary">
-                                    Ver Todos los Productos
-                                </a>
-                            </div>
+                            @pushOnce('scripts', 'cf4-scenes-js')
+                                @vite(['resources/js/errors/scenes.js'])
+                            @endPushOnce
+                            <x-cf4.state-card
+                                variant="embed"
+                                :bare="true"
+                                title-tag="h3"
+                                eyebrow="Búsqueda"
+                                title="No encontramos esa pieza"
+                                message="Intentá ajustar filtros o palabras de búsqueda, o volvé al catálogo completo."
+                                scene="wrong_route"
+                            >
+                                <x-slot name="visual">
+                                    @include('errors.partials.404-bike-svg')
+                                </x-slot>
+                                <x-slot name="fallback">
+                                    <img
+                                        class="cf4-error-fallback"
+                                        src="{{ asset('images/errors/404-bike-illustration-orig.png') }}"
+                                        alt=""
+                                        role="presentation"
+                                        loading="lazy"
+                                    >
+                                </x-slot>
+                                <x-slot name="actions">
+                                    <a href="{{ route('clients.catalog') }}" class="cf4-state-btn-primary">
+                                        Ver todos los productos
+                                    </a>
+                                    <a href="{{ route('clients.catalog') }}" class="cf4-state-btn-secondary">
+                                        Catálogo completo
+                                    </a>
+                                </x-slot>
+                            </x-cf4.state-card>
                         @endif
                     @endif
                 </div>
             </main>
-        </div>
     </div>
-</div>
+</section>
 
-{{-- Quantity selector modal, populated by JS when the user clicks "Agregar" --}}
-<div class="modal" id="add-to-cart-modal">
-    <div class="modal-content modal-sm">
-        <div class="modal-header">
-            <h3>Agregar al Carrito</h3>
-            <button class="modal-close" id="close-add-to-cart-modal">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="product-preview" id="product-preview">
-                <img id="preview-image" src="" alt="">
-                <div class="preview-info">
-                    <h4 id="preview-name"></h4>
-                    <p class="preview-price" id="preview-price"></p>
-                    <p class="preview-stock" id="preview-stock"></p>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="cart-quantity">Cantidad:</label>
-                <input type="number" id="cart-quantity" class="form-control" min="1" value="1">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" id="cancel-add-to-cart">Cancelar</button>
-            <button class="btn btn-primary" id="confirm-add-to-cart">Agregar al Carrito</button>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')

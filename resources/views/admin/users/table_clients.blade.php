@@ -9,7 +9,7 @@
 
     {{-- Styles & Fonts --}}
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    @vite(['resources/css/admin/users/clients.css'])
+    @vite(['resources/css/admin/components/page-header.css', 'resources/css/admin/users/clients.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -22,18 +22,19 @@
     <main class="admin-main">
 
         {{-- Page header with total user count --}}
-        <div class="page-header">
-            <div>
-                <h1>Gestión de Usuarios</h1>
-                <p class="text-muted">Administra los clientes registrados en la plataforma</p>
-            </div>
-            <div class="page-header-actions">
-                <span class="clients-count-badge">
-                    <i class="fas fa-users"></i>
-                    {{ $clients->count() }} usuario(s)
-                </span>
-            </div>
-        </div>
+@component('admin.partials.page-header', [
+    'title' => 'Gestión de usuarios',
+    'description' => 'Consulta y administra los clientes registrados en la plataforma, incluyendo su estado de acceso.',
+])
+            @slot('actions')
+                <div class="page-header-actions">
+                    <span class="clients-count-badge">
+                        <i class="fas fa-users"></i>
+                        {{ $clients->count() }} usuario(s)
+                    </span>
+                </div>
+            @endslot
+        @endcomponent
 
         {{-- ==================== USERS TABLE ==================== --}}
         <div class="clients-container">

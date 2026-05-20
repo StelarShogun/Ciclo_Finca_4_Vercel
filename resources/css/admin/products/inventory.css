@@ -62,7 +62,7 @@
 }
 
 .inventory-kpi-card:focus-visible {
-  outline: 3px solid rgba(46, 125, 50, 0.22);
+  outline: 3px solid rgba(35, 83, 71, 0.22);
   outline-offset: 2px;
 }
 
@@ -123,7 +123,7 @@
   3. INVENTORY HEADER
   ============================================================ */
 .usuarios-header {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-darkest) 100%);
   border-radius: 16px;
   padding: 30px;
   margin-bottom: 30px;
@@ -164,6 +164,7 @@
   font-size: 1.1rem;
   margin: 0;
   opacity: 0.9;
+  color: white;
 }
 
 .usuarios-actions {
@@ -181,10 +182,11 @@
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  border: none;
+  border: 2px solid;
   border-radius: 8px;
   font-size: 0.95rem;
   font-weight: 500;
+  font-family: 'Poppins', sans-serif;
   text-decoration: none;
   cursor: pointer;
   transition: var(--transition);
@@ -196,7 +198,7 @@
 }
 
 .btn:focus {
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.3);
+  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.3);
 }
 
 .btn:disabled {
@@ -244,7 +246,7 @@
   background: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+  box-shadow: 0 4px 15px rgba(35, 83, 71, 0.3);
 }
 
 .btn-secondary:not(.usuarios-header .btn-secondary) {
@@ -359,7 +361,7 @@
 .filter-group select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.1);
 }
 
 .filters-section .btn {
@@ -1269,7 +1271,7 @@ html:has(#stock-adjust-modal.is-open) {
 .form-group textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.1);
 }
 
 .form-row {
@@ -1319,7 +1321,7 @@ html:has(#stock-adjust-modal.is-open) {
   justify-content: center;
   width: 3rem;
   height: 3rem;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  background: linear-gradient(135deg, var(--brand-medium), var(--brand-medium-dark));
   color: white;
   border-radius: 0.5rem;
   font-size: 1.25rem;
@@ -1899,7 +1901,7 @@ img, svg, table {
   color: #111827;
 }
 
-.stock-modal-header h3 .modal-icon-add    { color: #16a34a; }
+.stock-modal-header h3 .modal-icon-add    { color: #235347; }
 .stock-modal-header h3 .modal-icon-remove { color: #dc2626; }
 
 .stock-modal-close {
@@ -2074,7 +2076,7 @@ img, svg, table {
 }
 
 .stock-btn-confirm-add {
-  background: #16a34a;
+  background: #235347;
   color: #fff;
 }
 

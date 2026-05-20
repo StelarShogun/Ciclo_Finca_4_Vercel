@@ -253,6 +253,7 @@ class ClientUserController extends Controller
                     'success' => true,
                     'redirect' => route('clients.catalog'),
                     'message' => 'Inicio de sesión exitoso.',
+                    'display_name' => $this->clientWelcomeDisplayName($client),
                 ]);
             }
 
@@ -474,7 +475,12 @@ class ClientUserController extends Controller
 
         return redirect()
             ->route('login.show')
-            ->with('status', 'Sesión cerrada correctamente.');
+            ->with('client_success_modal', [
+                'kind' => 'logout',
+                'authIcon' => 'signout',
+                'title' => '¡Sesión cerrada!',
+                'text' => 'Has cerrado sesión correctamente.',
+            ]);
     }
 
     // Show the password-recovery form.
@@ -637,6 +643,24 @@ class ClientUserController extends Controller
             ->with('recovery_success_modal', 'Contraseña actualizada. Ya puedes iniciar sesión.');
     }
 
+    /** Public display name for welcome toasts (name + surnames, or email). */
+    protected function clientWelcomeDisplayName(Client $client): string
+    {
+        $parts = array_filter(array_map('trim', [
+            (string) ($client->name ?? ''),
+            (string) ($client->first_surname ?? ''),
+            (string) ($client->second_surname ?? ''),
+        ]));
+
+        if ($parts !== []) {
+            return implode(' ', $parts);
+        }
+
+        $email = trim((string) ($client->gmail ?? ''));
+
+        return $email !== '' ? $email : 'Usuario';
+    }
+
     /**
      * Redirigir a Google para autenticación OAuth
      */
@@ -771,7 +795,11 @@ class ClientUserController extends Controller
                 'client_second_surname' => $client->second_surname,
             ]);
 
-            return redirect()->route('clients.home')->with('status', 'Inicio de sesión exitoso con Google');
+            return redirect()->route('clients.home')->with('client_success_modal', [
+                'kind' => 'welcome',
+                'authIcon' => 'google',
+                'displayName' => $this->clientWelcomeDisplayName($client),
+            ]);
         } catch (\Throwable $e) {
             $detail = $e->getMessage() ?: get_class($e).' en '.$e->getFile().':'.$e->getLine();
             Log::error('Error en Google OAuth: '.$detail, [

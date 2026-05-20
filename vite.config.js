@@ -48,6 +48,16 @@ const adminAssets = [
     "resources/css/admin/reports/sales-performance.css",
     "resources/css/admin/reports/client-purchase-history.css",
     "resources/css/admin/reports/audit-log.css",
+    "resources/css/admin/components/page-header.css",
+];
+
+// =======================
+// ERROR PAGE ASSETS
+// =======================
+const errorAssets = [
+    "resources/js/errors/scenes.js",
+    "resources/css/errors/state-card.css",
+    "resources/css/errors/404-page.css",
 ];
 
 // =======================
@@ -73,7 +83,7 @@ export default defineConfig({
     plugins: [
         laravel({
             detectTls: false,
-            input: [...adminAssets, ...clientAssets],
+            input: [...adminAssets, ...clientAssets, ...errorAssets],
             refresh: true,
         }),
     ],

@@ -98,6 +98,14 @@
         <div class="cf4-invoices-header-inner">
             <h1><i class="fas fa-file-invoice"></i> Mis Facturas</h1>
             <p>{{ $headerDescription }}</p>
+            <nav class="cf4-invoices-escape-nav" aria-label="Seguir en la tienda">
+                <a href="{{ route('clients.catalog') }}" class="cf4-invoices-escape-link cf4-invoices-escape-link--primary">
+                    <i class="fas fa-store" aria-hidden="true"></i> Seguir comprando
+                </a>
+                <a href="{{ route('clients.home') }}" class="cf4-invoices-escape-link">
+                    <i class="fas fa-home" aria-hidden="true"></i> Ir al inicio
+                </a>
+            </nav>
         </div>
         <div class="cf4-invoices-tab-selector">
             <div class="cf4-select-wrapper">
@@ -113,13 +121,18 @@
 
     <div class="cf4-invoices-wrapper">
 
+        <nav class="breadcrumb" aria-label="Migas de pan">
+            <a href="{{ route('clients.home') }}">Inicio</a>
+            <span>/</span>
+            <span>Mis Facturas</span>
+        </nav>
+
         <div class="cf4-invoices-card">
             <div class="sales-table-container">
                 <table class="sales-table cf4-purchases-table cf4-invoices-list-table">
                     <thead>
                         <tr>
                             <th>Factura</th>
-                            <th>Productos</th>
                             <th>Fecha</th>
                             <th>Estado</th>
                             <th>{{ $tab === 'historial' ? 'Total pagado' : 'Total' }}</th>
@@ -154,17 +167,6 @@
                                         <span class="cf4-invoice-muted">Sin número asignado</span>
                                     @endif
                                 </td>
-                                <td>
-                                    @if($sale->saleItems && $sale->saleItems->count() > 0)
-                                        <div class="cf4-invoice-items">
-                                            @foreach($sale->saleItems as $item)
-                                                <div>{{ $item->quantity }} &times; {{ $item->product->name ?? 'Producto' }}</div>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <span class="cf4-invoice-muted">Sin productos</span>
-                                    @endif
-                                </td>
                                 <td>{{ $sale->sale_date ? $sale->sale_date->format('d/m/Y H:i') : 'Sin fecha' }}</td>
                                 <td>
                                     <span class="cf4-invoice-status-badge {{ $statusClass }}">
@@ -180,7 +182,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6">
+                                <td colspan="5">
                                     <div class="cf4-invoices-empty">
                                         <div class="cf4-invoices-empty-icon"><i class="fas fa-file-invoice"></i></div>
                                         <p>
@@ -193,7 +195,7 @@
                                             @endif
                                         </p>
                                         <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-th"></i> Ir al catálogo
+                                            <i class="fas fa-bicycle"></i> Ir al catálogo
                                         </a>
                                     </div>
                                 </td>

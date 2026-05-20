@@ -8,7 +8,7 @@
         /* ── Reset ─────────────────────────────────────────────────────────── */
         body  { margin:0; padding:0; background:#f4f4f7; font-family:'Segoe UI',Arial,sans-serif; color:#333; }
         table { border-collapse:collapse; }
-        a     { color:#2e7d32; text-decoration:none; }
+        a     { color:#235347; text-decoration:none; }
         img   { border:0; display:block; }
 
         /* ── Layout ─────────────────────────────────────────────────────────── */
@@ -18,7 +18,7 @@
                      box-shadow:0 2px 8px rgba(0,0,0,.08); }
 
         /* ── Header ─────────────────────────────────────────────────────────── */
-        .header    { background:#2e7d32; padding:28px 32px; }
+        .header    { background:#235347; padding:28px 32px; }
         .header h1 { margin:0; color:#fff; font-size:22px; font-weight:700; }
         .header p  { margin:6px 0 0; color:#a5d6a7; font-size:13px; }
 
@@ -26,7 +26,7 @@
         .body      { padding:28px 32px; }
         .section   { margin-bottom:28px; }
         .section h2{ font-size:14px; font-weight:700; text-transform:uppercase;
-                     letter-spacing:.06em; color:#2e7d32; margin:0 0 14px; }
+                     letter-spacing:.06em; color:#235347; margin:0 0 14px; }
 
         /* ── KPI grid ───────────────────────────────────────────────────────── */
         .kpi-grid  { display:table; width:100%; border-spacing:0; }
@@ -34,7 +34,7 @@
         .kpi-cell  { display:table-cell; width:33.33%; padding:0 6px 12px 0;
                      vertical-align:top; }
         .kpi-box   { background:#f1f8e9; border-radius:6px; padding:14px 16px; }
-        .kpi-box .value { font-size:22px; font-weight:700; color:#1b5e20; }
+        .kpi-box .value { font-size:22px; font-weight:700; color:#163832; }
         .kpi-box .label { font-size:12px; color:#555; margin-top:4px; }
 
         .kpi-box.alert  { background:#fff3e0; }
@@ -42,7 +42,7 @@
 
         /* ── Table ───────────────────────────────────────────────────────────── */
         .data-table { width:100%; border-collapse:collapse; font-size:13px; }
-        .data-table th { background:#f1f8e9; color:#2e7d32; font-weight:600;
+        .data-table th { background:#f1f8e9; color:#235347; font-weight:600;
                          text-align:left; padding:8px 10px; border-bottom:2px solid #c8e6c9; }
         .data-table td { padding:8px 10px; border-bottom:1px solid #eee; vertical-align:top; }
         .data-table tr:last-child td { border-bottom:none; }
@@ -50,13 +50,13 @@
         /* ── Sales chart (text sparkline) ────────────────────────────────────── */
         .day-row     { display:inline-block; margin-right:8px; text-align:center;
                        font-size:11px; color:#555; }
-        .day-bar     { display:block; width:22px; background:#2e7d32; border-radius:2px;
+        .day-bar     { display:block; width:22px; background:#235347; border-radius:2px;
                        margin:0 auto 3px; }
         .bars-wrap   { display:flex; align-items:flex-end; gap:4px; padding-top:6px; }
 
         /* ── CTA ─────────────────────────────────────────────────────────────── */
         .cta-wrap  { text-align:center; margin:24px 0 0; }
-        .cta-btn   { display:inline-block; background:#2e7d32; color:#fff !important;
+        .cta-btn   { display:inline-block; background:#235347; color:#fff !important;
                      padding:12px 28px; border-radius:5px; font-size:14px; font-weight:600; }
 
         /* ── Footer ─────────────────────────────────────────────────────────── */

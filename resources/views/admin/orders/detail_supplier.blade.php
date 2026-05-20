@@ -23,17 +23,22 @@
         $label        = $stateLabels[$order->state] ?? ucfirst((string) $order->state);
         $po           = $order->po_number ?: ('#' . $order->num_order);
         $supplierName = $order->supplier?->name ?? '—';
-        $confirmedByName = null;
-        if ($order->confirmedBy) {
-            $confirmedByName = trim(implode(' ', array_filter([
-                $order->confirmedBy->name,
-                $order->confirmedBy->first_surname,
-                $order->confirmedBy->second_surname,
+
+        $confirmTimelineEntry = $order->stateTimeline->firstWhere('state', 'confirmed');
+        $confirmAuditAt = $confirmTimelineEntry?->changed_at;
+        $confirmAuditUserLabel = null;
+        if ($confirmTimelineEntry?->admin) {
+            $a = $confirmTimelineEntry->admin;
+            $confirmAuditUserLabel = trim(implode(' ', array_filter([
+                $a->name,
+                $a->first_surname,
+                $a->second_surname,
             ])));
-            if ($confirmedByName === '') {
-                $confirmedByName = $order->confirmedBy->gmail ?: null;
+            if ($confirmAuditUserLabel === '') {
+                $confirmAuditUserLabel = $a->gmail ?: null;
             }
         }
+        $showSupplierConfirmAudit = $confirmTimelineEntry !== null;
 
         $hasReceivedData = $order->orderItems->contains(fn ($it) => $it->received_quantity !== null);
 
@@ -67,57 +72,57 @@
     <div class="sales-container cf4-orders-module cf4-supplier-orders-module"
          data-supplier-order-num="{{ $order->num_order }}"
          data-supplier-order-state="{{ $order->state }}">
-        <header class="sales-header">
-            <div>
-                <h1>Pedido {{ $po }}</h1>
-                <p>Detalle del pedido de compra al proveedor.</p>
-            </div>
-            <div class="sales-actions" data-supplier-order-actions="{{ $order->num_order }}">
-                <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    Volver
-                </a>
+        @component('admin.partials.page-header', [
+            'title' => "Pedido {$po}",
+            'description' => 'Detalle del pedido de compra al proveedor.',
+        ])
+            @slot('actions')
+                <div class="sales-actions" data-supplier-order-actions="{{ $order->num_order }}">
+                    <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Volver
+                    </a>
 
-                @if($order->state === 'draft')
-                    {{-- draft va directo a confirmed; no existe paso intermedio "pending" para pedidos nuevos. --}}
-                    <button type="button" class="btn btn-primary"
-                            onclick="confirmOrder('{{ $order->num_order }}')"
-                            title="Confirmar pedido">
-                        <i class="fas fa-check"></i>
-                        Confirmar
-                    </button>
-                    <button type="button" class="btn btn-secondary"
-                            onclick="cancelOrder('{{ $order->num_order }}')"
-                            title="Cancelar pedido">
-                        <i class="fas fa-times"></i> Cancelar
-                    </button>
+                    @if($order->state === 'draft')
+                        {{-- draft va directo a confirmed; no existe paso intermedio "pending" para pedidos nuevos. --}}
+                        <button type="button" class="btn btn-primary"
+                                onclick="confirmOrder('{{ $order->num_order }}')"
+                                title="Confirmar pedido">
+                            <i class="fas fa-check"></i>
+                            Confirmar
+                        </button>
+                        <button type="button" class="btn btn-secondary"
+                                onclick="cancelOrder('{{ $order->num_order }}')"
+                                title="Cancelar pedido">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
 
-                @elseif($order->state === 'pending')
-                    {{-- Compatibilidad con pedidos históricos que aún estén en estado pending. --}}
-                    <button type="button" class="btn btn-primary"
-                            onclick="confirmOrder('{{ $order->num_order }}')"
-                            title="Confirmar pedido">
-                        <i class="fas fa-check"></i> Confirmar
-                    </button>
-                    <button type="button" class="btn btn-secondary"
-                            onclick="cancelOrder('{{ $order->num_order }}')"
-                            title="Cancelar pedido">
-                        <i class="fas fa-times"></i> Cancelar
-                    </button>
+                    @elseif($order->state === 'pending')
+                        {{-- Compatibilidad con pedidos históricos que aún estén en estado pending. --}}
+                        <button type="button" class="btn btn-primary"
+                                onclick="confirmOrder('{{ $order->num_order }}')"
+                                title="Confirmar pedido">
+                            <i class="fas fa-check"></i> Confirmar
+                        </button>
+                        <button type="button" class="btn btn-secondary"
+                                onclick="cancelOrder('{{ $order->num_order }}')"
+                                title="Cancelar pedido">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
 
-                @elseif($order->state === 'confirmed')
-                    <button type="button" class="btn btn-primary"
-                            onclick="openReceiveModal()"
-                            title="Registrar recepción de mercancía">
-                        <i class="fas fa-clipboard-check"></i> Registrar recepción
-                    </button>
-                    <button type="button" class="btn btn-secondary"
-                            onclick="cancelOrder('{{ $order->num_order }}')"
-                            title="Cancelar pedido">
-                        <i class="fas fa-times"></i> Cancelar
-                    </button>
+                    @elseif($order->state === 'confirmed')
+                        <button type="button" class="btn btn-primary"
+                                onclick="openReceiveModal()"
+                                title="Registrar recepción de mercancía">
+                            <i class="fas fa-clipboard-check"></i> Registrar recepción
+                        </button>
+                        <button type="button" class="btn btn-secondary"
+                                onclick="cancelOrder('{{ $order->num_order }}')"
+                                title="Cancelar pedido">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
 
-                @elseif($order->state === 'partial_received')
+                    @elseif($order->state === 'partial_received')
                     <button type="button" class="btn btn-primary"
                             onclick="openReceiveModal()"
                             title="Completar recepción de mercancía">
@@ -136,7 +141,8 @@
                     </button>
                 @endif
             </div>
-        </header>
+            @endslot
+        @endcomponent
 
         <div class="detail-grid">
             {{-- Información general --}}
@@ -183,18 +189,18 @@
                 </div>
             </section>
 
-            {{-- Auditoría de confirmación (solo visible cuando el pedido fue confirmado) --}}
-            @if($order->confirmed_at)
+            {{-- Auditoría de confirmación desde el historial de estados (transición a confirmado). --}}
+            @if($showSupplierConfirmAudit)
                 <section class="detail-card cf4-supplier-order-audit">
                     <h2><i class="fas fa-user-check"></i> Confirmación con proveedor</h2>
                     <div class="kv">
                         <div class="kv-row">
                             <span>Fecha y hora</span>
-                            <strong>{{ $order->confirmed_at->format('d/m/Y H:i') }}</strong>
+                            <strong>{{ $confirmAuditAt?->format('d/m/Y H:i') ?? '—' }}</strong>
                         </div>
                         <div class="kv-row">
                             <span>Registró</span>
-                            <strong>{{ $confirmedByName ?? '—' }}</strong>
+                            <strong>{{ $confirmAuditUserLabel ?? '—' }}</strong>
                         </div>
                     </div>
                 </section>
@@ -274,7 +280,7 @@
                             'pending'          => ['label' => 'Pendiente',         'icon' => 'fa-clock',          'color' => '#f59e0b'],
                             'confirmed'        => ['label' => 'Confirmado',        'icon' => 'fa-check',          'color' => '#3b82f6'],
                             'partial_received' => ['label' => 'Recepción parcial', 'icon' => 'fa-clipboard-check','color' => '#f97316'],
-                            'delivered'        => ['label' => 'Entregado',         'icon' => 'fa-truck',          'color' => '#22c55e'],
+                            'delivered'        => ['label' => 'Entregado',         'icon' => 'fa-truck',          'color' => '#235347'],
                             'cancelled'        => ['label' => 'Cancelado',         'icon' => 'fa-times',          'color' => '#ef4444'],
                         ];
                     @endphp
@@ -542,7 +548,7 @@
                         icon:               'success',
                         title:              'Recepción registrada',
                         text:               data.message,
-                        confirmButtonColor: '#2e7d32',
+                        confirmButtonColor: '#235347',
                         confirmButtonText:  'Entendido',
                     });
                 }

@@ -1,6 +1,6 @@
 @extends('admin.layouts.sales')
 
-@section('Titulo pagina', 'Pedidos - Ciclo Finca 4 Admin')
+@section('Titulo pagina', 'Encargos - Ciclo Finca 4 Admin')
 
 @push('styles')
     @vite(['resources/css/admin/sales/sales.css', 'resources/css/admin/orders/orders.css'])
@@ -24,33 +24,30 @@
         $pendingCardUrl = $pendingCardActive
             ? route('admin.orders.index')
             : route('admin.orders.index', ['status' => 'pending']);
-        $pendingCardCta = $pendingCardActive ? 'Ver todo' : 'Ver pedidos pendientes';
+        $pendingCardCta = $pendingCardActive ? 'Ver todo' : 'Ver encargos pendientes';
     @endphp
 
-    <div class="sales-container cf4-orders-module">
+    <div class="sales-container cf4-orders-module" data-cf4-orders-heartbeat>
 
         @if (session('status'))
             <div class="cf4-orders-flash-success" role="status">{{ session('status') }}</div>
         @endif
 
-        <header class="sales-header">
-            <div>
-                <h1>Pedidos en línea</h1>
-                <p>
-                    Gestione pedidos del carrito web: marque pedidos como listos para recoger, confirme la venta,
-                    rechace el pedido o consulte la factura. Los pedidos pendientes pueden marcarse como listos para
-                    recoger o rechazarse. Solo los pedidos listos para recoger pueden confirmarse. Las ventas ya
-                    confirmadas están en
-                    <a href="{{ route('sales.index') }}">Ventas</a>.
-                </p>
-            </div>
-            <div class="sales-header-actions">
-                <button type="button" class="btn btn-secondary btn-sm orders-settings-link"
-                    id="btn-open-order-expiration-modal">
-                    <i class="fas fa-clock"></i> Plazo de cancelación
-                </button>
-            </div>
-        </header>
+        @component('admin.partials.page-header', ['title' => 'Encargos en línea'])
+            <p>
+                Gestiona los encargos del carrito web: márcalos como listos para recoger, confirma ventas o rechaza pedidos.
+                Las ventas confirmadas se registran en
+                <a href="{{ route('sales.index') }}">Ventas</a>.
+            </p>
+
+            @slot('actions')
+                <div class="sales-header-actions">
+                    <button type="button" class="btn btn-secondary btn-sm orders-settings-link" id="btn-open-order-expiration-modal">
+                        <i class="fas fa-clock"></i> Plazo de cancelación
+                    </button>
+                </div>
+            @endslot
+        @endcomponent
 
         <section class="kpi-grid cf4-orders-kpi-grid" aria-label="Resumen de encargos">
             <a class="kpi-card cf4-orders-kpi-card-link" href="{{ $pendingCardUrl }}">
@@ -58,12 +55,25 @@
                     <h3 class="kpi-title">Pendientes web</h3>
                     <div class="kpi-icon info"><i class="fas fa-clock"></i></div>
                 </div>
-                <p class="kpi-value">{{ number_format((int) ($pendingWebOrdersCount ?? 0), 0, ',', '.') }}</p>
+                <p class="kpi-value" id="cf4-orders-pending-kpi" data-cf4-orders-pending-kpi>
+                    {{ number_format((int) ($pendingWebOrdersCount ?? 0), 0, ',', '.') }}
+                </p>
                 <div class="kpi-trend {{ $pendingCardActive ? 'trend-down cf4-kpi-reset-text' : 'trend-up' }}">
                     <i class="fas fa-arrow-right"></i> {{ $pendingCardCta }}
                 </div>
             </a>
         </section>
+
+        <div id="cf4-orders-new-banner" class="cf4-orders-new-banner" role="status" aria-live="polite" hidden>
+            <span class="cf4-orders-new-banner__text" data-cf4-orders-new-banner-text></span>
+            <button type="button" class="btn btn-primary btn-sm" data-cf4-orders-refresh-btn>
+                <i class="fas fa-sync-alt" aria-hidden="true"></i> Actualizar tabla
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm cf4-orders-new-banner__dismiss" data-cf4-orders-dismiss-banner
+                aria-label="Cerrar aviso">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
 
         <div class="orders-table-card">
             <form method="GET" action="{{ route('admin.orders.index') }}" class="orders-toolbar" id="orders-filters-form">
@@ -94,7 +104,7 @@
                     <div class="orders-search-field">
                         <i class="fas fa-search" aria-hidden="true"></i>
                         <input type="text" id="orders-search" name="search" value="{{ request('search') }}"
-                            placeholder="Nº pedido, factura o cliente" autocomplete="off">
+                            placeholder="Nº encargo, factura o cliente" autocomplete="off">
                     </div>
                 </div>
 
@@ -106,11 +116,12 @@
                 </div>
             </form>
 
+            <div data-cf4-orders-table-region id="cf4-orders-table-region">
             <div class="sales-table-container">
                 <table class="sales-table cf4-purchases-table">
                     <thead>
                         <tr>
-                            <th>Pedido / Factura</th>
+                            <th>Encargos / Factura</th>
                             <th>Cliente</th>
                             <th>Productos</th>
                             <th>Fecha</th>
@@ -253,6 +264,7 @@
                     <x-pagination :paginator="$orders" label="pedidos" />
                 </div>
             @endif
+            </div>
         </div>
     </div>
 
@@ -287,8 +299,9 @@
 
                     <div class="form-group">
                         <label for="ready_to_pickup_expiration_hours">Horas para recoger el pedido</label>
-                        <input type="number" id="ready_to_pickup_expiration_hours" name="ready_to_pickup_expiration_hours" min="1"
-                            max="8760" step="1" required value="{{ old('ready_to_pickup_expiration_hours', $readyToPickupExpirationHours) }}">
+                        <input type="number" id="ready_to_pickup_expiration_hours"
+                            name="ready_to_pickup_expiration_hours" min="1" max="8760" step="1"
+                            required value="{{ old('ready_to_pickup_expiration_hours', $readyToPickupExpirationHours) }}">
                         <p id="order-expiration-form-error" class="form-error" style="display:none;" role="alert"></p>
                         <p class="form-help">Ejemplo: 72 horas (3 días). Mínimo 1, máximo 8760.</p>
                     </div>

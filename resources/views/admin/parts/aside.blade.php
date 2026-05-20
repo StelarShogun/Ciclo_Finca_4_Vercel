@@ -27,6 +27,8 @@
                 <a href="{{ route('admin.orders.index') }}">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="sidebar-label">Encargos</span>
+                    <span class="cf4-sidebar-orders-badge" data-cf4-orders-pending-badge hidden
+                        aria-label="Encargos pendientes"></span>
                 </a>
             </li>
             <li class="{{ request()->routeIs('admin.supplier-orders.*') ? 'active' : '' }}">
@@ -36,7 +38,7 @@
                 </a>
             </li>
 
-            <li class="{{ request()->routeIs('inventory') ? 'active' : '' }}">
+            <li class="{{ request()->routeIs('inventory') || request()->routeIs('categories.*') ? 'active' : '' }}">
                 <a href="{{ route('inventory') }}">
                     <i class="fas fa-box"></i>
                     <span class="sidebar-label">Inventario</span>

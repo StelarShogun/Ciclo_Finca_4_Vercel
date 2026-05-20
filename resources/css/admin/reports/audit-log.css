@@ -9,18 +9,26 @@
     padding: 0.5rem 0 2rem;
 }
 
-.reports-breadcrumb {
+.audit-log-page .reports-breadcrumb {
     display: flex;
     align-items: center;
     gap: 0.4rem;
     margin-bottom: 0.8rem;
-    color: #6b7280;
+    color: var(--color-muted, #5f6368);
     font-size: 0.9rem;
 }
 
-.reports-breadcrumb a {
-    color: #2563eb;
+.audit-log-page .reports-breadcrumb a {
+    color: var(--color-primary, #2e7d32);
     text-decoration: none;
+}
+
+.audit-log-page .reports-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.audit-log-page .reports-breadcrumb .sep {
+    opacity: 0.6;
 }
 
 .audit-log-header h1 {
@@ -74,19 +82,19 @@
 
 .filter-field select option {
     background: #ecfdf3;
-    color: #14532d;
+    color: #235347;
 }
 
 .filter-field select option:checked {
     background: #c7f0d5;
-    color: #14532d;
+    color: #235347;
 }
 
 .filter-field input:focus,
 .filter-field select:focus {
     outline: none;
-    border-color: var(--color-primary, #2e7d32);
-    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.14);
+    border-color: var(--color-primary, #235347);
+    box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.14);
 }
 
 .filter-actions {
@@ -238,7 +246,7 @@
         padding: 0.2rem 0 1rem;
     }
 
-    .reports-breadcrumb {
+    .audit-log-page .reports-breadcrumb {
         margin-bottom: 0.9rem;
     }
 

@@ -211,7 +211,7 @@ function updateStrength(val) {
         { w: '25%',  c: '#d32f2f', t: 'Débil'  },
         { w: '50%',  c: '#f57c00', t: 'Regular' },
         { w: '75%',  c: '#fbc02d', t: 'Buena'   },
-        { w: '100%', c: '#2e7d32', t: 'Fuerte'  }
+        { w: '100%', c: '#235347', t: 'Fuerte'  }
     ];
     var lvl = levels[Math.max(score - 1, 0)];
     if (fill)  { fill.style.width = lvl.w; fill.style.background = lvl.c; }

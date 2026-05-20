@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Atributos para {{ $category->name }} - Ciclo Finca 4 Admin</title>
-    @vite(['resources/css/admin/suppliers/suppliers.css', 'resources/js/admin/classifications/catalog.js'])
+    @vite(['resources/css/admin/components/page-header.css', 'resources/css/admin/suppliers/suppliers.css', 'resources/js/admin/classifications/catalog.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -16,10 +16,25 @@
 
     <main class="admin-main">
         <div class="form-container">
-            <div class="form-header">
-                <h1>Atributos para: {{ $category->name }}</h1>
-                <p>Un <strong>atributo</strong> es el tipo de dato (Color, Talla…). Cada atributo tiene <strong>valores</strong> (Rojo, M…). {{ optional($category->parent)->name ?? '' }} › <strong>{{ $category->name }}</strong></p>
-            </div>
+            <nav class="reports-breadcrumb" aria-label="Migas de pan">
+                <a href="{{ route('admin.classifications.catalog.index') }}">Opciones por tipo</a>
+                <span class="sep">/</span>
+                <span>{{ $category->name }}</span>
+            </nav>
+
+            @component('admin.partials.page-header', ['title' => 'Atributos para: ' . $category->name])
+                <p>
+                    Un <strong>atributo</strong> es el tipo de dato, como Color, Talla o Material.
+                    Cada atributo puede tener <strong>valores</strong>, como Rojo, M o Algodón.
+
+                    @if ($category->parent)
+                        Categoría: {{ $category->parent->name }} ›
+                        <strong>{{ $category->name }}</strong>
+                    @else
+                        Categoría: <strong>{{ $category->name }}</strong>
+                    @endif
+                </p>
+            @endcomponent
 
             @if (session('status'))
                 <x-admin-alert type="success" :message="session('status')" dismissible />
@@ -27,8 +42,11 @@
 
             <div class="form-card" style="margin-bottom:1.5rem;">
                 <h2 style="font-size:1.1rem; margin-bottom:1rem;">Añadir atributo (ej. Color, Talla)</h2>
-                <form action="{{ route('admin.classifications.dimensions.store', $category) }}" method="POST" class="form-body">
+
+                <form action="{{ route('admin.classifications.dimensions.store', $category) }}" method="POST"
+                    class="form-body">
                     @csrf
+
                     @if ($errors->any())
                         <x-admin-alert type="error" title="Revisa los campos marcados antes de continuar.">
                             <ul style="margin: 0; padding-left: 1.25rem;">
@@ -38,21 +56,30 @@
                             </ul>
                         </x-admin-alert>
                     @endif
+
                     <div class="form-row" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
                         <div class="form-group">
                             <label for="label">Nombre del atributo *</label>
-                            <input type="text" id="label" name="label" value="{{ old('label') }}" required maxlength="255" placeholder="Color">
+                            <input type="text" id="label" name="label" value="{{ old('label') }}" required
+                                maxlength="255" placeholder="Color">
                             <div class="error-message">{{ $errors->first('label') }}</div>
                         </div>
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Añadir</button>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Añadir
+                        </button>
                     </div>
                 </form>
             </div>
 
             <div class="form-card">
                 <h2 style="font-size:1.1rem; margin-bottom:1rem;">Atributos cargados</h2>
+
                 @if ($attributes->isEmpty())
-                    <p>Todavía no hay atributos para esta subcategoría. Añadí al menos uno (ej. Color) y después sus valores.</p>
+                    <p>
+                        Todavía no hay atributos para esta subcategoría. Añadí al menos uno
+                        (ej. Color) y después sus valores.
+                    </p>
                 @else
                     <table style="width:100%; border-collapse:collapse;">
                         <thead>
@@ -63,9 +90,11 @@
                                 <th style="padding:0.5rem;"></th>
                             </tr>
                         </thead>
+
                         <tbody>
                             @foreach ($attributes as $dim)
-                                <tr style="border-bottom:1px solid #f3f4f6; {{ $dim->trashed() ? 'opacity:0.5;' : '' }}">
+                                <tr
+                                    style="border-bottom:1px solid #f3f4f6; {{ $dim->trashed() ? 'opacity:0.5;' : '' }}">
                                     <td style="padding:0.5rem;">{{ $dim->label }}</td>
                                     <td style="padding:0.5rem;">{{ $dim->values_count }}</td>
                                     <td style="padding:0.5rem;">
@@ -76,31 +105,44 @@
                                         @endif
                                     </td>
                                     <td style="padding:0.5rem;">
-                                        <a href="{{ route('admin.classifications.values.index', $dim) }}" class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.85rem;">Valores</a>
+                                        <a href="{{ route('admin.classifications.values.index', $dim) }}"
+                                            class="btn btn-secondary"
+                                            style="padding:0.25rem 0.5rem; font-size:0.85rem;">
+                                            Valores
+                                        </a>
 
-                                        @if (! $dim->trashed())
-                                            <a href="{{ route('admin.classifications.dimensions.edit', $dim) }}" class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.85rem;">Editar</a>
-                                            <form action="{{ route('admin.classifications.dimensions.destroy', $dim) }}" method="POST" style="display:inline;">
+                                        @if (!$dim->trashed())
+                                            <a href="{{ route('admin.classifications.dimensions.edit', $dim) }}"
+                                                class="btn btn-secondary"
+                                                style="padding:0.25rem 0.5rem; font-size:0.85rem;">
+                                                Editar
+                                            </a>
+
+                                            <form
+                                                action="{{ route('admin.classifications.dimensions.destroy', $dim) }}"
+                                                method="POST" style="display:inline;">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-secondary"
+
+                                                <button type="button" class="btn btn-secondary"
                                                     style="padding:0.25rem 0.5rem; font-size:0.85rem; color:#b91c1c;"
                                                     data-confirm-title="¿Deseas desactivar este atributo?"
-                                                    data-confirm="Se desactivará este atributo. Los productos que ya tenían un valor siguen igual."
-                                                >Desactivar</button>
+                                                    data-confirm="Se desactivará este atributo. Los productos que ya tenían un valor siguen igual.">
+                                                    Desactivar
+                                                </button>
                                             </form>
                                         @else
-                                            <form action="{{ route('admin.classifications.dimensions.restore', $dim) }}" method="POST" style="display:inline;">
+                                            <form
+                                                action="{{ route('admin.classifications.dimensions.restore', $dim) }}"
+                                                method="POST" style="display:inline;">
                                                 @csrf
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-primary"
+
+                                                <button type="button" class="btn btn-primary"
                                                     style="padding:0.25rem 0.5rem; font-size:0.85rem;"
                                                     data-confirm-title="¿Deseas activar este atributo?"
-                                                    data-confirm="Se activará de nuevo este atributo."
-                                                >Activar</button>
+                                                    data-confirm="Se activará de nuevo este atributo.">
+                                                    Activar
+                                                </button>
                                             </form>
                                         @endif
                                     </td>
@@ -112,7 +154,9 @@
             </div>
 
             <div style="margin-top:1.5rem;">
-                <a href="{{ route('admin.classifications.catalog.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver a la lista de tipos</a>
+                <a href="{{ route('admin.classifications.catalog.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver a la lista de tipos
+                </a>
             </div>
         </div>
     </main>

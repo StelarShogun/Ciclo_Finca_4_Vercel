@@ -30,26 +30,26 @@
 
     <div class="sales-container cf4-orders-module cf4-supplier-orders-module">
 
-        <header class="sales-header">
-            <div>
-                <h1>Pedidos a Proveedores</h1>
-                <p>
-                    Gestione los pedidos de compra realizados a los proveedores: confirme la recepción,
-                    cancele un pedido o consulte el detalle de los productos solicitados.
-                    Los pedidos de clientes en línea están en
-                    <a href="{{ route('admin.orders.index') }}">Órdenes</a>.
-                </p>
-            </div>
-            <div class="sales-header-actions">
-                <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-file-import"></i> Analizar XML de proveedor
-                </a>
-                <a href="{{ route('admin.supplier-orders.create') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus"></i>
-                    Nuevo pedido
-                </a>
-            </div>
-        </header>
+        @component('admin.partials.page-header', ['title' => 'Pedidos a Proveedores'])
+            <p>
+                Gestiona los pedidos de compra realizados a proveedores: confirma la recepción,
+                cancela pedidos y consulta el detalle de los productos solicitados.
+                Los pedidos de clientes en línea están en
+                <a href="{{ route('admin.orders.index') }}">Órdenes</a>.
+            </p>
+
+            @slot('actions')
+                <div class="sales-header-actions">
+                    <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-file-import"></i> Analizar XML de proveedor
+                    </a>
+                    <a href="{{ route('admin.supplier-orders.create') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i>
+                        Nuevo pedido
+                    </a>
+                </div>
+            @endslot
+        @endcomponent
 
         <section class="kpi-grid cf4-orders-kpi-grid" aria-label="Resumen de pedidos a proveedores">
             <a class="kpi-card cf4-orders-kpi-card-link" href="{{ $openCardUrl }}">
@@ -142,7 +142,6 @@
                             <th>Entrega estimada</th>
                             <th>Entrega real</th>
                             <th>Estado</th>
-                            <th>Confirmación</th>
                             <th>Total</th>
                             <th>Acciones</th>
                         </tr>
@@ -215,30 +214,6 @@
                                 <td>
                                     @php $label = $stateLabels[$order->state] ?? ucfirst($order->state); @endphp
                                     <span class="order-status-pill {{ $order->state }}" data-role="order-state-pill">{{ $label }}</span>
-                                </td>
-                                <td class="order-conf-cell" data-role="order-conf-cell">
-                                    @if($order->confirmed_at)
-                                        @php
-                                            $confUser = null;
-                                            if ($order->confirmedBy) {
-                                                $confUser = trim(implode(' ', array_filter([
-                                                    $order->confirmedBy->name,
-                                                    $order->confirmedBy->first_surname,
-                                                ])));
-                                                if ($confUser === '') {
-                                                    $confUser = $order->confirmedBy->gmail;
-                                                }
-                                            }
-                                        @endphp
-                                        <div class="order-conf-stack">
-                                            <span class="order-conf-date">{{ $order->confirmed_at->format('d/m/Y H:i') }}</span>
-                                            @if($confUser)
-                                                <span class="order-conf-user" title="{{ $confUser }}">{{ \Illuminate\Support\Str::limit($confUser, 28) }}</span>
-                                            @endif
-                                        </div>
-                                    @else
-                                        <span class="text-muted">—</span>
-                                    @endif
                                 </td>
                                 <td>
                                     @php
@@ -338,7 +313,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10">
+                                <td colspan="9">
                                     <div class="orders-empty">
                                         <div class="orders-empty-icon"><i class="fas fa-inbox"></i></div>
                                         <p style="margin:0; font-size:1rem;">No hay pedidos que coincidan con los filtros.</p>

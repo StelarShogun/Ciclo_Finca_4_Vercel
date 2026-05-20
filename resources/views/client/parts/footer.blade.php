@@ -52,7 +52,7 @@
                 <ul class="footer-links footer-contact">
                     <li><i class="fas fa-store" aria-hidden="true"></i><span>Tienda física disponible</span></li>
                     <li><i class="fas fa-clock" aria-hidden="true"></i><span>Lun-Sáb (horario comercial)</span></li>
-                    <li><i class="fas fa-shield-alt" aria-hidden="true"></i><span>Atención confiable y segura</span></li>
+                    <li><i class="fas fa-circle-check" aria-hidden="true"></i><span>Atención confiable y segura</span></li>
                 </ul>
             </div>
         </div>

@@ -39,7 +39,7 @@
 }
 
 .reports-breadcrumb a {
-    color: var(--color-primary, #2e7d32);
+    color: var(--color-primary, #235347);
     text-decoration: none;
 }
 
@@ -93,7 +93,7 @@
 }
 
 .period-btn.active {
-    background: var(--color-primary, #2e7d32);
+    background: var(--color-primary, #235347);
     color: #fff;
 }
 
@@ -131,8 +131,8 @@
     margin-bottom: 2rem;
     padding: 1.25rem;
     border-radius: var(--border-radius, 10px);
-    background: linear-gradient(135deg, rgba(46, 125, 50, 0.08) 0%, rgba(255, 255, 255, 1) 40%);
-    border: 1px solid rgba(46, 125, 50, 0.2);
+    background: linear-gradient(135deg, rgba(35, 83, 71, 0.08) 0%, rgba(255, 255, 255, 1) 40%);
+    border: 1px solid rgba(35, 83, 71, 0.2);
 }
 
 .top10-header {
@@ -167,7 +167,7 @@
 }
 
 .top10-btn.is-active {
-    background: var(--color-primary, #2e7d32);
+    background: var(--color-primary, #235347);
     color: #fff;
 }
 
@@ -230,11 +230,11 @@
 }
 
 .nav-sort:hover {
-    color: var(--color-primary, #2e7d32);
+    color: var(--color-primary, #235347);
 }
 
 .nav-sort.is-active {
-    color: var(--color-primary, #2e7d32);
+    color: var(--color-primary, #235347);
 }
 
 .loading-cell,

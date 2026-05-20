@@ -36,7 +36,7 @@
 }
 
 .reports-breadcrumb a {
-    color: var(--color-primary, #2e7d32);
+    color: var(--color-primary, #235347);
     text-decoration: none;
 }
 
@@ -67,7 +67,7 @@
     margin: 0;
     font-size: 0.95rem;
     line-height: 1.5;
-    color: var(--color-muted, #5f6368);
+    color: #fff;
     max-width: 40rem;
 }
 
@@ -115,10 +115,10 @@
 
 .period-btn {
     padding: 0.5rem 0.75rem;
-    border: 1px solid rgba(0, 0, 0, 0.12);
+    border: 2px solid rgba(0, 0, 0, 0.12);
     border-radius: 8px;
     background: #fff;
-    font-family: inherit;
+    font-family: 'Poppins', sans-serif;
     font-size: 0.8125rem;
     font-weight: 500;
     cursor: pointer;
@@ -137,12 +137,12 @@
 }
 
 .period-btn.active {
-    background: var(--color-primary, #2e7d32);
+    background: var(--color-primary, #235347);
     color: #fff;
 }
 
 .period-btn:not(.active):hover {
-    background: rgba(46, 125, 50, 0.08);
+    background: rgba(35, 83, 71, 0.08);
 }
 
 .sales-custom-range {
@@ -206,11 +206,11 @@
 .sales-apply-btn {
     margin-top: 0.25rem;
     padding: 0.55rem 1rem;
-    border: none;
+    border: 2px solid var(--color-primary, #2e7d32);
     border-radius: 8px;
-    background: var(--color-primary, #2e7d32);
+    background: var(--color-primary, #235347);
     color: #fff;
-    font-family: inherit;
+    font-family: 'Poppins', sans-serif;
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
@@ -265,7 +265,7 @@
     width: 9px;
     height: 9px;
     border-radius: 50%;
-    background: var(--color-primary, #2e7d32);
+    background: var(--color-primary, #235347);
     animation: sales-pulse 1s ease-in-out infinite;
 }
 
@@ -299,7 +299,7 @@
     padding: 1rem 1.15rem;
     border-radius: 10px;
     background: #f8faf8;
-    border: 1px dashed rgba(46, 125, 50, 0.25);
+    border: 1px dashed rgba(35, 83, 71, 0.25);
     margin-bottom: 1.25rem;
     font-size: 0.92rem;
     color: #444;
@@ -307,7 +307,7 @@
 }
 
 .sales-empty-state .fa-inbox {
-    color: var(--color-primary, #2e7d32);
+    color: var(--color-primary, #235347);
     font-size: 1.35rem;
     margin-top: 0.1rem;
     opacity: 0.85;
@@ -382,7 +382,7 @@
 
 .sales-metric-card--primary {
     background: linear-gradient(145deg, #f1f8f2 0%, #fff 100%);
-    border-color: rgba(46, 125, 50, 0.18);
+    border-color: rgba(35, 83, 71, 0.18);
 }
 
 .sales-metric-card--secondary {
@@ -397,7 +397,7 @@
 
 .sales-metric-icon {
     font-size: 0.95rem;
-    color: var(--color-primary, #2e7d32);
+    color: var(--color-primary, #235347);
     margin-bottom: 0.35rem;
     opacity: 0.9;
 }
@@ -483,7 +483,7 @@
 }
 
 .sales-comparison-value.trend-up {
-    color: #2e7d32;
+    color: #235347;
 }
 
 .sales-comparison-value.trend-down {
@@ -505,3 +505,4 @@
         text-align: left;
     }
 }
+

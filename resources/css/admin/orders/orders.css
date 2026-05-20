@@ -1,6 +1,26 @@
 @import "../variables-reset.css";
 @import "../sidebar.css";
 
+.cf4-orders-module .orders-breadcrumb {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  color: var(--color-muted, #5f6368);
+}
+
+.cf4-orders-module .orders-breadcrumb a {
+  color: var(--color-primary, #2e7d32);
+  text-decoration: none;
+}
+
+.cf4-orders-module .orders-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.cf4-orders-module .orders-breadcrumb .sep {
+  margin: 0 0.35rem;
+  opacity: 0.6;
+}
+
 /* CF4-21 Pedidos — mismo bloque de cabecera que Ventas (.sales-header en sales.css) */
 .cf4-orders-module .cf4-orders-kpi-grid {
   margin-bottom: 1rem;
@@ -20,7 +40,7 @@
 }
 
 .cf4-orders-module .cf4-orders-kpi-card-link:focus-visible {
-  outline: 3px solid rgba(46, 125, 50, 0.24);
+  outline: 3px solid rgba(35, 83, 71, 0.24);
   outline-offset: 2px;
 }
 
@@ -77,7 +97,7 @@
 .cf4-orders-module .orders-toolbar input[type="text"]:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.18);
+  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.18);
 }
 
 .cf4-orders-module .orders-search-wrap {
@@ -219,12 +239,77 @@
 }
 
 /* CF4-61 — plazo cancelación (botón cabecera + modal) */
+.cf4-orders-new-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(35, 83, 71, 0.22);
+  background: rgba(35, 83, 71, 0.08);
+  color: var(--color-dark, #1a1a1a);
+}
+
+.cf4-orders-new-banner[hidden] {
+  display: none !important;
+}
+
+.cf4-orders-new-banner__text {
+  flex: 1 1 12rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.cf4-orders-new-banner__dismiss {
+  margin-left: auto;
+}
+
+[data-cf4-orders-table-region].cf4-orders-table-region--updated {
+  animation: cf4-orders-table-flash 1.2s ease-out;
+}
+
+@keyframes cf4-orders-table-flash {
+  0% {
+    box-shadow: inset 0 0 0 2px rgba(35, 83, 71, 0.45);
+  }
+  100% {
+    box-shadow: inset 0 0 0 0 rgba(35, 83, 71, 0);
+  }
+}
+
+.cf4-sidebar-orders-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  margin-left: 0.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--color-danger, #c62828);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.cf4-sidebar-orders-badge[hidden] {
+  display: none !important;
+}
+
+.admin-sidebar .sidebar-nav a {
+  position: relative;
+}
+
 .cf4-orders-module .cf4-orders-flash-success {
   margin-bottom: 1rem;
   padding: 0.85rem 1rem;
   border-radius: 12px;
-  background: rgba(46, 125, 50, 0.12);
-  border: 1px solid rgba(46, 125, 50, 0.35);
+  background: rgba(35, 83, 71, 0.12);
+  border: 1px solid rgba(35, 83, 71, 0.35);
   color: var(--color-text, #1a1a1a);
   font-weight: 500;
 }
@@ -359,7 +444,7 @@
 }
 
 .supplier-name-btn:hover {
-  color: var(--color-primary-dark, #1b5e20);
+  color: var(--color-primary-dark, #163832);
   text-decoration-color: currentColor;
 }
 
@@ -426,30 +511,4 @@
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
-}
-
-/* Listado: auditoría de confirmación (CF4-15) */
-.cf4-supplier-orders-module .order-conf-cell {
-  font-size: 0.82rem;
-  line-height: 1.35;
-  max-width: 11rem;
-}
-
-.cf4-supplier-orders-module .order-conf-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.cf4-supplier-orders-module .order-conf-date {
-  font-weight: 600;
-  color: var(--color-text, #1a1a1a);
-}
-
-.cf4-supplier-orders-module .order-conf-user {
-  font-size: 0.78rem;
-  color: var(--color-muted, #666);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
