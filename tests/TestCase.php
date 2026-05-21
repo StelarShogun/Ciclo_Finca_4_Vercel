@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Foundation\Vite;
 use Illuminate\Support\Env;
@@ -49,6 +50,14 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Laravel 11+ uses PreventRequestForgery; JSON feature tests do not send CSRF tokens.
+        $this->withoutMiddleware(PreventRequestForgery::class);
+
+        // phpunit.mysql.xml forces APP_TIMEZONE=UTC; keep config in sync for date assertions.
+        if (env('APP_TIMEZONE')) {
+            config(['app.timezone' => env('APP_TIMEZONE')]);
+        }
 
         // Feature tests run without `npm run build`; @vite() would read public/build/manifest.json.
         $this->app->instance(Vite::class, new class extends Vite

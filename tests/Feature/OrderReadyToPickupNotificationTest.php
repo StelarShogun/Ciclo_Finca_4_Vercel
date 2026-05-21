@@ -8,7 +8,6 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Notifications\OrderReadyToPickupNotification;
-use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
@@ -34,8 +33,6 @@ class OrderReadyToPickupNotificationTest extends TestCase
 
         Config::set('mail.default', 'array');
         Config::set('sales.ready_to_pickup_expiration_hours', 72);
-
-        $this->withoutMiddleware(PreventRequestForgery::class);
     }
 
     public function test_mark_ready_to_pickup_creates_database_notification(): void

@@ -14,6 +14,11 @@ return new class extends Migration
                 ->nullable()
                 ->after('ready_at')
                 ->comment('When the client last acknowledged this completed sale in Historial.');
+
+            $table->index(
+                ['client_id', 'status', 'client_history_seen_at'],
+                'sales_client_status_history_seen_idx'
+            );
         });
 
         // Existing completed orders should not show as "new" after deploy.
@@ -28,6 +33,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('sales', function (Blueprint $table) {
+            $table->dropIndex('sales_client_status_history_seen_idx');
             $table->dropColumn('client_history_seen_at');
         });
     }

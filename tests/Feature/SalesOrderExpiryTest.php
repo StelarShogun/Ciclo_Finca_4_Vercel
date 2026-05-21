@@ -43,8 +43,10 @@ class SalesOrderExpiryTest extends TestCase
         }
         Config::set('sales.order_expiration_days', 30);
         Config::set('sales.expiry_alert_days', 2);
+        config(['app.timezone' => 'UTC']);
+        date_default_timezone_set('UTC');
 
-        Carbon::setTestNow(Carbon::parse('2026-06-15 14:30:00', 'UTC'));
+        Carbon::setTestNow(Carbon::parse('2026-06-15 00:00:00', 'UTC'));
 
         $this->adminUser = AdminUser::create([
             'name' => 'Admin',
@@ -86,13 +88,12 @@ class SalesOrderExpiryTest extends TestCase
             'payment_reference' => null,
             'status' => 'completed',
             'notes' => null,
-            'sale_date' => now(),
+            'sale_date' => Carbon::parse('2026-06-15 00:00:00', 'UTC'),
         ]);
 
         $response = $this->actingAs($this->adminUser, 'admin')->get(route('sales.index'));
         $response->assertStatus(200);
-        $response->assertSee($sale->sale_date->format('d/m/Y'), false);
-        $response->assertSee($sale->sale_date->format('H:i'), false);
+        $response->assertSee($sale->adminSaleDateLabel(), false);
 
         $responseJson = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
         $responseJson->assertStatus(200);
@@ -115,19 +116,20 @@ class SalesOrderExpiryTest extends TestCase
             'payment_reference' => null,
             'status' => 'completed',
             'notes' => null,
-            'sale_date' => now()->subDays(10),
+            'sale_date' => Carbon::parse('2026-06-05 00:00:00', 'UTC'),
         ]);
 
         $response = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
         $response->assertStatus(200);
         $response->assertJsonStructure(['sale' => ['days_remaining_until_expiration', 'expires_at', 'is_expiry_warning']]);
-        $this->assertEquals(20, $response->json('sale.days_remaining_until_expiration'));
+        $this->assertSame(20, $sale->fresh()->days_remaining_until_expiration);
+        $response->assertJsonPath('sale.days_remaining_until_expiration', 20);
     }
 
     /** CP3: El conteo se actualiza dinámicamente (recalculado en cada petición). */
     public function test_days_remaining_recalculated_on_each_request(): void
     {
-        $saleDate = now()->subDays(25);
+        $saleDate = Carbon::parse('2026-05-21 00:00:00', 'UTC');
         $sale = Sale::create([
             'invoice_number' => 'INV'.$saleDate->format('Ymd').'0003',
             'client_id' => $this->customer->user_id,
@@ -166,10 +168,11 @@ class SalesOrderExpiryTest extends TestCase
             'payment_reference' => null,
             'status' => 'pending',
             'notes' => null,
-            'sale_date' => now()->subDays(28),
+            'sale_date' => Carbon::parse('2026-05-18 00:00:00', 'UTC'),
         ]);
 
         $this->assertTrue($sale->is_expiry_warning);
+        $this->assertSame(2, $sale->days_remaining_until_expiration);
 
         $responseJson = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
         $responseJson->assertOk();
@@ -219,12 +222,13 @@ class SalesOrderExpiryTest extends TestCase
             'payment_reference' => null,
             'status' => 'pending',
             'notes' => null,
-            'sale_date' => now(),
+            'sale_date' => Carbon::parse('2026-06-15 00:00:00', 'UTC'),
         ]);
 
         $response = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
         $response->assertStatus(200);
-        $this->assertEquals(30, $response->json('sale.days_remaining_until_expiration'));
+        $this->assertSame(30, $sale->days_remaining_until_expiration);
+        $response->assertJsonPath('sale.days_remaining_until_expiration', 30);
     }
 
     /** CP7: Pedido cercano a la fecha límite muestra correctamente los días reducidos. */
@@ -242,12 +246,13 @@ class SalesOrderExpiryTest extends TestCase
             'payment_reference' => null,
             'status' => 'completed',
             'notes' => null,
-            'sale_date' => now()->subDays(29),
+            'sale_date' => Carbon::parse('2026-05-17 00:00:00', 'UTC'),
         ]);
 
         $response = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
         $response->assertStatus(200);
-        $this->assertEquals(1, $response->json('sale.days_remaining_until_expiration'));
+        $this->assertSame(1, $sale->days_remaining_until_expiration);
+        $response->assertJsonPath('sale.days_remaining_until_expiration', 1);
     }
 
     /** CP8: Pedido ya eliminado no aparece en la lista de activos. */
