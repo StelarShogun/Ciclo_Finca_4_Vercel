@@ -88,4 +88,146 @@ class AdminClientsPaginationTest extends TestCase
             $admin->delete();
         }
     }
+
+    public function test_admin_clients_index_filters_by_created_date(): void
+    {
+        $admin = $this->makeAdmin();
+        Auth::guard('admin')->login($admin);
+
+        $match = Client::create([
+            'name' => 'CreatedMatch',
+            'first_surname' => 'Client',
+            'second_surname' => null,
+            'gmail' => 'admin-clients-created-match-'.uniqid('', true).'@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+            'active' => true,
+        ]);
+        Client::query()->whereKey($match->user_id)->update([
+            'created_at' => '2026-03-15 10:00:00',
+            'updated_at' => '2026-03-15 10:00:00',
+        ]);
+
+        $other = Client::create([
+            'name' => 'CreatedOther',
+            'first_surname' => 'Client',
+            'second_surname' => null,
+            'gmail' => 'admin-clients-created-other-'.uniqid('', true).'@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+            'active' => true,
+        ]);
+        Client::query()->whereKey($other->user_id)->update([
+            'created_at' => '2026-01-10 10:00:00',
+            'updated_at' => '2026-01-10 10:00:00',
+        ]);
+
+        try {
+            $response = $this->get(route('admin.clients.index', [
+                'created_date' => '2026-03-15',
+            ]));
+
+            $response->assertOk();
+            $response->assertSee('CreatedMatch', false);
+            $response->assertDontSee('CreatedOther', false);
+        } finally {
+            Client::query()->whereIn('user_id', [(int) $match->user_id, (int) $other->user_id])->delete();
+            $admin->delete();
+        }
+    }
+
+    public function test_admin_clients_index_filters_by_updated_date(): void
+    {
+        $admin = $this->makeAdmin();
+        Auth::guard('admin')->login($admin);
+
+        $match = Client::create([
+            'name' => 'UpdatedMatch',
+            'first_surname' => 'Client',
+            'second_surname' => null,
+            'gmail' => 'admin-clients-updated-match-'.uniqid('', true).'@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+            'active' => true,
+        ]);
+        Client::query()->whereKey($match->user_id)->update([
+            'created_at' => '2026-01-01 10:00:00',
+            'updated_at' => '2026-05-20 14:00:00',
+        ]);
+
+        $other = Client::create([
+            'name' => 'UpdatedOther',
+            'first_surname' => 'Client',
+            'second_surname' => null,
+            'gmail' => 'admin-clients-updated-other-'.uniqid('', true).'@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+            'active' => true,
+        ]);
+        Client::query()->whereKey($other->user_id)->update([
+            'created_at' => '2026-01-01 10:00:00',
+            'updated_at' => '2026-04-01 14:00:00',
+        ]);
+
+        try {
+            $response = $this->get(route('admin.clients.index', [
+                'updated_date' => '2026-05-20',
+            ]));
+
+            $response->assertOk();
+            $response->assertSee('UpdatedMatch', false);
+            $response->assertDontSee('UpdatedOther', false);
+        } finally {
+            Client::query()->whereIn('user_id', [(int) $match->user_id, (int) $other->user_id])->delete();
+            $admin->delete();
+        }
+    }
+
+    public function test_admin_clients_index_sorts_by_column_and_direction(): void
+    {
+        $admin = $this->makeAdmin();
+        Auth::guard('admin')->login($admin);
+
+        $zebra = Client::create([
+            'name' => 'Zebra',
+            'first_surname' => 'Sort',
+            'second_surname' => null,
+            'gmail' => 'admin-clients-sort-z-'.uniqid('', true).'@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+            'active' => true,
+        ]);
+        $alpha = Client::create([
+            'name' => 'Alpha',
+            'first_surname' => 'Sort',
+            'second_surname' => null,
+            'gmail' => 'admin-clients-sort-a-'.uniqid('', true).'@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+            'active' => true,
+        ]);
+
+        try {
+            $asc = $this->get(route('admin.clients.index', [
+                'search' => 'Sort',
+                'sort' => 'name',
+                'dir' => 'asc',
+            ]));
+            $asc->assertOk();
+            $asc->assertSeeInOrder(['Alpha', 'Zebra'], false);
+
+            $desc = $this->get(route('admin.clients.index', [
+                'search' => 'Sort',
+                'sort' => 'name',
+                'dir' => 'desc',
+            ]));
+            $desc->assertOk();
+            $desc->assertSeeInOrder(['Zebra', 'Alpha'], false);
+            $desc->assertSee('th-sort is-active', false);
+            $desc->assertSee('fa-sort-down', false);
+        } finally {
+            Client::query()->whereIn('user_id', [(int) $zebra->user_id, (int) $alpha->user_id])->delete();
+            $admin->delete();
+        }
+    }
 }

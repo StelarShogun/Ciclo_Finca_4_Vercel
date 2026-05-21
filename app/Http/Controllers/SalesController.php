@@ -108,6 +108,13 @@ class SalesController extends Controller
                     'expires_at' => $sale->expires_at->toISOString(),
                     'is_expiry_warning' => $sale->is_expiry_warning,
                     'ready_at' => $sale->ready_at?->toISOString(),
+                    'confirmed_at' => $sale->status === 'completed'
+                        ? $sale->updated_at?->toISOString()
+                        : null,
+                    'order_placed_at_label' => $sale->adminOrderPlacedAtLabel(),
+                    'ready_at_label' => $sale->adminReadyAtLabel(),
+                    'confirmed_at_label' => $sale->adminConfirmedAtLabel(),
+                    'sale_date_label' => $sale->adminSaleDateLabel(),
                     'pickup_expires_at' => $sale->pickup_expires_at?->toISOString(),
                     'pickup_time_remaining_label' => $sale->pickup_time_remaining_label,
                     'is_pickup_expired' => $sale->isPickupExpired(),

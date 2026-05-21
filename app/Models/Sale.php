@@ -239,4 +239,43 @@ class Sale extends Model
 
         return $query->where('sale_date', '>=', $limitDate);
     }
+
+    /** Admin tables/modals: d/m/Y H:i in app timezone. */
+    public static function formatAdminDateTime(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '—';
+        }
+
+        $dt = $value instanceof Carbon
+            ? $value->copy()
+            : Carbon::parse($value);
+
+        return $dt->timezone(config('app.timezone'))->format('d/m/Y H:i');
+    }
+
+    public function adminOrderPlacedAtLabel(): string
+    {
+        return self::formatAdminDateTime($this->sale_date);
+    }
+
+    public function adminReadyAtLabel(): string
+    {
+        return self::formatAdminDateTime($this->ready_at);
+    }
+
+    /** Moment the encargo was confirmed as a completed sale (status → completed). */
+    public function adminConfirmedAtLabel(): string
+    {
+        if ($this->status !== 'completed') {
+            return '—';
+        }
+
+        return self::formatAdminDateTime($this->updated_at);
+    }
+
+    public function adminSaleDateLabel(): string
+    {
+        return self::formatAdminDateTime($this->sale_date);
+    }
 }

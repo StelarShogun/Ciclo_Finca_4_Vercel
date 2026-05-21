@@ -137,8 +137,8 @@
                             <th>Proveedor</th>
                             <th>Productos</th>
                             <th>Fecha de pedido</th>
-                            <th>Entrega estimada</th>
-                            <th>Entrega real</th>
+                            <th>Fecha de entrega estimada</th>
+                            <th>Fecha de entrega</th>
                             <th>Estado</th>
                             <th>Total</th>
                             <th>Acciones</th>

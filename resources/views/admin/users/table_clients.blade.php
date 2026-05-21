@@ -39,8 +39,12 @@
         @component('admin.partials.filters', [
             'action' => route('admin.clients.index'),
             'clearUrl' => route('admin.clients.index'),
+            'formId' => 'clients-filters-form',
         ])
             @slot('fields')
+                <input type="hidden" name="sort" value="{{ $sort }}">
+                <input type="hidden" name="dir" value="{{ $dir }}">
+
                 <div class="filter-group">
                     <label for="client-search">Buscar</label>
                     <input type="text" id="client-search" name="search" placeholder="Nombre, apellido o correo…"
@@ -55,33 +59,112 @@
                         <option value="banned" @selected(request('status') === 'banned')>Baneado</option>
                     </select>
                 </div>
+
+                <div class="filter-group">
+                    <label for="client-created-date">Creado</label>
+                    <input type="date" id="client-created-date" name="created_date" value="{{ request('created_date') }}">
+                </div>
+
+                <div class="filter-group">
+                    <label for="client-updated-date">Última actualización</label>
+                    <input type="date" id="client-updated-date" name="updated_date" value="{{ request('updated_date') }}">
+                </div>
             @endslot
         @endcomponent
 
         {{-- ==================== USERS TABLE ==================== --}}
+        @php
+            $clientSortUrl = static function (string $column) use ($sort, $dir): string {
+                $nextDir = $sort === $column && $dir === 'asc' ? 'desc' : 'asc';
+
+                return route('admin.clients.index', array_merge(
+                    request()->except(['page', 'sort', 'dir']),
+                    ['sort' => $column, 'dir' => $nextDir, 'page' => 1],
+                ));
+            };
+        @endphp
+
         <div class="clients-container" data-cf4-ajax-pagination data-cf4-ajax-scroll>
             <div id="cf4-list-fragment">
             <div class="clients-table-wrapper">
                 <table class="clients-table">
                     <thead>
                         <tr>
-                            <th>#</th>
-                            <th>Nombre</th>
-                            <th>Primer Apellido</th>
-                            <th>Segundo Apellido</th>
-                            <th>Correo</th>
-                            <th>Estado</th>
-                            <th>Acción</th>
+                            <th scope="col">
+                                <a href="{{ $clientSortUrl('name') }}"
+                                    class="th-sort {{ $sort === 'name' ? 'is-active' : '' }}">
+                                    Nombre
+                                    @if ($sort === 'name')
+                                        <i class="fas fa-sort-{{ $dir === 'asc' ? 'up' : 'down' }}" aria-hidden="true"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th scope="col">
+                                <a href="{{ $clientSortUrl('first_surname') }}"
+                                    class="th-sort {{ $sort === 'first_surname' ? 'is-active' : '' }}">
+                                    Primer Apellido
+                                    @if ($sort === 'first_surname')
+                                        <i class="fas fa-sort-{{ $dir === 'asc' ? 'up' : 'down' }}" aria-hidden="true"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th scope="col">
+                                <a href="{{ $clientSortUrl('second_surname') }}"
+                                    class="th-sort {{ $sort === 'second_surname' ? 'is-active' : '' }}">
+                                    Segundo Apellido
+                                    @if ($sort === 'second_surname')
+                                        <i class="fas fa-sort-{{ $dir === 'asc' ? 'up' : 'down' }}" aria-hidden="true"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th scope="col">
+                                <a href="{{ $clientSortUrl('gmail') }}"
+                                    class="th-sort {{ $sort === 'gmail' ? 'is-active' : '' }}">
+                                    Correo
+                                    @if ($sort === 'gmail')
+                                        <i class="fas fa-sort-{{ $dir === 'asc' ? 'up' : 'down' }}" aria-hidden="true"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th scope="col">
+                                <a href="{{ $clientSortUrl('created_at') }}"
+                                    class="th-sort {{ $sort === 'created_at' ? 'is-active' : '' }}">
+                                    Creado
+                                    @if ($sort === 'created_at')
+                                        <i class="fas fa-sort-{{ $dir === 'asc' ? 'up' : 'down' }}" aria-hidden="true"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th scope="col">
+                                <a href="{{ $clientSortUrl('updated_at') }}"
+                                    class="th-sort {{ $sort === 'updated_at' ? 'is-active' : '' }}">
+                                    Actualizado
+                                    @if ($sort === 'updated_at')
+                                        <i class="fas fa-sort-{{ $dir === 'asc' ? 'up' : 'down' }}" aria-hidden="true"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th scope="col">
+                                <a href="{{ $clientSortUrl('active') }}"
+                                    class="th-sort {{ $sort === 'active' ? 'is-active' : '' }}">
+                                    Estado
+                                    @if ($sort === 'active')
+                                        <i class="fas fa-sort-{{ $dir === 'asc' ? 'up' : 'down' }}" aria-hidden="true"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th scope="col">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($clients as $client)
                             <tr id="client-row-{{ $client->user_id }}">
-                                <td>{{ ($clients->firstItem() ?? 0) + $loop->index }}</td>
                                 <td>{{ $client->name }}</td>
                                 <td>{{ $client->first_surname }}</td>
                                 <td>{{ $client->second_surname ?? '—' }}</td>
                                 <td>{{ $client->gmail }}</td>
+                                <td>{{ $client->created_at?->format('d/m/Y') ?? '—' }}</td>
+                                <td>{{ $client->updated_at?->format('d/m/Y') ?? '—' }}</td>
 
                                 {{-- Active / banned status badge --}}
                                 <td>
@@ -113,8 +196,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="clients-empty">
-                                    @if (request()->hasAny(['search', 'status']))
+                                <td colspan="8" class="clients-empty">
+                                    @if (request()->hasAny(['search', 'status', 'created_date', 'updated_date']))
                                         No hay usuarios para los filtros seleccionados.
                                     @else
                                         No hay usuarios registrados.
