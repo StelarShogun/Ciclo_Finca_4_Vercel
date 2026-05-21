@@ -5,6 +5,13 @@
 .env.*
 !.env.example
 !.env.testing.example
+!.env.unlighthouse.example
+
+# Unlighthouse (https://unlighthouse.dev/)
+.env.unlighthouse.local
+lighthouse/
+.puppeteer-data/
+.puppeteer-browsers/
 
 # =========================
 # DEPENDENCIAS
