@@ -44,7 +44,7 @@ class OrderReadyToPickupNotification extends Notification
             'sale_id' => $this->sale->sale_id,
             'invoice_number' => $this->sale->invoice_number,
             'message' => sprintf(
-                'Tu pedido %s está listo para recoger en tienda. Revisalo en Facturas.',
+                'Tu pedido %s está listo para recoger en tienda. Revísalo en Facturas.',
                 $invoiceLabel
             ),
             'action_url' => $this->actionUrlRelative(),
