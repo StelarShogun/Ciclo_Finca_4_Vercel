@@ -7,7 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class OrderReadyToPickupNotification extends Notification
+class OrderCompletedNotification extends Notification
 {
     use Queueable;
 
@@ -23,16 +23,16 @@ class OrderReadyToPickupNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $clientName = $this->resolveClientName($notifiable);
-        $invoicesUrl = $this->invoicesUrlAbsolute();
+        $historyUrl = $this->historyUrlAbsolute();
 
         return (new MailMessage)
             ->subject(
-                'Su pedido '.($this->sale->invoice_number ?? '#'.$this->sale->sale_id).' está listo para recoger - Ciclo Finca 4'
+                'Su pedido '.($this->sale->invoice_number ?? '#'.$this->sale->sale_id).' fue confirmado - Ciclo Finca 4'
             )
-            ->view('emails.order-ready-to-pickup', [
+            ->view('emails.order-completed', [
                 'sale' => $this->sale->loadMissing(['saleItems.product']),
                 'clientName' => $clientName,
-                'invoicesUrl' => $invoicesUrl,
+                'historyUrl' => $historyUrl,
             ]);
     }
 
@@ -44,32 +44,23 @@ class OrderReadyToPickupNotification extends Notification
             'sale_id' => $this->sale->sale_id,
             'invoice_number' => $this->sale->invoice_number,
             'message' => sprintf(
-                'Tu pedido %s está listo para recoger en tienda. Revisalo en Facturas.',
+                'Tu pedido %s fue confirmado. Ya está disponible en Historial de compras.',
                 $invoiceLabel
             ),
-            'action_url' => $this->actionUrlRelative(),
-            'action_label' => $this->actionLabel(),
+            'action_url' => $this->historyUrlRelative(),
+            'action_label' => 'Ver en Historial de compras',
         ];
     }
 
-    private function actionUrlRelative(): string
+    private function historyUrlRelative(): string
     {
-        $tab = $this->sale->status === 'completed' ? 'historial' : 'facturas';
-
-        return route('clients.invoices', ['tab' => $tab], absolute: false);
+        return route('clients.invoices', ['tab' => 'historial'], absolute: false);
     }
 
-    private function actionLabel(): string
-    {
-        return $this->sale->status === 'completed'
-            ? 'Ver en Historial de compras'
-            : 'Ver en Facturas';
-    }
-
-    private function invoicesUrlAbsolute(): string
+    private function historyUrlAbsolute(): string
     {
         $base = rtrim((string) config('app.frontend_url', config('app.url')), '/');
-        $path = route('clients.invoices', ['tab' => 'facturas'], absolute: false);
+        $path = $this->historyUrlRelative();
 
         return str_starts_with($path, 'http') ? $path : $base.$path;
     }

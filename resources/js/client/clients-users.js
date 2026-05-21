@@ -44,10 +44,10 @@ function updateCartCount(count) {
 }
 
 // ============================================================
-// INVOICE BADGE (navbar) — keeps pending count in sync
+// INVOICE BADGES (navbar) — active invoices + unseen Historial
 // ============================================================
 
-/** Update navbar invoice badge count. */
+/** Update navbar invoice badge count (pending + ready_to_pickup). */
 function updateInvoiceCount(count) {
     const invoiceLink = document.getElementById('invoices-link');
     if (!invoiceLink) return;
@@ -68,16 +68,45 @@ function updateInvoiceCount(count) {
     }
 }
 
-// Start polling the invoice heartbeat endpoint to keep the badge live on all pages.
+/** Dot badge when the client has unseen completed orders in Historial. */
+function updateUnseenHistoryBadge(count) {
+    const invoiceLink = document.getElementById('invoices-link');
+    if (!invoiceLink) return;
+
+    let badge = document.getElementById('history-badge');
+
+    if (count > 0) {
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.id = 'history-badge';
+            badge.className = 'cf4-history-badge';
+            badge.title = 'Compras nuevas en Historial';
+            badge.setAttribute('aria-label', 'Historial con compras nuevas');
+            invoiceLink.appendChild(badge);
+        }
+        badge.style.display = 'block';
+    } else if (badge) {
+        badge.style.display = 'none';
+    }
+
+    const tabBadge = document.getElementById('history-tab-badge');
+    if (tabBadge) {
+        tabBadge.style.display = count > 0 ? 'block' : 'none';
+    }
+}
+
+// Start polling the invoice heartbeat endpoint to keep badges live on all pages.
 (function startInvoiceHeartbeat() {
     const metaUrl   = document.querySelector('meta[name="cf4-invoice-heartbeat-url"]');
     const metaCount = document.querySelector('meta[name="cf4-invoice-initial-count"]');
+    const metaHistory = document.querySelector('meta[name="cf4-unseen-history-initial-count"]');
     if (!metaUrl) return; // not authenticated
 
     let lastCount = parseInt(metaCount ? metaCount.getAttribute('content') : '0', 10);
+    let lastUnseenHistory = parseInt(metaHistory ? metaHistory.getAttribute('content') : '0', 10);
 
-    // Seed the badge immediately from the server-rendered count.
     updateInvoiceCount(lastCount);
+    updateUnseenHistoryBadge(lastUnseenHistory);
 
     const url = metaUrl.getAttribute('content');
 
@@ -88,13 +117,20 @@ function updateInvoiceCount(count) {
             });
             if (!res.ok) return;
             const data = await res.json();
-            if (data.count !== lastCount) {
+            const unseen = parseInt(data.unseen_history, 10) || 0;
+            const countChanged = data.count !== lastCount;
+            const historyChanged = unseen !== lastUnseenHistory;
+
+            if (countChanged) {
                 lastCount = data.count;
                 updateInvoiceCount(lastCount);
-                // If the invoices page is open, also reload its content.
-                if (window.location.pathname.startsWith('/invoices')) {
-                    location.reload();
-                }
+            }
+            if (historyChanged) {
+                lastUnseenHistory = unseen;
+                updateUnseenHistoryBadge(lastUnseenHistory);
+            }
+            if ((countChanged || historyChanged) && window.location.pathname.startsWith('/invoices')) {
+                location.reload();
             }
         } catch (_) {}
     }, 15000);
