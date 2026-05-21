@@ -10,12 +10,22 @@
 <!-- Hero: imagen full-bleed + overlay; reemplaza public/assets/images/hero/hero-downhill.jpg por tu arte -->
 <section class="hero-section" aria-label="Bienvenida a Ciclo Finca 4">
     <div class="hero-backdrop" aria-hidden="true">
-        <img src="{{ asset('assets/images/hero/hero-downhill.jpg') }}"
-             alt=""
-             width="1920"
-             height="1080"
-             fetchpriority="high"
-             decoding="async">
+        <picture>
+            <source
+                type="image/webp"
+                media="(max-width: 767px)"
+                srcset="{{ asset('assets/images/hero/hero-downhill-768.webp') }}">
+            <source
+                type="image/webp"
+                srcset="{{ asset('assets/images/hero/hero-downhill-1920.webp') }}">
+            <img
+                src="{{ asset('assets/images/hero/hero-downhill.jpg') }}"
+                alt=""
+                width="1920"
+                height="1080"
+                fetchpriority="high"
+                decoding="async">
+        </picture>
     </div>
     <div class="hero-overlay" aria-hidden="true"></div>
 
@@ -117,11 +127,13 @@
                         <div class="product-image">
                             <a class="product-image__link" href="{{ $product->clientProductUrl() }}"
                                aria-label="Ver producto: {{ $product->name }}">
-                            <!-- Fallback to favicon if product image is missing -->
-                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}" 
-                                 alt="{{ $product->name }}"
-                                 data-fallback-src="{{ asset('favicon.svg') }}"
-                                 onerror="this.src=this.dataset.fallbackSrc;">
+                            @include('client.parts.responsive-picture', [
+                                'desktopWebp' => \App\Support\ProductImageUrls::mainImageWebpDesktop($product),
+                                'mobileWebp' => \App\Support\ProductImageUrls::mainImageWebpMobile($product),
+                                'fallback' => \App\Support\ProductImageUrls::fallbackUrl($product),
+                                'alt' => $product->name,
+                                'loading' => 'lazy',
+                            ])
                             </a>
                         </div>
                         <div class="product-info">

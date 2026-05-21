@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @property-read Category|null $category
@@ -134,6 +135,25 @@ class Product extends Model implements HasMedia
 
         $this->addMediaCollection('gallery')
             ->useDisk($disk);
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this
+            ->addMediaConversion('webp_1920')
+            ->performOnCollections('main_image', 'gallery')
+            ->format('webp')
+            ->width(1920)
+            ->quality(80)
+            ->nonQueued();
+
+        $this
+            ->addMediaConversion('webp_768')
+            ->performOnCollections('main_image', 'gallery')
+            ->format('webp')
+            ->width(768)
+            ->quality(78)
+            ->nonQueued();
     }
 
     // Returns the main and extra images, falling back to the default asset.

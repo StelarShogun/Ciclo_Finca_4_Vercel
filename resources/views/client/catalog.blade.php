@@ -309,7 +309,6 @@
                                                 $product = $row['product'];
                                                 $spotlight = $row['spotlight'];
                                                 $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
-                                                $spotlightImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png'));
                                                 $spotLabel = $product->clientCatalogStockLabel();
                                                 $spotSku = $product->clientCatalogAssignedSku();
                                                 $spotlightPriceFormatted = number_format((float) $product->sale_price, 0, ',', '.');
@@ -323,12 +322,13 @@
                                                    aria-label="Ver producto: {{ $product->name }}">
                                                     <div class="product-image product-image--catalog-cf128">
                                                         <div class="product-image__frame">
-                                                            <img src="{{ $spotlightImgUrl }}"
-                                                                 alt=""
-                                                                 loading="lazy"
-                                                                 decoding="async"
-                                                                 data-fallback-src="{{ asset('favicon.svg') }}"
-                                                                 onerror="this.src=this.dataset.fallbackSrc;">
+                                                            @include('client.parts.responsive-picture', [
+                                                                'desktopWebp' => \App\Support\ProductImageUrls::mainImageWebpDesktop($product),
+                                                                'mobileWebp' => \App\Support\ProductImageUrls::mainImageWebpMobile($product),
+                                                                'fallback' => \App\Support\ProductImageUrls::fallbackUrl($product),
+                                                                'alt' => '',
+                                                                'loading' => 'lazy',
+                                                            ])
                                                             <div class="product-image__hover-overlay" aria-hidden="true">
                                                                 <span class="product-image__hover-price">₡{{ $spotlightPriceFormatted }}</span>
                                                             </div>
@@ -467,7 +467,6 @@
                                     $canBuy = $product->isPurchasableByClient();
                                     $isFavorite = $favoriteProductIds->contains((int) $product->product_id);
                                     $cardSku = $product->clientCatalogAssignedSku();
-                                    $cardImgUrl = $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png'));
                                     $cardPriceFormatted = number_format((float) $product->sale_price, 0, ',', '.');
                                 @endphp
                                 <div class="product-card product-card--catalog-cf128 @if($catLabel === 'Agotado') product-card--out-of-stock @endif">
@@ -482,13 +481,13 @@
                                         </button>
                                         <div class="product-image__frame">
                                             <a class="product-image__link" href="{{ $product->clientProductUrl() }}">
-                                                {{-- Fallback to favicon if product image is missing --}}
-                                                <img src="{{ $cardImgUrl }}"
-                                                     alt="{{ $product->name }}"
-                                                     loading="lazy"
-                                                     decoding="async"
-                                                     data-fallback-src="{{ asset('favicon.svg') }}"
-                                                     onerror="this.src=this.dataset.fallbackSrc;">
+                                                @include('client.parts.responsive-picture', [
+                                                    'desktopWebp' => \App\Support\ProductImageUrls::mainImageWebpDesktop($product),
+                                                    'mobileWebp' => \App\Support\ProductImageUrls::mainImageWebpMobile($product),
+                                                    'fallback' => \App\Support\ProductImageUrls::fallbackUrl($product),
+                                                    'alt' => $product->name,
+                                                    'loading' => 'lazy',
+                                                ])
                                             </a>
                                             <div class="product-image__hover-overlay" aria-hidden="true">
                                                 <span class="product-image__hover-price">₡{{ $cardPriceFormatted }}</span>
