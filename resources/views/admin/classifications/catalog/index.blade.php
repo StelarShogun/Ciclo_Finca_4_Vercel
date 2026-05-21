@@ -14,8 +14,9 @@
 <body class="admin-layout">
     @include('admin.parts.aside')
 
-    <main class="admin-main">
-        <div class="form-container">
+    <main class="admin-main admin-main--content">
+        <div class="admin-content-wrapper">
+            <div class="form-container">
             @component('admin.partials.page-header', [
                 'title' => 'Gestión de opciones por tipo de producto',
             ])
@@ -65,6 +66,7 @@
                 <a href="{{ route('admin.product-classifications.index') }}" class="btn btn-secondary"><i
                         class="fas fa-arrow-left"></i> Ver productos y opciones elegidas</a>
                 <a href="{{ route('inventory') }}" class="btn btn-secondary"><i class="fas fa-box"></i> Inventario</a>
+            </div>
             </div>
         </div>
     </main>

@@ -26,9 +26,11 @@
 
     @yield('aside')
 
-    <main class="admin-main">
-        @yield('header')
-        @yield('contenido')
+    <main class="admin-main admin-main--content">
+        <div class="admin-content-wrapper">
+            @yield('header')
+            @yield('contenido')
+        </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

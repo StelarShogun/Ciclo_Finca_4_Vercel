@@ -18,8 +18,9 @@
 <body class="admin-layout">
     @include('admin.parts.aside')
 
-    <main class="admin-main">
-        <div class="form-container">
+    <main class="admin-main admin-main--content">
+        <div class="admin-content-wrapper">
+            <div class="form-container">
             <nav class="reports-breadcrumb" aria-label="Migas de pan">
                 <a href="{{ route('admin.product-classifications.index') }}">Clasificaciones de productos</a>
                 <span class="sep">/</span>
@@ -88,6 +89,7 @@
                         </div>
                     </form>
                 @endif
+            </div>
             </div>
         </div>
     </main>

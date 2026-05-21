@@ -28,8 +28,8 @@
     <header class="inv-index-header">
         <h1>Movimientos de inventario</h1>
         <p class="inv-index-lead">
-            Seleccioná un producto para consultar su historial completo de entradas,
-            salidas y devoluciones. Podés buscar por nombre o código SKU.
+            Selecciona un producto para consultar su historial completo de entradas,
+            salidas y devoluciones. Puedes buscar por nombre o codigo SKU.
         </p>
     </header>
 
@@ -49,7 +49,7 @@
                         name="search"
                         id="inv-search-input"
                         value="{{ request('search') }}"
-                        placeholder="Nombre o código (ej. BK-004)…"
+                        placeholder="Nombre o codigo (ej. BK-004)..."
                         autocomplete="off"
                     >
                 </div>
@@ -72,9 +72,9 @@
             <p class="inv-index-results-label" style="padding: 0 0 0.75rem;">
                 @if($products->total() > 0)
                     {{ $products->total() }} {{ Str::plural('resultado', $products->total()) }}
-                    para <strong>«{{ request('search') }}»</strong>
+                    para <strong>"{{ request('search') }}"</strong>
                 @else
-                    Ningún producto coincide con <strong>«{{ request('search') }}»</strong>.
+                    Ningun producto coincide con <strong>"{{ request('search') }}"</strong>.
                 @endif
             </p>
         @endif
@@ -87,7 +87,7 @@
                     <tr>
                         <th>SKU</th>
                         <th>Producto</th>
-                        <th>Categoría</th>
+                        <th>Categoria</th>
                         <th>Proveedor</th>
                         <th>Estado stock</th>
                         <th class="text-end">Stock actual</th>
@@ -98,49 +98,70 @@
                     @forelse($products as $product)
                         @php $badgeClass = $product->adminInventoryStockBadgeClass(); @endphp
                         <tr>
-                            <th>SKU</th>
-                            <th>Producto</th>
-                            <th>Categoría</th>
-                            <th>Proveedor</th>
-                            <th>Estado stock</th>
-                            <th class="text-end">Stock actual</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($products as $product)
-                            @php $badgeClass = $product->adminInventoryStockBadgeClass(); @endphp
-                            <tr>
-                                <td>
-                                    <strong class="po-number">
-                                        {{ \App\Models\Product::skuFromId($product->product_id) }}
-                                    </strong>
-                                </td>
-                                <td>{{ $product->name }}</td>
-                                <td>
-                                    {{ $product->category?->name ?? '—' }}
-                                </td>
-                                <td>
-                                    @if ($product->supplier)
-                                        <span>
-                                            <i class="fas fa-truck-fast" aria-hidden="true"
-                                                style="font-size:0.75rem; margin-right:0.3rem; opacity:.6"></i>
-                                            {{ $product->supplier->name }}
-                                        </span>
-                                    @else
-                                        <span class="text-muted">—</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="order-status-pill {{ $badgeClass }}">
-                                        @switch($badgeClass)
-                                            @case('success')
-                                                Normal
-                                            @break
+                            <td>
+                                <strong class="po-number">
+                                    {{ \App\Models\Product::skuFromId($product->product_id) }}
+                                </strong>
+                            </td>
+                            <td>{{ $product->name }}</td>
+                            <td>
+                                {{ $product->category?->name ?? '—' }}
+                            </td>
+                            <td>
+                                @if ($product->supplier)
+                                    <span>
+                                        <i class="fas fa-truck-fast" aria-hidden="true"
+                                            style="font-size:0.75rem; margin-right:0.3rem; opacity:.6"></i>
+                                        {{ $product->supplier->name }}
+                                    </span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="order-status-pill {{ $badgeClass }}">
+                                    @switch($badgeClass)
+                                        @case('success')
+                                            Normal
+                                        @break
 
-                                            @case('warning')
-                                                Bajo
-                                            @break
+                                        @case('warning')
+                                            Bajo
+                                        @break
+
+                                        @case('danger')
+                                            Sin stock
+                                        @break
+
+                                        @default
+                                            Revisar
+                                    @endswitch
+                                </span>
+                            </td>
+                            <td class="text-end">{{ number_format($product->stock_current) }}</td>
+                            <td>
+                                <div class="actions-container">
+                                    <a href="{{ route('admin.inventory.movements.show', $product->product_id) }}"
+                                       class="btn btn-secondary btn-sm action-btn">
+                                        <i class="fas fa-chart-line"></i>
+                                        Ver movimientos
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7">
+                                <div class="orders-empty">
+                                    <i class="fas fa-inbox orders-empty-icon" aria-hidden="true"></i>
+                                    <p>No hay productos para mostrar.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
         {{-- Shared pagination --}}
         <div class="orders-pagination-wrap">

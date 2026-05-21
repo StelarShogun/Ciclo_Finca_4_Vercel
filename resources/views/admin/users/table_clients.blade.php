@@ -19,8 +19,8 @@
     {{-- Sidebar navigation --}}
     @include('admin.parts.aside')
 
-    <main class="admin-main">
-
+    <main class="admin-main admin-main--content">
+        <div class="admin-content-wrapper">
         {{-- Page header with total user count --}}
 @component('admin.partials.page-header', [
     'title' => 'Gestión de usuarios',
@@ -131,7 +131,7 @@
             </div>
             </div>
         </div>
-
+        </div>
     </main>
 
     {{-- SweetAlert2 for ban/unban confirmation dialogs --}}

@@ -30,8 +30,9 @@
     {{-- Sidebar navigation --}}
     @include('admin.parts.aside')
 
-    <main class="admin-main">
-        <div class="dashboard-container">
+    <main class="admin-main admin-main--content">
+        <div class="admin-content-wrapper">
+            <div class="dashboard-container">
 
             {{-- ==================== HEADER ==================== --}}
             @component('admin.partials.page-header', ['title' => 'Panel de control'])
@@ -346,6 +347,7 @@
                 </div>
             </section>
 
+            </div>
         </div>
     </main>
 

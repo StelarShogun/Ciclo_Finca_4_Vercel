@@ -77,9 +77,29 @@
 
         {{-- ==================== CONTENIDO PRINCIPAL ==================== --}}
         @if ($rows->isEmpty())
-            <div class="alert alert-info report-empty-state">
-                <i class="fas fa-info-circle fa-2x"></i>
-                No hay ventas confirmadas en el periodo seleccionado.
+            <div class="report-table-panel">
+                <div class="sales-table-container">
+                    <table class="sales-table">
+                        <thead>
+                            <tr>
+                                <th>Categoria</th>
+                                <th class="text-center">Unidades</th>
+                                <th class="text-right">Ingresos</th>
+                                <th class="text-right">Participacion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4">
+                                    <div class="report-empty-state">
+                                        <i class="fas fa-inbox fa-2x" aria-hidden="true"></i>
+                                        <p>No hay ventas confirmadas en el periodo seleccionado.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         @else
             {{-- KPIs --}}
