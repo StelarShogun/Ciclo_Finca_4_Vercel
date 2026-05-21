@@ -8,6 +8,7 @@
 
 @push('extra-meta')
     <meta name="auto-print" content="1">
+    <meta name="invoice-label" content="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}">
 @endpush
 
 @section('aside')@endsection
@@ -19,7 +20,7 @@
 
     <div class="invoice-doc invoice-doc--auto-print">
         <div class="invoice-doc__toolbar no-print">
-            <button type="button" class="btn-print" onclick="window.print()">
+            <button type="button" class="btn-print" data-confirm-print data-invoice-label="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}">
                 <i class="fas fa-print" aria-hidden="true"></i> Imprimir
             </button>
             <a href="{{ route('sales.index') }}" class="btn-back">
