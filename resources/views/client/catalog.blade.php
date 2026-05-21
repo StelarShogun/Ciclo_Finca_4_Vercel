@@ -656,5 +656,5 @@
             };
         </script>
     @endauth
-    @vite(['resources/js/client/clients-page.js'])
+    @vite(['resources/js/client/clients-catalog.js'])
 @endpush

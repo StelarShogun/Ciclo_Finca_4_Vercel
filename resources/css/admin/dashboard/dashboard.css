@@ -327,6 +327,8 @@
   gap: 30px;
   margin-bottom: 30px;
   align-items: start;
+  contain: layout;
+  min-height: 28rem;
 }
 
 /* Ventas: el canvas usa todo el ancho de la celda y crece en altura */

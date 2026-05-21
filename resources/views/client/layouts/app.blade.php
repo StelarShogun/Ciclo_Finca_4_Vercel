@@ -14,22 +14,15 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
     @vite([
+        'resources/css/client/fonts.css',
+        'resources/css/client/fontawesome.css',
         'resources/css/client/variables-reset.css',
         'resources/css/client/header.css',
         'resources/css/client/footer.css',
     ])
 
     @stack('styles')
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></noscript>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
 </head>
 <body class="cliente-layout">
 
@@ -62,9 +55,9 @@
         @include('client.parts.footer')
     @endunless
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
     @stack('scripts')
     @if (session('client_success_modal'))
+        @vite(['resources/js/client/auth-welcome-toast.js'])
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 if (typeof window.cf4AuthWelcomeToast !== 'function') {

@@ -1,3 +1,19 @@
+let chartJsPromise = null;
+
+async function loadChartJs() {
+    if (window.Chart) {
+        return window.Chart;
+    }
+    if (!chartJsPromise) {
+        chartJsPromise = import('chart.js/auto').then((mod) => {
+            const Chart = mod.default ?? mod.Chart;
+            window.Chart = Chart;
+            return Chart;
+        });
+    }
+    return chartJsPromise;
+}
+
 // Main dashboard controller class
 class Dashboard {
     constructor() {
@@ -154,11 +170,19 @@ class Dashboard {
     // Initialize dashboard components
     init() {
         this.updateCurrentTime();
-        this.initCharts();
         this.bindEvents();
         this.loadDashboardData();
 
-        // Update time every minute
+        // Defer Chart.js so FCP/LCP paint header + KPIs first (heavy bundle).
+        const runCharts = () => {
+            void this.initCharts();
+        };
+        if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(runCharts, { timeout: 2000 });
+        } else {
+            setTimeout(runCharts, 0);
+        }
+
         setInterval(() => this.updateCurrentTime(), 60000);
     }
 
@@ -182,7 +206,8 @@ class Dashboard {
     }
 
     // Initialize both sales and category charts
-    initCharts() {
+    async initCharts() {
+        await loadChartJs();
         this.initSalesChart();
         this.initCategoryChart();
     }
@@ -190,7 +215,7 @@ class Dashboard {
     // Create line chart for sales data
     initSalesChart() {
         const ctx = document.getElementById('sales-chart');
-        if (!ctx) return;
+        if (!ctx || !window.Chart) return;
 
         // Fetch real sales data from server
         this.loadSalesData().then(salesData => {

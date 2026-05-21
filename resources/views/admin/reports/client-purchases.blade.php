@@ -3,11 +3,11 @@
 @section('Titulo pagina', 'Compras por cliente - Reportes')
 
 @push('styles')
-    @vite(['resources/css/admin/reports/client-purchase-history.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/client-purchase-history.css'])
 @endpush
 
 @push('vite-body')
-    @vite(['resources/js/admin/reports/client-purchase-history.js'])
+    @vite(['resources/js/admin/shell.js', 'resources/js/admin/reports/client-purchase-history.js'])
 @endpush
 
 @section('aside')

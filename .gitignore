@@ -10,6 +10,8 @@
 # Unlighthouse — reports, browser profiles, local env (https://unlighthouse.dev/)
 .env.unlighthouse.local
 /lighthouse/
+/lighthouse-admin/
+/lighthouse-client/
 /.puppeteer-data/
 /.puppeteer-browsers/
 /chrome/

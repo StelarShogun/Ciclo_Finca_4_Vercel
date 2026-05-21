@@ -7,7 +7,7 @@
 @section('Titulo pagina', 'Bitácora de auditoría - Reportes')
 
 @push('styles')
-    @vite(['resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/audit-log.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/audit-log.css'])
 @endpush
 
 @push('vite-body')

@@ -2,6 +2,16 @@
 
 @section('title', 'Inicio - Ciclo Finca 4')
 
+@push('meta')
+    <link
+        rel="preload"
+        as="image"
+        type="image/webp"
+        imagesizes="100vw"
+        imagesrcset="{{ asset('assets/images/hero/hero-downhill-768.webp') }} 768w, {{ asset('assets/images/hero/hero-downhill-1280.webp') }} 1280w, {{ asset('assets/images/hero/hero-downhill-1920.webp') }} 1920w"
+        href="{{ asset('assets/images/hero/hero-downhill-1280.webp') }}">
+@endpush
+
 @push('styles')
     @vite(['resources/css/client/clients-page.css'])
 @endpush
@@ -13,15 +23,10 @@
         <picture>
             <source
                 type="image/webp"
-                media="(max-width: 767px)"
-                srcset="{{ asset('assets/images/hero/hero-downhill-768.webp') }}">
-            <source
-                type="image/webp"
-                media="(max-width: 1279px)"
-                srcset="{{ asset('assets/images/hero/hero-downhill-1280.webp') }}">
-            <source
-                type="image/webp"
-                srcset="{{ asset('assets/images/hero/hero-downhill-1920.webp') }}">
+                srcset="{{ asset('assets/images/hero/hero-downhill-768.webp') }} 768w,
+                        {{ asset('assets/images/hero/hero-downhill-1280.webp') }} 1280w,
+                        {{ asset('assets/images/hero/hero-downhill-1920.webp') }} 1920w"
+                sizes="100vw">
             <img
                 src="{{ asset('assets/images/hero/hero-downhill-1920.jpg') }}"
                 alt=""
@@ -441,5 +446,5 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/client/clients-page.js'])
+    @vite(['resources/js/client/clients-home.js'])
 @endpush

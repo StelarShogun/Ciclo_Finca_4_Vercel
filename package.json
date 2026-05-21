@@ -7,7 +7,12 @@
         "build": "vite build",
         "dev": "vite",
         "serve:php": "serve.cmd",
-        "k6:home": "bash scripts/k6/run-homepage.sh"
+        "k6:home": "bash scripts/k6/run-homepage.sh",
+        "unlighthouse": "bash scripts/unlighthouse/run.sh guest",
+        "unlighthouse:guest": "bash scripts/unlighthouse/run.sh guest",
+        "unlighthouse:client": "bash scripts/unlighthouse/run.sh client",
+        "unlighthouse:admin": "bash scripts/unlighthouse/run.sh admin",
+        "unlighthouse:auth": "bash scripts/unlighthouse/run-auth.sh"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
@@ -15,9 +20,14 @@
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^2.0.0",
         "tailwindcss": "^4.0.0",
+        "unlighthouse": "^0.17.9",
         "vite": "^7.3.2"
     },
     "dependencies": {
+        "@fontsource/dm-sans": "^5.2.8",
+        "@fontsource/poppins": "^5.2.7",
+        "@fortawesome/fontawesome-free": "^6.7.2",
+        "chart.js": "^4.5.1",
         "gsap": "^3.15.0",
         "sweetalert2": "^11.23.0",
         "swiper": "^12.1.4"

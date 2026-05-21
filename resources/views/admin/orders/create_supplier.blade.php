@@ -4,9 +4,10 @@
 
 @push('styles')
     @vite([
+        'resources/css/admin/shell-base.css',
         'resources/css/admin/sales/sales.css',
         'resources/css/admin/orders/orders.css',
-        'resources/css/admin/orders/supplier-order-create.css'
+        'resources/css/admin/orders/supplier-order-create.css',
     ])
 @endpush
 
@@ -135,7 +136,7 @@
             window.__CF4_SUPPLIERS__ = @json($suppliers);
         </script>
 
-        @vite(['resources/js/admin/orders/supplier-order-create.js'])
+        @vite(['resources/js/admin/shell.js', 'resources/js/admin/orders/supplier-order-create.js'])
     @endpush
 @endsection
 

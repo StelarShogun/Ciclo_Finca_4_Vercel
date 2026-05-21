@@ -302,12 +302,7 @@
     $favoritesToggleUrl = \Illuminate\Support\Facades\Route::has('clients.favorites.toggle')
         ? route('clients.favorites.toggle')
         : url('/favorites/toggle');
-    $initialFavoritesPaginator = \App\Models\FavoriteProduct::query()
-        ->with(['product.category'])
-        ->where('user_id', auth('clients')->id())
-        ->latest('id')
-        ->paginate(\App\Support\AdminPerPage::resolve(10));
-    $initialFavorites = \App\Support\ClientFavoriteFormatter::collect($initialFavoritesPaginator->items());
+    $initialFavorites = [];
 @endphp
 <div class="cf4-favorites-overlay" id="favorites-overlay" hidden></div>
 <aside class="cf4-favorites-drawer" id="favorites-drawer" aria-hidden="true">
@@ -341,13 +336,15 @@
 <meta name="cf4-favorites-initial" content='@json($initialFavorites)'>
 @endauth
 
-{{-- Invoice heartbeat meta (only for authenticated clients) --}}
+{{-- Invoice heartbeat: only on pages that need live badge updates (avoids polling on home/catalog). --}}
 @auth('clients')
+@if(request()->routeIs('clients.invoices*', 'clients.profile', 'clients.cart'))
 <meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
 <meta name="cf4-invoice-initial-count" content="{{ \App\Models\Sale::where('client_id', auth('clients')->user()->user_id)->where('status', 'pending')->count() }}">
+@endif
 @endauth
 
 {{-- Ventana para retiro tras "listo para recoger" (copia post-checkout; respeta AppSetting / READY_TO_PICKUP_EXPIRATION_HOURS). --}}
 <meta name="cf4-ready-to-pickup-expiration-hours" content="{{ \App\Models\Sale::getReadyToPickupExpirationHours() }}">
 
-@vite('resources/js/client/clients-users.js')
+@vite('resources/js/client/clients-header.js')

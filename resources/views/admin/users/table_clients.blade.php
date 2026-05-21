@@ -9,9 +9,7 @@
 
     {{-- Styles & Fonts --}}
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    @vite(['resources/css/admin/components/page-header.css', 'resources/css/admin/users/clients.css'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/components/page-header.css', 'resources/css/admin/users/clients.css'])
 </head>
 
 <body class="admin-layout">
@@ -218,10 +216,10 @@
     </main>
 
     {{-- SweetAlert2 for ban/unban confirmation dialogs --}}
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     {{-- User management scripts --}}
-    @vite(['resources/js/admin/users/clients.js'])
+    @vite(['resources/js/admin/shell.js', 'resources/js/admin/users/clients.js'])
 
 </body>
 </html>

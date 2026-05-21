@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Productos más buscados - Reportes')
 
 @push('styles')
-    @vite(['resources/css/admin/reports/reports-hub.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/reports-hub.css'])
 @endpush
 
 @section('aside')
