@@ -597,7 +597,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Auto-print
     if (meta('auto-print') === '1') {
         const label = meta('invoice-label') || '';
-        confirmInvoicePrint(label, () => window.print());
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                confirmInvoicePrint(label, () => window.print());
+            }, 300);
+        });
     }
 
     bindInvoiceConfirmationLinks();
