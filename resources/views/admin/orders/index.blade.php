@@ -107,7 +107,9 @@
                             <th>Encargos / Factura</th>
                             <th>Cliente</th>
                             <th>Productos</th>
-                            <th>Fecha</th>
+                            <th>Fecha de pedido</th>
+                            <th>Fecha listo para recoger</th>
+                            <th>Fecha de confirmación</th>
                             <th>Estado</th>
                             <th>Total</th>
                             <th>Acciones</th>
@@ -154,7 +156,9 @@
                                     @endif
                                 </td>
 
-                                <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
+                                <td>{{ $sale->adminOrderPlacedAtLabel() }}</td>
+                                <td>{{ $sale->adminReadyAtLabel() }}</td>
+                                <td>{{ $sale->adminConfirmedAtLabel() }}</td>
 
                                 <td>
                                     @php
@@ -219,7 +223,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7">
+                                <td colspan="9">
                                     <div class="orders-empty">
                                         <div class="orders-empty-icon">
                                             <i class="fas fa-inbox"></i>

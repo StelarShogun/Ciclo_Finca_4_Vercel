@@ -251,7 +251,7 @@
                                         <th>Factura</th>
                                         <th>Cliente</th>
                                         <th>Total</th>
-                                        <th>Fecha</th>
+                                        <th>Fecha de venta</th>
                                         <th>Estado</th>
                                     </tr>
                                 </thead>
@@ -269,7 +269,7 @@
                                                 @endif
                                             </td>
                                             <td>₡{{ number_format($sale->total, 0, ',', '.') }}</td>
-                                            <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
+                                            <td>{{ $sale->adminSaleDateLabel() }}</td>
                                             <td>
                                                 @php
                                                     $statusLabels = [

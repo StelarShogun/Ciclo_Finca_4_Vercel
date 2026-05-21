@@ -181,7 +181,7 @@
                     <tr>
                         <th>Número de factura</th>
                         <th>Cliente</th>
-                        <th>Fecha</th>
+                        <th>Fecha de venta</th>
                         <th>Estado</th>
                         <th>Días restantes</th>
                         <th>Método de Pago</th>
@@ -208,7 +208,7 @@
                                 @endif
                             </td>
 
-                            <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
+                            <td>{{ $sale->adminSaleDateLabel() }}</td>
 
                             <td>
                                 <span class="status-badge {{ $sale->status }}">

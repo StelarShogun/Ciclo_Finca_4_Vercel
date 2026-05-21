@@ -46,6 +46,8 @@ class Client extends Authenticatable
         'verification_code_expires_at' => 'datetime',
         'email_verified' => 'boolean',
         'active' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function cartItems(): HasMany
