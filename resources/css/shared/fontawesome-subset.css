@@ -1,24 +1,38 @@
 /*
  * CF4 self-hosted Font Awesome subset.
  *
- * We import only the class-to-glyph map from @fortawesome/...css/fontawesome.css
- * (no `@font-face` declarations) and serve woff2 files that have been pre-subset
- * with `pyftsubset` to contain only the ~120 glyphs actually referenced by the
- * codebase. This cuts ~180 KiB of font payload (fa-solid-900: 158 KiB -> 12 KiB,
- * fa-regular-400: 25 KiB -> 5 KiB) on every shell that loads icons.
+ * Imports the FA6 class-to-glyph map plus the weight selectors from solid.css /
+ * regular.css (without their @font-face blocks, which would pull the full
+ * 158 KiB woff2). The subset woff2 files live in public/fonts/fa-subset/.
  *
- * Subset script lives in scripts/fonts/build-fa-subset.mjs. Re-run it whenever
- * new `fa-*` classes appear in templates/JS.
+ * IMPORTANT: `.fas { font-weight: 900 }` / `.far { font-weight: 400 }` are
+ * required — without them the browser inherits body weight (400) and tries to
+ * render solid icons from the regular face, producing empty boxes / missing UI.
+ *
+ * Regenerate fonts: npm run build:fa-subset
  */
 
 @import "@fortawesome/fontawesome-free/css/fontawesome.css";
 
-/*
- * `font-display: block` matches FA's own default. With `swap`, icons render as
- * tofu (or the bullet fallback) for ~100 ms while the file downloads, and
- * the metric difference between the fallback glyph and the real icon
- * triggers a measurable CLS spike (see CF4 catalog regression).
- */
+:root,
+:host {
+    --fa-style-family-classic: "Font Awesome 6 Free";
+    --fa-font-solid: normal 900 1em/1 "Font Awesome 6 Free";
+    --fa-font-regular: normal 400 1em/1 "Font Awesome 6 Free";
+}
+
+/* From solid.css — selects the weight-900 @font-face below */
+.fas,
+.fa-solid {
+    font-weight: 900;
+}
+
+/* From regular.css — selects the weight-400 @font-face below */
+.far,
+.fa-regular {
+    font-weight: 400;
+}
+
 @font-face {
     font-family: "Font Awesome 6 Free";
     font-style: normal;

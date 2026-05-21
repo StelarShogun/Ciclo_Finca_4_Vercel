@@ -81,6 +81,34 @@ for (const f of files) {
     }
 }
 
+/** Always include these glyphs even if static scan misses a reference. */
+const REQUIRED_ICONS = [
+    // Admin sidebar
+    'chart-line', 'cash-register', 'shopping-cart', 'clipboard-list', 'box',
+    'layer-group', 'th-list', 'tags', 'truck', 'users', 'file-alt', 'globe',
+    'sign-out-alt',
+    // Inventory actions
+    'eye', 'edit', 'plus-circle', 'minus-circle', 'trash', 'star', 'filter',
+    'search', 'upload', 'file-import', 'box-open', 'plus', 'th',
+    // Client header / catalog
+    'heart', 'bell', 'cart-plus', 'cart-shopping', 'magnifying-glass',
+    'user-circle', 'bars', 'chevron-down', 'bicycle', 'arrow-right',
+];
+
+const missingRequired = [];
+for (const name of REQUIRED_ICONS) {
+    const code = nameToCode.get(name);
+    if (code) {
+        used.add(code);
+        usedNames.add(name);
+    } else {
+        missingRequired.push(name);
+    }
+}
+if (missingRequired.length) {
+    console.warn('[fa-subset] Required icons not found in fontawesome.css:', missingRequired.join(', '));
+}
+
 const codes = [...used].sort();
 const extras = ['0020', '00A0', '200B', '200C', '200D', 'FEFF'];
 const unicodes = [...codes, ...extras].map((c) => 'U+' + c).join(',');

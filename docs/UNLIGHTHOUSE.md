@@ -335,6 +335,7 @@ Key changes in this pass:
 - **Below-the-fold home:** `content-visibility: auto` + `contain-intrinsic-size` on trust strip, featured, categories, benefits, how-it-works, testimonials, final CTA.
 - **Fonts:** removed Google Fonts `@import` for Inter; client Poppins/DM Sans now use explicit `@font-face` with `font-display: optional` (fixes catalog CLS spike from `font-display: swap`).
 - **Font Awesome subset:** `scripts/fonts/build-fa-subset.mjs` + `resources/css/shared/fontawesome-subset.css` — fa-solid **158 KiB → 12 KiB**, fa-regular **25 KiB → 5 KiB** (`npm run build:fa-subset` to regenerate).
+- **Font Awesome subset UX fix (2026-05-21):** the subset must include `.fas { font-weight: 900 }` / `.far { font-weight: 400 }` from `solid.css`/`regular.css`. Without those rules the browser inherits body weight (400) and solid icons render as empty boxes. Admin `shell-base.css` now also imports `variables-reset`, `utilities`, and `sidebar.css` globally so icon/layout chrome is consistent on every admin page.
 - **Dashboard:** improved **72 → 84** (LCP 2.6 → 1.7 s, payload 343 → 205 KiB) but still below the 90+ target; remaining gap is likely the large `fontawesome.css` class map (~55 KiB gzipped CSS) plus dashboard-specific JS/CSS still on the critical path.
 
 **Acceptance vs targets:**
