@@ -5,6 +5,17 @@
 .env.*
 !.env.example
 !.env.testing.example
+!.env.unlighthouse.example
+
+# Unlighthouse — reports, browser profiles, local env (https://unlighthouse.dev/)
+.env.unlighthouse.local
+/lighthouse/
+/lighthouse-admin/
+/lighthouse-client/
+/.puppeteer-data/
+/.puppeteer-browsers/
+/chrome/
+*-chrome-linux64.zip
 
 # =========================
 # DEPENDENCIAS
