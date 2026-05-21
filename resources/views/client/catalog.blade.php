@@ -322,12 +322,14 @@
                                                    aria-label="Ver producto: {{ $product->name }}">
                                                     <div class="product-image product-image--catalog-cf128">
                                                         <div class="product-image__frame">
+                                                            @php $cardImg = \App\Support\ProductImageUrls::cardPicture($product); @endphp
                                                             @include('client.parts.responsive-picture', [
-                                                                'desktopWebp' => \App\Support\ProductImageUrls::mainImageWebpDesktop($product),
-                                                                'mobileWebp' => \App\Support\ProductImageUrls::mainImageWebpMobile($product),
-                                                                'fallback' => \App\Support\ProductImageUrls::fallbackUrl($product),
+                                                                'desktopWebp' => $cardImg['desktopWebp'],
+                                                                'mobileWebp' => $cardImg['mobileWebp'],
+                                                                'fallback' => $cardImg['fallback'],
                                                                 'alt' => '',
                                                                 'loading' => 'lazy',
+                                                                'sizes' => '(max-width: 767px) 45vw, 240px',
                                                             ])
                                                             <div class="product-image__hover-overlay" aria-hidden="true">
                                                                 <span class="product-image__hover-price">₡{{ $spotlightPriceFormatted }}</span>
@@ -481,12 +483,14 @@
                                         </button>
                                         <div class="product-image__frame">
                                             <a class="product-image__link" href="{{ $product->clientProductUrl() }}">
+                                                @php $cardImg = \App\Support\ProductImageUrls::cardPicture($product); @endphp
                                                 @include('client.parts.responsive-picture', [
-                                                    'desktopWebp' => \App\Support\ProductImageUrls::mainImageWebpDesktop($product),
-                                                    'mobileWebp' => \App\Support\ProductImageUrls::mainImageWebpMobile($product),
-                                                    'fallback' => \App\Support\ProductImageUrls::fallbackUrl($product),
+                                                    'desktopWebp' => $cardImg['desktopWebp'],
+                                                    'mobileWebp' => $cardImg['mobileWebp'],
+                                                    'fallback' => $cardImg['fallback'],
                                                     'alt' => $product->name,
                                                     'loading' => 'lazy',
+                                                    'sizes' => '(max-width: 767px) 45vw, 240px',
                                                 ])
                                             </a>
                                             <div class="product-image__hover-overlay" aria-hidden="true">

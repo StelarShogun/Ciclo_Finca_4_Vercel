@@ -7,6 +7,29 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ProductImageUrls
 {
+    private const PLACEHOLDER_IMAGE = 'default.png';
+
+    public static function usesPlaceholder(Product $product): bool
+    {
+        if ($product->getFirstMedia('main_image') !== null) {
+            return false;
+        }
+
+        $image = $product->image ?? self::PLACEHOLDER_IMAGE;
+
+        return $image === '' || $image === self::PLACEHOLDER_IMAGE;
+    }
+
+    public static function placeholderWebpDesktop(): string
+    {
+        return asset('assets/images/products/default-480.webp');
+    }
+
+    public static function placeholderWebpMobile(): string
+    {
+        return asset('assets/images/products/default-96.webp');
+    }
+
     public static function fallbackUrl(Product $product): string
     {
         $mediaUrl = $product->getFirstMediaUrl('main_image');
@@ -15,7 +38,20 @@ class ProductImageUrls
             return $mediaUrl;
         }
 
-        return asset('assets/images/products/'.($product->image ?? 'default.png'));
+        if (self::usesPlaceholder($product)) {
+            return asset('assets/images/products/'.self::PLACEHOLDER_IMAGE);
+        }
+
+        return asset('assets/images/products/'.($product->image ?? self::PLACEHOLDER_IMAGE));
+    }
+
+    public static function webpCardUrl(?Media $media): ?string
+    {
+        if ($media === null || ! $media->hasGeneratedConversion('webp_480')) {
+            return null;
+        }
+
+        return $media->getUrl('webp_480') ?: null;
     }
 
     public static function webpDesktopUrl(?Media $media): ?string
@@ -34,6 +70,29 @@ class ProductImageUrls
         }
 
         return $media->getUrl('webp_768') ?: null;
+    }
+
+    /**
+     * @return array{fallback: string, desktopWebp: ?string, mobileWebp: ?string}
+     */
+    public static function cardPicture(Product $product): array
+    {
+        if (self::usesPlaceholder($product)) {
+            return [
+                'fallback' => self::fallbackUrl($product),
+                'desktopWebp' => self::placeholderWebpDesktop(),
+                'mobileWebp' => self::placeholderWebpMobile(),
+            ];
+        }
+
+        $media = $product->getFirstMedia('main_image');
+        $cardWebp = self::webpCardUrl($media);
+
+        return [
+            'fallback' => self::fallbackUrl($product),
+            'desktopWebp' => $cardWebp ?? self::webpDesktopUrl($media),
+            'mobileWebp' => self::webpMobileUrl($media) ?? $cardWebp,
+        ];
     }
 
     public static function mainImageWebpDesktop(Product $product): ?string

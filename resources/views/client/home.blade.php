@@ -17,12 +17,17 @@
                 srcset="{{ asset('assets/images/hero/hero-downhill-768.webp') }}">
             <source
                 type="image/webp"
+                media="(max-width: 1279px)"
+                srcset="{{ asset('assets/images/hero/hero-downhill-1280.webp') }}">
+            <source
+                type="image/webp"
                 srcset="{{ asset('assets/images/hero/hero-downhill-1920.webp') }}">
             <img
-                src="{{ asset('assets/images/hero/hero-downhill.jpg') }}"
+                src="{{ asset('assets/images/hero/hero-downhill-1920.jpg') }}"
                 alt=""
                 width="1920"
                 height="1080"
+                sizes="100vw"
                 fetchpriority="high"
                 decoding="async">
         </picture>
@@ -127,12 +132,14 @@
                         <div class="product-image">
                             <a class="product-image__link" href="{{ $product->clientProductUrl() }}"
                                aria-label="Ver producto: {{ $product->name }}">
+                            @php $cardImg = \App\Support\ProductImageUrls::cardPicture($product); @endphp
                             @include('client.parts.responsive-picture', [
-                                'desktopWebp' => \App\Support\ProductImageUrls::mainImageWebpDesktop($product),
-                                'mobileWebp' => \App\Support\ProductImageUrls::mainImageWebpMobile($product),
-                                'fallback' => \App\Support\ProductImageUrls::fallbackUrl($product),
+                                'desktopWebp' => $cardImg['desktopWebp'],
+                                'mobileWebp' => $cardImg['mobileWebp'],
+                                'fallback' => $cardImg['fallback'],
                                 'alt' => $product->name,
                                 'loading' => 'lazy',
+                                'sizes' => '(max-width: 767px) 45vw, 240px',
                             ])
                             </a>
                         </div>

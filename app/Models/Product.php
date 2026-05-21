@@ -154,6 +154,14 @@ class Product extends Model implements HasMedia
             ->width(768)
             ->quality(78)
             ->nonQueued();
+
+        $this
+            ->addMediaConversion('webp_480')
+            ->performOnCollections('main_image', 'gallery')
+            ->format('webp')
+            ->width(480)
+            ->quality(76)
+            ->nonQueued();
     }
 
     // Returns the main and extra images, falling back to the default asset.

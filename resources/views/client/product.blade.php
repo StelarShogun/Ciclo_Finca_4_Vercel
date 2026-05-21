@@ -45,7 +45,7 @@
         @php
             use App\Support\ProductImageUrls;
 
-            $legacyFallback = asset('assets/images/products/' . ($product->image ?? 'default.png'));
+            $legacyFallback = ProductImageUrls::fallbackUrl($product);
             $carouselSlides = [];
 
             if ($mainMedia = $product->getFirstMedia('main_image')) {
@@ -57,11 +57,13 @@
             }
 
             if (empty($carouselSlides)) {
-                $carouselSlides[] = [
-                    'fallback' => $legacyFallback,
-                    'desktopWebp' => null,
-                    'mobileWebp' => null,
-                ];
+                $carouselSlides[] = ProductImageUrls::usesPlaceholder($product)
+                    ? ProductImageUrls::cardPicture($product)
+                    : [
+                        'fallback' => $legacyFallback,
+                        'desktopWebp' => null,
+                        'mobileWebp' => null,
+                    ];
             }
         @endphp
 
@@ -361,12 +363,14 @@
                             <div class="product-image">
                                 <a class="product-image__link" href="{{ $related->clientProductUrl() }}"
                                    aria-label="Ver producto: {{ $related->name }}">
+                                    @php $cardImg = \App\Support\ProductImageUrls::cardPicture($related); @endphp
                                     @include('client.parts.responsive-picture', [
-                                        'desktopWebp' => \App\Support\ProductImageUrls::mainImageWebpDesktop($related),
-                                        'mobileWebp' => \App\Support\ProductImageUrls::mainImageWebpMobile($related),
-                                        'fallback' => \App\Support\ProductImageUrls::fallbackUrl($related),
+                                        'desktopWebp' => $cardImg['desktopWebp'],
+                                        'mobileWebp' => $cardImg['mobileWebp'],
+                                        'fallback' => $cardImg['fallback'],
                                         'alt' => $related->name,
                                         'loading' => 'lazy',
+                                        'sizes' => '(max-width: 767px) 45vw, 240px',
                                     ])
                                 </a>
                             </div>

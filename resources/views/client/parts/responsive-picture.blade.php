@@ -13,6 +13,7 @@
         @if(!empty($class)) class="{{ $class }}" @endif
         @if(!empty($width)) width="{{ $width }}" @endif
         @if(!empty($height)) height="{{ $height }}" @endif
+        @if(!empty($sizes)) sizes="{{ $sizes }}" @endif
         @if(!empty($loading)) loading="{{ $loading }}" @endif
         decoding="async"
         @if(!empty($fetchpriority)) fetchpriority="{{ $fetchpriority }}" @endif

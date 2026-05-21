@@ -6,10 +6,25 @@
             <div class="logo-section">
                 <div class="logo-link" aria-label="Marca Ciclo Finca 4">
                     <span class="logo-icon-wrap" aria-hidden="true">
-                        <img src="{{ asset('assets/images/brand/logo-ciclo-finca-icon-transparent.png') }}" alt=""
-                            width="500" height="500" class="logo-img logo-img--icon-only" loading="eager" decoding="async"
-                            data-fallback-src="{{ asset('logo-navbar.svg') }}"
-                            onerror="this.src=this.dataset.fallbackSrc;">
+                        <picture>
+                            <source
+                                type="image/webp"
+                                media="(max-width: 767px)"
+                                srcset="{{ asset('assets/images/brand/logo-ciclo-finca-icon-64.webp') }}">
+                            <source
+                                type="image/webp"
+                                srcset="{{ asset('assets/images/brand/logo-ciclo-finca-icon-128.webp') }}">
+                            <img
+                                src="{{ asset('assets/images/brand/logo-ciclo-finca-icon-64.png') }}"
+                                alt=""
+                                width="56"
+                                height="56"
+                                class="logo-img logo-img--icon-only"
+                                loading="eager"
+                                decoding="async"
+                                data-fallback-src="{{ asset('logo-navbar.svg') }}"
+                                onerror="this.src=this.dataset.fallbackSrc;">
+                        </picture>
                     </span>
                     <span class="logo-wordmark">
                         <span class="logo-text logo-text--dark">CICLO</span>
