@@ -18,9 +18,6 @@ import {
     syncParentCategoryHiddenInput,
     bindDependentCategorySelectors,
     initCollapsibleFormSections,
-    applyServerFieldErrors,
-    initBrandCombobox,
-    initProductSearchCombobox,
     showSubtleNotification,
     setButtonLoading,
     setActionButtonLoading,
@@ -34,17 +31,21 @@ import {
     categoryPath,
 } from './inventory-shared.js';
 import {
+    applyServerFieldErrors,
+    initBrandCombobox,
+    initProductSearchCombobox,
+} from './inventory-modal-helpers.js';
+import {
     refreshClassificationFields,
     collectClassificationValueIds,
     CF_API,
 } from './inventory-classification.js';
 import { initStaticSearchCombobox, setComboboxFieldError } from '../shared/static-search-combobox.js';
 import { initFileUploadZone } from '../shared/file-upload-zone.js';
-import { fireSwal, getSwal } from '../shared/swal.js';
+import { fireSwal } from '../shared/swal.js';
 
 export async function initModals() {
-    await getSwal();
-
+    // Swal is lazy-loaded inside fireSwal() on first dialog.
     // Modal: New product
     const newProductModal = qs('#new-product-modal');
     const openNewProductModalBtn = qs('#open-new-product-modal');

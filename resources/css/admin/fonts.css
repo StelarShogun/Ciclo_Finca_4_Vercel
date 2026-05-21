@@ -1,6 +1,46 @@
-/* Self-hosted Poppins — avoids render-blocking fonts.googleapis.com. */
-@import '@fontsource/poppins/300.css';
-@import '@fontsource/poppins/400.css';
-@import '@fontsource/poppins/500.css';
-@import '@fontsource/poppins/600.css';
-@import '@fontsource/poppins/700.css';
+/*
+ * Self-hosted Poppins (latin subset only).
+ *
+ * - We avoid @fontsource/*.css imports because they pull every subset
+ *   (latin, latin-ext, devanagari) for every weight.
+ * - font-display: optional → no FOIT/FOUT layout shift. If the browser
+ *   doesn't have the font ready within ~100ms, it sticks with the system
+ *   fallback for this load and uses Poppins after caching for the next.
+ *   This kills the CLS spike that Poppins was producing on sales/orders.
+ */
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: optional;
+  src: url('@fontsource/poppins/files/poppins-latin-400-normal.woff2') format('woff2'),
+       url('@fontsource/poppins/files/poppins-latin-400-normal.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 500;
+  font-display: optional;
+  src: url('@fontsource/poppins/files/poppins-latin-500-normal.woff2') format('woff2'),
+       url('@fontsource/poppins/files/poppins-latin-500-normal.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-display: optional;
+  src: url('@fontsource/poppins/files/poppins-latin-600-normal.woff2') format('woff2'),
+       url('@fontsource/poppins/files/poppins-latin-600-normal.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 700;
+  font-display: optional;
+  src: url('@fontsource/poppins/files/poppins-latin-700-normal.woff2') format('woff2'),
+       url('@fontsource/poppins/files/poppins-latin-700-normal.woff') format('woff');
+}

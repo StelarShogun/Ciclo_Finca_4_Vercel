@@ -28,7 +28,7 @@
         @yield('contenido')
     </main>
 
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/sales/sales.js'])
+    @vite(['resources/js/admin/shell.js'])
     @stack('scripts')
 
 </body>

@@ -186,8 +186,9 @@
                                         <tr>
                                             <td>
                                                 <div class="product-info">
-                                                    <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
-                                                        alt="{{ $product->name }}" class="product-thumb">
+                                                    <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default-96.webp')) }}"
+                                                        alt="{{ $product->name }}" class="product-thumb"
+                                                        width="48" height="48" loading="lazy" decoding="async">
                                                     <span>{{ $product->name }}</span>
                                                 </div>
                                             </td>

@@ -1,8 +1,9 @@
 /**
- * Inventory page bootstrap — code-split modules loaded after DOM ready.
+ * Inventory page bootstrap — load only what FCP needs synchronously.
  *
- * Bundles: inventory-shared + classification + chrome (entry),
- * then inventory-modals, inventory-actions, inventory-filters, inventory-stock.
+ * Initial chunks: shared utils + classification helpers + chrome (sidebar/view toggle),
+ * filters, actions. Modals + stock modal are deferred until the user clicks a
+ * trigger (or the browser is idle).
  */
 import '../../shared/ajax-pagination.js';
 import { initSidebarToggle, initViewSwitcher } from './inventory-chrome.js';
@@ -17,25 +18,90 @@ function hideInventoryLoadingOverlay() {
     }
 }
 
+// Selectors that should trigger the heavy modal bundle.
+const MODAL_TRIGGER_SELECTORS = [
+    '#open-new-product-modal',
+    '#open-new-category-modal',
+    '#open-new-subcategory-modal',
+    '#open-import-modal',
+    '[data-edit-product]',
+    '[data-open-product-modal]',
+    '.edit-product-btn',
+    '.js-edit-variant',
+    '.js-delete-variant',
+    '.product-row',
+    '.product-grid-card',
+].join(',');
+
+const STOCK_TRIGGER_SELECTOR = '[data-stock-action="add"], [data-stock-action="remove"]';
+
+let modalsPromise = null;
+function ensureModals() {
+    if (!modalsPromise) {
+        modalsPromise = import('./inventory-modals.js')
+            .then(async (mod) => {
+                if (typeof mod.initModals === 'function') {
+                    await mod.initModals();
+                }
+                return mod;
+            })
+            .catch((err) => {
+                console.error('[inventory] modals load failed', err);
+                modalsPromise = null;
+                throw err;
+            });
+    }
+    return modalsPromise;
+}
+
+let stockPromise = null;
+function ensureStockModal() {
+    if (!stockPromise) {
+        stockPromise = import('./inventory-stock.js')
+            .then(async (mod) => {
+                if (typeof mod.initStockModal === 'function') {
+                    await mod.initStockModal();
+                }
+                return mod;
+            })
+            .catch((err) => {
+                console.error('[inventory] stock modal load failed', err);
+                stockPromise = null;
+                throw err;
+            });
+    }
+    return stockPromise;
+}
+
+function attachLazyTriggers() {
+    document.addEventListener(
+        'click',
+        (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+
+            if (target.closest(STOCK_TRIGGER_SELECTOR)) {
+                void ensureStockModal();
+            }
+
+            if (target.closest(MODAL_TRIGGER_SELECTORS)) {
+                void ensureModals();
+            }
+        },
+        true, // capture so we win before delegated handlers inside the chunks
+    );
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const [
-            { initModals },
-            { initInventoryActions },
-            { initInventoryFilters },
-            { initStockModal },
-        ] = await Promise.all([
-            import('./inventory-modals.js'),
+        const [{ initInventoryActions }, { initInventoryFilters }] = await Promise.all([
             import('./inventory-actions.js'),
             import('./inventory-filters.js'),
-            import('./inventory-stock.js'),
         ]);
 
         const results = await Promise.allSettled([
-            initModals(),
             initInventoryActions(),
             initInventoryFilters(),
-            initStockModal(),
         ]);
 
         results.forEach((result, index) => {
@@ -43,6 +109,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error('[inventory] init chunk failed', index, result.reason);
             }
         });
+
+        attachLazyTriggers();
+
+        // Warm up heavy modal chunk on idle so first open feels instant,
+        // but never block FCP/LCP on it.
+        const warm = () => {
+            void ensureModals();
+            void ensureStockModal();
+        };
+        if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(warm, { timeout: 3000 });
+        } else {
+            setTimeout(warm, 1500);
+        }
     } catch (err) {
         console.error('[inventory] bootstrap failed', err);
     } finally {

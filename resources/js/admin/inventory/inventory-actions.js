@@ -1,9 +1,8 @@
 import { qs, qsa, smartFetch, jsonHeaders, syncFeaturedStarButtons, showSubtleNotification, setActionButtonLoading, showSuccessFeedback, showErrorFeedback } from './inventory-shared.js';
-import { fireSwal, getSwal } from '../shared/swal.js';
+import { fireSwal } from '../shared/swal.js';
 
 export async function initInventoryActions() {
-    await getSwal();
-
+    // Swal is lazy-loaded inside fireSwal() on first dialog — no eager warm-up.
     const root = qs('.products-section');
     if (!root) {
         return;

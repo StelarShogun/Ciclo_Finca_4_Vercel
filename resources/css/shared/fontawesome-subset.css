@@ -1,0 +1,36 @@
+/*
+ * CF4 self-hosted Font Awesome subset.
+ *
+ * We import only the class-to-glyph map from @fortawesome/...css/fontawesome.css
+ * (no `@font-face` declarations) and serve woff2 files that have been pre-subset
+ * with `pyftsubset` to contain only the ~120 glyphs actually referenced by the
+ * codebase. This cuts ~180 KiB of font payload (fa-solid-900: 158 KiB -> 12 KiB,
+ * fa-regular-400: 25 KiB -> 5 KiB) on every shell that loads icons.
+ *
+ * Subset script lives in scripts/fonts/build-fa-subset.mjs. Re-run it whenever
+ * new `fa-*` classes appear in templates/JS.
+ */
+
+@import "@fortawesome/fontawesome-free/css/fontawesome.css";
+
+/*
+ * `font-display: block` matches FA's own default. With `swap`, icons render as
+ * tofu (or the bullet fallback) for ~100 ms while the file downloads, and
+ * the metric difference between the fallback glyph and the real icon
+ * triggers a measurable CLS spike (see CF4 catalog regression).
+ */
+@font-face {
+    font-family: "Font Awesome 6 Free";
+    font-style: normal;
+    font-weight: 900;
+    font-display: block;
+    src: url("/fonts/fa-subset/fa-solid-900.subset.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Font Awesome 6 Free";
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src: url("/fonts/fa-subset/fa-regular-400.subset.woff2") format("woff2");
+}

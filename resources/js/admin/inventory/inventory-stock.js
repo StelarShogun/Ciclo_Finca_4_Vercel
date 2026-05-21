@@ -1,8 +1,7 @@
-import { fireSwal, getSwal } from '../shared/swal.js';
+import { fireSwal } from '../shared/swal.js';
 
 export async function initStockModal() {
-    await getSwal();
-
+    // Swal is lazy-loaded inside fireSwal() on first dialog.
     function cf4SwalStockBase() {
         return {
             buttonsStyling: false,

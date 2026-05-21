@@ -1,4 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+/*
+ * Inter used to be pulled from Google Fonts via @import url(...), which made it
+ * render-blocking and added an extra cross-origin handshake on every client
+ * page. We already self-host Poppins for the storefront, so all `font-family:
+ * 'Inter'` selectors below now fall through to Poppins -> sans-serif without
+ * loading a second family.
+ */
 @import "../admin/sweetalert2-modal-zindex.css";
 @import "../admin/components/pagination.css";
 @import "../shared/components/buttons.css";
@@ -541,7 +547,7 @@ body.guest-layout {
 }
 
 .hero-section .hero-subtitle {
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   font-size: 1.125rem;
   line-height: 1.65;
   color: rgba(255, 255, 255, 0.72);
@@ -553,7 +559,7 @@ body.guest-layout {
 }
 
 .hero-section .hero-description {
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   font-size: 0.975rem;
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.58);
@@ -580,7 +586,7 @@ body.guest-layout {
   font-weight: 600;
   border-radius: 8px;
   min-height: 52px;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   white-space: nowrap;
   text-align: center;
   transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
@@ -664,7 +670,7 @@ body.guest-layout {
 }
 
 .hero-section .hero-benefits .benefit-text {
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.7);
   font-weight: 400;
@@ -759,6 +765,49 @@ body.guest-layout {
 .section-title    { font-size: 2.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
 .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); }
 .section-footer   { text-align: center; margin-top: 40px; }
+
+/*
+ * Below-the-fold home sections: opt into `content-visibility: auto` so the
+ * browser can skip layout/paint for them until they enter the viewport.
+ * `contain-intrinsic-size` keeps a placeholder height so we don't introduce
+ * CLS or a giant scrollbar jump when sections hydrate.
+ *
+ * Hero (.hero-section) is intentionally excluded — it is the LCP element.
+ */
+.home-trust-strip,
+.featured-section,
+.categories-section,
+.benefits-section,
+.how-it-works-section,
+.testimonials-section,
+.final-cta-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 600px;
+}
+
+/* Featured products carry a taller grid; reserve more vertical space so the
+   placeholder matches the rendered height more closely. */
+.featured-section {
+  contain-intrinsic-size: 1px 1100px;
+}
+
+.categories-section {
+  contain-intrinsic-size: 1px 720px;
+}
+
+.benefits-section,
+.how-it-works-section,
+.testimonials-section {
+  contain-intrinsic-size: 1px 520px;
+}
+
+.final-cta-section {
+  contain-intrinsic-size: 1px 260px;
+}
+
+.home-trust-strip {
+  contain-intrinsic-size: 1px 120px;
+}
 
 /* Entrada visual suave de bloques del home */
 .home-reveal {

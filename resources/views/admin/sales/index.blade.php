@@ -6,6 +6,10 @@
     @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/sales.css'])
 @endpush
 
+@push('scripts')
+    @vite(['resources/js/admin/sales/sales.js'])
+@endpush
+
 {{-- Sidebar provided by the layout via @yield('aside') --}}
 @section('aside')
     @include('admin.parts.aside')

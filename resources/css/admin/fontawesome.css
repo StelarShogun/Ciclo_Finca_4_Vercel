@@ -1,4 +1,2 @@
-/* Self-hosted Font Awesome (replaces cdnjs render-blocking stylesheet). */
-@import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
-@import '@fortawesome/fontawesome-free/css/solid.min.css';
-@import '@fortawesome/fontawesome-free/css/regular.min.css';
+/* Self-hosted Font Awesome (CF4 subset). See resources/css/shared/fontawesome-subset.css. */
+@import "../shared/fontawesome-subset.css";

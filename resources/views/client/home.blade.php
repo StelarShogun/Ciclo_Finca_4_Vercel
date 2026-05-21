@@ -3,13 +3,16 @@
 @section('title', 'Inicio - Ciclo Finca 4')
 
 @push('meta')
+    {{-- Preload AVIF first (the chosen format on >95% of mobile/desktop traffic); WebP/JPG only run
+         as <picture> fallbacks so the browser never has to download both formats. --}}
     <link
         rel="preload"
         as="image"
-        type="image/webp"
+        type="image/avif"
+        fetchpriority="high"
         imagesizes="100vw"
-        imagesrcset="{{ asset('assets/images/hero/hero-downhill-768.webp') }} 768w, {{ asset('assets/images/hero/hero-downhill-1280.webp') }} 1280w, {{ asset('assets/images/hero/hero-downhill-1920.webp') }} 1920w"
-        href="{{ asset('assets/images/hero/hero-downhill-1280.webp') }}">
+        imagesrcset="{{ asset('assets/images/hero/hero-downhill-480.avif') }} 480w, {{ asset('assets/images/hero/hero-downhill-768.avif') }} 768w, {{ asset('assets/images/hero/hero-downhill-1280.avif') }} 1280w, {{ asset('assets/images/hero/hero-downhill-1600.avif') }} 1600w"
+        href="{{ asset('assets/images/hero/hero-downhill-768.avif') }}">
 @endpush
 
 @push('styles')
@@ -22,13 +25,22 @@
     <div class="hero-backdrop" aria-hidden="true">
         <picture>
             <source
+                type="image/avif"
+                srcset="{{ asset('assets/images/hero/hero-downhill-480.avif') }} 480w,
+                        {{ asset('assets/images/hero/hero-downhill-768.avif') }} 768w,
+                        {{ asset('assets/images/hero/hero-downhill-1280.avif') }} 1280w,
+                        {{ asset('assets/images/hero/hero-downhill-1600.avif') }} 1600w"
+                sizes="100vw">
+            <source
                 type="image/webp"
-                srcset="{{ asset('assets/images/hero/hero-downhill-768.webp') }} 768w,
+                srcset="{{ asset('assets/images/hero/hero-downhill-480.webp') }} 480w,
+                        {{ asset('assets/images/hero/hero-downhill-768.webp') }} 768w,
                         {{ asset('assets/images/hero/hero-downhill-1280.webp') }} 1280w,
+                        {{ asset('assets/images/hero/hero-downhill-1600.webp') }} 1600w,
                         {{ asset('assets/images/hero/hero-downhill-1920.webp') }} 1920w"
                 sizes="100vw">
             <img
-                src="{{ asset('assets/images/hero/hero-downhill-1920.jpg') }}"
+                src="{{ asset('assets/images/hero/hero-downhill-1280.jpg') }}"
                 alt=""
                 width="1920"
                 height="1080"
