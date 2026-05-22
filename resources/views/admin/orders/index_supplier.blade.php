@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Pedidos a Proveedores - Ciclo Finca 4 Admin')
 
 @push('styles')
-    @vite(['resources/css/admin/sales/sales.css', 'resources/css/admin/orders/orders.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/sales.css', 'resources/css/admin/orders/orders.css'])
 @endpush
 
 @section('aside')
@@ -386,5 +386,5 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/admin/orders/supplier-orders.js'])
+    @vite(['resources/js/admin/shell.js', 'resources/js/admin/orders/supplier-orders.js'])
 @endpush

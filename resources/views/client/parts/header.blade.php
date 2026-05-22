@@ -6,10 +6,25 @@
             <div class="logo-section">
                 <div class="logo-link" aria-label="Marca Ciclo Finca 4">
                     <span class="logo-icon-wrap" aria-hidden="true">
-                        <img src="{{ asset('assets/images/brand/logo-ciclo-finca-icon-transparent.png') }}" alt=""
-                            width="500" height="500" class="logo-img logo-img--icon-only" loading="eager" decoding="async"
-                            data-fallback-src="{{ asset('logo-navbar.svg') }}"
-                            onerror="this.src=this.dataset.fallbackSrc;">
+                        <picture>
+                            <source
+                                type="image/webp"
+                                media="(max-width: 767px)"
+                                srcset="{{ asset('assets/images/brand/logo-ciclo-finca-icon-64.webp') }}">
+                            <source
+                                type="image/webp"
+                                srcset="{{ asset('assets/images/brand/logo-ciclo-finca-icon-128.webp') }}">
+                            <img
+                                src="{{ asset('assets/images/brand/logo-ciclo-finca-icon-64.png') }}"
+                                alt=""
+                                width="56"
+                                height="56"
+                                class="logo-img logo-img--icon-only"
+                                loading="eager"
+                                decoding="async"
+                                data-fallback-src="{{ asset('logo-navbar.svg') }}"
+                                onerror="this.src=this.dataset.fallbackSrc;">
+                        </picture>
                     </span>
                     <span class="logo-wordmark">
                         <span class="logo-text logo-text--dark">CICLO</span>
@@ -290,12 +305,7 @@
     $favoritesToggleUrl = \Illuminate\Support\Facades\Route::has('clients.favorites.toggle')
         ? route('clients.favorites.toggle')
         : url('/favorites/toggle');
-    $initialFavoritesPaginator = \App\Models\FavoriteProduct::query()
-        ->with(['product.category'])
-        ->where('user_id', auth('clients')->id())
-        ->latest('id')
-        ->paginate(\App\Support\AdminPerPage::resolve(10));
-    $initialFavorites = \App\Support\ClientFavoriteFormatter::collect($initialFavoritesPaginator->items());
+    $initialFavorites = [];
 @endphp
 <div class="cf4-favorites-overlay" id="favorites-overlay" hidden></div>
 <aside class="cf4-favorites-drawer" id="favorites-drawer" aria-hidden="true">
@@ -329,14 +339,16 @@
 <meta name="cf4-favorites-initial" content='@json($initialFavorites)'>
 @endauth
 
-{{-- Invoice heartbeat meta (only for authenticated clients) --}}
+{{-- Invoice heartbeat: only on pages that need live badge updates (avoids polling on home/catalog). --}}
 @auth('clients')
+@if(request()->routeIs('clients.invoices*', 'clients.profile', 'clients.cart'))
 <meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
 <meta name="cf4-invoice-initial-count" content="{{ $activeInvoiceCount ?? \App\Models\Sale::countActiveClientInvoices((int) auth('clients')->user()->user_id) }}">
 <meta name="cf4-unseen-history-initial-count" content="{{ $unseenHistoryCount ?? \App\Models\Sale::countUnseenInClientHistory((int) auth('clients')->user()->user_id) }}">
+@endif
 @endauth
 
 {{-- Ventana para retiro tras "listo para recoger" (copia post-checkout; respeta AppSetting / READY_TO_PICKUP_EXPIRATION_HOURS). --}}
 <meta name="cf4-ready-to-pickup-expiration-hours" content="{{ \App\Models\Sale::getReadyToPickupExpirationHours() }}">
 
-@vite('resources/js/client/clients-users.js')
+@vite('resources/js/client/clients-header.js')

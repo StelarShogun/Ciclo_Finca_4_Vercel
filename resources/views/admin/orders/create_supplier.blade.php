@@ -4,9 +4,10 @@
 
 @push('styles')
     @vite([
+        'resources/css/admin/shell-base.css',
         'resources/css/admin/sales/sales.css',
         'resources/css/admin/orders/orders.css',
-        'resources/css/admin/orders/supplier-order-create.css'
+        'resources/css/admin/orders/supplier-order-create.css',
     ])
 @endpush
 
@@ -49,12 +50,12 @@
 
                     <div class="form-group">
                         <label for="supplier-search">Proveedor</label>
-                        <div class="brand-combobox" id="supplier-combobox">
-                            <input type="text" id="supplier-search" class="brand-combobox-input"
+                        <div class="product-combobox" id="supplier-combobox">
+                            <input type="text" id="supplier-search" class="product-combobox-input"
                                    placeholder="Escribe para buscar un proveedor…" autocomplete="off"
                                    aria-label="Proveedor del pedido">
-                            <span class="brand-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
-                            <div class="brand-combobox-dropdown" id="supplier-dropdown" role="listbox"></div>
+                            <span class="product-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                            <div class="product-combobox-dropdown" id="supplier-dropdown" role="listbox"></div>
                         </div>
                         <input type="hidden" id="supplier_id" name="supplier_id" value="{{ old('supplier_id') }}" required>
                         @error('supplier_id')
@@ -135,7 +136,7 @@
             window.__CF4_SUPPLIERS__ = @json($suppliers);
         </script>
 
-        @vite(['resources/js/admin/orders/supplier-order-create.js'])
+        @vite(['resources/js/admin/shell.js', 'resources/js/admin/orders/supplier-order-create.js'])
     @endpush
 @endsection
 

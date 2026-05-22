@@ -210,6 +210,8 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
+  /* Reserve KPI height before font + numbers settle (sales CLS). */
+  min-height: 11rem;
 }
 
 .kpi-card {
@@ -219,6 +221,8 @@
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
   transition: var(--transition);
+  /* Lock per-card height so font swap doesn't reflow the grid. */
+  min-height: 9.5rem;
 }
 .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
@@ -305,6 +309,9 @@
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
+  /* Reserve room before the table HTML is fully parsed/styled. */
+  min-height: 22rem;
+  contain: layout;
 }
 
 .sales-table { width: 100%; border-collapse: collapse; }

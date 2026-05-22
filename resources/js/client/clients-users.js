@@ -1,9 +1,9 @@
+import { fireSwal } from './swal.js';
 import {
     buildCf4CheckoutSuccessText,
     getCf4PaymentMethodShortLabel,
 } from './checkout-copy.js';
 import './auth-welcome-toast.js';
-import { initHeaderCatalogSearch } from './header-catalog-search.js';
 
 // ============================================================
 // GLOBAL UTILITIES
@@ -43,98 +43,7 @@ function updateCartCount(count) {
     }
 }
 
-// ============================================================
-// INVOICE BADGES (navbar) — active invoices + unseen Historial
-// ============================================================
-
-/** Update navbar invoice badge count (pending + ready_to_pickup). */
-function updateInvoiceCount(count) {
-    const invoiceLink = document.getElementById('invoices-link');
-    if (!invoiceLink) return;
-
-    let badge = document.getElementById('invoice-count');
-
-    if (count > 0) {
-        if (!badge) {
-            badge = document.createElement('span');
-            badge.id = 'invoice-count';
-            badge.className = 'cf4-invoice-count';
-            invoiceLink.appendChild(badge);
-        }
-        badge.textContent = count;
-        badge.style.display = 'flex';
-    } else if (badge) {
-        badge.style.display = 'none';
-    }
-}
-
-/** Dot badge when the client has unseen completed orders in Historial. */
-function updateUnseenHistoryBadge(count) {
-    const invoiceLink = document.getElementById('invoices-link');
-    if (!invoiceLink) return;
-
-    let badge = document.getElementById('history-badge');
-
-    if (count > 0) {
-        if (!badge) {
-            badge = document.createElement('span');
-            badge.id = 'history-badge';
-            badge.className = 'cf4-history-badge';
-            badge.title = 'Compras nuevas en Historial';
-            badge.setAttribute('aria-label', 'Historial con compras nuevas');
-            invoiceLink.appendChild(badge);
-        }
-        badge.style.display = 'block';
-    } else if (badge) {
-        badge.style.display = 'none';
-    }
-
-    const tabBadge = document.getElementById('history-tab-badge');
-    if (tabBadge) {
-        tabBadge.style.display = count > 0 ? 'block' : 'none';
-    }
-}
-
-// Start polling the invoice heartbeat endpoint to keep badges live on all pages.
-(function startInvoiceHeartbeat() {
-    const metaUrl   = document.querySelector('meta[name="cf4-invoice-heartbeat-url"]');
-    const metaCount = document.querySelector('meta[name="cf4-invoice-initial-count"]');
-    const metaHistory = document.querySelector('meta[name="cf4-unseen-history-initial-count"]');
-    if (!metaUrl) return; // not authenticated
-
-    let lastCount = parseInt(metaCount ? metaCount.getAttribute('content') : '0', 10);
-    let lastUnseenHistory = parseInt(metaHistory ? metaHistory.getAttribute('content') : '0', 10);
-
-    updateInvoiceCount(lastCount);
-    updateUnseenHistoryBadge(lastUnseenHistory);
-
-    const url = metaUrl.getAttribute('content');
-
-    setInterval(async function () {
-        try {
-            const res = await fetch(url, {
-                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            if (!res.ok) return;
-            const data = await res.json();
-            const unseen = parseInt(data.unseen_history, 10) || 0;
-            const countChanged = data.count !== lastCount;
-            const historyChanged = unseen !== lastUnseenHistory;
-
-            if (countChanged) {
-                lastCount = data.count;
-                updateInvoiceCount(lastCount);
-            }
-            if (historyChanged) {
-                lastUnseenHistory = unseen;
-                updateUnseenHistoryBadge(lastUnseenHistory);
-            }
-            if ((countChanged || historyChanged) && window.location.pathname.startsWith('/invoices')) {
-                location.reload();
-            }
-        } catch (_) {}
-    }, 15000);
-})();
+// Invoice badge polling lives in clients-invoice-heartbeat.js (loaded from clients-header.js on idle).
 
 // ============================================================
 // ADD TO CART
@@ -155,7 +64,7 @@ function addToCart(productId, quantity, triggerBtn) {
         .then(function (data) {
             if (data.success) {
                 updateCartCount(data.cart_count);
-                Swal.fire({
+                fireSwal({
                     icon: 'success',
                     title: '¡Agregado!',
                     text: data.message || 'Producto agregado al carrito',
@@ -167,7 +76,7 @@ function addToCart(productId, quantity, triggerBtn) {
             } else {
                 var msg = data.message || 'No se pudo agregar el producto al carrito';
                 var stockShort = isClientStockShortMessage(msg);
-                Swal.fire({
+                fireSwal({
                     icon: stockShort ? 'warning' : 'error',
                     title: stockShort ? msg : 'Error',
                     text: stockShort ? '' : msg
@@ -176,7 +85,7 @@ function addToCart(productId, quantity, triggerBtn) {
         })
         .catch(function (err) {
             console.error('Error adding to cart:', err);
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al agregar el producto al carrito' });
+            fireSwal({ icon: 'error', title: 'Error', text: 'Ocurrió un error al agregar el producto al carrito' });
         });
 }
 
@@ -297,11 +206,11 @@ function updateCartQuantity(productId, quantity) {
             } else {
                 var umsg = data.message || 'No se pudo actualizar el carrito';
                 var uShort = isClientStockShortMessage(umsg);
-                Swal.fire(uShort ? umsg : 'Error', uShort ? '' : umsg, uShort ? 'warning' : 'error');
+                fireSwal(uShort ? umsg : 'Error', uShort ? '' : umsg, uShort ? 'warning' : 'error');
             }
         })
         .catch(function () {
-            Swal.fire('Error', 'Ocurrió un error al actualizar el carrito', 'error');
+            fireSwal('Error', 'Ocurrió un error al actualizar el carrito', 'error');
         });
 }
 
@@ -336,324 +245,6 @@ function showCartEmptyState() {
         '<p class="cart-empty-home-link">' +
         '<a href="' + homeUrl + '" class="cart-empty-home-anchor">Volver al inicio</a></p>' +
         '</div></div>';
-}
-
-// ============================================================
-// USER MENU (profile dropdown)
-// ============================================================
-
-/** Positions the account dropdown on narrow viewports (fixed + --cf4-user-dropdown-top). */
-function syncMobileUserDropdownPosition() {
-    var header = document.querySelector('.cliente-header');
-    var trigger = document.getElementById('user-menu-trigger');
-    if (!header || !trigger) return;
-    if (window.innerWidth > 768) {
-        header.style.removeProperty('--cf4-user-dropdown-top');
-        return;
-    }
-    var wrap = document.getElementById('user-menu');
-    if (!wrap || !wrap.classList.contains('open')) {
-        header.style.removeProperty('--cf4-user-dropdown-top');
-        return;
-    }
-    var rect = trigger.getBoundingClientRect();
-    var gap = 8;
-    header.style.setProperty('--cf4-user-dropdown-top', Math.round(rect.bottom + gap) + 'px');
-}
-
-/** Sets the user menu open/closed state and updates ARIA attributes. */
-function setUserMenuOpen(open) {
-    var wrap    = document.getElementById('user-menu');
-    var panel   = document.getElementById('user-dropdown');
-    var trigger = document.getElementById('user-menu-trigger');
-    if (!wrap) return;
-    wrap.classList.toggle('open', open);
-    if (panel)   panel.setAttribute('aria-hidden', String(!open));
-    if (trigger) trigger.setAttribute('aria-expanded', String(open));
-    syncMobileUserDropdownPosition();
-}
-
-function closeUserDropdown() {
-    setUserMenuOpen(false);
-}
-
-function toggleUserDropdown() {
-    var wrap   = document.getElementById('user-menu');
-    var isOpen = wrap ? wrap.classList.contains('open') : false;
-    setUserMenuOpen(!isOpen);
-}
-
-window.cf4CloseUserDropdown = closeUserDropdown;
-window.cf4ToggleUserDropdown = toggleUserDropdown;
-window.cf4SyncMobileUserDropdownPosition = syncMobileUserDropdownPosition;
-
-/** Sets mobile header menu open/closed state. */
-function setHeaderMenuOpen(open) {
-    var header = document.querySelector('.cliente-header');
-    var toggle = document.getElementById('header-menu-toggle');
-    var icon   = toggle ? toggle.querySelector('i') : null;
-    if (!header) return;
-    header.classList.toggle('menu-open', open);
-    if (!open) {
-        closeUserDropdown();
-    }
-    if (toggle) {
-        toggle.setAttribute('aria-expanded', String(open));
-        toggle.setAttribute('aria-label', open ? 'Cerrar menú de navegación' : 'Abrir menú de navegación');
-    }
-    if (icon) {
-        icon.classList.toggle('fa-bars',  !open);
-        icon.classList.toggle('fa-times',  open);
-    }
-    if (open) {
-        requestAnimationFrame(function () {
-            syncMobileUserDropdownPosition();
-        });
-    }
-}
-
-function setFavoritesDrawerOpen(open) {
-    var drawer = document.getElementById('favorites-drawer');
-    var overlay = document.getElementById('favorites-overlay');
-    if (!drawer || !overlay) return;
-    drawer.classList.toggle('is-open', open);
-    drawer.setAttribute('aria-hidden', String(!open));
-    overlay.hidden = !open;
-}
-
-var favoritesCache = [];
-var favoritesPagination = {
-    current_page: 1,
-    last_page: 1,
-    per_page: 10,
-    total: 0,
-    from: null,
-    to: null
-};
-
-function getInitialFavoritesFromMeta() {
-    var meta = document.querySelector('meta[name="cf4-favorites-initial"]');
-    if (!meta) return [];
-    try {
-        var parsed = JSON.parse(meta.getAttribute('content') || '[]');
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-        return [];
-    }
-}
-
-function syncFavoriteButtonsState(productId, isFavorite) {
-    document.querySelectorAll('[data-product-favorite-btn][data-product-id="' + productId + '"]').forEach(function (btn) {
-        btn.classList.toggle('is-active', !!isFavorite);
-        btn.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
-        btn.setAttribute('aria-label', isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos');
-        var icon = btn.querySelector('i');
-        if (icon) {
-            icon.classList.toggle('fas', !!isFavorite);
-            icon.classList.toggle('far', !isFavorite);
-            icon.classList.add('fa-heart');
-        }
-    });
-}
-
-function upsertFavoriteCacheItem(productId) {
-    var pid = String(productId);
-    var cardBtn = document.querySelector('[data-product-favorite-btn][data-product-id="' + pid + '"]');
-    var card = cardBtn ? cardBtn.closest('.product-card') : null;
-    if (!card) return;
-
-    var nameLink = card.querySelector('.product-name a');
-    var categoryEl = card.querySelector('.product-category');
-    var priceEl = card.querySelector('.product-price-value');
-    var imageEl = card.querySelector('.product-image img');
-
-    var existingIndex = favoritesCache.findIndex(function (item) {
-        return String(item.product_id) === pid;
-    });
-
-    var entry = {
-        product_id: Number(pid),
-        name: nameLink ? nameLink.textContent.trim() : '',
-        category: categoryEl ? categoryEl.textContent.trim() : 'Sin categoría',
-        price_formatted: priceEl ? priceEl.textContent.trim() : '',
-        url: nameLink ? nameLink.getAttribute('href') : '#',
-        image_url: imageEl ? imageEl.getAttribute('src') : ''
-    };
-
-    if (existingIndex >= 0) {
-        favoritesCache[existingIndex] = entry;
-    } else {
-        favoritesCache.unshift(entry);
-    }
-}
-
-function renderFavoritesPaginationFooter(meta) {
-    var footer = document.getElementById('favorites-drawer-pagination');
-    var info = document.getElementById('favorites-pagination-info');
-    var prevBtn = document.getElementById('favorites-page-prev');
-    var nextBtn = document.getElementById('favorites-page-next');
-    if (!footer || !info || !prevBtn || !nextBtn) return;
-
-    var lastPage = Math.max(1, parseInt(String(meta && meta.last_page ? meta.last_page : 1), 10) || 1);
-    var currentPage = Math.max(1, parseInt(String(meta && meta.current_page ? meta.current_page : 1), 10) || 1);
-    var total = parseInt(String(meta && meta.total ? meta.total : 0), 10) || 0;
-    var from = meta && meta.from != null ? meta.from : null;
-    var to = meta && meta.to != null ? meta.to : null;
-
-    favoritesPagination = {
-        current_page: currentPage,
-        last_page: lastPage,
-        per_page: parseInt(String(meta && meta.per_page ? meta.per_page : 10), 10) || 10,
-        total: total,
-        from: from,
-        to: to
-    };
-
-    if (total === 0 || lastPage <= 1) {
-        footer.hidden = true;
-        info.textContent = '';
-        prevBtn.disabled = true;
-        nextBtn.disabled = true;
-        return;
-    }
-
-    footer.hidden = false;
-    info.textContent = 'Mostrando ' + from + '–' + to + ' de ' + total + ' favoritos';
-    prevBtn.disabled = currentPage <= 1;
-    nextBtn.disabled = currentPage >= lastPage;
-}
-
-function renderFavoritesDrawerItems(items) {
-    var body = document.getElementById('favorites-drawer-body');
-    if (!body) return;
-
-    if (!Array.isArray(items) || items.length === 0) {
-        body.innerHTML = ''
-            + '<div class="cf4-favorites-empty">'
-            + '<i class="far fa-heart"></i>'
-            + '<p>Aún no tienes productos guardados.<br>¡Explora el catálogo!</p>'
-            + '</div>';
-        return;
-    }
-
-    body.innerHTML = items.map(function (item) {
-        return ''
-            + '<article class="cf4-favorite-item" data-favorite-product-id="' + item.product_id + '">'
-            + '  <img src="' + item.image_url + '" alt="' + item.name + '">'
-            + '  <div class="cf4-favorite-meta">'
-            + '    <div class="cf4-favorite-category">' + item.category + '</div>'
-            + '    <a class="cf4-favorite-name" href="' + item.url + '">' + item.name + '</a>'
-            + '    <div class="cf4-favorite-price">' + item.price_formatted + '</div>'
-            + '  </div>'
-            + '  <button type="button" class="cf4-favorite-remove" data-favorite-remove-btn data-product-id="' + item.product_id + '" aria-label="Quitar de favoritos">'
-            + '    <i class="fas fa-heart"></i>'
-            + '  </button>'
-            + '</article>';
-    }).join('');
-}
-
-function buildFavoritesIndexUrl(page) {
-    var indexMeta = document.querySelector('meta[name="cf4-favorites-index-url"]');
-    if (!indexMeta) return null;
-
-    var url = new URL(indexMeta.getAttribute('content'), window.location.origin);
-    var targetPage = Math.max(1, parseInt(String(page || favoritesPagination.current_page || 1), 10) || 1);
-    url.searchParams.set('page', String(targetPage));
-    url.searchParams.set('per_page', String(favoritesPagination.per_page || 10));
-
-    return url.toString();
-}
-
-function loadFavoritesDrawerItems(page) {
-    var body = document.getElementById('favorites-drawer-body');
-    var indexMeta = document.querySelector('meta[name="cf4-favorites-index-url"]');
-    if (!body) return Promise.resolve();
-
-    body.innerHTML = '<p class="cf4-favorites-loading">Cargando favoritos...</p>';
-
-    if (!indexMeta) {
-        renderFavoritesDrawerItems(favoritesCache);
-        renderFavoritesPaginationFooter(favoritesPagination);
-        return Promise.resolve();
-    }
-
-    var requestUrl = buildFavoritesIndexUrl(page);
-    if (!requestUrl) {
-        renderFavoritesDrawerItems(favoritesCache);
-        renderFavoritesPaginationFooter(favoritesPagination);
-        return Promise.resolve();
-    }
-
-    return fetch(requestUrl, {
-        headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-            if (!data || data.success !== true) {
-                throw new Error((data && data.message) ? data.message : 'No se pudieron cargar favoritos');
-            }
-            favoritesCache = Array.isArray(data.favorites) ? data.favorites : [];
-            renderFavoritesDrawerItems(favoritesCache);
-            renderFavoritesPaginationFooter(data.pagination || favoritesPagination);
-        })
-        .catch(function () {
-            renderFavoritesDrawerItems(favoritesCache);
-            renderFavoritesPaginationFooter(favoritesPagination);
-        });
-}
-
-function toggleFavoriteFromDrawer(productId) {
-    var toggleMeta = document.querySelector('meta[name="cf4-favorites-toggle-url"]');
-    if (!toggleMeta || !productId) return Promise.resolve();
-
-    return fetch(toggleMeta.getAttribute('content'), {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': getCsrfToken(),
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({ product_id: productId })
-    })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-            if (!data || data.success !== true) {
-                throw new Error((data && data.message) ? data.message : 'No se pudo actualizar favorito');
-            }
-            var removed = data.is_favorite === false;
-            if (removed) {
-                favoritesCache = favoritesCache.filter(function (item) {
-                    return String(item.product_id) !== String(productId);
-                });
-            }
-            syncFavoriteButtonsState(String(productId), !removed);
-            var reloadPage = favoritesPagination.current_page || 1;
-            if (removed && favoritesCache.length === 0 && reloadPage > 1) {
-                reloadPage -= 1;
-            }
-            return loadFavoritesDrawerItems(reloadPage);
-        })
-        .catch(function (err) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: err.message || 'No se pudo actualizar favorito.'
-            });
-        });
-}
-
-// ============================================================
-// LOGIN MODAL
-// ============================================================
-
-function closeLoginModal() {
-    closeModal('login-modal');
-    var overlay = document.getElementById('login-modal-overlay');
-    if (overlay) overlay.classList.remove('active');
 }
 
 // ============================================================
@@ -712,7 +303,7 @@ function cancelEdit() {
 function submitProfile() {
     var form = document.getElementById('formPerfil');
     if (!form) return;
-    Swal.fire({
+    fireSwal({
         title: '¿Guardar cambios?',
         text: 'Se actualizarán tus datos personales.',
         icon: 'question',
@@ -1278,150 +869,6 @@ function sendPassword(form) {
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function () {
-    favoritesCache = getInitialFavoritesFromMeta();
-
-    initHeaderCatalogSearch();
-
-    // — Initialise cart counter —
-    var cartLinkEl  = document.getElementById('cart-link');
-    var cartGuestEl = document.getElementById('cart-guest');
-    var cartRef     = cartLinkEl || cartGuestEl;
-    if (cartRef) {
-        var initialCount = parseInt(cartRef.getAttribute('data-cart-count') || '0', 10);
-        updateCartCount(initialCount);
-    }
-
-    // — Guest cart: prompt to log in —
-    if (cartGuestEl) {
-        cartGuestEl.addEventListener('click', function () {
-            Swal.fire({
-                icon: 'info',
-                title: 'Inicia sesión',
-                text: 'Debes iniciar sesión para ver tu carrito.',
-                confirmButtonText: 'Entendido'
-            });
-        });
-    }
-
-    // — User menu toggle —
-    var userMenuTrigger = document.getElementById('user-menu-trigger');
-    if (userMenuTrigger) {
-        userMenuTrigger.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleUserDropdown();
-        });
-
-    }
-
-    // — Close user dropdown on outside click —
-    document.addEventListener('click', function (e) {
-        var userMenu = document.getElementById('user-menu');
-        if (!userMenu || !userMenu.classList.contains('open')) return;
-        if (userMenu.contains(e.target)) return;
-        closeUserDropdown();
-    });
-
-    // — Mobile header menu toggle —
-    var headerMenuToggle = document.getElementById('header-menu-toggle');
-    if (headerMenuToggle) {
-        headerMenuToggle.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var header = document.querySelector('.cliente-header');
-            if (!header) return;
-            setHeaderMenuOpen(!header.classList.contains('menu-open'));
-        });
-    }
-
-    var favoritesCloseBtn = document.getElementById('favorites-close-btn');
-    var favoritesOverlay = document.getElementById('favorites-overlay');
-    var favoritesDrawer = document.getElementById('favorites-drawer');
-
-    if (favoritesDrawer && favoritesOverlay) {
-        document.querySelectorAll('.cf4-favorites-open-trigger').forEach(function (favBtn) {
-            favBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                setHeaderMenuOpen(false);
-                closeUserDropdown();
-                setFavoritesDrawerOpen(true);
-                loadFavoritesDrawerItems();
-            });
-        });
-    }
-
-    if (favoritesCloseBtn) {
-        favoritesCloseBtn.addEventListener('click', function () {
-            setFavoritesDrawerOpen(false);
-        });
-    }
-
-    if (favoritesOverlay) {
-        favoritesOverlay.addEventListener('click', function () {
-            setFavoritesDrawerOpen(false);
-        });
-    }
-
-    var favoritesPagePrev = document.getElementById('favorites-page-prev');
-    var favoritesPageNext = document.getElementById('favorites-page-next');
-    if (favoritesPagePrev) {
-        favoritesPagePrev.addEventListener('click', function () {
-            var page = (favoritesPagination.current_page || 1) - 1;
-            if (page < 1) return;
-            loadFavoritesDrawerItems(page);
-        });
-    }
-    if (favoritesPageNext) {
-        favoritesPageNext.addEventListener('click', function () {
-            var page = (favoritesPagination.current_page || 1) + 1;
-            if (page > (favoritesPagination.last_page || 1)) return;
-            loadFavoritesDrawerItems(page);
-        });
-    }
-
-    window.addEventListener('cf4:favorites:changed', function (event) {
-        var detail = event && event.detail ? event.detail : {};
-        var pid = String(detail.product_id || '');
-        var isFav = !!detail.is_favorite;
-        if (!pid) return;
-
-        if (isFav) {
-            upsertFavoriteCacheItem(pid);
-        } else {
-            favoritesCache = favoritesCache.filter(function (item) {
-                return String(item.product_id) !== pid;
-            });
-        }
-
-        syncFavoriteButtonsState(pid, isFav);
-
-        if (favoritesDrawer && favoritesDrawer.classList.contains('is-open')) {
-            loadFavoritesDrawerItems(favoritesPagination.current_page || 1);
-        }
-    });
-
-    // — Close mobile menu when selecting a nav link —
-    document.querySelectorAll('.header-menu-panel .nav-link').forEach(function (link) {
-        link.addEventListener('click', function () { setHeaderMenuOpen(false); });
-    });
-
-    // — Close mobile header menu on outside click —
-    document.addEventListener('click', function (e) {
-        var header = document.querySelector('.cliente-header');
-        if (!header || !header.classList.contains('menu-open')) return;
-        if (header.contains(e.target)) return;
-        setHeaderMenuOpen(false);
-    });
-
-    // — Keep desktop navbar always collapsed on resize; re-sync account dropdown on mobile —
-    window.addEventListener('resize', function () {
-        if (window.innerWidth > 768) {
-            setHeaderMenuOpen(false);
-        }
-        syncMobileUserDropdownPosition();
-    });
-
     // — Login modal —
     var loginModalTrigger = document.getElementById('login-modal-trigger');
     if (loginModalTrigger) {
@@ -1495,7 +942,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 thenUrl: data.redirect || '/',
                             });
                         } else {
-                            Swal.fire({
+                            fireSwal({
                                 icon: 'success',
                                 title: '¡Bienvenido!',
                                 text: data.message || 'Inicio de sesión exitoso',
@@ -1510,7 +957,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (submitBtn)   submitBtn.disabled = false;
                         if (submitSpan)  submitSpan.classList.remove('hidden');
                         if (loadingSpan) loadingSpan.classList.add('hidden');
-                        Swal.fire({
+                        fireSwal({
                             icon: 'warning',
                             title: 'Correo no verificado',
                             text: data.message || 'Debes verificar tu correo antes de iniciar sesión.',
@@ -1525,7 +972,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             window.location.href = data.redirect;
                         });
                     } else {
-                        Swal.fire({
+                        fireSwal({
                             icon: 'error',
                             title: 'Error',
                             html: (data.message || 'Error al iniciar sesión') +
@@ -1547,7 +994,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .catch(function (err) {
                     if (err === 'csrf' || err === 'parse') return;
                     console.error('Login error:', err);
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al iniciar sesión' });
+                    fireSwal({ icon: 'error', title: 'Error', text: 'Ocurrió un error al iniciar sesión' });
                     if (submitBtn)   submitBtn.disabled = false;
                     if (submitSpan)  submitSpan.classList.remove('hidden');
                     if (loadingSpan) loadingSpan.classList.add('hidden');
@@ -1582,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var confirmBtn   = isGoogleOnly
                 ? '<i class="fas fa-key"></i> Sí, definir'
                 : '<i class="fas fa-save"></i> Sí, actualizar';
-            Swal.fire({
+            fireSwal({
                 title: '¿Confirmar cambio de contraseña?',
                 text: confirmMsg, icon: 'warning',
                 showCancelButton: true,
@@ -1617,7 +1064,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var addBtn = e.target.closest('.add-to-cart-btn');
         if (addBtn) {
             if (addBtn.dataset.purchasable === '0' || parseInt(addBtn.dataset.productStock, 10) < 1) {
-                Swal.fire({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
+                fireSwal({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
                 return;
             }
             addToCart(addBtn.dataset.productId, 1, addBtn);
@@ -1627,7 +1074,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var guestBtn = e.target.closest('.guest-add-btn');
         if (guestBtn) {
             if (guestBtn.dataset.purchasable === '0' || parseInt(guestBtn.dataset.productStock, 10) < 1) {
-                Swal.fire({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
+                fireSwal({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
                 return;
             }
             window.location.href = '/login';
@@ -1649,7 +1096,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var itemName = btn.dataset.productName || 'este producto';
         if (!cartItem || !itemId) return;
 
-        Swal.fire({
+        fireSwal({
             title: '¿Eliminar producto?',
             text: '¿Deseas eliminar "' + itemName + '" del carrito?',
             icon: 'warning',
@@ -1670,13 +1117,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(function (res) { return res.json(); })
                 .then(function (data) {
                     if (!data.success) {
-                        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo eliminar' });
+                        fireSwal({ icon: 'error', title: 'Error', text: data.message || 'No se pudo eliminar' });
                         return;
                     }
 
                     cartItem.remove();
 
-                    Swal.fire({
+                    fireSwal({
                         toast: true, position: 'top-end', icon: 'success',
                         title: 'Producto eliminado del carrito',
                         showConfirmButton: false, timer: 2500, timerProgressBar: true
@@ -1698,7 +1145,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .catch(function (err) {
                     console.error('Error removing cart item:', err);
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar el producto' });
+                    fireSwal({ icon: 'error', title: 'Error', text: 'No se pudo eliminar el producto' });
                 });
         });
     });
@@ -1709,7 +1156,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('click', function (e) {
         if (!e.target.closest('#btn-clear-cart')) return;
 
-        Swal.fire({
+        fireSwal({
             title: '¿Vaciar carrito?',
             text: 'Se eliminarán todos los productos del carrito.',
             icon: 'warning',
@@ -1732,17 +1179,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (data.success) {
                         updateCartCount(0);
                         showCartEmptyState();
-                        Swal.fire({
+                        fireSwal({
                             toast: true, position: 'top-end', icon: 'success',
                             title: 'Carrito vaciado correctamente',
                             showConfirmButton: false, timer: 2500, timerProgressBar: true
                         });
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo vaciar el carrito' });
+                        fireSwal({ icon: 'error', title: 'Error', text: data.message || 'No se pudo vaciar el carrito' });
                     }
                 })
                 .catch(function () {
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al vaciar el carrito' });
+                    fireSwal({ icon: 'error', title: 'Error', text: 'Ocurrió un error al vaciar el carrito' });
                 });
         });
     });
@@ -1758,7 +1205,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateCartQuantity(productId, 1);
             } else if (quantity > max) {
                 this.value = max;
-                Swal.fire('Aviso', 'La cantidad no puede exceder el stock disponible', 'warning');
+                fireSwal('Aviso', 'La cantidad no puede exceder el stock disponible', 'warning');
                 updateCartQuantity(productId, max);
             } else {
                 updateCartQuantity(productId, quantity);
@@ -1822,7 +1269,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (proceedBtn) {
         proceedBtn.addEventListener('click', function () {
             var chosenMethodPreview = getCheckoutPaymentMethodFallback();
-            Swal.fire({
+            fireSwal({
                 title: '¿Confirmar pedido con pago por '
                     + getCf4PaymentMethodShortLabel(chosenMethodPreview) + '?',
                 text: 'Se enviará tu pedido para retiro en tienda.',
@@ -1852,7 +1299,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (!data.success) {
                             var cmsg = data.message || 'No se pudo procesar el pedido';
                             var cshort = isClientStockShortMessage(cmsg);
-                            Swal.fire({
+                            fireSwal({
                                 icon: cshort ? 'warning' : 'error',
                                 title: cshort ? cmsg : 'Error',
                                 text: cshort ? '' : cmsg
@@ -1866,7 +1313,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         var paidWith = (data && data.payment_method)
                             ? data.payment_method
                             : getCheckoutPaymentMethodFallback();
-                        Swal.fire({
+                        fireSwal({
                             icon: 'success',
                             title: '¡Pedido confirmado!',
                             text: buildCf4CheckoutSuccessText(paidWith),
@@ -1875,7 +1322,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     })
                     .catch(function (err) {
                         console.error('Checkout error:', err);
-                        Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al procesar el pedido' });
+                        fireSwal({ icon: 'error', title: 'Error', text: 'Ocurrió un error al procesar el pedido' });
                         proceedBtn.disabled  = false;
                         proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
                     });

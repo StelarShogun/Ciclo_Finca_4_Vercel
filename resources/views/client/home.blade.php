@@ -2,6 +2,19 @@
 
 @section('title', 'Inicio - Ciclo Finca 4')
 
+@push('meta')
+    {{-- Preload AVIF first (the chosen format on >95% of mobile/desktop traffic); WebP/JPG only run
+         as <picture> fallbacks so the browser never has to download both formats. --}}
+    <link
+        rel="preload"
+        as="image"
+        type="image/avif"
+        fetchpriority="high"
+        imagesizes="100vw"
+        imagesrcset="{{ asset('assets/images/hero/hero-downhill-480.avif') }} 480w, {{ asset('assets/images/hero/hero-downhill-768.avif') }} 768w, {{ asset('assets/images/hero/hero-downhill-1280.avif') }} 1280w, {{ asset('assets/images/hero/hero-downhill-1600.avif') }} 1600w"
+        href="{{ asset('assets/images/hero/hero-downhill-768.avif') }}">
+@endpush
+
 @push('styles')
     @vite(['resources/css/client/clients-page.css'])
 @endpush
@@ -10,12 +23,31 @@
 <!-- Hero: imagen full-bleed + overlay; reemplaza public/assets/images/hero/hero-downhill.jpg por tu arte -->
 <section class="hero-section" aria-label="Bienvenida a Ciclo Finca 4">
     <div class="hero-backdrop" aria-hidden="true">
-        <img src="{{ asset('assets/images/hero/hero-downhill.jpg') }}"
-             alt=""
-             width="1920"
-             height="1080"
-             fetchpriority="high"
-             decoding="async">
+        <picture>
+            <source
+                type="image/avif"
+                srcset="{{ asset('assets/images/hero/hero-downhill-480.avif') }} 480w,
+                        {{ asset('assets/images/hero/hero-downhill-768.avif') }} 768w,
+                        {{ asset('assets/images/hero/hero-downhill-1280.avif') }} 1280w,
+                        {{ asset('assets/images/hero/hero-downhill-1600.avif') }} 1600w"
+                sizes="100vw">
+            <source
+                type="image/webp"
+                srcset="{{ asset('assets/images/hero/hero-downhill-480.webp') }} 480w,
+                        {{ asset('assets/images/hero/hero-downhill-768.webp') }} 768w,
+                        {{ asset('assets/images/hero/hero-downhill-1280.webp') }} 1280w,
+                        {{ asset('assets/images/hero/hero-downhill-1600.webp') }} 1600w,
+                        {{ asset('assets/images/hero/hero-downhill-1920.webp') }} 1920w"
+                sizes="100vw">
+            <img
+                src="{{ asset('assets/images/hero/hero-downhill-1280.jpg') }}"
+                alt=""
+                width="1920"
+                height="1080"
+                sizes="100vw"
+                fetchpriority="high"
+                decoding="async">
+        </picture>
     </div>
     <div class="hero-overlay" aria-hidden="true"></div>
 
@@ -117,11 +149,15 @@
                         <div class="product-image">
                             <a class="product-image__link" href="{{ $product->clientProductUrl() }}"
                                aria-label="Ver producto: {{ $product->name }}">
-                            <!-- Fallback to favicon if product image is missing -->
-                            <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}" 
-                                 alt="{{ $product->name }}"
-                                 data-fallback-src="{{ asset('favicon.svg') }}"
-                                 onerror="this.src=this.dataset.fallbackSrc;">
+                            @php $cardImg = \App\Support\ProductImageUrls::cardPicture($product); @endphp
+                            @include('client.parts.responsive-picture', [
+                                'desktopWebp' => $cardImg['desktopWebp'],
+                                'mobileWebp' => $cardImg['mobileWebp'],
+                                'fallback' => $cardImg['fallback'],
+                                'alt' => $product->name,
+                                'loading' => 'lazy',
+                                'sizes' => '(max-width: 767px) 45vw, 240px',
+                            ])
                             </a>
                         </div>
                         <div class="product-info">
@@ -422,5 +458,5 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/client/clients-page.js'])
+    @vite(['resources/js/client/clients-home.js'])
 @endpush
