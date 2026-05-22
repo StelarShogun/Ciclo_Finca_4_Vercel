@@ -72,15 +72,26 @@ class SalesController extends Controller
             })
             ->where('sale_date', '>=', now()->subDays(Sale::getOrderExpirationDays()));
 
-        $hasNew = (clone $baseQuery)
+        $newCount = (clone $baseQuery)
             ->where('sale_id', '>', $since)
-            ->exists();
+            ->count();
 
         $latestSaleId = (clone $baseQuery)->max('sale_id') ?? 0;
 
+        $pendingCount = Sale::query()
+            ->where(function ($q) {
+                $q->where('order_source', 'web_cart')
+                    ->orWhereNull('order_source');
+            })
+            ->where('status', 'pending')
+            ->notExpired()
+            ->count();
+
         return response()->json([
-            'hasNew' => $hasNew,
+            'hasNew' => $newCount > 0,
+            'newCount' => $newCount,
             'latestSaleId' => $latestSaleId,
+            'pendingCount' => $pendingCount,
         ]);
     }
 
