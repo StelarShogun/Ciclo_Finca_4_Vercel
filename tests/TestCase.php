@@ -55,8 +55,9 @@ abstract class TestCase extends BaseTestCase
         $this->withoutMiddleware(PreventRequestForgery::class);
 
         // phpunit.mysql.xml forces APP_TIMEZONE=UTC; keep config in sync for date assertions.
-        if (env('APP_TIMEZONE')) {
-            config(['app.timezone' => env('APP_TIMEZONE')]);
+        $timezone = Env::get('APP_TIMEZONE');
+        if (is_string($timezone) && $timezone !== '') {
+            config(['app.timezone' => $timezone]);
         }
 
         // Feature tests run without `npm run build`; @vite() would read public/build/manifest.json.
