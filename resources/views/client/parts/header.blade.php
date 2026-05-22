@@ -127,9 +127,9 @@
 
                     @if(auth('clients')->check())
                         @php
-                            $pendingInvoiceCount = \App\Models\Sale::where('client_id', auth('clients')->user()->user_id)
-                                ->where('status', 'pending')
-                                ->count();
+                            $clientUserId = (int) auth('clients')->user()->user_id;
+                            $activeInvoiceCount = \App\Models\Sale::countActiveClientInvoices($clientUserId);
+                            $unseenHistoryCount = \App\Models\Sale::countUnseenInClientHistory($clientUserId);
                             $unreadNotificationCount = auth('clients')->user()->unreadNotifications()->count();
                             $notificationBadgeLabel = $unreadNotificationCount > 9 ? '9+' : (string) $unreadNotificationCount;
                         @endphp
@@ -145,10 +145,13 @@
                         <a href="{{ route('clients.invoices') }}"
                            class="cf4-invoices-btn {{ request()->routeIs('clients.invoices') ? 'active' : '' }}"
                            id="invoices-link"
-                           title="Mis facturas pendientes">
+                           title="Mis facturas (pendientes y por recoger)">
                             <i class="fas fa-file-invoice"></i>
-                            @if($pendingInvoiceCount > 0)
-                                <span class="cf4-invoice-count" id="invoice-count">{{ $pendingInvoiceCount }}</span>
+                            @if($activeInvoiceCount > 0)
+                                <span class="cf4-invoice-count" id="invoice-count">{{ $activeInvoiceCount }}</span>
+                            @endif
+                            @if($unseenHistoryCount > 0)
+                                <span class="cf4-history-badge" id="history-badge" title="Compras nuevas en Historial" aria-label="Historial con compras nuevas"></span>
                             @endif
                         </a>
 
@@ -340,7 +343,8 @@
 @auth('clients')
 @if(request()->routeIs('clients.invoices*', 'clients.profile', 'clients.cart'))
 <meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
-<meta name="cf4-invoice-initial-count" content="{{ \App\Models\Sale::where('client_id', auth('clients')->user()->user_id)->where('status', 'pending')->count() }}">
+<meta name="cf4-invoice-initial-count" content="{{ $activeInvoiceCount ?? \App\Models\Sale::countActiveClientInvoices((int) auth('clients')->user()->user_id) }}">
+<meta name="cf4-unseen-history-initial-count" content="{{ $unseenHistoryCount ?? \App\Models\Sale::countUnseenInClientHistory((int) auth('clients')->user()->user_id) }}">
 @endif
 @endauth
 

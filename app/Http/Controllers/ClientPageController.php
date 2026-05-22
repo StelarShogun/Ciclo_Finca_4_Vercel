@@ -929,6 +929,8 @@ class ClientPageController extends Controller
                 ->paginate($perPage)
                 ->withQueryString();
 
+            Sale::markClientHistorySeen((int) $client->user_id);
+
             $pendingReviewProducts = ProductReview::query()
                 ->with('product:product_id,name')
                 ->where('client_id', $client->user_id)
@@ -962,14 +964,14 @@ class ClientPageController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        $invoiceCount = Sale::where('client_id', $client->user_id)
-            ->whereIn('status', $activeStatuses)
-            ->count();
+        $invoiceCount = Sale::countActiveClientInvoices((int) $client->user_id);
+        $unseenHistoryCount = Sale::countUnseenInClientHistory((int) $client->user_id);
 
         return view('client.Invoices', compact(
             'orders',
             'cartCount',
             'invoiceCount',
+            'unseenHistoryCount',
             'tab',
             'pendingReviewProducts'
         ));
@@ -979,12 +981,12 @@ class ClientPageController extends Controller
     {
         /** @var Client $client */
         $client = Auth::guard('clients')->user();
+        $clientId = (int) $client->user_id;
 
-        $count = Sale::where('client_id', $client->user_id)
-            ->whereIn('status', $this->activeClientInvoiceStatuses())
-            ->count();
-
-        return response()->json(['count' => $count]);
+        return response()->json([
+            'count' => Sale::countActiveClientInvoices($clientId),
+            'unseen_history' => Sale::countUnseenInClientHistory($clientId),
+        ]);
     }
 
     public function notifications(Request $request)
@@ -1015,9 +1017,7 @@ class ClientPageController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        $invoiceCount = Sale::where('client_id', $client->user_id)
-            ->whereIn('status', $this->activeClientInvoiceStatuses())
-            ->count();
+        $invoiceCount = Sale::countActiveClientInvoices((int) $client->user_id);
 
         return view('client.invoice-detail', compact('sale', 'cartCount', 'invoiceCount'));
     }
@@ -1033,7 +1033,7 @@ class ClientPageController extends Controller
 
     private function activeClientInvoiceStatuses(): array
     {
-        return ['pending', 'ready_to_pickup'];
+        return Sale::activeClientInvoiceStatuses();
     }
 
     private function cancelledClientInvoiceStatuses(): array

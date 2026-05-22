@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pedido listo para recoger - Ciclo Finca 4</title>
+    <title>Pedido confirmado - Ciclo Finca 4</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f2f4f7;font-family:Arial,Helvetica,sans-serif;">
     @php
@@ -26,7 +26,7 @@
                         <td style="padding:22px 28px;color:#1f2937;">
                             <p style="margin:0 0 14px 0;font-size:20px;line-height:1.4;"><strong>Hola, {{ $clientName }}.</strong></p>
                             <p style="margin:0 0 18px 0;font-size:18px;line-height:1.6;">
-                                ¡Buenas noticias! Su pedido <strong>{{ $invoiceLabel }}</strong> ya está listo para ser retirado en nuestra tienda.
+                                Su pedido <strong>{{ $invoiceLabel }}</strong> fue confirmado como venta completada.
                             </p>
 
                             @if($sale->saleItems && $sale->saleItems->isNotEmpty())
@@ -42,13 +42,9 @@
                                 <strong>Total:</strong> ₡{{ number_format((float) $sale->total, 0, ',', '.') }}
                             </p>
 
-                            <p style="margin:0 0 18px 0;font-size:16px;line-height:1.6;">
-                                Recuerde traer su número de pedido o identificación al momento de recogerlo.
-                            </p>
-
                             <p style="margin:0;font-size:16px;line-height:1.6;">
-                                Puede ver este pedido en Facturas (Pendientes / Por recoger):<br>
-                                <a href="{{ $invoicesUrl }}" style="color:#235347;">{{ $invoicesUrl }}</a>
+                                Consulte el detalle en Historial de compras:<br>
+                                <a href="{{ $historyUrl }}" style="color:#235347;">{{ $historyUrl }}</a>
                             </p>
                         </td>
                     </tr>

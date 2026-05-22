@@ -43,30 +43,7 @@ function updateCartCount(count) {
     }
 }
 
-// ============================================================
-// INVOICE BADGE (navbar) — keeps pending count in sync
-// ============================================================
-
-/** Update navbar invoice badge count. */
-function updateInvoiceCount(count) {
-    const invoiceLink = document.getElementById('invoices-link');
-    if (!invoiceLink) return;
-
-    let badge = document.getElementById('invoice-count');
-
-    if (count > 0) {
-        if (!badge) {
-            badge = document.createElement('span');
-            badge.id = 'invoice-count';
-            badge.className = 'cf4-invoice-count';
-            invoiceLink.appendChild(badge);
-        }
-        badge.textContent = count;
-        badge.style.display = 'flex';
-    } else if (badge) {
-        badge.style.display = 'none';
-    }
-}
+// Invoice badge polling lives in clients-invoice-heartbeat.js (loaded from clients-header.js on idle).
 
 // ============================================================
 // ADD TO CART

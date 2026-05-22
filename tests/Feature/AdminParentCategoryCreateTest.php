@@ -217,11 +217,11 @@ class AdminParentCategoryCreateTest extends TestCase
 
         $pageOne = $this->get(route('categories.subcategories.create', ['hierarchy_page' => 1, 'per_page' => 10]));
         $pageOne->assertOk();
-        $pageOne->assertSee('Mostrando 1 a 10 de', false);
+        $pageOne->assertSee('Mostrando 1–10 de', false);
 
         $pageTwo = $this->get(route('categories.subcategories.create', ['hierarchy_page' => 2, 'per_page' => 10]));
         $pageTwo->assertOk();
-        $pageTwo->assertSee('Mostrando 11 a 19 de 19', false);
-        $pageTwo->assertSee('hierarchy_page=2', false);
+        $pageTwo->assertSee('Mostrando 11–19 de 19', false);
+        $pageTwo->assertSee('aria-current="page">2', false);
     }
 }
