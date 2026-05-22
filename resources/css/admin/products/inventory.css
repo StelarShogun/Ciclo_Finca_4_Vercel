@@ -933,8 +933,17 @@
   ============================================================ */
 .actions-container {
   display: flex;
+  flex-wrap: nowrap;
   gap: 8px;
   justify-content: center;
+  min-width: max-content;
+}
+
+/* Keep all action affordances visible; horizontal scroll lives on .products-table.table-view */
+.products-table.table-view th:last-child,
+.products-table.table-view td:last-child {
+  min-width: 11.5rem;
+  white-space: nowrap;
 }
 
 .action-btn {

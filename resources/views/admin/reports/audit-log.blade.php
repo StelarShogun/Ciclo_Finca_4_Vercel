@@ -7,7 +7,7 @@
 @section('Titulo pagina', 'Bitácora de auditoría - Reportes')
 
 @push('styles')
-    @vite(['resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/audit-log.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/audit-log.css'])
 @endpush
 
 @push('vite-body')
@@ -105,29 +105,39 @@
                     <table class="audit-log-table">
                         <thead>
                             <tr>
-                                <td data-label="Fecha y hora">{{ optional($log->created_at)->format('d/m/Y H:i:s') }}
-                                </td>
-                                <td data-label="Usuario">
-                                    @if ($log->adminUser)
-                                        {{ $log->adminUser->name }} {{ $log->adminUser->first_surname }}
-                                        <div class="muted">{{ $log->adminUser->gmail }}</div>
-                                    @else
-                                        {{ $log->admin_email_snapshot ?? 'Sistema' }}
-                                    @endif
-                                </td>
-                                <td data-label="Tipo de acción">
-                                    <code>{{ $actionTypeLabels[$log->action_type] ?? AuditLogController::actionTypeLabel($log->action_type) }}</code>
-                                </td>
-                                <td data-label="Módulo"><span
-                                        class="module-pill">{{ $moduleLabels[$log->module] ?? AuditLogController::moduleLabel($log->module) }}</span>
-                                </td>
-                                <td data-label="Descripción">
-                                    {{ AuditLogController::descriptionLabel($log->description) }}</td>
+                                <th>Fecha y hora</th>
+                                <th>Usuario</th>
+                                <th>Tipo de acción</th>
+                                <th>Módulo</th>
+                                <th>Descripción</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            @foreach ($logs as $log)
+                                <tr>
+                                    <td data-label="Fecha y hora">{{ optional($log->created_at)->format('d/m/Y H:i:s') }}
+                                    </td>
+                                    <td data-label="Usuario">
+                                        @if ($log->adminUser)
+                                            {{ $log->adminUser->name }} {{ $log->adminUser->first_surname }}
+                                            <div class="muted">{{ $log->adminUser->gmail }}</div>
+                                        @else
+                                            {{ $log->admin_email_snapshot ?? 'Sistema' }}
+                                        @endif
+                                    </td>
+                                    <td data-label="Tipo de acción">
+                                        <code>{{ $actionTypeLabels[$log->action_type] ?? AuditLogController::actionTypeLabel($log->action_type) }}</code>
+                                    </td>
+                                    <td data-label="Módulo"><span
+                                            class="module-pill">{{ $moduleLabels[$log->module] ?? AuditLogController::moduleLabel($log->module) }}</span>
+                                    </td>
+                                    <td data-label="Descripción">
+                                        {{ AuditLogController::descriptionLabel($log->description) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
 
                 <x-admin.pagination :paginator="$logs" label="auditoría" />
                 </div>

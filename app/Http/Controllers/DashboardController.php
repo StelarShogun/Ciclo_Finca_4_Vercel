@@ -105,39 +105,59 @@ class DashboardController extends Controller
     public function getChartData(Request $request)
     {
         $period = $request->get('period', '7d');
+        if (! in_array($period, ['7d', '30d', '90d'], true)) {
+            $period = '7d';
+        }
 
         try {
-            $startDate = $this->getStartDate($period)->startOfDay();
+            $ttl = max(60, (int) config('cf4_performance.admin_dashboard_charts_ttl', 300));
+            $payload = Cache::remember(
+                'cf4:admin:dashboard_charts:'.$period,
+                $ttl,
+                function () use ($period) {
+                    $startDate = $this->getStartDate($period)->startOfDay();
 
-            $salesRows = Sale::query()
-                ->select(
-                    DB::raw('DATE(sale_date) as date'),
-                    DB::raw('SUM(total) as total')
-                )
-                ->where('sale_date', '>=', $startDate)
-                ->where('status', 'completed')
-                ->groupBy(DB::raw('DATE(sale_date)'))
-                ->orderBy('date')
-                ->get();
+                    $salesRows = Sale::query()
+                        ->select(
+                            DB::raw('DATE(sale_date) as date'),
+                            DB::raw('SUM(total) as total')
+                        )
+                        ->where('sale_date', '>=', $startDate)
+                        ->where('status', 'completed')
+                        ->groupBy(DB::raw('DATE(sale_date)'))
+                        ->orderBy('date')
+                        ->get();
 
-            $salesData = $this->fillSalesChartSeries(collect($salesRows), $startDate, Carbon::now()->startOfDay());
+                    $salesData = $this->fillSalesChartSeries(
+                        collect($salesRows),
+                        $startDate,
+                        Carbon::now()->startOfDay()
+                    );
 
-            $categoryData = Category::withCount(['products' => function ($query) {
-                $query->where('status', 'active');
-            }])
-                ->orderBy('products_count', 'desc')
-                ->get()
-                ->map(function (Category $category) {
+                    $categoryData = Category::withCount(['products' => function ($query) {
+                        $query->where('status', 'active');
+                    }])
+                        ->orderBy('products_count', 'desc')
+                        ->get()
+                        ->map(function (Category $category) {
+                            return [
+                                'categoria' => $category->name,
+                                'total' => $category->products_count,
+                            ];
+                        })
+                        ->all();
+
                     return [
-                        'categoria' => $category->name,
-                        'total' => $category->products_count,
+                        'sales' => $salesData,
+                        'categories' => $categoryData,
                     ];
-                });
+                }
+            );
 
             return response()->json([
                 'success' => true,
-                'sales' => $salesData,
-                'categories' => $categoryData,
+                'sales' => $payload['sales'],
+                'categories' => $payload['categories'],
             ]);
 
         } catch (\Exception $e) {

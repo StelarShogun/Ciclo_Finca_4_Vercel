@@ -3,11 +3,11 @@
 @section('Titulo pagina', 'Desempeño de ventas - Reportes')
 
 @push('styles')
-    @vite(['resources/css/admin/reports/sales-performance.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/sales-performance.css'])
 @endpush
 
 @push('vite-body')
-    @vite(['resources/js/admin/reports/sales-performance.js'])
+    @vite(['resources/js/admin/shell.js', 'resources/js/admin/reports/sales-performance.js'])
 @endpush
 
 @section('aside')

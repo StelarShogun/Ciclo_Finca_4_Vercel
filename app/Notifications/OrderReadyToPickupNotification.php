@@ -23,9 +23,7 @@ class OrderReadyToPickupNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $clientName = $this->resolveClientName($notifiable);
-        $base = rtrim((string) config('app.frontend_url', config('app.url')), '/');
-        $path = route('clients.invoices', ['tab' => 'historial'], absolute: false);
-        $historyUrl = str_starts_with($path, 'http') ? $path : $base.$path;
+        $invoicesUrl = $this->invoicesUrlAbsolute();
 
         return (new MailMessage)
             ->subject(
@@ -34,7 +32,7 @@ class OrderReadyToPickupNotification extends Notification
             ->view('emails.order-ready-to-pickup', [
                 'sale' => $this->sale->loadMissing(['saleItems.product']),
                 'clientName' => $clientName,
-                'historyUrl' => $historyUrl,
+                'invoicesUrl' => $invoicesUrl,
             ]);
     }
 
@@ -46,10 +44,34 @@ class OrderReadyToPickupNotification extends Notification
             'sale_id' => $this->sale->sale_id,
             'invoice_number' => $this->sale->invoice_number,
             'message' => sprintf(
-                'Tu pedido %s está listo para recoger en tienda.',
+                'Tu pedido %s está listo para recoger en tienda. Revísalo en Facturas.',
                 $invoiceLabel
             ),
+            'action_url' => $this->actionUrlRelative(),
+            'action_label' => $this->actionLabel(),
         ];
+    }
+
+    private function actionUrlRelative(): string
+    {
+        $tab = $this->sale->status === 'completed' ? 'historial' : 'facturas';
+
+        return route('clients.invoices', ['tab' => $tab], absolute: false);
+    }
+
+    private function actionLabel(): string
+    {
+        return $this->sale->status === 'completed'
+            ? 'Ver en Historial de compras'
+            : 'Ver en Facturas';
+    }
+
+    private function invoicesUrlAbsolute(): string
+    {
+        $base = rtrim((string) config('app.frontend_url', config('app.url')), '/');
+        $path = route('clients.invoices', ['tab' => 'facturas'], absolute: false);
+
+        return str_starts_with($path, 'http') ? $path : $base.$path;
     }
 
     private function resolveClientName(object $notifiable): string

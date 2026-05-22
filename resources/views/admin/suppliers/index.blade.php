@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Proveedores - Ciclo Finca 4 Admin')
 
 @push('styles')
-    @vite(['resources/css/admin/suppliers/suppliers.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/suppliers/suppliers.css'])
 @endpush
 
 @section('aside')

@@ -8,8 +8,9 @@ const vitePort = Number(process.env.VITE_PORT) || 5173;
 // =======================
 const adminAssets = [
     // JS
+    "resources/js/admin/shell.js",
     "resources/js/admin/dashboard/dashboard.js",
-    "resources/js/admin/inventory/inventory.js",
+    "resources/js/admin/inventory/inventory-entry.js",
     "resources/js/admin/sales/sales.js",
     'resources/js/admin/sales/reports-by-category.js',
     "resources/js/admin/orders/orders.js",
@@ -49,6 +50,7 @@ const adminAssets = [
     "resources/css/admin/reports/sales-performance.css",
     "resources/css/admin/reports/client-purchase-history.css",
     "resources/css/admin/reports/audit-log.css",
+    "resources/css/admin/shell-base.css",
     "resources/css/admin/components/page-header.css",
     "resources/css/admin/components/filters.css",
 ];
@@ -68,10 +70,17 @@ const errorAssets = [
 const clientAssets = [
     // JS
     "resources/js/client/checkout-copy.js",
-    "resources/js/client/clients-page.js",
+    "resources/js/client/clients-header.js",
+    "resources/js/client/clients-home.js",
+    "resources/js/client/clients-catalog.js",
+    "resources/js/client/clients-cart.js",
+    "resources/js/client/clients-product.js",
     "resources/js/client/clients-users.js",
+    "resources/js/client/auth-welcome-toast.js",
 
     // CSS
+    "resources/css/client/fonts.css",
+    "resources/css/client/fontawesome.css",
     "resources/css/client/variables-reset.css",
     "resources/css/client/header.css",
     "resources/css/client/footer.css",
