@@ -168,6 +168,48 @@
                 </a>
             </div>
         </form>
+
+        <details class="xml-formats-help" style="margin-top:1.5rem;">
+            <summary style="cursor:pointer;font-size:.875rem;font-weight:500;color:var(--color-text-secondary,#6b7280);">
+                <i class="fas fa-info-circle" style="margin-right:.35rem;"></i>Formatos XML aceptados
+            </summary>
+            <div style="margin-top:.75rem;font-size:.8rem;color:var(--color-text-secondary,#6b7280);display:flex;flex-direction:column;gap:.75rem;">
+                <div>
+                    <strong style="color:var(--color-text-primary,#111827);">Formato A — genérico <code>&lt;items&gt;</code></strong>
+                    <pre style="background:#f3f4f6;border-radius:6px;padding:.6rem .85rem;margin:.35rem 0 0;font-size:.75rem;overflow-x:auto;">&lt;items&gt;
+  &lt;item&gt;
+    &lt;code&gt;ACT-001&lt;/code&gt;
+    &lt;name&gt;Aceite 10W-40&lt;/name&gt;
+    &lt;quantity&gt;10&lt;/quantity&gt;
+    &lt;unit_price&gt;11200.00&lt;/unit_price&gt;
+  &lt;/item&gt;
+&lt;/items&gt;</pre>
+                </div>
+                <div>
+                    <strong style="color:var(--color-text-primary,#111827);">Formato B — <code>&lt;products&gt;</code></strong>
+                    <pre style="background:#f3f4f6;border-radius:6px;padding:.6rem .85rem;margin:.35rem 0 0;font-size:.75rem;overflow-x:auto;">&lt;products&gt;
+  &lt;product&gt;
+    &lt;sku&gt;ACT-001&lt;/sku&gt;
+    &lt;description&gt;Aceite 10W-40&lt;/description&gt;
+    &lt;qty&gt;10&lt;/qty&gt;
+    &lt;price&gt;11200.00&lt;/price&gt;
+  &lt;/product&gt;
+&lt;/products&gt;</pre>
+                </div>
+                <div>
+                    <strong style="color:var(--color-text-primary,#111827);">Formato C — factura electrónica Costa Rica</strong>
+                    <pre style="background:#f3f4f6;border-radius:6px;padding:.6rem .85rem;margin:.35rem 0 0;font-size:.75rem;overflow-x:auto;">&lt;invoice&gt;
+  &lt;line&gt;
+    &lt;CodigoComercial&gt;ACT-001&lt;/CodigoComercial&gt;
+    &lt;Detalle&gt;Aceite 10W-40&lt;/Detalle&gt;
+    &lt;Cantidad&gt;10&lt;/Cantidad&gt;
+    &lt;PrecioUnitario&gt;11200.00&lt;/PrecioUnitario&gt;
+  &lt;/line&gt;
+&lt;/invoice&gt;</pre>
+                </div>
+                <p style="margin:0;">El SKU del XML debe coincidir con el SKU del producto en el sistema (o con el código generado <code>BK-{id}</code>).</p>
+            </div>
+        </details>
     </div>
 
 </div>
