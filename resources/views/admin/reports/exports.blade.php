@@ -3,11 +3,11 @@
 @section('Titulo pagina', 'Exportar datos - Reportes')
 
 @push('styles')
-    @vite(['resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/exports.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/exports.css'])
 @endpush
 
 @push('scripts')
-    @vite(['resources/js/admin/reports/exports-modal.js'])
+    @vite(['resources/js/admin/shell.js', 'resources/js/admin/reports/exports-modal.js'])
 @endpush
 
 @section('aside')

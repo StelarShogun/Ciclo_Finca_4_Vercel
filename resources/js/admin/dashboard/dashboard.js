@@ -1,3 +1,19 @@
+let chartJsPromise = null;
+
+async function loadChartJs() {
+    if (window.Chart) {
+        return window.Chart;
+    }
+    if (!chartJsPromise) {
+        chartJsPromise = import('chart.js/auto').then((mod) => {
+            const Chart = mod.default ?? mod.Chart;
+            window.Chart = Chart;
+            return Chart;
+        });
+    }
+    return chartJsPromise;
+}
+
 // Main dashboard controller class
 class Dashboard {
     constructor() {
@@ -151,14 +167,31 @@ class Dashboard {
         };
     }
 
-    // Initialize dashboard components
     init() {
         this.updateCurrentTime();
-        this.initCharts();
         this.bindEvents();
-        this.loadDashboardData();
 
-        // Update time every minute
+        // Chart.js + the two dashboard charts are deferred until the page has
+        // finished loading. After `window.load` the LCP is already captured, so
+        // pulling in ~70 kB gzipped of charting code can no longer regress it.
+        const scheduleCharts = () => {
+            const runCharts = () => {
+                const chartHosts = document.querySelectorAll('#sales-chart, #category-chart');
+                if (!chartHosts.length) return;
+                void this.initCharts();
+            };
+            if (typeof requestIdleCallback === 'function') {
+                requestIdleCallback(runCharts, { timeout: 2500 });
+            } else {
+                setTimeout(runCharts, 500);
+            }
+        };
+        if (document.readyState === 'complete') {
+            scheduleCharts();
+        } else {
+            window.addEventListener('load', scheduleCharts, { once: true });
+        }
+
         setInterval(() => this.updateCurrentTime(), 60000);
     }
 
@@ -181,19 +214,55 @@ class Dashboard {
         }
     }
 
-    // Initialize both sales and category charts
-    initCharts() {
-        this.initSalesChart();
-        this.initCategoryChart();
+    async initCharts() {
+        await loadChartJs();
+        const initialData = await this.loadChartDataset('7d').catch(() => null);
+        this.initSalesChart(initialData);
+        this.initCategoryChart(initialData);
     }
 
-    // Create line chart for sales data
-    initSalesChart() {
-        const ctx = document.getElementById('sales-chart');
-        if (!ctx) return;
+    /**
+     * Single source of truth for /dashboard/chart-data. Memoises responses per
+     * period so the sales and category charts share one network call instead of
+     * each module firing their own request.
+     */
+    async loadChartDataset(period = '7d') {
+        this._chartDatasetCache ??= new Map();
+        const cached = this._chartDatasetCache.get(period);
+        if (cached) return cached;
 
-        // Fetch real sales data from server
-        this.loadSalesData().then(salesData => {
+        const promise = (async () => {
+            const url = '/dashboard/chart-data' + (period ? `?period=${period}` : '');
+            const csrf = document.querySelector('meta[name="csrf-token"]');
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrf ? csrf.getAttribute('content') : '',
+                },
+            });
+            if (!response.ok) throw new Error('Error al cargar datos del dashboard');
+            const data = await response.json();
+            if (!data || data.success !== true) {
+                throw new Error(data?.message || 'Datos del dashboard no válidos');
+            }
+            return data;
+        })();
+
+        this._chartDatasetCache.set(period, promise);
+        try {
+            return await promise;
+        } catch (err) {
+            this._chartDatasetCache.delete(period);
+            throw err;
+        }
+    }
+
+    initSalesChart(preloaded) {
+        const ctx = document.getElementById('sales-chart');
+        if (!ctx || !window.Chart) return;
+
+        this.loadSalesData(preloaded).then(salesData => {
             this.salesChart = new Chart(ctx, {
                 type: 'line',
                 data: salesData,
@@ -328,13 +397,11 @@ class Dashboard {
         this.syncCategoryLegendHiddenStyles();
     }
 
-    // Create doughnut chart for category distribution
-    initCategoryChart() {
+    initCategoryChart(preloaded) {
         const ctx = document.getElementById('category-chart');
         if (!ctx) return;
 
-        // Fetch real category data from server
-        this.loadCategoryData().then(categoryData => {
+        this.loadCategoryData(preloaded).then(categoryData => {
             // Si antes se usó barras horizontales, el wrapper pudo quedar con altura inline enorme.
             if (ctx.parentNode) {
                 ctx.parentNode.style.height = '';
@@ -413,20 +480,9 @@ class Dashboard {
         });
     }
 
-    // Fetch sales data from backend API
-    async loadSalesData() {
+    async loadSalesData(preloaded) {
         try {
-            const response = await fetch('/dashboard/chart-data', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            });
-
-            if (!response.ok) throw new Error('Error al cargar datos de ventas');
-
-            const data = await response.json();
+            const data = preloaded ?? await this.loadChartDataset('7d');
 
             if (data.success && data.sales) {
                 const labels = this.formatSalesChartLabels(data.sales);
@@ -467,20 +523,9 @@ class Dashboard {
         }
     }
 
-    // Fetch category data from backend API
-    async loadCategoryData() {
+    async loadCategoryData(preloaded) {
         try {
-            const response = await fetch('/dashboard/chart-data', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            });
-
-            if (!response.ok) throw new Error('Error al cargar datos de categorías');
-
-            const data = await response.json();
+            const data = preloaded ?? await this.loadChartDataset('7d');
 
             if (data.success && data.categories) {
                 // Ordenamos las categorías por total descendente pero mostramos todas,
@@ -546,7 +591,6 @@ class Dashboard {
         this.animateElements();
     }
 
-    // Reload dashboard data manually
     async refreshDashboard() {
         const refreshBtn = document.getElementById('refresh-dashboard');
         if (refreshBtn) {
@@ -556,7 +600,13 @@ class Dashboard {
         }
 
         try {
+            this._chartDatasetCache?.clear();
             await this.loadDashboardData();
+            if (this.salesChart) {
+                const activeBtn = document.querySelector('.chart-btn.active');
+                const period = activeBtn?.dataset.period || '7d';
+                await this.updateSalesChart(period);
+            }
             this.showNotification('Dashboard actualizado correctamente', 'success');
         } catch (error) {
             console.error('Error al actualizar dashboard:', error);
@@ -583,22 +633,11 @@ class Dashboard {
         this.updateSalesChart(period);
     }
 
-    // Refresh sales chart with new period data
     async updateSalesChart(period) {
         if (!this.salesChart) return;
 
         try {
-            const response = await fetch(`/dashboard/chart-data?period=${period}`, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            });
-
-            if (!response.ok) throw new Error('Error al cargar datos de ventas');
-
-            const data = await response.json();
+            const data = await this.loadChartDataset(period);
 
             if (data.success && data.sales) {
                 const labels = this.formatSalesChartLabels(data.sales);
@@ -615,26 +654,28 @@ class Dashboard {
         }
     }
 
-    // Fetch main dashboard data (KPIs) from server
+    /**
+     * Fetch KPI numbers from /dashboard/data. The Blade template already prints
+     * the cached server-side values, so this only runs when the user clicks the
+     * manual "Actualizar" button.
+     */
     async loadDashboardData() {
         try {
+            const csrf = document.querySelector('meta[name="csrf-token"]');
             const response = await fetch('/dashboard/data', {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrf ? csrf.getAttribute('content') : '',
+                },
             });
 
             if (!response.ok) throw new Error('Error al cargar datos del dashboard');
 
             const data = await response.json();
 
-            console.log('Datos recibidos del servidor:', data);
-
             if (data.success) {
                 this.updateKPIs(data);
-                this.animateKPIs();
             }
         } catch (error) {
             console.error('Error al cargar datos del dashboard:', error);
@@ -713,24 +754,14 @@ class Dashboard {
         requestAnimationFrame(animate);
     }
 
-    // Apply fade-in animation on scroll
+    /**
+     * Hook left intentionally as a no-op: the previous implementation set
+     * `opacity: 0` and `transform: translateY(20px)` on every card before an
+     * IntersectionObserver restored them, which shifted layout right after
+     * paint and hurt CLS. The cards now stay in their natural position.
+     */
     animateElements() {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        });
-
-        const elements = document.querySelectorAll('.kpi-card, .chart-container, .table-container, .action-card');
-        elements.forEach(element => {
-            element.style.opacity = '0';
-            element.style.transform = 'translateY(20px)';
-            element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            observer.observe(element);
-        });
+        /* no-op */
     }
 
     // Display temporary toast notification

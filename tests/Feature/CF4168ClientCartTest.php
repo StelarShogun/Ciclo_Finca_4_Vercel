@@ -2,41 +2,25 @@
 
 namespace Tests\Feature;
 
+use App\Models\CartItem;
 use App\Models\Client;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Tests\TestCase;
 
-class CF4ClientCartTest extends TestCase
+class CF4168ClientCartTest extends TestCase
 {
     use RefreshDatabase;
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
+        parent::setUp();
 
-            $driver = Schema::getConnection()->getDriverName();
-            if ($driver !== 'mysql') {
-                $this->markTestSkipped('CF4 carrito/checkout requiere MySQL para el esquema en inglés.');
-            }
-
-            foreach (['client_table', 'products', 'sales', 'sale_items'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Tabla requerida no existe: '.$table);
-                }
-            }
-
-            // Asegurar que pedidos recientes cuenten como "no expirados" en ventas.
-            Config::set('sales.order_expiration_days', 30);
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
+        Config::set('sales.order_expiration_days', 30);
     }
 
     public function test_client_cart_add_update_remove_and_empty_state(): void
@@ -303,6 +287,163 @@ class CF4ClientCartTest extends TestCase
         $this->assertSame(4, (int) $product->stock_current);
 
         $this->assertSame([], Session::get('cart', []));
+    }
+
+    public function test_cart_persists_in_db_after_logout(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Persistencia',
+            'second_surname' => null,
+            'gmail' => 'cliente-persist@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $product = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Producto Persistente',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 75,
+            'purchase_price' => 10,
+            'stock_current' => 5,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($client, 'clients');
+
+        $this->postJson(route('clients.cart.add'), [
+            'product_id' => $product->product_id,
+            'quantity' => 2,
+        ])->assertStatus(200);
+
+        $this->assertDatabaseHas('cart_items', [
+            'client_id'  => $client->user_id,
+            'product_id' => $product->product_id,
+            'quantity'   => 2,
+        ]);
+
+        $this->post(route('logout'));
+
+        $this->assertDatabaseHas('cart_items', [
+            'client_id'  => $client->user_id,
+            'product_id' => $product->product_id,
+            'quantity'   => 2,
+        ]);
+    }
+
+    public function test_cart_loads_from_db_on_login(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Carga',
+            'second_surname' => null,
+            'gmail' => 'cliente-carga@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+            'email_verified' => true,
+        ]);
+
+        $product = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Producto Carga DB',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 120,
+            'purchase_price' => 10,
+            'stock_current' => 10,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        CartItem::create([
+            'client_id'  => $client->user_id,
+            'product_id' => $product->product_id,
+            'quantity'   => 3,
+        ]);
+
+        $this->post(route('login'), [
+            'gmail'    => 'cliente-carga@example.com',
+            'password' => 'password',
+        ]);
+
+        $cart = Session::get('cart', []);
+        $this->assertCount(1, $cart);
+        $this->assertEquals($product->product_id, $cart[0]['product_id']);
+        $this->assertEquals(3, $cart[0]['quantity']);
+    }
+
+    public function test_session_cart_merges_with_db_cart_on_login(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Fusion',
+            'second_surname' => null,
+            'gmail' => 'cliente-fusion@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+            'email_verified' => true,
+        ]);
+
+        $dbProduct = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Producto DB',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 50,
+            'purchase_price' => 10,
+            'stock_current' => 10,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        $sessionProduct = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Producto Sesion',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 80,
+            'purchase_price' => 10,
+            'stock_current' => 10,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        CartItem::create([
+            'client_id'  => $client->user_id,
+            'product_id' => $dbProduct->product_id,
+            'quantity'   => 1,
+        ]);
+
+        $preLoginCart = [[
+            'product_id' => $sessionProduct->product_id,
+            'name'       => $sessionProduct->name,
+            'price'      => (float) $sessionProduct->sale_price,
+            'quantity'   => 2,
+            'image'      => '',
+        ]];
+
+        $this->withSession(['cart' => $preLoginCart])
+            ->post(route('login'), [
+                'gmail'    => 'cliente-fusion@example.com',
+                'password' => 'password',
+            ]);
+
+        $cart = Session::get('cart', []);
+        $productIds = array_column($cart, 'product_id');
+
+        $this->assertContains($dbProduct->product_id, $productIds);
+        $this->assertContains($sessionProduct->product_id, $productIds);
+        $this->assertCount(2, $cart);
+
+        $this->assertDatabaseHas('cart_items', ['client_id' => $client->user_id, 'product_id' => $dbProduct->product_id]);
+        $this->assertDatabaseHas('cart_items', ['client_id' => $client->user_id, 'product_id' => $sessionProduct->product_id]);
     }
 
     public function test_cart_render_does_not_overwrite_session_quantities(): void

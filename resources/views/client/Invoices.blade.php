@@ -78,6 +78,7 @@
 @section('content')
 
     <meta name="cf4-invoice-count" content="{{ $invoiceCount }}">
+    <meta name="cf4-unseen-history-count" content="{{ $unseenHistoryCount }}">
     <meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
 
     @php
@@ -115,6 +116,9 @@
                     <option value="canceladas" {{ $tab === 'canceladas' ? 'selected' : '' }}>Canceladas</option>
                     <option value="historial" {{ $tab === 'historial' ? 'selected' : '' }}>Historial de compras</option>
                 </select>
+                @if($unseenHistoryCount > 0 && $tab !== 'historial')
+                    <span class="cf4-history-tab-badge" id="history-tab-badge" title="Compras nuevas en Historial" aria-hidden="true"></span>
+                @endif
             </div>
         </div>
     </div>
@@ -146,7 +150,7 @@
                                     'pending' => 'Pendiente',
                                     'ready_to_pickup' => 'Por recoger',
                                     'cancelled', 'canceled' => 'Cancelada',
-                                    'completed' => 'Completada',
+                                    'completed' => 'Confirmado',
                                     default => ucfirst(str_replace('_', ' ', (string) $sale->status)),
                                 };
 
@@ -218,31 +222,6 @@
 
 @push('scripts')
 <script>
-(function () {
-    const metaCount = document.querySelector('meta[name="cf4-invoice-count"]');
-    const metaUrl = document.querySelector('meta[name="cf4-invoice-heartbeat-url"]');
-    if (!metaCount || !metaUrl) return;
-
-    let lastCount = parseInt(metaCount.getAttribute('content'), 10);
-    const url = metaUrl.getAttribute('content');
-
-    setInterval(async function () {
-        try {
-            const res = await fetch(url, {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            if (!res.ok) return;
-            const data = await res.json();
-            if (data.count !== lastCount) {
-                location.reload();
-            }
-        } catch (_) {}
-    }, 15000);
-})();
-
 (function () {
     const tab = @json($tab);
     const pendingProducts = @json($pendingReviewProducts ?? []);

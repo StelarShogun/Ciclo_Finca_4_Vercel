@@ -43,26 +43,49 @@
         </nav>
 
         @php
-    $mainUrl     = $product->getFirstMediaUrl('main_image');
-    $galleryUrls = $product->getMedia('gallery')->map(fn($m) => $m->getUrl())->toArray();
-    $fallbackUrl = asset('assets/images/products/' . ($product->image ?? 'default.png'));
-    $allImages   = array_values(array_filter(array_merge($mainUrl ? [$mainUrl] : [], $galleryUrls)));
-    if (empty($allImages)) { $allImages = [$fallbackUrl]; }
-@endphp
+            use App\Support\ProductImageUrls;
+
+            $legacyFallback = ProductImageUrls::fallbackUrl($product);
+            $carouselSlides = [];
+
+            if ($mainMedia = $product->getFirstMedia('main_image')) {
+                $carouselSlides[] = ProductImageUrls::carouselSlide($mainMedia, $legacyFallback);
+            }
+
+            foreach ($product->getMedia('gallery') as $galleryMedia) {
+                $carouselSlides[] = ProductImageUrls::carouselSlide($galleryMedia, $galleryMedia->getUrl());
+            }
+
+            if (empty($carouselSlides)) {
+                $carouselSlides[] = ProductImageUrls::usesPlaceholder($product)
+                    ? ProductImageUrls::cardPicture($product)
+                    : [
+                        'fallback' => $legacyFallback,
+                        'desktopWebp' => null,
+                        'mobileWebp' => null,
+                    ];
+            }
+        @endphp
 
         <div class="product-detail-layout">
             <div class="product-detail-image">
                 <div class="product-carousel" id="product-carousel">
                     <div class="carousel-viewport">
                         <div class="carousel-track" id="carousel-track">
-                            @foreach($allImages as $imgUrl)
+                            @foreach($carouselSlides as $slide)
                                 <div class="carousel-slide">
-                                    <img src="{{ $imgUrl }}" alt="{{ $product->name }}">
+                                    @include('client.parts.responsive-picture', [
+                                        'desktopWebp' => $slide['desktopWebp'] ?? null,
+                                        'mobileWebp' => $slide['mobileWebp'] ?? null,
+                                        'fallback' => $slide['fallback'],
+                                        'alt' => $product->name,
+                                        'loading' => $loop->first ? 'eager' : 'lazy',
+                                    ])
                                 </div>
                             @endforeach
                         </div>
                     </div>
-                    @if(count($allImages) > 1)
+                    @if(count($carouselSlides) > 1)
                         <button class="carousel-btn carousel-btn--prev" id="carousel-prev" aria-label="Imagen anterior" disabled>
                             <i class="fas fa-chevron-left"></i>
                         </button>
@@ -70,7 +93,7 @@
                             <i class="fas fa-chevron-right"></i>
                         </button>
                         <div class="carousel-dots" id="carousel-dots">
-                            @foreach($allImages as $i => $imgUrl)
+                            @foreach($carouselSlides as $i => $slide)
                                 <button class="carousel-dot {{ $i === 0 ? 'active' : '' }}" data-index="{{ $i }}" aria-label="Imagen {{ $i + 1 }}"></button>
                             @endforeach
                         </div>
@@ -340,10 +363,15 @@
                             <div class="product-image">
                                 <a class="product-image__link" href="{{ $related->clientProductUrl() }}"
                                    aria-label="Ver producto: {{ $related->name }}">
-                                    @php $relatedImgUrl = $related->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($related->image ?? 'default.png')); @endphp
-                                    <img src="{{ $relatedImgUrl }}" alt="{{ $related->name }}"
-                                         data-fallback-src="{{ asset('favicon.svg') }}"
-                                         onerror="this.src=this.dataset.fallbackSrc;">
+                                    @php $cardImg = \App\Support\ProductImageUrls::cardPicture($related); @endphp
+                                    @include('client.parts.responsive-picture', [
+                                        'desktopWebp' => $cardImg['desktopWebp'],
+                                        'mobileWebp' => $cardImg['mobileWebp'],
+                                        'fallback' => $cardImg['fallback'],
+                                        'alt' => $related->name,
+                                        'loading' => 'lazy',
+                                        'sizes' => '(max-width: 767px) 45vw, 240px',
+                                    ])
                                 </a>
                             </div>
                             <div class="product-info">
@@ -418,5 +446,5 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/client/clients-page.js'])
+    @vite(['resources/js/client/clients-product.js'])
 @endpush

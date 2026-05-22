@@ -15,9 +15,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
     {{-- Styles & Fonts --}}
-    @vite(['resources/css/admin/products/inventory.css'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/products/inventory.css'])
 </head>
 
 <body class="admin-layout">
@@ -1040,8 +1038,6 @@
         </div>
     </div>
 
-    {{-- Scripts: SweetAlert2 loaded before inventory.js --}}
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    @vite(['resources/js/admin/inventory/inventory.js'])
+    @vite(['resources/js/admin/shell.js', 'resources/js/admin/inventory/inventory-entry.js'])
 </body>
 </html>

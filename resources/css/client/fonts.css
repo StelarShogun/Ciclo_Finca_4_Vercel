@@ -1,0 +1,69 @@
+/*
+ * Storefront fonts (latin subset only).
+ *
+ * We declare @font-face explicitly instead of importing the @fontsource CSS
+ * because the package ships `font-display: swap`, which produces a measurable
+ * CLS spike on every page that uses Poppins/DM Sans for body copy (catalog
+ * shifted ~0.47 points while the font swapped in).
+ *
+ * `font-display: optional` tells the browser: use the web font only if it is
+ * cached or can be fetched within ~100 ms, otherwise stay on the system
+ * fallback for this load and adopt the web font on the next navigation. This
+ * keeps layout stable without ever flashing fallback metrics over real ones.
+ */
+
+/* ---------- Poppins ---------- */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: optional;
+  src: url('@fontsource/poppins/files/poppins-latin-400-normal.woff2') format('woff2'),
+       url('@fontsource/poppins/files/poppins-latin-400-normal.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-display: optional;
+  src: url('@fontsource/poppins/files/poppins-latin-600-normal.woff2') format('woff2'),
+       url('@fontsource/poppins/files/poppins-latin-600-normal.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 700;
+  font-display: optional;
+  src: url('@fontsource/poppins/files/poppins-latin-700-normal.woff2') format('woff2'),
+       url('@fontsource/poppins/files/poppins-latin-700-normal.woff') format('woff');
+}
+
+/* ---------- DM Sans ---------- */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: optional;
+  src: url('@fontsource/dm-sans/files/dm-sans-latin-400-normal.woff2') format('woff2'),
+       url('@fontsource/dm-sans/files/dm-sans-latin-400-normal.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: optional;
+  src: url('@fontsource/dm-sans/files/dm-sans-latin-600-normal.woff2') format('woff2'),
+       url('@fontsource/dm-sans/files/dm-sans-latin-600-normal.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: optional;
+  src: url('@fontsource/dm-sans/files/dm-sans-latin-700-normal.woff2') format('woff2'),
+       url('@fontsource/dm-sans/files/dm-sans-latin-700-normal.woff') format('woff');
+}

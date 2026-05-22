@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Importar XML de proveedor – Admin')
 
 @push('styles')
-    @vite(['resources/css/admin/sales/sales.css', 'resources/css/admin/orders/orders.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/sales.css', 'resources/css/admin/orders/orders.css'])
     <style>
         /* ── Upload card ── */
         .xml-upload-card {

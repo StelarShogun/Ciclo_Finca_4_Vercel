@@ -1,0 +1,9 @@
+/*
+ * Admin shell baseline — loaded on every authenticated admin page via @vite.
+ * Page-specific CSS should NOT re-import these; add only layout/module rules.
+ */
+@import './variables-reset.css';
+@import './utilities.css';
+@import './fonts.css';
+@import './fontawesome.css';
+@import './sidebar.css';

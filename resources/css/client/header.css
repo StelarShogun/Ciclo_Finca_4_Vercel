@@ -601,6 +601,19 @@
   right: -5px;
 }
 
+.cf4-history-badge {
+  background: #1f4f9a;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  display: block;
+  position: absolute;
+  bottom: -2px;
+  left: -2px;
+  pointer-events: none;
+}
+
 /* Unread notifications — same accent as invoice badge */
 .cf4-nav-badge {
   background: var(--color-accent);
