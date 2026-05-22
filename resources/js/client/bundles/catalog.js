@@ -17,6 +17,28 @@ import { initCatalogFavoriteClickDelegation } from '../catalog-product-favorites
 
 export function initClientCatalogPage() {
   initCatalogFavoriteClickDelegation();
+
+    document.addEventListener('click', function (e) {
+        var addBtn = e.target.closest('.add-to-cart-btn');
+        if (addBtn) {
+            if (addBtn.dataset.purchasable === '0' || parseInt(addBtn.dataset.productStock, 10) < 1) {
+                fireSwal({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
+                return;
+            }
+            addToCart(addBtn.dataset.productId, 1, addBtn);
+            return;
+        }
+
+        var guestBtn = e.target.closest('.guest-add-btn');
+        if (guestBtn) {
+            if (guestBtn.dataset.purchasable === '0' || parseInt(guestBtn.dataset.productStock, 10) < 1) {
+                fireSwal({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
+                return;
+            }
+            window.location.href = '/login';
+        }
+    });
+
     // Catalog price-range filter validation.
     (function initCatalogPriceFilter() {
         var form      = document.getElementById('filter-form');
