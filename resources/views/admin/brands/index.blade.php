@@ -45,18 +45,18 @@
         {{-- ==================== TABLA --}}
         <div class="table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
             <div id="cf4-list-fragment">
-            <table class="brands-table">
+            <table class="brands-table admin-table">
                 <thead>
                     <tr>
                         <th>Marca</th>
-                        <th>Acciones</th>
+                        <th class="admin-table__col--actions">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($brands as $brand)
                         <tr>
                             <td class="brand-name">{{ $brand->name }}</td>
-                            <td class="actions-cell">
+                            <td class="actions-cell admin-table__col--actions">
                                 <button class="btn-icon btn-edit"
                                     data-id="{{ $brand->id }}"
                                     data-name="{{ $brand->name }}"

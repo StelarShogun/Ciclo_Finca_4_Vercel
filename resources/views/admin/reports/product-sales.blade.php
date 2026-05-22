@@ -69,7 +69,7 @@
                     id="top10-metric-label">{{ ($top10 ?? 'revenue') === 'units' ? 'unidades' : 'ingresos' }}</span> en el
                 periodo.</p>
             <div class="table-wrap">
-                <table class="report-table">
+                <table class="report-table admin-table">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -91,7 +91,7 @@
         <section class="full-table-section" aria-labelledby="full-table-heading">
             <h2 id="full-table-heading" class="section-title">Todos los productos con ventas</h2>
             <div class="table-wrap">
-                <table class="report-table">
+                <table class="report-table admin-table">
                     <thead>
                         <tr>
                             <th>Producto</th>

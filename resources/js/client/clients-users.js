@@ -1,3 +1,4 @@
+import '../shared/admin-table-responsive.js';
 import { fireSwal } from './swal.js';
 import {
     buildCf4CheckoutSuccessText,

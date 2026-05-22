@@ -29,22 +29,22 @@
                                 href="{{ route('categories.subcategories.create') }}">categorías</a>.
                         </x-admin-alert>
                     @else
-                        <table style="width:100%; border-collapse:collapse;">
+                        <table class="admin-table">
                             <thead>
-                                <tr style="border-bottom:2px solid #e5e7eb; text-align:left;">
-                                    <th style="padding:0.75rem;">Categoría</th>
-                                    <th style="padding:0.75rem;">Subcategoría</th>
-                                    <th style="padding:0.75rem;">Atributos definidos</th>
-                                    <th style="padding:0.75rem;"></th>
+                                <tr>
+                                    <th>Categoría</th>
+                                    <th>Subcategoría</th>
+                                    <th>Atributos definidos</th>
+                                    <th class="admin-table__col--actions" scope="col">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($subcategories as $sub)
-                                    <tr style="border-bottom:1px solid #f3f4f6;">
-                                        <td style="padding:0.75rem;">{{ optional($sub->parent)->name ?? '—' }}</td>
-                                        <td style="padding:0.75rem;">{{ $sub->name }}</td>
-                                        <td style="padding:0.75rem;">{{ $sub->classification_dimensions_count }}</td>
-                                        <td style="padding:0.75rem;">
+                                    <tr>
+                                        <td>{{ optional($sub->parent)->name ?? '—' }}</td>
+                                        <td>{{ $sub->name }}</td>
+                                        <td>{{ $sub->classification_dimensions_count }}</td>
+                                        <td class="admin-table__col--actions">
                                             <a href="{{ route('admin.classifications.catalog.show', $sub) }}"
                                                 class="btn btn-primary"
                                                 style="display:inline-flex; padding:0.35rem 0.75rem; text-decoration:none; border-radius:6px;">

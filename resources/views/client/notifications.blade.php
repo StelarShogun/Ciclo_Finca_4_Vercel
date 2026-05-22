@@ -28,7 +28,7 @@
 
     <div class="cf4-invoices-card">
         <div class="sales-table-container">
-            <table class="sales-table cf4-purchases-table">
+            <table class="sales-table cf4-purchases-table admin-table">
                 <thead>
                     <tr>
                         <th>Fecha</th>

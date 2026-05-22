@@ -414,7 +414,7 @@ function viewSale(id) {
             + '</div></div>'
             + '<div class="detail-section"><h4><i class="fas fa-shopping-cart"></i> Productos</h4>'
             + (productsHtml
-                ? '<table class="sale-products-table"><thead><tr>'
+                ? '<table class="sale-products-table admin-table"><thead><tr>'
                     + '<th>Producto</th><th class="text-center">Cantidad</th><th class="text-right">Precio unit.</th><th class="text-right">Total</th>'
                     + '</tr></thead><tbody>' + productsHtml + '</tbody></table>'
                 : '<p class="text-muted">Sin productos registrados.</p>')

@@ -83,7 +83,7 @@
                     </div>
 
                     <div class="items-table-wrap">
-                        <table class="items-table" aria-label="Líneas del pedido">
+                        <table class="items-table admin-table" aria-label="Líneas del pedido">
                             <thead>
                                 <tr>
                                     <th style="width:46%;">Producto</th>

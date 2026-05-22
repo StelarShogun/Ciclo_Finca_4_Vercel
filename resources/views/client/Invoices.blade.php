@@ -133,7 +133,7 @@
 
         <div class="cf4-invoices-card">
             <div class="sales-table-container">
-                <table class="sales-table cf4-purchases-table cf4-invoices-list-table">
+                <table class="sales-table cf4-purchases-table cf4-invoices-list-table admin-table">
                     <thead>
                         <tr>
                             <th>Factura</th>

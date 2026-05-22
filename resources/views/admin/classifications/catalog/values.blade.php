@@ -59,27 +59,26 @@
                 @if ($dimension->values->isEmpty())
                     <p>Todavía no hay valores. Agregá al menos uno (ej. Rojo, Azul).</p>
                 @else
-                    <table style="width:100%; border-collapse:collapse;">
+                    <table class="admin-table">
                         <thead>
-                            <tr style="border-bottom:2px solid #e5e7eb; text-align:left;">
-                                <th style="padding:0.5rem;">Valor</th>
-                                <th style="padding:0.5rem;">Estado</th>
-                                <th style="padding:0.5rem;"></th>
+                            <tr>
+                                <th>Valor</th>
+                                <th>Estado</th>
+                                <th class="admin-table__col--actions" scope="col">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($dimension->values as $val)
-                                <tr
-                                    style="border-bottom:1px solid #f3f4f6; {{ $val->trashed() ? 'opacity:0.5;' : '' }}">
-                                    <td style="padding:0.5rem;">{{ $val->value }}</td>
-                                    <td style="padding:0.5rem;">
+                                <tr style="{{ $val->trashed() ? 'opacity:0.5;' : '' }}">
+                                    <td>{{ $val->value }}</td>
+                                    <td>
                                         @if ($val->trashed())
-                                            <span style="color:#b91c1c; font-weight:600;">Inactivo</span>
+                                            <span class="status-badge status-banned">Inactivo</span>
                                         @else
-                                            <span style="color:#15803d; font-weight:600;">Activo</span>
+                                            <span class="status-badge status-active">Activo</span>
                                         @endif
                                     </td>
-                                    <td style="padding:0.5rem;">
+                                    <td class="admin-table__col--actions">
                                         @if (!$val->trashed())
                                             <a href="{{ route('admin.classifications.values.edit', $val) }}"
                                                 class="btn btn-secondary"

@@ -1,6 +1,7 @@
 /**
  * Admin shell — prefetch SweetAlert2 on idle (replaces blocking CDN script).
  */
+import '../shared/admin-table-responsive.js';
 import { getSwal } from './shared/swal.js';
 
 const prefetchSwal = () => {

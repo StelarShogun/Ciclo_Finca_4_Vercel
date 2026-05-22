@@ -101,7 +101,7 @@
         <div class="orders-table-card" data-cf4-ajax-pagination data-cf4-ajax-scroll>
             <div id="cf4-list-fragment">
             <div class="sales-table-container">
-                <table class="sales-table cf4-purchases-table">
+                <table class="sales-table cf4-purchases-table admin-table">
                     <thead>
                         <tr>
                             <th>Encargos / Factura</th>
@@ -112,7 +112,7 @@
                             <th>Fecha de confirmación</th>
                             <th>Estado</th>
                             <th>Total</th>
-                            <th>Acciones</th>
+                            <th class="admin-table__col--actions">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -171,7 +171,7 @@
                                     <strong>₡{{ number_format($sale->total, 0, ',', '.') }}</strong>
                                 </td>
 
-                                <td>
+                                <td class="admin-table__col--actions">
                                     <div class="actions-container">
                                         @php
                                             $saleReference = $sale->invoice_number ?? '#' . $sale->sale_id;

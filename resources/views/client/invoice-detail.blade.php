@@ -81,31 +81,7 @@
             word-break: break-word;
         }
 
-        .cf4-items-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .cf4-items-table thead th {
-            background: rgba(46, 125, 50, 0.06);
-            color: var(--color-muted);
-            font-size: 0.74rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 14px 18px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-            text-align: left;
-        }
-
-        .cf4-items-table tbody td {
-            padding: 16px 18px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-            vertical-align: middle;
-        }
-
-        .cf4-items-table tbody tr:last-child td {
-            border-bottom: none;
-        }
+        /* Line items table skin: admin-table.css (CF4-140) */
 
         .cf4-items-table .qty-col,
         .cf4-items-table .price-col,
@@ -481,7 +457,7 @@
                         </div>
                     @else
                         <div class="sales-table-container">
-                            <table class="cf4-items-table" aria-label="Líneas del pedido">
+                            <table class="cf4-items-table admin-table" aria-label="Líneas del pedido">
                                 <thead>
                                     <tr>
                                         <th>Producto</th>

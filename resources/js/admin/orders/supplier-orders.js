@@ -386,7 +386,7 @@ function viewOrder(id) {
                 ${productsHtml ? `
                 <div class="detail-section">
                     <h4><i class="fas fa-box"></i> Productos pedidos</h4>
-                    <table class="sale-products-table">
+                    <table class="sale-products-table admin-table">
                         <thead>
                             <tr>
                                 <th>Producto</th>

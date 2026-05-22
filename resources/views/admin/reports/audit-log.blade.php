@@ -102,7 +102,7 @@
             @else
                 <div id="cf4-list-fragment">
                 <div class="table-wrap">
-                    <table class="audit-log-table">
+                    <table class="audit-log-table admin-table">
                         <thead>
                             <tr>
                                 <th>Fecha y hora</th>

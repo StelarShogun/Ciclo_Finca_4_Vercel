@@ -192,7 +192,6 @@
                                     <a href="{{ $product->clientProductUrl() }}"
                                        class="btn-product btn-ver-detalles"
                                        title="Ver ficha del producto">
-                                        <i class="fas fa-eye" aria-hidden="true"></i>
                                         Ver producto
                                     </a>
                                     <!-- Authenticated users add to cart; guests are prompted to log in via JS -->

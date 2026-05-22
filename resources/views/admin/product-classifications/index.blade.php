@@ -46,7 +46,7 @@
                         <div data-cf4-ajax-pagination data-cf4-ajax-scroll>
                         <div id="cf4-list-fragment">
                         <div style="overflow-x: auto;">
-                            <table class="table" style="width: 100%; border-collapse: collapse;">
+                            <table class="table admin-table">
                                 <thead>
                                     <tr style="text-align: left; border-bottom: 2px solid #e5e7eb;">
                                         <th style="padding: 0.75rem;">Producto</th>

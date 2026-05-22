@@ -172,7 +172,7 @@
                     </div>
                     <div class="table-content table-content--scroll">
                         <div class="table-scroll-wrapper">
-                            <table class="dashboard-table">
+                            <table class="dashboard-table admin-table">
                                 <thead>
                                     <tr>
                                         <th>Producto</th>
@@ -239,7 +239,7 @@
                     </div>
                     <div class="table-content table-content--scroll">
                         <div class="table-scroll-wrapper">
-                            <table class="dashboard-table">
+                            <table class="dashboard-table admin-table">
                                 <thead>
                                     <tr>
                                         <th>Factura</th>
