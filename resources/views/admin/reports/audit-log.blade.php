@@ -7,7 +7,7 @@
 @section('Titulo pagina', 'Bitácora de auditoría - Reportes')
 
 @push('styles')
-    @vite(['resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/audit-log.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/audit-log.css'])
 @endpush
 
 @push('vite-body')
@@ -31,7 +31,7 @@
             'description' =>
                 'Consulta las acciones administrativas registradas para dar seguimiento a cambios, usuarios y módulos del sistema.',
         ])
-    @endcomponent
+        @endcomponent
 
         <section class="audit-log-filters">
             <form method="GET" action="{{ route('admin.reports.audit-log') }}" class="audit-log-filters-grid">
@@ -41,56 +41,56 @@
                     <input type="text" name="user" value="{{ $filters['user'] }}" placeholder="Correo o nombre del admin">
                 </label>
 
-            <label class="filter-field">
-                <span>Tipo de acción</span>
-                <select name="action_type">
-                    <option value="">Todas</option>
-                    @foreach ($actionTypes as $type)
-                        <option value="{{ $type }}" {{ $filters['action_type'] === $type ? 'selected' : '' }}>
-                            {{ $actionTypeLabels[$type] ?? AuditLogController::actionTypeLabel($type) }}
+                <label class="filter-field">
+                    <span>Tipo de acción</span>
+                    <select name="action_type">
+                        <option value="">Todas</option>
+                        @foreach ($actionTypes as $type)
+                            <option value="{{ $type }}" {{ $filters['action_type'] === $type ? 'selected' : '' }}>
+                                {{ $actionTypeLabels[$type] ?? AuditLogController::actionTypeLabel($type) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </label>
+
+                <label class="filter-field">
+                    <span>Módulo</span>
+                    <select name="module">
+                        <option value="">Todos</option>
+                        @foreach ($modules as $item)
+                            <option value="{{ $item }}" {{ $filters['module'] === $item ? 'selected' : '' }}>
+                                {{ $moduleLabels[$item] ?? AuditLogController::moduleLabel($item) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </label>
+
+                <label class="filter-field">
+                    <span>Desde</span>
+                    <input type="date" name="from" value="{{ $filters['from'] }}">
+                </label>
+
+                <label class="filter-field">
+                    <span>Hasta</span>
+                    <input type="date" name="to" value="{{ $filters['to'] }}">
+                </label>
+
+                <label class="filter-field">
+                    <span>Orden por fecha</span>
+                    <select name="dir">
+                        <option value="desc" {{ $filters['dir'] === 'desc' ? 'selected' : '' }}>Más reciente primero
                         </option>
-                    @endforeach
-                </select>
-            </label>
-
-            <label class="filter-field">
-                <span>Módulo</span>
-                <select name="module">
-                    <option value="">Todos</option>
-                    @foreach ($modules as $item)
-                        <option value="{{ $item }}" {{ $filters['module'] === $item ? 'selected' : '' }}>
-                            {{ $moduleLabels[$item] ?? AuditLogController::moduleLabel($item) }}
+                        <option value="asc" {{ $filters['dir'] === 'asc' ? 'selected' : '' }}>Más antiguo primero
                         </option>
-                    @endforeach
-                </select>
-            </label>
+                    </select>
+                </label>
 
-            <label class="filter-field">
-                <span>Desde</span>
-                <input type="date" name="from" value="{{ $filters['from'] }}">
-            </label>
-
-            <label class="filter-field">
-                <span>Hasta</span>
-                <input type="date" name="to" value="{{ $filters['to'] }}">
-            </label>
-
-            <label class="filter-field">
-                <span>Orden por fecha</span>
-                <select name="dir">
-                    <option value="desc" {{ $filters['dir'] === 'desc' ? 'selected' : '' }}>Más reciente primero
-                    </option>
-                    <option value="asc" {{ $filters['dir'] === 'asc' ? 'selected' : '' }}>Más antiguo primero
-                    </option>
-                </select>
-            </label>
-
-            <div class="filter-actions">
-                <button type="submit" class="btn-filter-apply">Aplicar filtros</button>
-                <a href="{{ route('admin.reports.audit-log') }}" class="btn-filter-clear">Limpiar</a>
-            </div>
-        </form>
-    </section>
+                <div class="filter-actions">
+                    <button type="submit" class="btn-filter-apply">Aplicar filtros</button>
+                    <a href="{{ route('admin.reports.audit-log') }}" class="btn-filter-clear">Limpiar</a>
+                </div>
+            </form>
+        </section>
 
         <section class="audit-log-results" data-cf4-ajax-pagination data-cf4-ajax-scroll>
             @if ($logs->isEmpty())

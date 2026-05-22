@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Factura ' . ($sale->invoice_number ?? $sale->sale_id) . ' — Ciclo Finca 4')
 
 @push('styles')
-    @vite(['resources/css/admin/sales/invoice-document.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/invoice-document.css'])
 @endpush
 
 @push('extra-meta')

@@ -47,8 +47,8 @@
                             </p>
 
                             <p style="margin:0;font-size:16px;line-height:1.6;">
-                                Puede consultar el estado de sus pedidos en:<br>
-                                <a href="{{ $historyUrl }}" style="color:#235347;">{{ $historyUrl }}</a>
+                                Puede ver este pedido en Facturas (Pendientes / Por recoger):<br>
+                                <a href="{{ $invoicesUrl }}" style="color:#235347;">{{ $invoicesUrl }}</a>
                             </p>
                         </td>
                     </tr>

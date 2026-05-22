@@ -1,7 +1,11 @@
 /**
- * Client auth welcome / logout toasts (SweetAlert2).
- * Depends on SweetAlert2 (global Swal). Loaded from the client layout Vite bundle.
+ * Client auth welcome / logout toasts.
+ *
+ * Loaded conditionally by the layout (only when a `client_success_modal`
+ * session flash is present). SweetAlert2 is imported dynamically so it does
+ * not enter the layout's initial bundle for every visitor.
  */
+
 function cf4AuthIconHtml(authIcon) {
     if (authIcon === 'google') {
         return '<span class="cf4-auth-toast-icon cf4-auth-toast-icon--google" aria-hidden="true"><i class="fab fa-google"></i></span>';
@@ -12,32 +16,27 @@ function cf4AuthIconHtml(authIcon) {
     return '<span class="cf4-auth-toast-icon cf4-auth-toast-icon--user" aria-hidden="true"><i class="fas fa-user-circle"></i></span>';
 }
 
-/**
- * @param {object} opts
- * @param {'welcome'|'logout'} [opts.kind]
- * @param {'google'|'user'|'signout'} [opts.authIcon]
- * @param {string} [opts.displayName]
- * @param {string} [opts.title]
- * @param {string} [opts.text]
- * @param {number} [opts.timer]
- * @param {string} [opts.thenUrl]  If set, navigate after the toast closes.
- */
-function cf4AuthWelcomeToast(opts) {
+async function cf4AuthWelcomeToast(opts) {
     opts = opts || {};
-    if (typeof Swal === 'undefined') {
+
+    let Swal;
+    try {
+        const mod = await import('sweetalert2');
+        Swal = mod.default || mod;
+    } catch (err) {
         if (opts.thenUrl) {
             window.location.href = opts.thenUrl;
         }
-        return Promise.resolve();
+        return;
     }
 
-    var kind = opts.kind || 'welcome';
-    var authIcon = opts.authIcon || (kind === 'logout' ? 'signout' : 'user');
-    var displayName = (opts.displayName || '').trim();
-    var timer = typeof opts.timer === 'number' ? opts.timer : 4000;
+    const kind = opts.kind || 'welcome';
+    const authIcon = opts.authIcon || (kind === 'logout' ? 'signout' : 'user');
+    const displayName = (opts.displayName || '').trim();
+    const timer = typeof opts.timer === 'number' ? opts.timer : 4000;
 
-    var title;
-    var text = opts.text || '';
+    let title;
+    let text = opts.text || '';
 
     if (kind === 'logout') {
         title = opts.title || '¡Sesión cerrada!';
@@ -53,14 +52,14 @@ function cf4AuthWelcomeToast(opts) {
         }
     }
 
-    var Toast = Swal.mixin({
+    const Toast = Swal.mixin({
         toast: true,
         position: 'top-end',
         showConfirmButton: false,
-        timer: timer,
+        timer,
         timerProgressBar: true,
-        didOpen: function () {
-            var popup = Swal.getPopup();
+        didOpen() {
+            const popup = Swal.getPopup();
             if (popup) {
                 popup.addEventListener('mouseenter', Swal.stopTimer);
                 popup.addEventListener('mouseleave', Swal.resumeTimer);
@@ -75,16 +74,16 @@ function cf4AuthWelcomeToast(opts) {
         },
     });
 
-    return Toast.fire({
+    await Toast.fire({
         icon: false,
         iconHtml: cf4AuthIconHtml(authIcon),
-        title: title,
-        text: text,
-    }).then(function () {
-        if (opts.thenUrl) {
-            window.location.href = opts.thenUrl;
-        }
+        title,
+        text,
     });
+
+    if (opts.thenUrl) {
+        window.location.href = opts.thenUrl;
+    }
 }
 
 if (typeof window !== 'undefined') {

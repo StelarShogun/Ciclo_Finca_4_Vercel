@@ -35,7 +35,7 @@
                     <tr>
                         <th>Factura / ID</th>
                         <th>Cliente</th>
-                        <th>Fecha</th>
+                        <th>Fecha de venta</th>
                         <th>Estado</th>
                         <th>Pago</th>
                         <th class="num">Total</th>
@@ -52,7 +52,7 @@
                                     {{ $sale->buyer_name ?: 'Mostrador / Sin datos' }}
                                 @endif
                             </td>
-                            <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
+                            <td>{{ $sale->adminSaleDateLabel() }}</td>
                             <td>{{ ucfirst($sale->status) }}</td>
                             <td>{{ ucfirst($sale->payment_method) }}</td>
                             <td class="num">₡{{ number_format((float) $sale->total, 0, ',', '.') }}</td>

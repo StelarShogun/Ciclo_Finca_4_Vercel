@@ -5,11 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Services\AuditLogger;
 use App\Support\AdminPerPage;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class AdminClientController extends Controller
 {
+    private const SORTABLE_COLUMNS = [
+        'name',
+        'first_surname',
+        'second_surname',
+        'gmail',
+        'created_at',
+        'updated_at',
+        'active',
+    ];
+
     public function index(Request $request)
     {
         $query = Client::query();
@@ -30,13 +41,26 @@ class AdminClientController extends Controller
             $query->where('active', false);
         }
 
+        $createdDate = $this->normalizeDate($request->input('created_date'));
+        if ($createdDate !== null) {
+            $query->whereDate('created_at', $createdDate->toDateString());
+        }
+
+        $updatedDate = $this->normalizeDate($request->input('updated_date'));
+        if ($updatedDate !== null) {
+            $query->whereDate('updated_at', $updatedDate->toDateString());
+        }
+
+        $sort = $this->normalizeSort($request->input('sort'));
+        $dir = $this->normalizeDir($request->input('dir'));
+
         $perPage = AdminPerPage::resolve($request->input('per_page', 10));
         $clients = $query
-            ->orderBy('name')
+            ->orderBy($sort, $dir)
             ->paginate($perPage)
             ->withQueryString();
 
-        return view('admin.users.table_clients', compact('clients'));
+        return view('admin.users.table_clients', compact('clients', 'sort', 'dir'));
     }
 
     public function ban(int $id)
@@ -82,6 +106,31 @@ class AdminClientController extends Controller
                 'action_type' => $actionType,
                 'error' => $e->getMessage(),
             ]);
+        }
+    }
+
+    private function normalizeSort(mixed $value): string
+    {
+        return is_string($value) && in_array($value, self::SORTABLE_COLUMNS, true)
+            ? $value
+            : 'name';
+    }
+
+    private function normalizeDir(mixed $value): string
+    {
+        return is_string($value) && strtolower($value) === 'desc' ? 'desc' : 'asc';
+    }
+
+    private function normalizeDate(mixed $value): ?Carbon
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value);
+        } catch (\Throwable) {
+            return null;
         }
     }
 }

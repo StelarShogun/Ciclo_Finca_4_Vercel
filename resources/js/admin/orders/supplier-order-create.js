@@ -74,6 +74,8 @@ function init() {
         getId: (s) => s.id,
         getLabel: (s) => s.name,
         placeholder: 'Escribe para buscar un proveedor…',
+        usePortal: false,
+        uiVariant: 'product',
     });
 
     const oldSupplierId = supplierHidden.value;

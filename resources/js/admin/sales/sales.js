@@ -299,8 +299,20 @@ function viewSale(id) {
         }
 
         const sale          = data.sale;
-        const fecha         = new Date(sale.sale_date).toLocaleString('es-CR');
         const items         = sale.sale_items || sale.saleItems || [];
+        const isWebOrder    = sale.order_source === 'web_cart' || sale.order_source == null;
+        const saleDateLabel = isWebOrder ? 'Fecha de pedido' : 'Fecha de venta';
+        const saleDateValue = isWebOrder
+            ? (sale.order_placed_at_label || sale.sale_date_label || '—')
+            : (sale.sale_date_label || '—');
+        const readyAtRow = sale.ready_at || sale.ready_at_label
+            ? '<div class="detail-item"><label>Fecha listo para recoger:</label><span>'
+                + (sale.ready_at_label || '—') + '</span></div>'
+            : '';
+        const confirmedAtRow = sale.status === 'completed'
+            ? '<div class="detail-item"><label>Fecha de confirmación:</label><span>'
+                + (sale.confirmed_at_label || '—') + '</span></div>'
+            : '';
         const statusLabels  = {
             pending:         'Pendiente',
             ready_to_pickup: 'Por recoger',
@@ -381,7 +393,7 @@ function viewSale(id) {
             returnSection = '<div class="detail-section">'
                 + '<h4><i class="fas fa-rotate-left"></i> Datos de la devolución</h4>'
                 + '<div class="detail-grid">'
-                + '<div class="detail-item"><label>Fecha:</label><span>' + returnedAt + '</span></div>'
+                + '<div class="detail-item"><label>Fecha de devolución:</label><span>' + returnedAt + '</span></div>'
                 + '<div class="detail-item"><label>Registrado por:</label><span>' + returnedBy + '</span></div>'
                 + '</div></div>';
         }
@@ -391,7 +403,9 @@ function viewSale(id) {
             + '<h4><i class="fas fa-info-circle"></i> Información general</h4>'
             + '<div class="detail-grid">'
             + '<div class="detail-item"><label>Factura:</label><span><strong>' + (sale.invoice_number || '#' + sale.sale_id) + '</strong></span></div>'
-            + '<div class="detail-item"><label>Fecha:</label><span>' + fecha + '</span></div>'
+            + '<div class="detail-item"><label>' + saleDateLabel + ':</label><span>' + saleDateValue + '</span></div>'
+            + readyAtRow
+            + confirmedAtRow
             + '<div class="detail-item"><label>Cliente:</label><span>' + customerName + '</span></div>'
             + '<div class="detail-item"><label>Estado:</label><span class="status-badge ' + sale.status + '">' + (statusLabels[sale.status] || sale.status) + '</span></div>'
             + '<div class="detail-item"><label>Metodo de pago:</label><span>' + (paymentLabels[sale.payment_method] || sale.payment_method) + '</span></div>'

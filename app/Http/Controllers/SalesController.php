@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Notifications\OrderCompletedNotification;
 use App\Notifications\OrderReadyToPickupNotification;
 use App\Notifications\ProductReviewReminderNotification;
 use App\Services\Admin\AdminPdfExportLimits;
@@ -108,6 +109,13 @@ class SalesController extends Controller
                     'expires_at' => $sale->expires_at->toISOString(),
                     'is_expiry_warning' => $sale->is_expiry_warning,
                     'ready_at' => $sale->ready_at?->toISOString(),
+                    'confirmed_at' => $sale->status === 'completed'
+                        ? $sale->updated_at?->toISOString()
+                        : null,
+                    'order_placed_at_label' => $sale->adminOrderPlacedAtLabel(),
+                    'ready_at_label' => $sale->adminReadyAtLabel(),
+                    'confirmed_at_label' => $sale->adminConfirmedAtLabel(),
+                    'sale_date_label' => $sale->adminSaleDateLabel(),
                     'pickup_expires_at' => $sale->pickup_expires_at?->toISOString(),
                     'pickup_time_remaining_label' => $sale->pickup_time_remaining_label,
                     'is_pickup_expired' => $sale->isPickupExpired(),
@@ -464,6 +472,7 @@ class SalesController extends Controller
                 $sale->update([
                     'status' => 'completed',
                     'invoice_number' => $invoiceNumber,
+                    'client_history_seen_at' => null,
                 ]);
 
                 $this->ensureReviewPlaceholdersForCompletedSale($sale);
@@ -486,9 +495,10 @@ class SalesController extends Controller
             // FIX: el correo se despacha DESPUÉS de que PHP envía la respuesta HTTP al cliente,
             // usando el hook terminating() del kernel. Así nunca bloquea ni rompe el flujo,
             // aunque el servidor de correo tarde o falle.
-            $saleForEmail = $sale;
-            app()->terminating(function () use ($saleForEmail) {
-                $this->sendProductReviewReminderEmail($saleForEmail);
+            $saleForNotify = $sale;
+            app()->terminating(function () use ($saleForNotify) {
+                $this->sendOrderCompletedNotification($saleForNotify);
+                $this->sendProductReviewReminderEmail($saleForNotify);
             });
 
             return response()->json([
@@ -1133,6 +1143,28 @@ class SalesController extends Controller
 
     // Notify the client to rate products after order confirmation.
     // NOTE: Always call this via app()->terminating() to avoid blocking the HTTP response.
+    private function sendOrderCompletedNotification(Sale $sale): void
+    {
+        if ((string) $sale->status !== 'completed') {
+            return;
+        }
+
+        $client = $sale->client ?: $sale->loadMissing('client')->client;
+        if (! $client) {
+            return;
+        }
+
+        try {
+            $client->notify(new OrderCompletedNotification($sale));
+        } catch (\Throwable $e) {
+            Log::warning('Could not notify client (order completed).', [
+                'sale_id' => $sale->sale_id ?? null,
+                'client_id' => $client->user_id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
     private function sendProductReviewReminderEmail(Sale $sale): void
     {
         if ((string) $sale->status !== 'completed') {

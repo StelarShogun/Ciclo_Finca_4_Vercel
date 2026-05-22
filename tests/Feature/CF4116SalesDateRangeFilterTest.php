@@ -49,6 +49,7 @@ class CF4116SalesDateRangeFilterTest extends TestCase
 
         $resp->assertOk();
         $resp->assertViewHas('sales');
+        $resp->assertSee('Fecha de venta', false);
     }
 
     /** Rejects an invalid range where start date is after end date with a validation error. */
