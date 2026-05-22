@@ -1,6 +1,8 @@
 @import "../admin/sweetalert2-modal-zindex.css";
 @import "../admin/components/admin-table.css";
 @import "../admin/components/pagination.css";
+@import "./invoices-mobile.css";
+@import "./invoice-detail.css";
 @import "../shared/components/buttons.css";
 @import "../shared/components/form-layout.css";
 
@@ -1365,9 +1367,11 @@ button.profile-quick-action {
 }
 
 /* ── Table container (reuse admin pattern) ── */
-.cf4-invoices-card .sales-table-container {
+.cf4-invoices-card .sales-table-container,
+.cf4-invoices-table-scroll {
     padding: 0;
-    overflow-x: auto;
+    overflow-x: visible;
+    max-width: 100%;
 }
 
 .cf4-invoices-card .sales-table {
@@ -1511,19 +1515,17 @@ button.profile-quick-action {
     font-size: 1rem;
 }
 
+.cf4-invoices-empty--panel {
+    padding: 2.5rem 1.25rem;
+}
+
+.cf4-invoices-table-scroll {
+    max-width: 100%;
+}
+
 /* ── Pagination wrap ── */
 .cf4-invoices-pagination-wrap {
     padding: 1rem 1.25rem;
     border-top: 1px solid rgba(0, 0, 0, 0.06);
     background: rgba(0, 0, 0, 0.015);
-}
-
-/* ── Responsive ── */
-@media (max-width: 768px) {
-    .cf4-invoices-header { padding: 28px 0; }
-    .cf4-invoices-header h1 { font-size: 1.5rem; }
-    .cf4-invoices-wrapper { padding: 0 16px 40px; }
-    .cf4-invoices-card .sales-table { font-size: 0.85rem; }
-    .cf4-invoices-card .sales-table thead th,
-    .cf4-invoices-card .sales-table tbody td { padding: 10px 12px; }
 }

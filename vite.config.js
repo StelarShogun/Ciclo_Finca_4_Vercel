@@ -76,6 +76,7 @@ const clientAssets = [
     "resources/js/client/clients-cart.js",
     "resources/js/client/clients-product.js",
     "resources/js/client/clients-users.js",
+    "resources/js/client/invoices-page.js",
     "resources/js/client/auth-welcome-toast.js",
 
     // CSS
