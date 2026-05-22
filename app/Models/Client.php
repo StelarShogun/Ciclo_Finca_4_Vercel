@@ -33,7 +33,6 @@ class Client extends Authenticatable
         'active',
         'provider',
         'provider_id',
-        'google_id',
         'remember_token',
     ];
 
