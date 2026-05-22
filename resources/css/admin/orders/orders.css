@@ -314,6 +314,28 @@
  * estados propios del flujo proveedor: confirmed, delivered.
  * ===================================================================== */
 
+/* Acciones centradas en la columna */
+.cf4-supplier-orders-module .admin-table thead th.admin-table__col--actions,
+.cf4-supplier-orders-module .admin-table tbody td.admin-table__col--actions {
+    text-align: center;
+}
+
+.cf4-supplier-orders-module .actions-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 0.35rem;
+}
+
+.cf4-supplier-orders-module .admin-table:has(tbody td[data-label]) tbody td.admin-table__col--actions {
+    text-align: center;
+}
+
+.cf4-supplier-orders-module .admin-table:has(tbody td[data-label]) .actions-container {
+    justify-content: center;
+}
+
 /* Pills de estado adicionales */
 .cf4-supplier-orders-module .order-status-pill.confirmed {
   background: var(--color-info-bg);
