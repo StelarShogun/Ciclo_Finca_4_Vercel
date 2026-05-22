@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Reportes - Ciclo Finca 4 Admin')
 
 @push('styles')
-    @vite(['resources/css/admin/reports/reports-hub.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/reports-hub.css'])
 @endpush
 
 @section('aside')

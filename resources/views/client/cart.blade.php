@@ -288,5 +288,5 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/client/clients-page.js'])
+    @vite(['resources/js/client/clients-cart.js'])
 @endpush

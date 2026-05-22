@@ -24,6 +24,7 @@ return [
     | uncached for fresher numbers.
     |
     */
-    'admin_dashboard_index_ttl' => (int) env('CF4_CACHE_ADMIN_DASHBOARD', 60),
+    'admin_dashboard_index_ttl' => (int) env('CF4_CACHE_ADMIN_DASHBOARD', 300),
+    'admin_dashboard_charts_ttl' => (int) env('CF4_CACHE_ADMIN_DASHBOARD_CHARTS', 300),
 
 ];

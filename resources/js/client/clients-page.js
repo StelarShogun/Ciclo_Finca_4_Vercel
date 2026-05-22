@@ -7,7 +7,6 @@ import {
     buildCf4CheckoutSuccessText,
     getCf4PaymentMethodShortLabel,
 } from './checkout-copy.js';
-import './auth-welcome-toast.js';
 import { initHeaderCatalogSearch } from './header-catalog-search.js';
 import '../shared/ajax-pagination.js';
 
@@ -74,7 +73,7 @@ function addToCart(productId, quantity, triggerBtn) {
         .then(function (data) {
             if (data.success) {
                 updateCartCount(data.cart_count);
-                Swal.fire({
+                fireSwal({
                     icon: 'success',
                     title: '¡Agregado!',
                     text: data.message || 'Producto agregado al carrito',
@@ -86,7 +85,7 @@ function addToCart(productId, quantity, triggerBtn) {
             } else {
                 var msg = data.message || 'No se pudo agregar el producto al carrito';
                 var stockShort = isClientStockShortMessage(msg);
-                Swal.fire({
+                fireSwal({
                     icon: stockShort ? 'warning' : 'error',
                     title: stockShort ? msg : 'Error',
                     text: stockShort ? '' : msg
@@ -95,7 +94,7 @@ function addToCart(productId, quantity, triggerBtn) {
         })
         .catch(function (err) {
             console.error('Error adding to cart:', err);
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al agregar el producto al carrito' });
+            fireSwal({ icon: 'error', title: 'Error', text: 'Ocurrió un error al agregar el producto al carrito' });
         });
 }
 
@@ -169,7 +168,7 @@ function toggleFavoriteProduct(btn) {
         })
         .catch(function (err) {
             console.error('Error toggling favorite:', err);
-            Swal.fire({
+            fireSwal({
                 icon: 'error',
                 title: 'Error',
                 text: err && err.message ? err.message : 'No se pudo actualizar tu favorito.'
@@ -243,7 +242,7 @@ function updateCartQuantity(productId, quantity) {
                         qtyInput.value = data.quantity_applied;
                     }
                     if (data.stock_clamped) {
-                        Swal.fire(
+                        fireSwal(
                             'Aviso',
                             'La cantidad se ajustó al stock disponible (' + data.quantity_applied + ' unidades).',
                             'warning'
@@ -253,11 +252,11 @@ function updateCartQuantity(productId, quantity) {
             } else {
                 var umsg = data.message || 'No se pudo actualizar el carrito';
                 var uShort = isClientStockShortMessage(umsg);
-                Swal.fire(uShort ? umsg : 'Error', uShort ? '' : umsg, uShort ? 'warning' : 'error');
+                fireSwal(uShort ? umsg : 'Error', uShort ? '' : umsg, uShort ? 'warning' : 'error');
             }
         })
         .catch(function () {
-            Swal.fire('Error', 'Ocurrió un error al actualizar el carrito', 'error');
+            fireSwal('Error', 'Ocurrió un error al actualizar el carrito', 'error');
         });
 }
 
@@ -320,7 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Show login prompt for guest cart click.
     if (cartGuestEl) {
         cartGuestEl.addEventListener('click', function () {
-            Swal.fire({
+            fireSwal({
                 icon: 'info',
                 title: 'Inicia sesión',
                 text: 'Debes iniciar sesión para ver tu carrito.',
@@ -396,7 +395,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 thenUrl: data.redirect || '/',
                             });
                         } else {
-                            Swal.fire({
+                            fireSwal({
                                 icon: 'success',
                                 title: '¡Bienvenido!',
                                 text: data.message || 'Inicio de sesión exitoso',
@@ -411,7 +410,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (submitBtn)   submitBtn.disabled = false;
                         if (submitSpan)  submitSpan.classList.remove('hidden');
                         if (loadingSpan) loadingSpan.classList.add('hidden');
-                        Swal.fire({
+                        fireSwal({
                             icon: 'warning',
                             title: 'Correo no verificado',
                             text: data.message || 'Debes verificar tu correo antes de iniciar sesión.',
@@ -425,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             window.location.href = data.redirect;
                         });
                     } else {
-                        Swal.fire({
+                        fireSwal({
                             icon: 'error',
                             title: 'Error',
                             html: (data.message || 'Error al iniciar sesión') +
@@ -449,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .catch(function (err) {
                     if (err === 'csrf' || err === 'parse') return;
                     console.error('Login error:', err);
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al iniciar sesión' });
+                    fireSwal({ icon: 'error', title: 'Error', text: 'Ocurrió un error al iniciar sesión' });
                     if (submitBtn)   submitBtn.disabled = false;
                     if (submitSpan)  submitSpan.classList.remove('hidden');
                     if (loadingSpan) loadingSpan.classList.add('hidden');
@@ -469,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var addBtn = e.target.closest('.add-to-cart-btn');
         if (addBtn) {
             if (addBtn.dataset.purchasable === '0' || parseInt(addBtn.dataset.productStock, 10) < 1) {
-                Swal.fire({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
+                fireSwal({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
                 return;
             }
             addToCart(addBtn.dataset.productId, 1, addBtn);
@@ -479,7 +478,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var guestBtn = e.target.closest('.guest-add-btn');
         if (guestBtn) {
             if (guestBtn.dataset.purchasable === '0' || parseInt(guestBtn.dataset.productStock, 10) < 1) {
-                Swal.fire({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
+                fireSwal({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
                 return;
             }
             window.location.href = '/login';
@@ -502,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var itemName = btn.dataset.productName || 'este producto';
         if (!cartItem || !itemId) return;
 
-        Swal.fire({
+        fireSwal({
             title: '¿Eliminar producto?',
             text: '¿Deseas eliminar "' + itemName + '" del carrito?',
             icon: 'warning',
@@ -523,13 +522,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(function (res) { return res.json(); })
                 .then(function (data) {
                     if (!data.success) {
-                        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo eliminar' });
+                        fireSwal({ icon: 'error', title: 'Error', text: data.message || 'No se pudo eliminar' });
                         return;
                     }
 
                     cartItem.remove();
 
-                    Swal.fire({
+                    fireSwal({
                         toast: true, position: 'top-end', icon: 'success',
                         title: 'Producto eliminado del carrito',
                         showConfirmButton: false, timer: 2500, timerProgressBar: true
@@ -553,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .catch(function (err) {
                     console.error('Error removing cart item:', err);
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar el producto' });
+                    fireSwal({ icon: 'error', title: 'Error', text: 'No se pudo eliminar el producto' });
                 });
         });
     });
@@ -565,7 +564,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('click', function (e) {
         if (!e.target.closest('#btn-clear-cart')) return;
 
-        Swal.fire({
+        fireSwal({
             title: '¿Vaciar carrito?',
             text: 'Se eliminarán todos los productos del carrito.',
             icon: 'warning',
@@ -588,17 +587,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (data.success) {
                         updateCartCount(0);
                         showCartEmptyState();
-                        Swal.fire({
+                        fireSwal({
                             toast: true, position: 'top-end', icon: 'success',
                             title: 'Carrito vaciado correctamente',
                             showConfirmButton: false, timer: 2500, timerProgressBar: true
                         });
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo vaciar el carrito' });
+                        fireSwal({ icon: 'error', title: 'Error', text: data.message || 'No se pudo vaciar el carrito' });
                     }
                 })
                 .catch(function () {
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al vaciar el carrito' });
+                    fireSwal({ icon: 'error', title: 'Error', text: 'Ocurrió un error al vaciar el carrito' });
                 });
         });
     });
@@ -614,7 +613,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateCartQuantity(productId, 1);
             } else if (quantity > max) {
                 this.value = max;
-                Swal.fire('Aviso', 'La cantidad no puede exceder el stock disponible', 'warning');
+                fireSwal('Aviso', 'La cantidad no puede exceder el stock disponible', 'warning');
                 updateCartQuantity(productId, max);
             } else {
                 updateCartQuantity(productId, quantity);
@@ -674,7 +673,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (proceedBtn) {
         proceedBtn.addEventListener('click', function () {
             var chosenMethodPreview = getCheckoutPaymentMethod();
-            Swal.fire({
+            fireSwal({
                 title: '¿Confirmar pedido con pago por '
                     + getCf4PaymentMethodShortLabel(chosenMethodPreview) + '?',
                 text: 'Se enviará tu pedido para retiro en tienda.',
@@ -704,7 +703,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (!data.success) {
                             var cmsg = data.message || 'No se pudo procesar el pedido';
                             var cshort = isClientStockShortMessage(cmsg);
-                            Swal.fire({
+                            fireSwal({
                                 icon: cshort ? 'warning' : 'error',
                                 title: cshort ? cmsg : 'Error',
                                 text: cshort ? '' : cmsg
@@ -737,7 +736,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         var paidWith = (data && data.payment_method)
                             ? data.payment_method
                             : getCheckoutPaymentMethod();
-                        Swal.fire({
+                        fireSwal({
                             icon: 'success',
                             title: '¡Pedido confirmado!',
                             text: buildCf4CheckoutSuccessText(paidWith),
@@ -746,7 +745,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     })
                     .catch(function (err) {
                         console.error('Checkout error:', err);
-                        Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al procesar el pedido' });
+                        fireSwal({ icon: 'error', title: 'Error', text: 'Ocurrió un error al procesar el pedido' });
                         proceedBtn.disabled  = false;
                         proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
                     });

@@ -33,12 +33,15 @@ export function initStaticSearchCombobox({
     placeholder = '',
     noResultsText = 'Sin resultados',
     onSelected,
+    usePortal = true,
+    uiVariant = 'brand',
 }) {
     const searchInput = document.getElementById(searchInputId);
     const hiddenInput = document.getElementById(hiddenInputId);
     const dropdown = document.getElementById(dropdownId);
     const wrapper = document.getElementById(wrapperId);
-    const chevron = wrapper?.querySelector('.brand-combobox-chevron');
+    const prefix = uiVariant === 'product' ? 'product-combobox' : 'brand-combobox';
+    const chevron = wrapper?.querySelector(`.${prefix}-chevron`);
 
     if (!searchInput || !hiddenInput || !dropdown || !wrapper) {
         return null;
@@ -48,7 +51,7 @@ export function initStaticSearchCombobox({
     let isOpen = false;
     let activeIndex = -1;
     const changeListeners = [];
-    const dropdownPortal = createDropdownPortal(wrapper, dropdown);
+    const dropdownPortal = usePortal ? createDropdownPortal(wrapper, dropdown) : { mount() {}, unmount() {}, position() {} };
 
     if (placeholder) {
         searchInput.setAttribute('placeholder', placeholder);
@@ -91,7 +94,7 @@ export function initStaticSearchCombobox({
 
         if (!filtered.length) {
             const noResult = document.createElement('div');
-            noResult.className = 'brand-combobox-no-result';
+            noResult.className = `${prefix}-no-result`;
             noResult.setAttribute('role', 'status');
             noResult.textContent = noResultsText;
             dropdown.appendChild(noResult);
@@ -102,7 +105,7 @@ export function initStaticSearchCombobox({
             const item = document.createElement('div');
             const optionId = `${dropdownId}-opt-${index}`;
             item.id = optionId;
-            item.className = 'brand-combobox-option';
+            item.className = `${prefix}-option`;
             item.setAttribute('role', 'option');
             item.dataset.index = String(index);
             if (normalizedId(getId(option)) === normalizedId(hiddenInput.value)) {
@@ -111,7 +114,12 @@ export function initStaticSearchCombobox({
             } else {
                 item.setAttribute('aria-selected', 'false');
             }
-            item.textContent = getLabel(option);
+            if (uiVariant === 'product') {
+                item.innerHTML = `<div class="product-combobox-option-info"><div class="product-combobox-option-name"></div></div>`;
+                item.querySelector('.product-combobox-option-name').textContent = getLabel(option);
+            } else {
+                item.textContent = getLabel(option);
+            }
             item.addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 selectOption(option);
@@ -121,7 +129,7 @@ export function initStaticSearchCombobox({
     }
 
     function highlightActive() {
-        const items = dropdown.querySelectorAll('.brand-combobox-option');
+        const items = dropdown.querySelectorAll(`.${prefix}-option`);
         items.forEach((el, i) => {
             const selected = i === activeIndex;
             el.classList.toggle('selected', selected);
@@ -236,7 +244,7 @@ export function initStaticSearchCombobox({
     });
 
     searchInput.addEventListener('keydown', (e) => {
-        const items = dropdown.querySelectorAll('.brand-combobox-option');
+        const items = dropdown.querySelectorAll(`.${prefix}-option`);
         if (e.key === 'Escape') {
             e.preventDefault();
             restoreLabelIfInvalid();
