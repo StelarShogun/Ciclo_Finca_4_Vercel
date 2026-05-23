@@ -1,21 +1,31 @@
-import { addToCart, fireSwal } from './cart-shared.js';
+import { addToCart } from './cart-shared.js';
+import { initProductSpotlightCarousels } from './init-product-spotlight-carousel.js';
+import { cf4Warning } from './swal.js';
 
 document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('click', function (e) {
         const addBtn = e.target.closest('.add-to-cart-btn');
-        if (!addBtn) return;
+        if (addBtn) {
+            if (addBtn.dataset.purchasable === '0' || parseInt(addBtn.dataset.productStock, 10) < 1) {
+                void cf4Warning('Este producto no tiene unidades disponibles.', 'Producto agotado');
+                return;
+            }
 
-        if (addBtn.dataset.purchasable === '0' || parseInt(addBtn.dataset.productStock, 10) < 1) {
-            fireSwal({
-                icon: 'warning',
-                title: 'Producto agotado',
-                text: 'Este producto no tiene unidades disponibles.',
-            });
+            addToCart(addBtn.dataset.productId, 1, addBtn);
             return;
         }
 
-        addToCart(addBtn.dataset.productId, 1, addBtn);
+        const guestBtn = e.target.closest('.guest-add-btn');
+        if (guestBtn) {
+            if (guestBtn.dataset.purchasable === '0' || parseInt(guestBtn.dataset.productStock, 10) < 1) {
+                void cf4Warning('Este producto no tiene unidades disponibles.', 'Producto agotado');
+                return;
+            }
+            window.location.href = '/login';
+        }
     });
+
+    void initProductSpotlightCarousels();
 
     (function initCategoriesCarousel() {
         const wrap = document.querySelector('[data-categories-carousel]');

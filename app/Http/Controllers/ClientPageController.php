@@ -44,7 +44,15 @@ class ClientPageController extends Controller
             $featuredProducts->pluck('product_id')->map(fn ($id) => (int) $id)->all()
         );
 
-        return view('client.home', compact('featuredProducts', 'categories', 'cartCount', 'productReviewStats'));
+        $showGuestRegisterCta = ! Auth::guard('clients')->check() && ! session('admin_catalog_mode');
+
+        return view('client.home', compact(
+            'featuredProducts',
+            'categories',
+            'cartCount',
+            'productReviewStats',
+            'showGuestRegisterCta',
+        ));
     }
 
     public function catalog(Request $request)

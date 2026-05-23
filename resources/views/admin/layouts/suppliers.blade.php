@@ -29,6 +29,7 @@
         </div>
     </main>
 
+    @include('admin.partials.cf4-flash-swal')
     @vite(['resources/js/admin/shell.js', 'resources/js/admin/suppliers/suppliers.js'])
     @stack('scripts')
 

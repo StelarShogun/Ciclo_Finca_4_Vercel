@@ -298,6 +298,7 @@ class ClientUserController extends Controller
                 'second_surname' => ['nullable', 'string', 'max:50', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
                 'gmail' => ['required', 'email', 'unique:client_table,gmail', 'regex:/^[^@]+@gmail\.com$/i'],
                 'password' => ['required', 'string', 'min:8', 'confirmed'],
+                'accept_terms' => ['accepted'],
             ],
             [
                 'name.required' => 'El nombre es obligatorio.',
@@ -317,6 +318,7 @@ class ClientUserController extends Controller
                 'password.required' => 'La contraseña es obligatoria.',
                 'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
                 'password.confirmed' => 'Las contraseñas no coinciden.',
+                'accept_terms.accepted' => 'Debes aceptar los Términos y condiciones y la Política de privacidad.',
             ]
         );
 
@@ -660,7 +662,7 @@ class ClientUserController extends Controller
             (string) ($client->name ?? ''),
             (string) ($client->first_surname ?? ''),
             (string) ($client->second_surname ?? ''),
-        ]));
+        ]), static fn (string $part): bool => $part !== '' && $part !== '-');
 
         if ($parts !== []) {
             return implode(' ', $parts);
@@ -779,7 +781,7 @@ class ClientUserController extends Controller
             } else {
                 $partes = array_filter(explode(' ', $fullName, 3));
                 $nombre = $partes[0] ?? ($fullName !== '' ? $fullName : 'Usuario');
-                $apellido1 = $partes[1] ?? '-';
+                $apellido1 = $partes[1] ?? null;
                 $apellido2 = $partes[2] ?? null;
                 $data = [
                     'name' => $nombre,
@@ -787,6 +789,7 @@ class ClientUserController extends Controller
                     'second_surname' => $apellido2,
                     'gmail' => $email,
                     'password' => Hash::make(Str::random(32)),
+                    'provider' => 'google',
                 ];
                 if (Schema::hasColumn((new Client)->getTable(), 'email_verified')) {
                     $data['email_verified'] = true;

@@ -2,17 +2,18 @@
  * Client header bootstrap — only the critical pieces run synchronously:
  *
  * - Cart badge from DOM (cheap, prevents badge flicker)
- * - Guest "must sign in" cart prompt (tiny click handler)
+ * - Guest "must sign in" cart message (tiny click handler)
  *
  * Everything else (catalog search trending fetch, favorites click delegation,
- * authenticated user menu / favorites drawer, invoice heartbeat polling) is
- * loaded on idle, after the first paint, so it never blocks FCP/LCP.
+ * authenticated user menu binds on DOMContentLoaded; favorites drawer / invoice
+ * heartbeat stay deferred where applicable so they never block FCP/LCP.
  */
 import {
     initCartBadgeFromDom,
     initGuestCartPrompt,
     updateCartCount,
 } from './cart-shared.js';
+import { initClientHeaderMenu } from './header-menu.js';
 
 const onIdle = (cb) => {
     if (typeof window.requestIdleCallback === 'function') {
@@ -23,6 +24,7 @@ const onIdle = (cb) => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    initClientHeaderMenu();
     initCartBadgeFromDom();
     initGuestCartPrompt();
 
@@ -38,10 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
         import('./catalog-product-favorites.js').then((m) => m.initCatalogFavoriteClickDelegation());
     });
 
-    if (document.querySelector('meta[name="cf4-favorites-index-url"]')) {
-        onIdle(() => {
-            import('./clients-header-auth.js').then((m) => m.initClientHeaderAuth());
-        });
+    // Account dropdown must bind on first paint (not gated on favorites meta / idle).
+    if (document.getElementById('user-menu-trigger')) {
+        import('./clients-header-auth.js').then((m) => m.initClientHeaderAuth());
     }
 
     if (document.querySelector('meta[name="cf4-invoice-heartbeat-url"]')) {

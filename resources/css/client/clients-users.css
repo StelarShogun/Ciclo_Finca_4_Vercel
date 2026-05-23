@@ -546,6 +546,21 @@ body.guest-layout {
     margin-bottom: 20px;
 }
 
+.cf4-oauth-legal-note {
+    margin: 0.65rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: #5f6368;
+    text-align: center;
+}
+
+.cf4-oauth-legal-note a {
+    color: var(--color-primary, #2d7a2d);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
 .oauth-btn {
     display: flex;
     align-items: center;

@@ -1,48 +1,18 @@
 import '../../shared/ajax-pagination.js';
+import {
+    cf4Confirm,
+    cf4Toast,
+    cf4Error,
+    cf4Warning,
+    cf4DialogDefaults,
+    cf4SwalClasses,
+    fireSwal,
+    getSwal,
+} from '../shared/swal.js';
 
 // Retrieve CSRF token from meta tag
 function getCSRFToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
-}
-
-/** SweetAlert2 v11 — diálogos sin `buttonsStyling` heredado, botones redondeados. */
-function cf4SwalDialogDefaults() {
-    return {
-        buttonsStyling: false,
-        reverseButtons: true,
-        focusCancel: true,
-        allowOutsideClick: false,
-    };
-}
-
-function cf4SwalConfirmBase(confirmButtonClass) {
-    return {
-        ...cf4SwalDialogDefaults(),
-        showCancelButton: true,
-        cancelButtonText: 'Volver',
-        customClass: {
-            popup:         'cf4-swal-popup',
-            confirmButton: confirmButtonClass,
-            cancelButton:  'cf4-swal-btn cf4-swal-btn-muted',
-            actions:       'cf4-swal-actions',
-            title:         'cf4-swal-title',
-            htmlContainer: 'cf4-swal-html',
-        },
-    };
-}
-
-function cf4SwalToastFire(icon, title, text) {
-    return Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon,
-        title,
-        text: text || undefined,
-        showConfirmButton: false,
-        timer: icon === 'success' ? 3600 : 5200,
-        timerProgressBar: true,
-        showCloseButton: true,
-    });
 }
 
 /* ---- Date range validation ---- */
@@ -68,23 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const to   = dateTo?.value;
             if (from && to && to < from) {
                 e.preventDefault();
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        ...cf4SwalDialogDefaults(),
-                        icon: 'warning',
-                        title: 'Rango de fechas inválido',
-                        text: 'La fecha "Hasta" no puede ser anterior a la fecha "Desde".',
-                        showCancelButton: false,
-                        confirmButtonText: 'Entendido',
-                        customClass: {
-                            popup:         'cf4-swal-popup',
-                            confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
-                            title:         'cf4-swal-title',
-                        },
-                    });
-                } else {
-                    alert('La fecha "Hasta" no puede ser anterior a la fecha "Desde".');
-                }
+                void cf4Warning(
+                    'La fecha "Hasta" no puede ser anterior a la fecha "Desde".',
+                    'Rango de fechas inválido'
+                );
             }
         });
     }
@@ -483,90 +440,68 @@ function viewSupplier(id) {
 }
 
 /* ---- State change helpers ---- */
-function _orderAction(id, state, confirmCfg, successMsg) {
-    Swal.fire({
-        ...cf4SwalConfirmBase(confirmCfg.confirmClass),
-        title:             confirmCfg.title,
-        html:              confirmCfg.html,
-        icon:              confirmCfg.icon,
+async function _orderAction(id, state, confirmCfg, successMsg) {
+    const result = await cf4Confirm({
+        title: confirmCfg.title,
+        html: confirmCfg.html,
+        icon: confirmCfg.icon,
         confirmButtonText: confirmCfg.confirm,
-    }).then(r => {
-        if (!r.isConfirmed) return;
+        cancelButtonText: 'Volver',
+        danger: confirmCfg.danger ?? false,
+        confirmStyle: confirmCfg.confirmStyle ?? 'primary',
+    });
 
-        const disableButtons = (disabled) => {
-            document
-                .querySelectorAll(
-                    `tr[data-order-id="${id}"] .action-btn, #view-order-body [data-role="modal-actions"] .btn, .sales-actions[data-supplier-order-actions="${id}"] button`
-                )
-                .forEach((el) => {
-                    if (el instanceof HTMLButtonElement) el.disabled = disabled;
-                });
-        };
+    if (!result.isConfirmed) return;
 
-        disableButtons(true);
-        fetch(`/supplier-orders/${id}/state`, {
+    const disableButtons = (disabled) => {
+        document
+            .querySelectorAll(
+                `tr[data-order-id="${id}"] .action-btn, #view-order-body [data-role="modal-actions"] .btn, .sales-actions[data-supplier-order-actions="${id}"] button`
+            )
+            .forEach((el) => {
+                if (el instanceof HTMLButtonElement) el.disabled = disabled;
+            });
+    };
+
+    disableButtons(true);
+
+    try {
+        const res = await fetch(`/supplier-orders/${id}/state`, {
             method: 'PATCH',
             headers: {
                 'X-CSRF-TOKEN': getCSRFToken(),
-                'Accept':       'application/json',
+                'Accept': 'application/json',
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ state }),
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                Swal.fire({
-                    title:              'Listo',
-                    text:               data.message || successMsg,
-                    icon:               'success',
-                    confirmButtonColor: '#235347',
-                    confirmButtonText:  'Entendido',
-                }).then(() => {
-                    if (state === 'confirmed' || state === 'delivered') {
-                        window.location.reload();
-                    } else {
-                        updateRowState(String(id), state);
-                        if (activeOrderIdInModal === String(id)) {
-                            updateModalState(state);
-                        }
-                        disableButtons(false);
-                    }
-                });
-            } else {
-                disableButtons(false);
-                Swal.fire({
-                    ...cf4SwalDialogDefaults(),
-                    title:             'No se pudo completar',
-                    text:              data.message || 'No se pudo actualizar.',
-                    icon:              'error',
-                    showCancelButton:  false,
-                    confirmButtonText: 'Cerrar',
-                    customClass: {
-                        popup:         'cf4-swal-popup',
-                        confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
-                        title:         'cf4-swal-title',
-                    },
-                });
-            }
-        })
-        .catch(() => {
-            disableButtons(false);
-            Swal.fire({
-                ...cf4SwalDialogDefaults(),
-                title:             'Error de conexión',
-                text:              'Revisa tu red e inténtalo de nuevo.',
-                icon:              'error',
-                showCancelButton:  false,
-                confirmButtonText: 'Cerrar',
-                customClass: {
-                    popup:         'cf4-swal-popup',
-                    confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
-                    title:         'cf4-swal-title',
-                },
-            });
         });
-    });
+        const data = await res.json();
+
+        if (data.success) {
+            await cf4Toast({
+                icon: 'success',
+                title: 'Listo',
+                text: data.message || successMsg,
+                timer: 3600,
+            });
+
+            if (state === 'confirmed' || state === 'delivered') {
+                window.location.reload();
+            } else {
+                updateRowState(String(id), state);
+                if (activeOrderIdInModal === String(id)) {
+                    updateModalState(state);
+                }
+                disableButtons(false);
+            }
+        } else {
+            disableButtons(false);
+            await cf4Error(data.message || 'No se pudo actualizar.', 'No se pudo completar');
+        }
+    } catch {
+        disableButtons(false);
+        await cf4Error('Revisa tu red e inténtalo de nuevo.', 'Error de conexión');
+    }
 }
 
 function confirmOrder(id) {
@@ -574,11 +509,10 @@ function confirmOrder(id) {
     if (st !== null && st !== 'draft' && st !== 'pending') return;
 
     _orderAction(id, 'confirmed', {
-        title:        '¿Confirmar este pedido?',
-        html:         '<p>El pedido pasará a estado <strong>confirmado</strong> con el proveedor. Luego podrás registrar la <strong>recepción de mercancía</strong> al recibirla.</p>',
-        icon:         'question',
-        confirm:      'Sí, confirmar',
-        confirmClass: 'cf4-swal-btn cf4-swal-btn-primary',
+        title:   '¿Confirmar este pedido?',
+        html:    '<p>El pedido pasará a estado <strong>confirmado</strong> con el proveedor. Luego podrás registrar la <strong>recepción de mercancía</strong> al recibirla.</p>',
+        icon:    'question',
+        confirm: 'Sí, confirmar',
     }, 'Pedido confirmado correctamente.');
 }
 
@@ -589,16 +523,18 @@ function deliverOrder(id) {
     if (st !== null && st !== 'confirmed') return;
 
     _orderAction(id, 'delivered', {
-        title:        '¿Marcar como entregado?',
-        html:         '<p>Se registrará la <strong>recepción de la mercancía</strong> y se actualizará el inventario según las líneas del pedido.</p>',
-        icon:         'question',
-        confirm:      'Sí, marcar entregado',
-        confirmClass: 'cf4-swal-btn cf4-swal-btn-info',
+        title:   '¿Marcar como entregado?',
+        html:    '<p>Se registrará la <strong>recepción de la mercancía</strong> y se actualizará el inventario según las líneas del pedido.</p>',
+        icon:    'question',
+        confirm: 'Sí, marcar entregado',
     }, 'Pedido marcado como entregado.');
 }
 
-function cancelOrder(id) {
-    Swal.fire({
+async function cancelOrder(id) {
+    const Swal = await getSwal();
+
+    const result = await fireSwal({
+        ...cf4DialogDefaults(),
         title: '¿Cancelar pedido?',
         html: `
             <p style="margin:0 0 12px; color:#4b5563;">El pedido se marcará como cancelado.</p>
@@ -613,11 +549,13 @@ function cancelOrder(id) {
                 Escribe al menos 4 caracteres para continuar.
             </div>`,
         icon: 'warning',
-        showCancelButton:  true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor:  '#6c757d',
-        confirmButtonText:  'Sí, cancelar',
-        cancelButtonText:   'Cancelar',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'Cancelar',
+        customClass: {
+            ...cf4SwalClasses,
+            confirmButton: 'cf4-swal-btn cf4-swal-btn-danger',
+        },
         didOpen: () => {
             const confirmBtn = Swal.getConfirmButton();
             const textarea   = document.getElementById('swal-cancel-reason');
@@ -644,55 +582,54 @@ function cancelOrder(id) {
             }
             return reason;
         },
-    }).then(r => {
-        if (!r.isConfirmed) return;
+    });
 
-        const reason = r.value;
+    if (!result.isConfirmed) return;
 
-        const disableButtons = (disabled) => {
-            document
-                .querySelectorAll(`tr[data-order-id="${id}"] .action-btn, #view-order-body [data-role="modal-actions"] .btn`)
-                .forEach((el) => {
-                    if (el instanceof HTMLButtonElement) el.disabled = disabled;
-                });
-        };
+    const reason = result.value;
 
-        disableButtons(true);
-        fetch(`/supplier-orders/${id}/state`, {
+    const disableButtons = (disabled) => {
+        document
+            .querySelectorAll(`tr[data-order-id="${id}"] .action-btn, #view-order-body [data-role="modal-actions"] .btn`)
+            .forEach((el) => {
+                if (el instanceof HTMLButtonElement) el.disabled = disabled;
+            });
+    };
+
+    disableButtons(true);
+
+    try {
+        const res = await fetch(`/supplier-orders/${id}/state`, {
             method: 'PATCH',
             headers: {
                 'X-CSRF-TOKEN': getCSRFToken(),
-                'Accept':       'application/json',
+                'Accept': 'application/json',
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ state: 'cancelled', reason }),
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                Swal.fire({
-                    title:              'Pedido cancelado',
-                    text:               data.message || 'El pedido fue cancelado correctamente.',
-                    icon:               'success',
-                    confirmButtonColor: '#235347',
-                    confirmButtonText:  'Entendido',
-                }).then(() => {
-                    updateRowState(String(id), 'cancelled');
-                    if (activeOrderIdInModal === String(id)) {
-                        updateModalState('cancelled');
-                    }
-                    disableButtons(false);
-                });
-            } else {
-                disableButtons(false);
-                Swal.fire({ title: 'Error', text: data.message || 'No se pudo cancelar.', icon: 'error' });
-            }
-        })
-        .catch(() => {
-            disableButtons(false);
-            Swal.fire({ title: 'Error', text: 'Error de conexión.', icon: 'error' });
         });
-    });
+        const data = await res.json();
+
+        if (data.success) {
+            await cf4Toast({
+                icon: 'success',
+                title: 'Pedido cancelado',
+                text: data.message || 'El pedido fue cancelado correctamente.',
+                timer: 3000,
+            });
+            updateRowState(String(id), 'cancelled');
+            if (activeOrderIdInModal === String(id)) {
+                updateModalState('cancelled');
+            }
+            disableButtons(false);
+        } else {
+            disableButtons(false);
+            await cf4Error(data.message || 'No se pudo cancelar.', 'Error');
+        }
+    } catch {
+        disableButtons(false);
+        await cf4Error('Error de conexión.', 'Error');
+    }
 }
 
 // Expose functions on window (required by Vite/ESM)

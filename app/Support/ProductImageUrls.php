@@ -65,11 +65,32 @@ class ProductImageUrls
 
     public static function webpMobileUrl(?Media $media): ?string
     {
-        if ($media === null || ! $media->hasGeneratedConversion('webp_768')) {
+        if ($media === null) {
             return null;
         }
 
-        return $media->getUrl('webp_768') ?: null;
+        if ($media->hasGeneratedConversion('webp_96')) {
+            return $media->getUrl('webp_96') ?: null;
+        }
+
+        if ($media->hasGeneratedConversion('webp_768')) {
+            return $media->getUrl('webp_768') ?: null;
+        }
+
+        return null;
+    }
+
+    public static function webpDetailUrl(?Media $media): ?string
+    {
+        if ($media === null) {
+            return null;
+        }
+
+        if ($media->hasGeneratedConversion('webp_1200')) {
+            return $media->getUrl('webp_1200') ?: null;
+        }
+
+        return self::webpDesktopUrl($media);
     }
 
     /**

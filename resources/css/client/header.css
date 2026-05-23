@@ -77,7 +77,7 @@
 }
 
 /* Con búsqueda abierta: acercar Inicio/Catálogo al carril derecho y alejarlos del logo */
-@media (min-width: 769px) {
+@media (min-width: 901px) {
   .header-menu-panel:has(.header-catalog-search.is-expanded) .header-nav-slot {
     justify-content: flex-end;
     padding-right: 0.25rem;
@@ -255,7 +255,7 @@
   border-color: rgba(218, 241, 222, 0.52);
 }
 
-@media (min-width: 769px) {
+@media (min-width: 901px) {
   .header-catalog-search.is-expanded {
     width: min(var(--cf4-hdr-search-open), calc(100vw - 22rem));
   }
@@ -394,20 +394,28 @@
  * no cargan clients-page.css (si no, el listado queda en flujo y tapa la página).
  */
 /* Fuera del track con overflow:hidden, para que el panel no quede recortado */
+.header-catalog-search > .catalog-search-suggestions,
+.catalog-search-suggestions.catalog-search-suggestions--header {
+  background: var(--background-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  max-height: 260px;
+  overflow: auto;
+  padding: 4px;
+  display: none;
+}
+
 .header-catalog-search > .catalog-search-suggestions {
   position: absolute;
   left: 0;
   right: 0;
   top: calc(100% + 6px);
-  background: var(--background-white);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-md);
   z-index: 1105;
-  max-height: 260px;
-  overflow: auto;
-  padding: 4px;
-  display: none;
+}
+
+.catalog-search-suggestions.catalog-search-suggestions--header.is-open {
+  display: block;
 }
 
 .header-catalog-search > .catalog-search-suggestions.is-open {
@@ -1042,26 +1050,35 @@ button.user-dropdown-item {
    RESPONSIVE
    =================================================================== */
 
-/* 768px: switch to hamburger menu */
-@media (max-width: 768px) {
+/* ≤900px: menú hamburguesa (evita nav apretado en tablet) */
+@media (max-width: 900px) {
+  .header-container {
+    position: relative;
+  }
+
   .header-content {
+    position: relative;
     height: auto;
     min-height: 64px;
     padding: 10px 0;
     gap: 10px;
     flex-wrap: nowrap;
+    align-items: center;
   }
 
   .header-menu-toggle {
     display: inline-flex;
     order: 2;
     flex-shrink: 0;
+    margin-left: auto;
+    z-index: 3;
   }
 
   .logo-section {
     order: 1;
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
+    max-width: calc(100% - 52px);
   }
 
   .logo-link { gap: 10px; }
@@ -1078,22 +1095,27 @@ button.user-dropdown-item {
     flex-wrap: nowrap;
   }
 
-  .logo-text { font-size: clamp(1rem, 4vw, 1.4rem); }
+  .logo-text { font-size: clamp(0.95rem, 3.6vw, 1.35rem); }
+
+  .logo-wordmark {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   .logo-img--brand {
     height: 36px;
     max-width: min(200px, 62vw);
   }
 
-  /* Collapsible menu panel — hidden by default, shown when .menu-open */
-  /* Sin transform en el panel: si no, crea containing block y rompe hijos position:absolute/fixed. */
+  /* Collapsible menu panel — fuera del flujo flex; oculto hasta .menu-open */
   .header-menu-panel {
     position: absolute;
     top: 100%;
     left: 0;
     right: 0;
     z-index: 1001;
-    display: flex;
+    display: none;
+    flex: none;
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
@@ -1102,16 +1124,13 @@ button.user-dropdown-item {
     border-top: 1px solid rgba(142, 182, 155, 0.2);
     box-shadow: var(--shadow-md);
     overflow: visible;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: opacity 0.22s ease, visibility 0.22s ease;
+    max-height: calc(100dvh - 64px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .cliente-header.menu-open .header-menu-panel {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
+    display: flex;
   }
 
   .header-nav-slot {
@@ -1155,6 +1174,11 @@ button.user-dropdown-item {
   .header-catalog-search:has(.catalog-search-suggestions.is-open) {
     position: relative;
     z-index: 20;
+  }
+
+  /* Sugerencias: posición la fija header-catalog-search.js (portal a body) */
+  .header-menu-panel .header-catalog-search > .catalog-search-suggestions.is-open {
+    box-shadow: var(--shadow-lg);
   }
 
   .header-catalog-search.is-expanded .header-catalog-search-inner {

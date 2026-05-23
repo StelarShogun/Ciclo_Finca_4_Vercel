@@ -1,3 +1,5 @@
+import { cf4Confirm } from './swal.js';
+
 // ----------------------------------------------------------------
 // SHARED UTILITIES
 // ----------------------------------------------------------------
@@ -102,21 +104,18 @@ function cancelEdit() {
 }
 
 // Shows confirmation dialog before submitting the profile form.
-function submitProfile() {
+async function submitProfile() {
     var form = document.getElementById('formPerfil');
     if (!form) return;
-    Swal.fire({
+    const result = await cf4Confirm({
         title: '¿Guardar cambios?',
         text: 'Se actualizarán tus datos personales.',
         icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: '<i class="fas fa-save"></i> Sí, guardar',
-        cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
-        reverseButtons: true
-    }).then(function (result) {
-        if (!result.isConfirmed) return;
-        sendProfile(form);
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar',
     });
+    if (!result.isConfirmed) return;
+    sendProfile(form);
 }
 
 // Sends profile data via AJAX and updates UI on success.
@@ -396,13 +395,13 @@ document.addEventListener('DOMContentLoaded', function () {
             var confirmBtn   = isGoogleOnly
                 ? '<i class="fas fa-key"></i> Sí, definir'
                 : '<i class="fas fa-save"></i> Sí, actualizar';
-            Swal.fire({
+            cf4Confirm({
                 title: '¿Confirmar cambio de contraseña?',
-                text: confirmMsg, icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: confirmBtn,
-                cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
-                reverseButtons: true
+                text: confirmMsg,
+                icon: 'warning',
+                confirmButtonText: isGoogleOnly ? 'Sí, definir' : 'Sí, actualizar',
+                cancelButtonText: 'Cancelar',
+                danger: true,
             }).then(function (result) {
                 if (!result.isConfirmed) return;
                 sendPassword(formPassword);

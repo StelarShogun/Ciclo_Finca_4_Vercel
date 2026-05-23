@@ -25,10 +25,7 @@ export function updateCartCount(count) {
     }
 }
 
-export async function fireSwal(options) {
-    const { default: Swal } = await import('sweetalert2');
-    return Swal.fire(options);
-}
+import { cf4Toast, cf4Error, cf4Warning } from './swal.js';
 
 /** Add product to cart via AJAX. */
 export function addToCart(productId, quantity, triggerBtn) {
@@ -48,32 +45,25 @@ export function addToCart(productId, quantity, triggerBtn) {
         .then(function (data) {
             if (data.success) {
                 updateCartCount(data.cart_count);
-                fireSwal({
+                void cf4Toast({
                     icon: 'success',
                     title: '¡Agregado!',
                     text: data.message || 'Producto agregado al carrito',
                     timer: 2000,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end',
                 });
             } else {
                 const msg = data.message || 'No se pudo agregar el producto al carrito';
                 const stockShort = isClientStockShortMessage(msg);
-                fireSwal({
-                    icon: stockShort ? 'warning' : 'error',
-                    title: stockShort ? msg : 'Error',
-                    text: stockShort ? '' : msg,
-                });
+                if (stockShort) {
+                    void cf4Warning(msg, 'Atención');
+                } else {
+                    void cf4Error(msg, 'Error');
+                }
             }
         })
         .catch(function (err) {
             console.error('Error adding to cart:', err);
-            fireSwal({
-                icon: 'error',
-                title: 'Error',
-                text: 'Ocurrió un error al agregar el producto al carrito',
-            });
+            void cf4Error('Ocurrió un error al agregar el producto al carrito.', 'Error');
         });
 }
 
@@ -92,11 +82,6 @@ export function initGuestCartPrompt() {
     if (!cartGuestEl) return;
 
     cartGuestEl.addEventListener('click', function () {
-        fireSwal({
-            icon: 'info',
-            title: 'Inicia sesión',
-            text: 'Debes iniciar sesión para ver tu carrito.',
-            confirmButtonText: 'Entendido',
-        });
+        void cf4Warning('Debes iniciar sesión para ver tu carrito.', 'Inicia sesión');
     });
 }

@@ -83,9 +83,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         (function () {
-            const PRIMARY = '#235347';
-            const DANGER = '#dc2626';
-
             const form = document.getElementById('create-category-form');
 
             if (form) {
@@ -101,8 +98,11 @@
                         text: 'Se creará una nueva categoría padre del catálogo.',
                         icon: 'question',
                         showCancelButton: true,
-                        confirmButtonColor: PRIMARY,
-                        cancelButtonColor: DANGER,
+                        buttonsStyling: false,
+                        customClass: {
+                            confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
+                            cancelButton: 'cf4-swal-btn cf4-swal-btn-muted',
+                        },
                         confirmButtonText: 'Sí, guardar',
                         cancelButtonText: 'Cancelar',
                         reverseButtons: true,

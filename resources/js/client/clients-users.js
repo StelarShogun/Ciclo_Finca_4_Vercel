@@ -1,5 +1,14 @@
 import '../shared/admin-table-responsive.js';
-import { fireSwal } from './swal.js';
+import {
+    fireSwal,
+    cf4Confirm,
+    cf4Toast,
+    cf4Error,
+    cf4Warning,
+    escapeHtml,
+} from './swal.js';
+import { initCartInteractions } from './cart-actions.js';
+import { addToCart as addToCartShared } from './cart-shared.js';
 import {
     buildCf4CheckoutSuccessText,
     getCf4PaymentMethodShortLabel,
@@ -165,90 +174,6 @@ function setInputState(input, state) {
 }
 
 // ============================================================
-// CART PAGE (/cart)
-// ============================================================
-
-function updateCartQuantity(productId, quantity) {
-    fetch('/cart/update', {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': getCsrfToken(),
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({ product_id: productId, quantity: quantity })
-    })
-        .then(function (res) { return res.json().catch(function () { return {}; }); })
-        .then(function (data) {
-            if (data.success) {
-                var totalFormatted = (data.cart_total != null)
-                    ? ('₡' + Number(data.cart_total).toLocaleString('es-CR'))
-                    : '₡0';
-
-                var subtotalEl = document.getElementById('cart-subtotal');
-                var totalEl    = document.getElementById('cart-total-amount');
-                if (subtotalEl) subtotalEl.textContent = totalFormatted;
-                if (totalEl)    totalEl.textContent    = totalFormatted;
-
-                updateCartCount(data.cart_count || 0);
-
-                var cartItem = document.querySelector('.cart-item[data-product-id="' + productId + '"]');
-                if (cartItem) {
-                    var unitPriceEl    = cartItem.querySelector('.item-price');
-                    var unitPriceText  = unitPriceEl ? unitPriceEl.textContent : '';
-                    var unitPrice      = parseInt(unitPriceText.replace(/[^\d]/g, ''), 10) || 0;
-                    var newSubtotal    = unitPrice * quantity;
-                    var lineSubtotalEl = cartItem.querySelector('.subtotal-amount');
-                    if (lineSubtotalEl) {
-                        lineSubtotalEl.textContent = '₡' + newSubtotal.toLocaleString('es-CR');
-                    }
-                }
-            } else {
-                var umsg = data.message || 'No se pudo actualizar el carrito';
-                var uShort = isClientStockShortMessage(umsg);
-                fireSwal(uShort ? umsg : 'Error', uShort ? '' : umsg, uShort ? 'warning' : 'error');
-            }
-        })
-        .catch(function () {
-            fireSwal('Error', 'Ocurrió un error al actualizar el carrito', 'error');
-        });
-}
-
-function showCartEmptyState() {
-    var card = document.querySelector('.cart-page-card');
-    if (!card) return;
-    var catalogLink = card.querySelector('a.btn-ghost-cart[href], a[href*="/catalog"]');
-    var rawHref = (catalogLink && catalogLink.getAttribute('href')) || '/catalog';
-    var catalogBase = rawHref.split('#')[0];
-    var spotlightHref = catalogBase + '#catalog-spotlight-heading';
-    var homeUrl = '/';
-    card.innerHTML =
-        '<div class="cart-toolbar">' +
-        '<div class="cart-toolbar-text">' +
-        '<span class="cart-toolbar-label">Resumen rápido</span>' +
-        '</div>' +
-        '<div class="cart-toolbar-actions">' +
-        '<a href="' + catalogBase + '" class="btn btn-ghost-cart">' +
-        '<i class="fas fa-bicycle" aria-hidden="true"></i> Seguir comprando</a>' +
-        '</div></div>' +
-        '<div class="cart-empty">' +
-        '<div class="cart-empty-inner">' +
-        '<div class="cart-empty-icon" aria-hidden="true"><i class="fas fa-cart-shopping"></i></div>' +
-        '<h2 class="cart-empty-title">Tu carrito está vacío</h2>' +
-        '<p class="cart-empty-text">Explorá el catálogo y agregá productos para armar tu solicitud.</p>' +
-        '<div class="cart-empty-actions">' +
-        '<a href="' + catalogBase + '" class="btn btn-primary btn-lg">' +
-        '<i class="fas fa-bicycle" aria-hidden="true"></i> Ir al catálogo</a>' +
-        '<a href="' + spotlightHref + '" class="btn btn-ghost-cart btn-lg">' +
-        '<i class="fas fa-star" aria-hidden="true"></i> Ver destacados</a>' +
-        '</div>' +
-        '<p class="cart-empty-home-link">' +
-        '<a href="' + homeUrl + '" class="cart-empty-home-anchor">Volver al inicio</a></p>' +
-        '</div></div>';
-}
-
-// ============================================================
 // PROFILE PAGE
 // ============================================================
 
@@ -301,21 +226,21 @@ function cancelEdit() {
 }
 
 /** Shows confirmation dialog before submitting the profile form. */
-function submitProfile() {
+async function submitProfile() {
     var form = document.getElementById('formPerfil');
     if (!form) return;
-    fireSwal({
+
+    const result = await cf4Confirm({
         title: '¿Guardar cambios?',
         text: 'Se actualizarán tus datos personales.',
         icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: '<i class="fas fa-save"></i> Sí, guardar',
-        cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
-        reverseButtons: true
-    }).then(function (result) {
-        if (!result.isConfirmed) return;
-        sendProfile(form);
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar',
     });
+
+    if (!result.isConfirmed) return;
+
+    sendProfile(form);
 }
 
 /** Sends profile data via AJAX and updates UI on success. */
@@ -434,6 +359,17 @@ function hidePasswordForm() {
 
 /** Displays a dismissible alert on the profile page. */
 function showProfileAlert(msg, tipo) {
+    if (tipo === 'danger') {
+        void cf4Error(msg, 'No se pudo completar');
+    } else {
+        void cf4Toast({
+            icon: 'success',
+            title: 'Listo',
+            text: msg,
+            timer: 3000,
+        });
+    }
+
     var alertEl = document.getElementById('profileAlert');
     var textEl  = document.getElementById('profileAlertText');
     var iconEl  = document.getElementById('profileAlertIcon');
@@ -701,6 +637,12 @@ function sendPassword(form) {
             valid = false;
         }
 
+        var termsEl = document.getElementById('accept_terms');
+        if (termsEl && !termsEl.checked) {
+            showMsg('msg-accept-terms', 'error', 'Debes aceptar los Términos y condiciones y la Política de privacidad.');
+            valid = false;
+        }
+
         if (!valid) { e.preventDefault(); return; }
 
         var btnTexto    = document.getElementById('btnRegistrarTexto');
@@ -958,32 +900,26 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (submitBtn)   submitBtn.disabled = false;
                         if (submitSpan)  submitSpan.classList.remove('hidden');
                         if (loadingSpan) loadingSpan.classList.add('hidden');
-                        fireSwal({
+                        cf4Confirm({
                             icon: 'warning',
                             title: 'Correo no verificado',
                             text: data.message || 'Debes verificar tu correo antes de iniciar sesión.',
-                            showCancelButton: true,
                             confirmButtonText: 'Verificar Correo',
                             cancelButtonText: 'Cancelar',
-                            confirmButtonColor: '#2d7a2d',
-                            cancelButtonColor: '#6c757d'
                         }).then(function (result) {
                             if (!result.isConfirmed) return;
                             // El servidor ya envió el código al detectar el correo no verificado.
                             window.location.href = data.redirect;
                         });
                     } else {
-                        fireSwal({
+                        cf4Confirm({
                             icon: 'error',
                             title: 'Error',
-                            html: (data.message || 'Error al iniciar sesión') +
+                            html: escapeHtml(data.message || 'Error al iniciar sesión') +
                                 '<hr style="margin:12px 0">' +
                                 '<p style="font-size:0.9rem;margin:0">¿Tienes una cuenta registrada? ¿O deseas registrarte?</p>',
-                            showCancelButton: true,
                             confirmButtonText: 'Ir a Registro',
                             cancelButtonText: 'Cancelar',
-                            confirmButtonColor: '#2d7a2d',
-                            cancelButtonColor: '#6c757d',
                         }).then(function (result) {
                             if (result.isConfirmed) { window.location.href = '/register'; }
                         });
@@ -1021,26 +957,24 @@ document.addEventListener('DOMContentLoaded', function () {
     // — Password change form: confirm and handle Google-only accounts —
     var formPassword = document.getElementById('formPassword');
     if (formPassword) {
-        formPassword.addEventListener('submit', function (e) {
+        formPassword.addEventListener('submit', async function (e) {
             e.preventDefault();
             var isGoogleOnly = !!document.getElementById('googlePassCta');
             var confirmMsg   = isGoogleOnly
                 ? 'Se definirá una contraseña para tu cuenta. Podrás iniciar sesión con correo y contraseña.'
                 : 'Se actualizará la contraseña de tu cuenta.';
-            var confirmBtn   = isGoogleOnly
-                ? '<i class="fas fa-key"></i> Sí, definir'
-                : '<i class="fas fa-save"></i> Sí, actualizar';
-            fireSwal({
+
+            const result = await cf4Confirm({
                 title: '¿Confirmar cambio de contraseña?',
-                text: confirmMsg, icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: confirmBtn,
-                cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
-                reverseButtons: true
-            }).then(function (result) {
-                if (!result.isConfirmed) return;
-                sendPassword(formPassword);
+                text: confirmMsg,
+                icon: 'warning',
+                confirmButtonText: isGoogleOnly ? 'Sí, definir' : 'Sí, actualizar',
+                cancelButtonText: 'Cancelar',
             });
+
+            if (!result.isConfirmed) return;
+
+            sendPassword(formPassword);
         });
     }
 
@@ -1065,17 +999,17 @@ document.addEventListener('DOMContentLoaded', function () {
         var addBtn = e.target.closest('.add-to-cart-btn');
         if (addBtn) {
             if (addBtn.dataset.purchasable === '0' || parseInt(addBtn.dataset.productStock, 10) < 1) {
-                fireSwal({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
+                void cf4Warning('Este producto no tiene unidades disponibles.', 'Producto agotado');
                 return;
             }
-            addToCart(addBtn.dataset.productId, 1, addBtn);
+            addToCartShared(addBtn.dataset.productId, 1, addBtn);
             return;
         }
 
         var guestBtn = e.target.closest('.guest-add-btn');
         if (guestBtn) {
             if (guestBtn.dataset.purchasable === '0' || parseInt(guestBtn.dataset.productStock, 10) < 1) {
-                fireSwal({ icon: 'warning', title: 'Producto agotado', text: 'Este producto no tiene unidades disponibles.' });
+                void cf4Warning('Este producto no tiene unidades disponibles.', 'Producto agotado');
                 return;
             }
             window.location.href = '/login';
@@ -1087,255 +1021,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // — Remove single cart item (delegated) —
-    document.addEventListener('click', function (e) {
-        var btn = e.target.closest('.cart-remove-item');
-        if (!btn) return;
-
-        var cartItem = btn.closest('.cart-item');
-        var itemId   = btn.dataset.productId;
-        var itemName = btn.dataset.productName || 'este producto';
-        if (!cartItem || !itemId) return;
-
-        fireSwal({
-            title: '¿Eliminar producto?',
-            text: '¿Deseas eliminar "' + itemName + '" del carrito?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        }).then(function (result) {
-            if (!result.isConfirmed) return;
-
-            fetch('/cart/remove/' + itemId, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-                .then(function (res) { return res.json(); })
-                .then(function (data) {
-                    if (!data.success) {
-                        fireSwal({ icon: 'error', title: 'Error', text: data.message || 'No se pudo eliminar' });
-                        return;
-                    }
-
-                    cartItem.remove();
-
-                    fireSwal({
-                        toast: true, position: 'top-end', icon: 'success',
-                        title: 'Producto eliminado del carrito',
-                        showConfirmButton: false, timer: 2500, timerProgressBar: true
-                    });
-
-                    var totalFormatted = (data.cart_total != null)
-                        ? ('₡' + Number(data.cart_total).toLocaleString('es-CR'))
-                        : '₡0';
-                    var subtotalEl = document.getElementById('cart-subtotal');
-                    var totalEl    = document.getElementById('cart-total-amount');
-                    if (subtotalEl) subtotalEl.textContent = totalFormatted;
-                    if (totalEl)    totalEl.textContent    = totalFormatted;
-
-                    updateCartCount(data.cart_count || 0);
-
-                    if (document.querySelectorAll('.cart-item').length === 0) {
-                        showCartEmptyState();
-                    }
-                })
-                .catch(function (err) {
-                    console.error('Error removing cart item:', err);
-                    fireSwal({ icon: 'error', title: 'Error', text: 'No se pudo eliminar el producto' });
-                });
-        });
-    });
-
-    // — Vaciar carrito (delegado) —
-    // Se usa delegación para que funcione aunque el botón sea regenerado
-    // dinámicamente o el click caiga sobre el <i> hijo.
-    document.addEventListener('click', function (e) {
-        if (!e.target.closest('#btn-clear-cart')) return;
-
-        fireSwal({
-            title: '¿Vaciar carrito?',
-            text: 'Se eliminarán todos los productos del carrito.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, vaciar',
-            cancelButtonText: 'Cancelar'
-        }).then(function (result) {
-            if (!result.isConfirmed) return;
-
-            fetch('/cart/clear', {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-                .then(function (res) { return res.json(); })
-                .then(function (data) {
-                    if (data.success) {
-                        updateCartCount(0);
-                        showCartEmptyState();
-                        fireSwal({
-                            toast: true, position: 'top-end', icon: 'success',
-                            title: 'Carrito vaciado correctamente',
-                            showConfirmButton: false, timer: 2500, timerProgressBar: true
-                        });
-                    } else {
-                        fireSwal({ icon: 'error', title: 'Error', text: data.message || 'No se pudo vaciar el carrito' });
-                    }
-                })
-                .catch(function () {
-                    fireSwal({ icon: 'error', title: 'Error', text: 'Ocurrió un error al vaciar el carrito' });
-                });
-        });
-    });
-
-    // — Quantity input: clamp to [1, stock] on change —
-    document.querySelectorAll('.quantity-input').forEach(function (input) {
-        input.addEventListener('change', function () {
-            var productId = this.dataset.productId;
-            var quantity  = parseInt(this.value, 10);
-            var max       = parseInt(this.max, 10);
-            if (quantity < 1) {
-                this.value = 1;
-                updateCartQuantity(productId, 1);
-            } else if (quantity > max) {
-                this.value = max;
-                fireSwal('Aviso', 'La cantidad no puede exceder el stock disponible', 'warning');
-                updateCartQuantity(productId, max);
-            } else {
-                updateCartQuantity(productId, quantity);
-            }
-        });
-    });
-
-    // — +/- quantity buttons (cart page) —
-    document.querySelectorAll('.quantity-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var action    = this.dataset.action;
-            var productId = this.dataset.productId;
-            var input     = document.querySelector('.quantity-input[data-product-id="' + productId + '"]');
-            if (!input) return;
-            var quantity = parseInt(input.value, 10);
-            var max      = parseInt(input.max, 10);
-            if (action === 'increase' && quantity < max) quantity++;
-            else if (action === 'decrease' && quantity > 1) quantity--;
-            input.value = quantity;
-            updateCartQuantity(productId, quantity);
-        });
-    });
-
-    // — Quantity controls on product detail page —
-    var productQtyInput = document.getElementById('product-quantity');
-    var productQty      = 1;
-
-    if (productQtyInput) {
-        var maxQty      = parseInt(productQtyInput.max, 10) || 999;
-        var decreaseBtn = document.getElementById('decrease-qty');
-        var increaseBtn = document.getElementById('increase-qty');
-
-        if (decreaseBtn) {
-            decreaseBtn.addEventListener('click', function () {
-                if (productQty > 1) { productQty--; productQtyInput.value = productQty; }
-            });
-        }
-        if (increaseBtn) {
-            increaseBtn.addEventListener('click', function () {
-                if (productQty < maxQty) { productQty++; productQtyInput.value = productQty; }
-            });
-        }
-
-        productQtyInput.addEventListener('change', function () {
-            var value = parseInt(this.value, 10);
-            if (value < 1)           { this.value = 1;      productQty = 1; }
-            else if (value > maxQty) { this.value = maxQty; productQty = maxQty; }
-            else                     { productQty = value; }
-        });
-
-        var detailAddBtn = document.querySelector('.product-detail-actions .add-to-cart-btn');
-        if (detailAddBtn) {
-            detailAddBtn.addEventListener('click', function () {
-                addToCart(this.dataset.productId, productQty, this);
-            });
-        }
-    }
-
-    // — Checkout confirmation —
-    var proceedBtn = document.getElementById('proceed-checkout');
-    if (proceedBtn) {
-        proceedBtn.addEventListener('click', function () {
-            var chosenMethodPreview = getCheckoutPaymentMethodFallback();
-            fireSwal({
-                title: '¿Confirmar pedido con pago por '
-                    + getCf4PaymentMethodShortLabel(chosenMethodPreview) + '?',
-                text: 'Se enviará tu pedido para retiro en tienda.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, confirmar',
-                cancelButtonText: 'Cancelar'
-            }).then(function (result) {
-                if (!result.isConfirmed) return;
-
-                proceedBtn.disabled  = true;
-                proceedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
-
-                fetch('/cart/checkout', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': getCsrfToken(),
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({ payment_method: getCheckoutPaymentMethodFallback() })
-                })
-                    .then(function (res) { return res.json(); })
-                    .then(function (data) {
-                        if (!data.success) {
-                            var cmsg = data.message || 'No se pudo procesar el pedido';
-                            var cshort = isClientStockShortMessage(cmsg);
-                            fireSwal({
-                                icon: cshort ? 'warning' : 'error',
-                                title: cshort ? cmsg : 'Error',
-                                text: cshort ? '' : cmsg
-                            });
-                            proceedBtn.disabled  = false;
-                            proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
-                            return;
-                        }
-                        updateCartCount(0);
-                        showCartEmptyState();
-                        var paidWith = (data && data.payment_method)
-                            ? data.payment_method
-                            : getCheckoutPaymentMethodFallback();
-                        fireSwal({
-                            icon: 'success',
-                            title: '¡Pedido confirmado!',
-                            text: buildCf4CheckoutSuccessText(paidWith),
-                            confirmButtonText: 'Entendido'
-                        });
-                    })
-                    .catch(function (err) {
-                        console.error('Checkout error:', err);
-                        fireSwal({ icon: 'error', title: 'Error', text: 'Ocurrió un error al procesar el pedido' });
-                        proceedBtn.disabled  = false;
-                        proceedBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Compra';
-                    });
-            });
-        });
-    }
+    initCartInteractions();
     } // end if (!window.__cf4ClientPageJsLoaded)
 
     // — ESC closes all modals and dropdowns —
     document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
-        setHeaderMenuOpen(false);
+        if (typeof window.cf4SetHeaderMenuOpen === 'function') {
+            window.cf4SetHeaderMenuOpen(false);
+        }
         setFavoritesDrawerOpen(false);
         closeUserDropdown();
         closeLoginModal();

@@ -29,10 +29,6 @@
 
     <div class="sales-container cf4-orders-module" data-cf4-orders-heartbeat>
 
-        @if (session('status'))
-            <div class="cf4-orders-flash-success" role="status">{{ session('status') }}</div>
-        @endif
-
         @component('admin.partials.page-header', ['title' => 'Encargos en línea'])
             <p>
                 Gestiona los encargos del carrito web: márcalos como listos para recoger, confirma ventas o rechaza pedidos.

@@ -75,9 +75,9 @@ class UpdateProductRequest extends FormRequest
             'status' => ['required', 'in:active,inactive,out_of_stock,discontinued'],
             'is_featured' => ['boolean'],
             'remove_main_image' => ['sometimes', 'boolean'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp,avif', 'max:10240'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
             'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'mimes:jpeg,png,jpg,gif,svg,webp,avif', 'max:10240'],
+            'images.*' => ['image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
             'classification_value_ids' => ['sometimes', 'array', 'nullable'],
             'classification_value_ids.*' => ['integer', Rule::exists('classification_values', 'id')->whereNull('deleted_at')],
         ];
@@ -150,13 +150,13 @@ class UpdateProductRequest extends FormRequest
             'unique' => 'Ya existe un producto con este nombre en esta categoría.',
             'array' => 'El campo :attribute debe ser una lista válida.',
             'image' => 'El campo :attribute debe ser una imagen válida.',
-            'mimes' => 'El campo :attribute solo admite: jpeg, png, jpg, gif, svg, webp o avif.',
+            'mimes' => 'El campo :attribute solo admite: jpeg, png, jpg, gif o webp.',
 
             'sale_price.gt' => 'El precio de venta debe ser mayor que el precio de compra.',
             'stock_current.gte' => 'El stock actual debe ser mayor o igual al stock mínimo.',
 
             'images.*.image' => 'Cada imagen adicional debe ser un archivo de imagen válido.',
-            'images.*.mimes' => 'Cada imagen adicional debe ser jpeg, png, jpg, gif, svg, webp o avif.',
+            'images.*.mimes' => 'Cada imagen adicional debe ser jpeg, png, jpg, gif o webp.',
             'images.*.max' => 'Cada imagen adicional no puede superar :max kilobytes.',
         ];
     }
@@ -199,7 +199,7 @@ class UpdateProductRequest extends FormRequest
 
         // When webkitdirectory is used, filter out non-image files before validation.
         if ($this->hasFile('images')) {
-            $validMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp', 'image/avif'];
+            $validMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
             $images = array_values(array_filter(
                 (array) $this->file('images'),
                 fn ($f) => $f && $f->isValid() && in_array($f->getMimeType(), $validMimes, true)

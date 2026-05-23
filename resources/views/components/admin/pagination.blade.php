@@ -91,16 +91,18 @@
         @endforeach
     </div>
 
-    <label class="sr-only" for="goToPageInput-{{ $uid }}">Ir a página</label>
-    <input
-        id="goToPageInput-{{ $uid }}"
-        class="pagination-go-input"
-        type="number"
-        min="1"
-        max="{{ $lastPage }}"
-        step="1"
-        value="{{ (int) $paginator->currentPage() }}"
-        inputmode="numeric"
-    />
-    <button class="go-button pagination-go-button" type="button">Ir</button>
+    <div class="cf4-pagination-jump">
+        <label class="sr-only" for="goToPageInput-{{ $uid }}">Ir a página</label>
+        <input
+            id="goToPageInput-{{ $uid }}"
+            class="pagination-go-input"
+            type="number"
+            min="1"
+            max="{{ $lastPage }}"
+            step="1"
+            value="{{ (int) $paginator->currentPage() }}"
+            inputmode="numeric"
+        />
+        <button class="go-button pagination-go-button" type="button">Ir</button>
+    </div>
 </div>
