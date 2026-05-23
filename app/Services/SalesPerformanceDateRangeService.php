@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\AdminDateRange;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 
@@ -22,14 +23,15 @@ class SalesPerformanceDateRangeService
     public function resolve(array $input): array
     {
         $preset = (string) ($input['preset'] ?? 'month');
-        $now = CarbonImmutable::now();
+        $tz = AdminDateRange::timezone();
+        $now = CarbonImmutable::now($tz);
 
         [$currentStart, $currentEnd] = match ($preset) {
             'today' => [$now->startOfDay(), $now->endOfDay()],
             'week' => [$now->startOfWeek(Carbon::MONDAY), $now->endOfWeek(Carbon::SUNDAY)],
             'month' => [$now->startOfMonth(), $now->endOfMonth()],
             'year' => [$now->startOfYear(), $now->endOfYear()],
-            'custom' => $this->resolveCustomRange($input),
+            'custom' => $this->resolveCustomRange($input, $tz),
             default => [$now->startOfMonth(), $now->endOfMonth()],
         };
 
@@ -50,10 +52,10 @@ class SalesPerformanceDateRangeService
      * @param  array{from?:string|null,to?:string|null}  $input
      * @return array{CarbonImmutable, CarbonImmutable}
      */
-    private function resolveCustomRange(array $input): array
+    private function resolveCustomRange(array $input, string $timezone): array
     {
-        $from = CarbonImmutable::parse((string) ($input['from'] ?? ''))->startOfDay();
-        $to = CarbonImmutable::parse((string) ($input['to'] ?? ''))->endOfDay();
+        $from = CarbonImmutable::parse((string) ($input['from'] ?? ''), $timezone)->startOfDay();
+        $to = CarbonImmutable::parse((string) ($input['to'] ?? ''), $timezone)->endOfDay();
 
         return [$from, $to];
     }

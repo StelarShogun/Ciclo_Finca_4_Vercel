@@ -114,6 +114,12 @@
                 <div class="filters-quick">
                     <span class="filters-quick-label">Filtros rápidos</span>
                     <div class="filters-quick-pills">
+                        @php
+                            $todayQs = array_merge($base, ['date_range' => 'today']);
+                            $todayActive = request('date_range') === 'today';
+                            $todayUrl = route('admin.supplier-orders.index', $todayQs);
+                        @endphp
+                        <a href="{{ $todayUrl }}" class="btn btn-sm {{ $todayActive ? 'btn-primary' : 'btn-secondary' }}">Hoy</a>
                         {!! $pill('', 'Todos') !!}
                         {!! $pill('open', 'Abiertas') !!}
                         {!! $pill('draft', 'Borrador') !!}

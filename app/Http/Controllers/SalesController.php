@@ -16,8 +16,8 @@ use App\Services\Admin\ReportExcelFilename;
 use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\OrderCancellationNotifier;
+use App\Support\AdminDateRange;
 use App\Support\AdminPerPage;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -998,28 +998,24 @@ class SalesController extends Controller
 
         $this->applyVentasStatusScope($query, $request->query('status'));
 
-        switch ($request->get('date_range', 'today')) {
-            case 'today':
-                $query->whereDate('sale_date', Carbon::today());
-                break;
-            case 'week':
-                $query->whereBetween('sale_date', [
-                    Carbon::now()->startOfWeek(),
-                    Carbon::now()->endOfWeek(),
-                ]);
-                break;
-            case 'month':
-                $query->whereMonth('sale_date', Carbon::now()->month)
-                    ->whereYear('sale_date', Carbon::now()->year);
-                break;
-            case 'custom':
-                if ($request->filled('date_from')) {
-                    $query->where('sale_date', '>=', Carbon::parse($request->date_from)->startOfDay());
-                }
-                if ($request->filled('date_to')) {
-                    $query->where('sale_date', '<=', Carbon::parse($request->date_to)->endOfDay());
-                }
-                break;
+        $dateRange = (string) $request->get('date_range', AdminDateRange::PRESET_TODAY);
+        if ($dateRange === AdminDateRange::PRESET_CUSTOM) {
+            if ($request->filled('date_from') || $request->filled('date_to')) {
+                AdminDateRange::applyDateTimeBetween(
+                    $query,
+                    'sale_date',
+                    AdminDateRange::PRESET_CUSTOM,
+                    $request->input('date_from'),
+                    $request->input('date_to'),
+                    storedAsUtc: true,
+                );
+            }
+        } elseif (in_array($dateRange, [
+            AdminDateRange::PRESET_TODAY,
+            AdminDateRange::PRESET_WEEK,
+            AdminDateRange::PRESET_MONTH,
+        ], true)) {
+            AdminDateRange::applyDateTimeBetween($query, 'sale_date', $dateRange, storedAsUtc: true);
         }
 
         if ($request->filled('payment_method')) {
@@ -1065,13 +1061,22 @@ class SalesController extends Controller
 
     private function calculateDailySales()
     {
-        return Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->sum('total');
+        [$start, $end] = AdminDateRange::boundsForUtcColumn(AdminDateRange::PRESET_TODAY);
+
+        return Sale::whereBetween('sale_date', [$start, $end])->where('status', 'completed')->sum('total');
     }
 
     private function calculateDailySalesTrend()
     {
-        $today = Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->sum('total');
-        $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->where('status', 'completed')->sum('total');
+        [$todayStart, $todayEnd] = AdminDateRange::boundsForUtcColumn(AdminDateRange::PRESET_TODAY);
+        $today = Sale::whereBetween('sale_date', [$todayStart, $todayEnd])->where('status', 'completed')->sum('total');
+        $yesterday = AdminDateRange::now()->copy()->subDay();
+        [$yesterdayStart, $yesterdayEnd] = AdminDateRange::boundsForUtcColumn(
+            AdminDateRange::PRESET_CUSTOM,
+            $yesterday->toDateString(),
+            $yesterday->toDateString(),
+        );
+        $yesterday = Sale::whereBetween('sale_date', [$yesterdayStart, $yesterdayEnd])->where('status', 'completed')->sum('total');
         if ($yesterday == 0) {
             return $today > 0 ? 100 : 0;
         }
@@ -1081,13 +1086,22 @@ class SalesController extends Controller
 
     private function calculateDailyTransactions()
     {
-        return Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->count();
+        [$start, $end] = AdminDateRange::boundsForUtcColumn(AdminDateRange::PRESET_TODAY);
+
+        return Sale::whereBetween('sale_date', [$start, $end])->where('status', 'completed')->count();
     }
 
     private function calculateDailyTransactionsTrend()
     {
-        $today = Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->count();
-        $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->where('status', 'completed')->count();
+        [$todayStart, $todayEnd] = AdminDateRange::boundsForUtcColumn(AdminDateRange::PRESET_TODAY);
+        $today = Sale::whereBetween('sale_date', [$todayStart, $todayEnd])->where('status', 'completed')->count();
+        $yesterday = AdminDateRange::now()->copy()->subDay();
+        [$yesterdayStart, $yesterdayEnd] = AdminDateRange::boundsForUtcColumn(
+            AdminDateRange::PRESET_CUSTOM,
+            $yesterday->toDateString(),
+            $yesterday->toDateString(),
+        );
+        $yesterday = Sale::whereBetween('sale_date', [$yesterdayStart, $yesterdayEnd])->where('status', 'completed')->count();
         if ($yesterday == 0) {
             return $today > 0 ? 100 : 0;
         }
@@ -1097,15 +1111,24 @@ class SalesController extends Controller
 
     private function calculateRefunds(): int
     {
-        return Sale::whereDate('sale_date', Carbon::today())
+        [$start, $end] = AdminDateRange::boundsForUtcColumn(AdminDateRange::PRESET_TODAY);
+
+        return Sale::whereBetween('sale_date', [$start, $end])
             ->where('status', 'returned')
             ->count();
     }
 
     private function calculateRefundsTrend(): int
     {
-        $today = Sale::whereDate('sale_date', Carbon::today())->where('status', 'returned')->count();
-        $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->where('status', 'returned')->count();
+        [$todayStart, $todayEnd] = AdminDateRange::boundsForUtcColumn(AdminDateRange::PRESET_TODAY);
+        $today = Sale::whereBetween('sale_date', [$todayStart, $todayEnd])->where('status', 'returned')->count();
+        $yesterday = AdminDateRange::now()->copy()->subDay();
+        [$yesterdayStart, $yesterdayEnd] = AdminDateRange::boundsForUtcColumn(
+            AdminDateRange::PRESET_CUSTOM,
+            $yesterday->toDateString(),
+            $yesterday->toDateString(),
+        );
+        $yesterday = Sale::whereBetween('sale_date', [$yesterdayStart, $yesterdayEnd])->where('status', 'returned')->count();
 
         return $today - $yesterday;
     }
@@ -1273,20 +1296,6 @@ class SalesController extends Controller
 
     private function resolveDateRange(string $range, ?string $dateFrom, ?string $dateTo): array
     {
-        switch ($range) {
-            case 'today':
-                return [now()->startOfDay()->toDateTimeString(), now()->endOfDay()->toDateTimeString()];
-            case 'week':
-                return [now()->startOfWeek()->startOfDay()->toDateTimeString(), now()->endOfWeek()->endOfDay()->toDateTimeString()];
-            case 'month':
-                return [now()->startOfMonth()->startOfDay()->toDateTimeString(), now()->endOfMonth()->endOfDay()->toDateTimeString()];
-            case 'custom':
-                return [
-                    $dateFrom ? Carbon::parse($dateFrom)->startOfDay()->toDateTimeString() : now()->startOfDay()->toDateTimeString(),
-                    $dateTo ? Carbon::parse($dateTo)->endOfDay()->toDateTimeString() : now()->endOfDay()->toDateTimeString(),
-                ];
-            default:
-                return [now()->startOfMonth()->startOfDay()->toDateTimeString(), now()->endOfMonth()->endOfDay()->toDateTimeString()];
-        }
+        return AdminDateRange::boundsAsDateTimeStrings($range, $dateFrom, $dateTo, storedAsUtc: true);
     }
 }

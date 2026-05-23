@@ -6,6 +6,7 @@ use App\Enums\MovementType;
 use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Services\InventoryMovementService;
+use App\Support\AdminDateRange;
 use App\Support\AdminPerPage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -128,12 +129,22 @@ class InventoryMovementController extends Controller
             }
         }
 
-        if ($request->filled('date_from')) {
-            $q->whereDate('created_at', '>=', $request->date_from);
-        }
+        $dateRange = AdminDateRange::resolvePresetFromRequest(
+            $request->input('date_range'),
+            $request->input('date_from'),
+            $request->input('date_to'),
+        );
 
-        if ($request->filled('date_to')) {
-            $q->whereDate('created_at', '<=', $request->date_to);
+        if ($dateRange === AdminDateRange::PRESET_TODAY) {
+            AdminDateRange::applyDateTimeBetween($q, 'created_at', AdminDateRange::PRESET_TODAY, storedAsUtc: true);
+        } else {
+            AdminDateRange::applyOptionalDateTimeFromTo(
+                $q,
+                'created_at',
+                $request->input('date_from'),
+                $request->input('date_to'),
+                storedAsUtc: true,
+            );
         }
 
         return $q;

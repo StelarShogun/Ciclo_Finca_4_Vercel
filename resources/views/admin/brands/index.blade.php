@@ -45,6 +45,7 @@
         {{-- ==================== TABLA --}}
         <div class="table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
             <div id="cf4-list-fragment">
+            <div class="sales-table-container">
             <table class="brands-table admin-table">
                 <thead>
                     <tr>
@@ -56,7 +57,8 @@
                     @forelse ($brands as $brand)
                         <tr>
                             <td class="brand-name">{{ $brand->name }}</td>
-                            <td class="actions-cell admin-table__col--actions">
+                            <td class="admin-table__col--actions">
+                                <div class="actions-container">
                                 <button class="btn-icon btn-edit"
                                     data-id="{{ $brand->id }}"
                                     data-name="{{ $brand->name }}"
@@ -69,6 +71,7 @@
                                     title="Eliminar">
                                     <i class="fas fa-trash"></i>
                                 </button>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -78,6 +81,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
 
             <div class="pagination-wrapper">
                 <x-admin.pagination :paginator="$brands" label="marcas" />
