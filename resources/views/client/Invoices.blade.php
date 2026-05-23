@@ -258,7 +258,7 @@
 
 @push('scripts')
     @vite(['resources/js/client/invoices-page.js'])
-    @if ($tab === 'historial' && ! empty($pendingReviewProducts))
+    @if ($tab === 'historial' && $pendingReviewProducts->isNotEmpty())
         <script>
             window.__cf4InvoiceReview = {
                 tab: @json($tab),

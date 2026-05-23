@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\AdminUser;
 use App\Models\Client;
 use App\Models\Product;
+use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -201,7 +202,7 @@ class ReviewTest extends TestCase
         ]);
     }
 
-    public function test_history_view_contains_pending_review_products_for_modal(): void
+    public function test_history_view_omits_review_modal_when_no_pending_products(): void
     {
         $client = $this->seedClient('cliente-review-history@example.com');
         $product = $this->seedProduct('Producto Historial');
@@ -214,7 +215,27 @@ class ReviewTest extends TestCase
 
         $response = $this->get(route('clients.invoices', ['tab' => 'historial']));
         $response->assertStatus(200);
-        $response->assertSee('const pendingProducts = [];', false);
+        $response->assertDontSee('__cf4InvoiceReview', false);
+    }
+
+    public function test_history_view_injects_review_modal_config_when_products_pending(): void
+    {
+        $client = $this->seedClient('cliente-review-history-pending@example.com');
+        $product = $this->seedProduct('Producto Pendiente Resena');
+        $this->createCompletedSaleWithItem($client, $product);
+        ProductReview::create([
+            'product_id' => $product->product_id,
+            'client_id' => $client->user_id,
+            'stars' => null,
+        ]);
+
+        $this->actingAs($client, 'clients');
+
+        $response = $this->get(route('clients.invoices', ['tab' => 'historial']));
+        $response->assertStatus(200);
+        $response->assertSee('__cf4InvoiceReview', false);
+        $response->assertSee('Producto Pendiente Resena', false);
+        $response->assertSee('pendingProducts', false);
     }
 
     private function seedAdminContext(): array
