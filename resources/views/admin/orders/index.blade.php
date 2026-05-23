@@ -91,6 +91,29 @@
                 </div>
 
                 <div class="filter-group">
+                    <label for="orders-date-range">Rango de fecha</label>
+                    <select id="orders-date-range" name="date_range">
+                        <option value="" {{ request('date_range', '') === '' ? 'selected' : '' }}>Todas las fechas</option>
+                        <option value="today" {{ request('date_range') === 'today' ? 'selected' : '' }}>Hoy</option>
+                        <option value="week" {{ request('date_range') === 'week' ? 'selected' : '' }}>Esta semana</option>
+                        <option value="month" {{ request('date_range') === 'month' ? 'selected' : '' }}>Este mes</option>
+                        <option value="custom" {{ request('date_range') === 'custom' ? 'selected' : '' }}>Personalizado</option>
+                    </select>
+                </div>
+
+                <div class="filter-group filter-group--date-from" id="orders-custom-date-from-group"
+                    style="{{ request('date_range') === 'custom' ? '' : 'display:none;' }}">
+                    <label for="orders-date-from">Fecha inicial</label>
+                    <input type="date" id="orders-date-from" name="date_from" value="{{ request('date_from') }}">
+                </div>
+
+                <div class="filter-group filter-group--date-to" id="orders-custom-date-to-group"
+                    style="{{ request('date_range') === 'custom' ? '' : 'display:none;' }}">
+                    <label for="orders-date-to">Fecha final</label>
+                    <input type="date" id="orders-date-to" name="date_to" value="{{ request('date_to') }}">
+                </div>
+
+                <div class="filter-group">
                     <label for="orders-search">Buscar</label>
                     <input type="text" id="orders-search" name="search" value="{{ request('search') }}"
                         placeholder="Nº encargo, factura o cliente" autocomplete="off">

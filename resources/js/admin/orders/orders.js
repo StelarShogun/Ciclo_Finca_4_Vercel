@@ -1,6 +1,21 @@
 import '../../shared/ajax-pagination.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    const ordersDateRange = document.getElementById('orders-date-range');
+    const ordersDateFromGroup = document.getElementById('orders-custom-date-from-group');
+    const ordersDateToGroup = document.getElementById('orders-custom-date-to-group');
+
+    if (ordersDateRange && ordersDateFromGroup && ordersDateToGroup) {
+        const toggleOrdersCustomDates = () => {
+            const isCustom = ordersDateRange.value === 'custom';
+            ordersDateFromGroup.style.display = isCustom ? '' : 'none';
+            ordersDateToGroup.style.display = isCustom ? '' : 'none';
+        };
+
+        ordersDateRange.addEventListener('change', toggleOrdersCustomDates);
+        toggleOrdersCustomDates();
+    }
+
     const modal = document.getElementById('order-expiration-modal');
     const openBtn = document.getElementById('btn-open-order-expiration-modal');
     const form = document.getElementById('order-expiration-form');

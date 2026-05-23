@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Supplier;
 use App\Services\Admin\AdminPdfExportService;
+use App\Support\AdminDateRange;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -77,7 +78,8 @@ class DashboardController extends Controller
             $totalSuppliers = Supplier::count();
             $totalCategories = Category::count();
 
-            $todaySales = Sale::whereDate('sale_date', Carbon::today())
+            [$todayStart, $todayEnd] = AdminDateRange::boundsForUtcColumn(AdminDateRange::PRESET_TODAY);
+            $todaySales = Sale::whereBetween('sale_date', [$todayStart, $todayEnd])
                 ->where('status', 'completed')
                 ->sum('total');
 
@@ -276,7 +278,8 @@ class DashboardController extends Controller
         $totalSuppliers = Supplier::count();
         $totalCategories = Category::count();
 
-        $todaySales = Sale::whereDate('sale_date', Carbon::today())
+        [$todayStart, $todayEnd] = AdminDateRange::boundsForUtcColumn(AdminDateRange::PRESET_TODAY);
+        $todaySales = Sale::whereBetween('sale_date', [$todayStart, $todayEnd])
             ->where('status', 'completed')
             ->sum('total');
 
@@ -315,7 +318,13 @@ class DashboardController extends Controller
                 ];
             });
 
-        $yesterdaySales = Sale::whereDate('sale_date', Carbon::yesterday())
+        $yesterday = AdminDateRange::now()->copy()->subDay();
+        [$yesterdayStart, $yesterdayEnd] = AdminDateRange::boundsForUtcColumn(
+            AdminDateRange::PRESET_CUSTOM,
+            $yesterday->toDateString(),
+            $yesterday->toDateString(),
+        );
+        $yesterdaySales = Sale::whereBetween('sale_date', [$yesterdayStart, $yesterdayEnd])
             ->where('status', 'completed')
             ->sum('total');
 

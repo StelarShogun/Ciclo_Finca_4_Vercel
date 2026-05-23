@@ -16,6 +16,7 @@ use App\Services\Admin\ProductSalesReportQuery;
 use App\Services\Admin\ReportExcelFilename;
 use App\Services\SalesPerformanceDateRangeService;
 use App\Services\SalesPerformanceMetricsService;
+use App\Support\AdminDateRange;
 use App\Support\AdminPerPage;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
@@ -99,12 +100,12 @@ class ReportsController extends Controller
     ) {
         $resolved = $rangeService->resolve($request->validated());
         $current = $metricsService->aggregateCompletedSales(
-            $resolved['current_start'],
-            $resolved['current_end'],
+            $resolved['current_start']->utc(),
+            $resolved['current_end']->utc(),
         );
         $previous = $metricsService->aggregateCompletedSales(
-            $resolved['previous_start'],
-            $resolved['previous_end'],
+            $resolved['previous_start']->utc(),
+            $resolved['previous_end']->utc(),
         );
         $comparison = $metricsService->comparisonVersusPrior($current, $previous);
 
@@ -507,32 +508,6 @@ class ReportsController extends Controller
 
     private function resolveDateRange(string $range, ?string $dateFrom, ?string $dateTo): array
     {
-        switch ($range) {
-            case 'today':
-                return [
-                    now()->startOfDay()->toDateTimeString(),
-                    now()->endOfDay()->toDateTimeString(),
-                ];
-            case 'week':
-                return [
-                    now()->startOfWeek()->startOfDay()->toDateTimeString(),
-                    now()->endOfWeek()->endOfDay()->toDateTimeString(),
-                ];
-            case 'month':
-                return [
-                    now()->startOfMonth()->startOfDay()->toDateTimeString(),
-                    now()->endOfMonth()->endOfDay()->toDateTimeString(),
-                ];
-            case 'custom':
-                return [
-                    $dateFrom ? Carbon::parse($dateFrom)->startOfDay()->toDateTimeString() : now()->startOfDay()->toDateTimeString(),
-                    $dateTo ? Carbon::parse($dateTo)->endOfDay()->toDateTimeString() : now()->endOfDay()->toDateTimeString(),
-                ];
-            default:
-                return [
-                    now()->startOfMonth()->startOfDay()->toDateTimeString(),
-                    now()->endOfMonth()->endOfDay()->toDateTimeString(),
-                ];
-        }
+        return AdminDateRange::boundsAsDateTimeStrings($range, $dateFrom, $dateTo, storedAsUtc: true);
     }
 }

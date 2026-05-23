@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
 use App\Models\Sale;
+use App\Support\AdminDateRange;
 use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
 
@@ -21,6 +22,29 @@ class AdminOrderController extends Controller
 
         if ($status) {
             $query->where('status', $status);
+        }
+
+        $dateRange = AdminDateRange::resolvePresetFromRequest(
+            $request->input('date_range'),
+            $request->input('date_from'),
+            $request->input('date_to'),
+        );
+
+        if ($dateRange !== null) {
+            if ($dateRange === AdminDateRange::PRESET_CUSTOM) {
+                if ($request->filled('date_from') || $request->filled('date_to')) {
+                    AdminDateRange::applyDateTimeBetween(
+                        $query,
+                        'sale_date',
+                        AdminDateRange::PRESET_CUSTOM,
+                        $request->input('date_from'),
+                        $request->input('date_to'),
+                        storedAsUtc: true,
+                    );
+                }
+            } else {
+                AdminDateRange::applyDateTimeBetween($query, 'sale_date', $dateRange, storedAsUtc: true);
+            }
         }
 
         if ($search) {

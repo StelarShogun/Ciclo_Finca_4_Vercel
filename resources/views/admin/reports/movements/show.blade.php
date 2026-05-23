@@ -116,6 +116,7 @@
                                aria-label="Año hasta" autocomplete="off">
                     </div>
                 </div>
+                <button type="button" class="inv-mov-apply-btn" id="inv-filter-today">Hoy</button>
                 <button type="button" class="inv-mov-apply-btn" id="inv-apply-dates">Aplicar fechas</button>
                 <button type="button" class="inv-mov-clear-btn" id="inv-clear-filters">Limpiar filtros</button>
 

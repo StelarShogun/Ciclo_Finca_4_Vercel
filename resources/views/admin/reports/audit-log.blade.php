@@ -82,6 +82,15 @@
                 </label>
 
                 <div class="filter-actions">
+                    <a href="{{ route('admin.reports.audit-log', [
+                        'user' => $filters['user'],
+                        'action_type' => $filters['action_type'],
+                        'module' => $filters['module'],
+                        'from' => \App\Support\AdminDateRange::todayDateString(),
+                        'to' => \App\Support\AdminDateRange::todayDateString(),
+                        'dir' => $filters['dir'],
+                        'per_page' => request('per_page'),
+                    ]) }}" class="btn-filter-clear">Hoy</a>
                     <button type="submit" class="btn-filter-apply">Aplicar filtros</button>
                     <a href="{{ route('admin.reports.audit-log') }}" class="btn-filter-clear">Limpiar</a>
                 </div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Support\AdminDateRange;
 use App\Support\AdminPerPage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -100,8 +101,16 @@ class AuditLogController extends Controller
             })
             ->when($actionType !== '', fn ($query) => $query->where('action_type', $actionType))
             ->when($module !== '', fn ($query) => $query->where('module', $module))
-            ->when($from !== null, fn ($query) => $query->where('created_at', '>=', $from->copy()->startOfDay()))
-            ->when($to !== null, fn ($query) => $query->where('created_at', '<=', $to->copy()->endOfDay()))
+            ->when($from !== null, fn ($query) => $query->where(
+                'created_at',
+                '>=',
+                AdminDateRange::parseDateStart($from->toDateString())->utc(),
+            ))
+            ->when($to !== null, fn ($query) => $query->where(
+                'created_at',
+                '<=',
+                AdminDateRange::parseDateEnd($to->toDateString())->utc(),
+            ))
             ->orderBy('created_at', $dir)
             ->paginate($perPage)
             ->withQueryString();
