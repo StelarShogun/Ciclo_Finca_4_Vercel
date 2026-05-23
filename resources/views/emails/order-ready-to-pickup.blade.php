@@ -30,12 +30,12 @@
 
     <p>Recuerde traer su número de pedido o identificación al momento de recogerlo.</p>
 
-    <p style="margin-top:24px;">
+    <div style="margin-top:24px;">
         @include('emails.partials.button', [
             'href' => $invoicesUrl,
             'label' => 'Ver pedido en Facturas',
         ])
-    </p>
+    </div>
 @endsection
 
 @section('footer-note')
