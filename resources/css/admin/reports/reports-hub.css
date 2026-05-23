@@ -453,7 +453,7 @@
     font-size: 0.875rem;
 }
 
-.inv-index-report .sales-table thead th {
+.inv-index-report .sales-table:not(.admin-table) thead th {
     padding: 0.65rem 0.85rem;
     background: rgba(0, 0, 0, 0.03);
     font-size: 0.78rem;
@@ -474,7 +474,7 @@
     transition: background 0.12s ease;
 }
 
-.inv-index-report .sales-table tbody tr:hover {
+.inv-index-report .sales-table:not(.admin-table) tbody tr:hover {
     background: rgba(0, 0, 0, 0.025);
 }
 
@@ -527,14 +527,29 @@
     color: var(--color-danger, #991b1b);
 }
 
-/* Actions */
+/* Actions — centered column (matches supplier orders pattern) */
+
+.inv-index-report .admin-table thead th.admin-table__col--actions,
+.inv-index-report .admin-table tbody td.admin-table__col--actions {
+    text-align: center;
+}
 
 .inv-index-report .actions-container {
     display: flex;
+    justify-content: center;
     align-items: center;
+    width: 100%;
     flex-wrap: nowrap;
     white-space: nowrap;
     gap: 0.4rem;
+}
+
+.inv-index-report .admin-table:has(tbody td[data-label]) tbody td.admin-table__col--actions {
+    text-align: center;
+}
+
+.inv-index-report .admin-table:has(tbody td[data-label]) .actions-container {
+    justify-content: center;
 }
 
 .inv-index-report .actions-container .action-btn {

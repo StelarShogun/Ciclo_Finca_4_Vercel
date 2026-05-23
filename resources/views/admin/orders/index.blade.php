@@ -115,18 +115,17 @@
 
             <div data-cf4-orders-table-region id="cf4-orders-table-region">
                 <div class="sales-table-container">
-                    <table class="sales-table cf4-purchases-table">
+                    <table class="sales-table cf4-purchases-table admin-table">
                         <thead>
                             <tr>
                                 <th>Encargos / Factura</th>
                                 <th>Cliente</th>
-                                <th>Productos</th>
                                 <th>Fecha de pedido</th>
                                 <th>Fecha listo para recoger</th>
                                 <th>Fecha de confirmación</th>
                                 <th>Estado</th>
                                 <th>Total</th>
-                                <th>Acciones</th>
+                                <th class="admin-table__col--actions">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -156,20 +155,6 @@
                                         @endif
                                     </td>
 
-                                    <td>
-                                        @if ($sale->saleItems && $sale->saleItems->count() > 0)
-                                            <div style="display:flex; flex-direction:column; gap:6px;">
-                                                @foreach ($sale->saleItems as $item)
-                                                    <div>
-                                                        {{ $item->quantity }} × {{ $item->product->name ?? 'Producto' }}
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        @else
-                                            <span class="text-muted">Sin productos</span>
-                                        @endif
-                                    </td>
-
                                     <td>{{ $sale->adminOrderPlacedAtLabel() }}</td>
                                     <td>{{ $sale->adminReadyAtLabel() }}</td>
                                     <td>{{ $sale->adminConfirmedAtLabel() }}</td>
@@ -185,7 +170,7 @@
                                         <strong>₡{{ number_format($sale->total, 0, ',', '.') }}</strong>
                                     </td>
 
-                                    <td>
+                                    <td class="admin-table__col--actions">
                                         <div class="actions-container">
                                             @php
                                                 $saleReference = $sale->invoice_number ?? '#' . $sale->sale_id;
@@ -227,6 +212,8 @@
                                             @if ($sale->status === 'completed')
                                                 <a href="{{ route('sales.invoice', $sale->sale_id) }}" target="_blank"
                                                     rel="noopener noreferrer" class="action-link-invoice"
+                                                    data-confirm-invoice
+                                                    data-invoice-label="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}"
                                                     title="Ver factura en formato estructurado">
                                                     <i class="fas fa-file-invoice" aria-hidden="true"></i>
                                                     Ver factura
@@ -237,7 +224,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9">
+                                    <td colspan="8">
                                         <div class="orders-empty">
                                             <div class="orders-empty-icon">
                                                 <i class="fas fa-inbox"></i>

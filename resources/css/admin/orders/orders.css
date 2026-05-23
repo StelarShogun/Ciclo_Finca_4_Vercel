@@ -148,30 +148,8 @@
   background: transparent;
 }
 
-.cf4-orders-module .orders-table-card .sales-table {
+.cf4-orders-module .orders-table-card .sales-table.admin-table {
   margin: 0;
-}
-
-.cf4-orders-module .orders-table-card .sales-table thead th {
-  background: rgba(0, 0, 0, 0.03);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  font-weight: 600;
-  color: var(--color-muted);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.cf4-orders-module .orders-table-card .sales-table tbody tr {
-  transition: background 0.12s ease;
-}
-
-.cf4-orders-module .orders-table-card .sales-table tbody tr:hover {
-  background: rgba(0, 0, 0, 0.025);
-}
-
-.cf4-orders-module .orders-table-card .sales-table tbody td {
-  vertical-align: middle;
 }
 
 .cf4-orders-module .actions-container {
@@ -400,6 +378,28 @@
  * Reutiliza toda la estructura de .cf4-orders-module y extiende los
  * estados propios del flujo proveedor: confirmed, delivered.
  * ===================================================================== */
+
+/* Acciones centradas en la columna */
+.cf4-supplier-orders-module .admin-table thead th.admin-table__col--actions,
+.cf4-supplier-orders-module .admin-table tbody td.admin-table__col--actions {
+    text-align: center;
+}
+
+.cf4-supplier-orders-module .actions-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 0.35rem;
+}
+
+.cf4-supplier-orders-module .admin-table:has(tbody td[data-label]) tbody td.admin-table__col--actions {
+    text-align: center;
+}
+
+.cf4-supplier-orders-module .admin-table:has(tbody td[data-label]) .actions-container {
+    justify-content: center;
+}
 
 /* Pills de estado adicionales */
 .cf4-supplier-orders-module .order-status-pill.confirmed {

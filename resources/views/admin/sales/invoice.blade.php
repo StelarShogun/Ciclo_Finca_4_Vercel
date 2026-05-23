@@ -6,12 +6,20 @@
     @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/invoice-document.css'])
 @endpush
 
+@push('scripts')
+    @vite(['resources/js/admin/sales/sales.js'])
+@endpush
+
+@push('extra-meta')
+    <meta name="invoice-label" content="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}">
+@endpush
+
 @section('aside')@endsection
 
 @section('contenido')
     <div class="invoice-doc">
         <div class="invoice-doc__toolbar no-print">
-            <button type="button" class="btn-print" onclick="window.print()">
+            <button type="button" class="btn-print" data-confirm-print data-invoice-label="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}">
                 <i class="fas fa-print" aria-hidden="true"></i> Imprimir
             </button>
             @php

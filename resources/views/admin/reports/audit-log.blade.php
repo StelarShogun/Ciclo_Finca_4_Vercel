@@ -10,10 +10,6 @@
     @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/audit-log.css'])
 @endpush
 
-@push('vite-body')
-    @vite(['resources/js/shared/ajax-pagination.js'])
-@endpush
-
 @section('aside')
     @include('admin.parts.aside')
 @endsection
@@ -102,7 +98,7 @@
             @else
                 <div id="cf4-list-fragment">
                     <div class="table-wrap">
-                        <table class="audit-log-table">
+                        <table class="audit-log-table admin-table">
                             <thead>
                                 <tr>
                                     <th>Fecha y hora</th>

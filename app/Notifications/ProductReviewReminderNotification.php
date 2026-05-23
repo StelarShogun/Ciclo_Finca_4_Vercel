@@ -29,13 +29,11 @@ class ProductReviewReminderNotification extends Notification
 
         return (new MailMessage)
             ->subject('Reseña de productos comprados - Ciclo Finca 4')
-            ->line("Estimado {$clientName},")
-            ->line(' ')
-            ->line("Favor reseñar {$productPhrase}.")
-            ->line('Para esto, acceda a Facturas > Historial de compras:')
-            ->line($historyUrl)
-            ->line(' ')
-            ->line('Gracias por comprar en Ciclo Finca 4.');
+            ->view('emails.product-review-reminder', [
+                'clientName' => $clientName,
+                'productPhrase' => $productPhrase,
+                'historyUrl' => $historyUrl,
+            ]);
     }
 
     public function toArray(object $notifiable): array

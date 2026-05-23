@@ -93,6 +93,12 @@
             'canceladas' => 'fas fa-ban',
             default => 'fas fa-file-invoice',
         };
+
+        $activeTabLabel = match ($tab) {
+            'historial' => 'Historial de compras',
+            'canceladas' => 'Canceladas',
+            default => 'Pendientes / Por recoger',
+        };
     @endphp
 
     <div class="cf4-invoices-header">
@@ -109,16 +115,49 @@
             </nav>
         </div>
         <div class="cf4-invoices-tab-selector">
-            <div class="cf4-select-wrapper">
-                <i class="{{ $selectIcon }} cf4-select-icon"></i>
-                <select id="cf4-invoice-tab" class="cf4-select" onchange="window.location.href = '{{ route('clients.invoices') }}?tab=' + this.value">
-                    <option value="facturas" {{ $tab === 'facturas' ? 'selected' : '' }}>Pendientes / Por recoger</option>
-                    <option value="canceladas" {{ $tab === 'canceladas' ? 'selected' : '' }}>Canceladas</option>
-                    <option value="historial" {{ $tab === 'historial' ? 'selected' : '' }}>Historial de compras</option>
-                </select>
-                @if($unseenHistoryCount > 0 && $tab !== 'historial')
-                    <span class="cf4-history-tab-badge" id="history-tab-badge" title="Compras nuevas en Historial" aria-hidden="true"></span>
-                @endif
+            <div class="cf4-invoices-tab-dropdown" data-cf4-invoices-tab-dropdown>
+                <button type="button"
+                        class="cf4-invoices-tab-trigger"
+                        id="cf4-invoice-tab-trigger"
+                        aria-expanded="false"
+                        aria-haspopup="listbox"
+                        aria-controls="cf4-invoice-tab-menu">
+                    <i class="{{ $selectIcon }} cf4-invoices-tab-trigger__icon" aria-hidden="true"></i>
+                    <span class="cf4-invoices-tab-trigger__label">{{ $activeTabLabel }}</span>
+                    <i class="fas fa-chevron-down cf4-invoices-tab-trigger__chevron" aria-hidden="true"></i>
+                    @if($unseenHistoryCount > 0 && $tab !== 'historial')
+                        <span class="cf4-invoices-tab-trigger__badge" id="history-tab-badge" title="Compras nuevas en Historial"></span>
+                    @endif
+                </button>
+                <ul class="cf4-invoices-tab-menu" id="cf4-invoice-tab-menu" role="listbox" hidden>
+                    <li role="presentation">
+                        <a href="{{ route('clients.invoices', ['tab' => 'facturas']) }}"
+                           role="option"
+                           @class(['cf4-invoices-tab-option', 'is-active' => $tab === 'facturas'])>
+                            <i class="fas fa-file-invoice" aria-hidden="true"></i>
+                            Pendientes / Por recoger
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="{{ route('clients.invoices', ['tab' => 'canceladas']) }}"
+                           role="option"
+                           @class(['cf4-invoices-tab-option', 'is-active' => $tab === 'canceladas'])>
+                            <i class="fas fa-ban" aria-hidden="true"></i>
+                            Canceladas
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="{{ route('clients.invoices', ['tab' => 'historial']) }}"
+                           role="option"
+                           @class(['cf4-invoices-tab-option', 'is-active' => $tab === 'historial'])>
+                            <i class="fas fa-history" aria-hidden="true"></i>
+                            Historial de compras
+                            @if($unseenHistoryCount > 0 && $tab !== 'historial')
+                                <span class="cf4-invoices-tab-option__badge" title="Compras nuevas"></span>
+                            @endif
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
@@ -132,8 +171,24 @@
         </nav>
 
         <div class="cf4-invoices-card">
-            <div class="sales-table-container">
-                <table class="sales-table cf4-purchases-table cf4-invoices-list-table">
+            @if($orders->isEmpty())
+                @php
+                    $emptyMessage = match ($tab) {
+                        'historial' => 'No has realizado ninguna compra aún.',
+                        'canceladas' => 'No tienes facturas canceladas.',
+                        default => 'No tienes facturas pendientes o por recoger.',
+                    };
+                @endphp
+                <div class="cf4-invoices-empty cf4-invoices-empty--panel">
+                    <div class="cf4-invoices-empty-icon"><i class="fas fa-file-invoice"></i></div>
+                    <p>{{ $emptyMessage }}</p>
+                    <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-bicycle"></i> Ir al catálogo
+                    </a>
+                </div>
+            @else
+                <div class="sales-table-container cf4-invoices-table-scroll">
+                    <table class="sales-table cf4-invoices-list-table admin-table">
                     <thead>
                         <tr>
                             <th>Factura</th>
@@ -144,7 +199,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($orders as $sale)
+                        @foreach($orders as $sale)
                             @php
                                 $statusLabel = match ($sale->status) {
                                     'pending' => 'Pendiente',
@@ -164,47 +219,27 @@
                             @endphp
 
                             <tr>
-                                <td>
+                                <td data-label="Factura">
                                     @if($sale->invoice_number)
                                         <strong>{{ $sale->invoice_number }}</strong>
                                     @else
                                         <span class="cf4-invoice-muted">Sin número asignado</span>
                                     @endif
                                 </td>
-                                <td>{{ $sale->sale_date ? $sale->sale_date->format('d/m/Y H:i') : 'Sin fecha' }}</td>
-                                <td>
+                                <td data-label="Fecha">{{ $sale->sale_date ? $sale->sale_date->format('d/m/Y H:i') : 'Sin fecha' }}</td>
+                                <td data-label="Estado">
                                     <span class="cf4-invoice-status-badge {{ $statusClass }}">
                                         {{ $statusLabel }}
                                     </span>
                                 </td>
-                                <td><strong>&#8353;{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
-                                <td class="cf4-invoices-td-actions">
-                                    <a href="{{ route('clients.invoices.show', $sale) }}" class="btn btn-primary btn-sm" aria-label="Ver detalle{{ $sale->invoice_number ? ' de '.$sale->invoice_number : '' }}">
-                                        <i class="fas fa-eye"></i> Ver detalle
+                                <td data-label="{{ $tab === 'historial' ? 'Total pagado' : 'Total' }}"><strong>&#8353;{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
+                                <td class="cf4-invoices-td-actions" data-label="Acciones">
+                                    <a href="{{ route('clients.invoices.show', $sale) }}" class="btn btn-primary btn-sm cf4-invoice-detail-btn" aria-label="Ver detalle{{ $sale->invoice_number ? ' de '.$sale->invoice_number : '' }}">
+                                        Ver detalle
                                     </a>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5">
-                                    <div class="cf4-invoices-empty">
-                                        <div class="cf4-invoices-empty-icon"><i class="fas fa-file-invoice"></i></div>
-                                        <p>
-                                            @if($tab === 'historial')
-                                                No has realizado ninguna compra aún.
-                                            @elseif($tab === 'canceladas')
-                                                No tienes facturas canceladas.
-                                            @else
-                                                No tienes facturas pendientes o por recoger.
-                                            @endif
-                                        </p>
-                                        <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-bicycle"></i> Ir al catálogo
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -214,6 +249,7 @@
                     <x-pagination :paginator="$orders" label="facturas" />
                 </div>
             @endif
+            @endif
         </div>
 
     </div>
@@ -221,6 +257,7 @@
 @endsection
 
 @push('scripts')
+    @vite(['resources/js/client/invoices-page.js'])
 <script>
 (function () {
     const tab = @json($tab);

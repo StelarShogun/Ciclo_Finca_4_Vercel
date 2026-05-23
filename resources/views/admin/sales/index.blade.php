@@ -180,17 +180,16 @@
         <div data-cf4-ajax-pagination data-cf4-ajax-scroll>
         <div id="cf4-list-fragment">
         <div class="sales-table-container">
-            <table class="sales-table">
+            <table class="sales-table admin-table">
                 <thead>
                     <tr>
                         <th>Número de factura</th>
                         <th>Cliente</th>
                         <th>Fecha de venta</th>
                         <th>Estado</th>
-                        <th>Días restantes</th>
                         <th>Método de Pago</th>
                         <th>Total</th>
-                        <th>Acciones</th>
+                        <th class="admin-table__col--actions">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -220,59 +219,12 @@
                                 </span>
                             </td>
 
-                            {{-- Expiry / pickup window: ready_to_pickup shows pickup countdown from ready_at;
-                                 completed shows an em dash (finalized). Other statuses use the legacy
-                                 30-day countdown from sale_date. --}}
-                            <td>
-                                @if ($sale->status === 'ready_to_pickup')
-                                    @php
-                                        $pickupLabel = $sale->pickup_time_remaining_label;
-                                    @endphp
-                                    @if ($pickupLabel === 'Vencido')
-                                        <span class="expiry-badge expiry-expired" title="Plazo de recogida vencido">
-                                            <i class="fas fa-clock"></i> Vencido
-                                        </span>
-                                    @elseif ($pickupLabel !== '')
-                                        <span class="expiry-badge expiry-ok">{{ $pickupLabel }}</span>
-                                    @else
-                                        <span class="text-muted">—</span>
-                                    @endif
-                                @elseif ($sale->status === 'completed')
-                                    <span class="text-muted">—</span>
-                                @else
-                                    @php
-                                        $days = $sale->days_remaining_until_expiration;
-                                        $warn = $sale->is_expiry_warning;
-                                    @endphp
-                                    @if ($days <= 0)
-                                        <span class="expiry-badge expiry-expired" title="El pedido ha expirado">
-                                            <i class="fas fa-clock"></i> Expirado
-                                        </span>
-                                    @elseif($warn)
-                                        <span class="expiry-badge expiry-warning">
-                                            <span class="expiry-warning-trigger" tabindex="0" role="button"
-                                                aria-label="Ver aviso de expiración">
-                                                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
-                                                <span class="expiry-tooltip-label">
-                                                    ¡Atención! Este pedido será eliminado automáticamente en
-                                                    {{ $days }} día(s).
-                                                    Por favor tome las acciones necesarias antes de la fecha límite.
-                                                </span>
-                                            </span>
-                                            {{ $days }} día(s)
-                                        </span>
-                                    @else
-                                        <span class="expiry-badge expiry-ok">{{ $days }} día(s)</span>
-                                    @endif
-                                @endif
-                            </td>
-
                             <td>{{ $paymentLabels[$sale->payment_method] ?? $sale->payment_method }}</td>
 
                             <td><strong>₡{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
 
                             {{-- Row actions vary by sale status (CA-01) --}}
-                            <td>
+                            <td class="admin-table__col--actions">
                                 <div class="actions-container">
                                     <button class="action-btn view" onclick="viewSale('{{ $sale->sale_id }}')"
                                         title="Ver detalles">
@@ -281,6 +233,8 @@
                                     @if ($sale->status === 'completed')
                                         <a href="{{ route('sales.invoice', $sale->sale_id) }}" target="_blank"
                                             rel="noopener noreferrer" class="action-link-invoice"
+                                            data-confirm-invoice
+                                            data-invoice-label="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}"
                                             title="Ver factura en formato estructurado">
                                             <i class="fas fa-file-invoice" aria-hidden="true"></i>
                                             Ver factura
@@ -293,7 +247,8 @@
                                         </button>
                                     @endif
                                     @if ($sale->status !== 'cancelled')
-                                        <button class="action-btn secondary" onclick="printSale('{{ $sale->sale_id }}')"
+                                        <button class="action-btn secondary"
+                                            onclick="printSale(@js($sale->sale_id), @js($sale->invoice_number ?? '#' . $sale->sale_id))"
                                             title="Imprimir">
                                             <i class="fas fa-print"></i>
                                         </button>
@@ -303,7 +258,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center">
+                            <td colspan="7" class="text-center">
                                 <div class="table-empty-state">
                                     <i class="fas fa-shopping-cart table-empty-icon"></i>
                                     <p>No hay ventas para los filtros seleccionados.</p>

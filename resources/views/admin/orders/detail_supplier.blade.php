@@ -215,7 +215,7 @@
             <section class="detail-card detail-card-wide">
                 <h2><i class="fas fa-box"></i> Productos</h2>
                 <div class="items-table-wrap">
-                    <table class="items-table">
+                    <table class="items-table admin-table">
                         <thead>
                             <tr>
                                 <th>Producto</th>
@@ -360,7 +360,7 @@
                 <div id="receive-form-error" class="field-error" style="display:none; margin-bottom:12px;" role="alert"></div>
 
                 <div class="items-table-wrap">
-                    <table class="items-table" id="receive-items-table">
+                    <table class="items-table admin-table" id="receive-items-table">
                         <thead>
                             <tr>
                                 <th>Producto</th>

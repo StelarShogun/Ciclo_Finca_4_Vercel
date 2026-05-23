@@ -61,13 +61,13 @@
                 <p class="empty-msg">Este cliente no tiene ventas completadas registradas.</p>
             @else
                 <div class="table-wrap">
-                    <table class="report-table client-purchases-show-table">
+                    <table class="report-table client-purchases-show-table admin-table">
                         <thead>
                             <tr>
                                 <th>Factura</th>
                                 <th>Fecha</th>
                                 <th class="num">Total</th>
-                                <th class="col-actions" scope="col">Acción</th>
+                                <th class="col-actions admin-table__col--actions" scope="col">Acción</th>
                             </tr>
                         </thead>
                         <tbody>

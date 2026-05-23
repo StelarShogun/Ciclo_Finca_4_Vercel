@@ -28,7 +28,7 @@
 
     <div class="cf4-invoices-card">
         <div class="sales-table-container">
-            <table class="sales-table cf4-purchases-table">
+            <table class="sales-table cf4-purchases-table admin-table">
                 <thead>
                     <tr>
                         <th>Fecha</th>
@@ -38,8 +38,8 @@
                 <tbody>
                     @forelse($notifications as $notification)
                         <tr>
-                            <td>{{ optional($notification->created_at)->format('d/m/Y H:i') }}</td>
-                            <td>
+                            <td data-label="Fecha">{{ optional($notification->created_at)->format('d/m/Y H:i') }}</td>
+                            <td data-label="Mensaje">
                                 <div class="cf4-notification-message">
                                     {{ data_get($notification->data, 'message', 'Notificación del sistema') }}
                                 </div>

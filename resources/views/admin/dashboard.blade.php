@@ -173,7 +173,7 @@
                     </div>
                     <div class="table-content table-content--scroll">
                         <div class="table-scroll-wrapper">
-                            <table class="dashboard-table">
+                            <table class="dashboard-table admin-table">
                                 <thead>
                                     <tr>
                                         <th>Producto</th>
@@ -240,7 +240,7 @@
                     </div>
                     <div class="table-content table-content--scroll">
                         <div class="table-scroll-wrapper">
-                            <table class="dashboard-table">
+                            <table class="dashboard-table admin-table">
                                 <thead>
                                     <tr>
                                         <th>Factura</th>
@@ -335,6 +335,14 @@
                         <div class="action-content">
                             <h4>Ver Reportes</h4>
                             <p>Ingresar al módulo de reportes del sistema</p>
+                        </div>
+                    </a>
+
+                    <a href="{{ route('suppliers.create') }}" class="action-card">
+                        <div class="action-icon"><i class="fas fa-truck"></i></div>
+                        <div class="action-content">
+                            <h4>Nuevo proveedor</h4>
+                            <p>Registrar un proveedor en el sistema</p>
                         </div>
                     </a>
 

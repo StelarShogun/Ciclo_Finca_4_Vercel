@@ -59,7 +59,7 @@
         <section class="client-purchases-section" aria-labelledby="table-heading">
             <h2 id="table-heading" class="section-title">Clientes con compras en el periodo</h2>
             <div class="table-wrap">
-                <table class="report-table">
+                <table class="report-table admin-table">
                     <thead>
                         <tr>
                             <th>Cliente</th>
@@ -92,7 +92,7 @@
                                     @endif
                                 </button>
                             </th>
-                            <th class="col-actions" scope="col">Acciones</th>
+                            <th class="col-actions admin-table__col--actions" scope="col">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="client-purchases-body">
