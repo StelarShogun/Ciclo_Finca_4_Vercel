@@ -180,7 +180,7 @@
         <div data-cf4-ajax-pagination data-cf4-ajax-scroll>
         <div id="cf4-list-fragment">
         <div class="sales-table-container">
-            <table class="sales-table">
+            <table class="sales-table admin-table">
                 <thead>
                     <tr>
                         <th>Número de factura</th>
@@ -189,7 +189,7 @@
                         <th>Estado</th>
                         <th>Método de Pago</th>
                         <th>Total</th>
-                        <th>Acciones</th>
+                        <th class="admin-table__col--actions">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -224,7 +224,7 @@
                             <td><strong>₡{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
 
                             {{-- Row actions vary by sale status (CA-01) --}}
-                            <td>
+                            <td class="admin-table__col--actions">
                                 <div class="actions-container">
                                     <button class="action-btn view" onclick="viewSale('{{ $sale->sale_id }}')"
                                         title="Ver detalles">

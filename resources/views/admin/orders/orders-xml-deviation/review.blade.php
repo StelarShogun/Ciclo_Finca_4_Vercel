@@ -363,7 +363,7 @@
 
             {{-- Review table --}}
             <div class="xml-review-table-wrap">
-                <table class="xml-review-table">
+                <table class="xml-review-table admin-table">
                     <thead>
                         <tr>
                             <th style="width:36px;"></th>

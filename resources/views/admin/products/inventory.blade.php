@@ -224,7 +224,7 @@
 
                 {{-- Table view --}}
                 <div class="products-table table-view active">
-                    <table>
+                    <table class="admin-table">
                         <thead>
                             <tr>
                                 <th>Producto</th>
@@ -233,7 +233,7 @@
                                 <th>Disponibilidad</th>
                                 <th>Precio</th>
                                 <th>Estado</th>
-                                <th>Acciones</th>
+                                <th class="admin-table__col--actions">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -293,7 +293,7 @@
                                             {{ $product->status === 'active' ? 'Activo' : ($product->status === 'inactive' ? 'Inactivo' : ($product->status === 'out_of_stock' ? 'Agotado' : 'Descontinuado')) }}
                                         </span>
                                     </td>
-                                    <td>
+                                    <td class="admin-table__col--actions">
                                         <div class="actions-container">
                                             <button class="action-btn view view-details-btn"
                                                     data-product-id="{{ $product->product_id }}"

@@ -170,7 +170,7 @@
                             </h2>
 
                             <div class="inv-table-wrap">
-                                <table class="inv-table">
+                                <table class="inv-table admin-table">
                                     <thead>
                                         <tr>
                                             <th>Fecha y hora</th>

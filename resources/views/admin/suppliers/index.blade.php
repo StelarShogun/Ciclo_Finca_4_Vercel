@@ -80,7 +80,7 @@
         <div data-cf4-ajax-pagination data-cf4-ajax-scroll>
         <div id="cf4-list-fragment">
         <div class="sales-table-container">
-            <table class="sales-table">
+            <table class="sales-table admin-table">
                 <thead>
                     <tr>
                         <th>Proveedor</th>
@@ -88,7 +88,7 @@
                         <th>Teléfono</th>
                         <th>Correo Electrónico</th>
                         <th>Dirección</th>
-                        <th>Acciones</th>
+                        <th class="admin-table__col--actions">Acciones</th>
                     </tr>
                 </thead>
 
@@ -113,7 +113,7 @@
                             <td>{{ $supplier->address }}</td>
 
                             {{-- Row actions: view, edit, delete --}}
-                            <td>
+                            <td class="admin-table__col--actions">
                                 <div class="actions-container">
                                     <button onclick="viewSupplierDetail('{{ $supplier->supplier_id }}')"
                                         class="action-btn view" title="Ver detalles">

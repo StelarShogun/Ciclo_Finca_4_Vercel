@@ -444,7 +444,7 @@ function viewSale(id) {
 
                     <div class="detail-section">
                         <h4>Productos</h4>
-                        <table class="sales-table">
+                        <table class="sales-table admin-table">
                             <thead>
                                 <tr>
                                     <th>Producto</th>

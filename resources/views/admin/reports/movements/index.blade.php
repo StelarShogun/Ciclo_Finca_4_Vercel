@@ -6,10 +6,6 @@
     @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/reports-hub.css'])
 @endpush
 
-@push('vite-body')
-    @vite(['resources/js/shared/ajax-pagination.js'])
-@endpush
-
 @section('aside')
     @include('admin.parts.aside')
 @endsection
@@ -82,16 +78,16 @@
         <div id="cf4-list-fragment">
         {{-- Products table --}}
         <div class="sales-table-container">
-            <table class="sales-table">
+            <table class="sales-table admin-table">
                 <thead>
                     <tr>
                         <th>SKU</th>
                         <th>Producto</th>
-                        <th>Categoria</th>
+                        <th>Categoría</th>
                         <th>Proveedor</th>
                         <th>Estado stock</th>
-                        <th class="text-end">Stock actual</th>
-                        <th>Acciones</th>
+                        <th class="text-end admin-table__col--end">Stock actual</th>
+                        <th class="admin-table__col--actions">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -138,13 +134,18 @@
                                     @endswitch
                                 </span>
                             </td>
-                            <td class="text-end">{{ number_format($product->stock_current) }}</td>
-                            <td>
+                            <td class="text-end admin-table__col--end">
+                                <strong style="color: var(--stock-color-{{ $badgeClass }}, inherit)">
+                                    {{ number_format($product->stock_current) }}
+                                </strong>
+                                <span style="font-size:0.78rem; color:var(--color-text-muted,#6b7280)"> unid.</span>
+                            </td>
+                            <td class="admin-table__col--actions">
                                 <div class="actions-container">
                                     <a href="{{ route('admin.inventory.movements.show', $product->product_id) }}"
-                                       class="btn btn-secondary btn-sm action-btn">
-                                        <i class="fas fa-chart-line"></i>
-                                        Ver movimientos
+                                       class="action-btn secondary"
+                                       title="Ver movimientos de {{ $product->name }}">
+                                        <i class="fas fa-clock-rotate-left"></i>
                                     </a>
                                 </div>
                             </td>
@@ -153,8 +154,21 @@
                         <tr>
                             <td colspan="7">
                                 <div class="orders-empty">
-                                    <i class="fas fa-inbox orders-empty-icon" aria-hidden="true"></i>
-                                    <p>No hay productos para mostrar.</p>
+                                    <div class="orders-empty-icon">
+                                        <i class="fas fa-box-open"></i>
+                                    </div>
+                                    <p style="margin:0; font-size:1rem;">
+                                        @if(request()->filled('search'))
+                                            Ningún producto coincide con «{{ request('search') }}».
+                                        @else
+                                            No hay productos registrados aún.
+                                        @endif
+                                    </p>
+                                    @if(request()->filled('search'))
+                                        <p style="margin:0.75rem 0 0; font-size:0.9rem;">
+                                            <a href="{{ route('admin.inventory.movements.index') }}">Limpiar búsqueda</a>
+                                        </p>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

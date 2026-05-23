@@ -83,7 +83,7 @@ function buildSaleDetailHtml(sale) {
     const productsSection = productsHtml
         ? `<div class="detail-section">
                 <h4><i class="fas fa-shopping-cart"></i> Productos</h4>
-                <table class="sale-products-table">
+                <table class="sale-products-table admin-table">
                     <thead>
                         <tr>
                             <th>Producto</th>

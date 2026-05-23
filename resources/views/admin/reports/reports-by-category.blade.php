@@ -147,7 +147,7 @@
                 {{-- Tabla --}}
                 <div class="report-table-panel">
                     <div class="sales-table-container">
-                        <table class="sales-table">
+                        <table class="sales-table admin-table">
                             <thead>
                                 <tr>
                                     <th>Categoría</th>

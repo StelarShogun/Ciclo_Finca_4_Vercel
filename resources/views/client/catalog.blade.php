@@ -533,7 +533,6 @@
                                                 <a href="{{ $product->clientProductUrl() }}"
                                                    class="btn-product btn-ver-detalles"
                                                    title="Ver ficha del producto">
-                                                    <i class="fas fa-eye" aria-hidden="true"></i>
                                                     Ver producto
                                                 </a>
                                                 @if($canBuy)

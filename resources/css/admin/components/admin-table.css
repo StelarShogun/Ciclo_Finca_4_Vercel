@@ -1,0 +1,524 @@
+/*
+ * CF4-140 — shared table styles (admin + client list tables).
+ * Loaded via shell-base.css and clients-users.css.
+ */
+
+/* Tables that participate in the unified skin (add class="… admin-table" in markup). */
+:is(
+    .admin-table,
+    table.admin-table,
+    .sales-table.admin-table,
+    .dashboard-table.admin-table,
+    .report-table.admin-table,
+    .audit-log-table.admin-table,
+    .inv-table.admin-table,
+    .xml-review-table.admin-table,
+    .items-table.admin-table,
+    .brands-table.admin-table,
+    .clients-table.admin-table,
+    .cf4-purchases-table.admin-table,
+    .cf4-invoices-list-table.admin-table,
+    .cf4-items-table.admin-table,
+    .sale-products-table.admin-table,
+    .products-table.table-view table.admin-table,
+    .inv-index-report .sales-table.admin-table,
+    .cf4-orders-module .orders-table-card .sales-table.admin-table
+) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+:is(
+    .admin-table,
+    table.admin-table,
+    .sales-table.admin-table,
+    .dashboard-table.admin-table,
+    .report-table.admin-table,
+    .audit-log-table.admin-table,
+    .inv-table.admin-table,
+    .xml-review-table.admin-table,
+    .items-table.admin-table,
+    .brands-table.admin-table,
+    .clients-table.admin-table,
+    .cf4-purchases-table.admin-table,
+    .cf4-invoices-list-table.admin-table,
+    .cf4-items-table.admin-table,
+    .sale-products-table.admin-table,
+    .products-table.table-view table.admin-table,
+    .inv-index-report .sales-table.admin-table,
+    .cf4-orders-module .orders-table-card .sales-table.admin-table
+) thead th {
+    background: var(--brand-dark);
+    color: var(--brand-lightest);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+    border-bottom: 2px solid var(--brand-medium-dark);
+    vertical-align: middle;
+}
+
+:is(
+    .admin-table,
+    table.admin-table,
+    .sales-table.admin-table,
+    .dashboard-table.admin-table,
+    .report-table.admin-table,
+    .audit-log-table.admin-table,
+    .inv-table.admin-table,
+    .xml-review-table.admin-table,
+    .items-table.admin-table,
+    .brands-table.admin-table,
+    .clients-table.admin-table,
+    .cf4-purchases-table.admin-table,
+    .cf4-invoices-list-table.admin-table,
+    .cf4-items-table.admin-table,
+    .sale-products-table.admin-table,
+    .products-table.table-view table.admin-table,
+    .inv-index-report .sales-table.admin-table,
+    .cf4-orders-module .orders-table-card .sales-table.admin-table
+) thead th.text-end,
+:is(
+    .admin-table,
+    .sales-table.admin-table,
+    .report-table.admin-table,
+    .inv-table.admin-table,
+    .items-table.admin-table
+) thead th.admin-table__col--end {
+    text-align: right;
+}
+
+:is(
+    .admin-table,
+    table.admin-table,
+    .sales-table.admin-table,
+    .dashboard-table.admin-table,
+    .report-table.admin-table,
+    .audit-log-table.admin-table,
+    .inv-table.admin-table,
+    .xml-review-table.admin-table,
+    .items-table.admin-table,
+    .brands-table.admin-table,
+    .clients-table.admin-table,
+    .cf4-purchases-table.admin-table,
+    .cf4-invoices-list-table.admin-table,
+    .cf4-items-table.admin-table,
+    .sale-products-table.admin-table,
+    .products-table.table-view table.admin-table,
+    .inv-index-report .sales-table.admin-table,
+    .cf4-orders-module .orders-table-card .sales-table.admin-table
+) tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+    vertical-align: middle;
+    color: var(--color-dark, #212529);
+}
+
+:is(
+    .admin-table,
+    table.admin-table,
+    .sales-table.admin-table,
+    .dashboard-table.admin-table,
+    .report-table.admin-table,
+    .audit-log-table.admin-table,
+    .inv-table.admin-table,
+    .xml-review-table.admin-table,
+    .items-table.admin-table,
+    .brands-table.admin-table,
+    .clients-table.admin-table,
+    .cf4-purchases-table.admin-table,
+    .cf4-invoices-list-table.admin-table,
+    .cf4-items-table.admin-table,
+    .sale-products-table.admin-table,
+    .products-table.table-view table.admin-table,
+    .inv-index-report .sales-table.admin-table,
+    .cf4-orders-module .orders-table-card .sales-table.admin-table
+) tbody tr {
+    transition: background-color 0.12s ease;
+}
+
+:is(
+    .admin-table,
+    table.admin-table,
+    .sales-table.admin-table,
+    .dashboard-table.admin-table,
+    .report-table.admin-table,
+    .audit-log-table.admin-table,
+    .inv-table.admin-table,
+    .xml-review-table.admin-table,
+    .items-table.admin-table,
+    .brands-table.admin-table,
+    .clients-table.admin-table,
+    .cf4-purchases-table.admin-table,
+    .cf4-invoices-list-table.admin-table,
+    .cf4-items-table.admin-table,
+    .sale-products-table.admin-table,
+    .products-table.table-view table.admin-table,
+    .inv-index-report .sales-table.admin-table,
+    .cf4-orders-module .orders-table-card .sales-table.admin-table
+) tbody tr:hover {
+    background: var(--brand-lightest);
+}
+
+:is(
+    .admin-table,
+    table.admin-table,
+    .sales-table.admin-table,
+    .dashboard-table.admin-table,
+    .report-table.admin-table,
+    .audit-log-table.admin-table,
+    .inv-table.admin-table,
+    .items-table.admin-table
+) tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Actions column */
+:is(
+    .admin-table
+) thead th.admin-table__col--actions,
+:is(
+    .admin-table
+) thead th.col-actions,
+:is(
+    .admin-table
+) tbody td.admin-table__col--actions,
+:is(
+    .admin-table
+) tbody td.col-actions {
+    text-align: right;
+    white-space: nowrap;
+    min-width: 7.5rem;
+}
+
+.admin-table .actions-container {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: none;
+}
+
+.admin-table td.actions-cell {
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Status badges inside admin tables */
+.admin-table .status-badge,
+.admin-table .order-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.admin-table .status-badge.pending,
+.admin-table .status-badge.status-pending,
+.admin-table .order-status-pill.pending {
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
+}
+
+.admin-table .status-badge.ready_to_pickup,
+.admin-table .status-badge.status-ready_to_pickup,
+.admin-table .order-status-pill.ready_to_pickup {
+    background: var(--color-info-bg);
+    color: var(--color-info);
+}
+
+.admin-table .status-badge.completed,
+.admin-table .status-badge.status-completed,
+.admin-table .status-badge.status-active,
+.admin-table .status-badge.success,
+.admin-table .order-status-pill.success,
+.admin-table .order-status-pill.completed,
+.admin-table .order-status-pill.confirmed,
+.admin-table .order-status-pill.delivered {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.admin-table .status-badge.cancelled,
+.admin-table .status-badge.status-cancelled,
+.admin-table .status-badge.status-banned,
+.admin-table .status-badge.danger,
+.admin-table .order-status-pill.cancelled,
+.admin-table .order-status-pill.danger {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+.admin-table .status-badge.refunded,
+.admin-table .status-badge.returned,
+.admin-table .status-badge.draft,
+.admin-table .status-badge.secondary,
+.admin-table .order-status-pill.draft,
+.admin-table .order-status-pill.secondary {
+    background: var(--color-secondary-bg);
+    color: var(--color-secondary);
+}
+
+.admin-table .status-badge.inactive,
+.admin-table .status-badge.warning,
+.admin-table .order-status-pill.warning {
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
+}
+
+.admin-table .stock-badge.success,
+.admin-table .stock-badge.warning,
+.admin-table .stock-badge.danger {
+    background: transparent;
+    font-weight: 600;
+}
+
+/* ── Scroll region: expand on desktop, horizontal scroll when narrow ── */
+.admin-table-scroll,
+.sales-table-container:has(.admin-table),
+.table-wrap:has(.admin-table),
+.clients-table-wrapper:has(.admin-table),
+.products-table.table-view:has(.admin-table),
+.inv-table-wrap:has(.admin-table),
+.items-table-wrap:has(.admin-table),
+.xml-review-table-wrap:has(.admin-table),
+.table-section:has(.admin-table),
+.sale-details .detail-section:has(.admin-table),
+.table-content:has(.admin-table),
+.table-scroll-wrapper:has(.admin-table),
+.cf4-invoices-card .sales-table-container:has(.admin-table) {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+
+.sales-table-container.admin-table-scroll,
+.sales-table-container:has(.admin-table) {
+    overflow-x: auto;
+    overflow-y: visible;
+    contain: none;
+    border-radius: 12px;
+}
+
+/* Minimum width so columns/buttons do not collapse; parent scrolls */
+.admin-table {
+    min-width: min(100%, 52rem);
+}
+
+.brands-table.admin-table,
+.table.admin-table {
+    min-width: min(100%, 28rem);
+}
+
+.sales-table.admin-table,
+.cf4-purchases-table.admin-table,
+.clients-table.admin-table,
+.report-table.admin-table,
+.inv-table.admin-table {
+    min-width: 56rem;
+}
+
+.items-table.admin-table,
+.xml-review-table.admin-table {
+    min-width: 40rem;
+}
+
+/* Cell text: ellipsis on wide tables; relaxed on product/name cells */
+.admin-table tbody td:not(.admin-table__col--actions):not(.col-actions):not(.actions-cell):not(.product-cell) {
+    max-width: 16rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-table tbody td.product-cell,
+.admin-table tbody td[data-label="Descripción"],
+.admin-table tbody td:last-child:has(.btn) {
+    max-width: none;
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
+}
+
+.admin-table .btn,
+.admin-table .btn-icon,
+.admin-table a.action-btn {
+    flex-shrink: 0;
+}
+
+.admin-table .btn-sm {
+    white-space: nowrap;
+}
+
+/* Sticky actions column while scrolling horizontally */
+.admin-table thead th.admin-table__col--actions,
+.admin-table thead th.col-actions {
+    position: sticky;
+    right: 0;
+    z-index: 4;
+    background: var(--brand-dark);
+    box-shadow: -6px 0 10px rgba(5, 31, 32, 0.12);
+}
+
+.admin-table tbody td.admin-table__col--actions,
+.admin-table tbody td.col-actions,
+.admin-table tbody td.actions-cell {
+    position: sticky;
+    right: 0;
+    z-index: 2;
+    background: #fff;
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.admin-table tbody tr:hover td.admin-table__col--actions,
+.admin-table tbody tr:hover td.col-actions,
+.admin-table tbody tr:hover td.actions-cell {
+    background: var(--brand-lightest);
+}
+
+.admin-table .actions-container {
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+/* Tablet: slightly tighter */
+@media (max-width: 1024px) {
+    .admin-table {
+        font-size: 0.86rem;
+    }
+
+    .admin-table thead th,
+    .admin-table tbody td {
+        padding: 0.65rem 0.85rem;
+    }
+
+    .admin-table .action-btn,
+    .admin-table .btn-icon {
+        width: 2rem;
+        height: 2rem;
+        min-width: 2rem;
+        padding: 0;
+        font-size: 0.82rem;
+    }
+}
+
+/* Phone: card rows when cells have data-label (set by admin-table-responsive.js) */
+@media (max-width: 768px) {
+    .admin-table-scroll,
+    .sales-table-container:has(.admin-table),
+    .table-wrap:has(.admin-table),
+    .cf4-invoices-card .sales-table-container:has(.admin-table) {
+        overflow-x: visible;
+    }
+
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) {
+        min-width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.65rem;
+    }
+
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) thead {
+        display: none;
+    }
+
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody {
+        display: block;
+    }
+
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody tr {
+        display: block;
+        background: #fff;
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 0.5rem;
+    }
+
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody tr:hover {
+        background: #fff;
+    }
+
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td {
+        display: grid;
+        grid-template-columns: minmax(5.5rem, 38%) 1fr;
+        gap: 0.35rem 0.65rem;
+        align-items: start;
+        max-width: none;
+        overflow: visible;
+        text-overflow: unset;
+        white-space: normal;
+        border-bottom: 1px solid #eff2f6;
+        padding: 0.55rem 0.75rem;
+        position: static;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td:last-child {
+        border-bottom: none;
+    }
+
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td::before {
+        content: attr(data-label);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--color-muted, #6c757d);
+        line-height: 1.35;
+    }
+
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td.admin-table__col--actions,
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td.col-actions,
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td.actions-cell {
+        text-align: right;
+    }
+
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) .actions-container {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) .action-btn,
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) .btn-icon {
+        width: 2.25rem;
+        height: 2.25rem;
+    }
+
+    .cf4-items-table.admin-table {
+        min-width: 100%;
+    }
+}
+
+/* Tables without data-label (e.g. before JS): keep horizontal scroll */
+@media (max-width: 768px) {
+    .admin-table:not(:has(tbody td[data-label])) {
+        min-width: 48rem;
+    }
+
+    .table-container:has(.admin-table),
+    .cf4-orders-module .orders-table-card:has(.admin-table) {
+        overflow: visible;
+    }
+
+    .table-content--scroll:has(.admin-table) {
+        overflow: visible;
+    }
+
+    .table-scroll-wrapper:has(.admin-table) {
+        max-height: none;
+        overflow: visible;
+    }
+}

@@ -85,7 +85,7 @@
         <div class="clients-container" data-cf4-ajax-pagination data-cf4-ajax-scroll>
             <div id="cf4-list-fragment">
             <div class="clients-table-wrapper">
-                <table class="clients-table">
+                <table class="clients-table admin-table">
                     <thead>
                         <tr>
                             <th scope="col">
@@ -151,7 +151,7 @@
                                     @endif
                                 </a>
                             </th>
-                            <th scope="col">Acción</th>
+                            <th scope="col" class="admin-table__col--actions">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -172,7 +172,7 @@
                                 </td>
 
                                 {{-- Toggle ban/unban; data attributes consumed by clients.js --}}
-                                <td>
+                                <td class="admin-table__col--actions">
                                     @if ($client->active)
                                         <button class="btn btn-danger btn-sm"
                                             data-id="{{ $client->user_id }}"

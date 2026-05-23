@@ -28,7 +28,7 @@ const adminAssets = [
     "resources/js/admin/reports/exports-modal.js",
     "resources/js/admin/reports/inventory-movements.js",        
     "resources/js/admin/reports/client-purchase-history.js",  
-    "resources/js/admin/reports/client-purchase-client-show.js", 
+    "resources/js/admin/reports/client-purchase-client-show.js",
 
     // CSS
     "resources/css/admin/products/inventory.css",
@@ -76,6 +76,7 @@ const clientAssets = [
     "resources/js/client/clients-cart.js",
     "resources/js/client/clients-product.js",
     "resources/js/client/clients-users.js",
+    "resources/js/client/invoices-page.js",
     "resources/js/client/auth-welcome-toast.js",
 
     // CSS
