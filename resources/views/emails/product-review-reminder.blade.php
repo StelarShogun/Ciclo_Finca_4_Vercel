@@ -13,12 +13,12 @@
 
     <p>Para esto, acceda a Facturas &gt; Historial de compras:</p>
 
-    <p style="margin-top:24px;">
+    <div style="margin-top:24px;">
         @include('emails.partials.button', [
             'href' => $historyUrl,
             'label' => 'Ir al historial de compras',
         ])
-    </p>
+    </div>
 @endsection
 
 @section('footer-note')
