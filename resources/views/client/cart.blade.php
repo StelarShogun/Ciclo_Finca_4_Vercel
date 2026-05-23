@@ -3,7 +3,7 @@
 @section('title', 'Carrito de Compras - Ciclo Finca 4')
 
 @push('styles')
-    @vite(['resources/css/client/clients-page.css'])
+    @vite(['resources/css/client/clients-page.css', 'resources/css/client/legal-pages.css'])
 @endpush
 
 @section('content')

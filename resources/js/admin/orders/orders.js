@@ -1,4 +1,13 @@
 import '../../shared/ajax-pagination.js';
+import {
+    cf4Confirm,
+    cf4PromptTextarea,
+    cf4Toast,
+    cf4Error,
+    cf4Loading,
+    cf4Close,
+    escapeHtml,
+} from '../shared/swal.js';
 
 const ORDERS_HEARTBEAT_INTERVAL_MS = 30000;
 
@@ -346,14 +355,11 @@ function initOrderExpirationModal() {
                 return;
             }
 
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'success',
-                    title: data.message ?? 'Guardado',
-                    timer: 2000,
-                    showConfirmButton: false,
-                });
-            }
+            await cf4Toast({
+                icon: 'success',
+                title: data.message ?? 'Guardado',
+                timer: 2000,
+            });
 
             close();
 
@@ -393,40 +399,20 @@ function getCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 }
 
-function markReadyToPickup(saleId, label) {
-    const swal = window.Swal;
-
-    if (!swal) {
-        const ok = window.confirm(`¿Marcar como listo para recoger?\n\nEl pedido ${label} pasará a estado "Listo para recoger".`);
-
-        if (!ok) {
-            return;
-        }
-
-        doOrderAction(`/orders/${saleId}/ready-to-pickup`, {
-            method: 'PATCH',
-            successTitle: () => 'Actualizado',
-        });
-
-        return;
-    }
-
-    swal.fire({
+async function markReadyToPickup(saleId, label) {
+    const result = await cf4Confirm({
         title: '¿Marcar como listo para recoger?',
         text: `El pedido ${label} pasará a estado "Listo para recoger". El stock ya fue reservado al crear el pedido.`,
         icon: 'question',
-        showCancelButton: true,
         confirmButtonText: 'Sí, marcar',
         cancelButtonText: 'Cancelar',
-    }).then(async (result) => {
-        if (!result.isConfirmed) {
-            return;
-        }
+    });
 
-        await doOrderAction(`/orders/${saleId}/ready-to-pickup`, {
-            method: 'PATCH',
-            successTitle: () => 'Actualizado',
-        });
+    if (!result.isConfirmed) return;
+
+    await doOrderAction(`/orders/${saleId}/ready-to-pickup`, {
+        method: 'PATCH',
+        successTitle: () => 'Actualizado',
     });
 }
 
@@ -435,7 +421,6 @@ async function doOrderAction(url, {
     payload = null,
     successTitle = () => 'Listo',
 } = {}) {
-    const swal = window.Swal;
     const csrf = getCsrfToken();
     const controller = new AbortController();
 
@@ -445,15 +430,7 @@ async function doOrderAction(url, {
         controller.abort();
     }, 15000);
 
-    if (swal) {
-        swal.fire({
-            title: 'Procesando…',
-            text: 'Espere mientras se completa la acción.',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            didOpen: () => swal.showLoading(),
-        });
-    }
+    void cf4Loading('Procesando…', 'Espere mientras se completa la acción.');
 
     try {
         const res = await fetch(url, {
@@ -472,6 +449,8 @@ async function doOrderAction(url, {
 
         const data = await parseResponsePayload(res);
 
+        await cf4Close();
+
         if (res.ok && (data.success === true || typeof data.success === 'undefined')) {
             let text = data.message ?? '';
 
@@ -481,16 +460,12 @@ async function doOrderAction(url, {
                     : `Factura: ${data.sale.invoice_number}`;
             }
 
-            if (swal) {
-                await swal.fire({
-                    icon: 'success',
-                    title: successTitle(data),
-                    text: text || undefined,
-                    confirmButtonText: 'Entendido',
-                });
-            } else {
-                window.alert(text || 'Acción realizada correctamente.');
-            }
+            await cf4Toast({
+                icon: 'success',
+                title: successTitle(data),
+                text: text || '',
+                timer: 3000,
+            });
 
             window.cf4OrdersActionInProgress = false;
             window.location.reload();
@@ -502,19 +477,10 @@ async function doOrderAction(url, {
 
         const message = data.message || `No se pudo completar la acción. Código: ${res.status}`;
 
-        if (swal) {
-            await swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: message,
-                confirmButtonText: 'Cerrar',
-            });
-        } else {
-            window.alert(message);
-        }
+        await cf4Error(message, 'Error');
     } catch (error) {
         window.clearTimeout(timeoutId);
-        window.cf4OrdersActionInProgress = false;
+        await cf4Close();
 
         const isTimeout = error.name === 'AbortError';
         const title = isTimeout ? 'Tiempo de espera agotado' : 'Error de red';
@@ -522,16 +488,7 @@ async function doOrderAction(url, {
             ? 'El servidor tardó demasiado en responder. Revise el controlador, la ruta o la lógica del backend.'
             : 'No se pudo conectar con el servidor.';
 
-        if (swal) {
-            await swal.fire({
-                icon: 'error',
-                title,
-                text: message,
-                confirmButtonText: 'Cerrar',
-            });
-        } else {
-            window.alert(`${title}: ${message}`);
-        }
+        await cf4Error(message, title);
     }
 }
 
@@ -542,92 +499,45 @@ function orderAction(url, successMsg, payload = null) {
     });
 }
 
-function completeSale(id, invoiceNumber) {
-    const swal = window.Swal;
+async function completeSale(id, invoiceNumber) {
     const invoiceLabel = invoiceNumber || `#${id}`;
 
-    if (!swal) {
-        const ok = window.confirm(`¿Confirmar encargo con factura ${invoiceLabel}?`);
-
-        if (!ok) {
-            return;
-        }
-
-        doOrderAction(`/sales/${id}/complete`, {
-            successTitle: () => 'Encargo confirmado',
-        });
-
-        return;
-    }
-
-    swal.fire({
+    const result = await cf4Confirm({
         title: `¿Confirmar encargo con factura ${invoiceLabel}?`,
         text: 'El pedido pasará a confirmado. No se volverá a descontar stock porque ya fue reservado en el checkout.',
         icon: 'question',
-        showCancelButton: true,
         confirmButtonText: 'Sí, confirmar',
         cancelButtonText: 'Cancelar',
-    }).then((result) => {
-        if (!result.isConfirmed) {
-            return;
-        }
+    });
 
-        doOrderAction(`/sales/${id}/complete`, {
-            successTitle: () => 'Encargo confirmado',
-        });
+    if (!result.isConfirmed) return;
+
+    await doOrderAction(`/sales/${id}/complete`, {
+        successTitle: () => 'Encargo confirmado',
     });
 }
 
-function cancelSale(id, invoiceNumber) {
-    const swal = window.Swal;
+async function cancelSale(id, invoiceNumber) {
     const invoiceLabel = invoiceNumber || `#${id}`;
 
-    if (!swal) {
-        const reason = window.prompt(`Ingrese el motivo de cancelación para el encargo ${invoiceLabel}.`);
-
-        if (!reason || reason.trim().length < 3) {
-            window.alert('Debe ingresar un motivo de al menos 3 caracteres.');
-            return;
-        }
-
-        doOrderAction(`/sales/${id}/cancel`, {
-            payload: {
-                reason: reason.trim(),
-            },
-            successTitle: () => 'Encargo rechazado',
-        });
-
-        return;
-    }
-
-    swal.fire({
+    const result = await cf4PromptTextarea({
         title: `¿Rechazar encargo ${invoiceLabel}?`,
         text: 'Ingrese el motivo de cancelación. El stock reservado se devolverá al inventario.',
-        input: 'textarea',
-        inputPlaceholder: 'Motivo de cancelación',
-        inputAttributes: { maxlength: 500 },
-        icon: 'warning',
-        showCancelButton: true,
+        placeholder: 'Motivo de cancelación',
         confirmButtonText: 'Sí, rechazar',
         cancelButtonText: 'Cancelar',
-        inputValidator: (value) => {
-            if (!value || value.trim().length < 3) {
-                return 'Debe ingresar un motivo de al menos 3 caracteres.';
-            }
+        minLength: 3,
+        maxLength: 500,
+        danger: true,
+    });
 
-            return null;
+    if (!result.isConfirmed) return;
+
+    await doOrderAction(`/sales/${id}/cancel`, {
+        payload: {
+            reason: result.value,
         },
-    }).then((result) => {
-        if (!result.isConfirmed) {
-            return;
-        }
-
-        doOrderAction(`/sales/${id}/cancel`, {
-            payload: {
-                reason: result.value.trim(),
-            },
-            successTitle: () => 'Encargo rechazado',
-        });
+        successTitle: () => 'Encargo rechazado',
     });
 }
 
@@ -669,15 +579,17 @@ function viewSale(id) {
                 : sale.sale_date_label || '—';
 
             const readyAtRow = sale.ready_at || sale.ready_at_label
-                ? '<div class="detail-item"><label>Fecha listo para recoger:</label><span>'
-                    + (sale.ready_at_label || '—')
-                    + '</span></div>'
+                ? `<div class="cf4-order-detail__item">
+                        <span>Fecha listo para recoger</span>
+                        <strong>${escapeHtml(sale.ready_at_label || '—')}</strong>
+                    </div>`
                 : '';
 
             const confirmedAtRow = sale.status === 'completed'
-                ? '<div class="detail-item"><label>Fecha de confirmación:</label><span>'
-                    + (sale.confirmed_at_label || '—')
-                    + '</span></div>'
+                ? `<div class="cf4-order-detail__item">
+                        <span>Fecha de confirmación</span>
+                        <strong>${escapeHtml(sale.confirmed_at_label || '—')}</strong>
+                    </div>`
                 : '';
 
             const statusLabels = {
@@ -710,40 +622,59 @@ function viewSale(id) {
                     const prod = item.product || {};
                     const up = parseFloat(item.unit_price || 0);
                     const tot = parseFloat(item.total || 0);
-                    return '<tr>'
-                        + '<td>' + (prod.name || 'N/A') + '</td>'
-                        + '<td class="text-center">' + item.quantity + '</td>'
-                        + '<td class="text-right">CRC' + up.toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</td>'
-                        + '<td class="text-right"><strong>CRC' + tot.toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</strong></td>'
-                        + '</tr>';
+
+                    return `<tr>
+                        <td>${escapeHtml(prod.name || 'N/A')}</td>
+                        <td class="text-center">${escapeHtml(String(item.quantity ?? '0'))}</td>
+                        <td class="text-right">₡${up.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</td>
+                        <td class="text-right"><strong>₡${tot.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></td>
+                    </tr>`;
                 })
                 .join('');
 
+            const statusClass = escapeHtml(sale.status || '');
+            const statusText = escapeHtml(statusLabels[sale.status] || sale.status || '—');
+            const paymentText = escapeHtml(paymentLabels[sale.payment_method] || sale.payment_method || '—');
+
             body.innerHTML = `
-                <div class="view-sale-detail">
-                    <div class="detail-grid">
-                        <div class="detail-item"><label>${saleDateLabel}:</label><span>${saleDateValue}</span></div>
+                <div class="cf4-order-detail">
+                    <section class="cf4-order-detail__summary">
+                        <div class="cf4-order-detail__item">
+                            <span>${escapeHtml(saleDateLabel)}</span>
+                            <strong>${escapeHtml(saleDateValue)}</strong>
+                        </div>
                         ${readyAtRow}
                         ${confirmedAtRow}
-                        <div class="detail-item"><label>Cliente:</label><span>${customerName}</span></div>
-                        <div class="detail-item"><label>Estado:</label><span class="order-status-pill ${sale.status}">${statusLabels[sale.status] || sale.status}</span></div>
-                        <div class="detail-item"><label>Método de pago:</label><span>${paymentLabels[sale.payment_method] || sale.payment_method || '—'}</span></div>
-                    </div>
+                        <div class="cf4-order-detail__item">
+                            <span>Cliente</span>
+                            <strong>${escapeHtml(customerName)}</strong>
+                        </div>
+                        <div class="cf4-order-detail__item">
+                            <span>Estado</span>
+                            <strong class="order-status-pill ${statusClass}">${statusText}</strong>
+                        </div>
+                        <div class="cf4-order-detail__item">
+                            <span>Método de pago</span>
+                            <strong>${paymentText}</strong>
+                        </div>
+                    </section>
 
-                    <div class="detail-section">
-                        <h4>Productos</h4>
-                        <table class="sales-table admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Producto</th>
-                                    <th class="text-center">Cantidad</th>
-                                    <th class="text-right">Precio unitario</th>
-                                    <th class="text-right">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>${productsHtml}</tbody>
-                        </table>
-                    </div>
+                    <section class="cf4-order-detail__products">
+                        <h4><i class="fas fa-box" aria-hidden="true"></i> Productos del pedido</h4>
+                        <div class="admin-table-responsive">
+                            <table class="sales-table admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th class="text-center">Cantidad</th>
+                                        <th class="text-right">Precio unitario</th>
+                                        <th class="text-right">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${productsHtml}</tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
             `;
         })

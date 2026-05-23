@@ -215,7 +215,10 @@
                         <div class="amount">&#8353;{{ number_format($totalDisplay, 0, ',', '.') }}</div>
                     </div>
 
-                    <div class="cf4-summary-actions">
+                    <div class="cf4-summary-actions cf4-invoices-td-actions">
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-cf4-confirm-print>
+                            <i class="fas fa-print" aria-hidden="true"></i> Imprimir comprobante
+                        </button>
                         <a href="{{ $backUrl }}" class="btn btn-outline-primary btn-sm">
                             Volver a Mis Facturas
                         </a>
@@ -230,3 +233,7 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    @vite(['resources/js/client/invoices-page.js'])
+@endpush

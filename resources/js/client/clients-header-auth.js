@@ -1,12 +1,13 @@
 import { fireSwal } from './swal.js';
 import { getCsrfToken } from './cart-shared.js';
+import { setHeaderMenuOpen } from './header-menu.js';
 
 /** Positions the account dropdown on narrow viewports (fixed + --cf4-user-dropdown-top). */
 function syncMobileUserDropdownPosition() {
     var header = document.querySelector('.cliente-header');
     var trigger = document.getElementById('user-menu-trigger');
     if (!header || !trigger) return;
-    if (window.innerWidth > 768) {
+    if (window.innerWidth > 900) {
         header.style.removeProperty('--cf4-user-dropdown-top');
         return;
     }
@@ -37,7 +38,7 @@ function closeUserDropdown() {
 }
 
 function toggleUserDropdown() {
-    var wrap   = document.getElementById('user-menu');
+    var wrap = document.getElementById('user-menu');
     var isOpen = wrap ? wrap.classList.contains('open') : false;
     setUserMenuOpen(!isOpen);
 }
@@ -45,31 +46,6 @@ function toggleUserDropdown() {
 window.cf4CloseUserDropdown = closeUserDropdown;
 window.cf4ToggleUserDropdown = toggleUserDropdown;
 window.cf4SyncMobileUserDropdownPosition = syncMobileUserDropdownPosition;
-
-/** Sets mobile header menu open/closed state. */
-function setHeaderMenuOpen(open) {
-    var header = document.querySelector('.cliente-header');
-    var toggle = document.getElementById('header-menu-toggle');
-    var icon   = toggle ? toggle.querySelector('i') : null;
-    if (!header) return;
-    header.classList.toggle('menu-open', open);
-    if (!open) {
-        closeUserDropdown();
-    }
-    if (toggle) {
-        toggle.setAttribute('aria-expanded', String(open));
-        toggle.setAttribute('aria-label', open ? 'Cerrar menú de navegación' : 'Abrir menú de navegación');
-    }
-    if (icon) {
-        icon.classList.toggle('fa-bars',  !open);
-        icon.classList.toggle('fa-times',  open);
-    }
-    if (open) {
-        requestAnimationFrame(function () {
-            syncMobileUserDropdownPosition();
-        });
-    }
-}
 
 function setFavoritesDrawerOpen(open) {
     var drawer = document.getElementById('favorites-drawer');
@@ -306,6 +282,11 @@ function toggleFavoriteFromDrawer(productId) {
 }
 
 export function initClientHeaderAuth() {
+    if (window.__cf4HeaderAuthBound) {
+        return;
+    }
+    window.__cf4HeaderAuthBound = true;
+
     // — User menu toggle —
     var userMenuTrigger = document.getElementById('user-menu-trigger');
     if (userMenuTrigger) {
@@ -324,18 +305,6 @@ export function initClientHeaderAuth() {
         if (userMenu.contains(e.target)) return;
         closeUserDropdown();
     });
-
-    // — Mobile header menu toggle —
-    var headerMenuToggle = document.getElementById('header-menu-toggle');
-    if (headerMenuToggle) {
-        headerMenuToggle.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var header = document.querySelector('.cliente-header');
-            if (!header) return;
-            setHeaderMenuOpen(!header.classList.contains('menu-open'));
-        });
-    }
 
     var favoritesCloseBtn = document.getElementById('favorites-close-btn');
     var favoritesOverlay = document.getElementById('favorites-overlay');
@@ -404,24 +373,4 @@ export function initClientHeaderAuth() {
         }
     });
 
-    // — Close mobile menu when selecting a nav link —
-    document.querySelectorAll('.header-menu-panel .nav-link').forEach(function (link) {
-        link.addEventListener('click', function () { setHeaderMenuOpen(false); });
-    });
-
-    // — Close mobile header menu on outside click —
-    document.addEventListener('click', function (e) {
-        var header = document.querySelector('.cliente-header');
-        if (!header || !header.classList.contains('menu-open')) return;
-        if (header.contains(e.target)) return;
-        setHeaderMenuOpen(false);
-    });
-
-    // — Keep desktop navbar always collapsed on resize; re-sync account dropdown on mobile —
-    window.addEventListener('resize', function () {
-        if (window.innerWidth > 768) {
-            setHeaderMenuOpen(false);
-        }
-        syncMobileUserDropdownPosition();
-    });
 }

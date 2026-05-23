@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import laravel from "laravel-vite-plugin";
 
 const vitePort = Number(process.env.VITE_PORT) || 5173;
@@ -16,6 +16,8 @@ const adminAssets = [
     "resources/js/admin/orders/orders.js",
     "resources/js/admin/orders/supplier-orders.js",
     "resources/js/admin/orders/supplier-order-create.js",
+    "resources/js/admin/orders/xml-deviation-review.js",
+    "resources/js/admin/orders/detail-supplier-page.js",
     "resources/js/admin/suppliers/suppliers.js",
     "resources/js/admin/login/login.js",
     "resources/js/admin/users/clients.js",
@@ -23,6 +25,7 @@ const adminAssets = [
     "resources/js/admin/product-classifications/index.js",
     "resources/js/admin/product-classifications/edit.js",
     "resources/js/admin/classifications/catalog.js",
+    "resources/js/admin/classifications/forms.js",
     "resources/js/admin/reports/product-sales.js",
     "resources/js/admin/reports/sales-performance.js",
     "resources/js/admin/reports/exports-modal.js",
@@ -78,6 +81,10 @@ const clientAssets = [
     "resources/js/client/clients-users.js",
     "resources/js/client/invoices-page.js",
     "resources/js/client/auth-welcome-toast.js",
+    "resources/js/client/client-flash.js",
+    "resources/js/client/recovery-success-modal.js",
+    "resources/js/client/register-validation-errors.js",
+    "resources/js/client/invoices-review-modal.js",
 
     // CSS
     "resources/css/client/fonts.css",
@@ -87,24 +94,38 @@ const clientAssets = [
     "resources/css/client/footer.css",
     "resources/css/client/clients-page.css",
     "resources/css/client/clients-users.css",
+    "resources/css/client/legal-pages.css",
 ];
 
-export default defineConfig({
-    // Keep Vite cache outside node_modules to avoid permission issues on WSL mounts.
-    cacheDir: ".vite-cache",
-    plugins: [
-        laravel({
-            detectTls: false,
-            input: [...adminAssets, ...clientAssets, ...errorAssets],
-            refresh: true,
-        }),
-    ],
-    server: {
-        host: "0.0.0.0",
-        port: vitePort,
-        strictPort: true,
-        hmr: {
-            host: "localhost",
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, process.cwd(), "");
+    const appUrl = env.APP_URL || "http://localhost:8080";
+
+    return {
+        // Keep Vite cache outside node_modules to avoid permission issues on WSL mounts.
+        cacheDir: ".vite-cache",
+        plugins: [
+            laravel({
+                detectTls: false,
+                input: [...adminAssets, ...clientAssets, ...errorAssets],
+                refresh: true,
+            }),
+        ],
+        server: {
+            host: "0.0.0.0",
+            port: vitePort,
+            strictPort: true,
+            hmr: {
+                host: "localhost",
+            },
+            // FA subset lives in public/fonts; @font-face uses /fonts/... which the browser
+            // resolves against the Vite origin when CSS is served from npm run dev (404 without proxy).
+            proxy: {
+                "/fonts": {
+                    target: appUrl,
+                    changeOrigin: true,
+                },
+            },
         },
-    },
+    };
 });

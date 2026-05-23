@@ -1,6 +1,4 @@
-import Swal from 'sweetalert2';
-
-window.Swal = Swal;
+import { cf4Confirm } from '../shared/swal.js';
 
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-confirm]');
@@ -15,15 +13,13 @@ document.addEventListener('click', (e) => {
     const message = btn.getAttribute('data-confirm');
     const title = btn.getAttribute('data-confirm-title') || '¿Deseas continuar?';
 
-    Swal.fire({
+    void cf4Confirm({
         title,
         text: message,
         icon: 'warning',
-        showCancelButton: true,
         confirmButtonText: 'Sí, continuar',
         cancelButtonText: 'No, cancelar',
-        focusCancel: true,
-        confirmButtonColor: '#b91c1c',
+        danger: true,
     }).then((result) => {
         if (result.isConfirmed) {
             form.submit();

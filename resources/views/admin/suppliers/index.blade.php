@@ -26,13 +26,6 @@
             @endslot
         @endcomponent
 
-        @if (session('status'))
-            <x-admin-alert type="success" :message="session('status')" dismissible />
-        @endif
-        @if (session('error'))
-            <x-admin-alert type="error" :message="session('error')" />
-        @endif
-
         {{-- ==================== KPI CARDS ==================== --}}
         <div class="kpi-grid">
 

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Valores del atributo {{ $dimension->label }} - Ciclo Finca 4 Admin</title>
-    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/components/page-header.css', 'resources/css/admin/suppliers/suppliers.css', 'resources/js/admin/classifications/catalog.js'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/components/page-header.css', 'resources/css/admin/suppliers/suppliers.css', 'resources/js/admin/classifications/catalog.js', 'resources/js/admin/classifications/forms.js'])
 </head>
 
 <body class="admin-layout">
@@ -32,7 +32,10 @@
             <div class="form-card" style="margin-bottom:1.5rem;">
                 <h2 style="font-size:1.1rem; margin-bottom:1rem;">Añadir valor</h2>
                 <form action="{{ route('admin.classifications.values.store', $dimension) }}" method="POST"
-                    class="form-body">
+                    class="form-body"
+                    data-cf4-confirm
+                    data-confirm-title="¿Añadir valor?"
+                    data-confirm-text="Se agregará un nuevo valor al atributo.">
                     @csrf
                     @if ($errors->any())
                         <x-admin-alert type="error" title="Revisa los campos marcados antes de continuar.">
@@ -50,7 +53,7 @@
                                 maxlength="255" placeholder="Rojo">
                             <div class="error-message">{{ $errors->first('value') }}</div>
                         </div>
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Añadir</button>
+                        <button type="submit" class="btn btn-primary cf4-inline-action"><i class="fas fa-plus"></i> Añadir</button>
                     </div>
                 </form>
             </div>

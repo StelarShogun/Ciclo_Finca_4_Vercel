@@ -1,4 +1,10 @@
 import '../../shared/ajax-pagination.js';
+import {
+    cf4Confirm,
+    cf4Toast,
+    cf4Success,
+    cf4Error,
+} from '../shared/swal.js';
 
 // Validates all fields in a supplier form; returns { valid, errors[] }
 function validateForm(form, type) {
@@ -67,12 +73,12 @@ function showMessage(message, type, elementId) {
 
     // No target element found — use SweetAlert as fallback
     if (!element) {
-        Swal.fire({
-            icon: type === 'success' ? 'success' : 'error',
-            title: type === 'success' ? 'Éxito' : 'Error',
-            text: message.replace(/[✅❌]/g, '').trim(),
-            confirmButtonText: 'Entendido'
-        });
+        const clean = message.replace(/[✅❌]/g, '').trim();
+        if (type === 'success') {
+            void cf4Success(clean, 'Éxito');
+        } else {
+            void cf4Error(clean, 'Error');
+        }
         return;
     }
 
@@ -113,12 +119,7 @@ async function registerSupplier(e) {
 
     const validation = validateForm(form, 'register');
     if (!validation.valid) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Errores de validación',
-            html: validation.errors.map(err => `• ${err}`).join('<br>'),
-            confirmButtonText: 'Entendido'
-        });
+        await cf4Error(validation.errors.join('\n'), 'Errores de validación');
         return;
     }
 
@@ -142,11 +143,11 @@ async function registerSupplier(e) {
         const data = await response.json();
 
         if (data.success) {
-            await Swal.fire({
+            await cf4Toast({
                 icon: 'success',
-                title: '¡Éxito!',
+                title: 'Proveedor registrado',
                 text: 'Proveedor registrado exitosamente.',
-                confirmButtonText: 'Aceptar'
+                timer: 3000,
             });
             // Redirect to the suppliers list (or the URL returned by the server)
             window.location.href = data.redirect || '/suppliers';
@@ -159,12 +160,7 @@ async function registerSupplier(e) {
         }
     } catch (error) {
         console.error('Error registering supplier:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error de conexión',
-            text: 'No se pudo conectar con el servidor. Intenta nuevamente.',
-            confirmButtonText: 'Entendido'
-        });
+        await cf4Error('No se pudo conectar con el servidor. Intenta nuevamente.', 'Error de conexión');
     } finally {
         // Always restore the button to its original state
         btnSubmit.disabled = false;
@@ -180,12 +176,7 @@ async function editSupplier(e) {
 
     const validation = validateForm(form, 'edit');
     if (!validation.valid) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Errores de validación',
-            html: validation.errors.map(err => `• ${err}`).join('<br>'),
-            confirmButtonText: 'Entendido'
-        });
+        await cf4Error(validation.errors.join('\n'), 'Errores de validación');
         return;
     }
 
@@ -212,11 +203,11 @@ async function editSupplier(e) {
         const data = await response.json();
 
         if (data.success) {
-            await Swal.fire({
+            await cf4Toast({
                 icon: 'success',
-                title: '¡Éxito!',
+                title: 'Proveedor actualizado',
                 text: 'Proveedor actualizado exitosamente.',
-                confirmButtonText: 'Aceptar'
+                timer: 3000,
             });
             window.location.href = data.redirect || '/suppliers';
         } else {
@@ -227,12 +218,7 @@ async function editSupplier(e) {
         }
     } catch (error) {
         console.error('Error editing supplier:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error de conexión',
-            text: 'No se pudo conectar con el servidor. Intenta nuevamente.',
-            confirmButtonText: 'Entendido'
-        });
+        await cf4Error('No se pudo conectar con el servidor. Intenta nuevamente.', 'Error de conexión');
     } finally {
         btnSubmit.disabled = false;
         btnText.classList.remove('hidden');
@@ -254,11 +240,7 @@ async function viewSupplierDetail(id) {
         const data = await response.json().catch(() => null);
 
         if (!response.ok || !data?.success) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data?.message || 'No se pudieron obtener los datos del proveedor',
-            });
+            await cf4Error(data?.message || 'No se pudieron obtener los datos del proveedor', 'Error');
             return;
         }
 
@@ -277,7 +259,7 @@ async function viewSupplierDetail(id) {
         document.getElementById('modalDetalleProveedor').classList.add('active');
     } catch (error) {
         console.error('Error:', error);
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexión al obtener los datos del proveedor' });
+        await cf4Error('Error de conexión al obtener los datos del proveedor', 'Error');
     }
 }
 
@@ -300,15 +282,13 @@ document.addEventListener('submit', async (event) => {
 
     const supplierName = form.dataset.supplierName || 'este proveedor';
 
-    const result = await Swal.fire({
+    const result = await cf4Confirm({
         title: '¿Deseas eliminar este proveedor?',
-        text: `Se eliminará el proveedor “${supplierName}”. Esta acción no se puede revertir fácilmente. ¿Deseas continuar?`,
+        text: `Se eliminará el proveedor “${supplierName}”. Esta acción no se puede revertir fácilmente.`,
         icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#b91c1c',
-        confirmButtonText: 'Sí, continuar',
-        cancelButtonText: 'No, cancelar',
-        focusCancel: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        danger: true,
     });
 
     if (!result.isConfirmed) return;
@@ -325,29 +305,23 @@ document.addEventListener('submit', async (event) => {
 
         const data = await response.json().catch(() => null);
         if (data?.success) {
-            Swal.fire({
+            await cf4Toast({
                 icon: 'success',
                 title: 'Proveedor eliminado',
                 text: data.message || 'Proveedor eliminado correctamente.',
-                confirmButtonText: 'Entendido',
-            }).then(() => location.reload());
+                timer: 3000,
+            });
+            location.reload();
             return;
         }
 
-        Swal.fire({
-            icon: 'error',
-            title: 'No se pudo eliminar',
-            text: (data && data.message) ? data.message : 'No se pudo completar la acción. Inténtalo nuevamente.',
-            confirmButtonText: 'Cerrar',
-        });
+        await cf4Error(
+            (data && data.message) ? data.message : 'No se pudo completar la acción. Inténtalo nuevamente.',
+            'No se pudo eliminar'
+        );
     } catch (error) {
         console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error de conexión',
-            text: 'No se pudo conectar con el servidor. Intenta nuevamente.',
-            confirmButtonText: 'Cerrar',
-        });
+        await cf4Error('No se pudo conectar con el servidor. Intenta nuevamente.', 'Error de conexión');
     }
 });
 
@@ -390,7 +364,7 @@ async function loadSupplierForEdit(id) {
         if (!response.ok || !data?.success) {
             editModal.classList.remove('active');
             const message = data?.message || 'No se pudieron obtener los datos del proveedor';
-            Swal.fire({ icon: 'error', title: 'Error', text: message });
+            await cf4Error(message, 'Error');
             return;
         }
 
@@ -412,7 +386,7 @@ async function loadSupplierForEdit(id) {
     } catch (error) {
         console.error('Error:', error);
         document.getElementById('edit-supplier-modal')?.classList.remove('active');
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexión al obtener los datos del proveedor' });
+        await cf4Error('Error de conexión al obtener los datos del proveedor', 'Error');
     }
 }
 
@@ -471,8 +445,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json();
 
             if (data.success) {
-                Swal.fire({ icon: 'success', title: 'Éxito', text: data.message || 'Proveedor creado exitosamente' })
-                    .then(() => { closeNewSupplierModal(); location.reload(); });
+                await cf4Toast({
+                    icon: 'success',
+                    title: 'Proveedor creado',
+                    text: data.message || 'Proveedor creado exitosamente.',
+                    timer: 3000,
+                });
+                closeNewSupplierModal();
+                location.reload();
             } else if (data.errors) {
                 // Display each server-side validation error next to the relevant field
                 Object.keys(data.errors).forEach(key => {
@@ -480,11 +460,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (errorEl) { errorEl.textContent = data.errors[key][0]; errorEl.style.display = 'flex'; }
                 });
             } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Error al crear el proveedor' });
+                await cf4Error(data.message || 'Error al crear el proveedor', 'Error');
             }
         } catch (error) {
             console.error('Error:', error);
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexión' });
+            await cf4Error('Error de conexión', 'Error');
         }
     });
 
@@ -521,8 +501,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json();
 
             if (data.success) {
-                Swal.fire({ icon: 'success', title: 'Éxito', text: data.message || 'Proveedor actualizado exitosamente' })
-                    .then(() => { closeEditSupplierModal(); location.reload(); });
+                await cf4Toast({
+                    icon: 'success',
+                    title: 'Proveedor actualizado',
+                    text: data.message || 'Proveedor actualizado exitosamente.',
+                    timer: 3000,
+                });
+                closeEditSupplierModal();
+                location.reload();
             } else if (data.errors) {
                 // Show field-specific errors returned by the server
                 Object.keys(data.errors).forEach(key => {
@@ -530,11 +516,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (errorEl) { errorEl.textContent = data.errors[key][0]; errorEl.style.display = 'flex'; }
                 });
             } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Error al actualizar el proveedor' });
+                await cf4Error(data.message || 'Error al actualizar el proveedor', 'Error');
             }
         } catch (error) {
             console.error('Error:', error);
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexión' });
+            await cf4Error('Error de conexión', 'Error');
         }
     });
 

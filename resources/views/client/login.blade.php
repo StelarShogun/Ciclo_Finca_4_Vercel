@@ -106,6 +106,12 @@
                     </span>
                 </span>
             </a>
+            <p class="cf4-oauth-legal-note">
+                Si creas tu cuenta con Google, aceptas los
+                <a href="{{ route('clients.legal.terms') }}" target="_blank" rel="noopener noreferrer">Términos y condiciones</a>
+                y la
+                <a href="{{ route('clients.legal.privacy') }}" target="_blank" rel="noopener noreferrer">Política de privacidad</a>.
+            </p>
         </div>
 
         <div class="login-footer">
@@ -125,18 +131,9 @@
     @vite(['resources/js/client/clients-users.js'])
     @if (session('recovery_success_modal'))
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Contraseña actualizada',
-                    text: @json(session('recovery_success_modal')),
-                    confirmButtonText: 'Aceptar',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false
-                }).then(function () {
-                    window.location.href = @json(route('login.show'));
-                });
-            });
+            window.__cf4RecoverySuccess = @json(session('recovery_success_modal'));
+            window.__cf4RecoverySuccessRedirect = @json(route('login.show'));
         </script>
+        @vite(['resources/js/client/recovery-success-modal.js'])
     @endif
 @endpush

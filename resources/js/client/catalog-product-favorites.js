@@ -3,6 +3,7 @@
  * Vive en módulo propio y se inicializa desde clients-users.js (header en todas las páginas)
  * para que no dependa de que clients-page.js cargue o falle en otras ramas.
  */
+import { cf4Error } from './swal.js';
 
 function getCsrfToken() {
     const meta = document.querySelector('meta[name="csrf-token"]');
@@ -78,13 +79,10 @@ export function toggleFavoriteProduct(btn) {
         })
         .catch(function (err) {
             console.error('Error toggling favorite:', err);
-            if (typeof Swal !== 'undefined' && Swal.fire) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: err && err.message ? err.message : 'No se pudo actualizar tu favorito.'
-                });
-            }
+            void cf4Error(
+                err && err.message ? err.message : 'No se pudo actualizar tu favorito.',
+                'Error'
+            );
         })
         .finally(function () {
             btn.disabled = false;

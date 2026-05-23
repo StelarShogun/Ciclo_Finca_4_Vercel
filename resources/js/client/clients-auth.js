@@ -1,3 +1,5 @@
+import { cf4Toast, cf4Confirm, cf4Error, escapeHtml } from './swal.js';
+
 // ----------------------------------------------------------------
 // SHARED UTILITIES
 // ----------------------------------------------------------------
@@ -223,6 +225,12 @@ function toggleUserDropdown() {
         } else if (pv !== pcv) {
             showMsg('msg-pass-confirm', 'error', 'Las contraseñas no coinciden.');
             setInputState(passConfirmInput, 'input-error');
+            valid = false;
+        }
+
+        const termsEl = document.getElementById('accept_terms');
+        if (termsEl && !termsEl.checked) {
+            showMsg('msg-accept-terms', 'error', 'Debes aceptar los Términos y condiciones y la Política de privacidad.');
             valid = false;
         }
 
@@ -478,22 +486,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .then(function (data) {
                     if (data.success) {
-                        Swal.fire({
-                            icon: 'success', title: '¡Bienvenido!',
+                        void cf4Toast({
+                            icon: 'success',
+                            title: '¡Bienvenido!',
                             text: data.message || 'Inicio de sesión exitoso',
-                            timer: 1500, showConfirmButton: false
+                            timer: 1500,
                         }).then(function () { window.location.href = data.redirect || '/'; });
                     } else {
-                        Swal.fire({
-                            icon: 'error', title: 'Error',
-                            html: (data.message || 'Error al iniciar sesión') +
+                        cf4Confirm({
+                            icon: 'error',
+                            title: 'Error',
+                            html: escapeHtml(data.message || 'Error al iniciar sesión') +
                                 '<hr style="margin:12px 0">' +
                                 '<p style="font-size:0.9rem;margin:0">¿Tienes una cuenta registrada? ¿O deseas registrarte?</p>',
-                            showCancelButton: true,
                             confirmButtonText: 'Ir a Registro',
                             cancelButtonText: 'Cancelar',
-                            confirmButtonColor: '#2d7a2d',
-                            cancelButtonColor: '#6c757d'
                         }).then(function (result) {
                             if (result.isConfirmed) window.location.href = '/register';
                         });
@@ -509,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .catch(function (err) {
                     if (err === 'csrf' || err === 'parse') return;
                     console.error('Login error:', err);
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al iniciar sesión' });
+                    void cf4Error('Ocurrió un error al iniciar sesión', 'Error');
                     if (submitBtn) submitBtn.disabled = false;
                 });
         });

@@ -30,6 +30,7 @@
         </div>
     </main>
 
+    @include('admin.partials.cf4-flash-swal')
     @vite(['resources/js/admin/shell.js'])
     @stack('scripts')
 

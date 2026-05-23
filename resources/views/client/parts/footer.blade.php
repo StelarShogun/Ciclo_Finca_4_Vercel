@@ -50,15 +50,33 @@
             <div class="footer-col">
                 <h4>Contacto</h4>
                 <ul class="footer-links footer-contact">
-                    <li><i class="fas fa-store" aria-hidden="true"></i><span>Tienda física disponible</span></li>
-                    <li><i class="fas fa-clock" aria-hidden="true"></i><span>Lun-Sáb (horario comercial)</span></li>
-                    <li><i class="fas fa-circle-check" aria-hidden="true"></i><span>Atención confiable y segura</span></li>
+                    <li>
+                        <i class="fas fa-envelope" aria-hidden="true"></i>
+                        <a href="mailto:{{ config('cf4_legal.contact_email') }}">{{ config('cf4_legal.contact_email') }}</a>
+                    </li>
+                    <li><i class="fas fa-store" aria-hidden="true"></i><span>Tienda física — retiro de pedidos</span></li>
+                    <li><i class="fas fa-clock" aria-hidden="true"></i><span>{{ config('cf4_legal.store_hours') }}</span></li>
+                    <li>
+                        <i class="fas fa-file-lines" aria-hidden="true"></i>
+                        <a href="{{ route('clients.contact') }}">Formulario e información de contacto</a>
+                    </li>
                 </ul>
             </div>
         </div>
 
         <div class="footer-bottom">
-            <p>&copy; {{ date('Y') }} Ciclo Finca 4. Todos los derechos reservados.</p>
+            <div class="footer-bottom-start">
+                <p>&copy; {{ date('Y') }} Ciclo Finca 4. Todos los derechos reservados.</p>
+                <nav class="footer-legal" aria-label="Información legal">
+                    <a href="{{ route('clients.legal.terms') }}">Términos y condiciones</a>
+                    <span class="footer-legal-sep" aria-hidden="true">|</span>
+                    <a href="{{ route('clients.legal.privacy') }}">Política de privacidad</a>
+                    <span class="footer-legal-sep" aria-hidden="true">|</span>
+                    <a href="{{ route('clients.legal.returns') }}">Cambios y devoluciones</a>
+                    <span class="footer-legal-sep" aria-hidden="true">|</span>
+                    <a href="{{ route('clients.contact') }}">Contacto</a>
+                </nav>
+            </div>
             <a href="{{ route('clients.catalog') }}" class="footer-bottom-cta">
                 Explorar catálogo <i class="fas fa-arrow-right" aria-hidden="true"></i>
             </a>

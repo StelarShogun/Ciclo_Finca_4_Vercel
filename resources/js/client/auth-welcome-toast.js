@@ -6,14 +6,85 @@
  * not enter the layout's initial bundle for every visitor.
  */
 
-function cf4AuthIconHtml(authIcon) {
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function cf4AuthToastFirstName(displayName) {
+    const trimmed = (displayName || '').trim();
+    if (!trimmed) {
+        return '';
+    }
+
+    return trimmed.split(/\s+/)[0] || '';
+}
+
+function cf4AuthToastIconMarkup(authIcon) {
     if (authIcon === 'google') {
-        return '<span class="cf4-auth-toast-icon cf4-auth-toast-icon--google" aria-hidden="true"><i class="fab fa-google"></i></span>';
+        return (
+            '<span class="cf4-auth-toast-icon cf4-auth-toast-icon--google" aria-hidden="true">' +
+            '<span class="google-g-icon">G</span>' +
+            '</span>'
+        );
     }
     if (authIcon === 'signout') {
-        return '<span class="cf4-auth-toast-icon cf4-auth-toast-icon--signout" aria-hidden="true"><i class="fas fa-right-from-bracket"></i></span>';
+        return (
+            '<span class="cf4-auth-toast-icon cf4-auth-toast-icon--signout" aria-hidden="true">' +
+            '<i class="fas fa-right-from-bracket"></i>' +
+            '</span>'
+        );
     }
-    return '<span class="cf4-auth-toast-icon cf4-auth-toast-icon--user" aria-hidden="true"><i class="fas fa-user-circle"></i></span>';
+
+    return (
+        '<span class="cf4-auth-toast-icon cf4-auth-toast-icon--user" aria-hidden="true">' +
+        '<i class="fas fa-user-circle"></i>' +
+        '</span>'
+    );
+}
+
+function cf4AuthToastHtml(opts) {
+    const authIcon = opts.authIcon || 'user';
+    const firstName = cf4AuthToastFirstName(opts.displayName);
+    const isLogout = opts.kind === 'logout';
+
+    let title;
+    let subtitle;
+
+    if (isLogout) {
+        title = opts.title || '¡Sesión cerrada!';
+        subtitle = opts.text || 'Has cerrado sesión correctamente.';
+    } else if (firstName) {
+        title = '¡Hola, ' + firstName + '!';
+        if (authIcon === 'google') {
+            subtitle = opts.text || 'Conectado con Google';
+        } else {
+            subtitle = opts.text || 'Inicio de sesión exitoso';
+        }
+    } else {
+        title = '¡Bienvenido!';
+        subtitle =
+            opts.text ||
+            (authIcon === 'google' ? 'Conectado con Google' : 'Inicio de sesión exitoso');
+    }
+
+    return (
+        '<div class="cf4-auth-toast-card" role="status">' +
+        cf4AuthToastIconMarkup(authIcon) +
+        '<div class="cf4-auth-toast-copy">' +
+        '<p class="cf4-auth-toast-title">' +
+        escapeHtml(title) +
+        '</p>' +
+        '<p class="cf4-auth-toast-subtitle">' +
+        escapeHtml(subtitle) +
+        '</p>' +
+        '</div>' +
+        '</div>'
+    );
 }
 
 async function cf4AuthWelcomeToast(opts) {
@@ -32,25 +103,7 @@ async function cf4AuthWelcomeToast(opts) {
 
     const kind = opts.kind || 'welcome';
     const authIcon = opts.authIcon || (kind === 'logout' ? 'signout' : 'user');
-    const displayName = (opts.displayName || '').trim();
     const timer = typeof opts.timer === 'number' ? opts.timer : 4000;
-
-    let title;
-    let text = opts.text || '';
-
-    if (kind === 'logout') {
-        title = opts.title || '¡Sesión cerrada!';
-        if (!text) {
-            text = 'Has cerrado sesión correctamente.';
-        }
-    } else {
-        title = displayName
-            ? '¡Bienvenido, ' + displayName + '!'
-            : '¡Bienvenido!';
-        if (!text) {
-            text = authIcon === 'google' ? 'Inicio de sesión con Google' : 'Inicio de sesión exitoso';
-        }
-    }
 
     const Toast = Swal.mixin({
         toast: true,
@@ -67,18 +120,20 @@ async function cf4AuthWelcomeToast(opts) {
         },
         customClass: {
             popup: 'swal2-client-auth-toast-popup',
-            title: 'swal2-client-auth-toast-title',
             htmlContainer: 'swal2-client-auth-toast-html',
             timerProgressBar: 'swal2-client-auth-toast-progress',
-            icon: 'swal2-client-auth-toast-icon-wrap',
         },
     });
 
     await Toast.fire({
         icon: false,
-        iconHtml: cf4AuthIconHtml(authIcon),
-        title,
-        text,
+        html: cf4AuthToastHtml({
+            kind,
+            authIcon,
+            displayName: opts.displayName,
+            title: opts.title,
+            text: opts.text,
+        }),
     });
 
     if (opts.thenUrl) {

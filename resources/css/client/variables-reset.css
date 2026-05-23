@@ -1,9 +1,12 @@
+@import '../shared/cf4-swal.css';
+
 /* ===================================================================
    VARIABLES
    =================================================================== */
 :root {
-  /* Altura útil del header cliente (sticky catálogo); alinear con header.css (.header-content ~70px) */
-  --client-header-height: 72px;
+  /* Altura útil del header cliente (fixed); alinear con header.css */
+  --client-header-height: 70px;
+  --client-header-offset: 70px;
 
   /* CF4-132 — paleta de marca */
   --brand-darkest:       #051F20;
@@ -89,4 +92,12 @@ body.guest-layout {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Header móvil (hamburger): altura real del bloque superior */
+@media (max-width: 900px) {
+  :root {
+    --client-header-height: 84px;
+    --client-header-offset: 84px;
+  }
 }
