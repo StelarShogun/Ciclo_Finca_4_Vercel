@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Client;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -41,5 +40,4 @@ class CF4ClientLegalPagesTest extends TestCase
 
         $response->assertSessionHasErrors('accept_terms');
     }
-
 }
