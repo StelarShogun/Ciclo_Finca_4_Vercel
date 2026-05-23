@@ -265,7 +265,7 @@ class CF4103XmlPriceDeviationTest extends TestCase
     {
         $service = app(XmlPriceDeviationService::class);
 
-        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>
 <items>
     <item>
         <code>SKU-QUE-NO-EXISTE-9999XYZ</code>
@@ -273,7 +273,7 @@ class CF4103XmlPriceDeviationTest extends TestCase
         <quantity>1</quantity>
         <unit_price>5000</unit_price>
     </item>
-</items>";
+</items>';
         $tmp = tempnam(sys_get_temp_dir(), 'xml_');
         file_put_contents($tmp, $xml);
         $file = new UploadedFile($tmp, 'unknown.xml', 'text/xml', UPLOAD_ERR_OK, true);

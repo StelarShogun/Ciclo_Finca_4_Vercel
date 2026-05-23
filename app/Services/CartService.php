@@ -45,10 +45,10 @@ class CartService
             ->filter(fn ($i) => $i->product !== null)
             ->map(fn ($i) => [
                 'product_id' => (int) $i->product_id,
-                'name'       => (string) $i->product->name,
-                'price'      => (float) $i->product->sale_price,
-                'quantity'   => (int) $i->quantity,
-                'image'      => (string) ($i->product->getFirstMediaUrl('main_image') ?? ''),
+                'name' => (string) $i->product->name,
+                'price' => (float) $i->product->sale_price,
+                'quantity' => (int) $i->quantity,
+                'image' => (string) ($i->product->getFirstMediaUrl('main_image') ?? ''),
             ])
             ->values()
             ->toArray();
@@ -62,7 +62,7 @@ class CartService
     public static function mergeOnLogin(int $clientId): void
     {
         $sessionCart = Session::get(self::SESSION_KEY, []);
-        $dbCart      = self::loadFromDb($clientId);
+        $dbCart = self::loadFromDb($clientId);
 
         if (empty($sessionCart) && empty($dbCart)) {
             return;
@@ -104,8 +104,6 @@ class CartService
         foreach ($sessionByProduct as $item) {
             $merged[] = $item;
         }
-
-        $merged = array_values($merged);
 
         Session::put(self::SESSION_KEY, $merged);
         self::saveToDb($clientId, $merged);
