@@ -57,7 +57,7 @@ function syncPaginationQueryFromUrl(url, root) {
 }
 
 async function loadListFragment(url, root, options = {}) {
-    const { pushState = true } = options;
+    const { pushState = true, scroll = true } = options;
     const fragmentId = getFragmentId(root);
     const current = document.getElementById(fragmentId);
     if (!current) {
@@ -96,7 +96,9 @@ async function loadListFragment(url, root, options = {}) {
         if (pushState) {
             window.history.pushState({ cf4AjaxPagination: true }, '', url);
         }
-        scrollToFragment(fragmentId);
+        if (scroll) {
+            scrollToFragment(fragmentId);
+        }
         document.dispatchEvent(
             new CustomEvent('cf4:ajax-pagination:loaded', {
                 detail: { url, fragmentId, root, pushState },

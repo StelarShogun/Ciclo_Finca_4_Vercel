@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\Sale;
@@ -17,6 +18,8 @@ use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\OrderCancellationNotifier;
 use App\Support\AdminPerPage;
+use App\Support\DashboardTodaySales;
+use App\Support\DeferAfterResponse;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -48,6 +51,7 @@ class SalesController extends Controller
         $dailyTransactionsTrend = $this->calculateDailyTransactionsTrend();
         $refunds = $this->calculateRefunds();
         $refundsTrend = $this->calculateRefundsTrend();
+        $latestHistorySaleId = (clone $this->historyHeartbeatBaseQuery())->max('sale_id') ?? 0;
 
         return view('admin.sales.index', compact(
             'sales',
@@ -57,7 +61,8 @@ class SalesController extends Controller
             'dailyTransactionsTrend',
             'refunds',
             'refundsTrend',
-            'salesStatusUi'
+            'salesStatusUi',
+            'latestHistorySaleId',
         ));
     }
 
@@ -65,13 +70,7 @@ class SalesController extends Controller
     {
         $since = (int) $request->query('since', 0);
 
-        $baseQuery = Sale::query()
-            ->whereIn('status', ['pending', 'ready_to_pickup', 'completed'])
-            ->where(function ($q) {
-                $q->where('order_source', 'web_cart')
-                    ->orWhereNull('order_source');
-            })
-            ->where('sale_date', '>=', now()->subDays(Sale::getOrderExpirationDays()));
+        $baseQuery = $this->historyHeartbeatBaseQuery();
 
         $newCount = (clone $baseQuery)
             ->where('sale_id', '>', $since)
@@ -93,6 +92,10 @@ class SalesController extends Controller
             'newCount' => $newCount,
             'latestSaleId' => $latestSaleId,
             'pendingCount' => $pendingCount,
+            'dailySales' => DashboardTodaySales::sumToday(),
+            'dailySalesTrend' => DashboardTodaySales::salesTrendPercent(),
+            'dailyTransactions' => DashboardTodaySales::countToday(),
+            'dailyTransactionsTrend' => DashboardTodaySales::transactionsTrendPercent(),
         ]);
     }
 
@@ -318,9 +321,11 @@ class SalesController extends Controller
             // FIX: correo fuera del try principal para no bloquear ni abortar la respuesta.
             // Se ejecuta después de que la respuesta HTTP ya fue enviada al cliente (afterResponse).
             $saleForEmail = $sale;
-            app()->terminating(function () use ($saleForEmail) {
+            DeferAfterResponse::run(function () use ($saleForEmail): void {
                 $this->sendProductReviewReminderEmail($saleForEmail);
             });
+
+            DashboardTodaySales::forgetDashboardCache();
 
             return response()->json([
                 'success' => true,
@@ -357,9 +362,11 @@ class SalesController extends Controller
 
             // FIX: correo asíncrono para no bloquear la respuesta HTTP.
             $saleForEmail = $sale;
-            app()->terminating(function () use ($saleForEmail) {
+            DeferAfterResponse::run(function () use ($saleForEmail): void {
                 $this->sendProductReviewReminderEmail($saleForEmail);
             });
+
+            DashboardTodaySales::forgetDashboardCache();
         }
 
         $this->logAuditAction(
@@ -507,10 +514,12 @@ class SalesController extends Controller
             // usando el hook terminating() del kernel. Así nunca bloquea ni rompe el flujo,
             // aunque el servidor de correo tarde o falle.
             $saleForNotify = $sale;
-            app()->terminating(function () use ($saleForNotify) {
+            DeferAfterResponse::run(function () use ($saleForNotify): void {
                 $this->sendOrderCompletedNotification($saleForNotify);
                 $this->sendProductReviewReminderEmail($saleForNotify);
             });
+
+            DashboardTodaySales::forgetDashboardCache();
 
             return response()->json([
                 'success' => true,
@@ -560,23 +569,31 @@ class SalesController extends Controller
                 ]
             );
 
-            $saleForNotify = $sale;
-            app()->terminating(function () use ($saleForNotify): void {
-                $client = $saleForNotify->client;
-                if (! $client) {
+            $saleId = (int) $sale->sale_id;
+            $clientId = $sale->client_id;
+            DeferAfterResponse::run(function () use ($saleId, $clientId): void {
+                if (! $clientId) {
+                    return;
+                }
+
+                $client = Client::query()->find($clientId);
+                $freshSale = Sale::query()->with(['client', 'saleItems.product'])->find($saleId);
+                if (! $client || ! $freshSale) {
                     return;
                 }
 
                 try {
-                    $client->notify(new OrderReadyToPickupNotification($saleForNotify));
+                    $client->notify(new OrderReadyToPickupNotification($freshSale));
                 } catch (\Throwable $e) {
                     Log::warning('Could not notify client (ready-to-pickup).', [
-                        'sale_id' => $saleForNotify->sale_id,
-                        'client_id' => $client->user_id ?? null,
+                        'sale_id' => $saleId,
+                        'client_id' => $clientId,
                         'error' => $e->getMessage(),
                     ]);
                 }
             });
+
+            DashboardTodaySales::forgetDashboardCache();
 
             return response()->json([
                 'success' => true,
@@ -645,7 +662,7 @@ class SalesController extends Controller
 
             // FIX: notificación de cancelación también asíncrona.
             $saleForNotify = $sale;
-            app()->terminating(function () use ($saleForNotify, $notifier, $reason, $cancelledAt) {
+            DeferAfterResponse::run(function () use ($saleForNotify, $notifier, $reason, $cancelledAt): void {
                 try {
                     $notifier->notify($saleForNotify, $reason, $cancelledAt);
                 } catch (\Throwable $e) {
@@ -655,6 +672,8 @@ class SalesController extends Controller
                     ]);
                 }
             });
+
+            DashboardTodaySales::forgetDashboardCache();
 
             $this->logAuditAction(
                 'sale_cancel',
@@ -990,6 +1009,17 @@ class SalesController extends Controller
         return $lines;
     }
 
+    private function historyHeartbeatBaseQuery(): Builder
+    {
+        return Sale::query()
+            ->whereIn('status', ['pending', 'ready_to_pickup', 'completed'])
+            ->where(function ($q) {
+                $q->where('order_source', 'web_cart')
+                    ->orWhereNull('order_source');
+            })
+            ->where('sale_date', '>=', now()->subDays(Sale::getOrderExpirationDays()));
+    }
+
     private function applySalesAdminListFilters(Builder $query, Request $request): void
     {
         $days = Sale::getOrderExpirationDays();
@@ -1065,34 +1095,22 @@ class SalesController extends Controller
 
     private function calculateDailySales()
     {
-        return Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->sum('total');
+        return DashboardTodaySales::sumToday();
     }
 
     private function calculateDailySalesTrend()
     {
-        $today = Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->sum('total');
-        $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->where('status', 'completed')->sum('total');
-        if ($yesterday == 0) {
-            return $today > 0 ? 100 : 0;
-        }
-
-        return round((($today - $yesterday) / $yesterday) * 100, 1);
+        return DashboardTodaySales::salesTrendPercent();
     }
 
     private function calculateDailyTransactions()
     {
-        return Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->count();
+        return DashboardTodaySales::countToday();
     }
 
     private function calculateDailyTransactionsTrend()
     {
-        $today = Sale::whereDate('sale_date', Carbon::today())->where('status', 'completed')->count();
-        $yesterday = Sale::whereDate('sale_date', Carbon::yesterday())->where('status', 'completed')->count();
-        if ($yesterday == 0) {
-            return $today > 0 ? 100 : 0;
-        }
-
-        return round((($today - $yesterday) / $yesterday) * 100, 1);
+        return DashboardTodaySales::transactionsTrendPercent();
     }
 
     private function calculateRefunds(): int
@@ -1153,7 +1171,7 @@ class SalesController extends Controller
     }
 
     // Notify the client to rate products after order confirmation.
-    // NOTE: Always call this via app()->terminating() to avoid blocking the HTTP response.
+    // NOTE: Always call via DeferAfterResponse::run() to avoid blocking the HTTP response.
     private function sendOrderCompletedNotification(Sale $sale): void
     {
         if ((string) $sale->status !== 'completed') {

@@ -193,6 +193,20 @@ class Dashboard {
         }
 
         setInterval(() => this.updateCurrentTime(), 60000);
+
+        void this.loadDashboardData();
+
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                void this.loadDashboardData();
+            }
+        }, 15000);
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                void this.loadDashboardData();
+            }
+        });
     }
 
     // Display current date and time in the header
@@ -696,6 +710,15 @@ class Dashboard {
             todaySalesEl.textContent = '₡' + Math.round(sales).toLocaleString('es-CR', {
                 maximumFractionDigits: 0
             });
+        }
+
+        const salesChangeEl = document.getElementById('sales-change');
+        if (salesChangeEl && data.salesTrend !== undefined) {
+            const trend = parseFloat(data.salesTrend) || 0;
+            const positive = trend >= 0;
+            salesChangeEl.classList.remove('positive', 'negative', 'neutral');
+            salesChangeEl.classList.add(positive ? 'positive' : 'negative');
+            salesChangeEl.innerHTML = `<i class="fas fa-arrow-${positive ? 'up' : 'down'}"></i><span>${Math.abs(trend)}%</span>`;
         }
 
         const totalSuppliersEl = document.getElementById('total-suppliers');
