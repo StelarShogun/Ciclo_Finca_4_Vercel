@@ -32,9 +32,9 @@ class SupplierController extends Controller
         return view('admin.suppliers.index', compact('suppliers', 'averageRating'));
     }
 
-    public function create()
+    public function create(): RedirectResponse
     {
-        return view('admin.suppliers.create');
+        return redirect()->route('suppliers.index', ['open' => 'new']);
     }
 
     public function store(Request $request)
