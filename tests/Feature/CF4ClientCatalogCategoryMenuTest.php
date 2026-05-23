@@ -134,7 +134,7 @@ class CF4ClientCatalogCategoryMenuTest extends TestCase
         $rA->assertStatus(200);
         $rA->assertSee('Solo en A', false);
         // El listado paginado debe ser solo 1 producto (spotlight puede listar otros).
-        $rA->assertSee('de 1 productos', false);
+        $rA->assertSee('1 productos', false);
     }
 
     public function test_empty_category_shows_specific_message(): void

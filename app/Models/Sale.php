@@ -37,6 +37,7 @@ class Sale extends Model
         'buyer_email',
         'order_source',
         'ready_at',
+        'client_history_seen_at',
     ];
 
     protected $casts = [
@@ -45,6 +46,7 @@ class Sale extends Model
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
         'ready_at' => 'datetime',  // Integrado desde rama local: complementa el campo ya presente en $fillable.
+        'client_history_seen_at' => 'datetime',
     ];
 
     // Converts sale_date from UTC to the application timezone for consistent display.
@@ -91,6 +93,44 @@ class Sale extends Model
     public function scopeReadyToPickup($query)
     {
         return $query->where('status', 'ready_to_pickup');
+    }
+
+    public function scopeUnseenInClientHistory(Builder $query, int $clientId): Builder
+    {
+        return $query
+            ->where('client_id', $clientId)
+            ->where('status', 'completed')
+            ->whereNull('client_history_seen_at');
+    }
+
+    public static function countUnseenInClientHistory(int $clientId): int
+    {
+        return (int) self::query()
+            ->unseenInClientHistory($clientId)
+            ->count();
+    }
+
+    public static function markClientHistorySeen(int $clientId): void
+    {
+        self::query()
+            ->where('client_id', $clientId)
+            ->where('status', 'completed')
+            ->whereNull('client_history_seen_at')
+            ->update(['client_history_seen_at' => now()]);
+    }
+
+    /** @return list<string> */
+    public static function activeClientInvoiceStatuses(): array
+    {
+        return ['pending', 'ready_to_pickup'];
+    }
+
+    public static function countActiveClientInvoices(int $clientId): int
+    {
+        return (int) self::query()
+            ->where('client_id', $clientId)
+            ->whereIn('status', self::activeClientInvoiceStatuses())
+            ->count();
     }
 
     // Integrado desde rama local: determina si una venta puede cancelarse según su estado actual.
@@ -238,5 +278,44 @@ class Sale extends Model
         $limitDate = now()->subDays($days);
 
         return $query->where('sale_date', '>=', $limitDate);
+    }
+
+    /** Admin tables/modals: d/m/Y H:i in app timezone. */
+    public static function formatAdminDateTime(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '—';
+        }
+
+        $dt = $value instanceof Carbon
+            ? $value->copy()
+            : Carbon::parse($value);
+
+        return $dt->timezone(config('app.timezone'))->format('d/m/Y H:i');
+    }
+
+    public function adminOrderPlacedAtLabel(): string
+    {
+        return self::formatAdminDateTime($this->sale_date);
+    }
+
+    public function adminReadyAtLabel(): string
+    {
+        return self::formatAdminDateTime($this->ready_at);
+    }
+
+    /** Moment the encargo was confirmed as a completed sale (status → completed). */
+    public function adminConfirmedAtLabel(): string
+    {
+        if ($this->status !== 'completed') {
+            return '—';
+        }
+
+        return self::formatAdminDateTime($this->updated_at);
+    }
+
+    public function adminSaleDateLabel(): string
+    {
+        return self::formatAdminDateTime($this->sale_date);
     }
 }

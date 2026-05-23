@@ -1,0 +1,50 @@
+/*
+ * CF4 self-hosted Font Awesome subset.
+ *
+ * Imports the FA6 class-to-glyph map plus the weight selectors from solid.css /
+ * regular.css (without their @font-face blocks, which would pull the full
+ * 158 KiB woff2). The subset woff2 files live in public/fonts/fa-subset/.
+ *
+ * IMPORTANT: `.fas { font-weight: 900 }` / `.far { font-weight: 400 }` are
+ * required — without them the browser inherits body weight (400) and tries to
+ * render solid icons from the regular face, producing empty boxes / missing UI.
+ *
+ * Regenerate fonts: npm run build:fa-subset
+ */
+
+@import "@fortawesome/fontawesome-free/css/fontawesome.css";
+
+:root,
+:host {
+    --fa-style-family-classic: "Font Awesome 6 Free";
+    --fa-font-solid: normal 900 1em/1 "Font Awesome 6 Free";
+    --fa-font-regular: normal 400 1em/1 "Font Awesome 6 Free";
+}
+
+/* From solid.css — selects the weight-900 @font-face below */
+.fas,
+.fa-solid {
+    font-weight: 900;
+}
+
+/* From regular.css — selects the weight-400 @font-face below */
+.far,
+.fa-regular {
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: "Font Awesome 6 Free";
+    font-style: normal;
+    font-weight: 900;
+    font-display: block;
+    src: url("/fonts/fa-subset/fa-solid-900.subset.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Font Awesome 6 Free";
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src: url("/fonts/fa-subset/fa-regular-400.subset.woff2") format("woff2");
+}

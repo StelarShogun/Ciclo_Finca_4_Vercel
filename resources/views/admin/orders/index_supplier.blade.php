@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Pedidos a Proveedores - Ciclo Finca 4 Admin')
 
 @push('styles')
-    @vite(['resources/css/admin/sales/sales.css', 'resources/css/admin/orders/orders.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/sales.css', 'resources/css/admin/orders/orders.css'])
 @endpush
 
 @section('aside')
@@ -137,8 +137,8 @@
                             <th>Proveedor</th>
                             <th>Productos</th>
                             <th>Fecha de pedido</th>
-                            <th>Entrega estimada</th>
-                            <th>Entrega real</th>
+                            <th>Fecha de entrega estimada</th>
+                            <th>Fecha de entrega</th>
                             <th>Estado</th>
                             <th>Total</th>
                             <th>Acciones</th>
@@ -386,5 +386,5 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/admin/orders/supplier-orders.js'])
+    @vite(['resources/js/admin/shell.js', 'resources/js/admin/orders/supplier-orders.js'])
 @endpush

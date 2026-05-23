@@ -33,7 +33,6 @@ class Client extends Authenticatable
         'active',
         'provider',
         'provider_id',
-        'google_id',
         'remember_token',
     ];
 
@@ -46,6 +45,8 @@ class Client extends Authenticatable
         'verification_code_expires_at' => 'datetime',
         'email_verified' => 'boolean',
         'active' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function cartItems(): HasMany

@@ -27,10 +27,12 @@ use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierOrderController;
 use App\Http\Controllers\XmlPriceDeviationController;
+use App\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 
 // Restricts deploy helper routes outside local and testing environments.
 $assertDeployHelperAllowed = function (Request $request): void {
@@ -368,6 +370,12 @@ Route::post('/recovery/verify', [ClientUserController::class, 'verifyRecoveryAnd
 // Logs out the client while preserving the admin session when both are active.
 Route::post('/logout', function () {
     $request = request();
+
+    $loggingOutClient = Auth::guard('clients')->user();
+    if ($loggingOutClient) {
+        CartService::saveToDb($loggingOutClient->user_id, Session::get('cart', []));
+    }
+
     Auth::guard('clients')->logout();
 
     if (Auth::guard('admin')->check()) {

@@ -3,7 +3,11 @@
 @section('Titulo pagina', 'Ventas - Ciclo Finca 4 Admin')
 
 @push('styles')
-    @vite(['resources/css/admin/sales/sales.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/sales.css'])
+@endpush
+
+@push('scripts')
+    @vite(['resources/js/admin/sales/sales.js'])
 @endpush
 
 {{-- Sidebar provided by the layout via @yield('aside') --}}
@@ -181,7 +185,7 @@
                     <tr>
                         <th>Número de factura</th>
                         <th>Cliente</th>
-                        <th>Fecha</th>
+                        <th>Fecha de venta</th>
                         <th>Estado</th>
                         <th>Días restantes</th>
                         <th>Método de Pago</th>
@@ -208,7 +212,7 @@
                                 @endif
                             </td>
 
-                            <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
+                            <td>{{ $sale->adminSaleDateLabel() }}</td>
 
                             <td>
                                 <span class="status-badge {{ $sale->status }}">

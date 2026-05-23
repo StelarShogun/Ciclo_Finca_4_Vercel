@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Ventas por Categoría')
 
 @push('styles')
-    @vite(['resources/css/admin/sales/sales.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/sales.css'])
 @endpush
 
 @section('aside')
@@ -204,5 +204,5 @@
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-    @vite(['resources/js/admin/sales/reports-by-category.js'])
+    @vite(['resources/js/admin/shell.js', 'resources/js/admin/sales/reports-by-category.js'])
 @endpush

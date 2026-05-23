@@ -1,7 +1,9 @@
 <aside class="admin-sidebar expanded">
     <div class="sidebar-header">
         <a href="{{ route('dashboard') }}" class="sidebar-header-brand" title="Ir al panel de administración">
-            <img src="{{ asset('assets/images/logo.png') }}" alt="" class="logo" width="88" height="88">
+            <picture>
+                <source type="image/webp" srcset="{{ asset('assets/images/brand/logo-ciclo-finca-icon-128.webp') }}">
+                <img src="{{ asset('assets/images/brand/logo-ciclo-finca-icon-64.png') }}" alt="" class="logo" width="88" height="88" decoding="async"></picture>
             <div class="sidebar-header-text">
                 <span class="sidebar-header-admin">Admin</span>
                 <span class="sidebar-header-title">Ciclo Finca 4</span>

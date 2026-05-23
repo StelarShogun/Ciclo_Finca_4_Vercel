@@ -15,14 +15,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
     {{-- Styles & Fonts --}}
-    @vite(['resources/css/admin/components/page-header.css', 'resources/css/admin/dashboard/dashboard.css'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-
-    {{-- Chart.js for data visualization --}}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/components/page-header.css', 'resources/css/admin/dashboard/dashboard.css'])
 </head>
 
 <body class="admin-layout">
@@ -194,8 +187,9 @@
                                         <tr>
                                             <td>
                                                 <div class="product-info">
-                                                    <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
-                                                        alt="{{ $product->name }}" class="product-thumb">
+                                                    <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default-96.webp')) }}"
+                                                        alt="{{ $product->name }}" class="product-thumb"
+                                                        width="48" height="48" loading="lazy" decoding="async">
                                                     <span>{{ $product->name }}</span>
                                                 </div>
                                             </td>
@@ -252,7 +246,7 @@
                                         <th>Factura</th>
                                         <th>Cliente</th>
                                         <th>Total</th>
-                                        <th>Fecha</th>
+                                        <th>Fecha de venta</th>
                                         <th>Estado</th>
                                     </tr>
                                 </thead>
@@ -270,7 +264,7 @@
                                                 @endif
                                             </td>
                                             <td>₡{{ number_format($sale->total, 0, ',', '.') }}</td>
-                                            <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
+                                            <td>{{ $sale->adminSaleDateLabel() }}</td>
                                             <td>
                                                 @php
                                                     $statusLabels = [
@@ -352,7 +346,7 @@
     </main>
 
     {{-- Dashboard scripts --}}
-    @vite(['resources/js/admin/dashboard/dashboard.js'])
+    @vite(['resources/js/admin/shell.js', 'resources/js/admin/dashboard/dashboard.js'])
 
 
     {{-- ==================== LOW-STOCK TOAST ==================== --}}

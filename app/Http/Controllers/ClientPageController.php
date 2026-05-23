@@ -11,6 +11,7 @@ use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Services\Catalog\CatalogProductSearchTelemetry;
+use App\Services\CartService;
 use App\Services\InventoryMovementService;
 use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
@@ -527,6 +528,11 @@ class ClientPageController extends Controller
 
         Session::put('cart', $cart);
 
+        $authClient = Auth::guard('clients')->user();
+        if ($authClient) {
+            CartService::saveToDb($authClient->user_id, $cart);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Producto agregado al carrito',
@@ -580,6 +586,10 @@ class ClientPageController extends Controller
 
         if ($needsPut) {
             Session::put('cart', $synced);
+            $authClient = Auth::guard('clients')->user();
+            if ($authClient) {
+                CartService::saveToDb($authClient->user_id, $synced);
+            }
         }
 
         if ($adjustedNames !== []) {
@@ -700,6 +710,11 @@ class ClientPageController extends Controller
 
         Session::put('cart', $cart);
 
+        $authClient = Auth::guard('clients')->user();
+        if ($authClient) {
+            CartService::saveToDb($authClient->user_id, $cart);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Carrito actualizado',
@@ -767,6 +782,11 @@ class ClientPageController extends Controller
 
         Session::put('cart', $cart);
 
+        $authClient = Auth::guard('clients')->user();
+        if ($authClient) {
+            CartService::saveToDb($authClient->user_id, $cart);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Producto eliminado del carrito',
@@ -779,6 +799,11 @@ class ClientPageController extends Controller
     public function clearCart()
     {
         Session::put('cart', []);
+
+        $authClient = Auth::guard('clients')->user();
+        if ($authClient) {
+            CartService::saveToDb($authClient->user_id, []);
+        }
 
         return response()->json([
             'success' => true,
@@ -893,6 +918,9 @@ class ClientPageController extends Controller
             }
 
             Session::forget('cart');
+            if ($client) {
+                CartService::saveToDb($client->user_id, []);
+            }
             DB::commit();
 
             return response()->json([
@@ -929,6 +957,8 @@ class ClientPageController extends Controller
                 ->paginate($perPage)
                 ->withQueryString();
 
+            Sale::markClientHistorySeen((int) $client->user_id);
+
             $pendingReviewProducts = ProductReview::query()
                 ->with('product:product_id,name')
                 ->where('client_id', $client->user_id)
@@ -962,14 +992,14 @@ class ClientPageController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        $invoiceCount = Sale::where('client_id', $client->user_id)
-            ->whereIn('status', $activeStatuses)
-            ->count();
+        $invoiceCount = Sale::countActiveClientInvoices((int) $client->user_id);
+        $unseenHistoryCount = Sale::countUnseenInClientHistory((int) $client->user_id);
 
         return view('client.Invoices', compact(
             'orders',
             'cartCount',
             'invoiceCount',
+            'unseenHistoryCount',
             'tab',
             'pendingReviewProducts'
         ));
@@ -979,12 +1009,12 @@ class ClientPageController extends Controller
     {
         /** @var Client $client */
         $client = Auth::guard('clients')->user();
+        $clientId = (int) $client->user_id;
 
-        $count = Sale::where('client_id', $client->user_id)
-            ->whereIn('status', $this->activeClientInvoiceStatuses())
-            ->count();
-
-        return response()->json(['count' => $count]);
+        return response()->json([
+            'count' => Sale::countActiveClientInvoices($clientId),
+            'unseen_history' => Sale::countUnseenInClientHistory($clientId),
+        ]);
     }
 
     public function notifications(Request $request)
@@ -1015,9 +1045,7 @@ class ClientPageController extends Controller
 
         $cartCount = $this->getCartCount();
 
-        $invoiceCount = Sale::where('client_id', $client->user_id)
-            ->whereIn('status', $this->activeClientInvoiceStatuses())
-            ->count();
+        $invoiceCount = Sale::countActiveClientInvoices((int) $client->user_id);
 
         return view('client.invoice-detail', compact('sale', 'cartCount', 'invoiceCount'));
     }
@@ -1033,7 +1061,7 @@ class ClientPageController extends Controller
 
     private function activeClientInvoiceStatuses(): array
     {
-        return ['pending', 'ready_to_pickup'];
+        return Sale::activeClientInvoiceStatuses();
     }
 
     private function cancelledClientInvoiceStatuses(): array

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Rules\Recaptcha;
+use App\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -247,6 +248,8 @@ class ClientUserController extends Controller
                 'client_first_surname' => $client->first_surname,
                 'client_second_surname' => $client->second_surname,
             ]);
+
+            CartService::mergeOnLogin($client->user_id);
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -794,6 +797,8 @@ class ClientUserController extends Controller
                 'client_first_surname' => $client->first_surname,
                 'client_second_surname' => $client->second_surname,
             ]);
+
+            CartService::mergeOnLogin($client->user_id);
 
             return redirect()->route('clients.home')->with('client_success_modal', [
                 'kind' => 'welcome',

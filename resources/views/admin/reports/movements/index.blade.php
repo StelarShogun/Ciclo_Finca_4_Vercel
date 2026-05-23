@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Movimientos de inventario - Reportes')
 
 @push('styles')
-    @vite(['resources/css/admin/reports/reports-hub.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/reports-hub.css'])
 @endpush
 
 @push('vite-body')

@@ -3,11 +3,11 @@
 @section('Titulo pagina', 'Productos más vendidos - Reportes')
 
 @push('styles')
-    @vite(['resources/css/admin/reports/product-sales.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/product-sales.css'])
 @endpush
 
 @push('vite-body')
-    @vite(['resources/js/admin/reports/product-sales.js'])
+    @vite(['resources/js/admin/shell.js', 'resources/js/admin/reports/product-sales.js'])
 @endpush
 
 @section('aside')

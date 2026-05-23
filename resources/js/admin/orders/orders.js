@@ -611,9 +611,132 @@ function cancelSale(id, invoiceNumber) {
     });
 }
 
+function closeViewSaleModal() {
+    document.getElementById('view-sale-modal')?.classList.remove('active');
+}
+
+function viewSale(id) {
+    const modal = document.getElementById('view-sale-modal');
+    const body = document.getElementById('view-sale-body');
+    if (!modal || !body) return;
+
+    body.innerHTML = `
+        <div class="loading-spinner" role="status">
+            <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
+            <p>Cargando detalles…</p>
+        </div>`;
+    modal.classList.add('active');
+
+    fetch('/sales/' + id, {
+        headers: {
+            'X-CSRF-TOKEN': getCsrfToken(),
+            Accept: 'application/json',
+        },
+    })
+        .then((r) => r.json())
+        .then((data) => {
+            if (!data.success || !data.sale) {
+                body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> No se pudieron cargar los detalles.</div>';
+                return;
+            }
+
+            const sale = data.sale;
+            const items = sale.sale_items || sale.saleItems || [];
+            const isWebOrder = sale.order_source === 'web_cart' || sale.order_source == null;
+            const saleDateLabel = isWebOrder ? 'Fecha de pedido' : 'Fecha de venta';
+            const saleDateValue = isWebOrder
+                ? sale.order_placed_at_label || sale.sale_date_label || '—'
+                : sale.sale_date_label || '—';
+
+            const readyAtRow = sale.ready_at || sale.ready_at_label
+                ? '<div class="detail-item"><label>Fecha listo para recoger:</label><span>'
+                    + (sale.ready_at_label || '—')
+                    + '</span></div>'
+                : '';
+
+            const confirmedAtRow = sale.status === 'completed'
+                ? '<div class="detail-item"><label>Fecha de confirmación:</label><span>'
+                    + (sale.confirmed_at_label || '—')
+                    + '</span></div>'
+                : '';
+
+            const statusLabels = {
+                pending: 'Pendiente',
+                ready_to_pickup: 'Por recoger',
+                completed: 'Confirmado',
+                cancelled: 'Rechazado',
+                refunded: 'Reembolsado (histórico)',
+                returned: 'Devuelta',
+            };
+            const paymentLabels = {
+                cash: 'Efectivo',
+                sinpe: 'SINPE movil',
+                transfer: 'Transferencia',
+            };
+
+            let customerName = 'Mostrador / sin datos';
+            if (sale.client) {
+                customerName = [sale.client.name, sale.client.first_surname, sale.client.second_surname]
+                    .filter(Boolean)
+                    .join(' ');
+                if (sale.client.gmail) customerName += ' (' + sale.client.gmail + ')';
+            } else if (sale.buyer?.name) {
+                customerName = sale.buyer.name;
+                if (sale.buyer.email) customerName += ' (' + sale.buyer.email + ')';
+            }
+
+            const productsHtml = items
+                .map((item) => {
+                    const prod = item.product || {};
+                    const up = parseFloat(item.unit_price || 0);
+                    const tot = parseFloat(item.total || 0);
+                    return '<tr>'
+                        + '<td>' + (prod.name || 'N/A') + '</td>'
+                        + '<td class="text-center">' + item.quantity + '</td>'
+                        + '<td class="text-right">CRC' + up.toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</td>'
+                        + '<td class="text-right"><strong>CRC' + tot.toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</strong></td>'
+                        + '</tr>';
+                })
+                .join('');
+
+            body.innerHTML = `
+                <div class="view-sale-detail">
+                    <div class="detail-grid">
+                        <div class="detail-item"><label>${saleDateLabel}:</label><span>${saleDateValue}</span></div>
+                        ${readyAtRow}
+                        ${confirmedAtRow}
+                        <div class="detail-item"><label>Cliente:</label><span>${customerName}</span></div>
+                        <div class="detail-item"><label>Estado:</label><span class="order-status-pill ${sale.status}">${statusLabels[sale.status] || sale.status}</span></div>
+                        <div class="detail-item"><label>Método de pago:</label><span>${paymentLabels[sale.payment_method] || sale.payment_method || '—'}</span></div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>Productos</h4>
+                        <table class="sales-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-right">Precio unitario</th>
+                                    <th class="text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>${productsHtml}</tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        })
+        .catch(() => {
+            body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> No se pudieron cargar los detalles.</div>';
+        });
+}
+
 Object.assign(window, {
     markReadyToPickup,
     completeSale,
     cancelSale,
     orderAction,
+    viewSale,
+    closeViewSaleModal,
 });
