@@ -28,7 +28,7 @@ const adminAssets = [
     "resources/js/admin/reports/exports-modal.js",
     "resources/js/admin/reports/inventory-movements.js",        
     "resources/js/admin/reports/client-purchase-history.js",  
-    "resources/js/admin/reports/client-purchase-client-show.js", 
+    "resources/js/admin/reports/client-purchase-client-show.js",
 
     // CSS
     "resources/css/admin/products/inventory.css",

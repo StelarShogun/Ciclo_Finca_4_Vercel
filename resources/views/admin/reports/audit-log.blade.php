@@ -10,10 +10,6 @@
     @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/audit-log.css'])
 @endpush
 
-@push('vite-body')
-    @vite(['resources/js/shared/ajax-pagination.js'])
-@endpush
-
 @section('aside')
     @include('admin.parts.aside')
 @endsection

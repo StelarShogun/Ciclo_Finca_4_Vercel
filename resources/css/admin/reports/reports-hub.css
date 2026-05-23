@@ -527,14 +527,29 @@
     color: var(--color-danger, #991b1b);
 }
 
-/* Actions */
+/* Actions — centered column (matches supplier orders pattern) */
+
+.inv-index-report .admin-table thead th.admin-table__col--actions,
+.inv-index-report .admin-table tbody td.admin-table__col--actions {
+    text-align: center;
+}
 
 .inv-index-report .actions-container {
     display: flex;
+    justify-content: center;
     align-items: center;
+    width: 100%;
     flex-wrap: nowrap;
     white-space: nowrap;
     gap: 0.4rem;
+}
+
+.inv-index-report .admin-table:has(tbody td[data-label]) tbody td.admin-table__col--actions {
+    text-align: center;
+}
+
+.inv-index-report .admin-table:has(tbody td[data-label]) .actions-container {
+    justify-content: center;
 }
 
 .inv-index-report .actions-container .action-btn {
