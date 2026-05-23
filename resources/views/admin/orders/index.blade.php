@@ -106,7 +106,6 @@
                         <tr>
                             <th>Encargos / Factura</th>
                             <th>Cliente</th>
-                            <th>Productos</th>
                             <th>Fecha de pedido</th>
                             <th>Fecha listo para recoger</th>
                             <th>Fecha de confirmación</th>
@@ -139,20 +138,6 @@
                                         @endif
                                     @else
                                         <span class="text-muted">Sin datos de cliente</span>
-                                    @endif
-                                </td>
-
-                                <td>
-                                    @if ($sale->saleItems && $sale->saleItems->count() > 0)
-                                        <div style="display:flex; flex-direction:column; gap:6px;">
-                                            @foreach ($sale->saleItems as $item)
-                                                <div>
-                                                    {{ $item->quantity }} × {{ $item->product->name ?? 'Producto' }}
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <span class="text-muted">Sin productos</span>
                                     @endif
                                 </td>
 
@@ -225,7 +210,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9">
+                                <td colspan="8">
                                     <div class="orders-empty">
                                         <div class="orders-empty-icon">
                                             <i class="fas fa-inbox"></i>

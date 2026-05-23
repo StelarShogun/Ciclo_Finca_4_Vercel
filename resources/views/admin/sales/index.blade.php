@@ -187,7 +187,6 @@
                         <th>Cliente</th>
                         <th>Fecha de venta</th>
                         <th>Estado</th>
-                        <th>Días restantes</th>
                         <th>Método de Pago</th>
                         <th>Total</th>
                         <th>Acciones</th>
@@ -218,53 +217,6 @@
                                 <span class="status-badge {{ $sale->status }}">
                                     {{ $statusLabels[$sale->status] ?? $sale->status }}
                                 </span>
-                            </td>
-
-                            {{-- Expiry / pickup window: ready_to_pickup shows pickup countdown from ready_at;
-                                 completed shows an em dash (finalized). Other statuses use the legacy
-                                 30-day countdown from sale_date. --}}
-                            <td>
-                                @if ($sale->status === 'ready_to_pickup')
-                                    @php
-                                        $pickupLabel = $sale->pickup_time_remaining_label;
-                                    @endphp
-                                    @if ($pickupLabel === 'Vencido')
-                                        <span class="expiry-badge expiry-expired" title="Plazo de recogida vencido">
-                                            <i class="fas fa-clock"></i> Vencido
-                                        </span>
-                                    @elseif ($pickupLabel !== '')
-                                        <span class="expiry-badge expiry-ok">{{ $pickupLabel }}</span>
-                                    @else
-                                        <span class="text-muted">—</span>
-                                    @endif
-                                @elseif ($sale->status === 'completed')
-                                    <span class="text-muted">—</span>
-                                @else
-                                    @php
-                                        $days = $sale->days_remaining_until_expiration;
-                                        $warn = $sale->is_expiry_warning;
-                                    @endphp
-                                    @if ($days <= 0)
-                                        <span class="expiry-badge expiry-expired" title="El pedido ha expirado">
-                                            <i class="fas fa-clock"></i> Expirado
-                                        </span>
-                                    @elseif($warn)
-                                        <span class="expiry-badge expiry-warning">
-                                            <span class="expiry-warning-trigger" tabindex="0" role="button"
-                                                aria-label="Ver aviso de expiración">
-                                                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
-                                                <span class="expiry-tooltip-label">
-                                                    ¡Atención! Este pedido será eliminado automáticamente en
-                                                    {{ $days }} día(s).
-                                                    Por favor tome las acciones necesarias antes de la fecha límite.
-                                                </span>
-                                            </span>
-                                            {{ $days }} día(s)
-                                        </span>
-                                    @else
-                                        <span class="expiry-badge expiry-ok">{{ $days }} día(s)</span>
-                                    @endif
-                                @endif
                             </td>
 
                             <td>{{ $paymentLabels[$sale->payment_method] ?? $sale->payment_method }}</td>
@@ -306,7 +258,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center">
+                            <td colspan="7" class="text-center">
                                 <div class="table-empty-state">
                                     <i class="fas fa-shopping-cart table-empty-icon"></i>
                                     <p>No hay ventas para los filtros seleccionados.</p>
