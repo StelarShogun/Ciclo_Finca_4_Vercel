@@ -14,6 +14,7 @@ use App\Models\Supplier;
 use App\Services\Admin\AdminInventoryExportQuery;
 use App\Services\Admin\AdminPdfExportLimits;
 use App\Services\Admin\AdminPdfExportService;
+use App\Services\Admin\Images\ProductImageOptimizerService;
 use App\Services\Admin\RegistryExcelExport;
 use App\Services\Admin\ReportExcelFilename;
 use App\Services\AuditLogger;
@@ -86,9 +87,7 @@ class ProductController extends Controller
                 $ext = $file->extension() ?: $file->getClientOriginalExtension();
                 $filename = $slug.'_main.'.$ext;
                 $file->move($folderPath, $filename);
-                $product->addMedia($folderPath.'/'.$filename)
-                    ->preservingOriginal()
-                    ->toMediaCollection('main_image');
+                $this->addSanitizedMedia($product, $folderPath.'/'.$filename, 'main_image');
             }
 
             if ($request->hasFile('images')) {
@@ -100,9 +99,7 @@ class ProductController extends Controller
                     $ext = $file->extension() ?: $file->getClientOriginalExtension();
                     $filename = $slug.'_'.$i.'.'.$ext;
                     $file->move($folderPath, $filename);
-                    $product->addMedia($folderPath.'/'.$filename)
-                        ->preservingOriginal()
-                        ->toMediaCollection('gallery');
+                    $this->addSanitizedMedia($product, $folderPath.'/'.$filename, 'gallery');
                     $i++;
                 }
             }
@@ -346,9 +343,7 @@ class ProductController extends Controller
                 }
                 $filename = $slug.'_main.'.$ext;
                 $file->move($folderPath, $filename);
-                $product->addMedia($folderPath.'/'.$filename)
-                    ->preservingOriginal()
-                    ->toMediaCollection('main_image');
+                $this->addSanitizedMedia($product, $folderPath.'/'.$filename, 'main_image');
             }
 
             // Replace the entire gallery when new files are provided
@@ -366,9 +361,7 @@ class ProductController extends Controller
                     $ext = $file->extension() ?: $file->getClientOriginalExtension();
                     $filename = $slug.'_'.$i.'.'.$ext;
                     $file->move($folderPath, $filename);
-                    $product->addMedia($folderPath.'/'.$filename)
-                        ->preservingOriginal()
-                        ->toMediaCollection('gallery');
+                    $this->addSanitizedMedia($product, $folderPath.'/'.$filename, 'gallery');
                     $i++;
                 }
             }
@@ -1067,6 +1060,28 @@ class ProductController extends Controller
                 'success' => false,
                 'message' => 'Error interno al actualizar el stock. Inténtalo de nuevo.',
             ], 500);
+        }
+    }
+
+    protected function addSanitizedMedia(Product $product, string $absolutePath, string $collection): void
+    {
+        $optimizer = app(ProductImageOptimizerService::class);
+
+        try {
+            $sanitizedPath = $optimizer->sanitizePath($absolutePath);
+            $product->addMedia($sanitizedPath)
+                ->preservingOriginal()
+                ->toMediaCollection($collection);
+        } catch (\Throwable $e) {
+            Log::warning('cf4_image_sanitize_failed', [
+                'path' => $absolutePath,
+                'collection' => $collection,
+                'error' => $e->getMessage(),
+            ]);
+
+            $product->addMedia($absolutePath)
+                ->preservingOriginal()
+                ->toMediaCollection($collection);
         }
     }
 }

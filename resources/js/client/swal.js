@@ -180,12 +180,20 @@ export async function cf4Warning(message, title = 'Atención') {
 export async function cf4Loading(title = 'Procesando…', text = 'Espere mientras se completa la acción.') {
     const Swal = await getSwal();
 
-    return Swal.fire({
+    void Swal.fire({
         ...cf4DialogDefaults(),
         title,
         text,
         allowOutsideClick: false,
         allowEscapeKey: false,
+        showConfirmButton: false,
         didOpen: () => Swal.showLoading(),
     });
+
+    return Swal;
+}
+
+export async function cf4Close() {
+    const Swal = await getSwal();
+    Swal.close();
 }

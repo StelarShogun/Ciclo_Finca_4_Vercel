@@ -20,6 +20,8 @@
 @endpush
 
 @section('content')
+{{-- Relleno bajo el header fijo (color navbar); la imagen del hero no se desplaza --}}
+<div class="cf4-header-spacer" aria-hidden="true"></div>
 <!-- Hero: imagen full-bleed + overlay; reemplaza public/assets/images/hero/hero-downhill.jpg por tu arte -->
 <section class="hero-section" aria-label="Bienvenida a Ciclo Finca 4">
     <div class="hero-backdrop" aria-hidden="true">
@@ -138,14 +140,26 @@
         </div>
         
         @if($featuredProducts->count() > 0)
-            <div class="products-grid">
+            <div class="catalog-spotlight-carousel featured-products-carousel"
+                 data-product-spotlight-carousel
+                 data-autoplay-delay="4000"
+                 data-a11y-prev="Producto destacado anterior"
+                 data-a11y-next="Siguiente producto destacado"
+                 role="region"
+                 aria-roledescription="carrusel"
+                 aria-label="Productos destacados">
+                <div class="swiper catalog-spotlight-swiper">
+                    <div class="swiper-wrapper">
                 @foreach($featuredProducts as $product)
                     @php
                         $stockLabel = $product->clientCatalogStockLabel();
                         $canBuy = $product->isPurchasableByClient();
                         $homeSku = $product->clientCatalogAssignedSku();
                     @endphp
-                    <div class="product-card @if($stockLabel === 'Agotado') product-card--out-of-stock @endif">
+                    <div class="swiper-slide product-card @if($stockLabel === 'Agotado') product-card--out-of-stock @endif"
+                         role="group"
+                         aria-roledescription="diapositiva"
+                         aria-label="{{ $loop->iteration }} de {{ $loop->count }}: {{ $product->name }}">
                         <div class="product-image">
                             <a class="product-image__link" href="{{ $product->clientProductUrl() }}"
                                aria-label="Ver producto: {{ $product->name }}">
@@ -225,8 +239,23 @@
                         </div>
                     </div>
                 @endforeach
+                    </div>
+                </div>
+
+                <button type="button"
+                        class="catalog-spotlight-nav catalog-spotlight-nav--prev"
+                        data-spotlight-prev
+                        aria-label="Producto destacado anterior">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                <button type="button"
+                        class="catalog-spotlight-nav catalog-spotlight-nav--next"
+                        data-spotlight-next
+                        aria-label="Siguiente producto destacado">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
             </div>
-            
+
             <div class="section-footer">
                 <a href="{{ route('clients.catalog') }}" class="btn btn-secondary">
                     Ver Todos los Productos
@@ -369,11 +398,11 @@
                 <div class="step-number">2</div>
                 <h3 class="step-title">Deja tu solicitud</h3>
                 <p class="step-desc">Agrega los productos al carrito y finaliza tu solicitud para que podamos confirmarte disponibilidad.</p>
-                @auth('clients')
+                @if(auth('clients')->check())
                     <a href="{{ route('clients.cart') }}" class="btn btn-secondary btn-lg step-cta">Ir al carrito</a>
-                @else
+                @elseif($showGuestRegisterCta ?? true)
                     <a href="{{ route('login.show') }}" class="btn btn-secondary btn-lg step-cta">Inicia sesión</a>
-                @endauth
+                @endif
             </div>
 
             <div class="step-card" role="listitem">
@@ -438,17 +467,17 @@
                     <i class="fas fa-bicycle" aria-hidden="true"></i>
                     Ver Catálogo
                 </a>
-                @auth('clients')
+                @if(auth('clients')->check())
                     <a href="{{ route('clients.cart') }}" class="btn btn-secondary btn-lg">
                         <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                         Ir al carrito
                     </a>
-                @else
+                @elseif($showGuestRegisterCta ?? true)
                     <a href="{{ route('clients.register.form') }}" class="btn btn-secondary btn-lg">
                         <i class="fas fa-user-plus" aria-hidden="true"></i>
                         Crear cuenta
                     </a>
-                @endauth
+                @endif
             </div>
         </div>
     </div>

@@ -4,7 +4,7 @@
 @endsection
 
 @push('styles')
-    @vite(['resources/css/client/clients-users.css'])
+    @vite(['resources/css/client/clients-users.css', 'resources/css/client/legal-pages.css'])
 @endpush
 
 @section('title', 'Registrar Cliente')
@@ -115,6 +115,24 @@
                 </div>
                 {{-- Populated dynamically by JS on mismatch --}}
                 <div id="msg-pass-confirm" class="field-msg"></div>
+            </div>
+
+            <div class="cf4-legal-consent">
+                <label class="cf4-legal-consent-label" for="accept_terms">
+                    <input type="checkbox" name="accept_terms" id="accept_terms" value="1"
+                        {{ old('accept_terms') ? 'checked' : '' }}>
+                    <span>
+                        Al registrarme acepto los
+                        <a href="{{ route('clients.legal.terms') }}" target="_blank" rel="noopener noreferrer">Términos y condiciones</a>
+                        y la
+                        <a href="{{ route('clients.legal.privacy') }}" target="_blank" rel="noopener noreferrer">Política de privacidad</a>.
+                    </span>
+                </label>
+                <div id="msg-accept-terms" class="field-msg @error('accept_terms') error @enderror">
+                    @error('accept_terms')
+                        <i class="fas fa-exclamation-circle"></i><span>{{ $message }}</span>
+                    @enderror
+                </div>
             </div>
 
             {{-- Loading state swaps button text during form submission --}}

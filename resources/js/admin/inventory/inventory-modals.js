@@ -42,7 +42,8 @@ import {
 } from './inventory-classification.js';
 import { initStaticSearchCombobox, setComboboxFieldError } from '../shared/static-search-combobox.js';
 import { initFileUploadZone } from '../shared/file-upload-zone.js';
-import { fireSwal, cf4Confirm, cf4Warning } from '../shared/swal.js';
+import { fireSwal, cf4Confirm, cf4Warning, cf4Toast, cf4Error } from '../shared/swal.js';
+import { compressImageFile, compressFileList } from './product-image-compression.js';
 
 export async function initModals() {
     // Swal is lazy-loaded inside fireSwal() on first dialog.
@@ -142,7 +143,7 @@ export async function initModals() {
     }
 
     if (saveNewProductBtn) {
-        saveNewProductBtn.addEventListener('click', () => {
+        saveNewProductBtn.addEventListener('click', async () => {
             syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
             syncParentCategoryHiddenInput(newParentCategory, newParentCategoryHidden);
 
@@ -177,14 +178,31 @@ export async function initModals() {
             }
 
             setButtonLoading(saveNewProductBtn, true);
+
             const formData = new FormData(newProductForm);
-            // Rebuild images[] with only valid image files (webkitdirectory may include non-images)
+
+            const mainInput = qs('#new-image');
+            if (mainInput?.files?.[0]) {
+                const meta = qs('#new-image-meta');
+                if (meta) meta.textContent = 'Preparando imagen…';
+                const compressedMain = await compressImageFile(mainInput.files[0]);
+                formData.set('image', compressedMain, compressedMain.name);
+                if (meta) meta.textContent = compressedMain.name;
+            }
+
             formData.delete('images[]');
             if (newImagesInput?.files?.length > 0) {
-                Array.from(newImagesInput.files)
-                    .filter(f => VALID_IMAGE_TYPES.includes(f.type))
-                    .forEach(f => formData.append('images[]', f));
+                const galleryMeta = qs('#new-images-meta');
+                if (galleryMeta) galleryMeta.textContent = 'Preparando imágenes…';
+                const validGallery = Array.from(newImagesInput.files)
+                    .filter((f) => VALID_IMAGE_TYPES.includes(f.type));
+                const compressedGallery = await compressFileList(validGallery);
+                compressedGallery.forEach((f) => formData.append('images[]', f));
+                if (galleryMeta) {
+                    galleryMeta.textContent = `${compressedGallery.length} imagen(es) lista(s)`;
+                }
             }
+
             formData.set('is_featured', qs('#new-featured')?.checked ? '1' : '0');
 
             smartFetch(newProductForm.action, {
@@ -622,10 +640,10 @@ export async function initModals() {
                 }
 
                 editVariantCombobox?.reset();
-                fireSwal('Agregada', 'Variante agregada correctamente.', 'success');
+                void cf4Toast({ icon: 'success', title: 'Agregada', text: 'Variante agregada correctamente.' });
             } catch (err) {
                 const msg = err?.message || 'No se pudo agregar la variante.';
-                fireSwal('No se pudo agregar', msg, 'error');
+                void cf4Error(msg, 'No se pudo agregar');
             } finally {
                 setActionButtonLoading(editVariantAddBtn, false);
                 editVariantAddBtn.disabled = true;
@@ -635,7 +653,7 @@ export async function initModals() {
     }
 
     if (saveEditBtn) {
-        saveEditBtn.addEventListener('click', () => {
+        saveEditBtn.addEventListener('click', async () => {
             syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
             syncParentCategoryHiddenInput(editParentCategory, editParentCategoryHidden);
 
@@ -654,14 +672,31 @@ export async function initModals() {
             }
 
             setButtonLoading(saveEditBtn, true);
+
             const formData = new FormData(editProductForm);
-            // Rebuild images[] with only valid image files
+
+            const editMainInput = qs('#edit-image');
+            if (editMainInput?.files?.[0]) {
+                const editMeta = qs('#edit-image-meta');
+                if (editMeta) editMeta.textContent = 'Preparando imagen…';
+                const compressedEditMain = await compressImageFile(editMainInput.files[0]);
+                formData.set('image', compressedEditMain, compressedEditMain.name);
+                if (editMeta) editMeta.textContent = compressedEditMain.name;
+            }
+
             formData.delete('images[]');
             if (editImagesInput?.files?.length > 0) {
-                Array.from(editImagesInput.files)
-                    .filter(f => VALID_IMAGE_TYPES.includes(f.type))
-                    .forEach(f => formData.append('images[]', f));
+                const editGalleryMeta = qs('#edit-images-meta');
+                if (editGalleryMeta) editGalleryMeta.textContent = 'Preparando imágenes…';
+                const validEditGallery = Array.from(editImagesInput.files)
+                    .filter((f) => VALID_IMAGE_TYPES.includes(f.type));
+                const compressedEditGallery = await compressFileList(validEditGallery);
+                compressedEditGallery.forEach((f) => formData.append('images[]', f));
+                if (editGalleryMeta) {
+                    editGalleryMeta.textContent = `${compressedEditGallery.length} imagen(es) lista(s)`;
+                }
             }
+
             formData.append('_method', 'PUT');
             formData.set('is_featured', qs('#edit-featured')?.checked ? '1' : '0');
 
@@ -683,13 +718,11 @@ export async function initModals() {
                 setButtonLoading(saveEditBtn, false);
                 if (data.success) {
                     editModal.classList.remove('active');
-                    fireSwal({
-                        title: 'Producto actualizado',
-                        text: data.message,
+                    void cf4Toast({
                         icon: 'success',
-                        timer: 3500,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
+                        title: 'Producto actualizado',
+                        text: data.message || '',
+                        timer: 2600,
                     }).then(() => { location.reload(); });
                 } else if (data.errors) {
                     qsa('.error-message', editProductForm).forEach((el) => el.remove());
@@ -784,16 +817,20 @@ export async function initModals() {
                             });
                         }
                         ensureVariantsPlaceholder();
-                        fireSwal('Eliminada', data.message || 'Variante eliminada correctamente.', 'success');
+                        void cf4Toast({ icon: 'success', title: 'Eliminada', text: data.message || 'Variante eliminada correctamente.' });
                         return;
                     }
 
                     const msg = data.message || 'No se pudo eliminar la variante.';
-                    fireSwal('No se puede eliminar', msg, response.status === 409 ? 'info' : 'error');
+                    if (response.status === 409) {
+                        void cf4Warning(msg, 'No se puede eliminar');
+                    } else {
+                        void cf4Error(msg, 'No se puede eliminar');
+                    }
                 })
                 .catch(() => {
                     setActionButtonLoading(btn, false);
-                    fireSwal('Error', 'Error de conexión al eliminar la variante.', 'error');
+                    void cf4Error('Error de conexión al eliminar la variante.', 'Error');
                 });
         });
     });
@@ -818,7 +855,7 @@ export async function initModals() {
     function openVariantEditModal(baseId, variantProductId) {
         const v = findVariantInEditList(variantProductId);
         if (!v || !variantEditModal) {
-            fireSwal('Error', 'No se encontró la variante en la lista.', 'error');
+            void cf4Error('No se encontró la variante en la lista.', 'Error');
             return;
         }
         const baseInput = qs('#variant-edit-base-id');
@@ -931,21 +968,21 @@ export async function initModals() {
                             currentVariants: currentEditVariants,
                         });
                     }
-                    fireSwal('Listo', data.message || 'Variante actualizada correctamente.', 'success');
+                    void cf4Toast({ icon: 'success', title: 'Listo', text: data.message || 'Variante actualizada correctamente.' });
                     return;
                 }
 
                 const msg = data.message || 'No se pudo guardar la variante.';
                 if (data.errors && typeof data.errors === 'object') {
                     const first = Object.values(data.errors).flat()[0];
-                    fireSwal('Revisá los datos', first || msg, 'warning');
+                    void cf4Warning(first || msg, 'Revisá los datos');
                 } else {
-                    fireSwal('Error', msg, 'error');
+                    void cf4Error(msg, 'Error');
                 }
             })
             .catch(() => {
                 setButtonLoading(variantEditSaveBtn, false);
-                fireSwal('Error', 'Error de conexión al guardar la variante.', 'error');
+                void cf4Error('Error de conexión al guardar la variante.', 'Error');
             });
     });
 

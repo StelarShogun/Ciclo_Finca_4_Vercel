@@ -5,6 +5,8 @@ import {
     cf4Toast,
     cf4Error,
     cf4Loading,
+    cf4Close,
+    escapeHtml,
 } from '../shared/swal.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -144,7 +146,7 @@ async function doOrderAction(url, {
         controller.abort();
     }, 15000);
 
-    await cf4Loading('Procesando…', 'Espere mientras se completa la acción.');
+    void cf4Loading('Procesando…', 'Espere mientras se completa la acción.');
 
     try {
         const res = await fetch(url, {
@@ -162,6 +164,8 @@ async function doOrderAction(url, {
         window.clearTimeout(timeoutId);
 
         const data = await parseResponsePayload(res);
+
+        await cf4Close();
 
         if (res.ok && (data.success === true || typeof data.success === 'undefined')) {
             let text = data.message ?? '';
@@ -189,6 +193,7 @@ async function doOrderAction(url, {
         await cf4Error(message, 'Error');
     } catch (error) {
         window.clearTimeout(timeoutId);
+        await cf4Close();
 
         const isTimeout = error.name === 'AbortError';
         const title = isTimeout ? 'Tiempo de espera agotado' : 'Error de red';
@@ -287,15 +292,17 @@ function viewSale(id) {
                 : sale.sale_date_label || '—';
 
             const readyAtRow = sale.ready_at || sale.ready_at_label
-                ? '<div class="detail-item"><label>Fecha listo para recoger:</label><span>'
-                    + (sale.ready_at_label || '—')
-                    + '</span></div>'
+                ? `<div class="cf4-order-detail__item">
+                        <span>Fecha listo para recoger</span>
+                        <strong>${escapeHtml(sale.ready_at_label || '—')}</strong>
+                    </div>`
                 : '';
 
             const confirmedAtRow = sale.status === 'completed'
-                ? '<div class="detail-item"><label>Fecha de confirmación:</label><span>'
-                    + (sale.confirmed_at_label || '—')
-                    + '</span></div>'
+                ? `<div class="cf4-order-detail__item">
+                        <span>Fecha de confirmación</span>
+                        <strong>${escapeHtml(sale.confirmed_at_label || '—')}</strong>
+                    </div>`
                 : '';
 
             const statusLabels = {
@@ -328,40 +335,59 @@ function viewSale(id) {
                     const prod = item.product || {};
                     const up = parseFloat(item.unit_price || 0);
                     const tot = parseFloat(item.total || 0);
-                    return '<tr>'
-                        + '<td>' + (prod.name || 'N/A') + '</td>'
-                        + '<td class="text-center">' + item.quantity + '</td>'
-                        + '<td class="text-right">CRC' + up.toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</td>'
-                        + '<td class="text-right"><strong>CRC' + tot.toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</strong></td>'
-                        + '</tr>';
+
+                    return `<tr>
+                        <td>${escapeHtml(prod.name || 'N/A')}</td>
+                        <td class="text-center">${escapeHtml(String(item.quantity ?? '0'))}</td>
+                        <td class="text-right">₡${up.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</td>
+                        <td class="text-right"><strong>₡${tot.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong></td>
+                    </tr>`;
                 })
                 .join('');
 
+            const statusClass = escapeHtml(sale.status || '');
+            const statusText = escapeHtml(statusLabels[sale.status] || sale.status || '—');
+            const paymentText = escapeHtml(paymentLabels[sale.payment_method] || sale.payment_method || '—');
+
             body.innerHTML = `
-                <div class="view-sale-detail">
-                    <div class="detail-grid">
-                        <div class="detail-item"><label>${saleDateLabel}:</label><span>${saleDateValue}</span></div>
+                <div class="cf4-order-detail">
+                    <section class="cf4-order-detail__summary">
+                        <div class="cf4-order-detail__item">
+                            <span>${escapeHtml(saleDateLabel)}</span>
+                            <strong>${escapeHtml(saleDateValue)}</strong>
+                        </div>
                         ${readyAtRow}
                         ${confirmedAtRow}
-                        <div class="detail-item"><label>Cliente:</label><span>${customerName}</span></div>
-                        <div class="detail-item"><label>Estado:</label><span class="order-status-pill ${sale.status}">${statusLabels[sale.status] || sale.status}</span></div>
-                        <div class="detail-item"><label>Método de pago:</label><span>${paymentLabels[sale.payment_method] || sale.payment_method || '—'}</span></div>
-                    </div>
+                        <div class="cf4-order-detail__item">
+                            <span>Cliente</span>
+                            <strong>${escapeHtml(customerName)}</strong>
+                        </div>
+                        <div class="cf4-order-detail__item">
+                            <span>Estado</span>
+                            <strong class="order-status-pill ${statusClass}">${statusText}</strong>
+                        </div>
+                        <div class="cf4-order-detail__item">
+                            <span>Método de pago</span>
+                            <strong>${paymentText}</strong>
+                        </div>
+                    </section>
 
-                    <div class="detail-section">
-                        <h4>Productos</h4>
-                        <table class="sales-table admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Producto</th>
-                                    <th class="text-center">Cantidad</th>
-                                    <th class="text-right">Precio unitario</th>
-                                    <th class="text-right">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>${productsHtml}</tbody>
-                        </table>
-                    </div>
+                    <section class="cf4-order-detail__products">
+                        <h4><i class="fas fa-box" aria-hidden="true"></i> Productos del pedido</h4>
+                        <div class="admin-table-responsive">
+                            <table class="sales-table admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th class="text-center">Cantidad</th>
+                                        <th class="text-right">Precio unitario</th>
+                                        <th class="text-right">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${productsHtml}</tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
             `;
         })

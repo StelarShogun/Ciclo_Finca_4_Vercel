@@ -32,6 +32,64 @@ export function initHeaderCatalogSearch() {
 
     list.setAttribute('aria-label', 'Tendencias y sugerencias de búsqueda');
 
+    var listPortalHome = { parent: null, next: null };
+
+    function clearListPortalStyles() {
+        list.style.removeProperty('position');
+        list.style.removeProperty('top');
+        list.style.removeProperty('left');
+        list.style.removeProperty('right');
+        list.style.removeProperty('width');
+        list.style.removeProperty('max-height');
+        list.style.removeProperty('z-index');
+    }
+
+    function restoreListToDom() {
+        if (!listPortalHome.parent) {
+            return;
+        }
+        if (listPortalHome.next && listPortalHome.next.parentNode === listPortalHome.parent) {
+            listPortalHome.parent.insertBefore(list, listPortalHome.next);
+        } else {
+            listPortalHome.parent.appendChild(list);
+        }
+        listPortalHome.parent = null;
+        listPortalHome.next = null;
+        clearListPortalStyles();
+    }
+
+    function syncMobileSuggestionsPosition() {
+        if (window.innerWidth > 900) {
+            restoreListToDom();
+            return;
+        }
+
+        if (!state.open) {
+            restoreListToDom();
+            return;
+        }
+
+        if (list.parentElement !== document.body) {
+            listPortalHome.parent = list.parentElement;
+            listPortalHome.next = list.nextSibling;
+            document.body.appendChild(list);
+        }
+
+        var anchor = root.querySelector('.header-catalog-search-track') || root;
+        var rect = anchor.getBoundingClientRect();
+        var gap = 6;
+        var side = Math.max(12, Math.round(rect.left));
+        var width = Math.min(Math.round(rect.width), window.innerWidth - side - 12);
+
+        list.style.position = 'fixed';
+        list.style.top = Math.round(rect.bottom + gap) + 'px';
+        list.style.left = side + 'px';
+        list.style.right = 'auto';
+        list.style.width = Math.max(width, 200) + 'px';
+        list.style.maxHeight = Math.min(280, Math.round(window.innerHeight - rect.bottom - gap - 16)) + 'px';
+        list.style.zIndex = '1205';
+    }
+
     function setOpen(open) {
         state.open = !!open;
         list.classList.toggle('is-open', state.open);
@@ -39,6 +97,12 @@ export function initHeaderCatalogSearch() {
         input.setAttribute('aria-expanded', state.open ? 'true' : 'false');
         if (!state.open) {
             state.activeIndex = -1;
+            restoreListToDom();
+        } else {
+            window.requestAnimationFrame(function () {
+                syncMobileSuggestionsPosition();
+                window.requestAnimationFrame(syncMobileSuggestionsPosition);
+            });
         }
     }
 
@@ -231,6 +295,7 @@ export function initHeaderCatalogSearch() {
         if (on) {
             window.setTimeout(function () {
                 try { input.focus(); } catch (err) { /* ignore */ }
+                syncMobileSuggestionsPosition();
             }, 180);
         } else {
             close();
@@ -517,4 +582,9 @@ export function initHeaderCatalogSearch() {
         if (root.contains(e.target) || list.contains(e.target) || input.contains(e.target)) return;
         close();
     });
+
+    window.addEventListener('resize', syncMobileSuggestionsPosition);
+    window.addEventListener('scroll', syncMobileSuggestionsPosition, true);
+
+    window.cf4SyncHeaderSearchSuggestionsPosition = syncMobileSuggestionsPosition;
 }

@@ -25,6 +25,7 @@ const adminAssets = [
     "resources/js/admin/product-classifications/index.js",
     "resources/js/admin/product-classifications/edit.js",
     "resources/js/admin/classifications/catalog.js",
+    "resources/js/admin/classifications/forms.js",
     "resources/js/admin/reports/product-sales.js",
     "resources/js/admin/reports/sales-performance.js",
     "resources/js/admin/reports/exports-modal.js",
@@ -93,6 +94,7 @@ const clientAssets = [
     "resources/css/client/footer.css",
     "resources/css/client/clients-page.css",
     "resources/css/client/clients-users.css",
+    "resources/css/client/legal-pages.css",
 ];
 
 export default defineConfig(({ mode }) => {

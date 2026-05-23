@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Editar valor - Ciclo Finca 4 Admin</title>
-    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/components/page-header.css', 'resources/css/admin/suppliers/suppliers.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/components/page-header.css', 'resources/css/admin/suppliers/suppliers.css', 'resources/js/admin/classifications/forms.js'])
 </head>
 
 <body class="admin-layout">
@@ -21,7 +21,10 @@
 
             <div class="form-card">
                 <form action="{{ route('admin.classifications.values.update', $value) }}" method="POST"
-                    class="form-body">
+                    class="form-body"
+                    data-cf4-confirm
+                    data-confirm-title="¿Guardar valor?"
+                    data-confirm-text="Se actualizará el valor visible para el cliente.">
                     @csrf
                     @method('PUT')
                     @if ($errors->any())
@@ -40,7 +43,7 @@
                         <div class="error-message">{{ $errors->first('value') }}</div>
                     </div>
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="submit" class="btn btn-primary cf4-inline-action">Guardar</button>
                         <a href="{{ route('admin.classifications.values.index', $dimension) }}"
                             class="btn btn-secondary">Cancelar</a>
                     </div>

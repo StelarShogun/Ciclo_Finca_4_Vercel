@@ -40,3 +40,7 @@ $reportMinute = AppSetting::getWeeklyReportMinute(); // 0–59
 Schedule::command('reports:send-weekly-dashboard')
     ->cron(sprintf('%d %d * * %d', $reportMinute, $reportHour, $reportDay))
     ->withoutOverlapping();
+
+Schedule::command('cf4:cleanup-temp-product-images')
+    ->dailyAt('03:30')
+    ->withoutOverlapping();

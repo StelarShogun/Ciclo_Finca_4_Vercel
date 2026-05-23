@@ -1,4 +1,4 @@
-import { cf4DialogDefaults, escapeHtml, getSwal } from './swal.js';
+import { cf4DialogDefaults, escapeHtml, fireSwal } from './swal.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const errors = window.__cf4RegisterErrors;
@@ -8,8 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         + errors.map((err) => `<li>${escapeHtml(err)}</li>`).join('')
         + '</ul>';
 
-    const Swal = await getSwal();
-    await Swal.fire({
+    await fireSwal({
         ...cf4DialogDefaults(),
         icon: 'error',
         title: 'Error en el registro',

@@ -228,6 +228,12 @@ function toggleUserDropdown() {
             valid = false;
         }
 
+        const termsEl = document.getElementById('accept_terms');
+        if (termsEl && !termsEl.checked) {
+            showMsg('msg-accept-terms', 'error', 'Debes aceptar los Términos y condiciones y la Política de privacidad.');
+            valid = false;
+        }
+
         if (!valid) { e.preventDefault(); return; }
 
         document.getElementById('btnRegistrarTexto').style.display   = 'none';

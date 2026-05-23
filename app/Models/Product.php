@@ -140,11 +140,19 @@ class Product extends Model implements HasMedia
     public function registerMediaConversions(?Media $media = null): void
     {
         $this
-            ->addMediaConversion('webp_1920')
+            ->addMediaConversion('webp_96')
             ->performOnCollections('main_image', 'gallery')
             ->format('webp')
-            ->width(1920)
-            ->quality(80)
+            ->width(96)
+            ->quality(70)
+            ->nonQueued();
+
+        $this
+            ->addMediaConversion('webp_480')
+            ->performOnCollections('main_image', 'gallery')
+            ->format('webp')
+            ->width(480)
+            ->quality(76)
             ->nonQueued();
 
         $this
@@ -156,11 +164,19 @@ class Product extends Model implements HasMedia
             ->nonQueued();
 
         $this
-            ->addMediaConversion('webp_480')
+            ->addMediaConversion('webp_1200')
             ->performOnCollections('main_image', 'gallery')
             ->format('webp')
-            ->width(480)
-            ->quality(76)
+            ->width(1200)
+            ->quality(80)
+            ->nonQueued();
+
+        $this
+            ->addMediaConversion('webp_1920')
+            ->performOnCollections('main_image', 'gallery')
+            ->format('webp')
+            ->width(1920)
+            ->quality(80)
             ->nonQueued();
     }
 

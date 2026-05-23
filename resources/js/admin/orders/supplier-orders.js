@@ -6,6 +6,7 @@ import {
     cf4Warning,
     cf4DialogDefaults,
     cf4SwalClasses,
+    fireSwal,
     getSwal,
 } from '../shared/swal.js';
 
@@ -532,7 +533,7 @@ function deliverOrder(id) {
 async function cancelOrder(id) {
     const Swal = await getSwal();
 
-    const result = await Swal.fire({
+    const result = await fireSwal({
         ...cf4DialogDefaults(),
         title: '¿Cancelar pedido?',
         html: `

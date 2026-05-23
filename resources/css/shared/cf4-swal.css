@@ -79,3 +79,52 @@
 .cf4-swal-loader {
     border-color: var(--brand-medium, #235347) transparent var(--brand-medium, #235347) transparent !important;
 }
+
+@media (max-width: 640px) {
+    .swal2-container {
+        padding: .75rem !important;
+    }
+
+    .cf4-swal-popup {
+        width: min(100%, 360px) !important;
+        max-width: calc(100vw - 1.5rem) !important;
+        padding: 1rem !important;
+        border-radius: 16px !important;
+    }
+
+    .cf4-swal-title {
+        font-size: 1.05rem !important;
+        line-height: 1.25 !important;
+    }
+
+    .cf4-swal-html,
+    .cf4-swal-text {
+        font-size: .9rem !important;
+        line-height: 1.45 !important;
+    }
+
+    .cf4-swal-actions {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: .5rem !important;
+    }
+
+    .cf4-swal-btn {
+        width: 100% !important;
+        min-height: 44px !important;
+        justify-content: center !important;
+        padding: .75rem 1rem !important;
+        white-space: normal !important;
+    }
+
+    .cf4-swal-toast {
+        width: calc(100vw - 1.5rem) !important;
+        max-width: calc(100vw - 1.5rem) !important;
+        margin: 0 auto !important;
+    }
+
+    .swal2-toast-shown .swal2-container {
+        align-items: flex-start !important;
+    }
+}

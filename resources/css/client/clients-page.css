@@ -121,7 +121,23 @@ body.guest-layout {
 
 .cliente-main {
   flex: 1;
-  padding-top: 80px;
+  padding-top: var(--client-header-offset);
+}
+
+/* Home: el espacio bajo el navbar lo ocupa .cf4-header-spacer (no la foto del hero) */
+.cliente-main:has(.cf4-header-spacer) {
+  padding-top: 0;
+}
+
+.cf4-header-spacer {
+  display: block;
+  width: 100%;
+  height: var(--client-header-offset);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--brand-darkest);
+  flex-shrink: 0;
 }
 
 /* ===================================================================
@@ -491,14 +507,16 @@ body.guest-layout {
   z-index: 2;
   box-sizing: border-box;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .hero-section .hero-content {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 0;
   max-width: 660px;
+  text-align: left;
   animation: heroFadeInUp 0.8s ease-out;
 }
 
@@ -514,7 +532,7 @@ body.guest-layout {
   font-size: 0.85rem;
   font-weight: 600;
   color: #fff;
-  align-self: center;
+  align-self: flex-start;
 }
 
 .hero-section .hero-title {
@@ -785,10 +803,9 @@ body.guest-layout {
   contain-intrinsic-size: 1px 600px;
 }
 
-/* Featured products carry a taller grid; reserve more vertical space so the
-   placeholder matches the rendered height more closely. */
+/* Featured products carousel; reserve vertical space for CLS. */
 .featured-section {
-  contain-intrinsic-size: 1px 1100px;
+  contain-intrinsic-size: 1px 720px;
 }
 
 .categories-section {
@@ -823,6 +840,27 @@ body.guest-layout {
 
 .featured-section {
   padding: 72px 0 64px;
+}
+
+.featured-products-carousel {
+  margin-top: 0.5rem;
+}
+
+.featured-products-carousel .swiper-slide.product-card {
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.featured-products-carousel .product-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.featured-products-carousel .product-footer {
+  margin-top: auto;
 }
 
 .home-trust-strip {
@@ -1674,17 +1712,7 @@ body.guest-layout {
   background: var(--color-primary-dark);
 }
 
-@media (max-width: 768px) {
-  .catalog-shell .cf4-pagination-toolbar.pagination,
-  .catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .catalog-shell .cf4-pagination-toolbar .admin-pagination-nav {
-    justify-content: center;
-  }
-}
+/* Paginación responsive: admin/components/pagination.css (.cf4-pagination-toolbar) */
 
 /* ===================================================================
    16. CATEGORIES — carrusel (home.blade.php)
@@ -5115,9 +5143,6 @@ select.catalog-toolbar-select:focus,
 /* --- 768px: mobile header + general layout --- */
 @media (max-width: 768px) {
   /* Header móvil: ver resources/css/client/header.css (evitar duplicar y piso de estilos). */
-
-  /* Push main content below fixed header */
-  .cliente-main { padding-top: 84px; }
 
   /* Typography scale */
   .section-title    { font-size: 1.9rem; }

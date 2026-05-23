@@ -237,6 +237,97 @@
   border: 0;
 }
 
+/* Ir a página (input + botón siempre en la misma fila) */
+.cf4-pagination-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+}
+
+.cf4-pagination-jump .pagination-go-input,
+.cf4-pagination-jump input[type="number"] {
+  flex: 0 0 auto;
+}
+
+.cf4-pagination-jump .go-button,
+.cf4-pagination-jump .pagination-go-button {
+  flex: 0 0 auto;
+  min-width: 2.75rem;
+  white-space: nowrap;
+}
+
+/* Móvil catálogo: resumen arriba; controles (flechas + páginas + Ir) en una sola fila */
+@media (max-width: 640px) {
+  .catalog-shell .cf4-pagination-toolbar.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin: 1rem 0;
+    padding: 0.55rem 0.6rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .catalog-shell .cf4-pagination-toolbar .results-info {
+    flex: 1 0 100%;
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.72rem;
+    padding: 0.4rem 0.55rem;
+  }
+
+  .catalog-shell .cf4-pagination-toolbar .admin-pagination-per-page-form,
+  .catalog-shell .cf4-pagination-toolbar .admin-pagination-per-page-form--static {
+    flex: 1 0 100%;
+    justify-content: center;
+  }
+
+  .catalog-shell .cf4-pagination-toolbar .admin-pagination-nav,
+  .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    max-width: none;
+  }
+
+  .catalog-shell .cf4-pagination-toolbar .admin-pagination-nav {
+    flex-wrap: nowrap;
+    gap: 0.28rem;
+  }
+
+  .catalog-shell .cf4-pagination-toolbar .admin-pagination-nav .button {
+    flex-shrink: 0;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0.3rem 0.45rem;
+    font-size: 0.68rem;
+  }
+
+  .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump {
+    gap: 0.28rem;
+  }
+
+  .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump input[type="number"] {
+    width: 2.35rem;
+    height: 2rem;
+    font-size: 0.68rem;
+  }
+
+  .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump .go-button,
+  .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump .pagination-go-button {
+    height: 2rem;
+    min-width: 2.35rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.68rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cf4-pagination-toolbar .button,
   .cf4-pagination-toolbar .go-button {

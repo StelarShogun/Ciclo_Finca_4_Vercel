@@ -14,6 +14,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClassificationCatalogController;
 use App\Http\Controllers\ClientCatalogProductSuggestionsController;
 use App\Http\Controllers\ClientCatalogSearchTrendingController;
+use App\Http\Controllers\ClientLegalController;
 use App\Http\Controllers\ClientPageController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
@@ -330,6 +331,11 @@ Route::get('/admin/catalog-exit', function () {
 // Public client pages.
 Route::get('/', [ClientPageController::class, 'home'])->name('clients.home');
 Route::get('/catalog', [ClientPageController::class, 'catalog'])->name('clients.catalog');
+
+Route::get('/legal/terminos', [ClientLegalController::class, 'terms'])->name('clients.legal.terms');
+Route::get('/legal/privacidad', [ClientLegalController::class, 'privacy'])->name('clients.legal.privacy');
+Route::get('/legal/cambios-devoluciones', [ClientLegalController::class, 'returns'])->name('clients.legal.returns');
+Route::get('/contacto', [ClientLegalController::class, 'contact'])->name('clients.contact');
 
 // Predictive suggestions for the public client catalog search bar.
 Route::get('/api/products/suggestions', ClientCatalogProductSuggestionsController::class)

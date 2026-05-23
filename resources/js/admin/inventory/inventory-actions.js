@@ -112,11 +112,10 @@ function initProductDeletion() {
                             });
                         } else {
                             showErrorFeedback(button, 'Error');
-                            fireSwal({
-                                title: 'Error',
-                                text: data.message || 'Hubo un problema al desactivar el producto.',
-                                icon: 'error',
-                            });
+                            void cf4Error(
+                                data.message || 'Hubo un problema al desactivar el producto.',
+                                'Error',
+                            );
                         }
                     })
                     .catch(error => {
