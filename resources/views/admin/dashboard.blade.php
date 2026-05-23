@@ -338,6 +338,14 @@
                         </div>
                     </a>
 
+                    <a href="{{ route('suppliers.create') }}" class="action-card">
+                        <div class="action-icon"><i class="fas fa-truck"></i></div>
+                        <div class="action-content">
+                            <h4>Nuevo proveedor</h4>
+                            <p>Registrar un proveedor en el sistema</p>
+                        </div>
+                    </a>
+
                 </div>
             </section>
 

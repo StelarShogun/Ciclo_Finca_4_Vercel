@@ -421,10 +421,27 @@ function closeEditSupplierModal() {
     document.getElementById('edit-supplier-modal')?.classList.remove('active');
 }
 
+// Opens the create form when arriving from dashboard quick action (?open=new).
+function maybeOpenNewSupplierFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('open') !== 'new') {
+        return;
+    }
+
+    openNewSupplierModal();
+
+    params.delete('open');
+    const query = params.toString();
+    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`;
+    window.history.replaceState({}, '', nextUrl);
+}
+
 // Event listeners for DOM elements that exist on page load
 document.addEventListener('DOMContentLoaded', function () {
 
-    // New supplier modal 
+    maybeOpenNewSupplierFromQuery();
+
+    // New supplier modal
     document.getElementById('open-new-supplier-modal')?.addEventListener('click', openNewSupplierModal);
     document.getElementById('close-new-supplier-modal')?.addEventListener('click', closeNewSupplierModal);
     document.getElementById('cancel-new-supplier')?.addEventListener('click', closeNewSupplierModal);
