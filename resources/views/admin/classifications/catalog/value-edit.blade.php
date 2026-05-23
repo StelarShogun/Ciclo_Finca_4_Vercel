@@ -12,8 +12,9 @@
 <body class="admin-layout">
     @include('admin.parts.aside')
 
-    <main class="admin-main">
-        <div class="form-container">
+    <main class="admin-main admin-main--content">
+        <div class="admin-content-wrapper">
+            <div class="form-container">
             @component('admin.partials.page-header', ['title' => 'Editar valor de atributo'])
                 <p>Actualiza el valor que verá el cliente dentro del atributo «{{ $dimension->label }}».</p>
             @endcomponent
@@ -44,6 +45,7 @@
                             class="btn btn-secondary">Cancelar</a>
                     </div>
                 </form>
+            </div>
             </div>
         </div>
     </main>

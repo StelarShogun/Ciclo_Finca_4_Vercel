@@ -12,8 +12,9 @@
 <body class="admin-layout">
     @include('admin.parts.aside')
 
-    <main class="admin-main">
-        <div class="form-container">
+    <main class="admin-main admin-main--content">
+        <div class="admin-content-wrapper">
+            <div class="form-container">
             <nav class="reports-breadcrumb" aria-label="Migas de pan">
                 <a href="{{ route('admin.classifications.catalog.index') }}">Opciones por tipo</a>
                 <span class="sep">/</span>
@@ -155,6 +156,7 @@
                 <a href="{{ route('admin.classifications.catalog.index') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Volver a la lista de tipos
                 </a>
+            </div>
             </div>
         </div>
     </main>

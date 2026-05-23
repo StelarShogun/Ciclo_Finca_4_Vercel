@@ -38,6 +38,19 @@
 .transition      { transition: var(--transition); }
  
 .hidden { display: none !important; }
+
+.admin-content-wrapper {
+   width: 100%;
+   max-width: 80rem;
+   margin: 0 auto;
+   padding: 0 clamp(0.75rem, 2vw, 1.5rem);
+   box-sizing: border-box;
+}
+
+.admin-main.admin-main--content {
+   padding-left: 0;
+   padding-right: 0;
+}
  
 .mb-0 { margin-bottom: 0;      } .mt-0 { margin-top: 0;      }
 .mb-1 { margin-bottom: .25rem; } .mt-1 { margin-top: .25rem; }

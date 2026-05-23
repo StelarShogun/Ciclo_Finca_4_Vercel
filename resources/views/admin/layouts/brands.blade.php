@@ -21,9 +21,11 @@
 
     @yield('aside')
 
-    <main class="admin-main">
-        @yield('header')
-        @yield('contenido')
+    <main class="admin-main admin-main--content">
+        <div class="admin-content-wrapper">
+            @yield('header')
+            @yield('contenido')
+        </div>
     </main>
 
     @vite(['resources/js/admin/shell.js', 'resources/js/admin/brand/brand.js'])

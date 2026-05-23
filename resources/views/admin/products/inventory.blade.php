@@ -31,8 +31,9 @@
     {{-- Sidebar navigation --}}
     @include('admin.parts.aside')
 
-    <main class="admin-main">
-        <div class="inventory-container">
+    <main class="admin-main admin-main--content">
+        <div class="admin-content-wrapper">
+            <div class="inventory-container">
 
             {{-- ==================== HEADER ==================== --}}
             <header class="usuarios-header">
@@ -458,6 +459,7 @@
                 </div>
 
             </section>
+            </div>
         </div>
     </main>
 
