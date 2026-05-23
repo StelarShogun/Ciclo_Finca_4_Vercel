@@ -6,6 +6,10 @@
     @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/invoice-document.css'])
 @endpush
 
+@push('scripts')
+    @vite(['resources/js/admin/sales/sales.js'])
+@endpush
+
 @push('extra-meta')
     <meta name="invoice-label" content="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}">
 @endpush
