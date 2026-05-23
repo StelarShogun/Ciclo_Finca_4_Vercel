@@ -69,18 +69,6 @@
                 </a>
             </section>
 
-            {{-- Flash messages --}}
-            @if(session('status'))
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i> {{ session('status') }}
-                </div>
-            @endif
-            @if(session('error'))
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-                </div>
-            @endif
-
             {{-- ==================== FILTERS ==================== --}}
             @component('admin.partials.filters', [
                 'action' => route('inventory'),

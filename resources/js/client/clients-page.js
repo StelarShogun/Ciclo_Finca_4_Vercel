@@ -8,6 +8,7 @@ import {
     getCf4PaymentMethodShortLabel,
 } from './checkout-copy.js';
 import { initHeaderCatalogSearch } from './header-catalog-search.js';
+import { fireSwal, cf4Confirm } from './swal.js';
 import '../shared/ajax-pagination.js';
 
 // Marker used by clients-users.js to skip the cart/checkout listeners
@@ -410,31 +411,25 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (submitBtn)   submitBtn.disabled = false;
                         if (submitSpan)  submitSpan.classList.remove('hidden');
                         if (loadingSpan) loadingSpan.classList.add('hidden');
-                        fireSwal({
+                        cf4Confirm({
                             icon: 'warning',
                             title: 'Correo no verificado',
                             text: data.message || 'Debes verificar tu correo antes de iniciar sesión.',
-                            showCancelButton: true,
                             confirmButtonText: 'Verificar Correo',
                             cancelButtonText: 'Cancelar',
-                            confirmButtonColor: '#2d7a2d',
-                            cancelButtonColor: '#6c757d'
                         }).then(function (result) {
                             if (!result.isConfirmed) return;
                             window.location.href = data.redirect;
                         });
                     } else {
-                        fireSwal({
+                        cf4Confirm({
                             icon: 'error',
                             title: 'Error',
                             html: (data.message || 'Error al iniciar sesión') +
                                 '<hr style="margin:12px 0">' +
                                 '<p style="font-size:0.9rem;margin:0">¿Tienes una cuenta registrada? ¿O deseas registrarte?</p>',
-                            showCancelButton: true,
                             confirmButtonText: 'Ir a Registro',
                             cancelButtonText: 'Cancelar',
-                            confirmButtonColor: '#2d7a2d',
-                            cancelButtonColor: '#6c757d',
                         }).then(function (result) {
                             if (result.isConfirmed) {
                                 window.location.href = '/register';

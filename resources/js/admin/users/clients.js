@@ -1,4 +1,5 @@
 import '../../shared/ajax-pagination.js';
+import { cf4Confirm, cf4Toast, cf4Error } from '../shared/swal.js';
 
 // Toggle sidebar collapse on click
 document.addEventListener("DOMContentLoaded", () => {
@@ -11,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Ban / Unban user actions
 document.addEventListener('DOMContentLoaded', function () {
-    // Use event delegation to handle dynamically added buttons
     document.addEventListener('click', function (e) {
         const banBtn = e.target.closest('[data-action="ban"]');
         const unbanBtn = e.target.closest('[data-action="unban"]');
@@ -26,22 +26,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const isBan = action === 'ban';
 
-        // Show confirmation dialog with SweetAlert2
-        Swal.fire({
+        void cf4Confirm({
             icon: isBan ? 'warning' : 'question',
             title: isBan ? '¿Banear usuario?' : '¿Activar usuario?',
             html: isBan
                 ? `¿Seguro que desea banear al usuario <strong>${name}</strong> (${email})?`
                 : `¿Seguro que desea activar al usuario <strong>${name}</strong> (${email})?`,
-            showCancelButton: true,
             confirmButtonText: isBan ? 'Sí, banear' : 'Sí, activar',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: isBan ? '#ef4444' : '#10b981',
-            cancelButtonColor: '#6b7280',
+            danger: isBan,
         }).then((result) => {
             if (!result.isConfirmed) return;
 
-            // Send PATCH request to ban or unban endpoint
             const url = isBan ? `/clientes/${id}/ban` : `/clientes/${id}/unban`;
 
             fetch(url, {
@@ -55,7 +51,6 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 if (!data.success) throw new Error('Error del servidor');
 
-                // Update UI: status badge and button in the table row
                 const row = document.getElementById(`client-row-${id}`);
                 const badge = row.querySelector('.status-badge');
                 const td = row.querySelector('td:last-child');
@@ -74,20 +69,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     </button>`;
                 }
 
-                // Notify success with auto‑close toast
-                Swal.fire({
+                void cf4Toast({
                     icon: 'success',
                     title: isBan ? 'Usuario baneado' : 'Usuario activado',
                     timer: 1800,
-                    showConfirmButton: false,
                 });
             })
             .catch(() => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo completar la operación. Intenta nuevamente.',
-                });
+                void cf4Error('No se pudo completar la operación. Intenta nuevamente.', 'Error');
             });
         });
     });

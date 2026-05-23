@@ -1,4 +1,5 @@
 import { initStaticSearchCombobox } from '../shared/static-search-combobox.js';
+import { cf4Warning } from '../shared/swal.js';
 
 function getCSRFToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
@@ -330,24 +331,12 @@ function init() {
                 searchInput.focus();
             }
 
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Revisa los campos obligatorios',
-                    text:
-                        missing.length === 1
-                            ? `${missing[0]} es obligatorio.`
-                            : `${missing.slice(0, -1).join(', ')} y ${missing[missing.length - 1]} son obligatorios.`,
-                    buttonsStyling: false,
-                    showCancelButton: false,
-                    confirmButtonText: 'Entendido',
-                    customClass: {
-                        popup: 'cf4-swal-popup',
-                        confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
-                        title: 'cf4-swal-title',
-                    },
-                });
-            }
+            void cf4Warning(
+                missing.length === 1
+                    ? `${missing[0]} es obligatorio.`
+                    : `${missing.slice(0, -1).join(', ')} y ${missing[missing.length - 1]} son obligatorios.`,
+                'Revisa los campos obligatorios'
+            );
         }
     });
 }

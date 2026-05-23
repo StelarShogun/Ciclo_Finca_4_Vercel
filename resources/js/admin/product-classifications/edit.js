@@ -1,6 +1,4 @@
-import Swal from 'sweetalert2';
-
-window.Swal = Swal;
+import { cf4Confirm, cf4Warning } from '../shared/swal.js';
 
 function init() {
     if (!window.location.pathname.includes('/classifications/edit')) return;
@@ -16,16 +14,11 @@ function init() {
         });
     });
 
-    const submitHandler = (e) => {
+    const submitHandler = async (e) => {
         e.preventDefault();
 
         if (!isDirty) {
-            Swal.fire({
-                icon: 'info',
-                title: 'Sin cambios',
-                text: 'No modificaste ningún valor. No hay nada que guardar.',
-                confirmButtonText: 'Entendido',
-            });
+            await cf4Warning('No modificaste ningún valor. No hay nada que guardar.', 'Sin cambios');
             return;
         }
 
@@ -47,13 +40,13 @@ function init() {
         e.preventDefault();
         e.stopPropagation();
 
-        const result = await Swal.fire({
+        const result = await cf4Confirm({
             title: '¿Salir sin guardar?',
             text: 'Tenés cambios sin guardar. ¿Querés salir de todas formas?',
             icon: 'warning',
-            showCancelButton: true,
             confirmButtonText: 'Sí, salir',
             cancelButtonText: 'No, quedarme',
+            danger: true,
         });
 
         if (result.isConfirmed) {
@@ -73,13 +66,13 @@ function init() {
             e.preventDefault();
             e.stopImmediatePropagation();
 
-            const result = await Swal.fire({
+            const result = await cf4Confirm({
                 title: '¿Salir sin guardar?',
                 text: 'Tenés cambios sin guardar. ¿Querés salir de todas formas?',
                 icon: 'warning',
-                showCancelButton: true,
                 confirmButtonText: 'Sí, salir',
                 cancelButtonText: 'No, quedarme',
+                danger: true,
             });
 
             if (result.isConfirmed) {

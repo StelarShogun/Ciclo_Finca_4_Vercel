@@ -1,4 +1,11 @@
 import '../../shared/ajax-pagination.js';
+import {
+    cf4Confirm,
+    cf4PromptTextarea,
+    cf4Toast,
+    cf4Error,
+    cf4Warning,
+} from '../shared/swal.js';
 
 // Helper to get meta tag content safely
 const meta   = name => document.querySelector(`meta[name="${name}"]`)?.content ?? '';
@@ -81,29 +88,19 @@ function confirmReturn() {
         closeReturnModal();
 
         if (data.success) {
-            Swal.fire({
-                title:             'Devolución registrada',
-                text:              data.message || 'La devolución fue procesada correctamente.',
-                icon:              'success',
-                confirmButtonText: 'Entendido',
+            void cf4Toast({
+                icon: 'success',
+                title: 'Devolución registrada',
+                text: data.message || 'La devolución fue procesada correctamente.',
+                timer: 3000,
             }).then(() => location.reload());
         } else {
-            Swal.fire({
-                title:             'Error',
-                text:              data.message || 'No se pudo registrar la devolución.',
-                icon:              'error',
-                confirmButtonText: 'Cerrar',
-            });
+            void cf4Error(data.message || 'No se pudo registrar la devolución.', 'Error');
         }
     })
     .catch(() => {
         closeReturnModal();
-        Swal.fire({
-            title:             'Error de conexión',
-            text:              'No se pudo conectar con el servidor. Intente nuevamente.',
-            icon:              'error',
-            confirmButtonText: 'Cerrar',
-        });
+        void cf4Error('No se pudo conectar con el servidor. Intente nuevamente.', 'Error de conexión');
     })
     .finally(() => {
         if (btn) {
@@ -452,83 +449,60 @@ function _saleAction(url, successMsg, payload = null) {
             if (data.sale && data.sale.invoice_number) {
                 text += '\n\nFactura: ' + data.sale.invoice_number;
             }
-            Swal.fire({ title: 'Listo', text, icon: 'success', confirmButtonText: 'Entendido' })
+            void cf4Toast({ icon: 'success', title: 'Listo', text, timer: 3000 })
                 .then(() => location.reload());
         } else {
-            Swal.fire({ title: 'Error', text: data.message || 'No se pudo completar la acción.', icon: 'error', confirmButtonText: 'Cerrar' });
+            void cf4Error(data.message || 'No se pudo completar la acción.', 'Error');
         }
     })
-    .catch(() => Swal.fire({ title: 'Error de conexión', text: 'Intente nuevamente.', icon: 'error', confirmButtonText: 'Cerrar' }));
+    .catch(() => void cf4Error('Intente nuevamente.', 'Error de conexión'));
 }
 
-function completeSale(id, invoiceNumber) {
+async function completeSale(id, invoiceNumber) {
     const invoiceLabel = invoiceNumber || ('#' + id);
-    Swal.fire({
+    const result = await cf4Confirm({
         title: 'Confirmar encargo con factura: ' + invoiceLabel + '?',
-        text: 'El encargo pasara a confirmado y quedara registrado como venta con su factura.',
+        text: 'El encargo pasará a confirmado y quedará registrado como venta con su factura.',
         icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#235347',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Si, confirmar',
-        cancelButtonText: 'Cancelar'
-    }).then(r => r.isConfirmed && _saleAction('/sales/' + id + '/complete', 'Encargo confirmado correctamente.'));
+        confirmButtonText: 'Sí, confirmar',
+        cancelButtonText: 'Cancelar',
+    });
+    if (result.isConfirmed) {
+        _saleAction('/sales/' + id + '/complete', 'Encargo confirmado correctamente.');
+    }
 }
 
-function cancelSale(id, invoiceNumber) {
+async function cancelSale(id, invoiceNumber) {
     const invoiceLabel = invoiceNumber || ('#' + id);
-    Swal.fire({
+    const result = await cf4PromptTextarea({
         title: 'Rechazar encargo con factura: ' + invoiceLabel + '?',
         text: 'Ingrese el motivo de cancelación. El stock reservado se devolverá al inventario.',
-        input: 'textarea',
-        inputPlaceholder: 'Motivo de cancelación',
-        inputAttributes: { maxlength: 500 },
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
+        placeholder: 'Motivo de cancelación',
         confirmButtonText: 'Sí, rechazar',
-        cancelButtonText: 'No',
-        inputValidator: value => {
-            if (! value || value.trim().length < 3) {
-                return 'Debe ingresar un motivo de al menos 3 caracteres.';
-            }
-            return null;
-        },
-    }).then(r => {
-        if (! r.isConfirmed) return;
-
-        _saleAction(
-            '/sales/' + id + '/cancel',
-            'Encargo: ' + invoiceLabel + ' eliminado.',
-            { reason: r.value.trim() }
-        );
+        cancelButtonText: 'Cancelar',
+        minLength: 3,
+        maxLength: 500,
+        danger: true,
     });
+    if (!result.isConfirmed) return;
+
+    _saleAction(
+        '/sales/' + id + '/cancel',
+        'Encargo: ' + invoiceLabel + ' eliminado.',
+        { reason: result.value }
+    );
 }
 
-function confirmInvoiceAction({ title, text, confirmText, onConfirm }) {
-    const swal = window.Swal;
+async function confirmInvoiceAction({ title, text, confirmText, onConfirm }) {
+    const result = await cf4Confirm({
+        title,
+        text: text || '',
+        icon: 'question',
+        confirmButtonText: confirmText,
+        cancelButtonText: 'Cancelar',
+    });
 
-    if (swal) {
-        swal.fire({
-            title,
-            text: text || undefined,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#235347',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: confirmText,
-            cancelButtonText: 'Cancelar',
-        }).then(result => {
-            if (result.isConfirmed) {
-                onConfirm();
-            }
-        });
-        return;
-    }
-
-    const message = text ? `${title}\n\n${text}` : title;
-    if (window.confirm(message)) {
+    if (result.isConfirmed) {
         onConfirm();
     }
 }
@@ -677,12 +651,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const disc = roundMoney(parseFloat(document.getElementById('discount')?.value) || 0);
             if (disc > sub) {
-                Swal.fire({
-                    title: 'Descuento invalido',
-                    text: 'El descuento no puede ser mayor que el subtotal (CRC' + sub.toFixed(2) + ').',
-                    icon: 'warning',
-                    confirmButtonText: 'Corregir'
-                });
+                void cf4Warning(
+                    'El descuento no puede ser mayor que el subtotal (₡' + sub.toFixed(2) + ').',
+                    'Descuento inválido'
+                );
                 return;
             }
 
@@ -695,27 +667,17 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => {
                 if (data.success) {
                     closeNewSaleModal();
-                    Swal.fire({
-                        title: 'Venta creada',
-                        text: data.message || 'La venta se registro correctamente.',
+                    void cf4Toast({
                         icon: 'success',
-                        confirmButtonText: 'Entendido'
+                        title: 'Venta creada',
+                        text: data.message || 'La venta se registró correctamente.',
+                        timer: 3000,
                     }).then(() => location.reload());
                 } else {
-                    Swal.fire({
-                        title: 'Error',
-                        text: data.message || 'No se pudo crear la venta',
-                        icon: 'error',
-                        confirmButtonText: 'Cerrar'
-                    });
+                    void cf4Error(data.message || 'No se pudo crear la venta', 'Error');
                 }
             })
-            .catch(() => Swal.fire({
-                title: 'Error',
-                text: 'Error de conexion',
-                icon: 'error',
-                confirmButtonText: 'Cerrar'
-            }));
+            .catch(() => void cf4Error('Error de conexión', 'Error'));
         });
     }
 

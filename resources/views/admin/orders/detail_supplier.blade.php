@@ -468,7 +468,7 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/orders/supplier-orders.js'])
+    @vite(['resources/js/admin/shell.js', 'resources/js/admin/orders/supplier-orders.js', 'resources/js/admin/orders/detail-supplier-page.js'])
 
     <script>
         // ── Modal: Recepción de mercancía ────────────────────────────────────────
@@ -548,14 +548,8 @@
                     return;
                 }
 
-                if (typeof Swal !== 'undefined') {
-                    await Swal.fire({
-                        icon:               'success',
-                        title:              'Recepción registrada',
-                        text:               data.message,
-                        confirmButtonColor: '#235347',
-                        confirmButtonText:  'Entendido',
-                    });
+                if (typeof window.showReceptionSuccess === 'function') {
+                    await window.showReceptionSuccess(data.message);
                 }
 
                 window.location.reload();
@@ -627,14 +621,8 @@
                     return;
                 }
 
-                if (typeof Swal !== 'undefined') {
-                    await Swal.fire({
-                        icon:               'warning',
-                        title:              'Pedido cerrado con faltantes',
-                        text:               data.message,
-                        confirmButtonColor: '#b45309',
-                        confirmButtonText:  'Entendido',
-                    });
+                if (typeof window.showPartialCloseWarning === 'function') {
+                    await window.showPartialCloseWarning(data.message);
                 }
 
                 window.location.reload();

@@ -1,5 +1,10 @@
 import '../shared/admin-table-responsive.js';
-import { fireSwal } from './swal.js';
+import {
+    fireSwal,
+    cf4Confirm,
+    cf4Toast,
+    cf4Error,
+} from './swal.js';
 import {
     buildCf4CheckoutSuccessText,
     getCf4PaymentMethodShortLabel,
@@ -301,21 +306,21 @@ function cancelEdit() {
 }
 
 /** Shows confirmation dialog before submitting the profile form. */
-function submitProfile() {
+async function submitProfile() {
     var form = document.getElementById('formPerfil');
     if (!form) return;
-    fireSwal({
+
+    const result = await cf4Confirm({
         title: '¿Guardar cambios?',
         text: 'Se actualizarán tus datos personales.',
         icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: '<i class="fas fa-save"></i> Sí, guardar',
-        cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
-        reverseButtons: true
-    }).then(function (result) {
-        if (!result.isConfirmed) return;
-        sendProfile(form);
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar',
     });
+
+    if (!result.isConfirmed) return;
+
+    sendProfile(form);
 }
 
 /** Sends profile data via AJAX and updates UI on success. */
@@ -434,6 +439,17 @@ function hidePasswordForm() {
 
 /** Displays a dismissible alert on the profile page. */
 function showProfileAlert(msg, tipo) {
+    if (tipo === 'danger') {
+        void cf4Error(msg, 'No se pudo completar');
+    } else {
+        void cf4Toast({
+            icon: 'success',
+            title: 'Listo',
+            text: msg,
+            timer: 3000,
+        });
+    }
+
     var alertEl = document.getElementById('profileAlert');
     var textEl  = document.getElementById('profileAlertText');
     var iconEl  = document.getElementById('profileAlertIcon');
@@ -958,32 +974,26 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (submitBtn)   submitBtn.disabled = false;
                         if (submitSpan)  submitSpan.classList.remove('hidden');
                         if (loadingSpan) loadingSpan.classList.add('hidden');
-                        fireSwal({
+                        cf4Confirm({
                             icon: 'warning',
                             title: 'Correo no verificado',
                             text: data.message || 'Debes verificar tu correo antes de iniciar sesión.',
-                            showCancelButton: true,
                             confirmButtonText: 'Verificar Correo',
                             cancelButtonText: 'Cancelar',
-                            confirmButtonColor: '#2d7a2d',
-                            cancelButtonColor: '#6c757d'
                         }).then(function (result) {
                             if (!result.isConfirmed) return;
                             // El servidor ya envió el código al detectar el correo no verificado.
                             window.location.href = data.redirect;
                         });
                     } else {
-                        fireSwal({
+                        cf4Confirm({
                             icon: 'error',
                             title: 'Error',
                             html: (data.message || 'Error al iniciar sesión') +
                                 '<hr style="margin:12px 0">' +
                                 '<p style="font-size:0.9rem;margin:0">¿Tienes una cuenta registrada? ¿O deseas registrarte?</p>',
-                            showCancelButton: true,
                             confirmButtonText: 'Ir a Registro',
                             cancelButtonText: 'Cancelar',
-                            confirmButtonColor: '#2d7a2d',
-                            cancelButtonColor: '#6c757d',
                         }).then(function (result) {
                             if (result.isConfirmed) { window.location.href = '/register'; }
                         });
@@ -1021,26 +1031,24 @@ document.addEventListener('DOMContentLoaded', function () {
     // — Password change form: confirm and handle Google-only accounts —
     var formPassword = document.getElementById('formPassword');
     if (formPassword) {
-        formPassword.addEventListener('submit', function (e) {
+        formPassword.addEventListener('submit', async function (e) {
             e.preventDefault();
             var isGoogleOnly = !!document.getElementById('googlePassCta');
             var confirmMsg   = isGoogleOnly
                 ? 'Se definirá una contraseña para tu cuenta. Podrás iniciar sesión con correo y contraseña.'
                 : 'Se actualizará la contraseña de tu cuenta.';
-            var confirmBtn   = isGoogleOnly
-                ? '<i class="fas fa-key"></i> Sí, definir'
-                : '<i class="fas fa-save"></i> Sí, actualizar';
-            fireSwal({
+
+            const result = await cf4Confirm({
                 title: '¿Confirmar cambio de contraseña?',
-                text: confirmMsg, icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: confirmBtn,
-                cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
-                reverseButtons: true
-            }).then(function (result) {
-                if (!result.isConfirmed) return;
-                sendPassword(formPassword);
+                text: confirmMsg,
+                icon: 'warning',
+                confirmButtonText: isGoogleOnly ? 'Sí, definir' : 'Sí, actualizar',
+                cancelButtonText: 'Cancelar',
             });
+
+            if (!result.isConfirmed) return;
+
+            sendPassword(formPassword);
         });
     }
 

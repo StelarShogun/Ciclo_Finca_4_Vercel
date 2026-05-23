@@ -1,5 +1,5 @@
 import { qs, qsa, smartFetch, jsonHeaders, syncFeaturedStarButtons, showSubtleNotification, setActionButtonLoading, showSuccessFeedback, showErrorFeedback } from './inventory-shared.js';
-import { fireSwal } from '../shared/swal.js';
+import { cf4Confirm, cf4Toast, cf4Error } from '../shared/swal.js';
 
 export async function initInventoryActions() {
     // Swal is lazy-loaded inside fireSwal() on first dialog — no eager warm-up.
@@ -50,23 +50,13 @@ export async function initInventoryActions() {
                     syncFeaturedStarButtons(productId, data.is_featured);
                     showSubtleNotification(data.message || 'Destacado actualizado', 'success');
                 } else {
-                    fireSwal({
-                        title: 'Error',
-                        text: data.message || 'No se pudo actualizar el destacado.',
-                        icon: 'error',
-                        confirmButtonText: 'Entendido',
-                    });
+                    void cf4Error(data.message || 'No se pudo actualizar el destacado.', 'Error');
                 }
             })
             .catch(() => {
                 btn.removeAttribute('aria-busy');
                 btn.classList.remove('featured-star-btn--busy');
-                fireSwal({
-                    title: 'Error',
-                    text: 'No se pudo actualizar el destacado.',
-                    icon: 'error',
-                    confirmButtonText: 'Entendido',
-                });
+                void cf4Error('No se pudo actualizar el destacado.', 'Error');
             });
     });
 
@@ -81,15 +71,13 @@ function initProductDeletion() {
             const productId = this.dataset.productId;
             const productName = this.dataset.productName;
 
-            fireSwal({
-                title: `¿Estás seguro de que deseas desactivar el producto "${productName}"?`,
-                text: "El producto existirá en la base de datos, pero no contará para el stock del inventario.",
+            void cf4Confirm({
+                title: `¿Desactivar el producto "${productName}"?`,
+                text: 'El producto existirá en la base de datos, pero no contará para el stock del inventario.',
                 icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
                 confirmButtonText: 'Sí, desactivar',
-                cancelButtonText: 'Cancelar'
+                cancelButtonText: 'Cancelar',
+                danger: true,
             }).then((result) => {
                 if (result.isConfirmed) {
                     setActionButtonLoading(button, true, 'Eliminando...');
@@ -114,10 +102,11 @@ function initProductDeletion() {
                         setActionButtonLoading(button, false);
                         if (data.success) {
                             showSuccessFeedback(button, '¡Desactivado!');
-                            fireSwal({
+                            void cf4Toast({
+                                icon: 'success',
                                 title: '¡Desactivado!',
                                 text: 'El producto ha sido desactivado correctamente.',
-                                icon: 'success',
+                                timer: 3000,
                             }).then(() => {
                                 location.reload();
                             });
@@ -134,11 +123,7 @@ function initProductDeletion() {
                         setActionButtonLoading(button, false);
                         showErrorFeedback(button, 'Error');
                         console.error('Error:', error);
-                        fireSwal({
-                            title: 'Error',
-                            text: 'Hubo un problema de conexión o el servidor no respondió correctamente.',
-                            icon: 'error',
-                        });
+                        void cf4Error('Hubo un problema de conexión o el servidor no respondió correctamente.', 'Error');
                     });
                 }
             });

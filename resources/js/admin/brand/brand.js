@@ -1,4 +1,5 @@
 import '../../shared/ajax-pagination.js';
+import { cf4Confirm, cf4Toast, cf4Warning, cf4Error } from '../shared/swal.js';
 
 // Toggle sidebar collapse on click
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,38 +19,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorName  = document.getElementById('error-nombre');
     const modalTitle = document.getElementById('modal-titulo');
 
-    // ── Toast helper ────────────────────────────────────────────
-    const toast = (icon, title) => Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon,
-        title,
-        showConfirmButton: false,
-        timer: 2800,
-        timerProgressBar: true,
-    });
+    const toast = (icon, title) => cf4Toast({ icon, title, timer: 2800 });
 
-    // ── Duplicate error handler ─────────────────────────────────
     const handleDuplicate = async (data, inputNameValue) => {
         if (data.exact) {
-            // Exact same name → simple alert
-            Swal.fire({
-                icon: 'warning',
-                title: 'Marca ya existente',
-                text: `La marca "${data.existing.name}" ya está registrada.`,
-                confirmButtonColor: '#235347',
-            });
+            await cf4Warning(
+                `La marca "${data.existing.name}" ya está registrada.`,
+                'Marca ya existente'
+            );
         } else {
-            // Different capitalization → offer to edit
-            const result = await Swal.fire({
-                icon: 'info',
+            const result = await cf4Confirm({
                 title: 'Marca similar encontrada',
                 html: `La marca que escribes (<strong>${inputNameValue}</strong>) ya está registrada como <strong>${data.existing.name}</strong>.<br><br>¿Deseas editarla?`,
-                showCancelButton: true,
+                icon: 'info',
                 confirmButtonText: 'Sí, editar',
                 cancelButtonText: 'No, cancelar',
-                confirmButtonColor: '#235347',
-                cancelButtonColor: '#455a64',
             });
             if (result.isConfirmed) {
                 inputId.value          = data.existing.id;
@@ -59,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // ── Modal open / close ──────────────────────────────────────
     const openModal = () => { modal.style.display = 'flex'; inputName.focus(); };
     const closeModal = () => {
         modal.style.display   = 'none';
@@ -78,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
-    // ── Edit buttons ────────────────────────────────────────────
     document.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', () => {
             inputId.value          = btn.dataset.id;
@@ -88,20 +70,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ── Delete buttons ──────────────────────────────────────────
     document.querySelectorAll('.btn-delete').forEach(btn => {
         btn.addEventListener('click', async () => {
-            const { isConfirmed } = await Swal.fire({
+            const result = await cf4Confirm({
                 title: '¿Eliminar marca?',
                 text: `"${btn.dataset.name}" será eliminada permanentemente.`,
                 icon: 'warning',
-                showCancelButton: true,
                 confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#d32f2f',
-                cancelButtonColor: '#455a64',
+                danger: true,
             });
-            if (!isConfirmed) return;
+            if (!result.isConfirmed) return;
 
             let data;
             try {
@@ -110,8 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
                 });
                 data = await res.json();
-            } catch (err) {
-                toast('error', 'Error de conexión al intentar eliminar la marca.');
+            } catch {
+                await toast('error', 'Error de conexión al intentar eliminar la marca.');
                 return;
             }
 
@@ -119,27 +98,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 await toast('success', data.message);
                 location.reload();
             } else if (data.blocked) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'No se puede eliminar',
-                    html: `<p style="margin:0 0 0.5rem">${data.message}</p>
-                           <p style="margin:0;font-size:0.875rem;color:#6b7280">Para eliminarla primero debes desvincularla de todos los productos asociados.</p>`,
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#235347',
-                });
+                await cf4Warning(
+                    `${data.message}\n\nPara eliminarla primero debes desvincularla de todos los productos asociados.`,
+                    'No se puede eliminar'
+                );
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'No se pudo eliminar',
-                    text: data.message || 'Ocurrió un error inesperado.',
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#235347',
-                });
+                await cf4Error(data.message || 'Ocurrió un error inesperado.', 'No se pudo eliminar');
             }
         });
     });
 
-    // ── Form submit (create / update) ───────────────────────────
     formMarca.addEventListener('submit', async (e) => {
         e.preventDefault();
         errorName.innerHTML = '';
@@ -168,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (data.errors) {
             errorName.textContent = data.errors.name?.[0] ?? '';
         } else {
-            toast('error', 'Ocurrió un error inesperado.');
+            await toast('error', 'Ocurrió un error inesperado.');
         }
     });
 });

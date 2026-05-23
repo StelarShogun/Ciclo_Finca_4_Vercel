@@ -1,3 +1,5 @@
+import { cf4Warning } from '../shared/swal.js';
+
 document.addEventListener('DOMContentLoaded', function () {
 
     // Toggle fechas personalizadas
@@ -17,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Validación de rango de fechas personalizadas
     const form = document.getElementById('report-filter-form');
     if (form) {
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('submit', async function (e) {
             const range = document.getElementById('date-range');
             if (!range || range.value !== 'custom') return;
 
@@ -31,13 +33,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!fromInput.value || !toInput.value) {
                 e.preventDefault();
-                alert('Debe ingresar ambas fechas para el rango personalizado.');
+                await cf4Warning('Debe ingresar ambas fechas para el rango personalizado.', 'Rango incompleto');
                 return;
             }
 
             if (to < from) {
                 e.preventDefault();
-                alert('La fecha de fin debe ser igual o posterior a la fecha de inicio.');
+                await cf4Warning('La fecha de fin debe ser igual o posterior a la fecha de inicio.', 'Rango de fechas inválido');
                 toInput.focus();
             }
         });

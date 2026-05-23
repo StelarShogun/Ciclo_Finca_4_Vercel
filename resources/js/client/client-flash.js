@@ -1,22 +1,7 @@
-/**
- * Admin shell — shared admin UI (tables, list pagination, SweetAlert2 prefetch).
- */
-import '../shared/admin-table-responsive.js';
-import '../shared/ajax-pagination.js';
-import { getSwal, cf4Toast, cf4Error, cf4Warning } from './shared/swal.js';
+import { cf4Toast, cf4Error, cf4Warning } from './swal.js';
 
-const prefetchSwal = () => {
-    void getSwal();
-};
-
-if (typeof requestIdleCallback === 'function') {
-    requestIdleCallback(prefetchSwal, { timeout: 2500 });
-} else {
-    setTimeout(prefetchSwal, 200);
-}
-
-async function renderCf4FlashMessages() {
-    const flash = window.__cf4Flash || null;
+document.addEventListener('DOMContentLoaded', async () => {
+    const flash = window.__cf4ClientFlash || null;
     if (!flash || flash.__rendered) return;
 
     flash.__rendered = true;
@@ -49,8 +34,4 @@ async function renderCf4FlashMessages() {
             timer: 3600,
         });
     }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    void renderCf4FlashMessages();
 });

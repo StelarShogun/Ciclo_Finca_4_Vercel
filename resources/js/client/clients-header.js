@@ -2,7 +2,7 @@
  * Client header bootstrap — only the critical pieces run synchronously:
  *
  * - Cart badge from DOM (cheap, prevents badge flicker)
- * - Guest "must sign in" cart prompt (tiny click handler)
+ * - Guest "must sign in" cart message (tiny click handler)
  *
  * Everything else (catalog search trending fetch, favorites click delegation,
  * authenticated user menu / favorites drawer, invoice heartbeat polling) is

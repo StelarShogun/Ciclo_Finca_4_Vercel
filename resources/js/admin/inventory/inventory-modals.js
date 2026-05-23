@@ -42,7 +42,7 @@ import {
 } from './inventory-classification.js';
 import { initStaticSearchCombobox, setComboboxFieldError } from '../shared/static-search-combobox.js';
 import { initFileUploadZone } from '../shared/file-upload-zone.js';
-import { fireSwal } from '../shared/swal.js';
+import { fireSwal, cf4Confirm, cf4Warning } from '../shared/swal.js';
 
 export async function initModals() {
     // Swal is lazy-loaded inside fireSwal() on first dialog.
@@ -744,15 +744,13 @@ export async function initModals() {
         const variantName = btn.dataset.variantName || `#${variantId}`;
         if (!baseId || !variantId) return;
 
-        fireSwal({
-            titleText: `¿Eliminar la variante "${variantName}"?`,
+        void cf4Confirm({
+            title: `¿Eliminar la variante "${variantName}"?`,
             text: 'Esta acción solo elimina la variante seleccionada. El producto base permanecerá activo.',
             icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#6b7280',
             confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'Cancelar',
+            danger: true,
         }).then((result) => {
             if (!result.isConfirmed) return;
 
@@ -1273,15 +1271,12 @@ export async function initModals() {
             const detected = detectFileFormat(file);
             const formatName = detected ? detected.name : 'desconocido';
             
-            fireSwal({
+            void cf4Confirm({
                 title: '¿Importar productos?',
                 html: `Se importarán los productos desde el archivo <strong>${file.name}</strong> en formato <strong>${formatName}</strong>.`,
                 icon: 'info',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
                 confirmButtonText: 'Sí, importar',
-                cancelButtonText: 'Cancelar'
+                cancelButtonText: 'Cancelar',
             }).then((result) => {
                 if (result.isConfirmed) {
                     const progressBar = showProgressBar();

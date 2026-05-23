@@ -16,6 +16,8 @@ const adminAssets = [
     "resources/js/admin/orders/orders.js",
     "resources/js/admin/orders/supplier-orders.js",
     "resources/js/admin/orders/supplier-order-create.js",
+    "resources/js/admin/orders/xml-deviation-review.js",
+    "resources/js/admin/orders/detail-supplier-page.js",
     "resources/js/admin/suppliers/suppliers.js",
     "resources/js/admin/login/login.js",
     "resources/js/admin/users/clients.js",
@@ -78,6 +80,10 @@ const clientAssets = [
     "resources/js/client/clients-users.js",
     "resources/js/client/invoices-page.js",
     "resources/js/client/auth-welcome-toast.js",
+    "resources/js/client/client-flash.js",
+    "resources/js/client/recovery-success-modal.js",
+    "resources/js/client/register-validation-errors.js",
+    "resources/js/client/invoices-review-modal.js",
 
     // CSS
     "resources/css/client/fonts.css",

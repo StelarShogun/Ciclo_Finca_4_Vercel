@@ -17,16 +17,9 @@
         {{-- Display validation errors via SweetAlert on DOM ready --}}
         @if ($errors->any())
             <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error en el registro',
-                        html: '<ul style="text-align:left;margin:0;padding-left:18px;">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>',
-                        confirmButtonText: 'Entendido',
-                        confirmButtonColor: '#1a73e8'
-                    });
-                });
+                window.__cf4RegisterErrors = @json($errors->all());
             </script>
+            @vite(['resources/js/client/register-validation-errors.js'])
         @endif
 
         @if (session('success'))
