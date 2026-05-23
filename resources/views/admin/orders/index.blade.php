@@ -27,7 +27,7 @@
         $pendingCardCta = $pendingCardActive ? 'Ver todo' : 'Ver encargos pendientes';
     @endphp
 
-    <div class="sales-container cf4-orders-module">
+    <div class="sales-container cf4-orders-module" data-cf4-orders-heartbeat>
 
         @if (session('status'))
             <div class="cf4-orders-flash-success" role="status">{{ session('status') }}</div>
@@ -55,19 +55,28 @@
                     <h3 class="kpi-title">Pendientes web</h3>
                     <div class="kpi-icon info"><i class="fas fa-clock"></i></div>
                 </div>
-                <p class="kpi-value">{{ number_format((int) ($pendingWebOrdersCount ?? 0), 0, ',', '.') }}</p>
+                <p class="kpi-value" id="cf4-orders-pending-kpi" data-cf4-orders-pending-kpi>
+                    {{ number_format((int) ($pendingWebOrdersCount ?? 0), 0, ',', '.') }}
+                </p>
                 <div class="kpi-trend {{ $pendingCardActive ? 'trend-down cf4-kpi-reset-text' : 'trend-up' }}">
                     <i class="fas fa-arrow-right"></i> {{ $pendingCardCta }}
                 </div>
             </a>
         </section>
 
-        @component('admin.partials.filters', [
-            'action' => route('admin.orders.index'),
-            'clearUrl' => route('admin.orders.index'),
-            'formId' => 'orders-filters-form',
-        ])
-            @slot('fields')
+        <div id="cf4-orders-new-banner" class="cf4-orders-new-banner" role="status" aria-live="polite" hidden>
+            <span class="cf4-orders-new-banner__text" data-cf4-orders-new-banner-text></span>
+            <button type="button" class="btn btn-primary btn-sm" data-cf4-orders-refresh-btn>
+                <i class="fas fa-sync-alt" aria-hidden="true"></i> Actualizar tabla
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm cf4-orders-new-banner__dismiss" data-cf4-orders-dismiss-banner
+                aria-label="Cerrar aviso">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <div class="orders-table-card">
+            <form method="GET" action="{{ route('admin.orders.index') }}" class="orders-toolbar" id="orders-filters-form">
                 <div class="filter-group">
                     <label for="orders-status">Estado</label>
                     <select id="orders-status" name="status">
@@ -95,147 +104,154 @@
                     <input type="text" id="orders-search" name="search" value="{{ request('search') }}"
                         placeholder="Nº encargo, factura o cliente" autocomplete="off">
                 </div>
-            @endslot
-        @endcomponent
 
-        <div class="orders-table-card" data-cf4-ajax-pagination data-cf4-ajax-scroll>
-            <div id="cf4-list-fragment">
-            <div class="sales-table-container">
-                <table class="sales-table cf4-purchases-table admin-table">
-                    <thead>
-                        <tr>
-                            <th>Encargos / Factura</th>
-                            <th>Cliente</th>
-                            <th>Fecha de pedido</th>
-                            <th>Fecha listo para recoger</th>
-                            <th>Fecha de confirmación</th>
-                            <th>Estado</th>
-                            <th>Total</th>
-                            <th class="admin-table__col--actions">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($orders as $sale)
+                <div class="orders-toolbar-actions">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-filter"></i> Aplicar
+                    </button>
+                    <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary btn-sm">Limpiar</a>
+                </div>
+            </form>
+
+            <div data-cf4-orders-table-region id="cf4-orders-table-region">
+                <div class="sales-table-container">
+                    <table class="sales-table cf4-purchases-table admin-table">
+                        <thead>
                             <tr>
-                                <td>
-                                    <strong>#{{ $sale->sale_id }}</strong>
-                                    @if ($sale->invoice_number)
-                                        <div class="text-muted" style="font-size: 0.85rem;">
-                                            {{ $sale->invoice_number }}
-                                        </div>
-                                    @endif
-                                </td>
-
-                                <td>
-                                    @if ($sale->client_id && $sale->client)
-                                        {{ $sale->client->name }} {{ $sale->client->first_surname }}
-                                        {{ $sale->client->second_surname ?: '' }}
-                                        <span class="text-muted">({{ $sale->client->gmail }})</span>
-                                    @elseif($sale->buyer_name)
-                                        {{ $sale->buyer_name }}
-                                        @if ($sale->buyer_email)
-                                            <span class="text-muted">({{ $sale->buyer_email }})</span>
+                                <th>Encargos / Factura</th>
+                                <th>Cliente</th>
+                                <th>Fecha de pedido</th>
+                                <th>Fecha listo para recoger</th>
+                                <th>Fecha de confirmación</th>
+                                <th>Estado</th>
+                                <th>Total</th>
+                                <th class="admin-table__col--actions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($orders as $sale)
+                                <tr>
+                                    <td>
+                                        <strong>#{{ $sale->sale_id }}</strong>
+                                        @if ($sale->invoice_number)
+                                            <div class="text-muted" style="font-size: 0.85rem;">
+                                                {{ $sale->invoice_number }}
+                                            </div>
                                         @endif
-                                    @else
-                                        <span class="text-muted">Sin datos de cliente</span>
-                                    @endif
-                                </td>
+                                    </td>
 
-                                <td>{{ $sale->adminOrderPlacedAtLabel() }}</td>
-                                <td>{{ $sale->adminReadyAtLabel() }}</td>
-                                <td>{{ $sale->adminConfirmedAtLabel() }}</td>
+                                    <td>
+                                        @if ($sale->client_id && $sale->client)
+                                            {{ $sale->client->name }} {{ $sale->client->first_surname }}
+                                            {{ $sale->client->second_surname ?: '' }}
+                                            <span class="text-muted">({{ $sale->client->gmail }})</span>
+                                        @elseif($sale->buyer_name)
+                                            {{ $sale->buyer_name }}
+                                            @if ($sale->buyer_email)
+                                                <span class="text-muted">({{ $sale->buyer_email }})</span>
+                                            @endif
+                                        @else
+                                            <span class="text-muted">Sin datos de cliente</span>
+                                        @endif
+                                    </td>
 
-                                <td>
-                                    @php
-                                        $label = $orderLabels[$sale->status] ?? ucfirst($sale->status);
-                                    @endphp
-                                    <span class="order-status-pill {{ $sale->status }}">{{ $label }}</span>
-                                </td>
+                                    <td>{{ $sale->adminOrderPlacedAtLabel() }}</td>
+                                    <td>{{ $sale->adminReadyAtLabel() }}</td>
+                                    <td>{{ $sale->adminConfirmedAtLabel() }}</td>
 
-                                <td>
-                                    <strong>₡{{ number_format($sale->total, 0, ',', '.') }}</strong>
-                                </td>
-
-                                <td class="admin-table__col--actions">
-                                    <div class="actions-container">
+                                    <td>
                                         @php
-                                            $saleReference = $sale->invoice_number ?? '#' . $sale->sale_id;
+                                            $label = $orderLabels[$sale->status] ?? ucfirst($sale->status);
                                         @endphp
+                                        <span class="order-status-pill {{ $sale->status }}">{{ $label }}</span>
+                                    </td>
 
-                                        <button class="action-btn secondary" type="button"
-                                            onclick="viewSale(@js($sale->sale_id))" title="Ver detalles">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                                    <td>
+                                        <strong>₡{{ number_format($sale->total, 0, ',', '.') }}</strong>
+                                    </td>
 
-                                        @if ($sale->status === 'pending')
-                                            <button class="action-btn warning" type="button"
-                                                onclick="markReadyToPickup(@js($sale->sale_id), @js($saleReference))"
-                                                title="Marcar como listo para recoger">
-                                                <i class="fas fa-box"></i>
+                                    <td class="admin-table__col--actions">
+                                        <div class="actions-container">
+                                            @php
+                                                $saleReference = $sale->invoice_number ?? '#' . $sale->sale_id;
+                                            @endphp
+
+                                            <button class="action-btn secondary" type="button"
+                                                onclick="viewSale(@js($sale->sale_id))" title="Ver detalles">
+                                                <i class="fas fa-eye"></i>
                                             </button>
 
-                                            <button class="action-btn danger" type="button"
-                                                onclick="cancelSale(@js($sale->sale_id), @js($saleReference))"
-                                                title="Rechazar encargo">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        @endif
+                                            @if ($sale->status === 'pending')
+                                                <button class="action-btn warning" type="button"
+                                                    onclick="markReadyToPickup(@js($sale->sale_id), @js($saleReference))"
+                                                    title="Marcar como listo para recoger">
+                                                    <i class="fas fa-box"></i>
+                                                </button>
 
-                                        @if ($sale->status === 'ready_to_pickup')
-                                            <button class="action-btn success" type="button"
-                                                onclick="completeSale(@js($sale->sale_id), @js($saleReference))"
-                                                title="Confirmar encargo">
-                                                <i class="fas fa-check"></i>
-                                            </button>
+                                                <button class="action-btn danger" type="button"
+                                                    onclick="cancelSale(@js($sale->sale_id), @js($saleReference))"
+                                                    title="Rechazar encargo">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            @endif
 
-                                            <button class="action-btn danger" type="button"
-                                                onclick="cancelSale(@js($sale->sale_id), @js($saleReference))"
-                                                title="Rechazar encargo">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        @endif
+                                            @if ($sale->status === 'ready_to_pickup')
+                                                <button class="action-btn success" type="button"
+                                                    onclick="completeSale(@js($sale->sale_id), @js($saleReference))"
+                                                    title="Confirmar encargo">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
 
-                                        @if ($sale->status === 'completed')
-                                            <a href="{{ route('sales.invoice', $sale->sale_id) }}" target="_blank"
-                                                rel="noopener noreferrer" class="action-link-invoice"
-                                                data-confirm-invoice
-                                                data-invoice-label="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}"
-                                                title="Ver factura en formato estructurado">
-                                                <i class="fas fa-file-invoice" aria-hidden="true"></i>
-                                                Ver factura
-                                            </a>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8">
-                                    <div class="orders-empty">
-                                        <div class="orders-empty-icon">
-                                            <i class="fas fa-inbox"></i>
+                                                <button class="action-btn danger" type="button"
+                                                    onclick="cancelSale(@js($sale->sale_id), @js($saleReference))"
+                                                    title="Rechazar encargo">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            @endif
+
+                                            @if ($sale->status === 'completed')
+                                                <a href="{{ route('sales.invoice', $sale->sale_id) }}" target="_blank"
+                                                    rel="noopener noreferrer" class="action-link-invoice"
+                                                    data-confirm-invoice
+                                                    data-invoice-label="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}"
+                                                    title="Ver factura en formato estructurado">
+                                                    <i class="fas fa-file-invoice" aria-hidden="true"></i>
+                                                    Ver factura
+                                                </a>
+                                            @endif
                                         </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8">
+                                        <div class="orders-empty">
+                                            <div class="orders-empty-icon">
+                                                <i class="fas fa-inbox"></i>
+                                            </div>
 
-                                        <p style="margin:0; font-size:1rem;">
-                                            No hay pedidos que coincidan con los filtros.
-                                        </p>
-
-                                        @if (request()->filled('status') || request()->filled('search'))
-                                            <p style="margin:0.75rem 0 0 0; font-size:0.9rem;">
-                                                <a href="{{ route('admin.orders.index') }}">Limpiar filtros</a>
+                                            <p style="margin:0; font-size:1rem;">
+                                                No hay pedidos que coincidan con los filtros.
                                             </p>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
 
-            <div class="orders-pagination-wrap">
-                <x-admin.pagination :paginator="$orders" label="pedidos" />
-            </div>
+                                            @if (request()->filled('status') || request()->filled('search'))
+                                                <p style="margin:0.75rem 0 0 0; font-size:0.9rem;">
+                                                    <a href="{{ route('admin.orders.index') }}">Limpiar filtros</a>
+                                                </p>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                @if ($orders->count() > 0)
+                    <div class="orders-pagination-wrap">
+                        <x-pagination :paginator="$orders" label="pedidos" />
+                    </div>
+                @endif
             </div>
         </div>
     </div>
