@@ -1,6 +1,6 @@
 @php
     $siteUrl = rtrim((string) config('app.frontend_url', config('app.url')), '/');
-    $mailContact = (string) config('mail.from.address', 'ciclo.finca4@gmail.com');
+    $mailContact = (string) (config('mail.from.address') ?: 'ciclo.finca4@gmail.com');
     $logoUrl = url(asset('assets/images/brand/logo-ciclo-finca-icon-64.png'));
     $pageTitle = trim($__env->yieldContent('title')) ?: 'Ciclo Finca 4';
 @endphp
