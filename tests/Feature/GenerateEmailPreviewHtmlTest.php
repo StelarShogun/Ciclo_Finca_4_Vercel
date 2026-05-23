@@ -50,7 +50,7 @@ class GenerateEmailPreviewHtmlTest extends TestCase
             $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
         }
 
-        if (! filter_var(env('GENERATE_EMAIL_PREVIEWS', false), FILTER_VALIDATE_BOOL)) {
+        if (! filter_var(getenv('GENERATE_EMAIL_PREVIEWS') ?: false, FILTER_VALIDATE_BOOL)) {
             $this->markTestSkipped(
                 'Omitido: define GENERATE_EMAIL_PREVIEWS=1 para escribir HTML en storage/app/email-previews/.'
             );
@@ -62,7 +62,7 @@ class GenerateEmailPreviewHtmlTest extends TestCase
             }
         }
 
-        $previewBaseUrl = rtrim((string) env('EMAIL_PREVIEW_APP_URL', 'http://127.0.0.1:8080'), '/');
+        $previewBaseUrl = rtrim((string) (getenv('EMAIL_PREVIEW_APP_URL') ?: 'http://127.0.0.1:8080'), '/');
         Config::set('app.url', $previewBaseUrl);
         Config::set('app.frontend_url', $previewBaseUrl);
         Config::set('mail.default', 'array');
