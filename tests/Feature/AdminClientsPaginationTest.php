@@ -38,15 +38,16 @@ class AdminClientsPaginationTest extends TestCase
     }
 
     /**
-     * @return list<int>
+     * @return array{ids: list<int>, search: string}
      */
     private function seedClients(int $count): array
     {
         $ids = [];
+        $searchTag = 'CF4Pager'.substr(uniqid('', true), -10);
 
         for ($i = 0; $i < $count; $i++) {
             $client = Client::create([
-                'name' => 'Pager Client '.str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT),
+                'name' => $searchTag.' Client '.str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT),
                 'first_surname' => 'Test',
                 'second_surname' => null,
                 'gmail' => 'admin-clients-pager-'.uniqid('', true).'@example.com',
@@ -57,7 +58,7 @@ class AdminClientsPaginationTest extends TestCase
             $ids[] = (int) $client->user_id;
         }
 
-        return $ids;
+        return ['ids' => $ids, 'search' => $searchTag];
     }
 
     public function test_admin_clients_index_paginates_with_shared_component(): void
@@ -65,24 +66,30 @@ class AdminClientsPaginationTest extends TestCase
         $admin = $this->makeAdmin();
         Auth::guard('admin')->login($admin);
 
-        $ids = $this->seedClients(12);
+        $seeded = $this->seedClients(12);
+        $ids = $seeded['ids'];
+        $search = $seeded['search'];
 
         try {
-            $page1 = $this->get(route('admin.clients.index', ['per_page' => 10]));
+            $page1 = $this->get(route('admin.clients.index', [
+                'per_page' => 10,
+                'search' => $search,
+            ]));
 
             $page1->assertOk();
             $page1->assertSee('cf4-pagination-toolbar', false);
-            $page1->assertSee('Mostrando 1–10 de', false);
+            $page1->assertSee('Mostrando 1–10 de 12', false);
             $page1->assertSee('data-page="2"', false);
             $page1->assertSee('data-cf4-ajax-pagination', false);
 
             $page2 = $this->get(route('admin.clients.index', [
                 'per_page' => 10,
                 'page' => 2,
+                'search' => $search,
             ]));
 
             $page2->assertOk();
-            $page2->assertSee('Mostrando 11–12 de', false);
+            $page2->assertSee('Mostrando 11–12 de 12', false);
         } finally {
             Client::query()->whereIn('user_id', $ids)->delete();
             $admin->delete();

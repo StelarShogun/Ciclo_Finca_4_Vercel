@@ -321,17 +321,17 @@ class CF4168ClientCartTest extends TestCase
         ])->assertStatus(200);
 
         $this->assertDatabaseHas('cart_items', [
-            'client_id'  => $client->user_id,
+            'client_id' => $client->user_id,
             'product_id' => $product->product_id,
-            'quantity'   => 2,
+            'quantity' => 2,
         ]);
 
         $this->post(route('logout'));
 
         $this->assertDatabaseHas('cart_items', [
-            'client_id'  => $client->user_id,
+            'client_id' => $client->user_id,
             'product_id' => $product->product_id,
-            'quantity'   => 2,
+            'quantity' => 2,
         ]);
     }
 
@@ -361,13 +361,13 @@ class CF4168ClientCartTest extends TestCase
         ]);
 
         CartItem::create([
-            'client_id'  => $client->user_id,
+            'client_id' => $client->user_id,
             'product_id' => $product->product_id,
-            'quantity'   => 3,
+            'quantity' => 3,
         ]);
 
         $this->post(route('login'), [
-            'gmail'    => 'cliente-carga@example.com',
+            'gmail' => 'cliente-carga@example.com',
             'password' => 'password',
         ]);
 
@@ -416,22 +416,22 @@ class CF4168ClientCartTest extends TestCase
         ]);
 
         CartItem::create([
-            'client_id'  => $client->user_id,
+            'client_id' => $client->user_id,
             'product_id' => $dbProduct->product_id,
-            'quantity'   => 1,
+            'quantity' => 1,
         ]);
 
         $preLoginCart = [[
             'product_id' => $sessionProduct->product_id,
-            'name'       => $sessionProduct->name,
-            'price'      => (float) $sessionProduct->sale_price,
-            'quantity'   => 2,
-            'image'      => '',
+            'name' => $sessionProduct->name,
+            'price' => (float) $sessionProduct->sale_price,
+            'quantity' => 2,
+            'image' => '',
         ]];
 
         $this->withSession(['cart' => $preLoginCart])
             ->post(route('login'), [
-                'gmail'    => 'cliente-fusion@example.com',
+                'gmail' => 'cliente-fusion@example.com',
                 'password' => 'password',
             ]);
 

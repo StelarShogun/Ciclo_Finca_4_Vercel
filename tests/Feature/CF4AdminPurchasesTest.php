@@ -142,7 +142,9 @@ class CF4AdminPurchasesTest extends TestCase
         $response->assertStatus(200);
 
         $response->assertSee('Pendiente', false);
-        $response->assertSee('Producto Admin', false);
+        $response->assertSee($salePending->invoice_number, false);
+        $response->assertSee($saleCompleted->invoice_number, false);
+        $response->assertSee('cliente-admin-purchases@example.com', false);
         $response->assertSee('Confirmado', false);
         $response->assertSee('Fecha de pedido', false);
         $response->assertSee('Fecha listo para recoger', false);
