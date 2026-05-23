@@ -1,5 +1,5 @@
 import '../../shared/ajax-pagination.js';
-import { cf4Confirm, cf4Toast, cf4Error } from '../shared/swal.js';
+import { cf4Confirm, cf4Toast, cf4Error, escapeHtml } from '../shared/swal.js';
 
 // Toggle sidebar collapse on click
 document.addEventListener("DOMContentLoaded", () => {
@@ -30,8 +30,8 @@ document.addEventListener('DOMContentLoaded', function () {
             icon: isBan ? 'warning' : 'question',
             title: isBan ? '¿Banear usuario?' : '¿Activar usuario?',
             html: isBan
-                ? `¿Seguro que desea banear al usuario <strong>${name}</strong> (${email})?`
-                : `¿Seguro que desea activar al usuario <strong>${name}</strong> (${email})?`,
+                ? `¿Seguro que desea banear al usuario <strong>${escapeHtml(name)}</strong> (${escapeHtml(email)})?`
+                : `¿Seguro que desea activar al usuario <strong>${escapeHtml(name)}</strong> (${escapeHtml(email)})?`,
             confirmButtonText: isBan ? 'Sí, banear' : 'Sí, activar',
             cancelButtonText: 'Cancelar',
             danger: isBan,

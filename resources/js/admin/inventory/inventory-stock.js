@@ -1,4 +1,4 @@
-import { fireSwal } from '../shared/swal.js';
+import { escapeHtml, fireSwal } from '../shared/swal.js';
 
 export async function initStockModal() {
     // Swal is lazy-loaded inside fireSwal() on first dialog.
@@ -281,8 +281,8 @@ export async function initStockModal() {
             },
             title: isAdd ? '¿Agregar stock al inventario?' : '¿Retirar stock del inventario?',
             html: isAdd
-                ? `<p>Se agregarán <strong>${qty}</strong> unidad(es) a <strong>${productName}</strong>.</p>`
-                : `<p>Se retirarán <strong>${qty}</strong> unidad(es) de <strong>${productName}</strong>.</p>`,
+                ? `<p>Se agregarán <strong>${escapeHtml(qty)}</strong> unidad(es) a <strong>${escapeHtml(productName)}</strong>.</p>`
+                : `<p>Se retirarán <strong>${escapeHtml(qty)}</strong> unidad(es) de <strong>${escapeHtml(productName)}</strong>.</p>`,
             icon: isAdd ? 'question' : 'warning',
             showCancelButton: true,
             confirmButtonText: isAdd ? 'Sí, agregar' : 'Sí, retirar',

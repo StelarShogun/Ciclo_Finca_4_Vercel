@@ -22,7 +22,7 @@ class CF4146SweetAlertConsistencyTest extends TestCase
             }
 
             foreach (File::allFiles($path) as $file) {
-                $relative = str_replace(base_path() . DIRECTORY_SEPARATOR, '', $file->getPathname());
+                $relative = str_replace(base_path().DIRECTORY_SEPARATOR, '', $file->getPathname());
 
                 if (! str_ends_with($relative, '.js') && ! str_ends_with($relative, '.blade.php')) {
                     continue;
@@ -39,6 +39,6 @@ class CF4146SweetAlertConsistencyTest extends TestCase
             }
         }
 
-        $this->assertSame([], $violations, "No deben quedar alert(), confirm() ni prompt() nativos:\n" . implode("\n", $violations));
+        $this->assertSame([], $violations, "No deben quedar alert(), confirm() ni prompt() nativos:\n".implode("\n", $violations));
     }
 }

@@ -1,5 +1,7 @@
 /** Lazy SweetAlert2 — avoid loading on pages that never open a dialog. */
 
+export { escapeHtml } from '../shared/escape-html.js';
+
 let swalModulePromise = null;
 
 export async function getSwal() {

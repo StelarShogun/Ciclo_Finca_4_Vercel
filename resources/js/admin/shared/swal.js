@@ -1,5 +1,7 @@
 /** Lazy SweetAlert2 for admin bundles. */
 
+export { escapeHtml } from '../../shared/escape-html.js';
+
 let swalModulePromise = null;
 
 export async function getSwal() {

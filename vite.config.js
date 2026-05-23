@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import laravel from "laravel-vite-plugin";
 
 const vitePort = Number(process.env.VITE_PORT) || 5173;
@@ -95,22 +95,35 @@ const clientAssets = [
     "resources/css/client/clients-users.css",
 ];
 
-export default defineConfig({
-    // Keep Vite cache outside node_modules to avoid permission issues on WSL mounts.
-    cacheDir: ".vite-cache",
-    plugins: [
-        laravel({
-            detectTls: false,
-            input: [...adminAssets, ...clientAssets, ...errorAssets],
-            refresh: true,
-        }),
-    ],
-    server: {
-        host: "0.0.0.0",
-        port: vitePort,
-        strictPort: true,
-        hmr: {
-            host: "localhost",
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, process.cwd(), "");
+    const appUrl = env.APP_URL || "http://localhost:8080";
+
+    return {
+        // Keep Vite cache outside node_modules to avoid permission issues on WSL mounts.
+        cacheDir: ".vite-cache",
+        plugins: [
+            laravel({
+                detectTls: false,
+                input: [...adminAssets, ...clientAssets, ...errorAssets],
+                refresh: true,
+            }),
+        ],
+        server: {
+            host: "0.0.0.0",
+            port: vitePort,
+            strictPort: true,
+            hmr: {
+                host: "localhost",
+            },
+            // FA subset lives in public/fonts; @font-face uses /fonts/... which the browser
+            // resolves against the Vite origin when CSS is served from npm run dev (404 without proxy).
+            proxy: {
+                "/fonts": {
+                    target: appUrl,
+                    changeOrigin: true,
+                },
+            },
         },
-    },
+    };
 });

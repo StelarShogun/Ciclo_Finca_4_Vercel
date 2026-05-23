@@ -8,7 +8,7 @@ import {
     getCf4PaymentMethodShortLabel,
 } from './checkout-copy.js';
 import { initHeaderCatalogSearch } from './header-catalog-search.js';
-import { fireSwal, cf4Confirm } from './swal.js';
+import { fireSwal, cf4Confirm, escapeHtml } from './swal.js';
 import '../shared/ajax-pagination.js';
 
 // Marker used by clients-users.js to skip the cart/checkout listeners
@@ -425,7 +425,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         cf4Confirm({
                             icon: 'error',
                             title: 'Error',
-                            html: (data.message || 'Error al iniciar sesión') +
+                            html: escapeHtml(data.message || 'Error al iniciar sesión') +
                                 '<hr style="margin:12px 0">' +
                                 '<p style="font-size:0.9rem;margin:0">¿Tienes una cuenta registrada? ¿O deseas registrarte?</p>',
                             confirmButtonText: 'Ir a Registro',

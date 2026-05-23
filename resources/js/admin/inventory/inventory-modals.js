@@ -1273,7 +1273,7 @@ export async function initModals() {
             
             void cf4Confirm({
                 title: '¿Importar productos?',
-                html: `Se importarán los productos desde el archivo <strong>${file.name}</strong> en formato <strong>${formatName}</strong>.`,
+                html: `Se importarán los productos desde el archivo <strong>${escapeHtml(file.name)}</strong> en formato <strong>${escapeHtml(formatName)}</strong>.`,
                 icon: 'info',
                 confirmButtonText: 'Sí, importar',
                 cancelButtonText: 'Cancelar',

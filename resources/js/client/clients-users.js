@@ -4,6 +4,7 @@ import {
     cf4Confirm,
     cf4Toast,
     cf4Error,
+    escapeHtml,
 } from './swal.js';
 import {
     buildCf4CheckoutSuccessText,
@@ -989,7 +990,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         cf4Confirm({
                             icon: 'error',
                             title: 'Error',
-                            html: (data.message || 'Error al iniciar sesión') +
+                            html: escapeHtml(data.message || 'Error al iniciar sesión') +
                                 '<hr style="margin:12px 0">' +
                                 '<p style="font-size:0.9rem;margin:0">¿Tienes una cuenta registrada? ¿O deseas registrarte?</p>',
                             confirmButtonText: 'Ir a Registro',

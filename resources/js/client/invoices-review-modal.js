@@ -1,4 +1,4 @@
-import { cf4DialogDefaults, cf4Toast, getSwal } from './swal.js';
+import { cf4DialogDefaults, cf4Toast, escapeHtml, getSwal } from './swal.js';
 
 (function () {
     const config = window.__cf4InvoiceReview;
@@ -20,7 +20,7 @@ import { cf4DialogDefaults, cf4Toast, getSwal } from './swal.js';
             }).join('');
 
             return '<div class="cf4-review-modal-row">' +
-                '<div class="cf4-review-modal-product">' + product.name + '</div>' +
+                '<div class="cf4-review-modal-product">' + escapeHtml(product.name) + '</div>' +
                 '<div class="cf4-review-stars">' + stars + '</div>' +
                 '</div>';
         }).join('');

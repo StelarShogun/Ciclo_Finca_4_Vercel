@@ -1,5 +1,5 @@
 import '../../shared/ajax-pagination.js';
-import { cf4Confirm, cf4Toast, cf4Warning, cf4Error } from '../shared/swal.js';
+import { cf4Confirm, cf4Toast, cf4Warning, cf4Error, escapeHtml } from '../shared/swal.js';
 
 // Toggle sidebar collapse on click
 document.addEventListener('DOMContentLoaded', () => {
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const result = await cf4Confirm({
                 title: 'Marca similar encontrada',
-                html: `La marca que escribes (<strong>${inputNameValue}</strong>) ya está registrada como <strong>${data.existing.name}</strong>.<br><br>¿Deseas editarla?`,
+                html: `La marca que escribes (<strong>${escapeHtml(inputNameValue)}</strong>) ya está registrada como <strong>${escapeHtml(data.existing.name)}</strong>.<br><br>¿Deseas editarla?`,
                 icon: 'info',
                 confirmButtonText: 'Sí, editar',
                 cancelButtonText: 'No, cancelar',
