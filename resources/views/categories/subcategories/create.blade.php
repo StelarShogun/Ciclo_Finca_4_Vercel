@@ -15,8 +15,9 @@
 <body class="admin-layout">
     @include('admin.parts.aside')
 
-    <main class="admin-main">
-        <div class="form-container">
+    <main class="admin-main admin-main--content">
+        <div class="admin-content-wrapper">
+            <div class="form-container">
             <nav class="admin-breadcrumb" aria-label="Migas de pan">
                 <a href="{{ route('inventory') }}">Inventario</a>
                 <span class="sep">/</span>
@@ -131,6 +132,7 @@
                         <x-pagination :paginator="$categoriesHierarchy" label="categorías" />
                     </div>
                 @endif
+            </div>
             </div>
         </div>
     </main>

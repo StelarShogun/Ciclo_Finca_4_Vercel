@@ -31,8 +31,9 @@
     {{-- Sidebar navigation --}}
     @include('admin.parts.aside')
 
-    <main class="admin-main">
-        <div class="inventory-container">
+    <main class="admin-main admin-main--content">
+        <div class="admin-content-wrapper">
+            <div class="inventory-container">
 
             {{-- ==================== HEADER ==================== --}}
             <header class="usuarios-header">
@@ -52,9 +53,6 @@
                         <i class="fas fa-sitemap"></i>
                         Crear Subcategoría
                     </a>
-                    <button class="btn btn-secondary" id="import-btn">
-                        <i class="fas fa-upload"></i> Importar
-                    </button>
                 </div>
             </header>
 
@@ -461,6 +459,7 @@
                 </div>
 
             </section>
+            </div>
         </div>
     </main>
 
@@ -913,65 +912,6 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="variant-edit-cancel-btn">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="variant-edit-save-btn">Guardar variante</button>
-            </div>
-        </div>
-    </div>
-
-    {{-- ==================== MODAL: IMPORT ==================== --}}
-    <div class="edit-modal" id="import-modal">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content modal-auto-size">
-            <div class="modal-header">
-                <h3><i class="fas fa-file-upload"></i> Importar Productos</h3>
-                <button class="modal-close" id="close-import-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ route('products.import') }}" method="POST"
-                      enctype="multipart/form-data" id="import-form">
-                    @csrf
-
-                    <p class="import-modal-intro">
-                        Subí un archivo de catálogo o planilla. Al elegirlo, detectamos el formato y validamos que sea legible antes de importar.
-                    </p>
-
-                    <div class="import-format-hints" aria-label="Formatos admitidos">
-                        <span class="import-format-chip import-format-chip--xml"><i class="fas fa-file-code"></i> XML</span>
-                        <span class="import-format-chip import-format-chip--csv"><i class="fas fa-file-csv"></i> CSV / TXT</span>
-                        <span class="import-format-chip import-format-chip--json"><i class="fas fa-file-alt"></i> JSON</span>
-                    </div>
-
-                    <x-cf-file-upload
-                        id="import_file"
-                        name="import_file"
-                        label="Archivo"
-                        accept=".xml,.csv,.json,.txt"
-                        :required="true"
-                        icon="fa-cloud-upload-alt"
-                        meta-id="import_file-meta"
-                        hint="Tamaño máximo: 10 MB.">
-                        Seleccioná o arrastrá el archivo
-                    </x-cf-file-upload>
-
-                    <p class="import-modal-requirements">
-                        <i class="fas fa-lightbulb" aria-hidden="true"></i>
-                        Cada producto debe traer al menos <strong>nombre</strong>, <strong>categoría</strong> y <strong>precio de venta</strong>.
-                        Si el archivo incluye SKU o código, se usan para actualizar registros existentes.
-                    </p>
-
-                    <div id="import-file-summary" class="import-file-summary hidden" aria-live="polite"></div>
-
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cancel-import">
-                    <i class="fas fa-times"></i> Cancelar
-                </button>
-                {{-- Enabled by inventory.js once a valid file is selected --}}
-                <button type="button" class="btn btn-primary" id="confirm-import" disabled>
-                    <i class="fas fa-upload"></i> <span>Importar Productos</span>
-                </button>
             </div>
         </div>
     </div>

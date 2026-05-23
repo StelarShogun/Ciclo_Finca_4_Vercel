@@ -135,7 +135,6 @@
                         <tr>
                             <th>Nº Pedido (PO)</th>
                             <th>Proveedor</th>
-                            <th>Productos</th>
                             <th>Fecha de pedido</th>
                             <th>Fecha de entrega estimada</th>
                             <th>Fecha de entrega</th>
@@ -167,16 +166,6 @@
                                         </button>
                                     @else
                                         <span class="text-muted">—</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @forelse($order->orderItems->take(3) as $item)
-                                        <div>{{ (int)$item->quantity }} × {{ $item->name }}</div>
-                                    @empty
-                                        <span class="text-muted">Sin productos</span>
-                                    @endforelse
-                                    @if($order->orderItems->count() > 3)
-                                        <div style="opacity:.65; font-size:.85rem;">+{{ $order->orderItems->count() - 3 }} más</div>
                                     @endif
                                 </td>
                                 <td>{{ $order->date?->format('d/m/Y H:i') ?? '—' }}</td>
@@ -311,7 +300,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9">
+                                <td colspan="8">
                                     <div class="orders-empty">
                                         <div class="orders-empty-icon"><i class="fas fa-inbox"></i></div>
                                         <p style="margin:0; font-size:1rem;">No hay pedidos que coincidan con los filtros.</p>

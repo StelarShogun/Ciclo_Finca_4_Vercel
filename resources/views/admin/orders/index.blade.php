@@ -106,7 +106,6 @@
                         <tr>
                             <th>Encargos / Factura</th>
                             <th>Cliente</th>
-                            <th>Productos</th>
                             <th>Fecha de pedido</th>
                             <th>Fecha listo para recoger</th>
                             <th>Fecha de confirmación</th>
@@ -139,20 +138,6 @@
                                         @endif
                                     @else
                                         <span class="text-muted">Sin datos de cliente</span>
-                                    @endif
-                                </td>
-
-                                <td>
-                                    @if ($sale->saleItems && $sale->saleItems->count() > 0)
-                                        <div style="display:flex; flex-direction:column; gap:6px;">
-                                            @foreach ($sale->saleItems as $item)
-                                                <div>
-                                                    {{ $item->quantity }} × {{ $item->product->name ?? 'Producto' }}
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <span class="text-muted">Sin productos</span>
                                     @endif
                                 </td>
 
@@ -213,6 +198,8 @@
                                         @if ($sale->status === 'completed')
                                             <a href="{{ route('sales.invoice', $sale->sale_id) }}" target="_blank"
                                                 rel="noopener noreferrer" class="action-link-invoice"
+                                                data-confirm-invoice
+                                                data-invoice-label="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}"
                                                 title="Ver factura en formato estructurado">
                                                 <i class="fas fa-file-invoice" aria-hidden="true"></i>
                                                 Ver factura
@@ -223,7 +210,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9">
+                                <td colspan="8">
                                     <div class="orders-empty">
                                         <div class="orders-empty-icon">
                                             <i class="fas fa-inbox"></i>

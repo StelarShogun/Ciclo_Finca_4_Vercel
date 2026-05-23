@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Movimientos de inventario - Reportes')
 
 @push('styles')
-    @vite(['resources/css/admin/reports/reports-hub.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/reports-hub.css'])
 @endpush
 
 @push('vite-body')
@@ -28,8 +28,8 @@
     <header class="inv-index-header">
         <h1>Movimientos de inventario</h1>
         <p class="inv-index-lead">
-            Seleccioná un producto para consultar su historial completo de entradas,
-            salidas y devoluciones. Podés buscar por nombre o código SKU.
+            Selecciona un producto para consultar su historial completo de entradas,
+            salidas y devoluciones. Puedes buscar por nombre o codigo SKU.
         </p>
     </header>
 
@@ -49,7 +49,7 @@
                         name="search"
                         id="inv-search-input"
                         value="{{ request('search') }}"
-                        placeholder="Nombre o código (ej. BK-004)…"
+                        placeholder="Nombre o codigo (ej. BK-004)..."
                         autocomplete="off"
                     >
                 </div>
@@ -72,9 +72,9 @@
             <p class="inv-index-results-label" style="padding: 0 0 0.75rem;">
                 @if($products->total() > 0)
                     {{ $products->total() }} {{ Str::plural('resultado', $products->total()) }}
-                    para <strong>«{{ request('search') }}»</strong>
+                    para <strong>"{{ request('search') }}"</strong>
                 @else
-                    Ningún producto coincide con <strong>«{{ request('search') }}»</strong>.
+                    Ningun producto coincide con <strong>"{{ request('search') }}"</strong>.
                 @endif
             </p>
         @endif
@@ -108,10 +108,10 @@
                                 {{ $product->category?->name ?? '—' }}
                             </td>
                             <td>
-                                @if($product->supplier)
+                                @if ($product->supplier)
                                     <span>
                                         <i class="fas fa-truck-fast" aria-hidden="true"
-                                           style="font-size:0.75rem; margin-right:0.3rem; opacity:.6"></i>
+                                            style="font-size:0.75rem; margin-right:0.3rem; opacity:.6"></i>
                                         {{ $product->supplier->name }}
                                     </span>
                                 @else
@@ -121,14 +121,24 @@
                             <td>
                                 <span class="order-status-pill {{ $badgeClass }}">
                                     @switch($badgeClass)
-                                        @case('success')  Normal   @break
-                                        @case('warning')  Bajo     @break
-                                        @case('danger')   Crítico  @break
-                                        @default          Sin stock
+                                        @case('success')
+                                            Normal
+                                        @break
+
+                                        @case('warning')
+                                            Bajo
+                                        @break
+
+                                        @case('danger')
+                                            Sin stock
+                                        @break
+
+                                        @default
+                                            Revisar
                                     @endswitch
                                 </span>
                             </td>
-                            <td class="text-end">
+                            <td class="text-end admin-table__col--end">
                                 <strong style="color: var(--stock-color-{{ $badgeClass }}, inherit)">
                                     {{ number_format($product->stock_current) }}
                                 </strong>

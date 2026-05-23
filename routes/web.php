@@ -209,7 +209,6 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::resource('products', ProductController::class)->except(['create']);
     Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
     Route::get('/inventory/export/{format?}', [ProductController::class, 'export'])->name('products.export');
-    Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
     Route::post('/inventory/add-manual/{id}', [ProductController::class, 'addManualStock'])
         ->name('products.stock.add')
         ->whereNumber('id');

@@ -506,8 +506,87 @@ function cancelSale(id, invoiceNumber) {
     });
 }
 
-function printSale(id) {
-    window.open('/sales/' + id + '/print', '_blank');
+function confirmInvoiceAction({ title, text, confirmText, onConfirm }) {
+    const swal = window.Swal;
+
+    if (swal) {
+        swal.fire({
+            title,
+            text: text || undefined,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#235347',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: confirmText,
+            cancelButtonText: 'Cancelar',
+        }).then(result => {
+            if (result.isConfirmed) {
+                onConfirm();
+            }
+        });
+        return;
+    }
+
+    const message = text ? `${title}\n\n${text}` : title;
+    if (window.confirm(message)) {
+        onConfirm();
+    }
+}
+
+function confirmInvoiceOpen(url, target, label) {
+    const text = label ? `Factura: ${label}` : 'Se abrirá la factura en una nueva pestaña.';
+    confirmInvoiceAction({
+        title: '¿Deseas ver la factura?',
+        text,
+        confirmText: 'Ver factura',
+        onConfirm: () => {
+            if (!url) return;
+            if (target === '_blank') {
+                window.open(url, '_blank', 'noopener,noreferrer');
+                return;
+            }
+            window.location.href = url;
+        },
+    });
+}
+
+function confirmInvoicePrint(label, onConfirm) {
+    const text = label ? `Factura: ${label}` : 'Se abrirá el diálogo de impresión del navegador.';
+    confirmInvoiceAction({
+        title: '¿Deseas imprimir esta factura?',
+        text,
+        confirmText: 'Imprimir',
+        onConfirm,
+    });
+}
+
+function bindInvoiceConfirmationLinks() {
+    document.querySelectorAll('[data-confirm-invoice]').forEach((link) => {
+        link.addEventListener('click', (event) => {
+            const href = link.getAttribute('href');
+            if (!href) return;
+            event.preventDefault();
+            const label = link.getAttribute('data-invoice-label') || '';
+            const target = link.getAttribute('target') || '_self';
+            confirmInvoiceOpen(href, target, label);
+        });
+    });
+}
+
+function bindPrintButtons() {
+    document.querySelectorAll('[data-confirm-print]').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            const label = button.getAttribute('data-invoice-label') || meta('invoice-label') || '';
+            confirmInvoicePrint(label, () => window.print());
+        });
+    });
+}
+
+function printSale(id, invoiceLabel = '') {
+    confirmInvoicePrint(invoiceLabel, () => {
+        window.open('/sales/' + id + '/print', '_blank', 'noopener,noreferrer');
+    });
 }
 
 // Expose public functions on window (required by Vite/ESM)
@@ -531,8 +610,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auto-print
     if (meta('auto-print') === '1') {
-        window.print();
+        const label = meta('invoice-label') || '';
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                confirmInvoicePrint(label, () => window.print());
+            }, 300);
+        });
     }
+
+    bindInvoiceConfirmationLinks();
+    bindPrintButtons();
 
     const dateRangeSelect = document.getElementById('date-range');
     if (dateRangeSelect) {

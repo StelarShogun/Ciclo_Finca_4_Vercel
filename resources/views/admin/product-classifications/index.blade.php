@@ -12,8 +12,9 @@
 <body class="admin-layout">
     @include('admin.parts.aside')
 
-    <main class="admin-main">
-        <div class="form-container">
+    <main class="admin-main admin-main--content">
+        <div class="admin-content-wrapper">
+            <div class="form-container">
             @component('admin.partials.page-header', ['title' => 'Características por producto'])
                 <p>
                     Consulta y administra los valores asignados a cada producto según sus atributos, como color, talla o
@@ -103,6 +104,7 @@
                 <a href="{{ route('inventory') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Volver al inventario
                 </a>
+            </div>
             </div>
         </div>
     </main>
