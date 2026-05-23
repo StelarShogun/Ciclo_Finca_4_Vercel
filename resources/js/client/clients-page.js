@@ -4,7 +4,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/a11y';
 import { initHeaderCatalogSearch } from './header-catalog-search.js';
-import { fireSwal, cf4Confirm, cf4Warning, escapeHtml } from './swal.js';
+import { cf4Confirm, cf4Warning, cf4Toast, cf4Error, escapeHtml } from './swal.js';
 import { initCartInteractions } from './cart-actions.js';
 import { addToCart, updateCartCount, isClientStockShortMessage } from './cart-shared.js';
 import '../shared/ajax-pagination.js';
@@ -99,11 +99,10 @@ function toggleFavoriteProduct(btn) {
         })
         .catch(function (err) {
             console.error('Error toggling favorite:', err);
-            fireSwal({
-                icon: 'error',
-                title: 'Error',
-                text: err && err.message ? err.message : 'No se pudo actualizar tu favorito.'
-            });
+            void cf4Error(
+                err && err.message ? err.message : 'No se pudo actualizar tu favorito.',
+                'Error',
+            );
         })
         .finally(function () {
             btn.disabled = false;
@@ -151,12 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Show login prompt for guest cart click.
     if (cartGuestEl) {
         cartGuestEl.addEventListener('click', function () {
-            fireSwal({
-                icon: 'info',
-                title: 'Inicia sesión',
-                text: 'Debes iniciar sesión para ver tu carrito.',
-                confirmButtonText: 'Entendido'
-            });
+            void cf4Warning('Debes iniciar sesión para ver tu carrito.', 'Inicia sesión');
         });
     }
 
@@ -227,12 +221,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                 thenUrl: data.redirect || '/',
                             });
                         } else {
-                            fireSwal({
+                            void cf4Toast({
                                 icon: 'success',
                                 title: '¡Bienvenido!',
                                 text: data.message || 'Inicio de sesión exitoso',
                                 timer: 4000,
-                                showConfirmButton: false,
                             }).then(function () {
                                 window.location.href = data.redirect || '/';
                             });
@@ -274,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .catch(function (err) {
                     if (err === 'csrf' || err === 'parse') return;
                     console.error('Login error:', err);
-                    fireSwal({ icon: 'error', title: 'Error', text: 'Ocurrió un error al iniciar sesión' });
+                    void cf4Error('Ocurrió un error al iniciar sesión', 'Error');
                     if (submitBtn)   submitBtn.disabled = false;
                     if (submitSpan)  submitSpan.classList.remove('hidden');
                     if (loadingSpan) loadingSpan.classList.add('hidden');

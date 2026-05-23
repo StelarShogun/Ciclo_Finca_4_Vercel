@@ -76,11 +76,8 @@ class ProductController extends Controller
             ];
 
             // Store uploaded files locally before registering them in MediaLibrary
-            $folderPath = public_path('images/'.$product->name);
-            if (! is_dir($folderPath)) {
-                mkdir($folderPath, 0755, true);
-            }
-            $slug = Str::slug($product->name, '_');
+            $slug = $this->productImageSlug($product);
+            $folderPath = $this->productImageFolderPath($product);
 
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
@@ -319,11 +316,8 @@ class ProductController extends Controller
             ];
 
             // Store uploaded files locally before registering them in MediaLibrary
-            $folderPath = public_path('images/'.$product->name);
-            if (! is_dir($folderPath)) {
-                mkdir($folderPath, 0755, true);
-            }
-            $slug = Str::slug($product->name, '_');
+            $slug = $this->productImageSlug($product);
+            $folderPath = $this->productImageFolderPath($product);
 
             // Remove main image when requested (no replacement file)
             if ($request->boolean('remove_main_image') && ! $request->hasFile('image')) {
@@ -349,7 +343,7 @@ class ProductController extends Controller
             // Replace the entire gallery when new files are provided
             if ($request->hasFile('images')) {
                 // Remove existing gallery files from disk
-                foreach (glob($folderPath.'/'.$slug.'_[0-9]*.{jpg,jpeg,png,webp,gif,avif}', GLOB_BRACE) ?: [] as $old) {
+                foreach (glob($folderPath.'/'.$slug.'_[0-9]*.{jpg,jpeg,png,webp,gif}', GLOB_BRACE) ?: [] as $old) {
                     @unlink($old);
                 }
                 $product->clearMediaCollection('gallery');
@@ -1063,25 +1057,47 @@ class ProductController extends Controller
         }
     }
 
+    protected function productImageSlug(Product $product): string
+    {
+        return Str::slug($product->name, '_');
+    }
+
+    protected function productImageFolderPath(Product $product): string
+    {
+        $folderPath = public_path('images/'.$this->productImageSlug($product));
+
+        if (! is_dir($folderPath)) {
+            mkdir($folderPath, 0755, true);
+        }
+
+        return $folderPath;
+    }
+
     protected function addSanitizedMedia(Product $product, string $absolutePath, string $collection): void
     {
         $optimizer = app(ProductImageOptimizerService::class);
+        $field = $collection === 'main_image' ? 'image' : 'images';
 
         try {
             $sanitizedPath = $optimizer->sanitizePath($absolutePath);
-            $product->addMedia($sanitizedPath)
-                ->preservingOriginal()
-                ->toMediaCollection($collection);
         } catch (\Throwable $e) {
+            if (is_file($absolutePath)) {
+                @unlink($absolutePath);
+            }
+
             Log::warning('cf4_image_sanitize_failed', [
                 'path' => $absolutePath,
                 'collection' => $collection,
                 'error' => $e->getMessage(),
             ]);
 
-            $product->addMedia($absolutePath)
-                ->preservingOriginal()
-                ->toMediaCollection($collection);
+            throw ValidationException::withMessages([
+                $field => ['No se pudo procesar la imagen de forma segura. Usá JPEG, PNG, GIF o WebP.'],
+            ]);
         }
+
+        $product->addMedia($sanitizedPath)
+            ->preservingOriginal()
+            ->toMediaCollection($collection);
     }
 }

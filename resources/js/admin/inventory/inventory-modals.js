@@ -42,11 +42,11 @@ import {
 } from './inventory-classification.js';
 import { initStaticSearchCombobox, setComboboxFieldError } from '../shared/static-search-combobox.js';
 import { initFileUploadZone } from '../shared/file-upload-zone.js';
-import { fireSwal, cf4Confirm, cf4Warning, cf4Toast, cf4Error } from '../shared/swal.js';
+import { cf4Confirm, cf4Warning, cf4Toast, cf4Error } from '../shared/swal.js';
 import { compressImageFile, compressFileList } from './product-image-compression.js';
 
 export async function initModals() {
-    // Swal is lazy-loaded inside fireSwal() on first dialog.
+    // SweetAlert2 is lazy-loaded via cf4* helpers on first dialog.
     // Modal: New product
     const newProductModal = qs('#new-product-modal');
     const openNewProductModalBtn = qs('#open-new-product-modal');
@@ -60,7 +60,7 @@ export async function initModals() {
     const newParentCategoryHidden = qs('#new-parent-category-id');
 
     // --- Gallery input validation (webkitdirectory may pick non-image files) ---
-    const VALID_IMAGE_TYPES = ['image/jpeg','image/png','image/gif','image/svg+xml','image/webp','image/avif'];
+    const VALID_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
     const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB por imagen (igual al límite del servidor)
 
@@ -68,24 +68,20 @@ export async function initModals() {
         if (!inputEl || !inputEl.files || inputEl.files.length === 0) return true;
         const images = Array.from(inputEl.files).filter(f => VALID_IMAGE_TYPES.includes(f.type));
         if (images.length === 0) {
-            fireSwal({
-                title: 'Sin imágenes válidas',
-                text: 'La carpeta seleccionada no contiene imágenes (jpeg, png, webp, gif, svg, avif). Seleccioná una carpeta con imágenes.',
-                icon: 'warning',
-                confirmButtonText: 'Entendido',
-            });
+            void cf4Warning(
+                'La carpeta seleccionada no contiene imágenes (JPEG, PNG, WebP o GIF). Seleccioná una carpeta con imágenes.',
+                'Sin imágenes válidas',
+            );
             inputEl.value = '';
             if (hintEl) hintEl.textContent = 'Ningún archivo seleccionado';
             return false;
         }
         const oversized = images.filter(f => f.size > MAX_IMAGE_SIZE_BYTES);
         if (oversized.length > 0) {
-            fireSwal({
-                title: 'Error',
-                text: 'Ha excedido la capacidad de imágenes que puedes cargar. Cada imagen no puede superar 10 MB.',
-                icon: 'error',
-                confirmButtonText: 'Entendido',
-            });
+            void cf4Error(
+                'Ha excedido la capacidad de imágenes que puedes cargar. Cada imagen no puede superar 10 MB.',
+                'Error',
+            );
             inputEl.value = '';
             if (hintEl) hintEl.textContent = 'Ningún archivo seleccionado';
             return false;
@@ -152,14 +148,10 @@ export async function initModals() {
             }
 
             if (!newFinalCategory || !String(newFinalCategory.value || '').trim()) {
-                if (typeof Swal !== 'undefined') {
-                    fireSwal({
-                        title: 'Categoría',
-                        text: 'Elegí una categoría. La subcategoría es opcional; si guardás solo la categoría (sin subcategoría) no podrás usar color, talla, etc.',
-                        icon: 'info',
-                        confirmButtonText: 'Entendido',
-                    });
-                }
+                void cf4Warning(
+                    'Elegí una categoría. La subcategoría es opcional; si guardás solo la categoría (sin subcategoría) no podrás usar color, talla, etc.',
+                    'Categoría',
+                );
                 return;
             }
 
@@ -167,7 +159,7 @@ export async function initModals() {
                 const cb = qs('#new-brand-combobox');
                 setComboboxFieldError(cb, 'Seleccioná una marca antes de guardar el producto.');
                 cb?.querySelector('input')?.focus();
-                fireSwal({ title: 'Marca requerida', text: 'Selecciona una marca antes de guardar el producto.', icon: 'warning', confirmButtonText: 'Entendido' });
+                void cf4Warning('Selecciona una marca antes de guardar el producto.', 'Marca requerida');
                 return;
             }
             setComboboxFieldError(qs('#new-brand-combobox'), '');
@@ -223,13 +215,11 @@ export async function initModals() {
                 setButtonLoading(saveNewProductBtn, false);
                 if (data.success) {
                     newProductModal.classList.remove('active');
-                    fireSwal({
+                    void cf4Toast({
+                        icon: 'success',
                         title: 'Producto creado',
                         text: data.message,
-                        icon: 'success',
                         timer: 3500,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
                     }).then(() => { location.reload(); });
                 } else if (data.errors) {
                     qsa('.error-message', newProductForm).forEach((el) => el.remove());
@@ -244,32 +234,23 @@ export async function initModals() {
                         }
                     }
 
-                    fireSwal({
-                        title: 'Error de validación',
-                        text: jsonValidationMessage(data) || data.message || 'Revisa los campos del formulario.',
-                        icon: 'error',
-                        confirmButtonText: 'Entendido',
-                    });
+                    void cf4Error(
+                        jsonValidationMessage(data) || data.message || 'Revisa los campos del formulario.',
+                        'Error de validación',
+                    );
                 } else {
-                    fireSwal({
-                        title: 'Error',
-                        text: data.message || 'Ocurrió un error al crear el producto.',
-                        icon: 'error',
-                        confirmButtonText: 'Entendido',
-                    });
+                    void cf4Error(data.message || 'Ocurrió un error al crear el producto.', 'Error');
                 }
             })
             .catch(error => {
                 setButtonLoading(saveNewProductBtn, false);
                 console.error('Error:', error);
-                fireSwal({
-                    title: 'Error',
-                    text: error.isSizeError
+                void cf4Error(
+                    error.isSizeError
                         ? 'Ha excedido la capacidad de imágenes que puedes cargar.'
                         : 'Ocurrió un error inesperado. Por favor, revisa los logs.',
-                    icon: 'error',
-                    confirmButtonText: 'Entendido',
-                });
+                    'Error',
+                );
             });
         });
     }
@@ -391,22 +372,12 @@ export async function initModals() {
                     }
                     editModal.classList.add('active');
                 } else {
-                    fireSwal({
-                        title: 'Error',
-                        text: data.message || 'Error al cargar el producto',
-                        icon: 'error',
-                        confirmButtonText: 'Entendido'
-                    });
+                    void cf4Error(data.message || 'Error al cargar el producto', 'Error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                fireSwal({
-                    title: 'Error',
-                    text: error?.message || 'Error al cargar el producto. Inténtalo de nuevo.',
-                    icon: 'error',
-                    confirmButtonText: 'Entendido'
-                });
+                void cf4Error(error?.message || 'Error al cargar el producto. Inténtalo de nuevo.', 'Error');
             });
         });
     });
@@ -661,7 +632,7 @@ export async function initModals() {
                 const cb = qs('#edit-brand-combobox');
                 setComboboxFieldError(cb, 'Seleccioná una marca antes de guardar el producto.');
                 cb?.querySelector('input')?.focus();
-                fireSwal({ title: 'Marca requerida', text: 'Selecciona una marca antes de guardar el producto.', icon: 'warning', confirmButtonText: 'Entendido' });
+                void cf4Warning('Selecciona una marca antes de guardar el producto.', 'Marca requerida');
                 return;
             }
             setComboboxFieldError(qs('#edit-brand-combobox'), '');
@@ -737,32 +708,23 @@ export async function initModals() {
                         }
                     }
                     
-                    fireSwal({
-                        title: 'Error de validación',
-                        text: jsonValidationMessage(data) || data.message || 'Revisa los campos del formulario.',
-                        icon: 'error',
-                        confirmButtonText: 'Entendido'
-                    });
+                    void cf4Error(
+                        jsonValidationMessage(data) || data.message || 'Revisa los campos del formulario.',
+                        'Error de validación',
+                    );
                 } else {
-                    fireSwal({
-                        title: 'Error',
-                        text: data.message || 'Ocurrió un error al actualizar el producto.',
-                        icon: 'error',
-                        confirmButtonText: 'Entendido'
-                    });
+                    void cf4Error(data.message || 'Ocurrió un error al actualizar el producto.', 'Error');
                 }
             })
             .catch(error => {
                 setButtonLoading(saveEditBtn, false);
                 console.error('Error:', error);
-                fireSwal({
-                    title: 'Error',
-                    text: error.isSizeError
+                void cf4Error(
+                    error.isSizeError
                         ? 'Ha excedido la capacidad de imágenes que puedes cargar.'
                         : 'Ocurrió un error inesperado. Por favor, revisa los logs.',
-                    icon: 'error',
-                    confirmButtonText: 'Entendido'
-                });
+                    'Error',
+                );
             });
         });
     }
@@ -1167,22 +1129,12 @@ export async function initModals() {
                     initAdminViewCarousel();
                     viewProductModal.classList.add('active');
                 } else {
-                    fireSwal({
-                        title: 'Error',
-                        text: data.message || 'Error al cargar el producto',
-                        icon: 'error',
-                        confirmButtonText: 'Entendido'
-                    });
+                    void cf4Error(data.message || 'Error al cargar el producto', 'Error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                fireSwal({
-                    title: 'Error',
-                    text: error?.message || 'Error al cargar el producto. Inténtalo de nuevo.',
-                    icon: 'error',
-                    confirmButtonText: 'Entendido'
-                });
+                void cf4Error(error?.message || 'Error al cargar el producto. Inténtalo de nuevo.', 'Error');
             });
         });
     });
@@ -1268,12 +1220,7 @@ export async function initModals() {
         }
         const detected = detectFileFormat(file);
         if (!detected) {
-            fireSwal({
-                title: 'Formato no soportado',
-                text: 'Usá un archivo XML, CSV o JSON.',
-                icon: 'error',
-                confirmButtonText: 'Entendido',
-            });
+            void cf4Error('Usá un archivo XML, CSV o JSON.', 'Formato no soportado');
             importUpload?.reset();
             resetImportUi();
             return;
@@ -1295,12 +1242,7 @@ export async function initModals() {
     if (confirmImportBtn) {
         confirmImportBtn.addEventListener('click', () => {
             if (!fileInput.files.length) {
-                fireSwal({
-                    title: 'Error',
-                    text: 'Por favor selecciona un archivo para importar.',
-                    icon: 'error',
-                    confirmButtonText: 'Entendido'
-                });
+                void cf4Error('Por favor selecciona un archivo para importar.', 'Error');
                 return;
             }
             

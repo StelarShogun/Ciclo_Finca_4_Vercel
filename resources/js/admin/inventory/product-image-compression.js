@@ -66,15 +66,21 @@ export async function compressImageFile(file, options = {}) {
 
         ctx.drawImage(img, 0, 0, width, height);
 
-        const mime = file.type === 'image/png' ? 'image/webp' : (file.type || 'image/webp');
-        const blob = await canvasToBlob(canvas, mime, qualityWebp);
+        const rasterTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        const convertToWebp = rasterTypes.includes(file.type);
+        const mime = convertToWebp ? 'image/webp' : (file.type || 'image/jpeg');
+        const blob = await canvasToBlob(
+            canvas,
+            convertToWebp ? 'image/webp' : mime,
+            convertToWebp ? qualityWebp : undefined,
+        );
 
         if (!blob || blob.size >= file.size) {
             return file;
         }
 
         const baseName = file.name.replace(/\.[^.]+$/, '');
-        const ext = mime === 'image/webp' ? '.webp' : '.jpg';
+        const ext = convertToWebp ? '.webp' : (mime === 'image/png' ? '.png' : '.jpg');
 
         return new File([blob], `${baseName}${ext}`, {
             type: mime,
