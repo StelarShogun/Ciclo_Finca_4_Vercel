@@ -22,11 +22,12 @@ return new class extends Migration
         });
 
         // Existing completed orders should not show as "new" after deploy.
+        // Use column-only COALESCE so this runs on MySQL (QA/prod) and SQLite (PHPUnit).
         DB::table('sales')
             ->where('status', 'completed')
             ->whereNull('client_history_seen_at')
             ->update([
-                'client_history_seen_at' => DB::raw('COALESCE(updated_at, sale_date, NOW())'),
+                'client_history_seen_at' => DB::raw('COALESCE(updated_at, sale_date, created_at)'),
             ]);
     }
 
