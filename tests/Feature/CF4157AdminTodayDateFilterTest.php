@@ -14,7 +14,6 @@ use App\Support\AdminDateRange;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon as SupportCarbon;
-use Illuminate\Support\Facades\Schema;
 use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 

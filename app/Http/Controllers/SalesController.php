@@ -18,7 +18,6 @@ use App\Services\InventoryMovementService;
 use App\Services\OrderCancellationNotifier;
 use App\Support\AdminDateRange;
 use App\Support\AdminPerPage;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
