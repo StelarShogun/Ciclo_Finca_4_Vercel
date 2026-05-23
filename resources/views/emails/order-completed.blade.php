@@ -28,12 +28,12 @@
 
     <p><strong>Total:</strong> ₡{{ number_format((float) $sale->total, 0, ',', '.') }}</p>
 
-    <p style="margin-top:24px;">
+    <div style="margin-top:24px;">
         @include('emails.partials.button', [
             'href' => $historyUrl,
             'label' => 'Ver historial de compras',
         ])
-    </p>
+    </div>
 @endsection
 
 @section('footer-note')
