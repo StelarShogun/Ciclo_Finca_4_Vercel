@@ -7,6 +7,8 @@ use App\Rules\Recaptcha;
 use App\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
@@ -14,9 +16,14 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Cookie as SymfonyCookie;
 
 class ClientUserController extends Controller
 {
+    private const GOOGLE_OAUTH_STATE_COOKIE = 'google_oauth_state';
+
+    private const GOOGLE_OAUTH_STATE_TTL_MINUTES = 10;
+
     // ============================================================
     // PROFILE
     // ============================================================
@@ -678,9 +685,7 @@ class ClientUserController extends Controller
             );
         }
 
-        $state = Str::random(40);
-        session(['google_oauth_state' => $state]);
-        session()->save();
+        $state = $this->issueGoogleOAuthState();
 
         $query = http_build_query([
             'client_id' => $googleConfig['client_id'],
@@ -692,7 +697,9 @@ class ClientUserController extends Controller
             'prompt' => 'select_account',
         ]);
 
-        return redirect()->away('https://accounts.google.com/o/oauth2/v2/auth?'.$query);
+        return redirect()
+            ->away('https://accounts.google.com/o/oauth2/v2/auth?'.$query)
+            ->withCookie($this->googleOAuthStateCookie($state));
     }
 
     /**
@@ -708,14 +715,12 @@ class ClientUserController extends Controller
                 );
             }
 
-            $stateFromSession = (string) session()->pull('google_oauth_state', '');
-            $stateFromRequest = (string) $request->query('state', '');
-
-            if ($stateFromSession === '' || $stateFromRequest === '' || ! hash_equals($stateFromSession, $stateFromRequest)) {
+            if (! $this->consumeGoogleOAuthState($request)) {
                 Log::warning('oauth_state_mismatch', [
-                    'session_present' => $stateFromSession !== '',
-                    'request_present' => $stateFromRequest !== '',
-                    'driver' => config('session.driver'),
+                    'request_present' => $request->filled('state'),
+                    'cookie_present' => $request->hasCookie(self::GOOGLE_OAUTH_STATE_COOKIE),
+                    'session_driver' => config('session.driver'),
+                    'cache_store' => config('cache.default'),
                 ]);
 
                 return redirect()->route('clients.home')->with('error', 'Sesión OAuth inválida. Inténtalo de nuevo.');
@@ -819,5 +824,57 @@ class ClientUserController extends Controller
 
             return redirect()->route('clients.home')->with('error', $message);
         }
+    }
+
+    /** Issue a one-time OAuth state token persisted outside the session (Render-safe). */
+    private function issueGoogleOAuthState(): string
+    {
+        $state = Str::random(40);
+        Cache::put(
+            'google_oauth_state:'.$state,
+            1,
+            now()->addMinutes(self::GOOGLE_OAUTH_STATE_TTL_MINUTES)
+        );
+
+        return $state;
+    }
+
+    private function googleOAuthStateCookie(string $state): SymfonyCookie
+    {
+        return cookie(
+            self::GOOGLE_OAUTH_STATE_COOKIE,
+            $state,
+            self::GOOGLE_OAUTH_STATE_TTL_MINUTES,
+            config('session.path', '/'),
+            config('session.domain'),
+            config('session.secure'),
+            true,
+            false,
+            config('session.same_site', 'lax')
+        );
+    }
+
+    /** Validate and consume OAuth state from cookie and/or shared cache. */
+    private function consumeGoogleOAuthState(Request $request): bool
+    {
+        $stateFromRequest = (string) $request->query('state', '');
+        if ($stateFromRequest === '') {
+            return false;
+        }
+
+        $stateFromCookie = (string) $request->cookie(self::GOOGLE_OAUTH_STATE_COOKIE, '');
+        $hadCacheEntry = Cache::pull('google_oauth_state:'.$stateFromRequest) !== null;
+
+        Cookie::queue(Cookie::forget(
+            self::GOOGLE_OAUTH_STATE_COOKIE,
+            config('session.path', '/'),
+            config('session.domain')
+        ));
+
+        if ($stateFromCookie !== '' && hash_equals($stateFromCookie, $stateFromRequest)) {
+            return true;
+        }
+
+        return $hadCacheEntry;
     }
 }

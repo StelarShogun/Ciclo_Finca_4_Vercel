@@ -1,21 +1,282 @@
 import '../../shared/ajax-pagination.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+const ORDERS_HEARTBEAT_INTERVAL_MS = 30000;
+
+const metaContent = (name) => document.querySelector(`meta[name="${name}"]`)?.content ?? '';
+
+function formatPendingCount(value) {
+    return new Intl.NumberFormat('es-CR').format(Math.max(0, Number(value) || 0));
+}
+
+function isOrdersAdminBusy() {
+    if (window.cf4OrdersActionInProgress) {
+        return true;
+    }
+
+    if (document.querySelector('.modal-overlay.active')) {
+        return true;
+    }
+
+    const swal = window.Swal;
+
+    if (swal?.isVisible?.() && (swal.isLoading?.() || document.querySelector('.swal2-container'))) {
+        return true;
+    }
+
+    return false;
+}
+
+function updateOrdersPendingBadges(pendingCount) {
+    const count = Math.max(0, Number(pendingCount) || 0);
+    const formatted = formatPendingCount(count);
+
+    const kpiEl = document.querySelector('[data-cf4-orders-pending-kpi]');
+
+    if (kpiEl) {
+        kpiEl.textContent = formatted;
+    }
+
+    const sidebarBadge = document.querySelector('[data-cf4-orders-pending-badge]');
+
+    if (sidebarBadge) {
+        if (count > 0) {
+            sidebarBadge.textContent = count > 99 ? '99+' : String(count);
+            sidebarBadge.hidden = false;
+            sidebarBadge.setAttribute('aria-label', `${count} encargo(s) pendiente(s)`);
+        } else {
+            sidebarBadge.textContent = '';
+            sidebarBadge.hidden = true;
+            sidebarBadge.removeAttribute('aria-label');
+        }
+    }
+}
+
+function showOrdersNewBanner(newCount) {
+    const banner = document.getElementById('cf4-orders-new-banner');
+    const textEl = document.querySelector('[data-cf4-orders-new-banner-text]');
+
+    if (!banner || !textEl) {
+        return;
+    }
+
+    const count = Math.max(1, Number(newCount) || 1);
+    const label = count === 1
+        ? 'Hay 1 nuevo encargo'
+        : `Hay ${formatPendingCount(count)} nuevos encargos`;
+
+    textEl.textContent = `${label}. Los filtros actuales se mantienen al actualizar.`;
+    banner.hidden = false;
+}
+
+function hideOrdersNewBanner() {
+    const banner = document.getElementById('cf4-orders-new-banner');
+
+    if (banner) {
+        banner.hidden = true;
+    }
+}
+
+let ordersTableRefreshInFlight = false;
+
+function flashOrdersTableRegion() {
+    const region = document.querySelector('[data-cf4-orders-table-region]');
+
+    if (!region) {
+        return;
+    }
+
+    region.classList.remove('cf4-orders-table-region--updated');
+    window.requestAnimationFrame(() => {
+        region.classList.add('cf4-orders-table-region--updated');
+        window.setTimeout(() => region.classList.remove('cf4-orders-table-region--updated'), 1200);
+    });
+}
+
+async function refreshOrdersTable() {
+    if (ordersTableRefreshInFlight) {
+        return false;
+    }
+
+    const region = document.querySelector('[data-cf4-orders-table-region]');
+
+    if (!region) {
+        return false;
+    }
+
+    ordersTableRefreshInFlight = true;
+
+    try {
+        const url = `${window.location.pathname}${window.location.search}`;
+        const res = await fetch(url, {
+            headers: {
+                Accept: 'text/html',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        });
+
+        if (!res.ok) {
+            return false;
+        }
+
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const incoming = doc.querySelector('[data-cf4-orders-table-region]');
+
+        if (!incoming) {
+            return false;
+        }
+
+        region.replaceWith(document.importNode(incoming, true));
+        flashOrdersTableRegion();
+
+        return true;
+    } catch {
+        return false;
+    } finally {
+        ordersTableRefreshInFlight = false;
+    }
+}
+
+function initOrdersHeartbeat() {
+    const root = document.querySelector('[data-cf4-orders-heartbeat]');
+    const latestEl = document.getElementById('cf4-latest-purchase-sale-id');
+    const heartbeatUrl = metaContent('sales-route-heartbeat');
+
+    if (!root || !latestEl || !heartbeatUrl) {
+        return;
+    }
+
+    let latestPurchaseSaleId = parseInt(latestEl.dataset.value, 10) || 0;
+    let bannerDismissed = false;
+    let pendingTableRefresh = false;
+
+    const kpiEl = document.querySelector('[data-cf4-orders-pending-kpi]');
+
+    if (kpiEl) {
+        const initialPending = Number(kpiEl.textContent.replace(/[^\d]/g, '')) || 0;
+        updateOrdersPendingBadges(initialPending);
+    }
+
+    const refreshBtn = document.querySelector('[data-cf4-orders-refresh-btn]');
+    const dismissBtn = document.querySelector('[data-cf4-orders-dismiss-banner]');
+
+    refreshBtn?.addEventListener('click', async () => {
+        hideOrdersNewBanner();
+        bannerDismissed = false;
+        pendingTableRefresh = false;
+
+        if (!(await refreshOrdersTable())) {
+            window.location.reload();
+        }
+    });
+
+    dismissBtn?.addEventListener('click', () => {
+        bannerDismissed = true;
+        hideOrdersNewBanner();
+    });
+
+    async function applyNewOrders(newCount) {
+        if (isOrdersAdminBusy()) {
+            pendingTableRefresh = true;
+
+            if (!bannerDismissed) {
+                showOrdersNewBanner(newCount);
+            }
+
+            return false;
+        }
+
+        pendingTableRefresh = false;
+        hideOrdersNewBanner();
+        bannerDismissed = false;
+
+        if (await refreshOrdersTable()) {
+            return true;
+        }
+
+        if (!bannerDismissed) {
+            showOrdersNewBanner(newCount);
+        }
+
+        return false;
+    }
+
+    async function heartbeatCheck() {
+        if (document.visibilityState === 'hidden') {
+            return;
+        }
+
+        try {
+            const res = await fetch(`${heartbeatUrl}?since=${latestPurchaseSaleId}`, {
+                headers: { Accept: 'application/json' },
+            });
+
+            if (!res.ok) {
+                return;
+            }
+
+            const data = await res.json();
+
+            if (typeof data.pendingCount !== 'undefined') {
+                updateOrdersPendingBadges(data.pendingCount);
+            }
+
+            if (data.hasNew) {
+                const applied = await applyNewOrders(data.newCount);
+
+                if (applied && typeof data.latestSaleId !== 'undefined') {
+                    latestPurchaseSaleId = data.latestSaleId;
+                }
+            } else {
+                if (typeof data.latestSaleId !== 'undefined') {
+                    latestPurchaseSaleId = data.latestSaleId;
+                }
+
+                if (pendingTableRefresh && !isOrdersAdminBusy()) {
+                    pendingTableRefresh = false;
+                    hideOrdersNewBanner();
+
+                    if (await refreshOrdersTable() && typeof data.latestSaleId !== 'undefined') {
+                        latestPurchaseSaleId = data.latestSaleId;
+                    }
+                }
+            }
+        } catch {
+            /* fail silently */
+        }
+    }
+
+    heartbeatCheck();
+    window.setInterval(heartbeatCheck, ORDERS_HEARTBEAT_INTERVAL_MS);
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            heartbeatCheck();
+        }
+    });
+}
+
+function initOrdersDateRangeFilter() {
     const ordersDateRange = document.getElementById('orders-date-range');
     const ordersDateFromGroup = document.getElementById('orders-custom-date-from-group');
     const ordersDateToGroup = document.getElementById('orders-custom-date-to-group');
 
-    if (ordersDateRange && ordersDateFromGroup && ordersDateToGroup) {
-        const toggleOrdersCustomDates = () => {
-            const isCustom = ordersDateRange.value === 'custom';
-            ordersDateFromGroup.style.display = isCustom ? '' : 'none';
-            ordersDateToGroup.style.display = isCustom ? '' : 'none';
-        };
-
-        ordersDateRange.addEventListener('change', toggleOrdersCustomDates);
-        toggleOrdersCustomDates();
+    if (!ordersDateRange || !ordersDateFromGroup || !ordersDateToGroup) {
+        return;
     }
 
+    const toggleOrdersCustomDates = () => {
+        const isCustom = ordersDateRange.value === 'custom';
+        ordersDateFromGroup.style.display = isCustom ? '' : 'none';
+        ordersDateToGroup.style.display = isCustom ? '' : 'none';
+    };
+
+    ordersDateRange.addEventListener('change', toggleOrdersCustomDates);
+    toggleOrdersCustomDates();
+}
+
+function initOrderExpirationModal() {
     const modal = document.getElementById('order-expiration-modal');
     const openBtn = document.getElementById('btn-open-order-expiration-modal');
     const form = document.getElementById('order-expiration-form');
@@ -106,6 +367,12 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = false;
         }
     });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initOrdersDateRangeFilter();
+    initOrderExpirationModal();
+    initOrdersHeartbeat();
 });
 
 async function parseResponsePayload(response) {
@@ -172,6 +439,8 @@ async function doOrderAction(url, {
     const csrf = getCsrfToken();
     const controller = new AbortController();
 
+    window.cf4OrdersActionInProgress = true;
+
     const timeoutId = window.setTimeout(() => {
         controller.abort();
     }, 15000);
@@ -223,10 +492,13 @@ async function doOrderAction(url, {
                 window.alert(text || 'Acción realizada correctamente.');
             }
 
+            window.cf4OrdersActionInProgress = false;
             window.location.reload();
 
             return;
         }
+
+        window.cf4OrdersActionInProgress = false;
 
         const message = data.message || `No se pudo completar la acción. Código: ${res.status}`;
 
@@ -242,6 +514,7 @@ async function doOrderAction(url, {
         }
     } catch (error) {
         window.clearTimeout(timeoutId);
+        window.cf4OrdersActionInProgress = false;
 
         const isTimeout = error.name === 'AbortError';
         const title = isTimeout ? 'Tiempo de espera agotado' : 'Error de red';
