@@ -148,6 +148,31 @@ export async function cf4Toast({
     });
 }
 
+/** Persistent success dialog — user must tap Entendido (e.g. post-checkout). */
+export async function cf4CheckoutSuccessDialog({
+    title = '¡Pedido confirmado!',
+    text = '',
+    confirmButtonText = 'Entendido',
+} = {}) {
+    const Swal = await getSwal();
+
+    return Swal.fire({
+        ...cf4DialogDefaults(),
+        icon: 'success',
+        title,
+        text,
+        showCancelButton: false,
+        showConfirmButton: true,
+        confirmButtonText,
+        allowOutsideClick: false,
+        allowEscapeKey: true,
+        customClass: {
+            ...cf4SwalClasses,
+            confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
+        },
+    });
+}
+
 export async function cf4Success(message = 'Operación realizada correctamente.', title = 'Listo') {
     return cf4Toast({
         icon: 'success',

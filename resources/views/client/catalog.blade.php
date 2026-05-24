@@ -28,6 +28,19 @@
     <div class="catalog-container">
         @php
             $activeCategoryId = (int) (request('category_id') ?: 0);
+            $activeCatalogFilterCount = 0;
+            if (request()->filled('min_price')) {
+                $activeCatalogFilterCount++;
+            }
+            if (request()->filled('max_price')) {
+                $activeCatalogFilterCount++;
+            }
+            if (request()->filled('brand_id')) {
+                $activeCatalogFilterCount++;
+            }
+            if (request()->filled('search')) {
+                $activeCatalogFilterCount++;
+            }
         @endphp
 
         <div class="catalog-sidebar-stack">
@@ -113,8 +126,19 @@
                 <div class="filters-card">
                     <h3 class="filters-title">
                         <i class="fas fa-filter" aria-hidden="true"></i>
-                        <span class="filters-title-text">Filtros</span>
+                        <span class="filters-title-text">Refinar búsqueda</span>
                     </h3>
+
+                    @if($activeCatalogFilterCount > 0)
+                        <p class="filters-active-summary" role="status">
+                            <strong>{{ $activeCatalogFilterCount }} filtro{{ $activeCatalogFilterCount === 1 ? '' : 's' }} activo{{ $activeCatalogFilterCount === 1 ? '' : 's' }}.</strong>
+                            Ajustá precio o marca y tocá «Ver resultados».
+                        </p>
+                    @else
+                        <p class="filters-active-summary" role="note">
+                            Elegí precio y/o marca para acotar los productos del catálogo.
+                        </p>
+                    @endif
 
                     {{-- GET form: category_id se conserva por URL al filtrar desde el menú de categorías --}}
                     <form method="GET" action="{{ route('clients.catalog') }}" id="filter-form" autocomplete="off">
@@ -132,7 +156,7 @@
                         @endif
 
                         <div class="filter-group">
-                            <label>Rango de Precio</label>
+                            <label for="min_price">Precio mínimo y máximo (₡)</label>
                             <div class="price-range">
                                 <input type="number"
                                        id="min_price"
@@ -212,13 +236,13 @@
 
                         <div class="filter-actions">
                             <button type="submit" class="btn btn-primary btn-block" id="filter-submit-btn">
-                                <i class="fas fa-sliders" aria-hidden="true"></i>
-                                <span class="btn-text">Aplicar Filtros</span>
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                                <span class="btn-text">Ver resultados</span>
                             </button>
                             {{-- Navigating to the base URL effectively clears all filters --}}
-                            <a href="{{ route('clients.catalog') }}" class="btn btn-secondary btn-block">
-                                <i class="fas fa-redo" aria-hidden="true"></i>
-                                <span class="btn-text">Limpiar</span>
+                            <a href="{{ route('clients.catalog') }}" class="btn btn-secondary btn-block" title="Quitar todos los filtros aplicados">
+                                <i class="fas fa-rotate-left" aria-hidden="true"></i>
+                                <span class="btn-text">Quitar filtros</span>
                             </a>
                         </div>
                     </form>
@@ -228,10 +252,13 @@
 
             <main class="catalog-main catalog-content">
                 {{-- Mobile / tablet: filtros colapsables (JS + .open en #catalog-sidebar) --}}
-                <button class="btn btn-outline-secondary catalog-filter-toggle" id="catalog-filter-toggle" type="button"
+                <button @class(['btn', 'btn-outline-secondary', 'catalog-filter-toggle', 'has-active-filters' => $activeCatalogFilterCount > 0]) id="catalog-filter-toggle" type="button"
                         aria-expanded="false" aria-controls="catalog-sidebar">
                     <i class="fas fa-filter"></i>
-                    <span>Mostrar filtros</span>
+                    <span>Filtrar productos</span>
+                    @if($activeCatalogFilterCount > 0)
+                        <span class="catalog-filter-active-badge" aria-label="{{ $activeCatalogFilterCount }} filtros activos">{{ $activeCatalogFilterCount }}</span>
+                    @endif
                     <i class="fas fa-chevron-down catalog-filter-toggle-caret" aria-hidden="true"></i>
                 </button>
 

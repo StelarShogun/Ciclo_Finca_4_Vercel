@@ -74,6 +74,11 @@
 
         <div class="cf4-invoices-wrapper">
 
+            @include('client.parts.mobile-back-nav', [
+                'backUrl' => $backUrl,
+                'backLabel' => 'Volver a Mis Facturas',
+            ])
+
             <nav class="breadcrumb" aria-label="Migas de pan">
                 <a href="{{ route('clients.home') }}">Inicio</a>
                 <span>/</span>
@@ -88,6 +93,20 @@
                     {{ $statusLabel }}
                 </span>
             </p>
+
+            @if($sale->status === 'ready_to_pickup')
+                <div class="cf4-ready-pickup-banner" role="status">
+                    <div class="cf4-ready-pickup-banner__icon" aria-hidden="true">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <div class="cf4-ready-pickup-banner__body">
+                        <strong>Tu pedido ya está listo para retirar</strong>
+                        <p>{{ \App\Support\ClientPickupPolicy::fullNotice() }}</p>
+                    </div>
+                </div>
+            @elseif($sale->status === 'pending')
+                @include('client.parts.pickup-policy-notice', ['variant' => 'compact'])
+            @endif
 
             @if($cancellationReason)
                 <section class="cf4-detail-section cf4-detail-cancel-reason" aria-labelledby="cf4-detail-cancel-heading">

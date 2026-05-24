@@ -4,6 +4,7 @@
 
 import {
     cf4Confirm,
+    cf4CheckoutSuccessDialog,
     cf4Toast,
     cf4Error,
     cf4Warning,
@@ -423,11 +424,10 @@ export function initCartInteractions() {
                 incrementInvoiceBadge();
 
                 const paidWith = data.payment_method || getCheckoutPaymentMethod();
-                await cf4Toast({
-                    icon: 'success',
+                await cf4CheckoutSuccessDialog({
                     title: '¡Pedido confirmado!',
                     text: buildCf4CheckoutSuccessText(paidWith),
-                    timer: 5000,
+                    confirmButtonText: 'Entendido',
                 });
             } catch (err) {
                 console.error('Checkout error:', err);

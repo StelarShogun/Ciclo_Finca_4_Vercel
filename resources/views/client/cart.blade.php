@@ -19,6 +19,11 @@
         </header>
 
         <div class="container cart-body">
+            @include('client.parts.mobile-back-nav', [
+                'backUrl' => route('clients.catalog'),
+                'backLabel' => 'Volver al catálogo',
+            ])
+
             <nav class="breadcrumb" aria-label="Migas de pan">
                 <a href="{{ route('clients.home') }}">Inicio</a>
                 <span>/</span>
@@ -31,6 +36,8 @@
                     <span>{{ session('cart_stock_adjusted') }}</span>
                 </div>
             @endif
+
+            @include('client.parts.pickup-policy-notice', ['variant' => 'highlight'])
 
             <div class="cart-page-card">
                 <div class="cart-toolbar">
@@ -257,7 +264,7 @@
 
                                     <p class="checkout-note">
                                         <i class="fas fa-circle-info" aria-hidden="true"></i>
-                                        Te contactamos para confirmar disponibilidad y retiro en tienda.
+                                        {{ \App\Support\ClientPickupPolicy::summaryLine() }}
                                     </p>
                                 </div>
                             </div>

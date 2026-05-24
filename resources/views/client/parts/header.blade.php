@@ -47,6 +47,18 @@
                     $cf4HeaderMenuAlert = ($cartCount ?? 0) > 0;
                 }
             @endphp
+            @if(! session('admin_catalog_mode'))
+                <a href="{{ route('clients.cart') }}"
+                   class="cart-btn cart-btn-link header-mobile-cart-btn"
+                   id="header-mobile-cart-link"
+                   data-cart-count="{{ $cartCount ?? 0 }}"
+                   aria-label="Ver carrito{{ ($cartCount ?? 0) > 0 ? ' ('.$cartCount.' productos)' : '' }}"
+                   title="Carrito">
+                    <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                    <span class="cart-count" id="header-mobile-cart-count">{{ ($cartCount ?? 0) > 0 ? $cartCount : 0 }}</span>
+                </a>
+            @endif
+
             <button @class(['header-menu-toggle', 'has-alert' => $cf4HeaderMenuAlert]) id="header-menu-toggle" type="button"
                 aria-label="{{ $cf4HeaderMenuAlert ? 'Abrir menú de navegación (tienes novedades)' : 'Abrir menú de navegación' }}" aria-controls="header-menu-panel" aria-expanded="false">
                 <i class="fas fa-bars" aria-hidden="true"></i>
@@ -365,5 +377,16 @@
 
 {{-- Ventana para retiro tras "listo para recoger" (copia post-checkout; respeta AppSetting / READY_TO_PICKUP_EXPIRATION_HOURS). --}}
 <meta name="cf4-ready-to-pickup-expiration-hours" content="{{ \App\Models\Sale::getReadyToPickupExpirationHours() }}">
+
+@if(! session('admin_catalog_mode'))
+    <a href="{{ route('clients.cart') }}"
+       id="cf4-mobile-cart-fab"
+       class="cf4-mobile-cart-fab @if(($cartCount ?? 0) > 0) is-visible @endif"
+       aria-label="Ir al carrito{{ ($cartCount ?? 0) > 0 ? ' ('.$cartCount.' productos)' : '' }}">
+        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+        <span>Carrito</span>
+        <span class="cf4-mobile-cart-fab__count" id="cf4-mobile-cart-fab-count">{{ $cartCount ?? 0 }}</span>
+    </a>
+@endif
 
 @vite('resources/js/client/clients-header.js')

@@ -1113,6 +1113,10 @@ class ClientPageController extends Controller
         $invoiceCount = Sale::countActiveClientInvoices((int) $client->user_id);
         $unseenHistoryCount = Sale::countUnseenInClientHistory((int) $client->user_id);
         $invoicesRevision = Sale::clientInvoicesRevision((int) $client->user_id);
+        $readyToPickupCount = Sale::query()
+            ->where('client_id', $client->user_id)
+            ->where('status', 'ready_to_pickup')
+            ->count();
 
         return view('client.Invoices', compact(
             'orders',
@@ -1120,6 +1124,7 @@ class ClientPageController extends Controller
             'invoiceCount',
             'unseenHistoryCount',
             'invoicesRevision',
+            'readyToPickupCount',
             'tab',
             'pendingReviewProducts'
         ));

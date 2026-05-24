@@ -164,7 +164,7 @@ export function initClientCatalogPage() {
             var caret = btn.querySelector('.fa-chevron-down');
             if (caret) caret.style.transform = open ? '' : 'rotate(180deg)';
             var label = btn.querySelector('span');
-            if (label) label.textContent = open ? 'Mostrar filtros' : 'Ocultar filtros';
+            if (label) label.textContent = open ? 'Filtrar productos' : 'Ocultar filtros';
         });
 
         checkMobile();

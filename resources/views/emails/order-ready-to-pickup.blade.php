@@ -7,6 +7,8 @@
 @section('header-title', 'Pedido listo para recoger')
 
 @php
+    use App\Support\ClientPickupPolicy;
+
     $invoiceLabel = $sale->invoice_number ?? '#'.$sale->sale_id;
 @endphp
 
@@ -15,6 +17,11 @@
 
     <p>
         ¡Buenas noticias! Su pedido <strong>{{ $invoiceLabel }}</strong> ya está listo para ser retirado en nuestra tienda.
+    </p>
+
+    <p style="margin:0 0 14px 0;padding:12px 14px;background:#ecfdf5;border:1px solid #86efac;border-radius:8px;color:#14532d;">
+        <strong>Plazo de retiro:</strong> {{ ClientPickupPolicy::summaryLine() }}
+        {{ ClientPickupPolicy::expiryConsequenceLine() }}
     </p>
 
     @if($sale->saleItems && $sale->saleItems->isNotEmpty())

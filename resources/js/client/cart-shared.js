@@ -15,6 +15,10 @@ export function isClientStockShortMessage(msg) {
 export function updateCartCount(count) {
     const cartCountEl = document.getElementById('cart-count');
     const cartLinkEl = document.getElementById('cart-link');
+    const mobileCountEl = document.getElementById('header-mobile-cart-count');
+    const mobileLinkEl = document.getElementById('header-mobile-cart-link');
+    const fabEl = document.getElementById('cf4-mobile-cart-fab');
+    const fabCountEl = document.getElementById('cf4-mobile-cart-fab-count');
 
     if (cartCountEl) {
         cartCountEl.textContent = count;
@@ -22,6 +26,27 @@ export function updateCartCount(count) {
     }
     if (cartLinkEl) {
         cartLinkEl.setAttribute('data-cart-count', count);
+    }
+    if (mobileCountEl) {
+        mobileCountEl.textContent = count;
+        mobileCountEl.style.display = count > 0 ? 'flex' : 'none';
+    }
+    if (mobileLinkEl) {
+        mobileLinkEl.setAttribute('data-cart-count', String(count));
+        mobileLinkEl.setAttribute(
+            'aria-label',
+            count > 0 ? `Ver carrito (${count} productos)` : 'Ver carrito',
+        );
+    }
+    if (fabCountEl) {
+        fabCountEl.textContent = String(count);
+    }
+    if (fabEl) {
+        fabEl.classList.toggle('is-visible', count > 0);
+        fabEl.setAttribute(
+            'aria-label',
+            count > 0 ? `Ir al carrito (${count} productos)` : 'Ir al carrito',
+        );
     }
 
     import('./header-menu-alert.js').then((m) => m.updateHeaderMenuToggleBadge()).catch(() => {});
@@ -72,7 +97,8 @@ export function addToCart(productId, quantity, triggerBtn) {
 export function initCartBadgeFromDom() {
     const cartLinkEl = document.getElementById('cart-link');
     const cartGuestEl = document.getElementById('cart-guest');
-    const cartRef = cartLinkEl || cartGuestEl;
+    const mobileLinkEl = document.getElementById('header-mobile-cart-link');
+    const cartRef = cartLinkEl || cartGuestEl || mobileLinkEl;
     if (cartRef) {
         const initialCount = parseInt(cartRef.getAttribute('data-cart-count') || '0', 10);
         updateCartCount(initialCount);

@@ -23,7 +23,7 @@ export function formatCf4PickupWindowPhrase(hours) {
     if (h >= 24 && h % 24 === 0) {
         const d = h / 24;
 
-        return d === 1 ? '1 día' : `${d} días`;
+        return d === 1 ? '1 día hábil' : `${d} días hábiles`;
     }
 
     return h === 1 ? '1 hora' : `${h} horas`;
@@ -50,7 +50,8 @@ export function getCf4PaymentMethodShortLabel(method) {
 export function buildCf4CheckoutSuccessText(paymentMethod) {
     const phrase = formatCf4PickupWindowPhrase(getCf4ReadyToPickupExpirationHours());
     const base = 'Su pedido fue enviado con éxito. Cuando esté listo para recoger, '
-        + `recibirá un aviso y tendrá hasta ${phrase} para retirarlo en tienda.`;
+        + `recibirá un aviso y tendrá hasta ${phrase} para retirarlo en tienda. `
+        + 'Si no lo retira a tiempo, el pedido puede cancelarse automáticamente.';
 
     let paymentLine;
     switch (String(paymentMethod || '').toLowerCase()) {

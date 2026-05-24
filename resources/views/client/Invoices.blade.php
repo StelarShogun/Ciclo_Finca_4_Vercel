@@ -83,6 +83,7 @@
     <meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
 
     @php
+        use App\Support\ClientPickupPolicy;
         $headerDescription = match ($tab) {
             'historial' => 'Compras completadas por la tienda.',
             'canceladas' => 'Pedidos cancelados.',
@@ -171,6 +172,22 @@
             <span>Mis Facturas</span>
         </nav>
 
+        @if(($readyToPickupCount ?? 0) > 0)
+            <div class="cf4-ready-pickup-banner" role="status" aria-live="polite">
+                <div class="cf4-ready-pickup-banner__icon" aria-hidden="true">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div class="cf4-ready-pickup-banner__body">
+                    <strong>Tu pedido ya está listo para retirar</strong>
+                    <p>
+                        {{ $readyToPickupCount === 1 ? 'Tienes 1 pedido' : 'Tienes '.$readyToPickupCount.' pedidos' }}
+                        listo{{ $readyToPickupCount === 1 ? '' : 's' }} en tienda.
+                        {{ ClientPickupPolicy::summaryLine() }}
+                    </p>
+                </div>
+            </div>
+        @endif
+
         <div class="cf4-invoices-card">
             @if($orders->isEmpty())
                 @php
@@ -235,8 +252,8 @@
                                 </td>
                                 <td data-label="{{ $tab === 'historial' ? 'Total pagado' : 'Total' }}"><strong>&#8353;{{ number_format($sale->total, 0, ',', '.') }}</strong></td>
                                 <td class="cf4-invoices-td-actions" data-label="Acciones">
-                                    <a href="{{ route('clients.invoices.show', $sale) }}" class="btn btn-primary btn-sm cf4-invoice-detail-btn" data-cf4-confirm-invoice aria-label="Ver detalle{{ $sale->invoice_number ? ' de '.$sale->invoice_number : '' }}">
-                                        Ver detalle
+                                    <a href="{{ route('clients.invoices.show', $sale) }}" class="btn btn-primary btn-sm cf4-invoice-detail-btn" data-cf4-confirm-invoice aria-label="Ver pedido{{ $sale->invoice_number ? ' '.$sale->invoice_number : '' }}">
+                                        Ver pedido
                                     </a>
                                 </td>
                             </tr>

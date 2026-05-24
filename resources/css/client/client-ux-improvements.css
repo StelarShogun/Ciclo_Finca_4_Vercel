@@ -1,0 +1,258 @@
+/*
+ * Client UX: pickup policy, mobile back, ready banner, catalog filters, cart FAB.
+ */
+
+.cf4-pickup-policy {
+    margin: 0 0 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(35, 83, 71, 0.18);
+    background: rgba(218, 241, 222, 0.45);
+    color: var(--text-primary);
+}
+
+.cf4-pickup-policy--highlight {
+    border-color: rgba(35, 83, 71, 0.28);
+    background: linear-gradient(135deg, rgba(218, 241, 222, 0.65) 0%, rgba(255, 255, 255, 0.95) 100%);
+    box-shadow: 0 2px 10px rgba(5, 31, 32, 0.06);
+}
+
+.cf4-pickup-policy--compact {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.88rem;
+}
+
+.cf4-pickup-policy__head {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.92rem;
+    color: var(--brand-medium-dark, #163832);
+}
+
+.cf4-pickup-policy__head i {
+    color: var(--color-primary);
+}
+
+.cf4-pickup-policy__text {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--text-secondary, #475569);
+}
+
+.cf4-ready-pickup-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin: 0 0 1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(22, 101, 52, 0.25);
+    background: linear-gradient(135deg, #ecfdf5 0%, #dff7ea 100%);
+    color: #14532d;
+    box-shadow: 0 2px 12px rgba(5, 31, 32, 0.08);
+}
+
+.cf4-ready-pickup-banner__icon {
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: #166534;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.cf4-ready-pickup-banner__body strong {
+    display: block;
+    font-size: 0.95rem;
+    margin-bottom: 0.2rem;
+}
+
+.cf4-ready-pickup-banner__body p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.cf4-mobile-back-nav {
+    display: none;
+    margin-bottom: 0.85rem;
+}
+
+.cf4-mobile-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.75rem;
+    padding: 0.45rem 0.15rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.cf4-mobile-back-link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 1024px) {
+    .cf4-mobile-back-nav {
+        display: block;
+    }
+}
+
+/* Catalog filter UX */
+.catalog-filter-toggle {
+    position: relative;
+}
+
+.catalog-filter-toggle.has-active-filters {
+    border-color: var(--color-primary);
+    background: rgba(218, 241, 222, 0.35);
+}
+
+.catalog-filter-active-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding: 0 0.35rem;
+    margin-left: 0.35rem;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.filters-active-summary {
+    margin: 0 0 0.75rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    background: rgba(218, 241, 222, 0.35);
+    border: 1px dashed rgba(35, 83, 71, 0.22);
+    font-size: 0.84rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+}
+
+.filters-active-summary strong {
+    color: var(--brand-medium-dark, #163832);
+}
+
+.filter-actions .btn-secondary {
+    border: 1px solid rgba(5, 31, 32, 0.12);
+}
+
+/* Mobile cart quick access */
+.header-mobile-cart-btn {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .header-mobile-cart-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        order: 2;
+        margin-left: auto;
+        position: relative;
+        min-width: 48px;
+        min-height: 48px;
+        padding: 0 0.65rem;
+        border-radius: 12px;
+        border: 2px solid rgba(218, 241, 222, 0.45);
+        background: var(--color-primary);
+        color: #fff;
+        text-decoration: none;
+        box-shadow: 0 4px 14px rgba(35, 83, 71, 0.28);
+        transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .header-mobile-cart-btn:active {
+        transform: scale(0.97);
+    }
+
+    .header-mobile-cart-btn .cart-count {
+        top: -4px;
+        right: -4px;
+        min-width: 22px;
+        width: auto;
+        padding: 0 0.25rem;
+        border: 2px solid var(--brand-dark);
+    }
+
+    .header-menu-toggle {
+        order: 3;
+        margin-left: 0.45rem;
+    }
+}
+
+.cf4-mobile-cart-fab {
+    display: none;
+    position: fixed;
+    right: max(1rem, env(safe-area-inset-right, 0px));
+    bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+    z-index: 900;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 3.25rem;
+    padding: 0 1rem 0 0.85rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.92rem;
+    box-shadow: 0 8px 24px rgba(35, 83, 71, 0.35);
+}
+
+.cf4-mobile-cart-fab.is-visible {
+    display: inline-flex;
+}
+
+.cf4-mobile-cart-fab__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: var(--color-accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+@media (min-width: 1025px) {
+    .cf4-mobile-cart-fab {
+        display: none !important;
+    }
+}
+
+body:has(.cart-shell) .cf4-mobile-cart-fab {
+    display: none !important;
+}
+
+/* Invoice detail / list actions */
+.cf4-invoice-detail-btn {
+    min-height: 2.85rem;
+    min-width: 8.5rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .cf4-invoices-td-actions .cf4-invoice-detail-btn {
+        width: 100%;
+        min-height: 3rem;
+        font-size: 0.95rem;
+    }
+}
