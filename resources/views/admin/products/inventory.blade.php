@@ -1045,6 +1045,8 @@
         </div>
     </div>
 
+    @include('admin.partials.cf4-flash-swal')
+
     @vite(['resources/js/admin/shell.js', 'resources/js/admin/inventory/inventory-entry.js'])
 </body>
 </html>

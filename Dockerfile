@@ -9,6 +9,8 @@ RUN apt-get update && \
     docker-php-ext-install -j"$(nproc)" gd && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
 # Node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ImportCatalogRequest;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Brand;
@@ -701,12 +702,8 @@ class ProductController extends Controller
         ]);
     }
 
-    public function importCatalog(Request $request)
+    public function importCatalog(ImportCatalogRequest $request)
     {
-        $request->validate([
-            'import_file' => 'required|file|max:102400|mimes:zip,json,xml,csv,txt',
-        ]);
-
         try {
             /** @var UploadedFile $file */
             $file = $request->file('import_file');
@@ -728,13 +725,52 @@ class ProductController extends Controller
 
             if ($stats['errors'] !== []) {
                 $message .= ' Errores: '.implode(' | ', array_slice($stats['errors'], 0, 5));
+                if (count($stats['errors']) > 5) {
+                    $message .= ' (y '.(count($stats['errors']) - 5).' más)';
+                }
+            }
+
+            if (($stats['media_conversions_queued'] ?? 0) > 0) {
+                $message .= sprintf(
+                    ' Las miniaturas WebP de %d imagen(es) se generan en segundo plano; si algo queda pendiente, el sistema lo reintenta solo.',
+                    $stats['media_conversions_queued'],
+                );
+            }
+
+            $importedCount = $stats['created'] + $stats['updated'];
+            $level = match (true) {
+                $importedCount === 0 => 'error',
+                $stats['errors'] !== [] => 'warning',
+                default => 'success',
+            };
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $message,
+                    'level' => $level,
+                    'stats' => $stats,
+                ]);
+            }
+
+            if ($level === 'error') {
+                return redirect()->route('inventory')->with('error', $message);
+            }
+
+            if ($level === 'warning') {
+                return redirect()->route('inventory')->with('warning', $message);
             }
 
             return redirect()->route('inventory')->with('status', $message);
         } catch (\Throwable $e) {
             Log::error('product_catalog_import_failed', ['error' => $e->getMessage()]);
 
-            return redirect()->route('inventory')->with('error', 'No se pudo importar: '.$e->getMessage());
+            $message = 'No se pudo importar: '.$e->getMessage();
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message, 'level' => 'error'], 500);
+            }
+
+            return redirect()->route('inventory')->with('error', $message);
         }
     }
 

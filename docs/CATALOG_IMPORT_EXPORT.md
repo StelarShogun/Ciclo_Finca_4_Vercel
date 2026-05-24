@@ -19,7 +19,11 @@ From **Inventory → Exportar**:
 
 Products match by `product_id`, SKU, or **name + category**. Missing fields keep sensible defaults.
 
-Maximum upload size: **100 MB** (see validation in `ProductController::importCatalog`).
+Maximum upload size: **100 MB** (Laravel validation). PHP must allow at least that much: `upload_max_filesize` and `post_max_size` (see `docker/php/uploads.ini` in Docker).
+
+Bulk ZIP import runs in **fast mode**: copies images without re-encoding during the upload, then **automatically generates WebP conversions in the background** after the import response returns.
+
+If that background pass is interrupted (container restart, timeout), the scheduler task `cf4:regenerate-missing-media-conversions` runs **every 15 minutes** and finishes any remaining images — no manual admin step.
 
 ## Typical workflow
 

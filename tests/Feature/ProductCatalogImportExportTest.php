@@ -139,6 +139,49 @@ class ProductCatalogImportExportTest extends TestCase
         $this->assertSame(9, (int) $product->stock_current);
     }
 
+    public function test_admin_import_returns_json_summary_for_ajax_request(): void
+    {
+        $admin = $this->createAdmin();
+        $this->createActiveSupplier();
+        $category = Category::create([
+            'name' => 'CF4 Ajax Import Cat',
+            'description' => null,
+            'parent_category_id' => null,
+        ]);
+        Product::create([
+            'category_id' => $category->category_id,
+            'supplier_id' => null,
+            'name' => 'CF4 Ajax Import Product',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 1000,
+            'purchase_price' => 100,
+            'stock_current' => 2,
+            'stock_minimum' => 1,
+            'status' => 'active',
+            'is_featured' => false,
+        ]);
+
+        $csv = implode("\n", [
+            'nombre,precio_venta,stock_actual,categoria',
+            'CF4 Ajax Import Product,1800,5,CF4 Ajax Import Cat',
+        ]);
+
+        $file = UploadedFile::fake()->createWithContent('proveedor.csv', $csv);
+
+        $response = $this->actingAs($admin, 'admin')
+            ->withHeaders([
+                'Accept' => 'application/json',
+                'X-Requested-With' => 'XMLHttpRequest',
+            ])
+            ->post(route('products.import'), ['import_file' => $file]);
+
+        $response->assertOk();
+        $response->assertJsonPath('level', 'success');
+        $response->assertJsonPath('stats.updated', 1);
+        $response->assertJsonStructure(['message', 'stats' => ['created', 'updated', 'skipped', 'errors']]);
+    }
+
     public function test_exporter_manifest_includes_product_name(): void
     {
         $category = Category::create([

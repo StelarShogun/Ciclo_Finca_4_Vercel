@@ -21,10 +21,6 @@ import {
     showSubtleNotification,
     setButtonLoading,
     setActionButtonLoading,
-    showLongOperationIndicator,
-    hideLongOperationIndicator,
-    showProgressBar,
-    hideProgressBar,
     showSuccessFeedback,
     showErrorFeedback,
     setModalLoading,
@@ -44,7 +40,7 @@ import {
 } from './inventory-classification.js';
 import { initStaticSearchCombobox, setComboboxFieldError } from '../shared/static-search-combobox.js';
 import { initFileUploadZone } from '../shared/file-upload-zone.js';
-import { cf4Confirm, cf4Warning, cf4Toast, cf4Error } from '../shared/swal.js';
+import { cf4Confirm, cf4Warning, cf4Toast, cf4Error, cf4Loading, cf4Close, cf4Success } from '../shared/swal.js';
 import { compressImageFile, compressFileList } from './product-image-compression.js';
 
 export async function initModals() {
@@ -1290,21 +1286,67 @@ export async function initModals() {
                 icon: 'info',
                 confirmButtonText: 'Sí, importar',
                 cancelButtonText: 'Cancelar',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const progressBar = showProgressBar();
-                    const longOperationIndicator = showLongOperationIndicator('Importando productos...');
-                    
-                    setButtonLoading(confirmImportBtn, true, 'Importando...');
-                    
-                    importForm.submit();
-                    
-                    // Fallback: remove indicators after 10 seconds
-                    setTimeout(() => {
-                        hideProgressBar(progressBar);
-                        hideLongOperationIndicator(longOperationIndicator);
-                        setButtonLoading(confirmImportBtn, false);
-                    }, 10000);
+            }).then(async (result) => {
+                if (!result.isConfirmed) return;
+
+                setButtonLoading(confirmImportBtn, true, 'Importando...');
+
+                try {
+                    await cf4Loading(
+                        'Importando productos…',
+                        'Esto puede tardar varios minutos si el ZIP incluye muchas imágenes.',
+                    );
+
+                    const formData = new FormData(importForm);
+                    const response = await fetch(importForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+
+                    let data = {};
+                    try {
+                        data = await response.json();
+                    } catch {
+                        data = {};
+                    }
+
+                    await cf4Close();
+
+                    if (!response.ok) {
+                        const message = jsonValidationMessage(data)
+                            || data.message
+                            || 'No se pudo importar el catálogo.';
+                        void cf4Error(message, response.status === 422 ? 'Archivo no válido' : 'Importación fallida');
+                        return;
+                    }
+
+                    importModal.classList.remove('active');
+                    importUpload?.reset();
+                    resetImportUi();
+
+                    const level = data.level || 'success';
+                    if (level === 'warning') {
+                        await cf4Warning(data.message || 'Importación completada con observaciones.', 'Importación con observaciones');
+                    } else if (level === 'error') {
+                        await cf4Error(data.message || 'No se importó ningún producto.', 'Importación fallida');
+                        return;
+                    } else {
+                        await cf4Success(data.message || 'Importación completada.', 'Importación completada');
+                    }
+
+                    window.location.reload();
+                } catch {
+                    await cf4Close();
+                    void cf4Error(
+                        'Error de conexión al importar. Verificá tu red e intentá de nuevo.',
+                        'Error',
+                    );
+                } finally {
+                    setButtonLoading(confirmImportBtn, false);
                 }
             });
         });

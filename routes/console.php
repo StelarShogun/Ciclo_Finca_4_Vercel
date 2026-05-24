@@ -60,3 +60,11 @@ SchedulerMonitor::track(
     'cf4:cleanup-temp-product-images',
     'cf4_cleanup_temp_product_images'
 )->withoutOverlapping();
+
+// Product images imported in bulk may miss WebP conversions if the post-import
+// worker is interrupted — this catches them without admin action.
+SchedulerMonitor::track(
+    Schedule::command('cf4:regenerate-missing-media-conversions')->everyFifteenMinutes(),
+    'cf4:regenerate-missing-media-conversions',
+    'cf4_regenerate_missing_media_conversions'
+)->withoutOverlapping();
