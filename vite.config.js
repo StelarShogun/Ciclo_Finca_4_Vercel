@@ -97,8 +97,9 @@ const clientAssets = [
     "resources/css/client/legal-pages.css",
 ];
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
     const env = loadEnv(mode, process.cwd(), "");
+    const isDevServer = command === "serve";
 
     // Internal URL used by Vite's dev server to proxy asset requests (e.g. /fonts/*)
     // to Apache. Vite runs INSIDE the container, where Apache listens on port 80.
@@ -110,10 +111,10 @@ export default defineConfig(({ mode }) => {
     return {
         // Keep Vite cache outside node_modules to avoid permission issues on WSL mounts.
         cacheDir: ".vite-cache",
-        // laravel-vite-plugin sets publicDir:false by default, preventing the dev
-        // server from serving public/ files (e.g. /fonts/fa-subset/*.woff2). Override
-        // so the dev server can resolve those absolute font URLs from fontawesome-subset.css.
-        publicDir: "public",
+        // Dev only: serve /fonts from public/ (FA subset). Production build must keep
+        // publicDir false (laravel-vite-plugin default) so Vite does not copy public/
+        // into public/build — CI has no storage:link and public/storage would ENOENT.
+        publicDir: isDevServer ? "public" : false,
         plugins: [
             laravel({
                 detectTls: false,
