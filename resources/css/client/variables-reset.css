@@ -95,7 +95,7 @@ body.guest-layout {
 }
 
 /* Header móvil (hamburger): altura real del bloque superior */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   :root {
     --client-header-height: 84px;
     --client-header-offset: 84px;

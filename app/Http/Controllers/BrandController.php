@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Support\AdminPerPage;
+use App\Support\ClientStorefrontCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -62,6 +63,7 @@ class BrandController extends Controller
         }
 
         $brand = Brand::create(['name' => $request->name]);
+        ClientStorefrontCache::forgetAfterBrandMutation();
 
         return response()->json([
             'success' => true,
@@ -113,6 +115,7 @@ class BrandController extends Controller
         }
 
         $brand->update(['name' => $request->name]);
+        ClientStorefrontCache::forgetAfterBrandMutation();
 
         return response()->json([
             'success' => true,
@@ -141,6 +144,7 @@ class BrandController extends Controller
         }
 
         $brand->delete();
+        ClientStorefrontCache::forgetAfterBrandMutation();
 
         return response()->json([
             'success' => true,

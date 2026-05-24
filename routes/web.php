@@ -331,6 +331,7 @@ Route::get('/admin/catalog-exit', function () {
 // Public client pages.
 Route::get('/', [ClientPageController::class, 'home'])->name('clients.home');
 Route::get('/catalog', [ClientPageController::class, 'catalog'])->name('clients.catalog');
+Route::get('/api/catalog/heartbeat', [ClientPageController::class, 'catalogHeartbeat'])->name('api.catalog.heartbeat');
 
 Route::get('/legal/terminos', [ClientLegalController::class, 'terms'])->name('clients.legal.terms');
 Route::get('/legal/privacidad', [ClientLegalController::class, 'privacy'])->name('clients.legal.privacy');

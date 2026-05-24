@@ -14,6 +14,7 @@ use App\Services\CartService;
 use App\Services\Catalog\CatalogProductSearchTelemetry;
 use App\Services\InventoryMovementService;
 use App\Support\AdminPerPage;
+use App\Support\ClientStorefrontCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -186,7 +187,9 @@ class ClientPageController extends Controller
 
         $productReviewStats = ProductReview::aggregatesForProductIds($catalogProductIdsForReviews);
 
-        return view('client.catalog', compact(
+        $catalogVersion = ClientStorefrontCache::catalogVersion();
+
+        return $this->clientCatalogResponse('client.catalog', compact(
             'products',
             'categories',
             'cartCount',
@@ -200,8 +203,29 @@ class ClientPageController extends Controller
             'emptyCategoryNoProducts',
             'brands',
             'selectedBrand',
-            'productReviewStats'
+            'productReviewStats',
+            'catalogVersion',
         ));
+    }
+
+    public function catalogHeartbeat()
+    {
+        return response()
+            ->json([
+                'version' => ClientStorefrontCache::catalogVersion(),
+            ])
+            ->header('Cache-Control', 'private, no-cache, max-age=0, must-revalidate');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function clientCatalogResponse(string $view, array $data)
+    {
+        return response()
+            ->view($view, $data)
+            ->header('Cache-Control', 'private, no-cache, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache');
     }
 
     /**
@@ -265,9 +289,9 @@ class ClientPageController extends Controller
     /** Árbol de categorías raíz + hijos (compartido entre inicio y catálogo). */
     private function cachedClientRootCategories(): Collection
     {
-        $ttl = (int) config('cf4_performance.client_root_categories_ttl', 600);
+        $ttl = ClientStorefrontCache::ttlSeconds((int) config('cf4_performance.client_root_categories_ttl', 60));
 
-        return Cache::remember('cf4:client:root_categories', max(30, $ttl), function () {
+        return Cache::remember(ClientStorefrontCache::KEY_ROOT_CATEGORIES, $ttl, function () {
             return Category::whereNull('parent_category_id')
                 ->with(['childCategories' => function ($q) {
                     $q->orderBy('name');
@@ -277,22 +301,24 @@ class ClientPageController extends Controller
         });
     }
 
-    /** Marcas que tienen al menos un producto (rail del catálogo). */
+    /** Marcas disponibles en el filtro del catálogo (incluye marcas recién creadas sin productos). */
     private function cachedClientBrandsForCatalog(): Collection
     {
-        $ttl = (int) config('cf4_performance.client_brands_catalog_ttl', 300);
+        $ttl = ClientStorefrontCache::ttlSeconds((int) config('cf4_performance.client_brands_catalog_ttl', 60));
 
-        return Cache::remember('cf4:client:catalog_brands', max(30, $ttl), function () {
-            return Brand::has('products')->orderBy('name')->get();
+        return Cache::remember(ClientStorefrontCache::KEY_CATALOG_BRANDS, $ttl, function () {
+            return Brand::query()
+                ->orderBy('name')
+                ->get();
         });
     }
 
     /** Spotlight del catálogo (destacados + novedades). */
     private function cachedCatalogSpotlightProductRows(): Collection
     {
-        $ttl = (int) config('cf4_performance.client_catalog_spotlight_ttl', 120);
+        $ttl = ClientStorefrontCache::ttlSeconds((int) config('cf4_performance.client_catalog_spotlight_ttl', 60));
 
-        return Cache::remember('cf4:client:catalog_spotlight', max(30, $ttl), function () {
+        return Cache::remember(ClientStorefrontCache::KEY_CATALOG_SPOTLIGHT, $ttl, function () {
             return $this->catalogSpotlightProductRowsUncached();
         });
     }
