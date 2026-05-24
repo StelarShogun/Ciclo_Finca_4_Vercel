@@ -8,7 +8,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Supplier;
 use App\Services\Admin\AdminPdfExportService;
-use App\Support\AdminDateRange;
+use App\Support\DashboardTodaySales;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,6 +29,10 @@ class DashboardController extends Controller
         try {
             $ttl = max(15, (int) config('cf4_performance.admin_dashboard_index_ttl', 60));
             $data = Cache::remember('cf4:admin:dashboard_index', $ttl, fn () => $this->gatherDashboardData());
+
+            // Volatile KPIs: always compute on request so reload reflects today's sales.
+            $data['todaySales'] = DashboardTodaySales::sumToday();
+            $data['salesTrend'] = DashboardTodaySales::salesTrendPercent();
 
             $data['weeklyReportDay'] = AppSetting::getWeeklyReportDay();
             $data['weeklyReportHour'] = AppSetting::getWeeklyReportHour();
@@ -78,10 +82,8 @@ class DashboardController extends Controller
             $totalSuppliers = Supplier::count();
             $totalCategories = Category::count();
 
-            [$todayStart, $todayEnd] = AdminDateRange::boundsForUtcColumn(AdminDateRange::PRESET_TODAY);
-            $todaySales = Sale::whereBetween('sale_date', [$todayStart, $todayEnd])
-                ->where('status', 'completed')
-                ->sum('total');
+            $todaySales = DashboardTodaySales::sumToday();
+            $salesTrend = DashboardTodaySales::salesTrendPercent();
 
             $lowStockProducts = Product::whereColumn('stock_current', '<', 'stock_minimum')->count();
 
@@ -91,6 +93,7 @@ class DashboardController extends Controller
                 'totalSuppliers' => $totalSuppliers,
                 'totalCategories' => $totalCategories,
                 'todaySales' => $todaySales,
+                'salesTrend' => $salesTrend,
                 'lowStockProducts' => $lowStockProducts,
             ]);
 
@@ -278,10 +281,7 @@ class DashboardController extends Controller
         $totalSuppliers = Supplier::count();
         $totalCategories = Category::count();
 
-        [$todayStart, $todayEnd] = AdminDateRange::boundsForUtcColumn(AdminDateRange::PRESET_TODAY);
-        $todaySales = Sale::whereBetween('sale_date', [$todayStart, $todayEnd])
-            ->where('status', 'completed')
-            ->sum('total');
+        $todaySales = DashboardTodaySales::sumToday();
 
         $lowStockProducts = Product::lowStockAlert()->count();
 
@@ -318,17 +318,7 @@ class DashboardController extends Controller
                 ];
             });
 
-        $yesterday = AdminDateRange::now()->copy()->subDay();
-        [$yesterdayStart, $yesterdayEnd] = AdminDateRange::boundsForUtcColumn(
-            AdminDateRange::PRESET_CUSTOM,
-            $yesterday->toDateString(),
-            $yesterday->toDateString(),
-        );
-        $yesterdaySales = Sale::whereBetween('sale_date', [$yesterdayStart, $yesterdayEnd])
-            ->where('status', 'completed')
-            ->sum('total');
-
-        $salesTrend = $this->calculateTrend($todaySales, $yesterdaySales);
+        $salesTrend = DashboardTodaySales::salesTrendPercent();
 
         $monthlySales = Sale::whereMonth('sale_date', Carbon::now()->month)
             ->whereYear('sale_date', Carbon::now()->year)

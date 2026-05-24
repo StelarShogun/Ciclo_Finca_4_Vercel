@@ -1,4 +1,5 @@
-import '../../shared/ajax-pagination.js';
+import { loadListFragment } from '../../shared/ajax-pagination.js';
+import { syncAllKpiValueScales, syncKpiValueScale, initKpiValueScaleObserver } from '../shared/kpi-value-scale.js';
 import {
     cf4Confirm,
     cf4PromptTextarea,
@@ -6,6 +7,119 @@ import {
     cf4Error,
     cf4Warning,
 } from '../shared/swal.js';
+
+function formatColones(amount) {
+    const value = Math.round(parseFloat(amount) || 0);
+    return '₡' + value.toLocaleString('es-CR', { maximumFractionDigits: 0 });
+}
+
+function updateSalesDailyKpis(data) {
+    const totalEl = document.getElementById('sales-daily-total');
+    if (totalEl && data.dailySales !== undefined) {
+        totalEl.textContent = formatColones(data.dailySales);
+        syncKpiValueScale(totalEl);
+    }
+
+    const totalTrendEl = document.getElementById('sales-daily-total-trend');
+    if (totalTrendEl && data.dailySalesTrend !== undefined) {
+        const trend = parseFloat(data.dailySalesTrend) || 0;
+        const positive = trend >= 0;
+        totalTrendEl.classList.toggle('trend-up', positive);
+        totalTrendEl.classList.toggle('trend-down', !positive);
+        totalTrendEl.innerHTML = `<i class="fas fa-arrow-${positive ? 'up' : 'down'}"></i> ${Math.abs(trend)}%`;
+    }
+
+    const txEl = document.getElementById('sales-daily-transactions');
+    if (txEl && data.dailyTransactions !== undefined) {
+        txEl.textContent = String(data.dailyTransactions);
+        syncKpiValueScale(txEl);
+    }
+
+    const txTrendEl = document.getElementById('sales-daily-transactions-trend');
+    if (txTrendEl && data.dailyTransactionsTrend !== undefined) {
+        const trend = parseFloat(data.dailyTransactionsTrend) || 0;
+        const positive = trend >= 0;
+        txTrendEl.classList.toggle('trend-up', positive);
+        txTrendEl.classList.toggle('trend-down', !positive);
+        txTrendEl.innerHTML = `<i class="fas fa-arrow-${positive ? 'up' : 'down'}"></i> ${Math.abs(trend)}%`;
+    }
+}
+
+async function refreshSalesListFragment() {
+    const root = document.querySelector('[data-cf4-ajax-pagination]');
+    if (!root) {
+        return;
+    }
+
+    const url = `${window.location.pathname}${window.location.search}`;
+    await loadListFragment(url, root, { pushState: false, scroll: false });
+}
+
+async function refreshSalesDailyKpis() {
+    const heartbeatUrl = ROUTES.heartbeat;
+    if (!heartbeatUrl) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`${heartbeatUrl}?since=0`, {
+            headers: { Accept: 'application/json' },
+        });
+        if (!res.ok) {
+            return;
+        }
+
+        updateSalesDailyKpis(await res.json());
+    } catch {
+        /* fail silently */
+    }
+}
+
+async function afterSalesListMutation() {
+    await Promise.all([
+        refreshSalesListFragment(),
+        refreshSalesDailyKpis(),
+    ]);
+}
+
+function resetNewSaleForm() {
+    const form = document.getElementById('new-sale-form');
+    if (!form) {
+        return;
+    }
+
+    form.reset();
+
+    const container = document.getElementById('productos-container');
+    container?.querySelectorAll('.product-row').forEach((row, index) => {
+        if (index > 0) {
+            row.remove();
+        }
+    });
+
+    productIndex = 1;
+
+    const firstRow = container?.querySelector('.product-row');
+    if (firstRow) {
+        firstRow.querySelectorAll('input').forEach((input) => {
+            if (input.name?.includes('[quantity]')) {
+                input.value = '1';
+            } else if (input.name?.includes('[total]')) {
+                input.value = '0';
+            } else if (input.name?.includes('[precio_unitario]')) {
+                input.value = '';
+            }
+        });
+
+        const select = firstRow.querySelector('.product-select');
+        if (select) {
+            select.selectedIndex = 0;
+        }
+    }
+
+    calculateTotals();
+    updateRemoveButtons();
+}
 
 // Helper to get meta tag content safely
 const meta   = name => document.querySelector(`meta[name="${name}"]`)?.content ?? '';
@@ -581,6 +695,8 @@ Object.assign(window, {
 
 // DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
+    initKpiValueScaleObserver();
+    syncAllKpiValueScales(document.querySelector('.kpi-grid') || document);
 
     // Auto-print
     if (meta('auto-print') === '1') {
@@ -615,26 +731,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Heartbeat on Ventas only (Encargos uses orders.js — 30s poll + auto table refresh).
-    const latestEl = document.getElementById('cf4-latest-purchase-sale-id');
-    if (latestEl && !document.querySelector('[data-cf4-orders-heartbeat]')) {
-        let latestPurchaseSaleId = parseInt(latestEl.dataset.value, 10) || 0;
+    // Heartbeat on Ventas: refresh KPIs and list without full page reload.
+    if (!document.querySelector('[data-cf4-orders-heartbeat]')) {
+        const latestEl = document.getElementById('cf4-latest-purchase-sale-id');
+        let salesHeartbeatReady = false;
 
         async function heartbeatCheck() {
             if (document.visibilityState === 'hidden') return;
             const heartbeatUrl = ROUTES.heartbeat;
             if (!heartbeatUrl) return;
+
+            const since = parseInt(latestEl?.dataset?.value, 10) || 0;
+
             try {
-                const res  = await fetch(heartbeatUrl + '?since=' + latestPurchaseSaleId, {
-                    headers: { 'Accept': 'application/json' }
+                const res = await fetch(`${heartbeatUrl}?since=${since}`, {
+                    headers: { Accept: 'application/json' },
                 });
                 const data = await res.json();
-                if (typeof data.latestSaleId !== 'undefined') latestPurchaseSaleId = data.latestSaleId;
-                if (data.hasNew) window.location.reload();
-            } catch (_) { /* fail silently */ }
+                if (typeof data.latestSaleId !== 'undefined') {
+                    if (latestEl) {
+                        latestEl.dataset.value = String(data.latestSaleId);
+                    }
+                }
+                updateSalesDailyKpis(data);
+                if (data.hasNew && salesHeartbeatReady) {
+                    await refreshSalesListFragment();
+                }
+                salesHeartbeatReady = true;
+            } catch {
+                /* fail silently */
+            }
         }
 
-        setInterval(heartbeatCheck, 20000);
+        void heartbeatCheck();
+        setInterval(heartbeatCheck, 15000);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                void heartbeatCheck();
+            }
+        });
     }
 
     // New sale form submission
@@ -667,12 +802,21 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => {
                 if (data.success) {
                     closeNewSaleModal();
+                    resetNewSaleForm();
+                    const newSaleId = data.sale?.sale_id;
+                    if (newSaleId) {
+                        const latestEl = document.getElementById('cf4-latest-purchase-sale-id');
+                        if (latestEl) {
+                            latestEl.dataset.value = String(newSaleId);
+                        }
+                    }
                     void cf4Toast({
                         icon: 'success',
                         title: 'Venta creada',
                         text: data.message || 'La venta se registró correctamente.',
                         timer: 3000,
-                    }).then(() => location.reload());
+                    });
+                    void afterSalesListMutation();
                 } else {
                     void cf4Error(data.message || 'No se pudo crear la venta', 'Error');
                 }
