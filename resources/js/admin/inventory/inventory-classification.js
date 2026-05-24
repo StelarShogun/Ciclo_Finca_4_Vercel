@@ -10,6 +10,7 @@ import {
     smartFetch,
     jsonValidationMessage,
 } from './inventory-shared.js';
+import { createDropdownPortal } from '../shared/combobox-dropdown-portal.js';
 import { fireSwal } from '../shared/swal.js';
 
 function collectClassificationValueIds(container) {
@@ -322,6 +323,13 @@ async function refreshClassificationFields(containerSelector, categoryId, presel
                 'Elegí categoría y, si aplica, subcategoría. Los atributos se configuran por tipo de producto (subcategoría).';
             hint.hidden = false;
         }
+        const placeholder = document.createElement('div');
+        placeholder.className = 'classification-placeholder';
+        placeholder.setAttribute('role', 'status');
+        placeholder.innerHTML =
+            '<p class="classification-placeholder__title">Atributos no disponibles todavía</p>' +
+            '<p class="classification-placeholder__text">Completá <strong>Categoría</strong> y, si aparece, <strong>Subcategoría</strong> en «Datos básicos». El editor de color, talla, etc. se cargará aquí automáticamente.</p>';
+        container.appendChild(placeholder);
         return;
     }
 
@@ -430,6 +438,7 @@ async function refreshClassificationFields(containerSelector, categoryId, presel
     toolbar.appendChild(dimBtn);
     toolbar.appendChild(toolbarFeedback);
     editor.appendChild(toolbar);
+    container.appendChild(editor);
 
     dimBtn.addEventListener('click', async () => {
         const label = dimLabel.value.trim();
@@ -477,7 +486,6 @@ async function refreshClassificationFields(containerSelector, categoryId, presel
         empty.appendChild(t1);
         empty.appendChild(t2);
         editor.appendChild(empty);
-        container.appendChild(editor);
 
         container._cfOutsideAbort = new AbortController();
         const { signal } = container._cfOutsideAbort;
@@ -495,12 +503,20 @@ async function refreshClassificationFields(containerSelector, categoryId, presel
         return;
     }
 
-    attrs.forEach((attr) => {
-        const initial = selMap[attr.id] ?? null;
-        editor.appendChild(buildDimensionCard(attr, initial));
-    });
-
-    container.appendChild(editor);
+    try {
+        attrs.forEach((attr) => {
+            const initial = selMap[attr.id] ?? null;
+            editor.appendChild(buildDimensionCard(attr, initial));
+        });
+    } catch (error) {
+        console.error('classification editor build failed', error);
+        const errBox = document.createElement('p');
+        errBox.className = 'classification-build-error';
+        errBox.setAttribute('role', 'alert');
+        errBox.textContent =
+            'No se pudieron mostrar las tarjetas de atributos. Recargá el modal o cambiá la subcategoría para intentar de nuevo.';
+        editor.appendChild(errBox);
+    }
 
     container._cfOutsideAbort = new AbortController();
     const { signal } = container._cfOutsideAbort;

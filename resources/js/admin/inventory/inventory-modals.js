@@ -120,9 +120,7 @@ export async function initModals() {
             newImageUpload?.reset();
             newGalleryUpload?.reset();
             newProductModal.classList.add('active');
-            syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
-            syncParentCategoryHiddenInput(newParentCategory, newParentCategoryHidden);
-            refreshClassificationFields('#new-classification-fields', newFinalCategory?.value || '', null);
+            refreshNewClassificationFields();
         });
     }
 
@@ -391,30 +389,6 @@ export async function initModals() {
     /** CF4-84 — al cambiar categoría en edición se limpian selecciones previas */
     let editClassificationPreset = [];
 
-    newParentCategory?.addEventListener('change', () => {
-        setTimeout(() => {
-            refreshClassificationFields('#new-classification-fields', newFinalCategory?.value || '', null);
-        }, 0);
-    });
-    newSubcategory?.addEventListener('change', () => {
-        setTimeout(() => {
-            refreshClassificationFields('#new-classification-fields', newFinalCategory?.value || '', null);
-        }, 0);
-    });
-
-    editParentCategory?.addEventListener('change', () => {
-        editClassificationPreset = [];
-        setTimeout(() => {
-            refreshClassificationFields('#edit-classification-fields', editFinalCategory?.value || '', []);
-        }, 0);
-    });
-    editSubcategory?.addEventListener('change', () => {
-        editClassificationPreset = [];
-        setTimeout(() => {
-            refreshClassificationFields('#edit-classification-fields', editFinalCategory?.value || '', []);
-        }, 0);
-    });
-
     const newBrandCombobox = initBrandCombobox('new-brand-search', 'new-brand', 'new-brand-dropdown', 'new-brand-combobox');
     const editBrandCombobox = initBrandCombobox('edit-brand-search', 'edit-brand', 'edit-brand-dropdown', 'edit-brand-combobox');
 
@@ -494,6 +468,52 @@ export async function initModals() {
         hiddenCategoryInput: editFinalCategory,
         parentCategoryHiddenInput: editParentCategoryHidden,
         subCombobox: editSubcategoryCombobox,
+    });
+
+    function refreshNewClassificationFields() {
+        syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
+        syncParentCategoryHiddenInput(newParentCategory, newParentCategoryHidden);
+        void refreshClassificationFields('#new-classification-fields', newFinalCategory?.value || '', null);
+    }
+
+    function refreshEditClassificationFields() {
+        syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
+        syncParentCategoryHiddenInput(editParentCategory, editParentCategoryHidden);
+        void refreshClassificationFields(
+            '#edit-classification-fields',
+            editFinalCategory?.value || '',
+            editClassificationPreset
+        );
+    }
+
+    function scheduleRefreshNewClassificationFields() {
+        queueMicrotask(refreshNewClassificationFields);
+    }
+
+    function scheduleRefreshEditClassificationFields() {
+        queueMicrotask(refreshEditClassificationFields);
+    }
+
+    newParentCategory?.addEventListener('change', scheduleRefreshNewClassificationFields);
+    newSubcategory?.addEventListener('change', scheduleRefreshNewClassificationFields);
+    newParentCategoryCombobox?.onChange(scheduleRefreshNewClassificationFields);
+    newSubcategoryCombobox?.onChange(scheduleRefreshNewClassificationFields);
+
+    editParentCategory?.addEventListener('change', () => {
+        editClassificationPreset = [];
+        scheduleRefreshEditClassificationFields();
+    });
+    editSubcategory?.addEventListener('change', () => {
+        editClassificationPreset = [];
+        scheduleRefreshEditClassificationFields();
+    });
+    editParentCategoryCombobox?.onChange(() => {
+        editClassificationPreset = [];
+        scheduleRefreshEditClassificationFields();
+    });
+    editSubcategoryCombobox?.onChange(() => {
+        editClassificationPreset = [];
+        scheduleRefreshEditClassificationFields();
     });
 
     const newImageUpload = initFileUploadZone({

@@ -25,6 +25,8 @@ class AppSetting extends Model
 
     public const KEY_WEEKLY_REPORT_MINUTE = 'weekly_report_minute';
 
+    public const KEY_SCHEDULER_LAST_HEARTBEAT_AT = 'scheduler_last_heartbeat_at';
+
     protected $fillable = [
         'key',
         'value',
@@ -243,6 +245,75 @@ class AppSetting extends Model
         );
 
         Cache::forget(self::cacheKeyWeeklyReportMinute());
+    }
+
+    public static function getSchedulerLastHeartbeatAt(): ?string
+    {
+        $raw = self::getSettingValue(self::KEY_SCHEDULER_LAST_HEARTBEAT_AT);
+
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+
+        return $raw;
+    }
+
+    public static function setSchedulerLastHeartbeatAt(string $at): void
+    {
+        static::updateOrCreate(
+            ['key' => self::KEY_SCHEDULER_LAST_HEARTBEAT_AT],
+            ['value' => $at]
+        );
+    }
+
+    public static function schedulerCommandKey(string $slug, string $field): string
+    {
+        return 'scheduler_'.$slug.'_last_'.$field;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function schedulerMonitoringKeys(): array
+    {
+        $slugs = [
+            'sales_delete_expired',
+            'sales_send_expiry_reminders',
+            'orders_cancel_expired_ready',
+            'reports_send_weekly_dashboard',
+            'cf4_cleanup_temp_product_images',
+        ];
+
+        $fields = ['started_at', 'success_at', 'failure_at', 'status'];
+
+        $keys = [self::KEY_SCHEDULER_LAST_HEARTBEAT_AT];
+
+        foreach ($slugs as $slug) {
+            foreach ($fields as $field) {
+                $keys[] = self::schedulerCommandKey($slug, $field);
+            }
+        }
+
+        return $keys;
+    }
+
+    public static function getSchedulerCommandValue(string $slug, string $field): ?string
+    {
+        $raw = self::getSettingValue(self::schedulerCommandKey($slug, $field));
+
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+
+        return $raw;
+    }
+
+    public static function setSchedulerCommandValue(string $slug, string $field, string $value): void
+    {
+        static::updateOrCreate(
+            ['key' => self::schedulerCommandKey($slug, $field)],
+            ['value' => $value]
+        );
     }
 
     public static function cacheKeyOrderExpirationDays(): string
