@@ -28,6 +28,8 @@ const MODAL_TRIGGER_SELECTORS = [
     '[data-edit-product]',
     '[data-open-product-modal]',
     '.edit-product-btn',
+    '.edit-btn',
+    '.view-details-btn',
     '.js-edit-variant',
     '.js-delete-variant',
     '.product-row',
@@ -37,6 +39,8 @@ const MODAL_TRIGGER_SELECTORS = [
 const STOCK_TRIGGER_SELECTOR = '[data-stock-action="add"], [data-stock-action="remove"]';
 
 let modalsPromise = null;
+let modalsReady = false;
+
 function ensureModals() {
     if (!modalsPromise) {
         modalsPromise = import('./inventory-modals.js')
@@ -44,6 +48,7 @@ function ensureModals() {
                 if (typeof mod.initModals === 'function') {
                     await mod.initModals();
                 }
+                modalsReady = true;
                 return mod;
             })
             .catch((err) => {
@@ -85,8 +90,19 @@ function attachLazyTriggers() {
                 void ensureStockModal();
             }
 
-            if (target.closest(MODAL_TRIGGER_SELECTORS)) {
-                void ensureModals();
+            const modalTrigger = target.closest(MODAL_TRIGGER_SELECTORS);
+            if (modalTrigger) {
+                if (!modalsReady) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    void ensureModals().then(() => {
+                        modalTrigger.dispatchEvent(
+                            new MouseEvent('click', { bubbles: true, cancelable: true, view: window }),
+                        );
+                    });
+                } else {
+                    void ensureModals();
+                }
             }
         },
         true, // capture so we win before delegated handlers inside the chunks

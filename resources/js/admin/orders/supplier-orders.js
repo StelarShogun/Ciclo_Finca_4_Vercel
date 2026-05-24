@@ -235,7 +235,7 @@ function viewOrder(id) {
                 : '';
             return `
                 <tr>
-                    <td>${item.name || 'N/A'}</td>
+                    <td>${escapeHtml(item.name || 'N/A')}</td>
                     <td class="text-center">${item.quantity}</td>
                     ${recvCol}
                     <td class="text-right">₡${up.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</td>

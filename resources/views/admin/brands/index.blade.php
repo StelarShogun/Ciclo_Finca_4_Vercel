@@ -92,11 +92,11 @@
     </div>
 
     {{-- ==================== MODAL NUEVA / EDITAR MARCA --}}
-    <div id="modal-marca" class="modal-overlay" style="display:none;">
-        <div class="modal-container">
+    <div id="modal-marca" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-titulo" aria-hidden="true">
+        <div class="modal-container modal-content">
             <div class="modal-header">
                 <h2 id="modal-titulo">Nueva marca</h2>
-                <button class="modal-close" id="btn-cerrar-modal"><i class="fas fa-times"></i></button>
+                <button type="button" class="modal-close" id="btn-cerrar-modal" aria-label="Cerrar"><i class="fas fa-times"></i></button>
             </div>
             <form id="form-marca">
                 @csrf

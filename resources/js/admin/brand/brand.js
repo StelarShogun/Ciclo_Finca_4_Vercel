@@ -43,9 +43,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const openModal = () => { modal.style.display = 'flex'; inputName.focus(); };
+    const openModal = () => {
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        inputName.focus();
+    };
     const closeModal = () => {
-        modal.style.display   = 'none';
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
         formMarca.reset();
         inputId.value         = '';
         errorName.innerHTML   = '';
@@ -59,7 +64,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-cerrar-modal').addEventListener('click', closeModal);
     document.getElementById('btn-cancelar').addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
 
     document.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -116,27 +125,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const url    = id ? `/brands/${id}` : '/brands';
         const method = id ? 'PUT' : 'POST';
 
-        const res  = await fetch(url, {
-            method,
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({ name: inputName.value }),
-        });
-        const data = await res.json();
+        try {
+            const res  = await fetch(url, {
+                method,
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ name: inputName.value }),
+            });
+            const data = await res.json().catch(() => ({}));
 
-        if (data.success) {
-            closeModal();
-            await toast('success', data.message);
-            location.reload();
-        } else if (data.duplicate) {
-            await handleDuplicate(data, inputName.value);
-        } else if (data.errors) {
-            errorName.textContent = data.errors.name?.[0] ?? '';
-        } else {
-            await toast('error', 'Ocurrió un error inesperado.');
+            if (data.success) {
+                closeModal();
+                await toast('success', data.message);
+                location.reload();
+            } else if (data.duplicate) {
+                await handleDuplicate(data, inputName.value);
+            } else if (data.errors) {
+                errorName.textContent = data.errors.name?.[0] ?? '';
+            } else {
+                await toast('error', data.message || 'Ocurrió un error inesperado.');
+            }
+        } catch {
+            errorName.textContent = 'Error de conexión. Verificá tu red e intentá de nuevo.';
+            await toast('error', 'Error de conexión. Verificá tu red e intentá de nuevo.');
         }
     });
 });

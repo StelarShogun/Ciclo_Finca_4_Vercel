@@ -279,11 +279,11 @@
     <meta name="sales-route-return" content="{{ url('/sales') }}">
 
     {{-- ==================== MODAL: NEW SALE ==================== --}}
-    <div id="new-sale-modal" class="modal-overlay">
+    <div id="new-sale-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="new-sale-modal-title" aria-hidden="true">
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
-                <h3><i class="fas fa-plus-circle"></i> Nueva venta</h3>
-                <button class="modal-close" onclick="closeNewSaleModal()">&times;</button>
+                <h3 id="new-sale-modal-title"><i class="fas fa-plus-circle"></i> Nueva venta</h3>
+                <button type="button" class="modal-close" onclick="closeNewSaleModal()" aria-label="Cerrar">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="new-sale-form" method="POST" action="{{ route('sales.store') }}">
@@ -398,11 +398,11 @@
     </div>
 
     {{-- ==================== MODAL: VIEW SALE DETAILS ==================== --}}
-    <div id="view-sale-modal" class="edit-modal">
+    <div id="view-sale-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="view-sale-modal-title" aria-hidden="true">
         <div class="modal-backdrop" onclick="closeViewSaleModal()"></div>
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
-                <h3><i class="fas fa-eye"></i> Detalles de la Venta</h3>
+                <h3 id="view-sale-modal-title"><i class="fas fa-eye"></i> Detalles de la Venta</h3>
                 <button type="button" class="modal-close" onclick="closeViewSaleModal()" aria-label="Cerrar">
                     <i class="fas fa-times"></i>
                 </button>

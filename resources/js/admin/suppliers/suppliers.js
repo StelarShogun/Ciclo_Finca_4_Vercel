@@ -5,6 +5,13 @@ import {
     cf4Success,
     cf4Error,
 } from '../shared/swal.js';
+import { closeOtherModals, setModalLoading } from '../shared/modal-utils.js';
+
+const SUPPLIER_MODAL_SELECTOR = '#modalDetalleProveedor, #new-supplier-modal, #edit-supplier-modal';
+
+function closeOtherSupplierModals(exceptId = null) {
+    closeOtherModals(SUPPLIER_MODAL_SELECTOR, exceptId);
+}
 
 // Validates all fields in a supplier form; returns { valid, errors[] }
 function validateForm(form, type) {
@@ -228,7 +235,15 @@ async function editSupplier(e) {
 
 // Fetches a single supplier by ID and populates the read-only detail modal
 async function viewSupplierDetail(id) {
+    const detailModal = document.getElementById('modalDetalleProveedor');
     try {
+        closeOtherSupplierModals('modalDetalleProveedor');
+        if (detailModal) {
+            detailModal.classList.add('active');
+            detailModal.setAttribute('aria-hidden', 'false');
+            setModalLoading(detailModal, true);
+        }
+
         const response = await fetch(`/suppliers/${id}`, {
             headers: {
                 'Accept': 'application/json',
@@ -240,11 +255,14 @@ async function viewSupplierDetail(id) {
         const data = await response.json().catch(() => null);
 
         if (!response.ok || !data?.success) {
+            detailModal?.classList.remove('active');
+            setModalLoading(detailModal, false);
             await cf4Error(data?.message || 'No se pudieron obtener los datos del proveedor', 'Error');
             return;
         }
 
         const s = data.data;
+        setModalLoading(detailModal, false);
 
         document.getElementById('modalProveedorNombre').textContent       = s.name        || 'N/A';
         document.getElementById('modalProveedorEmail').textContent        = s.email       || 'N/A';
@@ -256,9 +274,10 @@ async function viewSupplierDetail(id) {
             ? new Date(s.created_at).toLocaleDateString()
             : 'N/A';
 
-        document.getElementById('modalDetalleProveedor').classList.add('active');
     } catch (error) {
         console.error('Error:', error);
+        detailModal?.classList.remove('active');
+        setModalLoading(detailModal, false);
         await cf4Error('Error de conexión al obtener los datos del proveedor', 'Error');
     }
 }
@@ -329,7 +348,9 @@ document.addEventListener('submit', async (event) => {
 function openNewSupplierModal() {
     const modal = document.getElementById('new-supplier-modal');
     if (!modal) return;
+    closeOtherSupplierModals('new-supplier-modal');
     modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
     document.getElementById('new-supplier-form').reset();
     // Clear any lingering validation error messages from a previous attempt
     document.querySelectorAll('#new-supplier-form .error-message').forEach(el => {
@@ -345,11 +366,14 @@ function closeNewSupplierModal() {
 
 // Fetches supplier data by ID and pre-fills the edit modal form
 async function loadSupplierForEdit(id) {
+    const editModal = document.getElementById('edit-supplier-modal');
     try {
-        const editModal = document.getElementById('edit-supplier-modal');
         if (!editModal) return;
 
+        closeOtherSupplierModals('edit-supplier-modal');
         editModal.classList.add('active');
+        editModal.setAttribute('aria-hidden', 'false');
+        setModalLoading(editModal, true);
 
         const response = await fetch(`/suppliers/${id}`, {
             headers: {
@@ -363,12 +387,14 @@ async function loadSupplierForEdit(id) {
 
         if (!response.ok || !data?.success) {
             editModal.classList.remove('active');
+            setModalLoading(editModal, false);
             const message = data?.message || 'No se pudieron obtener los datos del proveedor';
             await cf4Error(message, 'Error');
             return;
         }
 
         const s = data.data;
+        setModalLoading(editModal, false);
 
         document.getElementById('edit-supplier-id').value        = s.supplier_id   || '';
         document.getElementById('edit-supplier-nombre').value    = s.name          || '';
@@ -385,7 +411,8 @@ async function loadSupplierForEdit(id) {
         });
     } catch (error) {
         console.error('Error:', error);
-        document.getElementById('edit-supplier-modal')?.classList.remove('active');
+        editModal?.classList.remove('active');
+        setModalLoading(editModal, false);
         await cf4Error('Error de conexión al obtener los datos del proveedor', 'Error');
     }
 }

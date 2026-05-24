@@ -24,6 +24,7 @@ import {
     showSuccessFeedback,
     showErrorFeedback,
     setModalLoading,
+    closeOtherInventoryModals,
     categoryPath,
     productUsesPlaceholderImage,
     buildProductMediaPlaceholderHtml,
@@ -108,6 +109,7 @@ export async function initModals() {
 
     if (openNewProductModalBtn) {
         openNewProductModalBtn.addEventListener('click', () => {
+            closeOtherInventoryModals('new-product-modal');
             if (newProductForm) {
                 newProductForm.reset();
             }
@@ -118,6 +120,7 @@ export async function initModals() {
             newImageUpload?.reset();
             newGalleryUpload?.reset();
             newProductModal.classList.add('active');
+            newProductModal.setAttribute('aria-hidden', 'false');
             refreshNewClassificationFields();
         });
     }
@@ -171,23 +174,23 @@ export async function initModals() {
 
             const mainInput = qs('#new-image');
             if (mainInput?.files?.[0]) {
-                const meta = qs('#new-image-meta');
-                if (meta) meta.textContent = 'Preparando imagen…';
+                const metaSize = qs('#new-image-meta .cf-file-upload-meta__size');
+                if (metaSize) metaSize.textContent = 'Preparando imagen…';
                 const compressedMain = await compressImageFile(mainInput.files[0]);
                 formData.set('image', compressedMain, compressedMain.name);
-                if (meta) meta.textContent = compressedMain.name;
+                if (metaSize) metaSize.textContent = `${Math.round(compressedMain.size / 1024)} KB`;
             }
 
             formData.delete('images[]');
             if (newImagesInput?.files?.length > 0) {
-                const galleryMeta = qs('#new-images-meta');
-                if (galleryMeta) galleryMeta.textContent = 'Preparando imágenes…';
+                const galleryMetaName = qs('#new-images-meta .cf-file-upload-meta__name');
+                if (galleryMetaName) galleryMetaName.textContent = 'Preparando imágenes…';
                 const validGallery = Array.from(newImagesInput.files)
                     .filter((f) => VALID_IMAGE_TYPES.includes(f.type));
                 const compressedGallery = await compressFileList(validGallery);
                 compressedGallery.forEach((f) => formData.append('images[]', f));
-                if (galleryMeta) {
-                    galleryMeta.textContent = `${compressedGallery.length} imagen(es) lista(s)`;
+                if (galleryMetaName) {
+                    galleryMetaName.textContent = `${compressedGallery.length} imagen(es) lista(s)`;
                 }
             }
 
@@ -284,6 +287,10 @@ export async function initModals() {
     editBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const productId = btn.dataset.productId;
+                    closeOtherInventoryModals('edit-modal');
+                    editModal?.classList.add('active');
+                    editModal?.setAttribute('aria-hidden', 'false');
+                    setModalLoading(editModal, true);
             fetch(`/products/${productId}`, {
                 credentials: 'same-origin',
                 headers: jsonHeaders(),
@@ -292,6 +299,7 @@ export async function initModals() {
                 return readJsonOrThrow(response, 'Error al cargar el producto');
             })
             .then(data => {
+                setModalLoading(editModal, false);
                 if(data.success){
                     const product = data.data;
                     currentEditProductId = String(productId || '');
@@ -366,14 +374,24 @@ export async function initModals() {
                             variants: product.variants || [],
                         });
                     }
-                    editModal.classList.add('active');
                 } else {
+                    setModalLoading(editModal, false);
+                    const editBody = editModal?.querySelector('.modal-body');
+                    if (editBody) {
+                        editBody.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> '
+                            + escapeHtml(data.message || 'Error al cargar el producto') + '</div>';
+                    }
                     void cf4Error(data.message || 'Error al cargar el producto', 'Error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                void cf4Error(error?.message || 'Error al cargar el producto. Inténtalo de nuevo.', 'Error');
+                setModalLoading(editModal, false);
+                const editBody = editModal?.querySelector('.modal-body');
+                if (editBody) {
+                    editBody.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> '
+                        + escapeHtml(error?.message || 'Error al cargar el producto. Inténtalo de nuevo.') + '</div>';
+                }
             });
         });
     });
@@ -666,23 +684,23 @@ export async function initModals() {
 
             const editMainInput = qs('#edit-image');
             if (editMainInput?.files?.[0]) {
-                const editMeta = qs('#edit-image-meta');
-                if (editMeta) editMeta.textContent = 'Preparando imagen…';
+                const editMetaSize = qs('#edit-image-meta .cf-file-upload-meta__size');
+                if (editMetaSize) editMetaSize.textContent = 'Preparando imagen…';
                 const compressedEditMain = await compressImageFile(editMainInput.files[0]);
                 formData.set('image', compressedEditMain, compressedEditMain.name);
-                if (editMeta) editMeta.textContent = compressedEditMain.name;
+                if (editMetaSize) editMetaSize.textContent = `${Math.round(compressedEditMain.size / 1024)} KB`;
             }
 
             formData.delete('images[]');
             if (editImagesInput?.files?.length > 0) {
-                const editGalleryMeta = qs('#edit-images-meta');
-                if (editGalleryMeta) editGalleryMeta.textContent = 'Preparando imágenes…';
+                const editGalleryMetaName = qs('#edit-images-meta .cf-file-upload-meta__name');
+                if (editGalleryMetaName) editGalleryMetaName.textContent = 'Preparando imágenes…';
                 const validEditGallery = Array.from(editImagesInput.files)
                     .filter((f) => VALID_IMAGE_TYPES.includes(f.type));
                 const compressedEditGallery = await compressFileList(validEditGallery);
                 compressedEditGallery.forEach((f) => formData.append('images[]', f));
-                if (editGalleryMeta) {
-                    editGalleryMeta.textContent = `${compressedEditGallery.length} imagen(es) lista(s)`;
+                if (editGalleryMetaName) {
+                    editGalleryMetaName.textContent = `${compressedEditGallery.length} imagen(es) lista(s)`;
                 }
             }
 
@@ -830,6 +848,7 @@ export async function initModals() {
         if (!variantEditModal) return;
         variantEditModal.classList.remove('active');
         variantEditModal.setAttribute('aria-hidden', 'true');
+        editModal?.classList.remove('is-underlay');
     }
 
     function openVariantEditModal(baseId, variantProductId) {
@@ -874,6 +893,7 @@ export async function initModals() {
         if (priceEl) priceEl.value = v.sale_price != null ? String(v.sale_price) : '';
         if (stockEl) stockEl.value = v.stock_current != null ? String(v.stock_current) : '';
 
+        editModal?.classList.add('is-underlay');
         variantEditModal.classList.add('active');
         variantEditModal.setAttribute('aria-hidden', 'false');
     }
@@ -999,7 +1019,7 @@ export async function initModals() {
         return values.map((cv) => {
             const dimName = cv.dimension?.name || 'Clasificación';
             const val = cv.value ?? '—';
-            return productDetailField(dimName, 'fa-tags', escapeHtml(String(val)));
+            return productDetailField(escapeHtml(dimName), 'fa-tags', escapeHtml(String(val)));
         }).join('');
     }
 
@@ -1055,6 +1075,7 @@ export async function initModals() {
 
     viewDetailsBtns.forEach(btn => {
         btn.addEventListener('click', () => {
+            closeOtherInventoryModals('view-product-modal');
             setActionButtonLoading(btn, true, 'Ver detalles');
             if (viewProductBody) {
                 viewProductBody.innerHTML = `
@@ -1063,6 +1084,8 @@ export async function initModals() {
                         <p>Cargando detalles…</p>
                     </div>`;
             }
+            viewProductModal?.classList.add('active');
+            viewProductModal?.setAttribute('aria-hidden', 'false');
             setModalLoading(viewProductModal, true);
             const productId = btn.dataset.productId;
             smartFetch(`/products/${productId}`, {
@@ -1100,7 +1123,7 @@ export async function initModals() {
                         imageHtml = `<img src="${allImages[0]}" alt="${escapeHtmlAttr(product.name)}">`;
                     } else {
                         const slides = allImages.map(url =>
-                            `<div class="carousel-slide"><img src="${url}" alt="${product.name}"></div>`
+                            `<div class="carousel-slide"><img src="${url}" alt="${escapeHtmlAttr(product.name)}"></div>`
                         ).join('');
                         const dots = allImages.map((_, i) =>
                             `<button class="carousel-dot${i === 0 ? ' active' : ''}" aria-label="Imagen ${i + 1}"></button>`
@@ -1155,14 +1178,22 @@ export async function initModals() {
                         </div>`;
                     initCollapsibleFormSections(viewProductModal);
                     initAdminViewCarousel();
-                    viewProductModal.classList.add('active');
                 } else {
+                    if (viewProductBody) {
+                        viewProductBody.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> '
+                            + escapeHtml(data.message || 'Error al cargar el producto') + '</div>';
+                    }
                     void cf4Error(data.message || 'Error al cargar el producto', 'Error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                void cf4Error(error?.message || 'Error al cargar el producto. Inténtalo de nuevo.', 'Error');
+                setActionButtonLoading(btn, false);
+                setModalLoading(viewProductModal, false);
+                if (viewProductBody) {
+                    viewProductBody.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> '
+                        + escapeHtml(error?.message || 'Error al cargar el producto. Inténtalo de nuevo.') + '</div>';
+                }
             });
         });
     });
@@ -1190,9 +1221,11 @@ export async function initModals() {
 
     if (openImportModalBtn) {
         openImportModalBtn.addEventListener('click', () => {
+            closeOtherInventoryModals('import-modal');
             importUpload?.reset();
             resetImportUi();
             importModal.classList.add('active');
+            importModal.setAttribute('aria-hidden', 'false');
         });
     }
 

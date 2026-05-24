@@ -469,12 +469,12 @@
     </main>
 
     {{-- ==================== MODAL: NEW PRODUCT ==================== --}}
-    <div class="edit-modal" id="new-product-modal">
+    <div class="edit-modal" id="new-product-modal" role="dialog" aria-modal="true" aria-labelledby="new-product-modal-title" aria-hidden="true">
         <div class="modal-backdrop"></div>
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
-                <h3><i class="fas fa-plus-circle"></i> Nuevo Producto</h3>
-                <button class="modal-close" id="close-new-product-modal">
+                <h3 id="new-product-modal-title"><i class="fas fa-plus-circle"></i> Nuevo Producto</h3>
+                <button type="button" class="modal-close" id="close-new-product-modal" aria-label="Cerrar">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -664,12 +664,12 @@
 
     {{-- ==================== MODAL: EDIT PRODUCT ==================== --}}
     {{-- Form fields populated dynamically by inventory.js --}}
-    <div class="edit-modal" id="edit-modal">
+    <div class="edit-modal" id="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title" aria-hidden="true">
         <div class="modal-backdrop"></div>
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Editar Producto</h3>
-                <button class="modal-close" id="modal-close">
+                <h3 id="edit-modal-title"><i class="fas fa-edit"></i> Editar Producto</h3>
+                <button type="button" class="modal-close" id="modal-close" aria-label="Cerrar">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -923,11 +923,11 @@
 
     {{-- ==================== MODAL: VIEW PRODUCT DETAILS ==================== --}}
     {{-- Body content injected dynamically by inventory.js --}}
-    <div class="edit-modal" id="view-product-modal">
+    <div class="edit-modal" id="view-product-modal" role="dialog" aria-modal="true" aria-labelledby="view-product-modal-title" aria-hidden="true">
         <div class="modal-backdrop" id="view-product-modal-backdrop"></div>
         <div class="modal-content modal-auto-size">
             <div class="modal-header">
-                <h3><i class="fas fa-eye"></i> Detalles del Producto</h3>
+                <h3 id="view-product-modal-title"><i class="fas fa-eye"></i> Detalles del Producto</h3>
                 <button type="button" class="modal-close" id="close-view-product-modal" aria-label="Cerrar">
                     <i class="fas fa-times"></i>
                 </button>

@@ -6,7 +6,15 @@ import {
     cf4Toast,
     cf4Error,
     cf4Warning,
+    escapeHtml,
 } from '../shared/swal.js';
+import { closeOtherModals } from '../shared/modal-utils.js';
+
+const SALES_MODAL_SELECTOR = '#new-sale-modal, #return-sale-modal, #view-sale-modal';
+
+function closeOtherSalesModals(exceptId = null) {
+    closeOtherModals(SALES_MODAL_SELECTOR, exceptId);
+}
 
 function formatColones(amount) {
     const value = Math.round(parseFloat(amount) || 0);
@@ -136,7 +144,12 @@ function getCSRFToken() {
 }
 
 // Open/close modal for creating a new sale
-function openNewSaleModal()   { document.getElementById('new-sale-modal')?.classList.add('active'); }
+function openNewSaleModal() {
+    closeOtherSalesModals('new-sale-modal');
+    const modal = document.getElementById('new-sale-modal');
+    modal?.classList.add('active');
+    modal?.setAttribute('aria-hidden', 'false');
+}
 function closeNewSaleModal()  { document.getElementById('new-sale-modal')?.classList.remove('active'); }
 function closeViewSaleModal() { document.getElementById('view-sale-modal')?.classList.remove('active'); }
 
@@ -159,7 +172,10 @@ function openReturnModal(saleId, invoiceLabel) {
     const errorMsg = document.getElementById('return-reason-error');
     if (errorMsg) errorMsg.style.display = 'none';
 
-    document.getElementById('return-sale-modal')?.classList.add('active');
+    closeOtherSalesModals('return-sale-modal');
+    const modal = document.getElementById('return-sale-modal');
+    modal?.classList.add('active');
+    modal?.setAttribute('aria-hidden', 'false');
 }
 
 function closeReturnModal() {
@@ -393,12 +409,14 @@ function viewSale(id) {
     const printBtn = document.getElementById('view-sale-print-btn');
     if (printBtn) printBtn.style.display = 'none';
 
+    closeOtherSalesModals('view-sale-modal');
     body.innerHTML = `
         <div class="loading-spinner" role="status">
             <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
             <p>Cargando detalles…</p>
         </div>`;
     modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
 
     fetch('/sales/' + id, {
         headers: { 'X-CSRF-TOKEN': getCSRFToken(), 'Accept': 'application/json' }
@@ -419,7 +437,7 @@ function viewSale(id) {
             : (sale.sale_date_label || '—');
         const confirmedAtRow = sale.status === 'completed'
             ? '<div class="detail-item"><label>Fecha de confirmación:</label><span>'
-                + (sale.confirmed_at_label || '—') + '</span></div>'
+                + escapeHtml(sale.confirmed_at_label || '—') + '</span></div>'
             : '';
         const statusLabels  = {
             pending:         'Pendiente',
@@ -441,14 +459,13 @@ function viewSale(id) {
             if (sale.buyer.email) customerName += ' (' + sale.buyer.email + ')';
         }
 
-        // Generate HTML for products table
         const productsHtml = items.map(item => {
             const prod = item.product || {};
             const up   = parseFloat(item.unit_price || 0);
             const tot  = parseFloat(item.total || 0);
             return '<tr>'
-                + '<td>' + (prod.name || 'N/A') + '</td>'
-                + '<td class="text-center">' + item.quantity + '</td>'
+                + '<td>' + escapeHtml(prod.name || 'N/A') + '</td>'
+                + '<td class="text-center">' + escapeHtml(String(item.quantity ?? '0')) + '</td>'
                 + '<td class="text-right">CRC' + up.toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</td>'
                 + '<td class="text-right"><strong>CRC' + tot.toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</strong></td>'
                 + '</tr>';
@@ -459,7 +476,7 @@ function viewSale(id) {
             : '';
 
         const refRow = sale.payment_reference
-            ? '<div class="detail-item"><label>Referencia:</label><span>' + sale.payment_reference + '</span></div>'
+            ? '<div class="detail-item"><label>Referencia:</label><span>' + escapeHtml(sale.payment_reference) + '</span></div>'
             : '';
 
         let returnSection = '';
@@ -469,21 +486,25 @@ function viewSale(id) {
             returnSection = '<div class="detail-section">'
                 + '<h4><i class="fas fa-rotate-left"></i> Datos de la devolución</h4>'
                 + '<div class="detail-grid">'
-                + '<div class="detail-item"><label>Fecha de devolución:</label><span>' + returnedAt + '</span></div>'
-                + '<div class="detail-item"><label>Registrado por:</label><span>' + returnedBy + '</span></div>'
+                + '<div class="detail-item"><label>Fecha de devolución:</label><span>' + escapeHtml(returnedAt) + '</span></div>'
+                + '<div class="detail-item"><label>Registrado por:</label><span>' + escapeHtml(returnedBy) + '</span></div>'
                 + '</div></div>';
         }
+
+        const statusClass = escapeHtml(sale.status || '');
+        const statusText = escapeHtml(statusLabels[sale.status] || sale.status || '—');
+        const paymentText = escapeHtml(paymentLabels[sale.payment_method] || sale.payment_method || '—');
 
         body.innerHTML = '<div class="sale-details">'
             + '<div class="detail-section">'
             + '<h4><i class="fas fa-info-circle"></i> Información general</h4>'
             + '<div class="detail-grid">'
-            + '<div class="detail-item"><label>Factura:</label><span><strong>' + (sale.invoice_number || '#' + sale.sale_id) + '</strong></span></div>'
-            + '<div class="detail-item"><label>' + saleDateLabel + ':</label><span>' + saleDateValue + '</span></div>'
+            + '<div class="detail-item"><label>Factura:</label><span><strong>' + escapeHtml(sale.invoice_number || ('#' + sale.sale_id)) + '</strong></span></div>'
+            + '<div class="detail-item"><label>' + escapeHtml(saleDateLabel) + ':</label><span>' + escapeHtml(saleDateValue) + '</span></div>'
             + confirmedAtRow
-            + '<div class="detail-item"><label>Cliente:</label><span>' + customerName + '</span></div>'
-            + '<div class="detail-item"><label>Estado:</label><span class="status-badge ' + sale.status + '">' + (statusLabels[sale.status] || sale.status) + '</span></div>'
-            + '<div class="detail-item"><label>Método de pago:</label><span>' + (paymentLabels[sale.payment_method] || sale.payment_method) + '</span></div>'
+            + '<div class="detail-item"><label>Cliente:</label><span>' + escapeHtml(customerName) + '</span></div>'
+            + '<div class="detail-item"><label>Estado:</label><span class="status-badge ' + statusClass + '">' + statusText + '</span></div>'
+            + '<div class="detail-item"><label>Método de pago:</label><span>' + paymentText + '</span></div>'
             + refRow
             + '</div></div>'
             + '<div class="detail-section"><h4><i class="fas fa-shopping-cart"></i> Productos</h4>'
@@ -500,7 +521,7 @@ function viewSale(id) {
             + '<div class="total-item total-final"><span><strong>Total:</strong></span><span><strong>CRC' + parseFloat(sale.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</strong></span></div>'
             + '</div></div>'
             + returnSection
-            + (sale.notes ? '<div class="detail-section"><h4><i class="fas fa-sticky-note"></i> Notas</h4><p class="sale-notes">' + sale.notes + '</p></div>' : '')
+            + (sale.notes ? '<div class="detail-section"><h4><i class="fas fa-sticky-note"></i> Notas</h4><p class="sale-notes">' + escapeHtml(sale.notes) + '</p></div>' : '')
             + '</div>';
 
         if (printBtn) {

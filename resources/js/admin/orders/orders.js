@@ -22,7 +22,7 @@ function isOrdersAdminBusy() {
         return true;
     }
 
-    if (document.querySelector('.modal-overlay.active')) {
+    if (document.querySelector('.modal-overlay.active, .edit-modal.active')) {
         return true;
     }
 
@@ -307,6 +307,18 @@ function initOrderExpirationModal() {
     openBtn.addEventListener('click', () => {
         modal.classList.add('active');
         modal.setAttribute('aria-hidden', 'false');
+    });
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            close();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            close();
+        }
     });
 
     modal.querySelectorAll('[data-close-order-expiration-modal]').forEach((btn) => {

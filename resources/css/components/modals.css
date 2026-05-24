@@ -144,6 +144,32 @@ html:has(.modal-overlay.active) {
   margin: 0.75rem 0 0;
 }
 
+/* Async load overlay (backdrop/close stay interactive unless blockShell is set in JS). */
+.edit-modal.loading .modal-body,
+.modal-overlay.loading .modal-body {
+  position: relative;
+}
+
+.edit-modal.loading .modal-body::after,
+.modal-overlay.loading .modal-content::after,
+.modal-overlay.loading .modal-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.55);
+  z-index: 2;
+  pointer-events: none;
+}
+
+#variant-edit-modal.edit-modal.active {
+  z-index: 2100;
+}
+
+.edit-modal.is-underlay .modal-content {
+  pointer-events: none;
+  opacity: 0.65;
+}
+
 /* ===== BODY DEL MODAL ===== */
 .modal-body {
   padding: 1.5rem;

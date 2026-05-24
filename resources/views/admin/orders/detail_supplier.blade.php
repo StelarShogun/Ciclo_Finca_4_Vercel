@@ -473,6 +473,7 @@
     <script>
         // ── Modal: Recepción de mercancía ────────────────────────────────────────
         function openReceiveModal() {
+            closeClosePartialModal();
             const modal = document.getElementById('receive-order-modal');
             if (!modal) return;
             document.getElementById('receive-form-error').style.display = 'none';
@@ -554,6 +555,9 @@
 
                 window.location.reload();
 
+            } catch {
+                errEl.textContent   = 'Error de conexión. Verificá tu red e intentá de nuevo.';
+                errEl.style.display = 'block';
             } finally {
                 btn.disabled = false;
             }
@@ -561,6 +565,7 @@
 
         // ── Modal: Cerrar con faltantes ──────────────────────────────────────────
         function openClosePartialModal() {
+            closeReceiveModal();
             const modal = document.getElementById('close-partial-modal');
             if (!modal) return;
             document.getElementById('close-partial-form-error').style.display = 'none';
@@ -627,6 +632,9 @@
 
                 window.location.reload();
 
+            } catch {
+                errEl.textContent   = 'Error de conexión. Verificá tu red e intentá de nuevo.';
+                errEl.style.display = 'block';
             } finally {
                 btn.disabled = false;
             }
