@@ -237,9 +237,24 @@ final class ProductCatalogImporter
 
                 return $cat;
             }
+
+            $parentCacheKey = 'parent|'.mb_strtolower($subName);
+            if (isset($this->categoryCache[$parentCacheKey])) {
+                return Category::query()->find($this->categoryCache[$parentCacheKey]);
+            }
+            $parentCat = Category::query()
+                ->whereRaw('LOWER(name) = ?', [mb_strtolower($subName)])
+                ->whereNull('parent_category_id')
+                ->first();
+            if ($parentCat) {
+                $this->categoryCache[$parentCacheKey] = (int) $parentCat->category_id;
+
+                return $parentCat;
+            }
         }
 
-        return Category::query()->whereNotNull('parent_category_id')->orderBy('category_id')->first();
+        return Category::query()->whereNotNull('parent_category_id')->orderBy('category_id')->first()
+            ?? Category::query()->whereNull('parent_category_id')->orderBy('category_id')->first();
     }
 
     /**
@@ -273,9 +288,7 @@ final class ProductCatalogImporter
             $parent = $current;
         }
 
-        if ($current) {
-            $this->categoryCache[$cacheKey] = (int) $current->category_id;
-        }
+        $this->categoryCache[$cacheKey] = (int) $current->category_id;
 
         return $current;
     }

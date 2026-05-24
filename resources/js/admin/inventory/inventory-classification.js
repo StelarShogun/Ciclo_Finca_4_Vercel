@@ -12,7 +12,7 @@ import {
     showSubtleNotification,
 } from './inventory-shared.js';
 import { createDropdownPortal } from '../shared/combobox-dropdown-portal.js';
-import { fireSwal } from '../shared/swal.js';
+import { cf4Confirm } from '../shared/swal.js';
 
 function collectClassificationValueIds(container) {
     const ids = [];
@@ -274,14 +274,13 @@ function buildDimensionCard(attr, initialValueId, editorContext = null) {
         removeBtn.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
         removeBtn.addEventListener('click', async () => {
             const label = attr.label || 'este atributo';
-            const { isConfirmed } = await fireSwal({
+            const { isConfirmed } = await cf4Confirm({
                 title: '¿Eliminar atributo?',
                 html: `<p>Se desactivará <strong>${escapeHtml(label)}</strong> del catálogo de esta subcategoría. Los productos que ya tenían un valor conservan su asignación.</p>`,
                 icon: 'warning',
-                showCancelButton: true,
                 confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#dc2626',
+                danger: true,
             });
             if (!isConfirmed) return;
 

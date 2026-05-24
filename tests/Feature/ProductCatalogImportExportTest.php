@@ -6,7 +6,9 @@ use App\Http\Middleware\LogSensitiveAdminModuleAccess;
 use App\Models\AdminUser;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Supplier;
 use App\Support\ProductCatalog\ProductCatalogExporter;
+use App\Support\ProductCatalog\ProductCatalogImporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Schema;
@@ -50,9 +52,24 @@ class ProductCatalogImportExportTest extends TestCase
         ]);
     }
 
+    private function createActiveSupplier(): Supplier
+    {
+        return Supplier::create([
+            'name' => 'CF4 Catalog Supplier',
+            'primary_contact' => 'Contact',
+            'phone' => '0000',
+            'email' => 'catalog-supplier-'.uniqid().'@example.com',
+            'address' => 'Addr',
+            'delivery_time' => 1,
+            'rating' => 5.0,
+            'status' => 'active',
+        ]);
+    }
+
     public function test_admin_can_export_catalog_bundle_zip(): void
     {
         $admin = $this->createAdmin();
+        $this->createActiveSupplier();
         $category = Category::create([
             'name' => 'CF4 Export Cat',
             'description' => null,
@@ -83,6 +100,7 @@ class ProductCatalogImportExportTest extends TestCase
     public function test_admin_can_import_csv_and_update_product(): void
     {
         $admin = $this->createAdmin();
+        $this->createActiveSupplier();
         $category = Category::create([
             'name' => 'CF4 Import Cat',
             'description' => null,
@@ -153,6 +171,7 @@ class ProductCatalogImportExportTest extends TestCase
 
     public function test_round_trip_zip_preserves_product_name(): void
     {
+        $this->createActiveSupplier();
         $category = Category::create([
             'name' => 'CF4 Zip Cat',
             'description' => null,
@@ -192,7 +211,7 @@ class ProductCatalogImportExportTest extends TestCase
         $this->assertFileExists($zipPath);
 
         $upload = new UploadedFile($zipPath, 'catalogo.zip', 'application/zip', null, true);
-        $stats = app(\App\Support\ProductCatalog\ProductCatalogImporter::class)->import($upload);
+        $stats = app(ProductCatalogImporter::class)->import($upload);
 
         @unlink($zipPath);
 

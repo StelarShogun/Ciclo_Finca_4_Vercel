@@ -121,11 +121,14 @@ final class ProductCatalogFileParser
 
         $delimiter = substr_count($lines[0], ';') > substr_count($lines[0], ',') ? ';' : ',';
         $headers = str_getcsv(array_shift($lines), $delimiter, '"', '\\');
-        if ($headers === false || $headers === []) {
+        $headers = array_values(array_filter(
+            array_map(static fn ($h) => trim((string) $h), $headers),
+            static fn ($h) => $h !== '',
+        ));
+        if ($headers === []) {
             return [];
         }
 
-        $headers = array_map(fn ($h) => trim((string) $h), $headers);
         $rows = [];
 
         foreach ($lines as $line) {
@@ -133,9 +136,6 @@ final class ProductCatalogFileParser
                 continue;
             }
             $cells = str_getcsv($line, $delimiter, '"', '\\');
-            if ($cells === false) {
-                continue;
-            }
             $assoc = [];
             foreach ($headers as $i => $header) {
                 if ($header === '') {

@@ -56,10 +56,6 @@ final class ProductCatalogFieldMapper
             }
         }
 
-        if (isset($out['brands']) && is_string($out['brands'])) {
-            $out['brand'] = $out['brands'];
-        }
-
         if (isset($out['brand']) && is_string($out['brand'])) {
             $out['brands'] = array_values(array_filter(array_map('trim', preg_split('/[,;|]/', $out['brand']) ?: [])));
         }
@@ -106,9 +102,6 @@ final class ProductCatalogFieldMapper
     {
         $out = [];
         foreach ($row as $key => $value) {
-            if (! is_string($key) && ! is_int($key)) {
-                continue;
-            }
             $k = self::slugKey((string) $key);
             if (is_array($value) && self::isAssoc($value)) {
                 foreach (self::flattenRow($value) as $subK => $subV) {
