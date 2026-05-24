@@ -16,7 +16,7 @@
 @endpush
 
 @push('styles')
-    @vite(['resources/css/client/clients-page.css'])
+    @vite(['resources/css/client/clients-home.css'])
 @endpush
 
 @section('content')
@@ -163,14 +163,10 @@
                         <div class="product-image">
                             <a class="product-image__link" href="{{ $product->clientProductUrl() }}"
                                aria-label="Ver producto: {{ $product->name }}">
-                            @php $cardImg = \App\Support\ProductImageUrls::cardPicture($product); @endphp
-                            @include('client.parts.responsive-picture', [
-                                'desktopWebp' => $cardImg['desktopWebp'],
-                                'mobileWebp' => $cardImg['mobileWebp'],
-                                'fallback' => $cardImg['fallback'],
-                                'alt' => $product->name,
-                                'loading' => 'lazy',
-                                'sizes' => '(max-width: 767px) 45vw, 240px',
+                            @include('shared.parts.product-media', [
+                                'product' => $product,
+                                'variant' => 'card',
+                                'href' => null,
                             ])
                             </a>
                         </div>
@@ -274,9 +270,6 @@
 
 <!-- Categories: carrusel de padres + chips de subcategorías -->
 @if($categories->count() > 0)
-@php
-    $categoryIcons = config('category_icons', []);
-@endphp
 <section class="categories-section" aria-labelledby="categories-heading">
     <div class="container">
         <div class="section-header">
@@ -301,15 +294,11 @@
             <div class="categories-carousel" role="region" aria-roledescription="carrusel" aria-label="Categorías de productos">
                 <div class="categories-carousel-track" data-carousel-track>
                     @foreach($categories as $category)
-                        @php
-                            $iconKey = strtolower(trim($category->name));
-                            $faIcon = $categoryIcons[$iconKey] ?? 'bicycle';
-                        @endphp
                         <article class="category-slide">
                             <div class="category-slide-card">
                                 <a href="{{ route('clients.catalog', ['category_id' => $category->category_id]) }}" class="category-slide-main">
                                     <div class="category-icon category-icon--lg" aria-hidden="true">
-                                        <i class="fas fa-{{ $faIcon }}"></i>
+                                        <i class="{{ \App\Support\ClientCategoryIcons::iconClassForName($category->name) }}"></i>
                                     </div>
                                     <h3 class="category-name">{{ $category->name }}</h3>
                                     @if($category->description)

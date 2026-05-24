@@ -1,34 +1,22 @@
-<!DOCTYPE html>
-<html lang="es">
+@extends('admin.layouts.admin-shell')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Dashboard - Ciclo Finca 4 Admin</title>
+@section('Titulo pagina', 'Dashboard - Ciclo Finca 4 Admin')
 
-    {{-- Favicons --}}
-    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+@push('styles')
+    @vite(['resources/css/admin/dashboard/dashboard.css'])
+@endpush
 
-    {{-- Styles & Fonts --}}
-    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/components/page-header.css', 'resources/css/admin/dashboard/dashboard.css'])
-</head>
+@push('vite-body')
+    @vite(['resources/js/admin/dashboard/dashboard.js'])
+@endpush
 
-<body class="admin-layout">
-
-    {{-- Sidebar navigation --}}
+@section('aside')
     @include('admin.parts.aside')
+@endsection
 
-    <main class="admin-main admin-main--content">
-        <div class="admin-content-wrapper">
-            <div class="dashboard-container">
-
-            {{-- ==================== HEADER ==================== --}}
-            @component('admin.partials.page-header', ['title' => 'Panel de control'])
+@section('contenido')
+    <div class="dashboard-page">
+@component('admin.partials.page-header', ['title' => 'Panel de control'])
                 <p>Consulta los indicadores principales de ventas, inventario, proveedores y actividad reciente del sistema.
                 </p>
                 <p class="current-time" id="current-time"></p>
@@ -160,7 +148,7 @@
                 <div class="table-container">
                     <div class="table-header">
                         <h3>
-                            Top 10 Productos con Stock Bajo
+                            Productos con stock bajo
                             @if (($lowStockProducts ?? 0) > 0)
                                 <span class="badge-count">{{ $lowStockProducts }}</span>
                             @endif
@@ -172,43 +160,39 @@
                     </div>
                     <div class="table-content table-content--scroll">
                         <div class="table-scroll-wrapper">
-                            <table class="dashboard-table admin-table">
+                            <table class="dashboard-table dashboard-table--low-stock admin-table">
                                 <thead>
                                     <tr>
-                                        <th>Producto</th>
-                                        <th>Stock Actual</th>
-                                        <th>Stock Mínimo</th>
-                                        <th>Estado</th>
+                                        <th scope="col" class="dashboard-table__col-product">Producto</th>
+                                        <th scope="col" class="dashboard-table__col-num" title="Stock actual">Actual</th>
+                                        <th scope="col" class="dashboard-table__col-num" title="Stock mínimo">Mín.</th>
+                                        <th scope="col" class="dashboard-table__col-status">Estado</th>
                                     </tr>
                                 </thead>
                                 <tbody id="low-stock-table" class="tbody-scroll">
-                                    @forelse(($lowStockProductsList ?? collect())->take(10) as $product)
+                                    @forelse($lowStockProductsList ?? collect() as $product)
                                         <tr>
-                                            <td>
+                                            <td class="dashboard-table__col-product">
                                                 <div class="product-info">
-                                                    <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default-96.webp')) }}"
-                                                        alt="{{ $product->name }}" class="product-thumb"
-                                                        width="48" height="48" loading="lazy" decoding="async">
-                                                    <span>{{ $product->name }}</span>
+                                                    @include('shared.parts.product-media', [
+                                                        'product' => $product,
+                                                        'variant' => 'thumb-table',
+                                                        'alt' => $product->name,
+                                                        'imgClass' => 'product-thumb',
+                                                    ])
+                                                    <span class="dashboard-table__product-name"
+                                                        title="{{ $product->name }}">{{ $product->name }}</span>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td class="dashboard-table__col-num">
                                                 <span class="stock-badge danger">{{ $product->stock_current }}</span>
                                             </td>
-                                            <td>{{ $product->stock_minimum }}</td>
-                                            <td>
-                                                @php
-                                                    $pct =
-                                                        $product->stock_minimum > 0
-                                                            ? round(
-                                                                ($product->stock_current / $product->stock_minimum) *
-                                                                    100,
-                                                            )
-                                                            : 0;
-                                                @endphp
-                                                <span class="status-badge {{ $pct <= 0 ? 'danger' : 'warning' }}"
-                                                    title="{{ $pct }}% del mínimo requerido">
-                                                    {{ $pct <= 0 ? 'Sin Stock' : 'Stock Bajo (' . $pct . '%)' }}
+                                            <td class="dashboard-table__col-num">{{ $product->stock_minimum }}</td>
+                                            <td class="dashboard-table__col-status">
+                                                <span
+                                                    class="status-badge {{ $product->adminDashboardLowStockStatusBadgeClass() }}"
+                                                    title="{{ $product->adminDashboardLowStockStatusTitle() }}">
+                                                    {{ $product->adminDashboardLowStockStatusLabel() }}
                                                 </span>
                                             </td>
                                         </tr>
@@ -239,57 +223,19 @@
                     </div>
                     <div class="table-content table-content--scroll">
                         <div class="table-scroll-wrapper">
-                            <table class="dashboard-table admin-table">
+                            <table class="dashboard-table dashboard-table--recent-sales admin-table">
                                 <thead>
                                     <tr>
-                                        <th>Factura</th>
-                                        <th>Cliente</th>
-                                        <th>Total</th>
-                                        <th>Fecha de venta</th>
-                                        <th>Estado</th>
+                                        <th scope="col" class="dashboard-table__col-invoice">Factura</th>
+                                        <th scope="col" class="dashboard-table__col-client">Cliente</th>
+                                        <th scope="col" class="dashboard-table__col-total">Total</th>
+                                        <th scope="col" class="dashboard-table__col-date" title="Fecha de venta">Fecha</th>
+                                        <th scope="col" class="dashboard-table__col-status">Estado</th>
                                     </tr>
                                 </thead>
                                 <tbody id="recent-sales-table" class="tbody-scroll">
-                                    @forelse(($recentSales ?? collect())->take(10) as $sale)
-                                        <tr>
-                                            <td>{{ $sale->invoice_number ?? '#' . $sale->sale_id }}</td>
-                                            <td>
-                                                @if ($sale->client)
-                                                    {{ trim($sale->client->name . ' ' . $sale->client->first_surname . ' ' . ($sale->client->second_surname ?? '')) }}
-                                                @elseif($sale->buyer_name)
-                                                    {{ $sale->buyer_name }}
-                                                @else
-                                                    Mostrador / sin datos
-                                                @endif
-                                            </td>
-                                            <td>₡{{ number_format($sale->total, 0, ',', '.') }}</td>
-                                            <td>{{ $sale->adminSaleDateLabel() }}</td>
-                                            <td>
-                                                @php
-                                                    $statusLabels = [
-                                                        'completed' => 'Completada',
-                                                        'pending' => 'Pendiente',
-                                                        'ready_to_pickup' => 'Por recoger',
-                                                        'cancelled' => 'Cancelada',
-                                                        'canceled' => 'Cancelada',
-                                                        'refunded' => 'Reembolsada',
-                                                        'returned' => 'Devuelta',
-                                                    ];
-
-                                                    $statusText =
-                                                        $statusLabels[$sale->status] ?? ucfirst($sale->status);
-
-                                                    $statusBadgeClass = match ($sale->status) {
-                                                        'completed' => 'success',
-                                                        'pending', 'ready_to_pickup' => 'warning',
-                                                        default => 'danger',
-                                                    };
-                                                @endphp
-                                                <span class="status-badge {{ $statusBadgeClass }}">
-                                                    {{ $statusText }}
-                                                </span>
-                                            </td>
-                                        </tr>
+                                    @forelse($recentSales ?? collect() as $sale)
+                                        @include('admin.dashboard.partials.recent-sale-row', ['sale' => $sale])
                                     @empty
                                         <tr>
                                             <td colspan="5" class="text-center">
@@ -348,62 +294,10 @@
                 </div>
             </section>
 
-            </div>
-        </div>
-    </main>
+    </div>
 
-    {{-- Dashboard scripts --}}
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/dashboard/dashboard.js'])
+    @include('admin.dashboard.partials.low-stock-toast')
 
-
-    {{-- ==================== LOW-STOCK TOAST ==================== --}}
-    @if (($lowStockProducts ?? 0) > 0)
-        <div id="low-stock-toast" class="ls-toast ls-toast--visible" role="alert" aria-live="assertive">
-            <div class="ls-toast__icon">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <div class="ls-toast__body">
-                <strong class="ls-toast__title">Alerta de inventario</strong>
-                <p class="ls-toast__msg">
-                    {{ $lowStockProducts }} producto{{ $lowStockProducts > 1 ? 's' : '' }}
-                    {{ $lowStockProducts > 1 ? 'están' : 'está' }} por debajo del stock mínimo configurado.
-                </p>
-                <a href="{{ route('inventory') }}" class="ls-toast__link">
-                    Ver inventario <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            <button class="ls-toast__close" id="close-low-stock-toast" aria-label="Cerrar">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-
-        <script>
-            (function() {
-                var toast = document.getElementById('low-stock-toast');
-                var closeBtn = document.getElementById('close-low-stock-toast');
-                if (!toast) return;
-
-                function hideToast() {
-                    toast.classList.add('ls-toast--hiding');
-                    toast.addEventListener('transitionend', function() {
-                        toast.remove();
-                    }, {
-                        once: true
-                    });
-                }
-
-                var autoTimer = setTimeout(hideToast, 7000);
-
-                closeBtn.addEventListener('click', function() {
-                    clearTimeout(autoTimer);
-                    hideToast();
-                });
-            })();
-        </script>
-    @endif
-
-
-    {{-- ==================== CONFIRM TOAST (success / error) ==================== --}}
     <div id="cf4-toast" class="cf4-toast" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="cf4-toast__icon-wrap">
             <i class="cf4-toast__icon fas"></i>
@@ -417,406 +311,5 @@
         </button>
     </div>
 
-
-    {{-- ==================== WEEKLY REPORT MODAL ==================== --}}
-    <div id="weekly-report-modal" class="wr-modal-overlay" aria-hidden="true" role="dialog" aria-modal="true"
-        aria-labelledby="wr-modal-title">
-        <div class="wr-modal-panel">
-
-            {{-- Header --}}
-            <div class="wr-modal-header">
-                <div class="wr-modal-header__icon">
-                    <i class="fas fa-paper-plane"></i>
-                </div>
-                <div>
-                    <h3 class="wr-modal-header__title" id="wr-modal-title">Reporte semanal automático</h3>
-                    <p class="wr-modal-header__sub">Configure el envío periódico de KPIs del dashboard</p>
-                </div>
-                <button type="button" class="wr-modal-close" id="btn-close-weekly-report-modal"
-                    aria-label="Cerrar">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            {{-- Body --}}
-            <div class="wr-modal-body">
-
-                <form id="weekly-report-settings-form" novalidate>
-                    @csrf
-                    @method('PUT')
-
-                    {{-- ── Sección: Programación ── --}}
-                    <div class="wr-section">
-                        <div class="wr-section__label">
-                            <i class="fas fa-calendar-alt"></i>
-                            Programación del envío
-                        </div>
-
-                        <div class="wr-fields-row">
-                            {{-- Día --}}
-                            <div class="wr-field">
-                                <label class="wr-label" for="weekly_report_day">Día</label>
-                                <select class="wr-select" id="weekly_report_day" name="weekly_report_day">
-                                    @php
-                                        $dayLabels = [
-                                            0 => 'Domingo',
-                                            1 => 'Lunes',
-                                            2 => 'Martes',
-                                            3 => 'Miércoles',
-                                            4 => 'Jueves',
-                                            5 => 'Viernes',
-                                            6 => 'Sábado',
-                                        ];
-                                    @endphp
-                                    @foreach ($dayLabels as $value => $label)
-                                        <option value="{{ $value }}"
-                                            {{ ($weeklyReportDay ?? 1) === $value ? 'selected' : '' }}>
-                                            {{ $label }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            {{-- Hora --}}
-                            <div class="wr-field wr-field--sm">
-                                <label class="wr-label" for="weekly_report_hour">Hora</label>
-                                <div class="wr-time-input">
-                                    <input class="wr-input" type="number" id="weekly_report_hour"
-                                        name="weekly_report_hour" min="0" max="23" step="1"
-                                        placeholder="HH"
-                                        value="{{ old('weekly_report_hour', $weeklyReportHour ?? 8) }}">
-                                    <span class="wr-time-sep">:</span>
-                                    <input class="wr-input" type="number" id="weekly_report_minute"
-                                        name="weekly_report_minute" min="0" max="59" step="1"
-                                        placeholder="MM"
-                                        value="{{ old('weekly_report_minute', $weeklyReportMinute ?? 0) }}">
-                                </div>
-                                <p id="weekly-report-hour-error" class="wr-field-error" role="alert"></p>
-                            </div>
-                        </div>
-
-                        <p class="wr-hint">
-                            <i class="fas fa-info-circle"></i>
-                            El reporte se enviará automáticamente cada semana en el día y hora indicados.
-                        </p>
-                    </div>
-
-                    {{-- ── Sección: Destinatarios ── --}}
-                    <div class="wr-section">
-                        <div class="wr-section__label">
-                            <i class="fas fa-users"></i>
-                            Destinatarios
-                        </div>
-
-                        <div id="wr-recipients-list" class="wr-recipients-list">
-                            {{-- Se generan dinámicamente desde PHP / JS --}}
-                            @php
-                                $recipients = $weeklyReportRecipients ?? [];
-                                if (empty($recipients)) {
-                                    $recipients = [''];
-                                }
-                            @endphp
-                            @foreach ($recipients as $email)
-                                <div class="wr-recipient-row">
-                                    <div class="wr-recipient-input-wrap">
-                                        <i class="fas fa-envelope wr-recipient-icon"></i>
-                                        <input class="wr-input wr-recipient-input" type="email"
-                                            name="weekly_report_recipients[]" placeholder="correo@ejemplo.com"
-                                            value="{{ $email }}" autocomplete="email">
-                                    </div>
-                                    <button type="button" class="wr-recipient-remove"
-                                        aria-label="Eliminar destinatario" title="Eliminar">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
-                            @endforeach
-                        </div>
-
-                        <p id="weekly-report-recipients-error" class="wr-field-error" role="alert"></p>
-
-                        <button type="button" id="wr-add-recipient" class="wr-add-btn">
-                            <i class="fas fa-plus-circle"></i>
-                            Añadir destinatario
-                        </button>
-                    </div>
-
-                    <p id="weekly-report-form-error" class="wr-form-error" role="alert"></p>
-
-                    {{-- Footer --}}
-                    <div class="wr-modal-footer">
-                        <button type="button" class="btn btn-secondary" id="btn-cancel-weekly-report-modal">
-                            <i class="fas fa-times"></i> Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-primary" id="weekly-report-submit">
-                            <i class="fas fa-save"></i> Guardar cambios
-                        </button>
-                    </div>
-
-                </form>
-
-            </div>{{-- /wr-modal-body --}}
-        </div>{{-- /wr-modal-panel --}}
-    </div>{{-- /wr-modal-overlay --}}
-
-
-    <script>
-        (function() {
-            'use strict';
-
-            /* ── DOM refs ─────────────────────────────────────────────────── */
-            var modal = document.getElementById('weekly-report-modal');
-            var openBtn = document.getElementById('btn-open-weekly-report-modal');
-            var closeBtn = document.getElementById('btn-close-weekly-report-modal');
-            var cancelBtn = document.getElementById('btn-cancel-weekly-report-modal');
-            var form = document.getElementById('weekly-report-settings-form');
-            var submitBtn = document.getElementById('weekly-report-submit');
-            var formError = document.getElementById('weekly-report-form-error');
-            var hourError = document.getElementById('weekly-report-hour-error');
-            var rcptError = document.getElementById('weekly-report-recipients-error');
-            var recipientList = document.getElementById('wr-recipients-list');
-            var addBtn = document.getElementById('wr-add-recipient');
-            var actionUrl = '{{ route('admin.orders.settings.weekly-report.update') }}';
-            var csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-            /* ── Toast ────────────────────────────────────────────────────── */
-            var toast = document.getElementById('cf4-toast');
-            var toastIcon = toast.querySelector('.cf4-toast__icon');
-            var toastTitle = toast.querySelector('.cf4-toast__title');
-            var toastMsg = toast.querySelector('.cf4-toast__msg');
-            var toastClose = toast.querySelector('.cf4-toast__close');
-            var toastTimer = null;
-
-            function showToast(type, title, msg) {
-                // type: 'success' | 'error'
-                toast.className = 'cf4-toast cf4-toast--' + type;
-                toastIcon.className = 'cf4-toast__icon fas ' + (type === 'success' ? 'fa-check-circle' :
-                    'fa-exclamation-circle');
-                toastTitle.textContent = title;
-                toastMsg.textContent = msg;
-
-                // Trigger reflow so animation replays
-                void toast.offsetWidth;
-                toast.classList.add('cf4-toast--visible');
-
-                clearTimeout(toastTimer);
-                toastTimer = setTimeout(function() {
-                    hideToast();
-                }, 5000);
-            }
-
-            function hideToast() {
-                toast.classList.remove('cf4-toast--visible');
-            }
-
-            toastClose.addEventListener('click', function() {
-                clearTimeout(toastTimer);
-                hideToast();
-            });
-
-            /* ── Modal open / close ───────────────────────────────────────── */
-            function openModal() {
-                modal.classList.add('wr-modal-overlay--active');
-                modal.removeAttribute('aria-hidden');
-                // Focus first input for accessibility
-                var first = modal.querySelector('select, input');
-                if (first) setTimeout(function() {
-                    first.focus();
-                }, 80);
-            }
-
-            function closeModal() {
-                modal.classList.remove('wr-modal-overlay--active');
-                modal.setAttribute('aria-hidden', 'true');
-            }
-
-            function clearErrors() {
-                [formError, hourError, rcptError].forEach(function(el) {
-                    el.textContent = '';
-                    el.classList.remove('wr-field-error--visible');
-                });
-                // Remove per-input error states
-                recipientList.querySelectorAll('.wr-recipient-input').forEach(function(inp) {
-                    inp.classList.remove('wr-input--error');
-                });
-            }
-
-            openBtn.addEventListener('click', openModal);
-            closeBtn.addEventListener('click', closeModal);
-            cancelBtn.addEventListener('click', closeModal);
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) closeModal();
-            });
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && modal.classList.contains('wr-modal-overlay--active')) closeModal();
-            });
-
-            /* ── Recipient rows ───────────────────────────────────────────── */
-            function updateRemoveButtons() {
-                var rows = recipientList.querySelectorAll('.wr-recipient-row');
-                rows.forEach(function(row) {
-                    var btn = row.querySelector('.wr-recipient-remove');
-                    // Always allow removal (user can leave 0 and we validate on submit)
-                    btn.disabled = rows.length === 1;
-                    btn.style.opacity = rows.length === 1 ? '0.3' : '1';
-                });
-            }
-
-            function addRecipientRow(value) {
-                var row = document.createElement('div');
-                row.className = 'wr-recipient-row wr-recipient-row--new';
-
-                row.innerHTML =
-                    '<div class="wr-recipient-input-wrap">' +
-                    '<i class="fas fa-envelope wr-recipient-icon"></i>' +
-                    '<input class="wr-input wr-recipient-input" type="email" name="weekly_report_recipients[]" ' +
-                    'placeholder="correo@ejemplo.com" value="' + (value || '') + '" autocomplete="email">' +
-                    '</div>' +
-                    '<button type="button" class="wr-recipient-remove" aria-label="Eliminar destinatario" title="Eliminar">' +
-                    '<i class="fas fa-trash-alt"></i>' +
-                    '</button>';
-
-                recipientList.appendChild(row);
-
-                // Animate in
-                requestAnimationFrame(function() {
-                    row.classList.remove('wr-recipient-row--new');
-                });
-
-                row.querySelector('.wr-recipient-remove').addEventListener('click', function() {
-                    removeRow(row);
-                });
-
-                updateRemoveButtons();
-
-                var input = row.querySelector('input');
-                input.focus();
-                return input;
-            }
-
-            function removeRow(row) {
-                row.classList.add('wr-recipient-row--removing');
-                row.addEventListener('transitionend', function() {
-                    row.remove();
-                    updateRemoveButtons();
-                }, {
-                    once: true
-                });
-            }
-
-            // Wire up existing remove buttons (PHP-rendered rows)
-            recipientList.querySelectorAll('.wr-recipient-remove').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    removeRow(btn.closest('.wr-recipient-row'));
-                });
-            });
-
-            updateRemoveButtons();
-
-            addBtn.addEventListener('click', function() {
-                addRecipientRow('');
-            });
-
-            /* ── Form submit ──────────────────────────────────────────────── */
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                clearErrors();
-
-                // Client-side validation: at least one valid email
-                var inputs = recipientList.querySelectorAll('.wr-recipient-input');
-                var validEmails = [];
-                var hasInvalid = false;
-
-                inputs.forEach(function(inp) {
-                    var val = inp.value.trim();
-                    if (val === '') return; // skip empty
-                    // Basic email regex
-                    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-                        validEmails.push(val);
-                    } else {
-                        inp.classList.add('wr-input--error');
-                        hasInvalid = true;
-                    }
-                });
-
-                if (hasInvalid) {
-                    showFieldError(rcptError, 'Uno o más correos tienen un formato inválido.');
-                    return;
-                }
-
-                if (validEmails.length === 0) {
-                    showFieldError(rcptError, 'Ingrese al menos un correo electrónico válido.');
-                    recipientList.querySelector('.wr-recipient-input')?.focus();
-                    return;
-                }
-
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando…';
-
-                // Build FormData from the form + override recipients with deduplicated values
-                var fd = new FormData(form);
-                // Remove all recipients[] entries added by FormData (may include empties)
-                fd.delete('weekly_report_recipients[]');
-                // Re-add only validated unique emails
-                var unique = validEmails.filter(function(v, i, a) {
-                    return a.indexOf(v) === i;
-                });
-                unique.forEach(function(email) {
-                    fd.append('weekly_report_recipients[]', email);
-                });
-
-                // The controller expects a single string field; join to match validation
-                fd.delete('weekly_report_recipients');
-                fd.append('weekly_report_recipients', unique.join(','));
-
-                try {
-                    var response = await fetch(actionUrl, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json'
-                        },
-                        body: fd,
-                    });
-
-                    var json = await response.json();
-
-                    if (response.ok) {
-                        closeModal();
-                        showToast('success', '¡Configuración guardada!', json.message ??
-                            'El reporte semanal ha sido actualizado correctamente.');
-                    } else {
-                        var errors = json.errors ?? {};
-
-                        if (errors.weekly_report_hour || errors.weekly_report_minute) {
-                            showFieldError(hourError, (errors.weekly_report_hour ?? errors
-                                .weekly_report_minute)[0]);
-                        }
-                        if (errors.weekly_report_recipients) {
-                            showFieldError(rcptError, errors.weekly_report_recipients[0]);
-                        }
-
-                        var generalMsg = json.message ?? 'Error al guardar la configuración.';
-                        showFieldError(formError, generalMsg);
-                        showToast('error', 'Error al guardar', generalMsg);
-                    }
-                } catch (err) {
-                    var netMsg = 'Error de red. Por favor, inténtelo de nuevo.';
-                    showFieldError(formError, netMsg);
-                    showToast('error', 'Error de conexión', netMsg);
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar cambios';
-                }
-            });
-
-            function showFieldError(el, msg) {
-                el.textContent = msg;
-                el.classList.add('wr-field-error--visible');
-            }
-
-        })();
-    </script>
-
-</body>
-
-</html>
+    @include('admin.dashboard.partials.weekly-report-modal')
+@endsection

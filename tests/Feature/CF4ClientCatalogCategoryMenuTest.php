@@ -37,7 +37,17 @@ class CF4ClientCatalogCategoryMenuTest extends TestCase
         $response->assertSee('id="catalog-category-panel"', false);
         $response->assertSee('id="catalog-category-trigger"', false);
         $response->assertSee('id="catalog-category-sidebar-toggle"', false);
+        $response->assertSee('catalog-sidebar-stack', false);
+        $response->assertSee('id="catalog-nav-search"', false);
         $response->assertSee('Categorías', false);
+    }
+
+    public function test_home_does_not_include_catalog_header_search(): void
+    {
+        $response = $this->get(route('clients.home'));
+        $response->assertStatus(200);
+        $response->assertDontSee('id="catalog-nav-search"', false);
+        $response->assertDontSee('header-catalog-search', false);
     }
 
     public function test_catalog_redirects_when_price_filter_is_negative(): void

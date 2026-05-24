@@ -65,6 +65,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'scheduler' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/scheduler.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_SCHEDULER_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

@@ -124,6 +124,7 @@ Solo recompilar assets (sin reinstalar):
 
 ## Producción (Render) — recordatorios
 
+- **Laravel Scheduler (CF4-163):** ver [docs/CRON_RENDER_LARAVEL.md](docs/CRON_RENDER_LARAVEL.md) (loop en `docker-entrypoint.sh`, heartbeat en `app_settings`, limitación Render Free).
 - **`APP_URL`** y opcionalmente **`FRONTEND_URL`**: deben ser la URL pública HTTPS. Los **workers de cola** deben tener las mismas variables o los correos pueden generar enlaces a `localhost`.
 - **`SESSION_DRIVER=database`**: requiere tabla `sessions` migrada (`database/migrations/0002_sessions.php`). Alternativa temporal: `SESSION_DRIVER=cookie`.
 - **Google OAuth**: `GOOGLE_REDIRECT_URI` debe coincidir exactamente con la URI autorizada en Google Cloud Console (`{APP_URL}/auth/google/callback`).

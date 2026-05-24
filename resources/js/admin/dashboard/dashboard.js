@@ -1,4 +1,6 @@
 import { syncAllKpiValueScales, syncKpiValueScale, initKpiValueScaleObserver } from '../shared/kpi-value-scale.js';
+import { initLowStockToast } from './low-stock-toast.js';
+import { initWeeklyReportModal } from './weekly-report-modal.js';
 
 let chartJsPromise = null;
 
@@ -851,6 +853,8 @@ class Dashboard {
 // Initialize dashboard when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     new Dashboard();
+    initLowStockToast();
+    initWeeklyReportModal();
 });
 
 // Global helper functions for external calls

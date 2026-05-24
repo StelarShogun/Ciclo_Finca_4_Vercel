@@ -771,7 +771,7 @@
   .sales-actions { flex-wrap: wrap; justify-content: center; }
 
   .kpi-grid      { grid-template-columns: 1fr; }
-  .filters-grid  { grid-template-columns: 1fr; }
+  .filters-grid__fields { grid-template-columns: 1fr; }
   .form-row      { grid-template-columns: 1fr; }
 
   .modal-content,

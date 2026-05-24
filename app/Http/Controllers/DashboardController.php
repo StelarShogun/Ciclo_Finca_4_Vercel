@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
+    /** Rows loaded for dashboard inventory/sales tables (scroll after 5 visible). */
+    private const DASHBOARD_TABLE_LIMIT = 10;
+
     public function index()
     {
         if (! Auth::guard('admin')->check()) {
@@ -288,12 +291,12 @@ class DashboardController extends Controller
         $lowStockProductsList = Product::with(['category', 'supplier'])
             ->lowStockAlert()
             ->orderBy('stock_current', 'asc')
-            ->limit(5)
+            ->limit(self::DASHBOARD_TABLE_LIMIT)
             ->get();
 
         $recentSales = Sale::with(['client'])
             ->orderBy('sale_date', 'desc')
-            ->limit(5)
+            ->limit(self::DASHBOARD_TABLE_LIMIT)
             ->get();
 
         $salesByDay = Sale::select(

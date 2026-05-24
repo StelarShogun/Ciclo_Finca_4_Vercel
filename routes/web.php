@@ -166,6 +166,11 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');
     Route::get('/inventory/classification-filters', [ProductController::class, 'inventoryClassificationFiltersOptions'])
         ->name('inventory.classification-filters');
+    Route::get('/inventory/classification-filters/dimensions', [ProductController::class, 'inventoryClassificationFilterDimensions'])
+        ->name('inventory.classification-filters.dimensions');
+    Route::get('/inventory/classification-filters/{slug}/suggest', [ProductController::class, 'inventoryClassificationFilterSuggest'])
+        ->where('slug', '[a-z0-9_-]+')
+        ->name('inventory.classification-filters.suggest');
 
     // Classification catalog routes.
     Route::get('/classifications/catalog', [ClassificationCatalogController::class, 'index'])->name('admin.classifications.catalog.index');
@@ -203,6 +208,7 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
 
     // Featured product toggle route.
     Route::post('/products/{id}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
+    Route::patch('/products/{id}/activate', [ProductController::class, 'activate'])->name('products.activate')->whereNumber('id');
 
     // Product media management routes.
     Route::post('/products/{id}/gallery/{mediaId}/promote', [ProductController::class, 'promoteToMain'])->name('products.gallery.promote');
@@ -210,6 +216,7 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::resource('products', ProductController::class)->except(['create']);
     Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
     Route::get('/inventory/export/{format?}', [ProductController::class, 'export'])->name('products.export');
+    Route::post('/inventory/import', [ProductController::class, 'importCatalog'])->name('products.import');
     Route::post('/inventory/add-manual/{id}', [ProductController::class, 'addManualStock'])
         ->name('products.stock.add')
         ->whereNumber('id');

@@ -34,6 +34,20 @@ class BrandSeeder extends Seeder
         'Powerade',
         'Clif Bar',
         'Marca demo Ciclo Finca',
+        'B-MO',
+        'Banana',
+        'All Time',
+        'Nicolás',
+        'Fiftyfive',
+        'DDK',
+        'X-Race',
+        'Frees',
+        'La Bici',
+        'Lujo',
+        'Specialized',
+        'BC',
+        'Force',
+        'Saddle Bike',
     ];
 
     public function run(): void

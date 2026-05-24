@@ -12,6 +12,7 @@
   border-radius: 12px;
   color: #fff;
   box-shadow: var(--shadow-md);
+  overflow: visible;
 }
 
 .cf4-admin-page-header__title {
@@ -31,13 +32,13 @@
   margin: 0;
 }
 
-.cf4-admin-page-header a:not(.btn) {
+.cf4-admin-page-header a:not(.btn):not(.inventory-export-menu__item) {
   color: #fff;
   font-weight: 600;
   text-decoration: none;
 }
 
-.cf4-admin-page-header a:not(.btn):hover {
+.cf4-admin-page-header a:not(.btn):not(.inventory-export-menu__item):hover {
   opacity: 0.92;
 }
 
@@ -46,6 +47,32 @@
   gap: 15px;
   align-items: center;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+/* Export dropdown lives inside the green header — needs its own colors */
+.cf4-admin-page-header .inventory-export-menu {
+  color: var(--text-primary, #1f2937);
+}
+
+.cf4-admin-page-header .inventory-export-menu__item {
+  color: var(--text-primary, #1f2937);
+  opacity: 1;
+}
+
+.cf4-admin-page-header .inventory-export-menu__item i {
+  color: var(--color-primary);
+  opacity: 0.9;
+}
+
+.cf4-admin-page-header .inventory-export-menu__item--primary {
+  color: var(--color-primary);
+}
+
+.cf4-admin-page-header .inventory-export-menu__item:hover {
+  color: var(--text-primary, #1f2937);
+  opacity: 1;
 }
 
 .cf4-admin-page-header__actions .btn {

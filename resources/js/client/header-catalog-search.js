@@ -1,3 +1,5 @@
+import { buildProductMediaPlaceholderHtml } from '../shared/product-media-placeholder.js';
+
 /**
  * Navbar catalog search: trending + predictive suggestions (CF4-106/107).
  * Safe to call from clients-users.js (all pages) and clients-page.js (catalog);
@@ -160,7 +162,11 @@ export function initHeaderCatalogSearch() {
                 : '';
 
         var thumb = '';
-        if (it.image_url) {
+        if (it.uses_placeholder_image) {
+            thumb = '<div class="catalog-search-suggestion-thumb catalog-search-suggestion-thumb--placeholder">' +
+                buildProductMediaPlaceholderHtml(it.placeholder_icon_class, it.name, 'suggestion') +
+                '</div>';
+        } else if (it.image_url) {
             thumb = '<div class="catalog-search-suggestion-thumb"><img src="' + esc(it.image_url) + '" alt="" loading="lazy"></div>';
         } else {
             thumb = '<div class="catalog-search-suggestion-thumb' + termThumb + '" aria-hidden="true"></div>';

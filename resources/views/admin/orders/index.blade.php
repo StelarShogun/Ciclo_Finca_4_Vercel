@@ -71,8 +71,12 @@
             </button>
         </div>
 
-        <div class="orders-table-card">
-            <form method="GET" action="{{ route('admin.orders.index') }}" class="orders-toolbar" id="orders-filters-form">
+        @component('admin.partials.filters', [
+            'action' => route('admin.orders.index'),
+            'clearUrl' => route('admin.orders.index'),
+            'formId' => 'orders-filters-form',
+        ])
+            @slot('fields')
                 <div class="filter-group">
                     <label for="orders-status">Estado</label>
                     <select id="orders-status" name="status">
@@ -123,16 +127,11 @@
                     <input type="text" id="orders-search" name="search" value="{{ request('search') }}"
                         placeholder="Nº encargo, factura o cliente" autocomplete="off">
                 </div>
+            @endslot
+        @endcomponent
 
-                <div class="orders-toolbar-actions">
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="fas fa-filter"></i> Aplicar
-                    </button>
-                    <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary btn-sm">Limpiar</a>
-                </div>
-            </form>
-
-            <div data-cf4-orders-table-region id="cf4-orders-table-region" data-cf4-ajax-pagination data-cf4-ajax-scroll>
+        <div class="orders-table-card table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
+            <div data-cf4-orders-table-region id="cf4-orders-table-region">
                 <div id="cf4-list-fragment">
                 <div class="sales-table-container">
                     <table class="sales-table cf4-purchases-table admin-table">

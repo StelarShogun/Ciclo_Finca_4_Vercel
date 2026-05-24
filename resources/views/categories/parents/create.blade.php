@@ -1,145 +1,82 @@
-<!DOCTYPE html>
-<html lang="es">
+@extends('admin.layouts.admin-shell')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Crear categoría - Ciclo Finca 4 Admin</title>
+@section('Titulo pagina', 'Crear categoría - Ciclo Finca 4 Admin')
 
-    @vite(['resources/css/admin/components/page-header.css', 'resources/css/admin/suppliers/suppliers.css'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-
-<body class="admin-layout">
+@section('aside')
     @include('admin.parts.aside')
+@endsection
 
-    <main class="admin-main admin-main--content">
-        <div class="admin-content-wrapper">
-            <div class="form-container">
-            <nav class="admin-breadcrumb" aria-label="Migas de pan">
-                <a href="{{ route('inventory') }}">Inventario</a>
-                <span class="sep">/</span>
-                <span>Crear categoría</span>
-            </nav>
+@push('styles')
+    @vite(['resources/css/admin/suppliers/suppliers.css'])
+@endpush
 
-            @component('admin.partials.page-header', ['title' => 'Crear categoría'])
-                <p>
-                    Definí una categoría principal del catálogo para organizar el inventario.
-                    Luego podés agregar subcategorías y asignar productos.
-                </p>
-            @endcomponent
+@section('contenido')
+    <div class="form-container">
+        <nav class="admin-breadcrumb" aria-label="Migas de pan">
+            <a href="{{ route('inventory') }}">Inventario</a>
+            <span class="sep">/</span>
+            <span>Crear categoría</span>
+        </nav>
 
-            <div class="form-card">
-                <form
-                    id="create-category-form"
-                    action="{{ route('categories.parents.store') }}"
-                    method="POST"
-                    class="form-body"
-                >
-                    @csrf
+        @component('admin.partials.page-header', ['title' => 'Crear categoría'])
+            <p>
+                Definí una categoría principal del catálogo para organizar el inventario.
+                Luego podés agregar subcategorías y asignar productos.
+            </p>
+        @endcomponent
 
-                    <div class="form-group">
-                        <label for="name">Nombre de la categoría *</label>
-                        <input
-                            type="text"
-                            id="name"
-                            name="name"
-                            value="{{ old('name') }}"
-                            required
-                            placeholder="Ej. Iluminación, Llantas"
-                            autocomplete="off"
-                        >
-                        <div class="error-message">{{ $errors->first('name') }}</div>
-                    </div>
+        <div class="form-card">
+            <form
+                id="create-category-form"
+                action="{{ route('categories.parents.store') }}"
+                method="POST"
+                class="form-body"
+                data-cf4-confirm
+                data-confirm-title="¿Guardar esta categoría?"
+                data-confirm-text="Se creará una nueva categoría padre del catálogo."
+                data-confirm-button="Sí, guardar"
+            >
+                @csrf
 
-                    <div class="form-group">
-                        <label for="description">Descripción</label>
-                        <textarea
-                            id="description"
-                            name="description"
-                            rows="3"
-                            placeholder="Opcional."
-                        >{{ old('description') }}</textarea>
-                        <div class="error-message">{{ $errors->first('description') }}</div>
-                    </div>
+                <div class="form-group">
+                    <label for="name">Nombre de la categoría *</label>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value="{{ old('name') }}"
+                        required
+                        placeholder="Ej. Iluminación, Llantas"
+                        autocomplete="off"
+                    >
+                    <div class="error-message">{{ $errors->first('name') }}</div>
+                </div>
 
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Guardar categoría
-                        </button>
+                <div class="form-group">
+                    <label for="description">Descripción</label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="3"
+                        placeholder="Opcional."
+                    >{{ old('description') }}</textarea>
+                    <div class="error-message">{{ $errors->first('description') }}</div>
+                </div>
 
-                        <a href="{{ route('inventory') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Volver al inventario
-                        </a>
-                    </div>
-                </form>
-            </div>
-            </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus" aria-hidden="true"></i> Guardar categoría
+                    </button>
+
+                    <a href="{{ route('inventory') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver al inventario
+                    </a>
+                </div>
+            </form>
         </div>
-    </main>
+    </div>
+@endsection
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        (function () {
-            const form = document.getElementById('create-category-form');
-
-            if (form) {
-                form.addEventListener('submit', function (event) {
-                    if (form.dataset.confirmed === '1') {
-                        return;
-                    }
-
-                    event.preventDefault();
-
-                    Swal.fire({
-                        title: '¿Guardar esta categoría?',
-                        text: 'Se creará una nueva categoría padre del catálogo.',
-                        icon: 'question',
-                        showCancelButton: true,
-                        buttonsStyling: false,
-                        customClass: {
-                            confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
-                            cancelButton: 'cf4-swal-btn cf4-swal-btn-muted',
-                        },
-                        confirmButtonText: 'Sí, guardar',
-                        cancelButtonText: 'Cancelar',
-                        reverseButtons: true,
-                        focusCancel: true,
-                    }).then(function (result) {
-                        if (result.isConfirmed) {
-                            form.dataset.confirmed = '1';
-                            form.submit();
-                        }
-                    });
-                });
-            }
-
-            const successMessage = @json(session('status'));
-
-            if (!successMessage) {
-                return;
-            }
-
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-                didOpen: function (toastEl) {
-                    toastEl.addEventListener('mouseenter', Swal.stopTimer);
-                    toastEl.addEventListener('mouseleave', Swal.resumeTimer);
-                },
-            });
-
-            Toast.fire({
-                icon: 'success',
-                title: successMessage,
-            });
-        })();
-    </script>
-</body>
-
-</html>
+@push('scripts')
+    @vite(['resources/js/admin/classifications/forms.js'])
+@endpush

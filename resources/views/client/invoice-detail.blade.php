@@ -140,22 +140,22 @@
                                         $lineTotal = $item->total !== null ? (float) $item->total : ($unitPrice * $qty);
                                         $product = $item->product;
                                         $productName = $product->name ?? 'Producto eliminado';
-                                        $imageUrl = null;
-                                        if ($product && !empty($product->image) && $product->image !== 'default.png') {
-                                            $imageUrl = filter_var($product->image, FILTER_VALIDATE_URL)
-                                                ? $product->image
-                                                : asset('storage/'.ltrim($product->image, '/'));
-                                        }
                                     @endphp
                                     <article class="cf4-order-line-card">
                                         <div class="cf4-order-line-card__product">
-                                            <span class="cf4-product-thumb">
-                                                @if($imageUrl)
-                                                    <img src="{{ $imageUrl }}" alt="{{ $productName }}" loading="lazy">
+                                            <div class="cf4-product-thumb">
+                                                @if($product)
+                                                    @include('shared.parts.product-media', [
+                                                        'product' => $product,
+                                                        'variant' => 'thumb-invoice',
+                                                        'alt' => $productName,
+                                                    ])
                                                 @else
-                                                    <i class="fas fa-bicycle" aria-hidden="true"></i>
+                                                    <div class="product-media-placeholder product-media-placeholder--thumb-invoice" role="img" aria-label="Producto eliminado">
+                                                        <i class="fas fa-box" aria-hidden="true"></i>
+                                                    </div>
                                                 @endif
-                                            </span>
+                                            </div>
                                             <div>
                                                 <div class="cf4-product-name">{{ $productName }}</div>
                                                 <div class="cf4-product-meta">SKU: {{ $product ? $product->displaySku() : '—' }}</div>

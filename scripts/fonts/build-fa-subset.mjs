@@ -93,6 +93,8 @@ const REQUIRED_ICONS = [
     // Client header / catalog
     'heart', 'bell', 'cart-plus', 'cart-shopping', 'magnifying-glass',
     'user-circle', 'bars', 'chevron-down', 'bicycle', 'arrow-right',
+    // Product detail / placeholders
+    'tint', 'wine-bottle', 'layer-group', 'bolt', 'money-bill-wave', 'comment-alt',
 ];
 
 const missingRequired = [];

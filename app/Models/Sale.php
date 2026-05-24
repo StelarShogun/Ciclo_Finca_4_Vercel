@@ -318,4 +318,80 @@ class Sale extends Model
     {
         return self::formatAdminDateTime($this->sale_date);
     }
+
+    /** Compact date for dense admin layouts (e.g. dashboard recent sales). */
+    public function adminSaleDateShortLabel(): string
+    {
+        return self::formatAdminDateShort($this->sale_date);
+    }
+
+    public function adminDashboardClientLabel(): string
+    {
+        if ($this->client) {
+            return trim(
+                $this->client->name.' '.
+                $this->client->first_surname.' '.
+                ($this->client->second_surname ?? '')
+            );
+        }
+
+        if ($this->buyer_name) {
+            return $this->buyer_name;
+        }
+
+        return 'Mostrador / sin datos';
+    }
+
+    public function adminDashboardInvoiceLabel(): string
+    {
+        return $this->invoice_number ?? '#'.$this->sale_id;
+    }
+
+    public function adminDashboardStatusTitle(): string
+    {
+        return match ($this->status) {
+            'completed' => 'Completada',
+            'pending' => 'Pendiente',
+            'ready_to_pickup' => 'Por recoger',
+            'cancelled', 'canceled' => 'Cancelada',
+            'refunded' => 'Reembolsada',
+            'returned' => 'Devuelta',
+            default => ucfirst((string) $this->status),
+        };
+    }
+
+    public function adminDashboardStatusShortLabel(): string
+    {
+        return match ($this->status) {
+            'completed' => 'Completada',
+            'pending' => 'Pend.',
+            'ready_to_pickup' => 'Recoger',
+            'cancelled', 'canceled' => 'Cancel.',
+            'refunded' => 'Reemb.',
+            'returned' => 'Devuelta',
+            default => $this->adminDashboardStatusTitle(),
+        };
+    }
+
+    public function adminDashboardStatusBadgeClass(): string
+    {
+        return match ($this->status) {
+            'completed' => 'success',
+            'pending', 'ready_to_pickup' => 'warning',
+            default => 'danger',
+        };
+    }
+
+    public static function formatAdminDateShort(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '—';
+        }
+
+        $dt = $value instanceof Carbon
+            ? $value->copy()
+            : Carbon::parse($value);
+
+        return $dt->timezone(config('app.timezone'))->format('d/m/y');
+    }
 }

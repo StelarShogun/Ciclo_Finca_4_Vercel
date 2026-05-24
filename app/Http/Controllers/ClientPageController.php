@@ -14,8 +14,11 @@ use App\Services\CartService;
 use App\Services\Catalog\CatalogProductSearchTelemetry;
 use App\Services\InventoryMovementService;
 use App\Support\AdminPerPage;
+use App\Support\ClientCategoryIcons;
 use App\Support\ClientStorefrontCache;
+use App\Support\ProductImageUrls;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -26,10 +29,12 @@ use Illuminate\Validation\Rule;
 
 class ClientPageController extends Controller
 {
+    private const PRODUCT_NOVELTY_DAYS = 30;
+
     public function home()
     {
         // Load featured products that are active, in stock, and recently created.
-        $featuredProducts = Product::with(['category'])
+        $featuredProducts = Product::with(['category.parent'])
             ->activeInClientStore()
             ->where('is_featured', true)
             ->where('stock_current', '>', 0)
@@ -60,7 +65,7 @@ class ClientPageController extends Controller
     {
         // Base del catálogo cliente: solo productos visibles/publicables para el cliente.
         $query = Product::with([
-            'category',
+            'category.parent',
             'brands',
             'media' => static function ($q): void {
                 $q->where('collection_name', 'main_image');
@@ -260,30 +265,7 @@ class ClientPageController extends Controller
     /** Clases Font Awesome (fas fa-*) por heurística de nombre — sin icono en BD. */
     private function clientCatalogCategoryIconClass(?string $name): string
     {
-        $n = mb_strtolower(trim((string) $name), 'UTF-8');
-        $pairs = [
-            'bicicleta' => 'fas fa-bicycle',
-            'bici' => 'fas fa-bicycle',
-            'accesorio' => 'fas fa-box-open',
-            'componente' => 'fas fa-cogs',
-            'herramienta' => 'fas fa-wrench',
-            'nutrición' => 'fas fa-apple-alt',
-            'nutricion' => 'fas fa-apple-alt',
-            'ropa' => 'fas fa-tshirt',
-            'seguridad' => 'fas fa-shield-alt',
-            'repuesto' => 'fas fa-cog',
-            'llanta' => 'fas fa-circle',
-            'casco' => 'fas fa-hard-hat',
-            'luz' => 'fas fa-lightbulb',
-            'electr' => 'fas fa-bolt',
-        ];
-        foreach ($pairs as $needle => $icon) {
-            if (str_contains($n, $needle)) {
-                return $icon;
-            }
-        }
-
-        return 'fas fa-layer-group';
+        return ClientCategoryIcons::iconClassForName($name);
     }
 
     /** Árbol de categorías raíz + hijos (compartido entre inicio y catálogo). */
@@ -330,7 +312,7 @@ class ClientPageController extends Controller
         $maxFeatured = 8;
 
         $featured = Product::with([
-            'category',
+            'category.parent',
             'media' => static function ($q): void {
                 $q->where('collection_name', 'main_image');
             },
@@ -346,7 +328,7 @@ class ClientPageController extends Controller
 
         $novelties = $remaining > 0
             ? Product::with([
-                'category',
+                'category.parent',
                 'media' => static function ($q): void {
                     $q->where('collection_name', 'main_image');
                 },
@@ -364,7 +346,7 @@ class ClientPageController extends Controller
 
     public function product(Request $request, int $id, ?string $slug = null)
     {
-        $product = Product::with(['category', 'supplier', 'classificationValues.dimension'])->findOrFail($id);
+        $product = Product::with(['category.parent', 'brands', 'classificationValues.dimension'])->findOrFail($id);
 
         // Redirect to the canonical product URL when the slug does not match.
         $canonicalSlug = $product->clientPublicSlug();
@@ -375,11 +357,33 @@ class ClientPageController extends Controller
             ), 301);
         }
 
-        $relatedProducts = Product::with(['category'])
+        $relatedProducts = Product::with(['category.parent', 'brands'])
             ->where('category_id', $product->category_id)
             ->where('product_id', '!=', $product->product_id)
             ->limit(4)
             ->get();
+
+        $favoriteProductIds = collect();
+        if (Auth::guard('clients')->check()) {
+            $favoriteProductIds = FavoriteProduct::query()
+                ->where('user_id', (int) Auth::guard('clients')->id())
+                ->pluck('product_id')
+                ->map(fn ($pid) => (int) $pid);
+        }
+
+        $isProductFavorite = $favoriteProductIds->contains((int) $product->product_id);
+
+        $taxonomy = $this->productDetailTaxonomy($product);
+        $primaryBrand = $product->brands->first();
+        $catalogBrandUrl = $primaryBrand
+            ? route('clients.catalog', ['brand_id' => $primaryBrand->id])
+            : null;
+
+        $whatsappConsultUrl = $this->productWhatsappConsultUrl($product);
+        $orderReservationHours = max(1, (int) config('sales.ready_to_pickup_expiration_hours', 72));
+
+        $isNoveltyProduct = $product->created_at !== null
+            && $product->created_at->greaterThanOrEqualTo(now()->subDays(self::PRODUCT_NOVELTY_DAYS));
 
         $cartCount = $this->getCartCount();
 
@@ -499,8 +503,75 @@ class ClientPageController extends Controller
             'verifiedPurchaserIds',
             'reviewsSort',
             'reviewFilter',
-            'productReviewStats'
+            'productReviewStats',
+            'favoriteProductIds',
+            'isProductFavorite',
+            'taxonomy',
+            'primaryBrand',
+            'catalogBrandUrl',
+            'isNoveltyProduct',
+            'whatsappConsultUrl',
+            'orderReservationHours',
         ));
+    }
+
+    private function productWhatsappConsultUrl(Product $product): ?string
+    {
+        $configured = config('cf4_legal.whatsapp_url');
+        if (is_string($configured) && trim($configured) !== '') {
+            return trim($configured);
+        }
+
+        $phone = config('cf4_legal.contact_phone');
+        if (! is_string($phone) || trim($phone) === '') {
+            return null;
+        }
+
+        $digits = preg_replace('/\D+/', '', $phone);
+        if ($digits === '') {
+            return null;
+        }
+
+        $message = 'Hola, me gustaría consultar por: '.$product->name;
+
+        return 'https://wa.me/'.$digits.'?text='.rawurlencode($message);
+    }
+
+    /**
+     * @return array{parentCategory: ?Category, subcategory: ?Category, catalogParentUrl: ?string, catalogSubcategoryUrl: ?string}
+     */
+    private function productDetailTaxonomy(Product $product): array
+    {
+        $category = $product->category;
+        if ($category === null) {
+            return [
+                'parentCategory' => null,
+                'subcategory' => null,
+                'catalogParentUrl' => null,
+                'catalogSubcategoryUrl' => null,
+            ];
+        }
+
+        if ($category->parent_category_id !== null) {
+            $parentCategory = $category->parent;
+            $subcategory = $category;
+
+            return [
+                'parentCategory' => $parentCategory,
+                'subcategory' => $subcategory,
+                'catalogParentUrl' => $parentCategory
+                    ? route('clients.catalog', ['category_id' => $parentCategory->category_id])
+                    : null,
+                'catalogSubcategoryUrl' => route('clients.catalog', ['category_id' => $subcategory->category_id]),
+            ];
+        }
+
+        return [
+            'parentCategory' => $category,
+            'subcategory' => null,
+            'catalogParentUrl' => route('clients.catalog', ['category_id' => $category->category_id]),
+            'catalogSubcategoryUrl' => null,
+        ];
     }
 
     public function addToCart(Request $request)
@@ -764,7 +835,7 @@ class ClientPageController extends Controller
      * Display cart. Session `cart` is the source of truth (minimal rows only).
      * It is only mutated via addToCart, updateCart, removeFromCart, or syncCartWithStock when stock clamps occur.
      */
-    public function cart()
+    public function cart(Request $request)
     {
         $this->syncCartWithStock();
 
@@ -785,12 +856,14 @@ class ClientPageController extends Controller
                 $subtotal = $item['price'] * $qty;
                 $total += $subtotal;
 
-                $mediaUrl = $product->getFirstMediaUrl('main_image');
+                $image = ProductImageUrls::clientPresentation($product);
                 $cartItems[] = [
                     'product_id' => $product->product_id,
                     'name' => $product->name,
                     'price' => $item['price'],
-                    'image_url' => $mediaUrl ?: asset('assets/images/products/'.($product->image ?? 'default.png')),
+                    'image_url' => $image['image_url'],
+                    'uses_placeholder_image' => $image['uses_placeholder_image'],
+                    'placeholder_icon_class' => $image['placeholder_icon_class'],
                     'quantity' => $qty,
                     'stock_available' => $product->stock_current,
                     'subtotal' => $subtotal,
@@ -800,8 +873,19 @@ class ClientPageController extends Controller
         }
 
         $cartCount = $this->getCartCount();
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
 
-        return view('client.cart', compact('cartItems', 'total', 'cartCount'));
+        $cartItemsPaginator = new LengthAwarePaginator(
+            collect($cartItems)->forPage($currentPage, $perPage)->values()->all(),
+            count($cartItems),
+            $perPage,
+            $currentPage,
+            ['path' => route('clients.cart')]
+        );
+        $cartItemsPaginator->withQueryString();
+
+        return view('client.cart', compact('cartItemsPaginator', 'total', 'cartCount'));
     }
 
     public function removeFromCart(int $id)

@@ -37,9 +37,9 @@
                     <div class="cart-toolbar-text">
                         <span class="cart-toolbar-label">Resumen rápido</span>
 
-                        @if(count($cartItems) > 0)
+                        @if($cartItemsPaginator->total() > 0)
                             <span class="cart-toolbar-count">
-                                {{ count($cartItems) }} {{ count($cartItems) === 1 ? 'artículo' : 'artículos' }}
+                                {{ $cartItemsPaginator->total() }} {{ $cartItemsPaginator->total() === 1 ? 'artículo' : 'artículos' }}
                             </span>
                         @endif
                     </div>
@@ -50,7 +50,7 @@
                             Seguir comprando
                         </a>
 
-                        @if(count($cartItems) > 0)
+                        @if($cartItemsPaginator->total() > 0)
                             <button type="button" class="btn btn-outline-danger btn-sm" id="btn-clear-cart">
                                 <i class="fas fa-trash-alt" aria-hidden="true"></i>
                                 Vaciar carrito
@@ -59,22 +59,29 @@
                     </div>
                 </div>
 
-                @if(count($cartItems) > 0)
+                @if($cartItemsPaginator->total() > 0)
                     <div class="cart-layout">
-                        <div class="cart-items" role="list" aria-label="Productos en el carrito">
-                            @foreach($cartItems as $item)
+                        <div class="cart-items-panel">
+                            <div class="cart-items" role="list" aria-label="Productos en el carrito">
+                            @foreach($cartItemsPaginator as $item)
                                 @php
                                     $productUrl = $item['product_url'] ?? route('clients.catalog', ['search' => $item['name']]);
                                 @endphp
 
                                 <article class="cart-item" role="listitem" data-product-id="{{ $item['product_id'] }}">
                                     <a href="{{ $productUrl }}" class="cart-item-image" tabindex="-1" aria-hidden="true">
-                                        <img
-                                            src="{{ $item['image_url'] }}"
-                                            alt=""
-                                            data-fallback-src="{{ asset('favicon.svg') }}"
-                                            onerror="this.src=this.dataset.fallbackSrc;"
-                                        >
+                                        @if(!empty($item['uses_placeholder_image']))
+                                            <div class="product-media-placeholder product-media-placeholder--cart" role="img" aria-label="Sin imagen: {{ $item['name'] }}">
+                                                <i class="{{ $item['placeholder_icon_class'] ?? 'fas fa-box' }}" aria-hidden="true"></i>
+                                            </div>
+                                        @else
+                                            <img
+                                                src="{{ $item['image_url'] }}"
+                                                alt=""
+                                                data-fallback-src="{{ asset('favicon.svg') }}"
+                                                onerror="this.src=this.dataset.fallbackSrc;"
+                                            >
+                                        @endif
                                     </a>
 
                                     <div class="cart-item-main">
@@ -154,6 +161,13 @@
                                     </div>
                                 </article>
                             @endforeach
+                        </div>
+
+                        @if($cartItemsPaginator->hasPages())
+                            <div class="cart-pagination-wrap">
+                                <x-pagination :paginator="$cartItemsPaginator" label="productos del carrito" />
+                            </div>
+                        @endif
                         </div>
 
                         <aside class="cart-summary" aria-labelledby="cart-summary-title">

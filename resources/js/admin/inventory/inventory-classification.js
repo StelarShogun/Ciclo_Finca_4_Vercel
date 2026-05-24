@@ -9,8 +9,10 @@ import {
     readJsonOrThrow,
     smartFetch,
     jsonValidationMessage,
+    showSubtleNotification,
 } from './inventory-shared.js';
-import { fireSwal } from '../shared/swal.js';
+import { createDropdownPortal } from '../shared/combobox-dropdown-portal.js';
+import { cf4Confirm } from '../shared/swal.js';
 
 function collectClassificationValueIds(container) {
     const ids = [];
@@ -246,7 +248,7 @@ function setupClassificationDimensionCard(card, dimension, initialValueId) {
     renderChip();
 }
 
-function buildDimensionCard(attr, initialValueId) {
+function buildDimensionCard(attr, initialValueId, editorContext = null) {
     const card = document.createElement('div');
     card.className = 'classification-card';
     card.dataset.cfDimensionId = String(attr.id);
@@ -263,6 +265,52 @@ function buildDimensionCard(attr, initialValueId) {
         slug.textContent = attr.slug;
         head.appendChild(slug);
     }
+
+    if (editorContext?.categoryId && editorContext?.containerSelector) {
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'classification-card__remove';
+        removeBtn.setAttribute('aria-label', `Eliminar atributo ${String(attr.label || 'atributo')}`);
+        removeBtn.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
+        removeBtn.addEventListener('click', async () => {
+            const label = attr.label || 'este atributo';
+            const { isConfirmed } = await cf4Confirm({
+                title: '¿Eliminar atributo?',
+                html: `<p>Se desactivará <strong>${escapeHtml(label)}</strong> del catálogo de esta subcategoría. Los productos que ya tenían un valor conservan su asignación.</p>`,
+                icon: 'warning',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                danger: true,
+            });
+            if (!isConfirmed) return;
+
+            removeBtn.disabled = true;
+            try {
+                const res = await smartFetch(CF_API.destroyDimension(attr.id), {
+                    method: 'DELETE',
+                    headers: {
+                        ...jsonHeaders(),
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': getCSRFToken(),
+                    },
+                });
+                await readJsonOrThrow(res, 'No se pudo eliminar el atributo.');
+                showSubtleNotification('Atributo eliminado', 'success');
+                const preserved = collectClassificationValueIds(editorContext.container);
+                await refreshClassificationFields(
+                    editorContext.containerSelector,
+                    editorContext.categoryId,
+                    preserved
+                );
+            } catch (e) {
+                const msg = e?.data ? jsonValidationMessage(e.data) : e.message;
+                showSubtleNotification(msg || 'No se pudo eliminar el atributo.', 'error');
+                removeBtn.disabled = false;
+            }
+        });
+        head.appendChild(removeBtn);
+    }
+
     card.appendChild(head);
 
     const hidden = document.createElement('input');
@@ -322,6 +370,13 @@ async function refreshClassificationFields(containerSelector, categoryId, presel
                 'Elegí categoría y, si aplica, subcategoría. Los atributos se configuran por tipo de producto (subcategoría).';
             hint.hidden = false;
         }
+        const placeholder = document.createElement('div');
+        placeholder.className = 'classification-placeholder';
+        placeholder.setAttribute('role', 'status');
+        placeholder.innerHTML =
+            '<p class="classification-placeholder__title">Atributos no disponibles todavía</p>' +
+            '<p class="classification-placeholder__text">Completá <strong>Categoría</strong> y, si aparece, <strong>Subcategoría</strong> en «Datos básicos». El editor de color, talla, etc. se cargará aquí automáticamente.</p>';
+        container.appendChild(placeholder);
         return;
     }
 
@@ -430,6 +485,7 @@ async function refreshClassificationFields(containerSelector, categoryId, presel
     toolbar.appendChild(dimBtn);
     toolbar.appendChild(toolbarFeedback);
     editor.appendChild(toolbar);
+    container.appendChild(editor);
 
     dimBtn.addEventListener('click', async () => {
         const label = dimLabel.value.trim();
@@ -477,7 +533,6 @@ async function refreshClassificationFields(containerSelector, categoryId, presel
         empty.appendChild(t1);
         empty.appendChild(t2);
         editor.appendChild(empty);
-        container.appendChild(editor);
 
         container._cfOutsideAbort = new AbortController();
         const { signal } = container._cfOutsideAbort;
@@ -495,12 +550,25 @@ async function refreshClassificationFields(containerSelector, categoryId, presel
         return;
     }
 
-    attrs.forEach((attr) => {
-        const initial = selMap[attr.id] ?? null;
-        editor.appendChild(buildDimensionCard(attr, initial));
-    });
-
-    container.appendChild(editor);
+    try {
+        const editorContext = {
+            categoryId,
+            containerSelector,
+            container,
+        };
+        attrs.forEach((attr) => {
+            const initial = selMap[attr.id] ?? null;
+            editor.appendChild(buildDimensionCard(attr, initial, editorContext));
+        });
+    } catch (error) {
+        console.error('classification editor build failed', error);
+        const errBox = document.createElement('p');
+        errBox.className = 'classification-build-error';
+        errBox.setAttribute('role', 'alert');
+        errBox.textContent =
+            'No se pudieron mostrar las tarjetas de atributos. Recargá el modal o cambiá la subcategoría para intentar de nuevo.';
+        editor.appendChild(errBox);
+    }
 
     container._cfOutsideAbort = new AbortController();
     const { signal } = container._cfOutsideAbort;
@@ -521,6 +589,8 @@ export const CF_API = {
     options: (categoryId) => `/classifications/catalog/${encodeURIComponent(categoryId)}/options`,
     storeDimension: (categoryId) =>
         `/classifications/catalog/${encodeURIComponent(categoryId)}/dimensions`,
+    destroyDimension: (dimensionId) =>
+        `/classifications/dimensions/${encodeURIComponent(dimensionId)}`,
     storeValue: (dimensionId) =>
         `/classifications/dimensions/${encodeURIComponent(dimensionId)}/values`,
 };

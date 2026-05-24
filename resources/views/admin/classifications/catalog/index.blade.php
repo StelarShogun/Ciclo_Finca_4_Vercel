@@ -24,7 +24,6 @@
 
             <div class="form-container">
 
-                {{-- ================= HEADER ================= --}}
                 @component('admin.partials.page-header', [
                     'title' => 'Gestión de opciones por tipo de producto',
                 ])
@@ -40,7 +39,6 @@
                     @endslot
                 @endcomponent
 
-                {{-- ================= CONTENT ================= --}}
                 <div class="form-card"
                     @if (! $subcategories->isEmpty()) style="padding: 0; overflow: hidden;" @endif
                 >
@@ -62,7 +60,7 @@
                                             <th>Categoría</th>
                                             <th>Subcategoría</th>
                                             <th>Atributos definidos</th>
-                                            <th class="admin-table__col--actions">Acciones</th>
+                                            <th class="admin-table__col--actions" scope="col">Acciones</th>
                                         </tr>
                                     </thead>
 
@@ -84,8 +82,11 @@
                                             </tr>
                                         @endforeach
                                     </tbody>
-
                                 </table>
+
+                                <div class="pagination-wrapper">
+                                    <x-admin.pagination :paginator="$subcategories" label="tipos de producto" />
+                                </div>
                             </div>
 
                         @endif

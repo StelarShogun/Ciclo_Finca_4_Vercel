@@ -27,113 +27,38 @@
             'description' =>
                 'Analiza los ingresos, unidades vendidas y participación de cada categoría en el periodo seleccionado.',
         ])
-            @slot('actions')
-                <a href="{{ route('admin.reports.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    Volver a Reportes
-                </a>
-            @endslot
         @endcomponent
 
         {{-- ==================== FILTROS ==================== --}}
-        <div class="filters-section">
-
-            <div class="filters-header">
-                <h2 class="filters-title">
-                    Filtros de búsqueda
-                </h2>
-            </div>
-
-            <form
-                method="GET"
-                action="{{ route('sales.reports.byCategory') }}"
-                id="filters-form">
-
-                <div class="filters-grid">
-
-                    <div class="filter-group">
-                        <label for="date-range">
-                            Rango de fecha
-                        </label>
-
-                        <select id="date-range" name="date_range">
-                            <option value="today" {{ $dateRange == 'today' ? 'selected' : '' }}>
-                                Hoy
-                            </option>
-
-                            <option value="week" {{ $dateRange == 'week' ? 'selected' : '' }}>
-                                Esta semana
-                            </option>
-
-                            <option value="month" {{ $dateRange == 'month' ? 'selected' : '' }}>
-                                Este mes
-                            </option>
-
-                            <option value="custom" {{ $dateRange == 'custom' ? 'selected' : '' }}>
-                                Personalizado
-                            </option>
-                        </select>
-                    </div>
-
-                    <div
-                        class="filter-group"
-                        id="custom-from"
-                        style="{{ $dateRange == 'custom' ? '' : 'display:none' }}">
-
-                        <label for="date_from">
-                            Desde
-                        </label>
-
-                        <input
-                            type="date"
-                            id="date_from"
-                            name="date_from"
-                            value="{{ request('date_from') }}">
-                    </div>
-
-                    <div
-                        class="filter-group"
-                        id="custom-to"
-                        style="{{ $dateRange == 'custom' ? '' : 'display:none' }}">
-
-                        <label for="date_to">
-                            Hasta
-                        </label>
-
-                        <input
-                            type="date"
-                            id="date_to"
-                            name="date_to"
-                            value="{{ request('date_to') }}">
-                    </div>
-
-                    <div class="filter-group filter-buttons">
-
-                        <button
-                            type="submit"
-                            class="btn btn-primary filter-btn">
-
-                            <i class="fas fa-search"></i>
-                            Aplicar
-
-                        </button>
-
-                        <a
-                            href="{{ route('sales.reports.byCategory') }}"
-                            class="btn btn-secondary filter-btn">
-
-                            <i class="fas fa-times"></i>
-                            Limpiar
-
-                        </a>
-
-                    </div>
-
+        @component('admin.partials.filters', [
+            'action' => route('sales.reports.byCategory'),
+            'clearUrl' => route('sales.reports.byCategory'),
+            'formId' => 'filters-form',
+            'preservePerPage' => false,
+            'title' => 'Filtros de búsqueda',
+        ])
+            @slot('fields')
+                <div class="filter-group">
+                    <label for="date-range">Rango de Fecha</label>
+                    <select id="date-range" name="date_range">
+                        <option value="today" {{ $dateRange == 'today' ? 'selected' : '' }}>Hoy</option>
+                        <option value="week" {{ $dateRange == 'week' ? 'selected' : '' }}>Esta semana</option>
+                        <option value="month" {{ $dateRange == 'month' ? 'selected' : '' }}>Este mes</option>
+                        <option value="custom" {{ $dateRange == 'custom' ? 'selected' : '' }}>Personalizado</option>
+                    </select>
                 </div>
 
-            </form>
+                <div class="filter-group" id="custom-from" style="{{ $dateRange == 'custom' ? '' : 'display:none' }}">
+                    <label for="date_from">Desde</label>
+                    <input type="date" id="date_from" name="date_from" value="{{ request('date_from') }}">
+                </div>
 
-        </div>
+                <div class="filter-group" id="custom-to" style="{{ $dateRange == 'custom' ? '' : 'display:none' }}">
+                    <label for="date_to">Hasta</label>
+                    <input type="date" id="date_to" name="date_to" value="{{ request('date_to') }}">
+                </div>
+            @endslot
+        @endcomponent
 
         {{-- ==================== CONTENIDO ==================== --}}
         @if ($rows->isEmpty())

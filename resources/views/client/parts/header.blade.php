@@ -62,8 +62,9 @@
                     $cf4SearchSuggestionsUrl = route('api.products.suggestions');
                     $cf4SearchTrendingUrl = route('api.catalog.search-trending');
                 @endphp
-                {{-- Búsqueda junto al carrito; al expandir crece hacia la izquierda --}}
+                {{-- Búsqueda de catálogo: solo en ruta /catalog (GET); en otras páginas no se muestra. --}}
                 <div class="header-right-cluster">
+                    @if(request()->routeIs('clients.catalog'))
                     <div class="header-catalog-search"
                          data-catalog-suggestions
                          data-suggestions-url="{{ $cf4SearchSuggestionsUrl }}"
@@ -121,6 +122,7 @@
                              aria-label="Sugerencias de búsqueda"
                              aria-hidden="true"></div>
                     </div>
+                    @endif
 
                     {{-- Header actions: cart and user menu --}}
                     <div class="header-actions">

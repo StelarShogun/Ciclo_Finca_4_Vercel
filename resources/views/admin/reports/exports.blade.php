@@ -124,9 +124,11 @@
                 'inventory' => [
                     'id' => 'inventory',
                     'title' => 'Inventario',
-                    'subtitle' => 'Exporta inventario en PDF, Excel o XML.',
+                    'subtitle' => 'Exporta inventario en paquete ZIP (con imágenes), JSON, PDF, Excel o XML.',
                     'formatMode' => 'path',
                     'baseUrls' => [
+                        'bundle' => route('products.export', ['format' => 'bundle']),
+                        'json' => route('products.export', ['format' => 'json']),
                         'pdf' => route('products.export', ['format' => 'pdf']),
                         'excel' => route('products.export', ['format' => 'excel']),
                         'xml' => route('products.export', ['format' => 'xml']),
@@ -423,15 +425,13 @@
         </nav>
 
         @component('admin.partials.page-header', ['title' => 'Exportación de datos'])
-            <div 
-                <p>
-                    Descarga reportes y listados administrativos en PDF, Excel o XML desde un solo lugar.
-                </p>
-                <p>
-                    Puedes exportar información del dashboard, inventario, ventas, productos más vendidos y registros
-                    administrativos.
-                </p>
-            </div>
+            <p>
+                Descarga reportes y listados administrativos en PDF, Excel o XML desde un solo lugar.
+            </p>
+            <p>
+                Puedes exportar información del dashboard, inventario, ventas, productos más vendidos y registros
+                administrativos.
+            </p>
         @endcomponent
 
         <div class="reports-exports-layout">
@@ -453,6 +453,10 @@
                         <span class="exports-item-label">Inventario</span>
                         <span class="exports-item-actions">
                             <a href="#" class="exports-chip exports-chip-primary" data-export-id="inventory"
+                                data-export-format="bundle"><i class="fas fa-file-archive" aria-hidden="true"></i> ZIP</a>
+                            <a href="#" class="exports-chip" data-export-id="inventory"
+                                data-export-format="json">JSON</a>
+                            <a href="#" class="exports-chip" data-export-id="inventory"
                                 data-export-format="pdf">PDF</a>
                             <a href="#" class="exports-chip exports-chip--excel" data-export-id="inventory"
                                 data-export-format="excel"><i class="fas fa-file-excel" aria-hidden="true"></i> Excel</a>

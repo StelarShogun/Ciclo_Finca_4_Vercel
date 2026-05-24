@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\GdImage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -139,6 +140,10 @@ class Product extends Model implements HasMedia
 
     public function registerMediaConversions(?Media $media = null): void
     {
+        if (! GdImage::supportsWebp()) {
+            return;
+        }
+
         $this
             ->addMediaConversion('webp_96')
             ->performOnCollections('main_image', 'gallery')
@@ -344,6 +349,86 @@ class Product extends Model implements HasMedia
         }
 
         return 'success';
+    }
+
+    // Human-readable low-stock severity for the admin dashboard table (replaces % badges).
+    public function adminDashboardLowStockStatusLabel(): string
+    {
+        if ($this->stock_current <= 0) {
+            return 'Sin stock';
+        }
+
+        $minimum = (int) $this->stock_minimum;
+        if ($minimum <= 0) {
+            return 'Stock bajo';
+        }
+
+        $pct = self::adminDashboardLowStockPercentOfMinimum(
+            (int) $this->stock_current,
+            $minimum,
+        );
+
+        return match (true) {
+            $pct <= 25 => 'Crítico',
+            $pct <= 50 => 'Muy bajo',
+            default => 'Stock bajo',
+        };
+    }
+
+    // Badge tone for dashboard low-stock status labels.
+    public function adminDashboardLowStockStatusBadgeClass(): string
+    {
+        if ($this->stock_current <= 0) {
+            return 'danger';
+        }
+
+        $minimum = (int) $this->stock_minimum;
+        if ($minimum <= 0) {
+            return 'warning';
+        }
+
+        $pct = self::adminDashboardLowStockPercentOfMinimum(
+            (int) $this->stock_current,
+            $minimum,
+        );
+
+        return $pct <= 50 ? 'danger' : 'warning';
+    }
+
+    // Tooltip for dashboard low-stock status (keeps % detail for admins).
+    public function adminDashboardLowStockStatusTitle(): string
+    {
+        if ($this->stock_current <= 0) {
+            return 'Sin stock disponible';
+        }
+
+        $minimum = (int) $this->stock_minimum;
+        if ($minimum <= 0) {
+            return 'Stock por debajo del umbral configurado';
+        }
+
+        $pct = self::adminDashboardLowStockPercentOfMinimum(
+            (int) $this->stock_current,
+            $minimum,
+        );
+
+        return sprintf(
+            '%s: %d%% del mínimo requerido (%d / %d)',
+            $this->adminDashboardLowStockStatusLabel(),
+            $pct,
+            (int) $this->stock_current,
+            $minimum,
+        );
+    }
+
+    // Percent of minimum stock (0 when minimum is not configured).
+    public static function adminDashboardLowStockPercentOfMinimum(int $stockCurrent, int $stockMinimum): int
+    {
+        if ($stockMinimum <= 0) {
+            return 0;
+        }
+
+        return (int) round(($stockCurrent / $stockMinimum) * 100);
     }
 
     // Maps stock values to export tiers used in PDF reports.

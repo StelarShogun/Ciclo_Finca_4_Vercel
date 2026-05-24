@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\AdminUser;
+use App\Models\Category;
 use App\Models\Client;
+use App\Models\Product;
+use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -63,6 +66,35 @@ class CF4AdminInventoryFormUiTest extends TestCase
     {
         $this->authenticateAdmin();
 
+        $category = Category::create([
+            'name' => 'CF4 Inventory UI Cat',
+            'description' => null,
+            'parent_category_id' => null,
+        ]);
+        $supplier = Supplier::create([
+            'name' => 'CF4 Inventory UI Sup',
+            'primary_contact' => 'Contact',
+            'phone' => '0000',
+            'email' => 'cf4-inv-ui-'.uniqid().'@example.com',
+            'address' => 'Addr',
+            'delivery_time' => 1,
+            'rating' => 5.0,
+            'status' => 'active',
+        ]);
+        Product::create([
+            'category_id' => $category->category_id,
+            'supplier_id' => $supplier->supplier_id,
+            'name' => 'CF4 Inventory UI Product',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 1000,
+            'purchase_price' => 100,
+            'stock_current' => 2,
+            'stock_minimum' => 1,
+            'status' => 'active',
+            'is_featured' => false,
+        ]);
+
         $response = $this->get(route('inventory'));
 
         $response->assertOk();
@@ -70,5 +102,7 @@ class CF4AdminInventoryFormUiTest extends TestCase
         $response->assertSee('id="new-image"', false);
         $response->assertSee('id="new-subcategory-search"', false);
         $response->assertSee('form-section', false);
+        $response->assertSee('data-action="deactivate"', false);
+        $response->assertSee('fa-ban', false);
     }
 }

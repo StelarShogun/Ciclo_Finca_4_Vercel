@@ -3,6 +3,7 @@
  * Page-specific CSS should NOT re-import these; add only layout/module rules.
  */
 @import './variables-reset.css';
+@import './scrollbars.css';
 @import './utilities.css';
 @import './fonts.css';
 @import './fontawesome.css';

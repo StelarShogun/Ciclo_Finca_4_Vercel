@@ -1,6 +1,8 @@
 import { fireSwal } from './swal.js';
 import { getCsrfToken } from './cart-shared.js';
 import { setHeaderMenuOpen } from './header-menu.js';
+import { buildProductMediaPlaceholderHtml } from '../shared/product-media-placeholder.js';
+import { escapeHtml } from '../shared/escape-html.js';
 
 /** Positions the account dropdown on narrow viewports (fixed + --cf4-user-dropdown-top). */
 function syncMobileUserDropdownPosition() {
@@ -100,7 +102,8 @@ function upsertFavoriteCacheItem(productId) {
     var nameLink = card.querySelector('.product-name a');
     var categoryEl = card.querySelector('.product-category');
     var priceEl = card.querySelector('.product-price-value');
-    var imageEl = card.querySelector('.product-image img');
+    var placeholderIcon = card.querySelector('.product-media-placeholder i');
+    var imageEl = card.querySelector('.product-image img, .product-image picture img');
 
     var existingIndex = favoritesCache.findIndex(function (item) {
         return String(item.product_id) === pid;
@@ -112,7 +115,9 @@ function upsertFavoriteCacheItem(productId) {
         category: categoryEl ? categoryEl.textContent.trim() : 'Sin categoría',
         price_formatted: priceEl ? priceEl.textContent.trim() : '',
         url: nameLink ? nameLink.getAttribute('href') : '#',
-        image_url: imageEl ? imageEl.getAttribute('src') : ''
+        image_url: placeholderIcon ? null : (imageEl ? imageEl.getAttribute('src') : null),
+        uses_placeholder_image: Boolean(placeholderIcon),
+        placeholder_icon_class: placeholderIcon ? placeholderIcon.className.trim() : 'fas fa-box'
     };
 
     if (existingIndex >= 0) {
@@ -172,9 +177,14 @@ function renderFavoritesDrawerItems(items) {
     }
 
     body.innerHTML = items.map(function (item) {
+        var safeName = escapeHtml(item.name || '');
+        var thumb = item.uses_placeholder_image
+            ? buildProductMediaPlaceholderHtml(item.placeholder_icon_class, item.name, 'favorite')
+            : '<img src="' + escapeHtml(item.image_url || '') + '" alt="' + safeName + '">';
+
         return ''
             + '<article class="cf4-favorite-item" data-favorite-product-id="' + item.product_id + '">'
-            + '  <img src="' + item.image_url + '" alt="' + item.name + '">'
+            + '  ' + thumb
             + '  <div class="cf4-favorite-meta">'
             + '    <div class="cf4-favorite-category">' + item.category + '</div>'
             + '    <a class="cf4-favorite-name" href="' + item.url + '">' + item.name + '</a>'

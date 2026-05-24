@@ -10,7 +10,7 @@ import {
     smartFetch,
     jsonValidationMessage,
     renderVariantsListHtml,
-    setEditCurrentProductImage,
+    setEditCurrentProductImagePreview,
     markEditMainImageForRemoval,
     syncFeaturedStarButtons,
     fillSubcategoryOptions,
@@ -29,6 +29,8 @@ import {
     showErrorFeedback,
     setModalLoading,
     categoryPath,
+    productUsesPlaceholderImage,
+    buildProductMediaPlaceholderHtml,
 } from './inventory-shared.js';
 import {
     applyServerFieldErrors,
@@ -120,9 +122,7 @@ export async function initModals() {
             newImageUpload?.reset();
             newGalleryUpload?.reset();
             newProductModal.classList.add('active');
-            syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
-            syncParentCategoryHiddenInput(newParentCategory, newParentCategoryHidden);
-            refreshClassificationFields('#new-classification-fields', newFinalCategory?.value || '', null);
+            refreshNewClassificationFields();
         });
     }
 
@@ -310,7 +310,7 @@ export async function initModals() {
                     editProductForm.action = `/products/${productId}`;
                     editImageUpload?.reset();
                     editGalleryUpload?.reset();
-                    setEditCurrentProductImage(product.media_main || null);
+                    setEditCurrentProductImagePreview(product);
                     const removeMainInput = qs('#edit-remove-main-image');
                     if (removeMainInput) removeMainInput.value = '0';
                     qs('#edit-name').value = product.name || '';
@@ -391,30 +391,6 @@ export async function initModals() {
     /** CF4-84 — al cambiar categoría en edición se limpian selecciones previas */
     let editClassificationPreset = [];
 
-    newParentCategory?.addEventListener('change', () => {
-        setTimeout(() => {
-            refreshClassificationFields('#new-classification-fields', newFinalCategory?.value || '', null);
-        }, 0);
-    });
-    newSubcategory?.addEventListener('change', () => {
-        setTimeout(() => {
-            refreshClassificationFields('#new-classification-fields', newFinalCategory?.value || '', null);
-        }, 0);
-    });
-
-    editParentCategory?.addEventListener('change', () => {
-        editClassificationPreset = [];
-        setTimeout(() => {
-            refreshClassificationFields('#edit-classification-fields', editFinalCategory?.value || '', []);
-        }, 0);
-    });
-    editSubcategory?.addEventListener('change', () => {
-        editClassificationPreset = [];
-        setTimeout(() => {
-            refreshClassificationFields('#edit-classification-fields', editFinalCategory?.value || '', []);
-        }, 0);
-    });
-
     const newBrandCombobox = initBrandCombobox('new-brand-search', 'new-brand', 'new-brand-dropdown', 'new-brand-combobox');
     const editBrandCombobox = initBrandCombobox('edit-brand-search', 'edit-brand', 'edit-brand-dropdown', 'edit-brand-combobox');
 
@@ -494,6 +470,52 @@ export async function initModals() {
         hiddenCategoryInput: editFinalCategory,
         parentCategoryHiddenInput: editParentCategoryHidden,
         subCombobox: editSubcategoryCombobox,
+    });
+
+    function refreshNewClassificationFields() {
+        syncFinalCategory(newParentCategory, newSubcategory, newFinalCategory);
+        syncParentCategoryHiddenInput(newParentCategory, newParentCategoryHidden);
+        void refreshClassificationFields('#new-classification-fields', newFinalCategory?.value || '', null);
+    }
+
+    function refreshEditClassificationFields() {
+        syncFinalCategory(editParentCategory, editSubcategory, editFinalCategory);
+        syncParentCategoryHiddenInput(editParentCategory, editParentCategoryHidden);
+        void refreshClassificationFields(
+            '#edit-classification-fields',
+            editFinalCategory?.value || '',
+            editClassificationPreset
+        );
+    }
+
+    function scheduleRefreshNewClassificationFields() {
+        queueMicrotask(refreshNewClassificationFields);
+    }
+
+    function scheduleRefreshEditClassificationFields() {
+        queueMicrotask(refreshEditClassificationFields);
+    }
+
+    newParentCategory?.addEventListener('change', scheduleRefreshNewClassificationFields);
+    newSubcategory?.addEventListener('change', scheduleRefreshNewClassificationFields);
+    newParentCategoryCombobox?.onChange(scheduleRefreshNewClassificationFields);
+    newSubcategoryCombobox?.onChange(scheduleRefreshNewClassificationFields);
+
+    editParentCategory?.addEventListener('change', () => {
+        editClassificationPreset = [];
+        scheduleRefreshEditClassificationFields();
+    });
+    editSubcategory?.addEventListener('change', () => {
+        editClassificationPreset = [];
+        scheduleRefreshEditClassificationFields();
+    });
+    editParentCategoryCombobox?.onChange(() => {
+        editClassificationPreset = [];
+        scheduleRefreshEditClassificationFields();
+    });
+    editSubcategoryCombobox?.onChange(() => {
+        editClassificationPreset = [];
+        scheduleRefreshEditClassificationFields();
     });
 
     const newImageUpload = initFileUploadZone({
@@ -1059,14 +1081,24 @@ export async function initModals() {
                 setModalLoading(viewProductModal, false);
                 if(data.success){
                     const product = data.data;
-                    // Build image carousel slides from MediaLibrary URLs, fallback to legacy field
+                    const usesPlaceholder = productUsesPlaceholderImage(product);
                     const allImages = [];
-                    if (product.media_main) allImages.push(product.media_main);
-                    if (Array.isArray(product.media_gallery)) allImages.push(...product.media_gallery);
-                    if (!allImages.length && product.image) allImages.push('/assets/images/products/' + product.image);
+                    if (!usesPlaceholder) {
+                        if (product.media_main) allImages.push(product.media_main);
+                        if (Array.isArray(product.media_gallery)) allImages.push(...product.media_gallery);
+                        if (!allImages.length && product.image && product.image !== 'default.png') {
+                            allImages.push('/assets/images/products/' + product.image);
+                        }
+                    }
 
                     let imageHtml;
-                    if (!allImages.length) {
+                    if (usesPlaceholder) {
+                        imageHtml = buildProductMediaPlaceholderHtml(
+                            product.placeholder_icon_class || 'fas fa-box',
+                            product.name,
+                            'detail'
+                        );
+                    } else if (!allImages.length) {
                         imageHtml = '<p class="product-details-empty">No hay imagen</p>';
                     } else if (allImages.length === 1) {
                         imageHtml = `<img src="${allImages[0]}" alt="${escapeHtmlAttr(product.name)}">`;
@@ -1154,7 +1186,7 @@ export async function initModals() {
 
     // Modal: Import products
     const importModal = qs('#import-modal');
-    const openImportModalBtn = qs('#import-btn');
+    const openImportModalBtn = qs('#open-import-modal') || qs('#import-btn');
     const closeImportModalBtn = qs('#close-import-modal');
     const cancelImportBtn = qs('#cancel-import');
     const confirmImportBtn = qs('#confirm-import');
@@ -1185,7 +1217,9 @@ export async function initModals() {
         const extension = file.name.split('.').pop().toLowerCase();
         const fileName = file.name.toLowerCase();
         
-        if (extension === 'xml' || fileName.endsWith('.xml')) {
+        if (extension === 'zip' || fileName.endsWith('.zip')) {
+            return { format: 'zip', name: 'ZIP (catálogo completo)', icon: 'fa-file-archive', color: '#059669' };
+        } else if (extension === 'xml' || fileName.endsWith('.xml')) {
             return { format: 'xml', name: 'XML', icon: 'fa-file-code', color: '#f59e0b' };
         } else if (extension === 'csv' || extension === 'txt' || fileName.endsWith('.csv') || fileName.endsWith('.txt')) {
             return { format: 'csv', name: 'CSV', icon: 'fa-file-csv', color: '#3b82f6' };
@@ -1220,7 +1254,7 @@ export async function initModals() {
         }
         const detected = detectFileFormat(file);
         if (!detected) {
-            void cf4Error('Usá un archivo XML, CSV o JSON.', 'Formato no soportado');
+            void cf4Error('Usá un archivo ZIP, XML, CSV o JSON.', 'Formato no soportado');
             importUpload?.reset();
             resetImportUi();
             return;

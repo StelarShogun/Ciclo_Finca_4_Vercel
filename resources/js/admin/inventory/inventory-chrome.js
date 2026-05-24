@@ -27,6 +27,32 @@ export function initSidebarToggle() {
 }
 
 // View switcher for inventory list with persistence
+export function initCatalogExportMenu() {
+    const toggle = qs('#inventory-export-toggle');
+    const menu = qs('#inventory-export-menu');
+    if (!toggle || !menu) {
+        return;
+    }
+
+    const close = () => {
+        menu.hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = menu.hidden;
+        menu.hidden = !open;
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target) && e.target !== toggle) {
+            close();
+        }
+    });
+}
+
 export function initViewSwitcher() {
     const viewButtons = qsa('.view-btn');
     const tableView = qs('.table-view');

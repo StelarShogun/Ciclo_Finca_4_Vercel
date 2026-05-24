@@ -261,4 +261,23 @@ class CF105AdminInventoryClassificationFilterTest extends TestCase
         $response->assertJsonFragment(['slug' => 'color']);
         $response->assertJsonFragment(['slug' => 'material']);
     }
+
+    public function test_cp007_loads_classification_dimensions_and_suggestions(): void
+    {
+        $this->authenticateAdmin();
+        $this->seedProductsWithClassifications();
+
+        $dimensions = $this->getJson(route('inventory.classification-filters.dimensions'));
+        $dimensions->assertOk();
+        $dimensions->assertJsonPath('success', true);
+        $dimensions->assertJsonFragment(['slug' => 'color', 'label' => 'Color']);
+
+        $suggest = $this->getJson(route('inventory.classification-filters.suggest', ['slug' => 'color']).'?q=Roj');
+        $suggest->assertOk();
+        $suggest->assertJsonPath('success', true);
+        $suggest->assertJsonFragment([
+            'value' => ClassificationValue::normalizeStoredValue('Rojo'),
+            'label' => 'Rojo',
+        ]);
+    }
 }

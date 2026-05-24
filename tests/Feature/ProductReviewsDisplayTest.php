@@ -45,7 +45,7 @@ class ProductReviewsDisplayTest extends TestCase
 
         $response = $this->get($url);
         $response->assertOk();
-        $response->assertSee('Aún no hay valoraciones disponibles', false);
+        $response->assertSee('Todavía no hay valoraciones públicas', false);
     }
 
     public function test_guest_sees_average_distribution_and_reviews_without_login(): void

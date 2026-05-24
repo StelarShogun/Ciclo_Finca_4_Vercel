@@ -174,16 +174,6 @@
     font-size: 0.86rem;
 }
 
-.audit-log-table th {
-    background: #f8fafc;
-    color: var(--color-text-muted, #5f6368);
-    font-size: 0.77rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-}
-
 .audit-log-table tbody tr:hover td {
     background: #fbfcfe;
 }

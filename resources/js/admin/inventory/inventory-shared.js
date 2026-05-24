@@ -6,6 +6,11 @@
  * inventory-modal-helpers.js so the initial chunk stays small.
  */
 
+import {
+    buildProductMediaPlaceholderHtml,
+    productUsesPlaceholderImage,
+} from '../../shared/product-media-placeholder.js';
+
 // Selector shortcuts
 const qs = (s, r = document) => r.querySelector(s);
 const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -75,6 +80,40 @@ function setEditCurrentProductImage(url) {
         '<i class="fas fa-trash-alt" aria-hidden="true"></i> Eliminar imagen' +
         '</button>' +
         '</div>';
+}
+
+function setEditCurrentProductImagePreview(product) {
+    const block = qs('#current-image-preview');
+    if (!block) return;
+
+    if (!product || productUsesPlaceholderImage(product)) {
+        if (product && productUsesPlaceholderImage(product)) {
+            const removeInput = qs('#edit-remove-main-image');
+            if (removeInput) removeInput.value = '0';
+            block.hidden = false;
+            block.innerHTML =
+                '<div class="cf-product-current-image__media">' +
+                buildProductMediaPlaceholderHtml(
+                    product.placeholder_icon_class || 'fas fa-box',
+                    product.name,
+                    'thumb-card'
+                ) +
+                '</div>' +
+                '<div class="cf-product-current-image__actions">' +
+                '<p class="cf-product-current-image__label">Sin imagen principal</p>' +
+                '</div>';
+        } else {
+            block.hidden = true;
+            block.innerHTML = '';
+        }
+        return;
+    }
+
+    let url = product.media_main || '';
+    if (!url && product.image && product.image !== 'default.png') {
+        url = '/assets/images/products/' + product.image;
+    }
+    setEditCurrentProductImage(url || null);
 }
 
 function markEditMainImageForRemoval() {
@@ -601,6 +640,7 @@ function setModalLoading(modal, isLoading) {
 
 export {
     bindDependentCategorySelectors,
+    buildProductMediaPlaceholderHtml,
     categoryPath,
     escapeHtml,
     escapeHtmlAttr,
@@ -613,6 +653,7 @@ export {
     jsonHeaders,
     jsonValidationMessage,
     markEditMainImageForRemoval,
+    productUsesPlaceholderImage,
     qs,
     qsa,
     readJsonOrThrow,
@@ -623,6 +664,7 @@ export {
     setActionButtonLoading,
     setButtonLoading,
     setEditCurrentProductImage,
+    setEditCurrentProductImagePreview,
     setModalLoading,
     showErrorFeedback,
     showLongOperationIndicator,

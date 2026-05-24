@@ -250,6 +250,15 @@ export function initCartInteractions() {
                 applyCartTotals(data);
 
                 if (document.querySelectorAll('.cart-item').length === 0) {
+                    if ((data.cart_count || 0) > 0) {
+                        const url = new URL(window.location.href);
+                        const page = parseInt(url.searchParams.get('page') || '1', 10);
+                        if (page > 1) {
+                            url.searchParams.set('page', String(page - 1));
+                            window.location.assign(url.toString());
+                            return;
+                        }
+                    }
                     showCartEmptyState();
                 }
             } catch {

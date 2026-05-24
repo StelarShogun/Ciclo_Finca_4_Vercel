@@ -173,7 +173,7 @@
 
         <div class="table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
         <div id="cf4-list-fragment">
-        <div class="sales-table-container">
+        <div class="sales-table-container{{ $sales->isEmpty() ? ' sales-table-container--empty' : '' }}">
             <table class="sales-table admin-table">
                 <thead>
                     <tr>
@@ -186,8 +186,9 @@
                         <th class="admin-table__col--actions">Acciones</th>
                     </tr>
                 </thead>
+                @if ($sales->isNotEmpty())
                 <tbody>
-                    @forelse($sales as $sale)
+                    @foreach ($sales as $sale)
                         <tr>
                             <td><strong>{{ $sale->invoice_number ?? '#' . $sale->sale_id }}</strong></td>
 
@@ -250,18 +251,16 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center">
-                                <div class="table-empty-state">
-                                    <i class="fas fa-shopping-cart table-empty-icon"></i>
-                                    <p>No hay ventas para los filtros seleccionados.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
+                @endif
             </table>
+            @if ($sales->isEmpty())
+                <div class="table-empty-state table-empty-state--fill" role="status">
+                    <i class="fas fa-shopping-cart table-empty-icon" aria-hidden="true"></i>
+                    <p>No hay ventas para los filtros seleccionados.</p>
+                </div>
+            @endif
 
             <div class="pagination-wrapper">
                 <x-admin.pagination :paginator="$sales" label="ventas" />

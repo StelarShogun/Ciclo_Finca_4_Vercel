@@ -51,6 +51,11 @@
   color: var(--color-danger);
 }
 
+/* Mismo patrón que pedidos a proveedores: filtros en .filters-section, tabla aparte */
+.cf4-orders-module .filters-section {
+  margin-bottom: 1.5rem;
+}
+
 .cf4-orders-module .orders-table-card {
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -58,6 +63,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   contain: layout;
+  margin-top: 0;
 }
 
 .cf4-orders-module .orders-table-card .sales-table-container {
@@ -588,7 +594,95 @@
   }
 }
 
-/* ── Modal: Nuevo pedido a proveedor ── */
+/* ── XML price deviation upload ── */
+.xml-upload-shell {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.xml-upload-card {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-md, 10px);
+  padding: 2rem 2.25rem;
+}
+
+.xml-upload-card h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: var(--color-text-primary, #111827);
+}
+
+.xml-upload-card p.subtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #6b7280);
+  margin-bottom: 1.5rem;
+}
+
+.xml-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.xml-field-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary, #111827);
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.xml-field-group input[type="number"],
+.xml-field-group select {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.9rem;
+  background: var(--color-input-bg, #f9fafb);
+  color: var(--color-text-primary, #111827);
+  box-sizing: border-box;
+}
+
+.xml-field-group .field-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #6b7280);
+  margin-top: 0.3rem;
+}
+
+.xml-form-error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius-sm, 6px);
+  padding: 0.65rem 1rem;
+  color: #b91c1c;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  word-break: break-word;
+}
+
+.xml-field-error {
+  margin-top: 0.35rem;
+  font-size: 0.8125rem;
+  color: #b91c1c;
+}
+
+.xml-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.sales-container.xml-upload-page {
+  min-height: unset !important;
+  height: auto !important;
+  padding-bottom: 2rem;
+}
+
 #create-supplier-order-modal .modal-content {
   width: min(92vw, 920px) !important;
   max-width: min(92vw, 920px) !important;

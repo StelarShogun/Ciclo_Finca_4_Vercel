@@ -1,0 +1,125 @@
+/* Product badges — CF4 client storefront (detail + reusable) */
+
+.product-badge,
+.product-detail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-decoration: none;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.product-badge__icon,
+.product-detail-badge__icon {
+  font-size: 0.72rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+a.product-badge:hover,
+a.product-detail-badge:hover {
+  text-decoration: none;
+  filter: brightness(0.97);
+}
+
+/* Informative — category / subcategory */
+.product-badge--category,
+.product-badge--subcategory,
+.product-detail-badge--category,
+.product-detail-badge--subcategory {
+  background: var(--brand-lightest, #daf1de);
+  color: var(--brand-darkest, #051f20);
+  border-color: color-mix(in srgb, var(--brand-light) 45%, #fff);
+}
+
+.product-badge--subcategory,
+.product-detail-badge--subcategory {
+  background: #fff;
+}
+
+/* Brand */
+.product-badge--brand,
+.product-detail-badge--brand {
+  background: #fff;
+  border-color: color-mix(in srgb, var(--brand-medium) 22%, #c5d4ce);
+  color: var(--brand-darkest);
+}
+
+/* Stock — available */
+.product-badge--stock,
+.product-detail-badge--stock,
+.product-detail-badge--stock-available {
+  background: var(--color-success-bg, #e8f5e9);
+  color: var(--brand-medium-dark, #163832);
+  border-color: color-mix(in srgb, var(--brand-medium) 35%, #fff);
+}
+
+/* Low stock */
+.product-badge--low-stock,
+.product-detail-badge--stock-low {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+/* Out of stock */
+.product-badge--out-stock,
+.product-detail-badge--stock-out {
+  background: var(--color-danger-bg, #ffebee);
+  color: var(--color-danger, #b91c1c);
+  border-color: #fecaca;
+}
+
+/* Unavailable */
+.product-badge--unavailable,
+.product-detail-badge--stock-na {
+  background: #f3f4f6;
+  color: #4b5563;
+  border-color: #d1d5db;
+}
+
+/* Promotional — featured (dorado) */
+.product-badge--featured,
+.product-detail-badge--featured {
+  background: linear-gradient(145deg, #f5e6b8 0%, #e8c84a 42%, #c9a227 100%);
+  color: #3d2e0a;
+  border-color: #a67c00;
+  font-weight: 700;
+  padding: 0.38rem 0.75rem;
+  box-shadow: 0 1px 3px rgba(92, 61, 0, 0.12);
+}
+
+.product-badge--featured .product-badge__icon,
+.product-detail-badge--featured .product-badge__icon {
+  color: #8b6914;
+}
+
+/* Promotional — new */
+.product-badge--new,
+.product-detail-badge--novelty {
+  background: color-mix(in srgb, #5eead4 18%, #fff);
+  color: #0f766e;
+  border-color: color-mix(in srgb, #2dd4bf 45%, #fff);
+  font-weight: 700;
+}
+
+/* Offer — prepared, not used in Blade yet */
+.product-badge--offer,
+.product-detail-badge--offer {
+  background: #fff7ed;
+  color: #9a3412;
+  border-color: #fdba74;
+}
+
+.product-detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}

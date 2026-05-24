@@ -133,7 +133,8 @@ a.period-btn-link:hover:not(.active) {
 .client-purchases-show-meta {
     margin: 0;
     font-size: 0.95rem;
-    color: var(--color-muted, #6c757d);
+    color: inherit;
+    opacity: 0.95;
 }
 
 .client-purchases-show-email {
@@ -215,11 +216,6 @@ a.btn-client-orders-open {
     padding: 0.65rem 0.85rem;
     text-align: left;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.report-table th {
-    background: #fafafa;
-    font-weight: 600;
 }
 
 .report-table .num {

@@ -21,6 +21,30 @@ class SaleAdminDateLabelsTest extends TestCase
     }
 
     #[Test]
+    public function format_admin_date_short_uses_dd_mm_yy(): void
+    {
+        $value = Carbon::parse('2026-05-20 14:30:00', 'UTC');
+
+        $this->assertMatchesRegularExpression(
+            '/^\d{2}\/\d{2}\/\d{2}$/',
+            Sale::formatAdminDateShort($value),
+        );
+    }
+
+    #[Test]
+    public function sale_short_date_label_uses_compact_format(): void
+    {
+        $sale = new Sale([
+            'sale_date' => Carbon::parse('2026-05-20 14:30:00', 'UTC'),
+        ]);
+
+        $this->assertSame(
+            Sale::formatAdminDateShort($sale->sale_date),
+            $sale->adminSaleDateShortLabel(),
+        );
+    }
+
+    #[Test]
     public function confirmed_label_only_when_sale_is_completed(): void
     {
         $pending = new Sale([
