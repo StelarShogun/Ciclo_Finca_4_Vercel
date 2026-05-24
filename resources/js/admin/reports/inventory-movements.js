@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         origin:   root.dataset.initialOrigin || '',
         dateFrom: root.dataset.initialFrom   || '',
         dateTo:   root.dataset.initialTo     || '',
+        dateRange: root.dataset.initialDateRange || '',
         page:     1,
         lastPage: 1,
     };
@@ -54,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams();
         if (state.type)     params.set('type', state.type);
         if (state.origin)   params.set('origin', state.origin);
+        if (state.dateRange) params.set('date_range', state.dateRange);
         if (state.dateFrom) params.set('date_from', state.dateFrom);
         if (state.dateTo)   params.set('date_to', state.dateTo);
         if (state.page > 1) params.set('page', state.page);
@@ -66,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams();
         if (state.type)     params.set('type', state.type);
         if (state.origin)   params.set('origin', state.origin);
+        if (state.dateRange) params.set('date_range', state.dateRange);
         if (state.dateFrom) params.set('date_from', state.dateFrom);
         if (state.dateTo)   params.set('date_to', state.dateTo);
         params.set('page', state.page);
@@ -395,6 +398,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    document.getElementById('inv-filter-today')?.addEventListener('click', () => {
+        setError(null);
+        state.dateRange = 'today';
+        state.dateFrom = '';
+        state.dateTo = '';
+        state.page = 1;
+        [elFromD, elFromM, elFromY, elToD, elToM, elToY].forEach((el) => { el.value = ''; });
+        loadMovements();
+    });
+
     document.getElementById('inv-apply-dates')?.addEventListener('click', () => {
         // Validate each date field before building ISO values.
         const fieldErrorFrom = validateDateFields(elFromD, elFromM, elFromY, 'inicio');
@@ -412,6 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (rangeError) { setError(rangeError); return; }
 
         setError(null);
+        state.dateRange = '';
         state.dateFrom = from;
         state.dateTo   = to;
         state.page     = 1;
@@ -421,6 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('inv-clear-filters')?.addEventListener('click', () => {
         state.type     = '';
         state.origin   = '';
+        state.dateRange = '';
         state.dateFrom = '';
         state.dateTo   = '';
         state.page     = 1;

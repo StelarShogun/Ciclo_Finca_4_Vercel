@@ -266,6 +266,25 @@ function initOrdersHeartbeat() {
     });
 }
 
+function initOrdersDateRangeFilter() {
+    const ordersDateRange = document.getElementById('orders-date-range');
+    const ordersDateFromGroup = document.getElementById('orders-custom-date-from-group');
+    const ordersDateToGroup = document.getElementById('orders-custom-date-to-group');
+
+    if (!ordersDateRange || !ordersDateFromGroup || !ordersDateToGroup) {
+        return;
+    }
+
+    const toggleOrdersCustomDates = () => {
+        const isCustom = ordersDateRange.value === 'custom';
+        ordersDateFromGroup.style.display = isCustom ? '' : 'none';
+        ordersDateToGroup.style.display = isCustom ? '' : 'none';
+    };
+
+    ordersDateRange.addEventListener('change', toggleOrdersCustomDates);
+    toggleOrdersCustomDates();
+}
+
 function initOrderExpirationModal() {
     const modal = document.getElementById('order-expiration-modal');
     const openBtn = document.getElementById('btn-open-order-expiration-modal');
@@ -357,6 +376,7 @@ function initOrderExpirationModal() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    initOrdersDateRangeFilter();
     initOrderExpirationModal();
     initOrdersHeartbeat();
 });

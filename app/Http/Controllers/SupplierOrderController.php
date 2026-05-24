@@ -11,6 +11,7 @@ use App\Models\Supplier;
 use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\SupplierDeliveryEstimator;
+use App\Support\AdminDateRange;
 use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -91,8 +92,19 @@ class SupplierOrderController extends Controller
     {
         $state = $request->get('state');
         $search = $request->get('search');
+        $dateRange = AdminDateRange::resolvePresetFromRequest(
+            $request->input('date_range'),
+            $request->input('date_from'),
+            $request->input('date_to'),
+        );
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
+
+        if ($dateRange !== null && $dateRange !== AdminDateRange::PRESET_CUSTOM) {
+            [$start, $end] = AdminDateRange::bounds($dateRange);
+            $dateFrom = $start->toDateString();
+            $dateTo = $end->toDateString();
+        }
 
         if ($dateFrom && $dateTo && $dateTo < $dateFrom) {
             [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
@@ -110,11 +122,11 @@ class SupplierOrderController extends Controller
         }
 
         if ($dateFrom) {
-            $query->whereDate('orders.date', '>=', $dateFrom);
+            $query->where('orders.date', '>=', AdminDateRange::parseDateStart($dateFrom)->utc());
         }
 
         if ($dateTo) {
-            $query->whereDate('orders.date', '<=', $dateTo);
+            $query->where('orders.date', '<=', AdminDateRange::parseDateEnd($dateTo)->utc());
         }
 
         if ($search) {

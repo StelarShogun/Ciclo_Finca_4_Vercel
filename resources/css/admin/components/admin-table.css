@@ -387,6 +387,28 @@
     background: var(--brand-lightest);
 }
 
+/* Compact two-column lists (brands): sticky actions + shadow reads as a vertical seam */
+.brands-table.admin-table thead th.admin-table__col--actions,
+.brands-table.admin-table tbody td.admin-table__col--actions,
+.brands-table.admin-table tbody td.actions-cell {
+    position: static;
+    box-shadow: none;
+    background: inherit;
+}
+
+.brands-table.admin-table thead th.admin-table__col--actions {
+    background: var(--brand-dark);
+}
+
+.brands-table.admin-table tbody tr:hover td.admin-table__col--actions,
+.brands-table.admin-table tbody tr:hover td.actions-cell {
+    background: var(--brand-lightest);
+}
+
+.brands-table.admin-table tbody td:not(.admin-table__col--actions):not(.actions-cell) {
+    max-width: none;
+}
+
 .admin-table .actions-container {
     justify-content: flex-end;
     flex-shrink: 0;
