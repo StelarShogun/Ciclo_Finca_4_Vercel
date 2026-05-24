@@ -2,6 +2,8 @@
 
 namespace Tests\Unit;
 
+use App\Models\Category;
+use App\Models\Product;
 use App\Support\ClientCategoryIcons;
 use PHPUnit\Framework\TestCase;
 
@@ -48,10 +50,10 @@ class ClientCategoryIconsTest extends TestCase
 
     public function test_icon_class_for_product_uses_subcategory_then_parent(): void
     {
-        $product = new \App\Models\Product;
-        $parent = new \App\Models\Category(['name' => 'Bicicletas', 'parent_category_id' => null]);
+        $product = new Product;
+        $parent = new Category(['name' => 'Bicicletas', 'parent_category_id' => null]);
         $parent->category_id = 1;
-        $sub = new \App\Models\Category(['name' => 'Modelo X', 'parent_category_id' => 1]);
+        $sub = new Category(['name' => 'Modelo X', 'parent_category_id' => 1]);
         $sub->setRelation('parent', $parent);
         $product->setRelation('category', $sub);
 

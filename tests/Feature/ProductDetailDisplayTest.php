@@ -4,9 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\Client;
 use App\Models\ClassificationDimension;
 use App\Models\ClassificationValue;
+use App\Models\Client;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

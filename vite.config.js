@@ -85,6 +85,7 @@ const clientAssets = [
     "resources/js/client/recovery-success-modal.js",
     "resources/js/client/register-validation-errors.js",
     "resources/js/client/invoices-review-modal.js",
+    "resources/js/shared/client-pagination.js",
 
     // CSS
     "resources/css/client/fonts.css",

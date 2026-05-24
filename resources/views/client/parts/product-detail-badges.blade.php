@@ -17,7 +17,7 @@
     @if($parentCategory && $catalogParentUrl)
         <a href="{{ $catalogParentUrl }}"
            class="product-badge product-badge--category product-detail-badge product-detail-badge--category">
-            <i class="fas fa-folder product-badge__icon" aria-hidden="true"></i>
+            <i class="fas fa-layer-group product-badge__icon" aria-hidden="true"></i>
             {{ $parentCategory->name }}
         </a>
     @endif
@@ -33,7 +33,7 @@
     @if($brand)
         <a href="{{ $catalogBrandUrl }}"
            class="product-badge product-badge--brand product-detail-badge product-detail-badge--brand">
-            <i class="fas fa-copyright product-badge__icon" aria-hidden="true"></i>
+            <i class="fas fa-tag product-badge__icon" aria-hidden="true"></i>
             {{ $brand->name }}
         </a>
     @endif
@@ -67,7 +67,7 @@
 
     @if($isNoveltyProduct ?? false)
         <span class="product-badge product-badge--new product-detail-badge product-detail-badge--novelty">
-            <i class="fas fa-sparkles product-badge__icon" aria-hidden="true"></i>
+            <i class="fas fa-bolt product-badge__icon" aria-hidden="true"></i>
             Novedad
         </span>
     @endif

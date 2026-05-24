@@ -166,7 +166,7 @@
                             @include('shared.parts.product-media', [
                                 'product' => $product,
                                 'variant' => 'card',
-                                'href' => $product->clientProductUrl(),
+                                'href' => null,
                             ])
                             </a>
                         </div>

@@ -528,7 +528,7 @@
                                                 @include('shared.parts.product-media', [
                                                     'product' => $product,
                                                     'variant' => 'card',
-                                                    'href' => $product->clientProductUrl(),
+                                                    'href' => null,
                                                 ])
                                             </a>
                                             <div class="product-image__hover-overlay" aria-hidden="true">

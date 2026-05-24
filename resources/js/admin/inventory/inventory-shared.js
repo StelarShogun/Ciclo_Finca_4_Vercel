@@ -6,6 +6,11 @@
  * inventory-modal-helpers.js so the initial chunk stays small.
  */
 
+import {
+    buildProductMediaPlaceholderHtml,
+    productUsesPlaceholderImage,
+} from '../../shared/product-media-placeholder.js';
+
 // Selector shortcuts
 const qs = (s, r = document) => r.querySelector(s);
 const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -33,30 +38,6 @@ function categoryPath(category) {
     const parentName = category.parent?.name;
     const currentName = category.name || '';
     return parentName ? `${parentName} > ${currentName}` : (currentName || '-');
-}
-
-function productUsesPlaceholderImage(product) {
-    if (product?.uses_placeholder_image != null) {
-        return Boolean(product.uses_placeholder_image);
-    }
-    if (product?.media_main) {
-        return false;
-    }
-    if (Array.isArray(product?.media_gallery) && product.media_gallery.length > 0) {
-        return false;
-    }
-    const legacy = product?.image || 'default.png';
-    return legacy === '' || legacy === 'default.png';
-}
-
-function buildProductMediaPlaceholderHtml(iconClass, alt, variant = 'detail') {
-    const safeIcon = escapeHtmlAttr(iconClass || 'fas fa-box');
-    const safeAlt = escapeHtmlAttr(alt || 'Producto');
-    const labelHtml = variant === 'detail'
-        ? '<span class="product-media-placeholder__label">Sin imagen</span>'
-        : '';
-    return `<div class="product-media-placeholder product-media-placeholder--${escapeHtmlAttr(variant)}" role="img" aria-label="Sin imagen: ${safeAlt}">` +
-        `<i class="${safeIcon}" aria-hidden="true"></i>${labelHtml}</div>`;
 }
 
 function jsonHeaders() {

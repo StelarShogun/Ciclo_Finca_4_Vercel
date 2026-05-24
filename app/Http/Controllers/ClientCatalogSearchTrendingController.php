@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Support\ProductImageUrls;
 use App\Services\Admin\CatalogMostSearchedProductsReportQuery;
 use App\Services\Catalog\CatalogSearchTrendingQuery;
+use App\Support\ProductImageUrls;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;

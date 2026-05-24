@@ -84,11 +84,16 @@ chown -R www-data:www-data storage bootstrap/cache
 mkdir -p public/images
 chown -R www-data:www-data public/images
 
+touch storage/logs/scheduler.log
+chown www-data:www-data storage/logs/scheduler.log
 (
-  while true; do
-    php artisan schedule:run --no-interaction >> storage/logs/scheduler.log 2>&1
-    sleep 60
-  done
+  su -s /bin/bash www-data -c '
+    cd /var/www/html
+    while true; do
+      php artisan schedule:run --no-interaction >> storage/logs/scheduler.log 2>&1
+      sleep 60
+    done
+  '
 ) &
 
 echo ">>> Scheduler loop iniciado (schedule:run cada 60s)"
