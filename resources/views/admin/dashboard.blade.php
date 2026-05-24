@@ -79,8 +79,7 @@
                     </div>
                     <div class="kpi-content">
                         <h3>Ventas Hoy</h3>
-                        <div class="kpi-value" id="today-sales">₡{{ number_format($todaySales ?? 0, 0, ',', '.') }}
-                        </div>
+                        <div class="kpi-value" id="today-sales">₡{{ number_format($todaySales ?? 0, 0, ',', '.') }}</div>
                         <div class="kpi-change {{ ($salesTrend ?? 0) >= 0 ? 'positive' : 'negative' }}" id="sales-change">
                             <i class="fas fa-arrow-{{ ($salesTrend ?? 0) >= 0 ? 'up' : 'down' }}"></i>
                             <span>{{ abs($salesTrend ?? 0) }}%</span>

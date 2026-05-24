@@ -1,3 +1,5 @@
+import { syncAllKpiValueScales, syncKpiValueScale, initKpiValueScaleObserver } from '../shared/kpi-value-scale.js';
+
 let chartJsPromise = null;
 
 async function loadChartJs() {
@@ -195,6 +197,8 @@ class Dashboard {
         setInterval(() => this.updateCurrentTime(), 60000);
 
         void this.loadDashboardData();
+        initKpiValueScaleObserver();
+        syncAllKpiValueScales();
 
         setInterval(() => {
             if (document.visibilityState === 'visible') {
@@ -731,6 +735,8 @@ class Dashboard {
             console.log('Actualizando stock bajo:', data.lowStockProducts);
             lowStockEl.textContent = data.lowStockProducts;
         }
+
+        syncAllKpiValueScales(document.querySelector('.kpis-section') || document);
     }
 
     // Animate KPI numbers counting up
@@ -771,6 +777,8 @@ class Dashboard {
 
             if (progress < 1) {
                 requestAnimationFrame(animate);
+            } else {
+                syncKpiValueScale(element);
             }
         };
 

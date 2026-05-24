@@ -1,4 +1,5 @@
 import { loadListFragment } from '../../shared/ajax-pagination.js';
+import { syncAllKpiValueScales, syncKpiValueScale, initKpiValueScaleObserver } from '../shared/kpi-value-scale.js';
 import {
     cf4Confirm,
     cf4PromptTextarea,
@@ -16,6 +17,7 @@ function updateSalesDailyKpis(data) {
     const totalEl = document.getElementById('sales-daily-total');
     if (totalEl && data.dailySales !== undefined) {
         totalEl.textContent = formatColones(data.dailySales);
+        syncKpiValueScale(totalEl);
     }
 
     const totalTrendEl = document.getElementById('sales-daily-total-trend');
@@ -30,6 +32,7 @@ function updateSalesDailyKpis(data) {
     const txEl = document.getElementById('sales-daily-transactions');
     if (txEl && data.dailyTransactions !== undefined) {
         txEl.textContent = String(data.dailyTransactions);
+        syncKpiValueScale(txEl);
     }
 
     const txTrendEl = document.getElementById('sales-daily-transactions-trend');
@@ -692,6 +695,8 @@ Object.assign(window, {
 
 // DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
+    initKpiValueScaleObserver();
+    syncAllKpiValueScales(document.querySelector('.kpi-grid') || document);
 
     // Auto-print
     if (meta('auto-print') === '1') {
