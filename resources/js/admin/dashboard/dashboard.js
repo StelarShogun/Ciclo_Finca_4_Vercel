@@ -1,3 +1,5 @@
+import { syncAllKpiValueScales, syncKpiValueScale, initKpiValueScaleObserver } from '../shared/kpi-value-scale.js';
+
 let chartJsPromise = null;
 
 async function loadChartJs() {
@@ -193,6 +195,22 @@ class Dashboard {
         }
 
         setInterval(() => this.updateCurrentTime(), 60000);
+
+        void this.loadDashboardData();
+        initKpiValueScaleObserver();
+        syncAllKpiValueScales();
+
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                void this.loadDashboardData();
+            }
+        }, 15000);
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                void this.loadDashboardData();
+            }
+        });
     }
 
     // Display current date and time in the header
@@ -698,6 +716,15 @@ class Dashboard {
             });
         }
 
+        const salesChangeEl = document.getElementById('sales-change');
+        if (salesChangeEl && data.salesTrend !== undefined) {
+            const trend = parseFloat(data.salesTrend) || 0;
+            const positive = trend >= 0;
+            salesChangeEl.classList.remove('positive', 'negative', 'neutral');
+            salesChangeEl.classList.add(positive ? 'positive' : 'negative');
+            salesChangeEl.innerHTML = `<i class="fas fa-arrow-${positive ? 'up' : 'down'}"></i><span>${Math.abs(trend)}%</span>`;
+        }
+
         const totalSuppliersEl = document.getElementById('total-suppliers');
         if (totalSuppliersEl && data.totalSuppliers !== undefined) {
             totalSuppliersEl.textContent = data.totalSuppliers;
@@ -708,6 +735,8 @@ class Dashboard {
             console.log('Actualizando stock bajo:', data.lowStockProducts);
             lowStockEl.textContent = data.lowStockProducts;
         }
+
+        syncAllKpiValueScales(document.querySelector('.kpis-section') || document);
     }
 
     // Animate KPI numbers counting up
@@ -748,6 +777,8 @@ class Dashboard {
 
             if (progress < 1) {
                 requestAnimationFrame(animate);
+            } else {
+                syncKpiValueScale(element);
             }
         };
 

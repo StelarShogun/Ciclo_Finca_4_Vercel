@@ -21,6 +21,7 @@ use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\ProductClassificationAssignmentService;
 use App\Support\AdminPerPage;
+use App\Support\ClientStorefrontCache;
 use App\Support\ProductImageUrls;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -103,6 +104,7 @@ class ProductController extends Controller
             }
 
             $this->logAudit('product_create', 'Producto creado.', $auditContext ?? []);
+            ClientStorefrontCache::forgetAfterProductMutation();
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -234,6 +236,7 @@ class ProductController extends Controller
                     'is_featured' => (bool) $product->is_featured,
                 ]
             );
+            ClientStorefrontCache::forgetAfterProductMutation();
 
             return response()->json([
                 'success' => true,
@@ -368,6 +371,7 @@ class ProductController extends Controller
                 'Producto actualizado.',
                 $auditContext ?? ['product_id' => (int) $id]
             );
+            ClientStorefrontCache::forgetAfterProductMutation();
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -422,6 +426,7 @@ class ProductController extends Controller
                 'product_id' => (int) $id,
                 'name' => $productName,
             ]);
+            ClientStorefrontCache::forgetAfterProductMutation();
 
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
@@ -457,6 +462,7 @@ class ProductController extends Controller
                 'product_id' => (int) $id,
                 'name' => $productName,
             ]);
+            ClientStorefrontCache::forgetAfterProductMutation();
 
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([

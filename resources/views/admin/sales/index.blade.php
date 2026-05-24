@@ -45,8 +45,8 @@
                     <h3 class="kpi-title">Ventas del Día</h3>
                     <div class="kpi-icon success"><i class="fas fa-chart-line"></i></div>
                 </div>
-                <p class="kpi-value">₡{{ number_format($dailySales, 0, ',', '.') }}</p>
-                <div class="kpi-trend {{ $dailySalesTrend >= 0 ? 'trend-up' : 'trend-down' }}">
+                <p class="kpi-value" id="sales-daily-total">₡{{ number_format($dailySales, 0, ',', '.') }}</p>
+                <div class="kpi-trend {{ $dailySalesTrend >= 0 ? 'trend-up' : 'trend-down' }}" id="sales-daily-total-trend">
                     <i class="fas fa-arrow-{{ $dailySalesTrend >= 0 ? 'up' : 'down' }}"></i>
                     {{ abs($dailySalesTrend) }}%
                 </div>
@@ -58,8 +58,8 @@
                     <h3 class="kpi-title">Transacciones</h3>
                     <div class="kpi-icon info"><i class="fas fa-receipt"></i></div>
                 </div>
-                <p class="kpi-value">{{ $dailyTransactions }}</p>
-                <div class="kpi-trend {{ $dailyTransactionsTrend >= 0 ? 'trend-up' : 'trend-down' }}">
+                <p class="kpi-value" id="sales-daily-transactions">{{ $dailyTransactions }}</p>
+                <div class="kpi-trend {{ $dailyTransactionsTrend >= 0 ? 'trend-up' : 'trend-down' }}" id="sales-daily-transactions-trend">
                     <i class="fas fa-arrow-{{ $dailyTransactionsTrend >= 0 ? 'up' : 'down' }}"></i>
                     {{ abs($dailyTransactionsTrend) }}%
                 </div>
@@ -275,6 +275,8 @@
         </div>
 
     </div>
+
+    <div id="cf4-latest-purchase-sale-id" data-value="{{ $latestHistorySaleId ?? 0 }}" style="display:none;"></div>
 
     {{-- Route URLs exposed via meta tags; read by sales.js (avoids inline JS) --}}
     <meta name="sales-route-store" content="{{ route('sales.store') }}">

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\AdminUser;
 use App\Models\Client;
 use App\Models\Sale;
+use App\Support\AdminDateRange;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -31,6 +32,8 @@ class CF4AdminSalesClientInvoiceVisibilityTest extends TestCase
         } catch (\Throwable $e) {
             $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
         }
+
+        config(['app.timezone' => 'America/Costa_Rica']);
     }
 
     private function makeAdmin(): AdminUser
@@ -68,7 +71,7 @@ class CF4AdminSalesClientInvoiceVisibilityTest extends TestCase
             'invoice_number' => 'CF4-7001',
             'client_id' => $clientA->user_id,
             'seller_admin_id' => $admin->user_id,
-            'sale_date' => now()->subHour(),
+            'sale_date' => AdminDateRange::now()->copy()->startOfDay()->addHours(2)->utc(),
             'payment_method' => 'cash',
             'status' => 'completed',
             'subtotal' => 10000,
@@ -82,7 +85,7 @@ class CF4AdminSalesClientInvoiceVisibilityTest extends TestCase
             'invoice_number' => 'CF4-7002',
             'client_id' => $clientB->user_id,
             'seller_admin_id' => $admin->user_id,
-            'sale_date' => now(),
+            'sale_date' => AdminDateRange::now()->copy()->startOfDay()->addHours(4)->utc(),
             'payment_method' => 'sinpe',
             'status' => 'completed',
             'subtotal' => 15000,
@@ -123,7 +126,7 @@ class CF4AdminSalesClientInvoiceVisibilityTest extends TestCase
             'invoice_number' => 'CF4-7003',
             'client_id' => $client->user_id,
             'seller_admin_id' => $admin->user_id,
-            'sale_date' => now(),
+            'sale_date' => AdminDateRange::now()->copy()->startOfDay()->addHours(3)->utc(),
             'payment_method' => 'transfer',
             'status' => 'completed',
             'subtotal' => 22000,
