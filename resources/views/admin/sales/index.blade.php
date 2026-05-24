@@ -177,7 +177,7 @@
                 ($isCustomRange && ($hasDateFrom || $hasDateTo));
         @endphp
 
-        <div data-cf4-ajax-pagination data-cf4-ajax-scroll>
+        <div class="table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
         <div id="cf4-list-fragment">
         <div class="sales-table-container">
             <table class="sales-table admin-table">
@@ -268,10 +268,11 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
 
-        {{-- Pagination component --}}
-        <x-admin.pagination :paginator="$sales" label="ventas" />
+            <div class="pagination-wrapper">
+                <x-admin.pagination :paginator="$sales" label="ventas" />
+            </div>
+        </div>
         </div>
         </div>
 

@@ -442,8 +442,9 @@
                     </div>
                 </div>
 
-                {{-- Pagination component --}}
-                <x-admin.pagination :paginator="$paginator" label="inventario" />
+                <div class="pagination-wrapper">
+                    <x-admin.pagination :paginator="$paginator" label="inventario" />
+                </div>
                 </div>
 
             </section>

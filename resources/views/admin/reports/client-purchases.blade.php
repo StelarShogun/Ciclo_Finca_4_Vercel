@@ -101,8 +101,9 @@
                         </tr>
                     </tbody>
                 </table>
+
+                <div id="client-purchases-pagination" class="pagination-wrapper" aria-live="polite"></div>
             </div>
-            <div id="client-purchases-pagination" class="pagination-wrapper" aria-live="polite"></div>
             <p id="client-purchases-empty" class="empty-msg" hidden>No hay clientes con compras completadas en este periodo
                 para los criterios seleccionados.</p>
         </section>

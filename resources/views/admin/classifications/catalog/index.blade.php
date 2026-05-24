@@ -22,7 +22,7 @@
                     utilizarlos al registrar productos en el inventario.</p>
             @endcomponent
 
-            <div class="form-card">
+            <div class="form-card" @if (! $subcategories->isEmpty()) style="padding: 0; overflow: hidden;" @endif>
                 <div class="form-body">
                     @if ($subcategories->isEmpty())
                         <x-admin-alert type="info" title="No hay registros disponibles para mostrar." dismissible>
@@ -30,32 +30,34 @@
                                 href="{{ route('categories.subcategories.create') }}">categorías</a>.
                         </x-admin-alert>
                     @else
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Categoría</th>
-                                    <th>Subcategoría</th>
-                                    <th>Atributos definidos</th>
-                                    <th class="admin-table__col--actions" scope="col">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($subcategories as $sub)
+                        <div class="admin-table-scroll">
+                            <table class="admin-table">
+                                <thead>
                                     <tr>
-                                        <td>{{ optional($sub->parent)->name ?? '—' }}</td>
-                                        <td>{{ $sub->name }}</td>
-                                        <td>{{ $sub->classification_dimensions_count }}</td>
-                                        <td class="admin-table__col--actions">
-                                            <a href="{{ route('admin.classifications.catalog.show', $sub) }}"
-                                                class="btn btn-primary"
-                                                style="display:inline-flex; padding:0.35rem 0.75rem; text-decoration:none; border-radius:6px;">
-                                                Gestionar
-                                            </a>
-                                        </td>
+                                        <th>Categoría</th>
+                                        <th>Subcategoría</th>
+                                        <th>Atributos definidos</th>
+                                        <th class="admin-table__col--actions" scope="col">Acciones</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach ($subcategories as $sub)
+                                        <tr>
+                                            <td>{{ optional($sub->parent)->name ?? '—' }}</td>
+                                            <td>{{ $sub->name }}</td>
+                                            <td>{{ $sub->classification_dimensions_count }}</td>
+                                            <td class="admin-table__col--actions">
+                                                <a href="{{ route('admin.classifications.catalog.show', $sub) }}"
+                                                    class="btn btn-primary"
+                                                    style="display:inline-flex; padding:0.35rem 0.75rem; text-decoration:none; border-radius:6px;">
+                                                    Gestionar
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     @endif
                 </div>
             </div>

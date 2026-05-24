@@ -70,7 +70,7 @@
         @endcomponent
 
         {{-- ==================== SUPPLIERS TABLE ==================== --}}
-        <div data-cf4-ajax-pagination data-cf4-ajax-scroll>
+        <div class="table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
         <div id="cf4-list-fragment">
         <div class="sales-table-container">
             <table class="sales-table admin-table">
@@ -88,12 +88,8 @@
                 <tbody id="tablaProveedores">
                     @forelse($suppliers as $supplier)
                         <tr>
-                            {{-- Avatar uses first letter of supplier name --}}
                             <td>
                                 <div class="provider-info">
-                                    <div class="provider-avatar">
-                                        {{ substr($supplier->name, 0, 1) }}
-                                    </div>
                                     <div class="provider-details">
                                         <h4 class="supplier-name">{{ $supplier->name }}</h4>
                                     </div>
@@ -142,10 +138,11 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
 
-        {{-- Pagination component --}}
-        <x-admin.pagination :paginator="$suppliers" label="proveedores" />
+            <div class="pagination-wrapper">
+                <x-admin.pagination :paginator="$suppliers" label="proveedores" />
+            </div>
+        </div>
         </div>
         </div>
 

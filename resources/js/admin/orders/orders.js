@@ -137,6 +137,7 @@ async function refreshOrdersTable() {
         }
 
         region.replaceWith(document.importNode(incoming, true));
+        document.dispatchEvent(new CustomEvent('cf4:ajax-pagination:loaded'));
         flashOrdersTableRegion();
 
         return true;

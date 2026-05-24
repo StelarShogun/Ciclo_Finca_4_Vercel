@@ -133,7 +133,7 @@
             @endslot
         @endcomponent
 
-        <div class="orders-table-card" data-cf4-ajax-pagination data-cf4-ajax-scroll>
+        <div class="orders-table-card table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
             <div id="cf4-list-fragment">
             <div class="sales-table-container">
                 <table class="sales-table cf4-purchases-table admin-table">
@@ -323,7 +323,7 @@
                 </table>
             </div>
 
-            <div class="orders-pagination-wrap">
+            <div class="pagination-wrapper">
                 <x-admin.pagination :paginator="$orders" label="pedidos" />
             </div>
             </div>

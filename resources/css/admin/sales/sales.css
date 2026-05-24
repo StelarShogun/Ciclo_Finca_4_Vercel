@@ -310,8 +310,6 @@
   overflow-y: visible;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
-  /* Reserve room before the table HTML is fully parsed/styled. */
-  min-height: 22rem;
   max-width: 100%;
   -webkit-overflow-scrolling: touch;
 }

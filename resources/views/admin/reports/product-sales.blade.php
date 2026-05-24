@@ -122,8 +122,9 @@
                         </tr>
                     </tbody>
                 </table>
+
+                <div id="full-table-pagination" class="pagination-wrapper" aria-live="polite"></div>
             </div>
-            <div id="full-table-pagination" class="pagination-wrapper" aria-live="polite"></div>
             <p id="product-sales-empty" class="empty-msg" hidden>No hay ventas completadas en este periodo para los
                 criterios seleccionados.</p>
 

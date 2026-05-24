@@ -29,8 +29,8 @@ const adminAssets = [
     "resources/js/admin/reports/product-sales.js",
     "resources/js/admin/reports/sales-performance.js",
     "resources/js/admin/reports/exports-modal.js",
-    "resources/js/admin/reports/inventory-movements.js",        
-    "resources/js/admin/reports/client-purchase-history.js",  
+    "resources/js/admin/reports/inventory-movements.js",
+    "resources/js/admin/reports/client-purchase-history.js",
     "resources/js/admin/reports/client-purchase-client-show.js",
 
     // CSS
@@ -99,11 +99,21 @@ const clientAssets = [
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), "");
-    const appUrl = env.APP_URL || "http://localhost:8080";
+
+    // Internal URL used by Vite's dev server to proxy asset requests (e.g. /fonts/*)
+    // to Apache. Vite runs INSIDE the container, where Apache listens on port 80.
+    // APP_URL (e.g. http://localhost:8080) is the PUBLIC URL from the host machine
+    // and is not reachable from inside the container, which is why we don't use it here.
+    // Override with VITE_PROXY_TARGET in .env if Apache moves to another container.
+    const internalAppUrl = env.VITE_PROXY_TARGET || "http://127.0.0.1:80";
 
     return {
         // Keep Vite cache outside node_modules to avoid permission issues on WSL mounts.
         cacheDir: ".vite-cache",
+        // laravel-vite-plugin sets publicDir:false by default, preventing the dev
+        // server from serving public/ files (e.g. /fonts/fa-subset/*.woff2). Override
+        // so the dev server can resolve those absolute font URLs from fontawesome-subset.css.
+        publicDir: "public",
         plugins: [
             laravel({
                 detectTls: false,
@@ -122,7 +132,7 @@ export default defineConfig(({ mode }) => {
             // resolves against the Vite origin when CSS is served from npm run dev (404 without proxy).
             proxy: {
                 "/fonts": {
-                    target: appUrl,
+                    target: internalAppUrl,
                     changeOrigin: true,
                 },
             },

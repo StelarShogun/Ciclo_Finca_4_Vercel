@@ -524,6 +524,24 @@
     }
 }
 
+/* Pagination wrapper: sits inside the table card, separated by a single top line */
+.pagination-wrapper {
+    border-top: 1px solid var(--border-color);
+}
+
+.pagination-wrapper .cf4-pagination-toolbar.pagination {
+    margin: 0;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    justify-content: center;
+}
+
+/* Ensure compact toolbars don't reintroduce vertical margins inside table cards. */
+.pagination-wrapper .cf4-pagination-toolbar.pagination.is-compact {
+    margin: 0;
+}
+
 /* Tables without data-label (e.g. before JS): keep horizontal scroll */
 @media (max-width: 768px) {
     .admin-table:not(:has(tbody td[data-label])) {
