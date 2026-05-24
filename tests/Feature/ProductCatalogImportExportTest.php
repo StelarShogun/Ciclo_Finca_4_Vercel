@@ -261,4 +261,42 @@ class ProductCatalogImportExportTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $stats['created'] + $stats['updated']);
         $this->assertDatabaseHas('products', ['name' => 'CF4 Zip Product Original']);
     }
+
+    public function test_bundle_import_creates_missing_categories_on_target(): void
+    {
+        $this->createActiveSupplier();
+
+        $bundleDir = storage_path('app/temp/test-catalog-cats-'.Str::uuid());
+        mkdir($bundleDir, 0755, true);
+        file_put_contents($bundleDir.'/catalog.json', json_encode([
+            'version' => 1,
+            'products' => [[
+                'export_key' => 'cf4-auto-cat',
+                'name' => 'CF4 Auto Category Product',
+                'category_path' => ['CF4 Import Parent', 'CF4 Import Sub'],
+                'sale_price' => 1500,
+                'purchase_price' => 500,
+                'stock_current' => 4,
+                'stock_minimum' => 1,
+                'status' => 'active',
+            ]],
+        ], JSON_UNESCAPED_UNICODE));
+
+        $placeholder = UploadedFile::fake()->create('bundle.json', 1, 'application/json');
+        $stats = app(ProductCatalogImporter::class)->import($placeholder, $bundleDir);
+
+        @unlink($bundleDir.'/catalog.json');
+        @rmdir($bundleDir);
+
+        $this->assertSame(1, $stats['created']);
+        $this->assertSame([], $stats['errors']);
+        $this->assertDatabaseHas('categories', [
+            'name' => 'CF4 Import Parent',
+            'parent_category_id' => null,
+        ]);
+        $this->assertDatabaseHas('categories', [
+            'name' => 'CF4 Import Sub',
+        ]);
+        $this->assertDatabaseHas('products', ['name' => 'CF4 Auto Category Product']);
+    }
 }

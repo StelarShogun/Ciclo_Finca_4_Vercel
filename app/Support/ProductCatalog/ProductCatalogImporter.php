@@ -36,6 +36,8 @@ final class ProductCatalogImporter
     /** @var list<int> */
     private array $importedMediaIds = [];
 
+    private bool $autoCreateCategories = false;
+
     public function __construct(
         private readonly ProductClassificationAssignmentService $classifications,
         private readonly ProductImageOptimizerService $imageOptimizer,
@@ -48,12 +50,15 @@ final class ProductCatalogImporter
     {
         return CatalogImportContext::runFastImport(function () use ($file, $extractedDir) {
             $this->importedMediaIds = [];
+            $this->autoCreateCategories = false;
             $stats = ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => [], 'media_conversions_queued' => 0];
             $bundleDir = $extractedDir;
 
             if ($bundleDir === null && strtolower($file->getClientOriginalExtension()) === 'zip') {
                 $bundleDir = $this->extractBundleZip($file);
             }
+
+            $this->autoCreateCategories = $bundleDir !== null;
 
             $parser = new ProductCatalogFileParser;
             $rows = $bundleDir !== null
@@ -132,7 +137,10 @@ final class ProductCatalogImporter
 
         $category = $this->resolveCategory($row);
         if ($category === null) {
-            throw new \InvalidArgumentException('No se pudo resolver la categoría/subcategoría.');
+            $pathLabel = $this->categoryPathLabel($row);
+            throw new \InvalidArgumentException($pathLabel !== ''
+                ? "No se pudo resolver la categoría/subcategoría ({$pathLabel})."
+                : 'No se pudo resolver la categoría/subcategoría.');
         }
 
         $supplier = $this->resolveSupplier($row);
@@ -316,6 +324,14 @@ final class ProductCatalogImporter
                 $query->where('parent_category_id', $parent->category_id);
             }
             $current = $query->first();
+            if (! $current && $this->autoCreateCategories) {
+                $current = Category::query()->create([
+                    'name' => $segment,
+                    'description' => null,
+                    'parent_category_id' => $parent?->category_id,
+                ]);
+                $this->rememberCategoryInCache($current);
+            }
             if (! $current) {
                 return null;
             }
@@ -325,6 +341,46 @@ final class ProductCatalogImporter
         $this->categoryCache[$cacheKey] = (int) $current->category_id;
 
         return $current;
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function categoryPathLabel(array $row): string
+    {
+        $path = $row['category_path'] ?? null;
+        if (is_array($path) && $path !== []) {
+            return implode(' > ', array_values(array_filter(array_map(
+                fn ($segment) => trim((string) $segment),
+                $path,
+            ))));
+        }
+
+        $subName = trim((string) ($row['category'] ?? ''));
+        $parentName = trim((string) ($row['parent_category'] ?? ''));
+
+        if ($subName !== '' && $parentName !== '') {
+            return $parentName.' > '.$subName;
+        }
+
+        if ($subName !== '') {
+            return $subName;
+        }
+
+        if (! empty($row['category_id'])) {
+            return 'id '.(int) $row['category_id'];
+        }
+
+        return '';
+    }
+
+    private function rememberCategoryInCache(Category $category): void
+    {
+        if ($category->parent_category_id === null) {
+            $this->categoryCache['parent|'.mb_strtolower($category->name)] = (int) $category->category_id;
+        } else {
+            $this->categoryCache['sub|'.mb_strtolower($category->name)] = (int) $category->category_id;
+        }
     }
 
     /**
