@@ -39,25 +39,32 @@
     use App\Support\ProductImageUrls;
 
     $legacyFallback = ProductImageUrls::fallbackUrl($product);
+    $showImagePlaceholder = ProductImageUrls::usesPlaceholder($product);
     $carouselSlides = [];
 
-    if ($mainMedia = $product->getFirstMedia('main_image')) {
-        $carouselSlides[] = ProductImageUrls::carouselSlide($mainMedia, $legacyFallback);
+    if (! $showImagePlaceholder) {
+        if ($mainMedia = $product->getFirstMedia('main_image')) {
+            $carouselSlides[] = ProductImageUrls::carouselSlide($mainMedia, $legacyFallback);
+        }
+
+        foreach ($product->getMedia('gallery') as $galleryMedia) {
+            if (ProductImageUrls::mediaIsDisplayable($galleryMedia)) {
+                $carouselSlides[] = ProductImageUrls::carouselSlide($galleryMedia, $galleryMedia->getUrl());
+            }
+        }
+
+        if ($carouselSlides === [] && ProductImageUrls::legacyImageIsDisplayable($product->image)) {
+            $carouselSlides[] = [
+                'fallback' => asset('assets/images/products/'.$product->image),
+                'desktopWebp' => null,
+                'mobileWebp' => null,
+            ];
+        }
     }
 
-    foreach ($product->getMedia('gallery') as $galleryMedia) {
-        $carouselSlides[] = ProductImageUrls::carouselSlide($galleryMedia, $galleryMedia->getUrl());
+    if ($carouselSlides === [] && ProductImageUrls::usesPlaceholder($product)) {
+        $showImagePlaceholder = true;
     }
-
-    if ($carouselSlides === [] && ! ProductImageUrls::usesPlaceholder($product)) {
-        $carouselSlides[] = [
-            'fallback' => $legacyFallback,
-            'desktopWebp' => null,
-            'mobileWebp' => null,
-        ];
-    }
-
-    $showImagePlaceholder = $carouselSlides === [] && ProductImageUrls::usesPlaceholder($product);
 
     $hasDescription = filled($product->description);
     $hasSpecs = $product->classificationValues->isNotEmpty() || $hasDescription;

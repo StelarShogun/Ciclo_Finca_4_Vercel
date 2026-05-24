@@ -17,6 +17,6 @@
         @if(!empty($loading)) loading="{{ $loading }}" @endif
         decoding="async"
         @if(!empty($fetchpriority)) fetchpriority="{{ $fetchpriority }}" @endif
-        data-fallback-src="{{ asset('favicon.svg') }}"
-        onerror="this.src=this.dataset.fallbackSrc;">
+        data-fallback-src="{{ asset('assets/images/products/default.png') }}"
+        onerror="if (this.src !== this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; }">
 </picture>

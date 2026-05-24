@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Product;
+use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ProductImageUrls
@@ -11,13 +12,45 @@ class ProductImageUrls
 
     public static function usesPlaceholder(Product $product): bool
     {
-        if ($product->getFirstMedia('main_image') !== null) {
+        return ! self::hasDisplayableMainImage($product);
+    }
+
+    public static function hasDisplayableMainImage(Product $product): bool
+    {
+        if (self::mediaIsDisplayable($product->getFirstMedia('main_image'))) {
+            return true;
+        }
+
+        return self::legacyImageIsDisplayable($product->image);
+    }
+
+    public static function mediaIsDisplayable(?Media $media): bool
+    {
+        if ($media === null) {
             return false;
         }
 
-        $image = $product->image ?? self::PLACEHOLDER_IMAGE;
+        try {
+            return Storage::disk($media->disk)->exists($media->getPathRelativeToRoot());
+        } catch (\Throwable) {
+            try {
+                $path = $media->getPath();
 
-        return $image === '' || $image === self::PLACEHOLDER_IMAGE;
+                return is_string($path) && $path !== '' && is_file($path);
+            } catch (\Throwable) {
+                return false;
+            }
+        }
+    }
+
+    public static function legacyImageIsDisplayable(?string $image): bool
+    {
+        $image = trim((string) ($image ?? ''));
+        if ($image === '' || $image === self::PLACEHOLDER_IMAGE) {
+            return false;
+        }
+
+        return is_file(public_path('assets/images/products/'.$image));
     }
 
     public static function placeholderIconClass(Product $product): string
@@ -37,17 +70,20 @@ class ProductImageUrls
 
     public static function fallbackUrl(Product $product): string
     {
-        $mediaUrl = $product->getFirstMediaUrl('main_image');
-
-        if ($mediaUrl !== '') {
-            return $mediaUrl;
+        $media = $product->getFirstMedia('main_image');
+        if (self::mediaIsDisplayable($media)) {
+            $url = $media->getUrl();
+            if ($url !== '') {
+                return $url;
+            }
         }
 
-        if (self::usesPlaceholder($product)) {
-            return asset('assets/images/products/'.self::PLACEHOLDER_IMAGE);
+        $legacy = trim((string) ($product->image ?? ''));
+        if (self::legacyImageIsDisplayable($legacy)) {
+            return asset('assets/images/products/'.$legacy);
         }
 
-        return asset('assets/images/products/'.($product->image ?? self::PLACEHOLDER_IMAGE));
+        return asset('assets/images/products/'.self::PLACEHOLDER_IMAGE);
     }
 
     /**
@@ -68,17 +104,17 @@ class ProductImageUrls
             ];
         }
 
-        $mediaUrl = $product->getFirstMediaUrl('main_image');
-        if ($mediaUrl !== '') {
+        $media = $product->getFirstMedia('main_image');
+        if (self::mediaIsDisplayable($media)) {
             return [
-                'image_url' => $mediaUrl,
+                'image_url' => $media->getUrl(),
                 'uses_placeholder_image' => false,
                 'placeholder_icon_class' => $iconClass,
             ];
         }
 
-        $legacy = $product->image ?? '';
-        if ($legacy !== '' && $legacy !== self::PLACEHOLDER_IMAGE) {
+        $legacy = trim((string) ($product->image ?? ''));
+        if (self::legacyImageIsDisplayable($legacy)) {
             return [
                 'image_url' => asset('assets/images/products/'.$legacy),
                 'uses_placeholder_image' => false,
@@ -95,7 +131,7 @@ class ProductImageUrls
 
     public static function webpCardUrl(?Media $media): ?string
     {
-        if ($media === null || ! $media->hasGeneratedConversion('webp_480')) {
+        if ($media === null || ! self::mediaIsDisplayable($media) || ! $media->hasGeneratedConversion('webp_480')) {
             return null;
         }
 
@@ -104,7 +140,7 @@ class ProductImageUrls
 
     public static function webpDesktopUrl(?Media $media): ?string
     {
-        if ($media === null || ! $media->hasGeneratedConversion('webp_1920')) {
+        if ($media === null || ! self::mediaIsDisplayable($media) || ! $media->hasGeneratedConversion('webp_1920')) {
             return null;
         }
 
@@ -113,7 +149,7 @@ class ProductImageUrls
 
     public static function webpMobileUrl(?Media $media): ?string
     {
-        if ($media === null) {
+        if ($media === null || ! self::mediaIsDisplayable($media)) {
             return null;
         }
 
@@ -130,7 +166,7 @@ class ProductImageUrls
 
     public static function webpDetailUrl(?Media $media): ?string
     {
-        if ($media === null) {
+        if ($media === null || ! self::mediaIsDisplayable($media)) {
             return null;
         }
 
@@ -179,7 +215,7 @@ class ProductImageUrls
      */
     public static function carouselSlide(?Media $media, string $legacyFallback): array
     {
-        if ($media === null) {
+        if ($media === null || ! self::mediaIsDisplayable($media)) {
             return [
                 'fallback' => $legacyFallback,
                 'desktopWebp' => null,
