@@ -285,26 +285,6 @@
     @include('admin.parts.aside')
 @endsection
 
-@section('header')
-    @component('admin.partials.page-header', ['title' => 'Revisión de precios XML'])
-        <p>
-            Revisa las diferencias entre los precios actuales y los precios importados desde el XML.
-            Selecciona los productos que deseas actualizar y ajusta el precio de venta cuando corresponda.
-        </p>
-
-        @slot('actions')
-            <div class="sales-header-actions">
-                <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-redo"></i> Cargar otro XML
-                </a>
-                <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-ghost btn-sm">
-                    <i class="fas fa-arrow-left"></i> Volver a pedidos
-                </a>
-            </div>
-        @endslot
-    @endcomponent
-@endsection
-
 @section('contenido')
     @php
         $items = $analysis['items'];
@@ -320,6 +300,24 @@
     @endphp
 
     <div class="sales-container xml-review-container">
+
+        @component('admin.partials.page-header', ['title' => 'Revisión de precios XML'])
+            <p>
+                Revisa las diferencias entre los precios actuales y los precios importados desde el XML.
+                Selecciona los productos que deseas actualizar y ajusta el precio de venta cuando corresponda.
+            </p>
+
+            @slot('actions')
+                <div class="sales-header-actions">
+                    <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-redo"></i> Cargar otro XML
+                    </a>
+                    <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-ghost btn-sm">
+                        <i class="fas fa-arrow-left"></i> Volver a pedidos
+                    </a>
+                </div>
+            @endslot
+        @endcomponent
 
         <nav class="orders-breadcrumb" aria-label="Migas de pan">
             <a href="{{ route('admin.supplier-orders.index') }}">Pedidos a proveedor</a>

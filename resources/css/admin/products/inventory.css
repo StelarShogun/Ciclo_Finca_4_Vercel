@@ -252,17 +252,19 @@
   grid-column: 1 / -1;
 }
 
+/* Inventory action buttons always sit at the bottom-right regardless of grid column count */
+.admin-filters-form.filter-form .filter-buttons {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+}
+
 .filter-group--classification {
-  grid-column: span 2;
   min-width: 0;
 }
 
 .btn-classification-toggle {
-  width: 100% !important;
-  max-width: 420px;
-  min-width: clamp(280px, 34vw, 420px);
-  align-self: flex-start;
-  justify-content: flex-start;
+  width: 100%;
+  align-self: end;
   white-space: nowrap;
 }
 
@@ -331,32 +333,46 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  border-bottom: 0.0625rem solid var(--border-color);
+  padding: 0.65rem 1rem;
+  margin-bottom: 1rem;
+  background: color-mix(in srgb, var(--color-primary) 6%, white);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
 }
 
 .products-count {
-  font-weight: 600;
-  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-dark);
+}
+
+.products-count__icon {
+  color: var(--color-primary);
+  font-size: 0.95rem;
 }
 
 .view-options {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .view-btn {
-  background: #f5f5f5;
-  border: none;
-  padding: 0.5rem;
-  border-radius: var(--border-radius);
+  background: white;
+  border: 1px solid var(--border-color);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
   cursor: pointer;
+  color: var(--color-muted);
   transition: var(--transition);
+  font-size: 0.85rem;
 }
 
 .view-btn.active,
 .view-btn:hover {
   background: var(--color-primary);
+  border-color: var(--color-primary);
   color: #fff;
 }
 
@@ -379,10 +395,13 @@
 }
 
 .products-table.table-view th {
-  background: #f8f9fa;
+  background: var(--brand-dark);
+  color: var(--brand-lightest);
   font-weight: 600;
-  color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--brand-medium-dark);
 }
 
 .products-table.table-view tbody tr:hover {
@@ -1123,8 +1142,9 @@ html:has(#stock-adjust-modal.is-open) {
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--background-white);
+  border-bottom: none;
+  background: var(--color-primary-dark);
+  border-radius: 12px 12px 0 0;
   flex-shrink: 0;
 }
 
@@ -1132,7 +1152,7 @@ html:has(#stock-adjust-modal.is-open) {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #fff;
 }
 
 .modal-close {
@@ -1140,12 +1160,13 @@ html:has(#stock-adjust-modal.is-open) {
   border: none;
   font-size: 1.25rem;
   cursor: pointer;
-  color: var(--text-secondary);
-  transition: color 0.2s;
+  color: rgba(255, 255, 255, 0.75);
+  transition: color 0.2s, background 0.2s;
 }
 
 .modal-close:hover {
-  color: var(--color-danger);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
 }
 
 .modal-body {
@@ -1302,30 +1323,14 @@ html:has(#stock-adjust-modal.is-open) {
   max-width: min(880px, calc(100vw - 2rem));
 }
 
-#view-product-modal .modal-header {
-  background: var(--background-white, #fff);
-  color: var(--color-dark, #1f2937);
-  border-bottom: 1px solid var(--border-color);
-}
-
 #view-product-modal .modal-header h3 {
-  color: var(--color-dark, #1f2937);
   font-size: 1.2rem;
   font-weight: 600;
   gap: 0.5rem;
 }
 
 #view-product-modal .modal-header h3 i {
-  color: var(--color-primary);
-}
-
-#view-product-modal .modal-close {
-  color: var(--color-muted, #6b7280);
-}
-
-#view-product-modal .modal-close:hover {
-  color: var(--color-danger);
-  background: transparent;
+  color: var(--brand-lightest);
 }
 
 #view-product-modal .modal-body {
@@ -1623,13 +1628,8 @@ html:has(#stock-adjust-modal.is-open) {
   .classification-filters-grid {
     grid-template-columns: 1fr;
   }
-  .filter-group--classification {
-    grid-column: auto;
-  }
   .btn-classification-toggle {
-    width: 100% !important;
-    min-width: 0;
-    max-width: 100%;
+    width: 100%;
   }
   .admin-header {
     border-radius: 12px;
@@ -1954,7 +1954,9 @@ img, svg, table {
   align-items: center;
   justify-content: space-between;
   padding: 1.1rem 1.4rem;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--color-primary-dark);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
 }
 
 .stock-modal-header h3 {
@@ -1964,26 +1966,26 @@ img, svg, table {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #111827;
+  color: #fff;
 }
 
-.stock-modal-header h3 .modal-icon-add    { color: #235347; }
-.stock-modal-header h3 .modal-icon-remove { color: #dc2626; }
+.stock-modal-header h3 .modal-icon-add,
+.stock-modal-header h3 .modal-icon-remove { color: var(--brand-lightest); }
 
 .stock-modal-close {
   background: none;
   border: none;
   cursor: pointer;
   font-size: 1.1rem;
-  color: #6b7280;
+  color: rgba(255, 255, 255, 0.75);
   padding: 0.25rem 0.4rem;
   border-radius: 6px;
   transition: background 0.15s, color 0.15s;
 }
 
 .stock-modal-close:hover {
-  background: #f3f4f6;
-  color: #111827;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
 }
 
 /* ── Product info strip ── */
@@ -1999,8 +2001,8 @@ img, svg, table {
 }
 
 .stock-modal-box.is-remove .stock-modal-product-info {
-  background: #fef2f2;
-  border-color: #fecaca;
+  background: var(--color-success-bg);
+  border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 
 .stock-modal-product-info__icon {
@@ -2012,13 +2014,13 @@ img, svg, table {
   justify-content: center;
   border-radius: 0.5rem;
   background: #fff;
-  color: var(--color-primary, #235347);
+  color: var(--color-primary);
   font-size: 1rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .stock-modal-box.is-remove .stock-modal-product-info__icon {
-  color: #dc2626;
+  color: var(--color-primary);
 }
 
 .stock-modal-product-info__body {
@@ -2060,8 +2062,8 @@ img, svg, table {
 }
 
 .stock-modal-box.is-remove .stock-modal-product-info .stock-pill {
-  color: #b91c1c;
-  border-color: rgba(220, 38, 38, 0.25);
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 
 /* ── Body ── */
@@ -2072,13 +2074,6 @@ img, svg, table {
   gap: 1.15rem;
 }
 
-.stock-modal-box.is-add .stock-modal-header {
-  border-bottom-color: rgba(35, 83, 71, 0.15);
-}
-
-.stock-modal-box.is-remove .stock-modal-header {
-  border-bottom-color: rgba(220, 38, 38, 0.15);
-}
 
 /* ── Form controls ── */
 .stock-form-group {
@@ -2119,8 +2114,8 @@ img, svg, table {
 }
 
 .stock-modal-box.is-remove .stock-form-control:focus {
-  border-color: #dc2626;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
 .stock-form-control.is-invalid {
@@ -2138,13 +2133,9 @@ img, svg, table {
   display: block;
 }
 
-.stock-form-hint.stock-form-hint--add {
-  color: var(--color-primary, #235347);
-  font-weight: 500;
-}
-
+.stock-form-hint.stock-form-hint--add,
 .stock-form-hint.stock-form-hint--remove {
-  color: #b91c1c;
+  color: var(--color-primary);
   font-weight: 500;
 }
 
@@ -2197,8 +2188,8 @@ img, svg, table {
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1rem 1.4rem;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border-top: 1px solid var(--border-color);
+  background: var(--background-light);
 }
 
 /* ── Botones del modal de stock ── */
@@ -2221,29 +2212,22 @@ img, svg, table {
 }
 
 .stock-btn-cancel {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background: var(--color-secondary-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
 .stock-btn-cancel:hover:not(:disabled) {
-  background: #e5e7eb;
+  background: var(--border-color);
 }
 
-.stock-btn-confirm-add {
-  background: #235347;
-  color: #fff;
-}
-
-.stock-btn-confirm-add:hover:not(:disabled) {
-  filter: brightness(0.9);
-}
-
+.stock-btn-confirm-add,
 .stock-btn-confirm-remove {
-  background: #dc2626;
+  background: var(--color-primary);
   color: #fff;
 }
 
+.stock-btn-confirm-add:hover:not(:disabled),
 .stock-btn-confirm-remove:hover:not(:disabled) {
   filter: brightness(0.9);
 }

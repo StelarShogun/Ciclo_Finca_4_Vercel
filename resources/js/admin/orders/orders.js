@@ -579,13 +579,6 @@ function viewSale(id) {
                 ? sale.order_placed_at_label || sale.sale_date_label || '—'
                 : sale.sale_date_label || '—';
 
-            const readyAtRow = sale.ready_at || sale.ready_at_label
-                ? `<div class="cf4-order-detail__item">
-                        <span>Fecha listo para recoger</span>
-                        <strong>${escapeHtml(sale.ready_at_label || '—')}</strong>
-                    </div>`
-                : '';
-
             const confirmedAtRow = sale.status === 'completed'
                 ? `<div class="cf4-order-detail__item">
                         <span>Fecha de confirmación</span>
@@ -644,7 +637,6 @@ function viewSale(id) {
                             <span>${escapeHtml(saleDateLabel)}</span>
                             <strong>${escapeHtml(saleDateValue)}</strong>
                         </div>
-                        ${readyAtRow}
                         ${confirmedAtRow}
                         <div class="cf4-order-detail__item">
                             <span>Cliente</span>

@@ -121,24 +121,24 @@ function addProduct() {
     const firstSelect = container?.querySelector('.product-select');
     const optionsHTML = firstSelect
         ? firstSelect.innerHTML
-        : '<option value="">Select product</option>';
+        : '<option value="">Seleccionar producto</option>';
 
     const newRow = document.createElement('div');
     newRow.className = 'product-row';
     newRow.innerHTML = `
         <div class="form-row">
             <div class="form-group">
-                <label>Product</label>
+                <label>Producto</label>
                 <select name="items[${productIndex}][product_id]" class="product-select" required>
                     ${optionsHTML}
                 </select>
             </div>
             <div class="form-group">
-                <label>Quantity</label>
+                <label>Cantidad</label>
                 <input type="number" name="items[${productIndex}][quantity]" min="1" value="1" required>
             </div>
             <div class="form-group">
-                <label>Unit Price</label>
+                <label>Precio unitario</label>
                 <input type="number" name="items[${productIndex}][precio_unitario]" step="0.01" readonly>
             </div>
             <input type="hidden" name="items[${productIndex}][total]" value="0">
@@ -208,13 +208,11 @@ function calculateTotals() {
 
 // Show or hide custom date range fields based on the selected option
 function toggleCustomDateFields(value) {
-    const fromGroup = document.getElementById('custom-date-from-group');
-    const toGroup   = document.getElementById('custom-date-to-group');
-    if (!fromGroup || !toGroup) return;
+    const customRow = document.getElementById('date-range-custom-row');
+    if (!customRow) return;
 
     const show = value === 'custom';
-    fromGroup.style.display = show ? '' : 'none';
-    toGroup.style.display   = show ? '' : 'none';
+    customRow.style.display = show ? '' : 'none';
 
     if (!show) {
         const fromInput = document.getElementById('date-from');
@@ -278,6 +276,9 @@ function viewSale(id) {
     const body  = document.getElementById('view-sale-body');
     if (!modal || !body) return;
 
+    const printBtn = document.getElementById('view-sale-print-btn');
+    if (printBtn) printBtn.style.display = 'none';
+
     body.innerHTML = `
         <div class="loading-spinner" role="status">
             <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
@@ -302,10 +303,6 @@ function viewSale(id) {
         const saleDateValue = isWebOrder
             ? (sale.order_placed_at_label || sale.sale_date_label || '—')
             : (sale.sale_date_label || '—');
-        const readyAtRow = sale.ready_at || sale.ready_at_label
-            ? '<div class="detail-item"><label>Fecha listo para recoger:</label><span>'
-                + (sale.ready_at_label || '—') + '</span></div>'
-            : '';
         const confirmedAtRow = sale.status === 'completed'
             ? '<div class="detail-item"><label>Fecha de confirmación:</label><span>'
                 + (sale.confirmed_at_label || '—') + '</span></div>'
@@ -343,38 +340,6 @@ function viewSale(id) {
                 + '</tr>';
         }).join('');
 
-        // Expiration badge.
-        // - ready_to_pickup: deadline = ready_at + READY_TO_PICKUP_EXPIRATION_HOURS
-        //   (exposed by the backend as pickup_time_remaining_label / is_pickup_expired).
-        // - completed: confirmed sales have no deadline anymore (they are already finalized).
-        // - other statuses: legacy 30-day countdown from sale_date.
-        let expiryBadge;
-        if (sale.status === 'ready_to_pickup') {
-            const pickupLabel = (sale.pickup_time_remaining_label || '').trim();
-            if (sale.is_pickup_expired || pickupLabel === 'Vencido') {
-                expiryBadge = '<span class="expiry-badge expiry-expired"><i class="fas fa-clock"></i> Vencido</span>';
-            } else if (pickupLabel !== '') {
-                expiryBadge = '<span class="expiry-badge expiry-ok">' + pickupLabel + '</span>';
-            } else {
-                expiryBadge = '-';
-            }
-        } else if (sale.status === 'completed') {
-            expiryBadge = '<span class="text-muted">—</span>';
-        } else {
-            const daysLeft = sale.days_remaining_until_expiration;
-            if (typeof daysLeft !== 'undefined' && daysLeft <= 0) {
-                expiryBadge = '<span class="expiry-badge expiry-expired">Expirado</span>';
-            } else if (sale.is_expiry_warning) {
-                expiryBadge = '<span class="expiry-badge expiry-warning">'
-                    + '<span class="expiry-warning-trigger" tabindex="0" role="button">'
-                    + '<i class="fas fa-exclamation-triangle"></i>'
-                    + '<span class="expiry-tooltip-label">¡Atención! Este pedido se eliminará automáticamente en ' + daysLeft + ' día(s).</span>'
-                    + '</span>' + daysLeft + ' día(s)</span>';
-            } else {
-                expiryBadge = (typeof daysLeft !== 'undefined') ? daysLeft + ' día(s)' : '-';
-            }
-        }
-
         const discountRow = (sale.discount || 0) > 0
             ? '<div class="total-item"><span>Descuento:</span><span>-CRC' + parseFloat(sale.discount).toLocaleString('es-CR', { minimumFractionDigits: 2 }) + '</span></div>'
             : '';
@@ -401,12 +366,10 @@ function viewSale(id) {
             + '<div class="detail-grid">'
             + '<div class="detail-item"><label>Factura:</label><span><strong>' + (sale.invoice_number || '#' + sale.sale_id) + '</strong></span></div>'
             + '<div class="detail-item"><label>' + saleDateLabel + ':</label><span>' + saleDateValue + '</span></div>'
-            + readyAtRow
             + confirmedAtRow
             + '<div class="detail-item"><label>Cliente:</label><span>' + customerName + '</span></div>'
             + '<div class="detail-item"><label>Estado:</label><span class="status-badge ' + sale.status + '">' + (statusLabels[sale.status] || sale.status) + '</span></div>'
-            + '<div class="detail-item"><label>Metodo de pago:</label><span>' + (paymentLabels[sale.payment_method] || sale.payment_method) + '</span></div>'
-            + '<div class="detail-item"><label>Dias restantes:</label><span>' + expiryBadge + '</span></div>'
+            + '<div class="detail-item"><label>Método de pago:</label><span>' + (paymentLabels[sale.payment_method] || sale.payment_method) + '</span></div>'
             + refRow
             + '</div></div>'
             + '<div class="detail-section"><h4><i class="fas fa-shopping-cart"></i> Productos</h4>'
@@ -425,6 +388,12 @@ function viewSale(id) {
             + returnSection
             + (sale.notes ? '<div class="detail-section"><h4><i class="fas fa-sticky-note"></i> Notas</h4><p class="sale-notes">' + sale.notes + '</p></div>' : '')
             + '</div>';
+
+        if (printBtn) {
+            const invoiceLabel = sale.invoice_number || ('#' + sale.sale_id);
+            printBtn.onclick = () => printSale(sale.sale_id, invoiceLabel);
+            printBtn.style.display = '';
+        }
     })
     .catch(() => {
         body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Error de conexión al cargar los detalles.</div>';

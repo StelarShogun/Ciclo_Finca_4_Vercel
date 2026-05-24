@@ -33,14 +33,8 @@
             </p>
 
             @slot('actions')
-                <a
-                    href="{{ route('inventory') }}"
-                    class="btn btn-secondary">
-
-                    <i class="fas fa-arrow-left"></i>
-
-                    Volver al inventario
-
+                <a href="{{ route('inventory') }}" class="btn btn-secondary">
+                    <i class="fas fa-box"></i> Inventario
                 </a>
             @endslot
         @endcomponent
@@ -182,17 +176,16 @@
 
                                                 </td>
 
-                                                <td>
+                                                <td class="admin-table__col--actions">
 
-                                                    <a
-                                                        href="{{ route('admin.products.classifications.edit', $product) }}"
-                                                        class="btn btn-primary">
-
-                                                        <i class="fas fa-sliders-h"></i>
-
-                                                        Editar
-
-                                                    </a>
+                                                    <div class="actions-container">
+                                                        <a
+                                                            href="{{ route('admin.products.classifications.edit', $product) }}"
+                                                            class="action-btn edit"
+                                                            title="Editar características">
+                                                            <i class="fas fa-sliders-h"></i>
+                                                        </a>
+                                                    </div>
 
                                                 </td>
 

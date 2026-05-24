@@ -230,7 +230,7 @@
                                             @endif
 
                                             @if ($sale->status === 'completed')
-                                                <a href="{{ route('sales.invoice', $sale->sale_id) }}" target="_blank"
+                                                <a href="{{ route('sales.invoice', ['id' => $sale->sale_id, 'from' => 'orders']) }}" target="_blank"
                                                     rel="noopener noreferrer" class="action-link-invoice"
                                                     data-confirm-invoice
                                                     data-invoice-label="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}"

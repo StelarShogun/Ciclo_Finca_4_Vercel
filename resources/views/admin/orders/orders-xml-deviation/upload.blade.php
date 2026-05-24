@@ -77,7 +77,9 @@
     @include('admin.parts.aside')
 @endsection
 
-@section('header')
+@section('contenido')
+<div class="sales-container">
+
     @component('admin.partials.page-header', [
         'title' => 'Importar XML de proveedor',
         'description' => 'Carga un archivo XML del proveedor para comparar los precios de compra actuales antes de aplicar cambios.',
@@ -90,10 +92,6 @@
             </div>
         @endslot
     @endcomponent
-@endsection
-
-@section('contenido')
-<div class="sales-container" style="padding-top: 1.5rem;">
 
     <nav class="orders-breadcrumb" aria-label="Migas de pan">
         <a href="{{ route('admin.supplier-orders.index') }}">Pedidos a proveedor</a>
@@ -115,6 +113,8 @@
                 @endforeach
             </div>
         @endif
+
+        <div id="xml-client-error" class="xml-form-error" role="alert" hidden></div>
 
         <form
             method="POST"
@@ -217,7 +217,18 @@
 
 @push('scripts')
 <script>
-document.getElementById('xml-upload-form').addEventListener('submit', function () {
+document.getElementById('xml-upload-form').addEventListener('submit', function (e) {
+    const fileInput = document.getElementById('xml_file');
+    const errorEl  = document.getElementById('xml-client-error');
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        e.preventDefault();
+        if (errorEl) {
+            errorEl.textContent = 'Debes seleccionar un archivo XML antes de analizar.';
+            errorEl.hidden = false;
+        }
+        return;
+    }
+    if (errorEl) errorEl.hidden = true;
     const btn = document.getElementById('xml-submit-btn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando…';
