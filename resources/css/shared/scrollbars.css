@@ -1,0 +1,149 @@
+/* ============================================================
+   CF4 scrollbars — shared (admin + storefront)
+   Import from admin shell-base and client variables-reset.
+   ============================================================ */
+:root {
+    --cf4-scrollbar-size: 6px;
+    --cf4-scrollbar-thumb: rgba(35, 83, 71, 0.32);
+    --cf4-scrollbar-thumb-hover: rgba(35, 83, 71, 0.52);
+    --cf4-scrollbar-track: transparent;
+    /* Dark surfaces (admin sidebar, dark panels) */
+    --cf4-scrollbar-thumb-on-dark: rgba(142, 182, 155, 0.38);
+    --cf4-scrollbar-thumb-on-dark-hover: rgba(218, 241, 222, 0.52);
+}
+
+/* Legacy aliases (admin) */
+:root {
+    --admin-scrollbar-size: var(--cf4-scrollbar-size);
+    --admin-scrollbar-thumb: var(--cf4-scrollbar-thumb);
+    --admin-scrollbar-thumb-hover: var(--cf4-scrollbar-thumb-hover);
+    --admin-scrollbar-track: var(--cf4-scrollbar-track);
+    --admin-scrollbar-sidebar-thumb: var(--cf4-scrollbar-thumb-on-dark);
+    --admin-scrollbar-sidebar-thumb-hover: var(--cf4-scrollbar-thumb-on-dark-hover);
+}
+
+/* ---- Scopes: viewport ---- */
+html:has(body.admin-layout),
+html:has(body.cliente-layout),
+html:has(body.guest-layout),
+html:has(.catalog-shell) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--cf4-scrollbar-thumb) var(--cf4-scrollbar-track);
+}
+
+html:has(body.admin-layout)::-webkit-scrollbar,
+html:has(body.cliente-layout)::-webkit-scrollbar,
+html:has(body.guest-layout)::-webkit-scrollbar,
+html:has(.catalog-shell)::-webkit-scrollbar {
+    width: var(--cf4-scrollbar-size);
+    height: var(--cf4-scrollbar-size);
+}
+
+html:has(body.admin-layout)::-webkit-scrollbar-track,
+html:has(body.cliente-layout)::-webkit-scrollbar-track,
+html:has(body.guest-layout)::-webkit-scrollbar-track,
+html:has(.catalog-shell)::-webkit-scrollbar-track {
+    background: var(--cf4-scrollbar-track);
+}
+
+html:has(body.admin-layout)::-webkit-scrollbar-thumb,
+html:has(body.cliente-layout)::-webkit-scrollbar-thumb,
+html:has(body.guest-layout)::-webkit-scrollbar-thumb,
+html:has(.catalog-shell)::-webkit-scrollbar-thumb {
+    background-color: var(--cf4-scrollbar-thumb);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+html:has(body.admin-layout)::-webkit-scrollbar-thumb:hover,
+html:has(body.cliente-layout)::-webkit-scrollbar-thumb:hover,
+html:has(body.guest-layout)::-webkit-scrollbar-thumb:hover,
+html:has(.catalog-shell)::-webkit-scrollbar-thumb:hover {
+    background-color: var(--cf4-scrollbar-thumb-hover);
+}
+
+/* ---- Light surfaces (default) ---- */
+body.admin-layout,
+body.cliente-layout,
+body.guest-layout,
+.catalog-shell,
+.cf4-scrollbar-surface {
+    scrollbar-width: thin;
+    scrollbar-color: var(--cf4-scrollbar-thumb) var(--cf4-scrollbar-track);
+}
+
+body.admin-layout *::-webkit-scrollbar,
+body.cliente-layout *::-webkit-scrollbar,
+body.guest-layout *::-webkit-scrollbar,
+.catalog-shell *::-webkit-scrollbar,
+.cf4-scrollbar-surface *::-webkit-scrollbar {
+    width: var(--cf4-scrollbar-size);
+    height: var(--cf4-scrollbar-size);
+}
+
+body.admin-layout *::-webkit-scrollbar-track,
+body.cliente-layout *::-webkit-scrollbar-track,
+body.guest-layout *::-webkit-scrollbar-track,
+.catalog-shell *::-webkit-scrollbar-track,
+.cf4-scrollbar-surface *::-webkit-scrollbar-track {
+    background: var(--cf4-scrollbar-track);
+}
+
+body.admin-layout *::-webkit-scrollbar-thumb,
+body.cliente-layout *::-webkit-scrollbar-thumb,
+body.guest-layout *::-webkit-scrollbar-thumb,
+.catalog-shell *::-webkit-scrollbar-thumb,
+.cf4-scrollbar-surface *::-webkit-scrollbar-thumb {
+    background-color: var(--cf4-scrollbar-thumb);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+body.admin-layout *::-webkit-scrollbar-thumb:hover,
+body.cliente-layout *::-webkit-scrollbar-thumb:hover,
+body.guest-layout *::-webkit-scrollbar-thumb:hover,
+.catalog-shell *::-webkit-scrollbar-thumb:hover,
+.cf4-scrollbar-surface *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--cf4-scrollbar-thumb-hover);
+}
+
+body.admin-layout *::-webkit-scrollbar-corner,
+body.cliente-layout *::-webkit-scrollbar-corner,
+.catalog-shell *::-webkit-scrollbar-corner,
+.cf4-scrollbar-surface *::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+body.admin-layout *::-webkit-scrollbar:horizontal,
+body.cliente-layout *::-webkit-scrollbar:horizontal,
+.catalog-shell *::-webkit-scrollbar:horizontal {
+    height: 5px;
+}
+
+/* ---- Dark surfaces (admin sidebar) ---- */
+body.admin-layout .admin-sidebar,
+body.admin-layout .admin-sidebar *,
+.cf4-scrollbar-surface--on-dark,
+.cf4-scrollbar-surface--on-dark * {
+    scrollbar-color: var(--cf4-scrollbar-thumb-on-dark) var(--cf4-scrollbar-track);
+}
+
+body.admin-layout .admin-sidebar *::-webkit-scrollbar-thumb,
+.cf4-scrollbar-surface--on-dark *::-webkit-scrollbar-thumb {
+    background-color: var(--cf4-scrollbar-thumb-on-dark);
+}
+
+body.admin-layout .admin-sidebar *::-webkit-scrollbar-thumb:hover,
+.cf4-scrollbar-surface--on-dark *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--cf4-scrollbar-thumb-on-dark-hover);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    body.admin-layout *::-webkit-scrollbar-thumb,
+    body.cliente-layout *::-webkit-scrollbar-thumb,
+    .catalog-shell *::-webkit-scrollbar-thumb {
+        transition: background-color 0.15s ease;
+    }
+}

@@ -34,6 +34,7 @@ class AuditLogController extends Controller
         'product_create' => 'Producto creado',
         'product_update' => 'Producto actualizado',
         'product_delete' => 'Producto desactivado',
+        'product_activate' => 'Producto reactivado',
         'product_force_delete' => 'Producto eliminado permanentemente',
         'product_toggle_featured' => 'Producto destacado actualizado',
         'products_import' => 'Importación de productos',

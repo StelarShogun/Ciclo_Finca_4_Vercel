@@ -166,7 +166,7 @@ class CF4169TransactionalEmailLayoutTest extends TestCase
         $this->assertStringContainsString('CICLO', $html);
         $this->assertStringContainsString('FINCA', $html);
         $this->assertStringContainsString('Contacto Ciclo Finca 4', $html);
-        $this->assertStringContainsString('logo-ciclo-finca-icon-64.png', $html);
+        $this->assertStringNotContainsString('<img', $html);
         $this->assertStringContainsString('max-width:620px', $html);
     }
 }

@@ -17,6 +17,8 @@ use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\Images\ProductImageOptimizerService;
 use App\Services\Admin\RegistryExcelExport;
 use App\Services\Admin\ReportExcelFilename;
+use App\Support\ProductCatalog\ProductCatalogExporter;
+use App\Support\ProductCatalog\ProductCatalogImporter;
 use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\ProductClassificationAssignmentService;
@@ -26,6 +28,7 @@ use App\Support\ProductImageUrls;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -414,12 +417,24 @@ class ProductController extends Controller
     public function destroy($id)
     {
         try {
-            $productName = null;
-            DB::transaction(function () use ($id, &$productName) {
-                $p = Product::findOrFail($id);
-                $productName = $p->name;
-                // Deactivate the product instead of deleting the record
-                $p->update(['status' => 'inactive']);
+            $product = Product::findOrFail($id);
+
+            if ($product->status === 'inactive') {
+                if (request()->wantsJson() || request()->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'already_inactive' => true,
+                        'message' => 'Product is already inactive',
+                        'status' => 'inactive',
+                    ]);
+                }
+
+                return redirect()->route('inventory')->with('status', 'Product is already inactive');
+            }
+
+            $productName = $product->name;
+            DB::transaction(function () use ($product) {
+                $product->update(['status' => 'inactive']);
             });
 
             $this->logAudit('product_delete', 'Producto desactivado.', [
@@ -432,6 +447,7 @@ class ProductController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Product deactivated successfully',
+                    'status' => 'inactive',
                 ]);
             }
 
@@ -445,6 +461,47 @@ class ProductController extends Controller
             }
 
             return redirect()->back()->with('error', 'Error deactivating product');
+        }
+    }
+
+    public function activate($id)
+    {
+        try {
+            $product = Product::findOrFail($id);
+            $productName = $product->name;
+            $wasActive = $product->status === 'active';
+
+            DB::transaction(function () use ($product) {
+                $product->update(['status' => 'active']);
+            });
+
+            if (! $wasActive) {
+                $this->logAudit('product_activate', 'Producto reactivado.', [
+                    'product_id' => (int) $id,
+                    'name' => $productName,
+                ]);
+                ClientStorefrontCache::forgetAfterProductMutation();
+            }
+
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'already_active' => $wasActive,
+                    'message' => $wasActive ? 'Product is already active' : 'Product activated successfully',
+                    'status' => 'active',
+                ]);
+            }
+
+            return redirect()->route('inventory')->with('status', 'Product activated successfully');
+        } catch (\Throwable $e) {
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error activating product: '.$e->getMessage(),
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Error activating product');
         }
     }
 
@@ -547,8 +604,8 @@ class ProductController extends Controller
         $lowStockProductsCount = Product::query()->lowStockAlert()->count();
         $hasClassificationSelections = collect((array) $request->input('classifications', []))
             ->contains(fn ($value) => is_string($value) && trim($value) !== '');
-        $classificationFilters = $hasClassificationSelections
-            ? $this->inventoryClassificationFilters($request)
+        $activeClassificationFilters = $hasClassificationSelections
+            ? $this->inventoryActiveClassificationFilters($request)
             : [];
 
         $perPage = AdminPerPage::resolve($request->get('per_page', 10));
@@ -598,7 +655,7 @@ class ProductController extends Controller
                 ->orderBy('name')
                 ->get(['supplier_id', 'name']),
             'inventoryExportsQuery' => AdminInventoryExportQuery::queryStringFromRequest($request),
-            'classificationFilters' => $classificationFilters,
+            'activeClassificationFilters' => $activeClassificationFilters,
             'hasClassificationSelections' => $hasClassificationSelections,
         ]);
     }
@@ -611,6 +668,76 @@ class ProductController extends Controller
         ]);
     }
 
+    public function inventoryClassificationFilterDimensions(Request $request)
+    {
+        return response()->json([
+            'success' => true,
+            'dimensions' => collect($this->inventoryClassificationFilters($request))
+                ->map(fn (array $filter) => [
+                    'slug' => $filter['slug'],
+                    'label' => $filter['label'],
+                ])
+                ->values(),
+        ]);
+    }
+
+    public function inventoryClassificationFilterSuggest(Request $request, string $slug)
+    {
+        $requestForScope = $request->duplicate();
+        $classifications = (array) $request->input('classifications', []);
+        unset($classifications[$slug]);
+        $requestForScope->merge(['classifications' => $classifications]);
+
+        $filteredProductIds = $this->inventoryProductsFilteredQuery($requestForScope)
+            ->reorder()
+            ->select('products.product_id');
+
+        $search = trim((string) $request->get('q', ''));
+        $limit = max(1, min(50, (int) $request->get('limit', 50)));
+
+        return response()->json([
+            'success' => true,
+            'options' => $this->classificationFilterValuesBySlug($slug, clone $filteredProductIds, $search, $limit),
+        ]);
+    }
+
+    public function importCatalog(Request $request)
+    {
+        $request->validate([
+            'import_file' => 'required|file|max:102400|mimes:zip,json,xml,csv,txt',
+        ]);
+
+        try {
+            /** @var UploadedFile $file */
+            $file = $request->file('import_file');
+            $stats = app(ProductCatalogImporter::class)->import($file);
+
+            $this->logAudit('products_import', 'Products import processed ('.strtoupper($file->getClientOriginalExtension()).').', [
+                'created' => $stats['created'],
+                'updated' => $stats['updated'],
+                'skipped' => $stats['skipped'],
+                'errors' => count($stats['errors']),
+            ]);
+
+            $message = sprintf(
+                'Importación finalizada: %d creados, %d actualizados, %d omitidos.',
+                $stats['created'],
+                $stats['updated'],
+                $stats['skipped'],
+            );
+
+            if ($stats['errors'] !== []) {
+                $message .= ' Errores: '.implode(' | ', array_slice($stats['errors'], 0, 5));
+            }
+
+            return redirect()->route('inventory')->with('status', $message);
+        } catch (\Throwable $e) {
+            Log::error('product_catalog_import_failed', ['error' => $e->getMessage()]);
+
+            return redirect()->route('inventory')->with('error', 'No se pudo importar: '.$e->getMessage());
+        }
+    }
+
     public function export(Request $request, $format = null)
     {
         $format = strtolower($format ?? $request->get('format', 'pdf'));
@@ -619,28 +746,66 @@ class ProductController extends Controller
         $baseQuery = $exportAll ? $this->inventoryProductsFilteredQuery(new Request) : $this->inventoryProductsFilteredQuery($request);
         $filterLines = $exportAll ? ['Inventario: todo (sin filtros)'] : $this->inventoryExportFilterLines($request);
 
-        $withRelations = ['category:category_id,name', 'supplier:supplier_id,name'];
+        $catalogExporter = app(ProductCatalogExporter::class);
+        $withRelations = [
+            'category.parent',
+            'supplier:supplier_id,name',
+            'brands:id,name',
+            'classificationValues.dimension',
+            'variants:product_id,name,sku',
+        ];
+
+        if (in_array($format, ['bundle', 'zip'], true)) {
+            $manifest = $catalogExporter->buildManifest($baseQuery, $exportAll);
+            $products = (clone $baseQuery)->with($withRelations)->limit(10_000)->get();
+            $zipPath = storage_path('app/temp/catalog-export-'.Str::uuid().'.zip');
+            if (! is_dir(dirname($zipPath))) {
+                mkdir(dirname($zipPath), 0755, true);
+            }
+            $catalogExporter->writeBundleZip($zipPath, $products, $manifest);
+            $filename = 'catalogo_productos_'.date('Ymd_His').'.zip';
+
+            return response()->download($zipPath, $filename)->deleteFileAfterSend(true);
+        }
+
+        if ($format === 'json') {
+            $manifest = $catalogExporter->buildManifest($baseQuery, $exportAll);
+            $filename = 'catalogo_productos_'.date('Ymd_His').'.json';
+
+            return response()->json($manifest, 200, [
+                'Content-Disposition' => "attachment; filename=\"$filename\"",
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        }
 
         if ($format === 'xml') {
-            $data = (clone $baseQuery)->with($withRelations)->get();
-            $xml = new \SimpleXMLElement('<products/>');
+            $maxRows = $exportAll ? 10_000 : AdminPdfExportLimits::INVENTORY_MAX_ROWS;
+            $data = (clone $baseQuery)->with($withRelations)->limit($maxRows)->get();
+            $xml = new \SimpleXMLElement('<catalog/>');
+            $xml->addAttribute('version', (string) ProductCatalogExporter::MANIFEST_VERSION);
+            $xml->addChild('exported_at', now()->toIso8601String());
             foreach ($data as $p) {
                 if (! $p instanceof Product) {
                     continue;
                 }
-
+                $arr = $catalogExporter->productToArray($p);
                 $n = $xml->addChild('product');
-                $n->addChild('id', (string) $p->product_id);
-                $n->addChild('name', htmlspecialchars($p->name));
-                $n->addChild('description', htmlspecialchars($p->description ?? ''));
-                $n->addChild('category', htmlspecialchars(optional($p->category)->name));
-                $n->addChild('supplier', htmlspecialchars(optional($p->supplier)->name));
-                $n->addChild('purchase_price', number_format((float) $p->purchase_price, 2, '.', ''));
-                $n->addChild('sale_price', number_format((float) $p->sale_price, 2, '.', ''));
-                $n->addChild('stock_current', (string) $p->stock_current);
-                $n->addChild('stock_minimum', (string) $p->stock_minimum);
-                $n->addChild('status', $p->status);
-                $n->addChild('created_at', (string) $p->created_at);
+                foreach ($arr as $key => $value) {
+                    if (is_array($value)) {
+                        $child = $n->addChild($key);
+                        foreach ($value as $subKey => $subVal) {
+                            if (is_array($subVal)) {
+                                $sub = $child->addChild(is_int($subKey) ? 'item' : (string) $subKey);
+                                foreach ($subVal as $item) {
+                                    $sub->addChild('value', htmlspecialchars((string) $item));
+                                }
+                            } else {
+                                $child->addChild((string) $subKey, htmlspecialchars((string) $subVal));
+                            }
+                        }
+                    } else {
+                        $n->addChild((string) $key, htmlspecialchars((string) $value));
+                    }
+                }
             }
             $filename = 'products_'.date('Ymd_His').'.xml';
 
@@ -713,23 +878,35 @@ class ProductController extends Controller
                 ->limit($maxRows)
                 ->get();
 
-            $headers = ['ID', 'Nombre', 'Descripción', 'Categoría', 'Proveedor', 'Precio compra', 'Precio venta', 'Stock actual', 'Stock mínimo', 'Estado', 'Creado'];
-            $dataRows = $rows->map(function ($p) {
+            $headers = [
+                'ID', 'SKU', 'Nombre', 'Descripción', 'Categoría padre', 'Subcategoría', 'Proveedor', 'Marca(s)',
+                'Precio compra', 'Precio venta', 'Stock actual', 'Stock mínimo', 'Estado', 'Destacado',
+                'Clasificaciones', 'Variantes (SKU)', 'Creado',
+            ];
+            $dataRows = $rows->map(function ($p) use ($catalogExporter) {
                 if (! $p instanceof Product) {
                     return null;
                 }
+                $arr = $catalogExporter->productToArray($p);
+                $classStr = collect($arr['classifications'] ?? [])->map(fn ($v, $k) => $k.': '.$v)->implode('; ');
 
                 return [
                     (string) $p->product_id,
+                    $arr['display_sku'] ?? '',
                     $p->name,
                     $p->description ?? '',
-                    optional($p->category)->name ?? '',
+                    $arr['parent_category'] ?? '',
+                    $arr['category'] ?? '',
                     optional($p->supplier)->name ?? '',
+                    implode(', ', $arr['brands'] ?? []),
                     number_format((float) $p->purchase_price, 2, '.', ''),
                     number_format((float) $p->sale_price, 2, '.', ''),
                     (string) $p->stock_current,
                     (string) $p->stock_minimum,
                     $p->status,
+                    ($p->is_featured ?? false) ? '1' : '0',
+                    $classStr,
+                    implode(', ', $arr['variant_export_keys'] ?? []),
                     $p->created_at ? $p->created_at->format('Y-m-d H:i:s') : '',
                 ];
             })->filter()->values()->all();
@@ -746,7 +923,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => false,
-            'message' => 'Formato no soportado. Use xml, pdf o excel.',
+            'message' => 'Formato no soportado. Use bundle (ZIP completo), json, xml, pdf o excel.',
         ], 400);
     }
 
@@ -929,9 +1106,52 @@ class ProductController extends Controller
         })->filter(fn (array $f) => $f['options'] !== [])->values()->all();
     }
 
-    /** Distinct visible values for a classification slug across products. */
-    private function classificationFilterValuesBySlug(string $slug, ?Builder $filteredProductIds = null): array
+    /** Active classification filters with display labels for inventory chips. */
+    private function inventoryActiveClassificationFilters(Request $request): array
     {
+        $classifications = collect($request->input('classifications', []))
+            ->filter(fn ($value) => is_string($value) && trim($value) !== '');
+
+        if ($classifications->isEmpty()) {
+            return [];
+        }
+
+        $dimensions = ClassificationDimension::query()
+            ->whereIn('slug', $classifications->keys())
+            ->pluck('label', 'slug');
+
+        $result = [];
+        foreach ($classifications as $slug => $normalizedValue) {
+            $slug = (string) $slug;
+            $normalizedValue = (string) $normalizedValue;
+
+            $displayValue = ClassificationValue::query()
+                ->selectRaw('MIN(classification_values.value) AS display_value')
+                ->join('classification_dimensions', 'classification_dimensions.id', '=', 'classification_values.classification_dimension_id')
+                ->where('classification_dimensions.slug', $slug)
+                ->where('classification_values.normalized_value', $normalizedValue)
+                ->whereNull('classification_dimensions.deleted_at')
+                ->whereNull('classification_values.deleted_at')
+                ->value('display_value');
+
+            $result[] = [
+                'slug' => $slug,
+                'dimension_label' => (string) ($dimensions[$slug] ?? $slug),
+                'value' => $normalizedValue,
+                'value_label' => (string) ($displayValue ?? $normalizedValue),
+            ];
+        }
+
+        return $result;
+    }
+
+    /** Distinct visible values for a classification slug across products. */
+    private function classificationFilterValuesBySlug(
+        string $slug,
+        ?Builder $filteredProductIds = null,
+        ?string $search = null,
+        ?int $limit = null
+    ): array {
         $query = ClassificationValue::query()
             ->selectRaw('classification_values.normalized_value, MIN(classification_values.value) AS display_value')
             ->join('classification_dimensions', 'classification_dimensions.id', '=', 'classification_values.classification_dimension_id')
@@ -947,6 +1167,15 @@ class ProductController extends Controller
             $query->joinSub($filteredProductIds, 'inventory_filtered_products', function ($join) {
                 $join->on('inventory_filtered_products.product_id', '=', 'classification_product.product_id');
             });
+        }
+
+        if ($search !== null && trim($search) !== '') {
+            $term = '%'.addcslashes(trim($search), '%_\\').'%';
+            $query->where('classification_values.value', 'LIKE', $term);
+        }
+
+        if ($limit !== null) {
+            $query->limit($limit);
         }
 
         return $query->get()

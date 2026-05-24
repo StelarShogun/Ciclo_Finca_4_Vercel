@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import laravel from "laravel-vite-plugin";
 
 const vitePort = Number(process.env.VITE_PORT) || 5173;
@@ -100,16 +100,8 @@ const clientAssets = [
     "resources/css/client/product-detail.css",
 ];
 
-export default defineConfig(({ mode, command }) => {
-    const env = loadEnv(mode, process.cwd(), "");
+export default defineConfig(({ command }) => {
     const isDevServer = command === "serve";
-
-    // Internal URL used by Vite's dev server to proxy asset requests (e.g. /fonts/*)
-    // to Apache. Vite runs INSIDE the container, where Apache listens on port 80.
-    // APP_URL (e.g. http://localhost:8080) is the PUBLIC URL from the host machine
-    // and is not reachable from inside the container, which is why we don't use it here.
-    // Override with VITE_PROXY_TARGET in .env if Apache moves to another container.
-    const internalAppUrl = env.VITE_PROXY_TARGET || "http://127.0.0.1:80";
 
     return {
         // Keep Vite cache outside node_modules to avoid permission issues on WSL mounts.
@@ -133,13 +125,9 @@ export default defineConfig(({ mode, command }) => {
                 host: "localhost",
             },
             // FA subset lives in public/fonts; @font-face uses /fonts/... which the browser
-            // resolves against the Vite origin when CSS is served from npm run dev (404 without proxy).
-            proxy: {
-                "/fonts": {
-                    target: internalAppUrl,
-                    changeOrigin: true,
-                },
-            },
+            // resolves against the Vite origin when CSS is served from npm run dev. publicDir
+            // serves those files directly — a /fonts proxy breaks host-side dev (proxy targets
+            // 127.0.0.1:80 inside the container, not localhost:8080 on the host).
         },
     };
 });

@@ -1186,7 +1186,7 @@ export async function initModals() {
 
     // Modal: Import products
     const importModal = qs('#import-modal');
-    const openImportModalBtn = qs('#import-btn');
+    const openImportModalBtn = qs('#open-import-modal') || qs('#import-btn');
     const closeImportModalBtn = qs('#close-import-modal');
     const cancelImportBtn = qs('#cancel-import');
     const confirmImportBtn = qs('#confirm-import');
@@ -1217,7 +1217,9 @@ export async function initModals() {
         const extension = file.name.split('.').pop().toLowerCase();
         const fileName = file.name.toLowerCase();
         
-        if (extension === 'xml' || fileName.endsWith('.xml')) {
+        if (extension === 'zip' || fileName.endsWith('.zip')) {
+            return { format: 'zip', name: 'ZIP (catálogo completo)', icon: 'fa-file-archive', color: '#059669' };
+        } else if (extension === 'xml' || fileName.endsWith('.xml')) {
             return { format: 'xml', name: 'XML', icon: 'fa-file-code', color: '#f59e0b' };
         } else if (extension === 'csv' || extension === 'txt' || fileName.endsWith('.csv') || fileName.endsWith('.txt')) {
             return { format: 'csv', name: 'CSV', icon: 'fa-file-csv', color: '#3b82f6' };

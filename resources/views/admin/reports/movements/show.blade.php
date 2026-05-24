@@ -49,6 +49,12 @@
         <br>
         Stock actual: <strong class="stock-badge stock-badge--{{ $product->adminInventoryStockBadgeClass() }}">{{ number_format($product->stock_current) }} unid.</strong>
     </p>
+
+    @slot('actions')
+        <a href="{{ route('admin.inventory.movements.index') }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Volver al listado
+        </a>
+    @endslot
 @endcomponent
 
         <div class="inv-mov-layout">

@@ -1,0 +1,520 @@
+<?php
+
+namespace App\Support\ProductCatalog;
+
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\ClassificationDimension;
+use App\Models\ClassificationValue;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\Supplier;
+use App\Services\Admin\Images\ProductImageOptimizerService;
+use App\Services\ProductClassificationAssignmentService;
+use App\Support\ClientStorefrontCache;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use ZipArchive;
+
+final class ProductCatalogImporter
+{
+    /** @var array<string, int> */
+    private array $brandCache = [];
+
+    /** @var array<string, int> */
+    private array $supplierCache = [];
+
+    /** @var array<string, int> */
+    private array $categoryCache = [];
+
+    /** @var array<string, Product> */
+    private array $productsByExportKey = [];
+
+    public function __construct(
+        private readonly ProductClassificationAssignmentService $classifications,
+        private readonly ProductImageOptimizerService $imageOptimizer,
+    ) {}
+
+    /**
+     * @return array{created: int, updated: int, skipped: int, errors: list<string>}
+     */
+    public function import(UploadedFile $file, ?string $extractedDir = null): array
+    {
+        $stats = ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []];
+        $bundleDir = $extractedDir;
+
+        if ($bundleDir === null && strtolower($file->getClientOriginalExtension()) === 'zip') {
+            $bundleDir = $this->extractBundleZip($file);
+        }
+
+        $parser = new ProductCatalogFileParser;
+        $rows = $bundleDir !== null
+            ? $this->rowsFromBundle($bundleDir)
+            : $parser->parse($file);
+
+        if ($rows === []) {
+            $stats['errors'][] = 'No se encontraron productos reconocibles en el archivo.';
+
+            return $stats;
+        }
+
+        DB::transaction(function () use ($rows, $bundleDir, &$stats) {
+            foreach ($rows as $index => $row) {
+                try {
+                    $result = $this->importRow($row, $bundleDir);
+                    $stats[$result]++;
+                } catch (\Throwable $e) {
+                    $stats['skipped']++;
+                    $stats['errors'][] = 'Fila '.($index + 1).': '.$e->getMessage();
+                    Log::warning('product_catalog_import_row_failed', [
+                        'row' => $index + 1,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+            $this->linkVariantsFromRows($rows);
+        });
+
+        ClientStorefrontCache::forgetAfterProductMutation();
+
+        if ($bundleDir !== null && str_starts_with($bundleDir, sys_get_temp_dir())) {
+            $this->deleteDirectory($bundleDir);
+        }
+
+        return $stats;
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function importRow(array $row, ?string $bundleDir): string
+    {
+        $name = trim((string) ($row['name'] ?? ''));
+        if ($name === '') {
+            throw new \InvalidArgumentException('Falta el nombre del producto.');
+        }
+
+        $category = $this->resolveCategory($row);
+        if ($category === null) {
+            throw new \InvalidArgumentException('No se pudo resolver la categoría/subcategoría.');
+        }
+
+        $supplier = $this->resolveSupplier($row);
+        $purchase = $this->parseMoney($row['purchase_price'] ?? null) ?? 0.0;
+        $sale = $this->parseMoney($row['sale_price'] ?? null) ?? max($purchase * 1.35, 1000);
+        if ($sale <= $purchase) {
+            $sale = $purchase + max(500, $purchase * 0.15);
+        }
+
+        $payload = [
+            'category_id' => $category->category_id,
+            'supplier_id' => $supplier->supplier_id,
+            'name' => $name,
+            'sku' => $this->nullableString($row['sku'] ?? null),
+            'description' => (string) ($row['description'] ?? ''),
+            'purchase_price' => round($purchase, 2),
+            'sale_price' => round($sale, 2),
+            'stock_current' => max(0, (int) ($row['stock_current'] ?? 0)),
+            'stock_minimum' => max(0, (int) ($row['stock_minimum'] ?? 3)),
+            'status' => $this->parseStatus($row['status'] ?? 'active'),
+            'is_featured' => filter_var($row['is_featured'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'image' => 'default.png',
+        ];
+
+        $product = $this->findExistingProduct($row, $category->category_id, $name);
+        $action = 'created';
+
+        if ($product) {
+            $product->update($payload);
+            $action = 'updated';
+        } else {
+            $product = Product::query()->create($payload);
+        }
+
+        $this->syncBrands($product, $row);
+        $this->syncClassifications($product, $row);
+        $this->importImages($product, $row, $bundleDir);
+
+        $exportKey = (string) ($row['export_key'] ?? $this->exportKeyFor($product));
+        $this->productsByExportKey[$exportKey] = $product;
+
+        return $action;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function linkVariantsFromRows(array $rows): void
+    {
+        foreach ($rows as $row) {
+            $keys = $row['variant_export_keys'] ?? [];
+            if (! is_array($keys) || $keys === []) {
+                continue;
+            }
+            $baseKey = (string) ($row['export_key'] ?? '');
+            $base = $this->productsByExportKey[$baseKey] ?? null;
+            if (! $base instanceof Product) {
+                continue;
+            }
+            foreach ($keys as $variantKey) {
+                $variant = $this->productsByExportKey[(string) $variantKey] ?? null;
+                if ($variant instanceof Product && (int) $variant->product_id !== (int) $base->product_id) {
+                    ProductVariant::query()
+                        ->where('variant_product_id', $variant->product_id)
+                        ->delete();
+                    ProductVariant::query()->firstOrCreate([
+                        'base_product_id' => $base->product_id,
+                        'variant_product_id' => $variant->product_id,
+                    ]);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function findExistingProduct(array $row, int $categoryId, string $name): ?Product
+    {
+        if (! empty($row['product_id'])) {
+            $byId = Product::query()->find((int) $row['product_id']);
+            if ($byId) {
+                return $byId;
+            }
+        }
+
+        $sku = $this->nullableString($row['sku'] ?? null);
+        if ($sku !== null) {
+            $bySku = Product::query()->where('sku', $sku)->first();
+            if ($bySku) {
+                return $bySku;
+            }
+        }
+
+        return Product::query()
+            ->where('category_id', $categoryId)
+            ->where('name', $name)
+            ->first();
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function resolveCategory(array $row): ?Category
+    {
+        if (! empty($row['category_id'])) {
+            $cat = Category::query()->find((int) $row['category_id']);
+            if ($cat) {
+                return $cat;
+            }
+        }
+
+        $path = $row['category_path'] ?? null;
+        if (is_array($path) && $path !== []) {
+            return $this->categoryByPath($path);
+        }
+
+        $subName = trim((string) ($row['category'] ?? ''));
+        $parentName = trim((string) ($row['parent_category'] ?? ''));
+
+        if ($subName !== '' && $parentName !== '') {
+            return $this->categoryByPath([$parentName, $subName]);
+        }
+
+        if ($subName !== '') {
+            $cacheKey = 'sub|'.mb_strtolower($subName);
+            if (isset($this->categoryCache[$cacheKey])) {
+                return Category::query()->find($this->categoryCache[$cacheKey]);
+            }
+            $cat = Category::query()
+                ->whereRaw('LOWER(name) = ?', [mb_strtolower($subName)])
+                ->whereNotNull('parent_category_id')
+                ->first();
+            if ($cat) {
+                $this->categoryCache[$cacheKey] = (int) $cat->category_id;
+
+                return $cat;
+            }
+        }
+
+        return Category::query()->whereNotNull('parent_category_id')->orderBy('category_id')->first();
+    }
+
+    /**
+     * @param  list<string>  $path
+     */
+    private function categoryByPath(array $path): ?Category
+    {
+        $path = array_values(array_filter(array_map(fn ($p) => trim((string) $p), $path)));
+        if ($path === []) {
+            return null;
+        }
+
+        $cacheKey = implode('>', array_map('mb_strtolower', $path));
+        if (isset($this->categoryCache[$cacheKey])) {
+            return Category::query()->find($this->categoryCache[$cacheKey]);
+        }
+
+        $parent = null;
+        $current = null;
+        foreach ($path as $segment) {
+            $query = Category::query()->whereRaw('LOWER(name) = ?', [mb_strtolower($segment)]);
+            if ($parent === null) {
+                $query->whereNull('parent_category_id');
+            } else {
+                $query->where('parent_category_id', $parent->category_id);
+            }
+            $current = $query->first();
+            if (! $current) {
+                return null;
+            }
+            $parent = $current;
+        }
+
+        if ($current) {
+            $this->categoryCache[$cacheKey] = (int) $current->category_id;
+        }
+
+        return $current;
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function resolveSupplier(array $row): Supplier
+    {
+        $name = trim((string) ($row['supplier'] ?? ''));
+        if ($name === '') {
+            return Supplier::query()->where('status', 'active')->orderBy('supplier_id')->first()
+                ?? throw new \RuntimeException('No hay proveedor activo en el sistema.');
+        }
+
+        $key = mb_strtolower($name);
+        if (isset($this->supplierCache[$key])) {
+            return Supplier::query()->findOrFail($this->supplierCache[$key]);
+        }
+
+        $supplier = Supplier::query()->firstOrCreate(
+            ['name' => $name],
+            ['status' => 'active', 'primary_contact' => $name, 'email' => '', 'phone' => ''],
+        );
+        $this->supplierCache[$key] = (int) $supplier->supplier_id;
+
+        return $supplier;
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function syncBrands(Product $product, array $row): void
+    {
+        $names = [];
+        if (isset($row['brands']) && is_array($row['brands'])) {
+            $names = array_map('strval', $row['brands']);
+        } elseif (! empty($row['brand'])) {
+            $names = preg_split('/[,;|]/', (string) $row['brand']) ?: [];
+        }
+
+        $names = array_values(array_filter(array_map('trim', $names)));
+        if ($names === []) {
+            return;
+        }
+
+        $ids = [];
+        foreach ($names as $name) {
+            $key = mb_strtolower($name);
+            if (! isset($this->brandCache[$key])) {
+                $this->brandCache[$key] = (int) Brand::query()->firstOrCreate(['name' => $name])->id;
+            }
+            $ids[] = $this->brandCache[$key];
+        }
+
+        $product->brands()->sync(array_slice($ids, 0, 1));
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function syncClassifications(Product $product, array $row): void
+    {
+        $defs = $row['classifications'] ?? [];
+        if (! is_array($defs) || $defs === []) {
+            return;
+        }
+
+        $product->loadMissing('category');
+        $category = $product->category;
+        if (! $category || $category->parent_category_id === null) {
+            return;
+        }
+
+        $valueIds = [];
+        foreach ($defs as $slug => $label) {
+            if (! is_string($slug) || ! is_scalar($label) || trim((string) $label) === '') {
+                continue;
+            }
+            $dim = ClassificationDimension::query()->firstOrCreate(
+                ['category_id' => $category->category_id, 'slug' => Str::slug($slug, '-')],
+                ['label' => ucfirst(str_replace('-', ' ', $slug)), 'sort_order' => 0],
+            );
+            $norm = ClassificationValue::normalizeStoredValue((string) $label);
+            $val = ClassificationValue::query()->firstOrCreate(
+                ['classification_dimension_id' => $dim->id, 'normalized_value' => $norm],
+                ['value' => trim((string) $label), 'sort_order' => 0],
+            );
+            $valueIds[] = (int) $val->id;
+        }
+
+        if ($valueIds !== []) {
+            $this->classifications->syncForProduct($product, $valueIds);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function importImages(Product $product, array $row, ?string $bundleDir): void
+    {
+        if ($bundleDir === null) {
+            return;
+        }
+
+        $images = $row['images'] ?? [];
+        if (! is_array($images)) {
+            return;
+        }
+
+        $mainRel = $images['main'] ?? null;
+        if (is_string($mainRel) && $mainRel !== '') {
+            $path = $bundleDir.'/'.ltrim($mainRel, '/');
+            if (is_file($path)) {
+                $product->clearMediaCollection('main_image');
+                $this->attachMedia($product, $path, 'main_image');
+            }
+        }
+
+        $gallery = $images['gallery'] ?? [];
+        if (is_array($gallery) && $gallery !== []) {
+            $product->clearMediaCollection('gallery');
+            foreach ($gallery as $rel) {
+                if (! is_string($rel)) {
+                    continue;
+                }
+                $path = $bundleDir.'/'.ltrim($rel, '/');
+                if (is_file($path)) {
+                    $this->attachMedia($product, $path, 'gallery');
+                }
+            }
+        }
+    }
+
+    private function attachMedia(Product $product, string $absolutePath, string $collection): void
+    {
+        try {
+            $sanitized = $this->imageOptimizer->sanitizePath($absolutePath);
+        } catch (\Throwable) {
+            return;
+        }
+
+        $product->addMedia($sanitized)->preservingOriginal()->toMediaCollection($collection);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function rowsFromBundle(string $dir): array
+    {
+        $manifestPath = $dir.'/catalog.json';
+        if (! is_file($manifestPath)) {
+            throw new \InvalidArgumentException('catalog.json no encontrado en el paquete.');
+        }
+
+        $data = json_decode((string) file_get_contents($manifestPath), true);
+        if (! is_array($data) || ! isset($data['products']) || ! is_array($data['products'])) {
+            throw new \InvalidArgumentException('catalog.json inválido.');
+        }
+
+        return $data['products'];
+    }
+
+    private function extractBundleZip(UploadedFile $file): string
+    {
+        $dir = sys_get_temp_dir().'/cf4-import-'.Str::uuid();
+        if (! mkdir($dir, 0755, true) && ! is_dir($dir)) {
+            throw new \RuntimeException('No se pudo crear carpeta temporal.');
+        }
+
+        $zip = new ZipArchive;
+        if ($zip->open($file->getRealPath()) !== true) {
+            throw new \InvalidArgumentException('ZIP inválido.');
+        }
+        $zip->extractTo($dir);
+        $zip->close();
+
+        return $dir;
+    }
+
+    private function deleteDirectory(string $dir): void
+    {
+        if (! is_dir($dir)) {
+            return;
+        }
+        $items = scandir($dir) ?: [];
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+            $path = $dir.'/'.$item;
+            if (is_dir($path)) {
+                $this->deleteDirectory($path);
+            } else {
+                @unlink($path);
+            }
+        }
+        @rmdir($dir);
+    }
+
+    private function parseMoney(mixed $value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+        $s = preg_replace('/[^\d.,\-]/', '', (string) $value) ?? '';
+        if ($s === '') {
+            return null;
+        }
+        if (str_contains($s, ',') && str_contains($s, '.')) {
+            $s = str_replace('.', '', $s);
+            $s = str_replace(',', '.', $s);
+        } elseif (str_contains($s, ',')) {
+            $s = str_replace(',', '.', $s);
+        }
+
+        return is_numeric($s) ? (float) $s : null;
+    }
+
+    private function parseStatus(mixed $raw): string
+    {
+        return Product::canonicalStatus(is_scalar($raw) ? (string) $raw : 'active');
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        $s = trim((string) $value);
+
+        return $s === '' ? null : $s;
+    }
+
+    private function exportKeyFor(Product $product): string
+    {
+        return (new ProductCatalogExporter)->exportKey($product);
+    }
+}

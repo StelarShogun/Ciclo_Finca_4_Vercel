@@ -1,7 +1,6 @@
 @php
     $siteUrl = rtrim((string) config('app.frontend_url', config('app.url')), '/');
     $mailContact = (string) (config('mail.from.address') ?: 'ciclo.finca4@gmail.com');
-    $logoUrl = url(asset('assets/images/brand/logo-ciclo-finca-icon-64.png'));
     $pageTitle = trim($__env->yieldContent('title')) ?: 'Ciclo Finca 4';
 @endphp
 <!DOCTYPE html>
@@ -78,26 +77,9 @@
             color: #235347;
             text-decoration: underline;
         }
-        .email-brand-row {
-            width: 100%;
-        }
-        .email-logo-cell {
-            width: 80px;
-            vertical-align: top;
-        }
-        .email-logo-spacer {
-            width: 80px;
-            font-size: 0;
-            line-height: 0;
-        }
         .email-wordmark-cell {
             vertical-align: middle;
             text-align: center;
-        }
-        .email-logo {
-            width: 80px !important;
-            height: 80px !important;
-            max-width: 80px;
         }
         .email-wordmark {
             font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
@@ -129,18 +111,6 @@
                 padding-left: 20px !important;
                 padding-right: 20px !important;
             }
-            .email-brand-title {
-                font-size: 20px !important;
-            }
-            .email-logo-cell,
-            .email-logo-spacer {
-                width: 64px !important;
-            }
-            .email-logo {
-                width: 64px !important;
-                height: 64px !important;
-                max-width: 64px !important;
-            }
             .email-wordmark {
                 font-size: 20px !important;
                 white-space: normal !important;
@@ -164,22 +134,12 @@
                     <tr>
                         <td class="email-card" style="background-color:#ffffff;border:1px solid #c8e6c9;border-radius:8px;overflow:hidden;">
 
-                            {{-- Header: logo esquina izquierda, wordmark centrado, título como subtítulo --}}
+                            {{-- Header: wordmark centrado, título como subtítulo --}}
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                                 <tr>
-                                    <td class="email-header-cell" bgcolor="#235347" style="background-color:#235347;padding:16px 20px 20px 16px;">
-                                        <table role="presentation" class="email-brand-row" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                    <td class="email-header-cell" bgcolor="#235347" style="background-color:#235347;padding:20px 20px 24px;">
+                                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                                             <tr>
-                                                <td class="email-logo-cell" width="80" align="left" valign="top" style="width:80px;vertical-align:top;text-align:left;">
-                                                    <a href="{{ $siteUrl }}" style="text-decoration:none;">
-                                                        <img src="{{ $logoUrl }}"
-                                                             width="80"
-                                                             height="80"
-                                                             alt="Ciclo Finca 4"
-                                                             class="email-logo"
-                                                             style="display:block;border:0;outline:none;text-decoration:none;width:80px;height:80px;max-width:80px;">
-                                                    </a>
-                                                </td>
                                                 <td class="email-wordmark-cell" align="center" valign="middle" style="vertical-align:middle;text-align:center;">
                                                     <a href="{{ $siteUrl }}" style="text-decoration:none;display:inline-block;">
                                                         <span class="email-wordmark" style="font-family:'Segoe UI',Arial,Helvetica,sans-serif;font-size:28px;font-weight:700;line-height:1.15;letter-spacing:-0.01em;text-align:center;white-space:nowrap;">
@@ -199,7 +159,6 @@
                                                         </p>
                                                     @endif
                                                 </td>
-                                                <td class="email-logo-spacer" width="80" align="right" valign="top" style="width:80px;font-size:0;line-height:0;">&nbsp;</td>
                                             </tr>
                                         </table>
                                     </td>

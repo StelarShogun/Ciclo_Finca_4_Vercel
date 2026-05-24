@@ -9,6 +9,7 @@ import {
     readJsonOrThrow,
     smartFetch,
     jsonValidationMessage,
+    showSubtleNotification,
 } from './inventory-shared.js';
 import { createDropdownPortal } from '../shared/combobox-dropdown-portal.js';
 import { fireSwal } from '../shared/swal.js';
@@ -247,7 +248,7 @@ function setupClassificationDimensionCard(card, dimension, initialValueId) {
     renderChip();
 }
 
-function buildDimensionCard(attr, initialValueId) {
+function buildDimensionCard(attr, initialValueId, editorContext = null) {
     const card = document.createElement('div');
     card.className = 'classification-card';
     card.dataset.cfDimensionId = String(attr.id);
@@ -264,6 +265,53 @@ function buildDimensionCard(attr, initialValueId) {
         slug.textContent = attr.slug;
         head.appendChild(slug);
     }
+
+    if (editorContext?.categoryId && editorContext?.containerSelector) {
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'classification-card__remove';
+        removeBtn.setAttribute('aria-label', `Eliminar atributo ${String(attr.label || 'atributo')}`);
+        removeBtn.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
+        removeBtn.addEventListener('click', async () => {
+            const label = attr.label || 'este atributo';
+            const { isConfirmed } = await fireSwal({
+                title: '¿Eliminar atributo?',
+                html: `<p>Se desactivará <strong>${escapeHtml(label)}</strong> del catálogo de esta subcategoría. Los productos que ya tenían un valor conservan su asignación.</p>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc2626',
+            });
+            if (!isConfirmed) return;
+
+            removeBtn.disabled = true;
+            try {
+                const res = await smartFetch(CF_API.destroyDimension(attr.id), {
+                    method: 'DELETE',
+                    headers: {
+                        ...jsonHeaders(),
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': getCSRFToken(),
+                    },
+                });
+                await readJsonOrThrow(res, 'No se pudo eliminar el atributo.');
+                showSubtleNotification('Atributo eliminado', 'success');
+                const preserved = collectClassificationValueIds(editorContext.container);
+                await refreshClassificationFields(
+                    editorContext.containerSelector,
+                    editorContext.categoryId,
+                    preserved
+                );
+            } catch (e) {
+                const msg = e?.data ? jsonValidationMessage(e.data) : e.message;
+                showSubtleNotification(msg || 'No se pudo eliminar el atributo.', 'error');
+                removeBtn.disabled = false;
+            }
+        });
+        head.appendChild(removeBtn);
+    }
+
     card.appendChild(head);
 
     const hidden = document.createElement('input');
@@ -504,9 +552,14 @@ async function refreshClassificationFields(containerSelector, categoryId, presel
     }
 
     try {
+        const editorContext = {
+            categoryId,
+            containerSelector,
+            container,
+        };
         attrs.forEach((attr) => {
             const initial = selMap[attr.id] ?? null;
-            editor.appendChild(buildDimensionCard(attr, initial));
+            editor.appendChild(buildDimensionCard(attr, initial, editorContext));
         });
     } catch (error) {
         console.error('classification editor build failed', error);
@@ -537,6 +590,8 @@ export const CF_API = {
     options: (categoryId) => `/classifications/catalog/${encodeURIComponent(categoryId)}/options`,
     storeDimension: (categoryId) =>
         `/classifications/catalog/${encodeURIComponent(categoryId)}/dimensions`,
+    destroyDimension: (dimensionId) =>
+        `/classifications/dimensions/${encodeURIComponent(dimensionId)}`,
     storeValue: (dimensionId) =>
         `/classifications/dimensions/${encodeURIComponent(dimensionId)}/values`,
 };

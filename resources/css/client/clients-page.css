@@ -5,6 +5,7 @@
  * 'Inter'` selectors below now fall through to Poppins -> sans-serif without
  * loading a second family.
  */
+@import "../shared/scrollbars.css";
 @import "../admin/sweetalert2-modal-zindex.css";
 @import "../admin/components/pagination.css";
 @import "../shared/components/buttons.css";
@@ -1744,15 +1745,6 @@ body.guest-layout {
   scrollbar-width: thin;
 }
 
-.categories-carousel-track::-webkit-scrollbar {
-  height: 6px;
-}
-
-.categories-carousel-track::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-
 .category-slide {
   flex: 0 0 min(100%, 340px);
   scroll-snap-align: start;
@@ -2184,7 +2176,7 @@ body.guest-layout {
     overflow-x: hidden;
     scrollbar-gutter: stable;
     scrollbar-width: thin;
-    scrollbar-color: rgba(35, 83, 71, 0.55) rgba(218, 241, 222, 0.7);
+    scrollbar-color: var(--cf4-scrollbar-thumb) var(--cf4-scrollbar-track);
     padding-right: 0.2rem;
   }
 
@@ -2273,21 +2265,6 @@ body.guest-layout {
 
   .catalog-category-toolbar {
     display: none !important;
-  }
-
-  .catalog-sidebar-stack::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .catalog-sidebar-stack::-webkit-scrollbar-track {
-    background: rgba(218, 241, 222, 0.7);
-    border-radius: 999px;
-  }
-
-  .catalog-sidebar-stack::-webkit-scrollbar-thumb {
-    background: rgba(35, 83, 71, 0.55);
-    border-radius: 999px;
-    border: 2px solid rgba(218, 241, 222, 0.7);
   }
 
   .category-rail:not(.is-expanded) .catalog-category-sidebar-item-row {
@@ -2392,26 +2369,7 @@ body.guest-layout {
   padding-right: 0.35rem;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: rgba(35, 83, 71, 0.55) rgba(218, 241, 222, 0.7);
-}
-
-.category-rail-scroll::-webkit-scrollbar {
-  width: 8px;
-}
-
-.category-rail-scroll::-webkit-scrollbar-track {
-  background: rgba(218, 241, 222, 0.7);
-  border-radius: 999px;
-}
-
-.category-rail-scroll::-webkit-scrollbar-thumb {
-  background: rgba(35, 83, 71, 0.55);
-  border-radius: 999px;
-  border: 2px solid rgba(218, 241, 222, 0.7);
-}
-
-.category-rail-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(35, 83, 71, 0.85);
+  scrollbar-color: var(--cf4-scrollbar-thumb) var(--cf4-scrollbar-track);
 }
 
 .catalog-category-sidebar-all,
@@ -3830,20 +3788,6 @@ select.catalog-toolbar-select:focus,
     padding-bottom: 0.25rem;
     scrollbar-gutter: stable;
     -webkit-overflow-scrolling: touch;
-  }
-
-  .category-rail-scroll::-webkit-scrollbar {
-    height: 7px;
-  }
-
-  .category-rail-scroll::-webkit-scrollbar-track {
-    background: rgba(218, 241, 222, 0.7);
-    border-radius: 999px;
-  }
-
-  .category-rail-scroll::-webkit-scrollbar-thumb {
-    background: rgba(35, 83, 71, 0.55);
-    border-radius: 999px;
   }
 
   .catalog-category-sidebar-all,
@@ -5456,9 +5400,7 @@ select.catalog-toolbar-select:focus,
     gap: 6px;
   }
 
-  .catalog-cats-horizontal::-webkit-scrollbar { height: 3px; }
-  .catalog-cats-horizontal::-webkit-scrollbar-track { background: transparent; }
-  .catalog-cats-horizontal::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+  /* horizontal scroll: shared/scrollbars.css */
 
   .cat-pill {
     flex-shrink: 0;

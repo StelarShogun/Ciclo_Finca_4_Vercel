@@ -6,10 +6,11 @@
  * trigger (or the browser is idle).
  */
 import '../../shared/ajax-pagination.js';
-import { initSidebarToggle, initViewSwitcher } from './inventory-chrome.js';
+import { initCatalogExportMenu, initSidebarToggle, initViewSwitcher } from './inventory-chrome.js';
 
 initSidebarToggle();
 initViewSwitcher();
+initCatalogExportMenu();
 
 function hideInventoryLoadingOverlay() {
     const overlay = document.querySelector('.loading-spinner-overlay');

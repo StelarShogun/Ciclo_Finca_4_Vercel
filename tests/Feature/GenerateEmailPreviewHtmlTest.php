@@ -38,10 +38,6 @@ class GenerateEmailPreviewHtmlTest extends TestCase
 
     private string $outputDir;
 
-    private const LOGO_PUBLIC_PATH = 'assets/images/brand/logo-ciclo-finca-icon-64.png';
-
-    private const LOGO_PREVIEW_RELATIVE = 'assets/logo-ciclo-finca-icon-64.png';
-
     protected function setUp(): void
     {
         try {
@@ -158,17 +154,16 @@ class GenerateEmailPreviewHtmlTest extends TestCase
             ],
         ];
 
-        $this->copyLogoForOfflinePreviews();
-
         $indexEntries = [];
 
         foreach ($previews as $filename => $preview) {
             $path = $this->outputDir.DIRECTORY_SEPARATOR.$filename;
-            $html = $this->rewritePreviewHtmlForOfflineViewing($preview['html']);
+            $html = $preview['html'];
             File::put($path, $html);
             $this->assertFileExists($path);
             $this->assertNotEmpty($html);
-            $this->assertStringContainsString(self::LOGO_PREVIEW_RELATIVE, $html);
+            $this->assertStringContainsString('CICLO', $html);
+            $this->assertStringNotContainsString('<img', $html);
 
             $indexEntries[] = [
                 'file' => $filename,
@@ -182,34 +177,6 @@ class GenerateEmailPreviewHtmlTest extends TestCase
 
         fwrite(STDERR, "\n  Email previews written to: {$this->outputDir}\n");
         fwrite(STDERR, "  Open: {$indexPath}\n\n");
-    }
-
-    private function copyLogoForOfflinePreviews(): void
-    {
-        $source = public_path(self::LOGO_PUBLIC_PATH);
-        $this->assertFileExists($source, 'Logo PNG requerido en public/'.self::LOGO_PUBLIC_PATH);
-
-        $targetDir = $this->outputDir.DIRECTORY_SEPARATOR.'assets';
-        File::ensureDirectoryExists($targetDir);
-        File::copy($source, $targetDir.DIRECTORY_SEPARATOR.'logo-ciclo-finca-icon-64.png');
-    }
-
-    /**
-     * Las plantillas usan URL absolutas (correcto en correo real). En previews locales
-     * (file://) apuntan a localhost sin servidor; reemplazamos por ruta relativa al PNG copiado.
-     */
-    private function rewritePreviewHtmlForOfflineViewing(string $html): string
-    {
-        $relative = self::LOGO_PREVIEW_RELATIVE;
-        $escapedPublicPath = preg_quote(self::LOGO_PUBLIC_PATH, '#');
-
-        $html = preg_replace(
-            '#https?://[^"\'\s>]+/'.$escapedPublicPath.'#i',
-            $relative,
-            $html
-        ) ?? $html;
-
-        return $html;
     }
 
     /**
@@ -349,7 +316,7 @@ class GenerateEmailPreviewHtmlTest extends TestCase
             <body>
                 <div class="wrap">
                     <h1>Ciclo Finca 4 — Plantillas de correo</h1>
-                    <p class="meta">Generado: {$generatedAt}. Abre cada enlace en una pestaña nueva. El logo usa <code>assets/logo-ciclo-finca-icon-64.png</code> (sin servidor web).</p>
+                    <p class="meta">Generado: {$generatedAt}. Abre cada enlace en una pestaña nueva.</p>
                     <ul>
                         {$listItems}
                     </ul>

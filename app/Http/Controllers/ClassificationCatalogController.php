@@ -217,13 +217,19 @@ class ClassificationCatalogController extends Controller
             ->with('status', 'Atributo actualizado.');
     }
 
-    public function destroyDimension(ClassificationDimension $dimension): RedirectResponse
+    public function destroyDimension(Request $request, ClassificationDimension $dimension): RedirectResponse|JsonResponse
     {
         $dimension->load('category');
         $this->assertSubcategory($dimension->category);
         $catId = (int) $dimension->category->category_id;
         $dimension->delete();
         self::forgetClassificationOptionsCacheForCategory($catId);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Atributo desactivado. Los productos que ya tenían un valor siguen igual.',
+            ]);
+        }
 
         return redirect()
             ->route('admin.classifications.catalog.show', $dimension->category)

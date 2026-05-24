@@ -27,17 +27,6 @@
         'description' =>
             'Selecciona un producto para consultar su historial completo de entradas, salidas y devoluciones. Puedes buscar por nombre o código SKU.',
     ])
-
-        @slot('actions')
-            <a
-                href="{{ route('admin.reports.index') }}"
-                class="btn btn-secondary">
-
-                <i class="fas fa-arrow-left"></i>
-                Reportes
-            </a>
-        @endslot
-
     @endcomponent
 
     {{-- ==================== TABLE CARD ==================== --}}

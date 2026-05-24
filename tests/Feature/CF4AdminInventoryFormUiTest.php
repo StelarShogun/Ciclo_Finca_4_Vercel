@@ -70,5 +70,7 @@ class CF4AdminInventoryFormUiTest extends TestCase
         $response->assertSee('id="new-image"', false);
         $response->assertSee('id="new-subcategory-search"', false);
         $response->assertSee('form-section', false);
+        $response->assertSee('data-action="deactivate"', false);
+        $response->assertSee('fa-ban', false);
     }
 }

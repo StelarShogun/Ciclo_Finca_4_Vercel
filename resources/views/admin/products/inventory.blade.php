@@ -52,6 +52,7 @@
                         <i class="fas fa-sitemap"></i>
                         Crear Subcategoría
                     </a>
+                    @include('admin.products.partials.catalog-import-export')
                 @endslot
             @endcomponent
 
@@ -140,31 +141,49 @@
                         class="classification-filters-panel{{ ($hasClassificationSelections ?? false) ? ' is-open' : '' }}"
                         @unless($hasClassificationSelections ?? false) hidden @endunless>
                         <div
-                            id="classification-filters-container"
-                            class="classification-filters-grid"
-                            data-endpoint="{{ route('inventory.classification-filters') }}"
-                            data-loaded="{{ !empty($classificationFilters) ? '1' : '0' }}">
-                            @foreach(($classificationFilters ?? []) as $classificationFilter)
-                                @php
-                                    $slug = (string) ($classificationFilter['slug'] ?? '');
-                                    $label = (string) ($classificationFilter['label'] ?? $slug);
-                                    $options = $classificationFilter['options'] ?? [];
-                                @endphp
-                                @if($slug !== '')
-                                    <div class="filter-group">
-                                        <label for="classification-filter-{{ $slug }}">{{ $label }}</label>
-                                        <select id="classification-filter-{{ $slug }}" name="classifications[{{ $slug }}]">
-                                            <option value="">Todos</option>
-                                            @foreach($options as $option)
-                                                <option value="{{ $option['value'] }}"
-                                                    @selected((string) request("classifications.$slug") === (string) $option['value'])>
-                                                    {{ $option['label'] }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                            id="classification-filters-root"
+                            data-endpoint-dimensions="{{ route('inventory.classification-filters.dimensions') }}"
+                            data-endpoint-suggest-template="{{ route('inventory.classification-filters.suggest', ['slug' => '__SLUG__']) }}"
+                            data-initial='@json($activeClassificationFilters ?? [])'>
+                            <div id="classification-filters-active" class="classification-filters-active" @if(empty($activeClassificationFilters)) hidden @endif>
+                                @foreach(($activeClassificationFilters ?? []) as $activeFilter)
+                                    <span class="classification-filter-chip cf-chip">
+                                        {{ $activeFilter['dimension_label'] }}: {{ $activeFilter['value_label'] }}
+                                        <button type="button" class="cf-chip__clear" aria-label="Quitar filtro {{ $activeFilter['dimension_label'] }}">&times;</button>
+
+                                    </span>
+                                @endforeach
+                            </div>
+
+                            <p class="classification-filters-hint">Elegí un atributo y buscá el valor. Podés combinar varios filtros.</p>
+
+                            <div class="classification-filters-builder">
+                                <div class="filter-group">
+                                    <label for="classification-dimension-picker">Atributo</label>
+                                    <select id="classification-dimension-picker" disabled>
+                                        <option value="">Cargando…</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group classification-value-combobox-wrap">
+                                    <label for="classification-value-search">Valor</label>
+                                    <div class="cf-combobox classification-filter-combobox">
+                                        <input
+                                            type="text"
+                                            id="classification-value-search"
+                                            class="cf-combobox__input"
+                                            autocomplete="off"
+                                            placeholder="Escribí para buscar…"
+                                            disabled>
+                                        <div id="classification-value-list" class="cf-combobox__list" role="listbox" hidden></div>
                                     </div>
-                                @endif
-                            @endforeach
+                                </div>
+                            </div>
+
+                            <div id="classification-filters-hidden-inputs">
+                                @foreach(($activeClassificationFilters ?? []) as $activeFilter)
+                                    <input type="hidden" name="classifications[{{ $activeFilter['slug'] }}]" value="{{ $activeFilter['value'] }}">
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 @endslot
@@ -315,13 +334,7 @@
                                                     title="Remove stock">
                                                 <i class="fas fa-minus-circle" style="color:#dc2626;"></i>
                                             </button>
-                                            <button class="action-btn delete"
-                                                    data-action="delete"
-                                                    data-product-id="{{ $product->product_id }}"
-                                                    data-product-name="{{ $product->name }}"
-                                                    title="Delete product">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                            @include('admin.products.partials.inventory-status-action', ['product' => $product])
                                         </div>
                                     </td>
                                 </tr>
@@ -436,13 +449,7 @@
                                                 title="Remove stock">
                                             <i class="fas fa-minus-circle" style="color:#dc2626;"></i>
                                         </button>
-                                        <button class="action-btn delete"
-                                                data-action="delete"
-                                                data-product-id="{{ $product->product_id }}"
-                                                data-product-name="{{ $product->name }}"
-                                                title="Delete product">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        @include('admin.products.partials.inventory-status-action', ['product' => $product])
                                     </div>
 
                                 </div>

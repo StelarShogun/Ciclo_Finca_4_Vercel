@@ -204,11 +204,6 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.report-table th {
-    background: #fafafa;
-    font-weight: 600;
-}
-
 .report-table .num {
     text-align: right;
     white-space: nowrap;
