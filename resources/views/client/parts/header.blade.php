@@ -366,9 +366,27 @@
 <meta name="cf4-favorites-initial" content='@json($initialFavorites)'>
 @endauth
 
-{{-- Invoice heartbeat: only on pages that need live badge updates (avoids polling on home/catalog). --}}
+{{-- Header alert state for hamburger badge (catalog, facturas, etc.) — not tied to menu panel visibility. --}}
+@if(auth('clients')->check())
+    @php
+        $cf4HeaderAlertInvoices = $activeInvoiceCount ?? \App\Models\Sale::countActiveClientInvoices((int) auth('clients')->user()->user_id);
+        $cf4HeaderAlertHistory = $unseenHistoryCount ?? \App\Models\Sale::countUnseenInClientHistory((int) auth('clients')->user()->user_id);
+        $cf4HeaderAlertNotifications = auth('clients')->user()->unreadNotifications()->count();
+    @endphp
+    <meta name="cf4-header-alert-cart" content="{{ $cartCount ?? 0 }}">
+    <meta name="cf4-header-alert-invoices" content="{{ $cf4HeaderAlertInvoices }}">
+    <meta name="cf4-header-alert-history" content="{{ $cf4HeaderAlertHistory }}">
+    <meta name="cf4-header-alert-notifications" content="{{ $cf4HeaderAlertNotifications }}">
+@elseif(! session('admin_catalog_mode'))
+    <meta name="cf4-header-alert-cart" content="{{ $cartCount ?? 0 }}">
+    <meta name="cf4-header-alert-invoices" content="0">
+    <meta name="cf4-header-alert-history" content="0">
+    <meta name="cf4-header-alert-notifications" content="0">
+@endif
+
+{{-- Invoice heartbeat: badge updates on catalog + invoices + cart + profile. --}}
 @auth('clients')
-@if(request()->routeIs('clients.invoices*', 'clients.profile', 'clients.cart'))
+@if(request()->routeIs('clients.invoices*', 'clients.profile', 'clients.cart', 'clients.catalog'))
 <meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
 <meta name="cf4-invoice-initial-count" content="{{ $activeInvoiceCount ?? \App\Models\Sale::countActiveClientInvoices((int) auth('clients')->user()->user_id) }}">
 <meta name="cf4-unseen-history-initial-count" content="{{ $unseenHistoryCount ?? \App\Models\Sale::countUnseenInClientHistory((int) auth('clients')->user()->user_id) }}">

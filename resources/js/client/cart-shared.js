@@ -49,7 +49,10 @@ export function updateCartCount(count) {
         );
     }
 
-    import('./header-menu-alert.js').then((m) => m.updateHeaderMenuToggleBadge()).catch(() => {});
+    import('./header-menu-alert.js').then((m) => {
+        m.setHeaderAlertMeta('cf4-header-alert-cart', count);
+        m.updateHeaderMenuToggleBadge();
+    }).catch(() => {});
 }
 
 import { cf4Toast, cf4Error, cf4Warning } from './swal.js';

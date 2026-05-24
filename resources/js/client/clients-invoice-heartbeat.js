@@ -1,6 +1,6 @@
-/** Active-invoice + unseen-historial badge polling — only on pages that ship heartbeat meta. */
+/** Active-invoice + unseen-historial badge polling — catalog, invoices, cart, profile. */
 
-import { updateHeaderMenuToggleBadge } from './header-menu-alert.js'
+import { setHeaderAlertMeta, updateHeaderMenuToggleBadge } from './header-menu-alert.js';
 
 function updateInvoiceCount(count) {
   const invoiceLink = document.getElementById('invoices-link')
@@ -21,6 +21,7 @@ function updateInvoiceCount(count) {
     badge.style.display = 'none'
   }
 
+  setHeaderAlertMeta('cf4-header-alert-invoices', count)
   updateHeaderMenuToggleBadge()
 }
 
@@ -50,6 +51,7 @@ function updateUnseenHistoryBadge(count) {
     tabBadge.style.display = count > 0 ? 'block' : 'none'
   }
 
+  setHeaderAlertMeta('cf4-header-alert-history', count)
   updateHeaderMenuToggleBadge()
 }
 
@@ -121,5 +123,7 @@ export function startInvoiceHeartbeat() {
   setInterval(poll, intervalMs)
   if (isInvoicesSectionPath()) {
     setTimeout(poll, 3000)
+  } else if (window.location.pathname.startsWith('/catalog')) {
+    setTimeout(poll, 5000)
   }
 }
