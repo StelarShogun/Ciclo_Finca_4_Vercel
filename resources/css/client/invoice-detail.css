@@ -2,19 +2,92 @@
  * Client invoice detail (Detalle del pedido) — layout + mobile-first UX.
  */
 
+.cf4-invoice-detail-page {
+    --cf4-detail-heading-size: 0.82rem;
+    --cf4-detail-heading-weight: 700;
+    --cf4-detail-label-size: 0.88rem;
+    --cf4-detail-label-weight: 600;
+    --cf4-detail-value-size: 0.88rem;
+    --cf4-detail-value-weight: 700;
+    --cf4-detail-body-pad-x: 1rem;
+    --cf4-detail-body-pad-y: 0.75rem;
+    --cf4-detail-row-gap: 0.5rem;
+}
+
 .cf4-invoice-detail-page .cf4-invoices-header {
     margin-bottom: 1rem;
 }
 
+.cf4-invoice-detail-page .cf4-invoices-wrapper > .cf4-detail-section,
+.cf4-invoice-detail-page .cf4-detail-stack > .cf4-detail-section,
+.cf4-invoice-detail-page .cf4-detail-stack__main .cf4-detail-section {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.cf4-detail-stack,
 .cf4-detail-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-areas: "main aside";
     gap: 1.25rem;
     align-items: start;
+    width: 100%;
+}
+
+.cf4-detail-stack > aside,
+.cf4-detail-grid > aside {
+    grid-area: aside;
+    min-width: 0;
+}
+
+.cf4-detail-stack__main,
+.cf4-detail-grid > div:first-child {
+    grid-area: main;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-width: 0;
+    width: 100%;
+}
+
+.cf4-detail-stack__main .cf4-detail-section + .cf4-detail-section,
+.cf4-detail-grid > div .cf4-detail-section + .cf4-detail-section {
+    margin-top: 0;
 }
 
 .cf4-detail-status-banner {
     margin: -0.35rem 0 0.85rem;
+}
+
+.cf4-invoice-detail-page .cf4-detail-cancel-reason__text {
+    margin: 0;
+    padding: var(--cf4-detail-body-pad-y) var(--cf4-detail-body-pad-x);
+    font-size: var(--cf4-detail-value-size);
+    font-weight: var(--cf4-detail-value-weight);
+    line-height: 1.45;
+    color: var(--text-primary);
+}
+
+.cf4-detail-invoice-doc .cf4-detail-section-head {
+    border-bottom: 1px solid rgba(5, 31, 32, 0.06);
+}
+
+.cf4-invoice-document-wrap {
+    padding: 0.75rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: linear-gradient(160deg, #e8ece9 0%, #eef1ef 45%, #e3e8e4 100%);
+}
+
+.cf4-invoice-document-wrap .invoice-doc {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.cf4-invoice-document-wrap .invoice-doc__sheet {
+    box-shadow: 0 4px 18px rgba(5, 31, 32, 0.1);
 }
 
 .cf4-detail-section {
@@ -46,11 +119,16 @@
 
 .cf4-detail-section-head h2 {
     margin: 0;
-    font-size: 0.78rem;
-    font-weight: 700;
+    font-size: var(--cf4-detail-heading-size);
+    font-weight: var(--cf4-detail-heading-weight);
     color: var(--brand-medium-dark, #163832);
     letter-spacing: 0.05em;
     text-transform: uppercase;
+}
+
+.cf4-invoice-detail-page .cf4-invoice-muted {
+    font-size: var(--cf4-detail-label-size);
+    font-weight: var(--cf4-detail-label-weight);
 }
 
 .cf4-detail-section-head i {
@@ -60,19 +138,24 @@
 
 .cf4-detail-meta-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.65rem 1rem;
-    padding: 0.85rem 1rem 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--cf4-detail-row-gap);
+    padding: var(--cf4-detail-body-pad-y) var(--cf4-detail-body-pad-x);
 }
 
-@media (min-width: 769px) and (max-width: 1100px) {
+@media (min-width: 1101px) {
     .cf4-detail-meta-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
 .cf4-detail-meta-item {
-    padding: 0.55rem 0.65rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.15rem;
+    min-height: 2.75rem;
+    padding: 0.55rem 0.7rem;
     border-radius: 10px;
     background: rgba(218, 241, 222, 0.22);
     border: 1px solid rgba(5, 31, 32, 0.05);
@@ -80,18 +163,18 @@
 
 .cf4-detail-meta-item .label {
     display: block;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #64748b;
-    margin-bottom: 0.2rem;
-    font-weight: 700;
+    font-size: var(--cf4-detail-label-size);
+    font-weight: var(--cf4-detail-label-weight);
+    letter-spacing: 0.01em;
+    color: var(--color-muted, #64748b);
+    margin-bottom: 0;
+    line-height: 1.25;
 }
 
 .cf4-detail-meta-item .value {
-    font-size: 0.9rem;
+    font-size: var(--cf4-detail-value-size);
     color: var(--text-primary);
-    font-weight: 700;
+    font-weight: var(--cf4-detail-value-weight);
     line-height: 1.3;
     word-break: break-word;
 }
@@ -101,6 +184,13 @@
 }
 
 /* Product lines — card list (replaces table on all viewports) */
+.cf4-invoice-detail-page .cf4-order-lines {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cf4-detail-row-gap);
+    padding: var(--cf4-detail-body-pad-y) var(--cf4-detail-body-pad-x);
+}
+
 .cf4-order-lines {
     display: flex;
     flex-direction: column;
@@ -159,6 +249,20 @@
     object-fit: cover;
 }
 
+.cf4-invoice-detail-page .cf4-product-name {
+    font-weight: var(--cf4-detail-value-weight);
+    font-size: var(--cf4-detail-value-size);
+    color: var(--text-primary);
+    line-height: 1.25;
+}
+
+.cf4-invoice-detail-page .cf4-product-meta {
+    font-size: var(--cf4-detail-label-size);
+    font-weight: var(--cf4-detail-label-weight);
+    color: var(--color-muted);
+    margin-top: 0.1rem;
+}
+
 .cf4-product-name {
     font-weight: 700;
     font-size: 0.9rem;
@@ -175,6 +279,27 @@
 .cf4-order-line-card__stat {
     text-align: right;
     white-space: nowrap;
+}
+
+.cf4-invoice-detail-page .cf4-order-line-card__stat-label {
+    display: block;
+    font-size: var(--cf4-detail-label-size);
+    font-weight: var(--cf4-detail-label-weight);
+    letter-spacing: 0.01em;
+    color: var(--color-muted, #94a3b8);
+    margin-bottom: 0.1rem;
+}
+
+.cf4-invoice-detail-page .cf4-order-line-card__stat-value {
+    font-size: var(--cf4-detail-value-size);
+    font-weight: var(--cf4-detail-value-weight);
+    color: var(--text-primary);
+}
+
+.cf4-invoice-detail-page .cf4-order-line-card__stat--subtotal .cf4-order-line-card__stat-value {
+    font-size: var(--cf4-detail-value-size);
+    font-weight: var(--cf4-detail-value-weight);
+    color: var(--color-primary);
 }
 
 .cf4-order-line-card__stat-label {
@@ -204,33 +329,36 @@
     top: 5.5rem;
 }
 
-.cf4-summary-rows {
-    padding: 0.5rem 1rem 0.75rem;
+.cf4-invoice-detail-page .cf4-summary-rows {
+    padding: var(--cf4-detail-body-pad-y) var(--cf4-detail-body-pad-x);
 }
 
-.cf4-summary-row {
+.cf4-invoice-detail-page .cf4-summary-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     padding: 0.45rem 0;
     border-bottom: 1px dashed rgba(5, 31, 32, 0.08);
-    font-size: 0.88rem;
+    font-size: var(--cf4-detail-value-size);
 }
 
-.cf4-summary-row:last-of-type {
+.cf4-invoice-detail-page .cf4-summary-row:last-of-type {
     border-bottom: none;
 }
 
-.cf4-summary-label {
+.cf4-invoice-detail-page .cf4-summary-label {
+    font-size: var(--cf4-detail-label-size);
+    font-weight: var(--cf4-detail-label-weight);
     color: var(--color-muted);
 }
 
-.cf4-summary-value {
-    font-weight: 700;
+.cf4-invoice-detail-page .cf4-summary-value {
+    font-size: var(--cf4-detail-value-size);
+    font-weight: var(--cf4-detail-value-weight);
     color: var(--text-primary);
 }
 
-.cf4-summary-row.discount .cf4-summary-value {
+.cf4-invoice-detail-page .cf4-summary-row.discount .cf4-summary-value {
     color: var(--color-warning, #c0392b);
 }
 
@@ -287,8 +415,21 @@
 }
 
 @media (max-width: 1100px) {
+    .cf4-detail-stack,
     .cf4-detail-grid {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+    }
+
+    .cf4-detail-stack > aside,
+    .cf4-detail-grid > aside {
+        order: -1;
+    }
+
+    .cf4-detail-stack__main,
+    .cf4-detail-grid > div:first-child {
+        width: 100%;
     }
 
     .cf4-summary-card {
@@ -298,7 +439,7 @@
 
 @media (max-width: 768px) {
     .cf4-invoice-detail-page .cf4-invoices-header {
-        padding: 1rem 0 0.7rem;
+        padding: calc(var(--client-header-offset, 84px) + 1rem) 0 0.7rem;
         margin-bottom: 0.65rem;
     }
 
@@ -324,8 +465,8 @@
 
     .cf4-detail-meta-grid {
         grid-template-columns: 1fr 1fr;
-        gap: 0.45rem;
-        padding: 0.65rem;
+        gap: var(--cf4-detail-row-gap);
+        padding: var(--cf4-detail-body-pad-y) var(--cf4-detail-body-pad-x);
     }
 
     .cf4-detail-meta-item--wide {
@@ -333,12 +474,13 @@
     }
 
     .cf4-detail-meta-item {
-        padding: 0.45rem 0.55rem;
+        min-height: 2.65rem;
+        padding: 0.5rem 0.65rem;
     }
 
-    .cf4-order-lines {
-        padding: 0.55rem;
-        gap: 0.5rem;
+    .cf4-invoice-detail-page .cf4-order-lines {
+        padding: var(--cf4-detail-body-pad-y) var(--cf4-detail-body-pad-x);
+        gap: var(--cf4-detail-row-gap);
     }
 
     .cf4-order-line-card {
@@ -367,16 +509,14 @@
         text-align: center;
     }
 
-    .cf4-order-line-card__stat-label {
-        font-size: 0.6rem;
+    .cf4-invoice-detail-page .cf4-order-line-card__stat-label,
+    .cf4-invoice-detail-page .cf4-order-line-card__stat-value,
+    .cf4-invoice-detail-page .cf4-order-line-card__stat--subtotal .cf4-order-line-card__stat-value {
+        font-size: var(--cf4-detail-value-size);
     }
 
-    .cf4-order-line-card__stat-value {
-        font-size: 0.82rem;
-    }
-
-    .cf4-order-line-card__stat--subtotal .cf4-order-line-card__stat-value {
-        font-size: 0.9rem;
+    .cf4-invoice-detail-page .cf4-order-line-card__stat-label {
+        font-size: var(--cf4-detail-label-size);
     }
 
     .cf4-summary-total .amount {

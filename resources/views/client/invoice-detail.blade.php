@@ -6,7 +6,7 @@
 @section('title', 'Detalle de pedido - Ciclo Finca 4')
 
 @push('styles')
-    @vite(['resources/css/client/clients-users.css'])
+    @vite(['resources/css/client/clients-users.css', 'resources/css/admin/sales/invoice-document.css'])
 @endpush
 
 @section('content')
@@ -15,10 +15,12 @@
 
     @php
         $isCompleted = $sale->status === 'completed';
-        $isPending = $sale->status === 'pending';
-        $statusLabel = $isCompleted
-            ? 'Confirmada'
-            : ($isPending ? 'Pendiente de confirmación' : ucfirst((string) $sale->status));
+        $statusLabel = $sale->clientStatusLabel();
+        $statusPillClass = $sale->clientStatusPillClass();
+        $statusIconClass = $sale->clientStatusIconClass();
+        $cancellationReason = $sale->clientCancellationReason();
+        $documentKind = $sale->clientInvoiceDocumentKind();
+        $documentTitle = $documentKind === 'invoice' ? 'Factura' : 'Comprobante';
         $items = $sale->saleItems ?? collect();
         $itemsCount = $items->sum(fn ($item) => (int) $item->quantity);
 
@@ -53,7 +55,7 @@
             ? ($sourceLabels[strtolower((string) $sale->order_source)] ?? ucfirst((string) $sale->order_source))
             : 'Tienda web';
 
-        $backUrl = route('clients.invoices', ['tab' => $isCompleted ? 'historial' : 'facturas']);
+        $backUrl = route('clients.invoices', ['tab' => $sale->clientInvoicesBackTab()]);
     @endphp
 
     <div class="cf4-invoice-detail-page">
@@ -80,42 +82,113 @@
                 <span>{{ $sale->invoice_number ?? 'Pedido #'.$sale->sale_id }}</span>
             </nav>
 
-            @if($isPending)
-                <p class="cf4-detail-status-banner">
-                    <span class="cf4-invoice-status-pill pending">
-                        <i class="fas fa-clock" aria-hidden="true"></i>
-                        {{ $statusLabel }}
-                    </span>
-                </p>
+            <p class="cf4-detail-status-banner">
+                <span class="cf4-invoice-status-pill {{ $statusPillClass }}">
+                    <i class="fas {{ $statusIconClass }}" aria-hidden="true"></i>
+                    {{ $statusLabel }}
+                </span>
+            </p>
+
+            @if($cancellationReason)
+                <section class="cf4-detail-section cf4-detail-cancel-reason" aria-labelledby="cf4-detail-cancel-heading">
+                    <div class="cf4-detail-section-head">
+                        <h2 id="cf4-detail-cancel-heading"><i class="fas fa-comment-dots" aria-hidden="true"></i> Motivo de cancelación</h2>
+                    </div>
+                    <p class="cf4-detail-cancel-reason__text">{{ $cancellationReason }}</p>
+                </section>
             @endif
 
-            <div class="cf4-detail-grid">
+            <section class="cf4-detail-section cf4-detail-invoice-doc" aria-labelledby="cf4-detail-doc-heading">
+                <div class="cf4-detail-section-head">
+                    <h2 id="cf4-detail-doc-heading"><i class="fas fa-file-invoice-dollar" aria-hidden="true"></i> {{ $documentTitle }}</h2>
+                </div>
+                <div class="cf4-invoice-document-wrap">
+                    <div class="invoice-doc">
+                        @include('admin.sales.partials.invoice-sheet', [
+                            'sale' => $sale,
+                            'documentKind' => $documentKind,
+                        ])
+                    </div>
+                </div>
+            </section>
 
-                <div>
+            <div class="cf4-detail-stack">
+
+                <aside class="cf4-detail-section cf4-summary-card" aria-label="Resumen de totales">
+                    <div class="cf4-detail-section-head">
+                        <h2><i class="fas fa-receipt" aria-hidden="true"></i> Resumen</h2>
+                    </div>
+
+                    <div class="cf4-summary-rows">
+                        <div class="cf4-summary-row">
+                            <span class="cf4-summary-label">Subtotal</span>
+                            <span class="cf4-summary-value">&#8353;{{ number_format($subtotalDisplay, 0, ',', '.') }}</span>
+                        </div>
+                        @if($discountDisplay > 0)
+                            <div class="cf4-summary-row discount">
+                                <span class="cf4-summary-label">Descuento</span>
+                                <span class="cf4-summary-value">-&#8353;{{ number_format($discountDisplay, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+                        @if($ivaDisplay > 0)
+                            <div class="cf4-summary-row">
+                                <span class="cf4-summary-label">IVA</span>
+                                <span class="cf4-summary-value">&#8353;{{ number_format($ivaDisplay, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+                        <div class="cf4-summary-row">
+                            <span class="cf4-summary-label">Productos</span>
+                            <span class="cf4-summary-value">{{ $itemsCount }} unidad{{ $itemsCount === 1 ? '' : 'es' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="cf4-summary-total">
+                        <div class="label">{{ $isCompleted ? 'Total pagado' : 'Total a pagar' }}</div>
+                        <div class="amount">&#8353;{{ number_format($totalDisplay, 0, ',', '.') }}</div>
+                    </div>
+
+                    <div class="cf4-summary-actions cf4-invoices-td-actions">
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-cf4-confirm-print>
+                            <i class="fas fa-print" aria-hidden="true"></i> Imprimir comprobante
+                        </button>
+                        <a href="{{ $backUrl }}" class="btn btn-outline-primary btn-sm">
+                            Volver a Mis Facturas
+                        </a>
+                        <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-sm">
+                            Seguir comprando
+                        </a>
+                    </div>
+                </aside>
+
+                <div class="cf4-detail-stack__main">
                     <section class="cf4-detail-section" aria-labelledby="cf4-detail-info-heading">
                         <div class="cf4-detail-section-head">
                             <h2 id="cf4-detail-info-heading"><i class="fas fa-info-circle" aria-hidden="true"></i> Información general</h2>
                         </div>
-                        <div class="cf4-detail-meta-grid">
-                            <div class="cf4-detail-meta-item">
-                                <span class="label">N.º de factura</span>
-                                <span class="value">{{ $sale->invoice_number ?? '—' }}</span>
+                        <div class="cf4-summary-rows">
+                            <div class="cf4-summary-row">
+                                <span class="cf4-summary-label">N.º de factura</span>
+                                <span class="cf4-summary-value">{{ $sale->invoice_number ?? '—' }}</span>
                             </div>
-                            <div class="cf4-detail-meta-item">
-                                <span class="label">Fecha</span>
-                                <span class="value">{{ optional($sale->sale_date)->format('d/m/Y H:i') ?? '—' }}</span>
+                            <div class="cf4-summary-row">
+                                <span class="cf4-summary-label">Fecha</span>
+                                <span class="cf4-summary-value">{{ optional($sale->sale_date)->format('d/m/Y H:i') ?? '—' }}</span>
                             </div>
-                            <div class="cf4-detail-meta-item">
-                                <span class="label">Método de pago</span>
-                                <span class="value">{{ $paymentDisplay }}</span>
+                            <div class="cf4-summary-row">
+                                <span class="cf4-summary-label">Estado</span>
+                                <span class="cf4-summary-value">{{ $statusLabel }}</span>
                             </div>
-                            <div class="cf4-detail-meta-item">
-                                <span class="label">Origen</span>
-                                <span class="value">{{ $sourceDisplay }}</span>
+                            <div class="cf4-summary-row">
+                                <span class="cf4-summary-label">Método de pago</span>
+                                <span class="cf4-summary-value">{{ $paymentDisplay }}</span>
                             </div>
-                            <div class="cf4-detail-meta-item cf4-detail-meta-item--wide">
-                                <span class="label">Productos</span>
-                                <span class="value">{{ $items->count() }} artículo{{ $items->count() === 1 ? '' : 's' }} ({{ $itemsCount }} unidad{{ $itemsCount === 1 ? '' : 'es' }})</span>
+                            <div class="cf4-summary-row">
+                                <span class="cf4-summary-label">Origen</span>
+                                <span class="cf4-summary-value">{{ $sourceDisplay }}</span>
+                            </div>
+                            <div class="cf4-summary-row">
+                                <span class="cf4-summary-label">Productos</span>
+                                <span class="cf4-summary-value">{{ $items->count() }} artículo{{ $items->count() === 1 ? '' : 's' }} ({{ $itemsCount }} unidad{{ $itemsCount === 1 ? '' : 'es' }})</span>
                             </div>
                         </div>
                     </section>
@@ -181,52 +254,6 @@
                         @endif
                     </section>
                 </div>
-
-                <aside class="cf4-detail-section cf4-summary-card" aria-label="Resumen de totales">
-                    <div class="cf4-detail-section-head">
-                        <h2><i class="fas fa-receipt" aria-hidden="true"></i> Resumen</h2>
-                    </div>
-
-                    <div class="cf4-summary-rows">
-                        <div class="cf4-summary-row">
-                            <span class="cf4-summary-label">Subtotal</span>
-                            <span class="cf4-summary-value">&#8353;{{ number_format($subtotalDisplay, 0, ',', '.') }}</span>
-                        </div>
-                        @if($discountDisplay > 0)
-                            <div class="cf4-summary-row discount">
-                                <span class="cf4-summary-label">Descuento</span>
-                                <span class="cf4-summary-value">-&#8353;{{ number_format($discountDisplay, 0, ',', '.') }}</span>
-                            </div>
-                        @endif
-                        @if($ivaDisplay > 0)
-                            <div class="cf4-summary-row">
-                                <span class="cf4-summary-label">IVA</span>
-                                <span class="cf4-summary-value">&#8353;{{ number_format($ivaDisplay, 0, ',', '.') }}</span>
-                            </div>
-                        @endif
-                        <div class="cf4-summary-row">
-                            <span class="cf4-summary-label">Productos</span>
-                            <span class="cf4-summary-value">{{ $itemsCount }} unidad{{ $itemsCount === 1 ? '' : 'es' }}</span>
-                        </div>
-                    </div>
-
-                    <div class="cf4-summary-total">
-                        <div class="label">{{ $isCompleted ? 'Total pagado' : 'Total a pagar' }}</div>
-                        <div class="amount">&#8353;{{ number_format($totalDisplay, 0, ',', '.') }}</div>
-                    </div>
-
-                    <div class="cf4-summary-actions cf4-invoices-td-actions">
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-cf4-confirm-print>
-                            <i class="fas fa-print" aria-hidden="true"></i> Imprimir comprobante
-                        </button>
-                        <a href="{{ $backUrl }}" class="btn btn-outline-primary btn-sm">
-                            Volver a Mis Facturas
-                        </a>
-                        <a href="{{ route('clients.catalog') }}" class="btn btn-primary btn-sm">
-                            Seguir comprando
-                        </a>
-                    </div>
-                </aside>
 
             </div>
         </div>

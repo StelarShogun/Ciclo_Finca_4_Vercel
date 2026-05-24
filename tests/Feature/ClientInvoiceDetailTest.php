@@ -163,4 +163,41 @@ class ClientInvoiceDetailTest extends TestCase
             $this->cleanup($sale, $product, $client);
         }
     }
+
+    public function test_cancelled_invoice_detail_shows_cancellation_reason_and_document(): void
+    {
+        $client = $this->createIsolatedClient('cp89-cancel');
+        $product = $this->createIsolatedProduct('Detalle Cancelado');
+        [$sale] = $this->createIsolatedSale($client, $product, 'CF4-C'.substr(uniqid('', true), -5));
+        $reason = 'Cliente no recogió el pedido a tiempo';
+
+        try {
+            $sale->update(['status' => 'cancelled']);
+
+            \App\Models\InventoryMovement::create([
+                'product_id' => $product->product_id,
+                'user_id' => null,
+                'type' => \App\Enums\MovementType::CANCELADO,
+                'origin' => 'cancellation',
+                'quantity' => 1,
+                'stock_before' => 10,
+                'stock_after' => 11,
+                'reference_id' => $sale->sale_id,
+                'reason' => $reason,
+            ]);
+
+            $this->actingAs($client, 'clients');
+
+            $response = $this->get(route('clients.invoices.show', $sale));
+            $response->assertOk();
+            $response->assertSee('Motivo de cancelación', false);
+            $response->assertSee($reason, false);
+            $response->assertSee('Comprobante', false);
+            $response->assertSee('Detalle de productos', false);
+            $response->assertSee('Cancelada', false);
+        } finally {
+            \App\Models\InventoryMovement::where('reference_id', $sale->sale_id)->delete();
+            $this->cleanup($sale, $product, $client);
+        }
+    }
 }

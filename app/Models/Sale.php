@@ -410,6 +410,86 @@ class Sale extends Model
         };
     }
 
+    public function clientStatusLabel(): string
+    {
+        return match ($this->status) {
+            'completed' => 'Completada',
+            'pending' => 'Pendiente de confirmación',
+            'ready_to_pickup' => 'Lista para recoger',
+            'cancelled', 'canceled' => 'Cancelada',
+            default => ucfirst(str_replace('_', ' ', (string) $this->status)),
+        };
+    }
+
+    public function clientStatusPillClass(): string
+    {
+        return match ($this->status) {
+            'pending' => 'pending',
+            'ready_to_pickup' => 'ready',
+            'completed' => 'confirmed',
+            'cancelled', 'canceled' => 'cancelled',
+            default => 'pending',
+        };
+    }
+
+    public function clientStatusIconClass(): string
+    {
+        return match ($this->status) {
+            'pending' => 'fa-clock',
+            'ready_to_pickup' => 'fa-box-open',
+            'completed' => 'fa-check-circle',
+            'cancelled', 'canceled' => 'fa-ban',
+            default => 'fa-info-circle',
+        };
+    }
+
+    public function clientCancellationReason(): ?string
+    {
+        if (! in_array($this->status, ['cancelled', 'canceled'], true)) {
+            return null;
+        }
+
+        $fromMovement = InventoryMovement::query()
+            ->where('reference_id', $this->sale_id)
+            ->where('origin', 'cancellation')
+            ->whereNotNull('reason')
+            ->orderByDesc('id')
+            ->value('reason');
+
+        if (is_string($fromMovement) && trim($fromMovement) !== '') {
+            return trim($fromMovement);
+        }
+
+        $notes = trim((string) ($this->notes ?? ''));
+        if ($notes === '') {
+            return null;
+        }
+
+        if (preg_match('/Motivo de cancelaci[oó]n:\s*(.+)$/uis', $notes, $matches)) {
+            return trim($matches[1]);
+        }
+
+        if (str_contains($notes, 'Cancelado automáticamente')) {
+            return $notes;
+        }
+
+        return $notes;
+    }
+
+    public function clientInvoiceDocumentKind(): string
+    {
+        return $this->status === 'completed' ? 'invoice' : 'receipt';
+    }
+
+    public function clientInvoicesBackTab(): string
+    {
+        return match ($this->status) {
+            'completed' => 'historial',
+            'cancelled', 'canceled' => 'canceladas',
+            default => 'facturas',
+        };
+    }
+
     public static function formatAdminDateShort(mixed $value): string
     {
         if ($value === null || $value === '') {

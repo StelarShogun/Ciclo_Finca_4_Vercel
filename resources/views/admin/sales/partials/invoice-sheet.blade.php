@@ -19,13 +19,14 @@
     $statusLabel = match ($sale->status) {
         'pending' => 'Pendiente',
         'completed' => 'Confirmada',
+        'ready_to_pickup' => 'Por recoger',
         'cancelled' => 'Cancelada',
         'refunded' => 'Reembolsada',
         default => ucfirst((string) $sale->status),
     };
     $statusChipClass = match ($sale->status) {
         'completed' => 'invoice-doc__chip--status-ok',
-        'pending' => 'invoice-doc__chip--status-warn',
+        'pending', 'ready_to_pickup' => 'invoice-doc__chip--status-warn',
         'cancelled' => 'invoice-doc__chip--status-bad',
         'refunded' => 'invoice-doc__chip--status-neutral',
         default => 'invoice-doc__chip--status-neutral',

@@ -1162,7 +1162,7 @@ class ClientPageController extends Controller
             abort(404);
         }
 
-        $sale->load(['saleItems.product']);
+        $sale->load(['saleItems.product', 'client', 'sellerAdmin']);
 
         $cartCount = $this->getCartCount();
 
