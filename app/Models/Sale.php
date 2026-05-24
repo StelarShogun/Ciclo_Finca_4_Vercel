@@ -318,4 +318,23 @@ class Sale extends Model
     {
         return self::formatAdminDateTime($this->sale_date);
     }
+
+    /** Compact date for dense admin layouts (e.g. dashboard recent sales). */
+    public function adminSaleDateShortLabel(): string
+    {
+        return self::formatAdminDateShort($this->sale_date);
+    }
+
+    public static function formatAdminDateShort(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '—';
+        }
+
+        $dt = $value instanceof Carbon
+            ? $value->copy()
+            : Carbon::parse($value);
+
+        return $dt->timezone(config('app.timezone'))->format('d/m/y');
+    }
 }

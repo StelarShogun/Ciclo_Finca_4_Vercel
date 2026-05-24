@@ -9,8 +9,11 @@ use App\Http\Requests\UpdateClassificationValueRequest;
 use App\Models\Category;
 use App\Models\ClassificationDimension;
 use App\Models\ClassificationValue;
+use App\Support\AdminPerPage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -107,14 +110,26 @@ class ClassificationCatalogController extends Controller
         ]);
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $subcategories = Category::hierarchyRowsForAdminDisplay()
+        $subcategoriesAll = Category::hierarchyRowsForAdminDisplay()
             ->filter(fn (Category $c) => $c->parent_category_id !== null)
             ->sortBy(fn (Category $c) => mb_strtolower((string) ($c->name ?? '')))
             ->values();
 
-        $ids = $subcategories->pluck('category_id')->all();
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+
+        $subcategories = new LengthAwarePaginator(
+            $subcategoriesAll->forPage($currentPage, $perPage)->values(),
+            $subcategoriesAll->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url()]
+        );
+        $subcategories->withQueryString();
+
+        $ids = $subcategories->getCollection()->pluck('category_id')->all();
         if ($ids !== []) {
             $counts = DB::table('classification_dimensions')
                 ->whereIn('category_id', $ids)

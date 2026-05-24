@@ -10,7 +10,7 @@ import {
     smartFetch,
     jsonValidationMessage,
     renderVariantsListHtml,
-    setEditCurrentProductImage,
+    setEditCurrentProductImagePreview,
     markEditMainImageForRemoval,
     syncFeaturedStarButtons,
     fillSubcategoryOptions,
@@ -29,6 +29,8 @@ import {
     showErrorFeedback,
     setModalLoading,
     categoryPath,
+    productUsesPlaceholderImage,
+    buildProductMediaPlaceholderHtml,
 } from './inventory-shared.js';
 import {
     applyServerFieldErrors,
@@ -308,7 +310,7 @@ export async function initModals() {
                     editProductForm.action = `/products/${productId}`;
                     editImageUpload?.reset();
                     editGalleryUpload?.reset();
-                    setEditCurrentProductImage(product.media_main || null);
+                    setEditCurrentProductImagePreview(product);
                     const removeMainInput = qs('#edit-remove-main-image');
                     if (removeMainInput) removeMainInput.value = '0';
                     qs('#edit-name').value = product.name || '';
@@ -1079,14 +1081,24 @@ export async function initModals() {
                 setModalLoading(viewProductModal, false);
                 if(data.success){
                     const product = data.data;
-                    // Build image carousel slides from MediaLibrary URLs, fallback to legacy field
+                    const usesPlaceholder = productUsesPlaceholderImage(product);
                     const allImages = [];
-                    if (product.media_main) allImages.push(product.media_main);
-                    if (Array.isArray(product.media_gallery)) allImages.push(...product.media_gallery);
-                    if (!allImages.length && product.image) allImages.push('/assets/images/products/' + product.image);
+                    if (!usesPlaceholder) {
+                        if (product.media_main) allImages.push(product.media_main);
+                        if (Array.isArray(product.media_gallery)) allImages.push(...product.media_gallery);
+                        if (!allImages.length && product.image && product.image !== 'default.png') {
+                            allImages.push('/assets/images/products/' + product.image);
+                        }
+                    }
 
                     let imageHtml;
-                    if (!allImages.length) {
+                    if (usesPlaceholder) {
+                        imageHtml = buildProductMediaPlaceholderHtml(
+                            product.placeholder_icon_class || 'fas fa-box',
+                            product.name,
+                            'detail'
+                        );
+                    } else if (!allImages.length) {
                         imageHtml = '<p class="product-details-empty">No hay imagen</p>';
                     } else if (allImages.length === 1) {
                         imageHtml = `<img src="${allImages[0]}" alt="${escapeHtmlAttr(product.name)}">`;

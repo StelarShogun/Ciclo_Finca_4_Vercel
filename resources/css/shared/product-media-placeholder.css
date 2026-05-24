@@ -78,4 +78,103 @@
 
 .product-thumb-wrap .product-media-placeholder {
   display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Admin inventory — product detail modal */
+.product-media-placeholder--detail {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+.product-media-placeholder--detail i {
+  font-size: clamp(2rem, 10vw, 2.75rem);
+}
+
+.product-media-placeholder__label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1.3;
+}
+
+#view-product-modal .product-details-media-frame .product-media-placeholder--detail {
+  border-radius: inherit;
+}
+
+#view-product-modal .product-details-media-frame > .product-media-placeholder--detail {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Client cart line item */
+.product-media-placeholder--cart {
+  width: 100%;
+  height: 100%;
+  min-height: 96px;
+  border-radius: inherit;
+}
+
+.product-media-placeholder--cart i {
+  font-size: 1.75rem;
+}
+
+.cart-item-image .product-media-placeholder--cart {
+  border: none;
+}
+
+/* Client invoice order line */
+.product-media-placeholder--thumb-invoice,
+.cf4-product-thumb .product-media-placeholder--thumb-invoice {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+}
+
+.product-media-placeholder--thumb-invoice i {
+  font-size: 1.1rem;
+}
+
+.cf4-product-thumb .product-media-placeholder,
+.cf4-product-thumb img {
+  width: 100%;
+  height: 100%;
+}
+
+/* Favorites drawer */
+.product-media-placeholder--favorite {
+  width: 74px;
+  height: 74px;
+  border-radius: 8px;
+}
+
+.product-media-placeholder--favorite i {
+  font-size: 1.5rem;
+}
+
+/* Header catalog search suggestions */
+.product-media-placeholder--suggestion {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  border: none;
+}
+
+.product-media-placeholder--suggestion i {
+  font-size: 0.85rem;
+}
+
+.catalog-search-suggestion-thumb--placeholder {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Admin dashboard low-stock table */
+.dashboard-table .product-info .product-media-placeholder--thumb-table {
+  flex-shrink: 0;
 }

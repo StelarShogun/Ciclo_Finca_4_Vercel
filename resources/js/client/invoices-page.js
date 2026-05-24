@@ -2,6 +2,7 @@
  * Mis Facturas — custom tab dropdown (mobile + desktop, avoids native select quirks).
  */
 import { cf4Confirm } from './swal.js';
+import '../shared/client-pagination.js';
 
 function initInvoicesTabDropdown() {
     const root = document.querySelector('[data-cf4-invoices-tab-dropdown]');

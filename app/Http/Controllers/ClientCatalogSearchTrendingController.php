@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Support\ProductImageUrls;
 use App\Services\Admin\CatalogMostSearchedProductsReportQuery;
 use App\Services\Catalog\CatalogSearchTrendingQuery;
 use Illuminate\Http\JsonResponse;
@@ -132,17 +133,7 @@ class ClientCatalogSearchTrendingController extends Controller
     private function productRow(Product $p, bool $hasMediaTable, bool $fallback): array
     {
         $sku = Product::skuFromId((int) $p->product_id);
-        $imageUrl = '';
-        if ($hasMediaTable) {
-            try {
-                $imageUrl = (string) $p->getFirstMediaUrl('main_image');
-            } catch (\Throwable $e) {
-                $imageUrl = '';
-            }
-        }
-        if ($imageUrl === '') {
-            $imageUrl = (string) asset('assets/images/products/'.($p->image ?? 'default.png'));
-        }
+        $image = ProductImageUrls::clientPresentation($p);
 
         return [
             'type' => 'product',
@@ -150,7 +141,9 @@ class ClientCatalogSearchTrendingController extends Controller
             'name' => (string) $p->name,
             'sku' => $sku,
             'category' => $p->category !== null ? (string) $p->category->name : '',
-            'image_url' => $imageUrl,
+            'image_url' => $image['image_url'],
+            'uses_placeholder_image' => $image['uses_placeholder_image'],
+            'placeholder_icon_class' => $image['placeholder_icon_class'],
             'match_type' => $fallback ? 'featured' : 'trending',
             'url' => route('clients.product', [
                 'id' => (int) $p->product_id,

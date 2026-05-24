@@ -194,7 +194,7 @@
 .pagination-wrapper {
     padding: 20px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     border-top: 1px solid var(--border-color);
 }
 

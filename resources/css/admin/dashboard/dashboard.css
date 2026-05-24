@@ -1,4 +1,5 @@
 @import "../variables-reset.css";
+@import "../../shared/product-media-placeholder.css";
 @import "../utilities.css";
 @import "../sidebar.css";
 @import "../../components/modals.css";
@@ -498,7 +499,7 @@
 
 .tables-section {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 30px;
   margin-bottom: 30px;
   contain: layout;
@@ -511,6 +512,7 @@
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
   overflow: hidden;
+  min-width: 0;
 }
 
 .table-header {
@@ -530,46 +532,150 @@
 }
 
 .table-content {
-  overflow-x: auto;
+  overflow-x: hidden;
+}
+
+.tables-section .table-content {
+  overflow-x: hidden;
 }
 
 .dashboard-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
-.dashboard-table th {
-  background: var(--color-light);
-  padding: 15px 20px;
-  text-align: left;
+/* Fit inside half-width cards: undo shared admin-table min-width scroll forcing */
+.dashboard-table.admin-table {
+  min-width: 0;
+  width: 100%;
+  font-size: 0.8rem;
+}
+
+.tables-section .table-scroll-wrapper.admin-table-scroll,
+.tables-section .table-content.admin-table-scroll,
+.tables-section .table-scroll-wrapper:has(.dashboard-table),
+.tables-section .table-content:has(.dashboard-table) {
+  overflow-x: hidden;
+}
+
+.tables-section .dashboard-table.admin-table thead th,
+.tables-section .dashboard-table.admin-table tbody td {
+  padding: 0.4rem 0.5rem;
+}
+
+.tables-section .dashboard-table.admin-table thead th {
+  background: var(--brand-dark);
+  color: var(--brand-lightest);
+  border-bottom: 2px solid var(--brand-medium-dark);
+  font-size: 0.7rem;
   font-weight: 600;
-  color: var(--color-dark);
-  border-bottom: 1px solid var(--border-color);
-  font-size: 0.9rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+  vertical-align: middle;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.dashboard-table td {
-  padding: 15px 20px;
+.tables-section .dashboard-table.admin-table tbody td {
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
+  font-size: 0.8rem;
 }
 
 .dashboard-table tbody tr:hover {
   background: var(--color-light);
 }
 
+.dashboard-table__col-num,
+.dashboard-table__col-total,
+.dashboard-table__col-date,
+.dashboard-table__col-status {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-table__col-product,
+.dashboard-table__col-client,
+.dashboard-table__col-invoice {
+  text-align: left;
+}
+
+.dashboard-table__col-product {
+  width: 44%;
+}
+
+.dashboard-table--low-stock .dashboard-table__col-num {
+  width: 14%;
+}
+
+.dashboard-table--low-stock .dashboard-table__col-status {
+  width: 26%;
+}
+
+.dashboard-table--recent-sales .dashboard-table__col-invoice {
+  width: 19%;
+}
+
+.dashboard-table--recent-sales .dashboard-table__col-client {
+  width: 28%;
+}
+
+.dashboard-table--recent-sales .dashboard-table__col-total {
+  width: 17%;
+}
+
+.dashboard-table--recent-sales .dashboard-table__col-date {
+  width: 14%;
+}
+
+.dashboard-table--recent-sales .dashboard-table__col-status {
+  width: 22%;
+}
+
+.dashboard-table__cell-truncate,
+.dashboard-table__product-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.dashboard-table.admin-table tbody td.dashboard-table__col-product {
+  max-width: none;
+  overflow: visible;
+}
+
 .product-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.tables-section .product-thumb,
+.tables-section .product-info .product-media-placeholder--thumb-table,
+.tables-section .product-info img.product-thumb {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
+.tables-section .product-info .product-media-placeholder--thumb-table i {
+  font-size: 0.85rem;
 }
 
 .product-thumb {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
   object-fit: cover;
   border: 1px solid var(--border-color);
 }
@@ -601,12 +707,27 @@
 .status-badge {
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  justify-content: center;
+  max-width: 100%;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.tables-section .dashboard-table.admin-table .status-badge {
+  font-size: 0.68rem;
+  padding: 0.22rem 0.5rem;
+}
+
+.tables-section .dashboard-table.admin-table tbody td:not(.dashboard-table__col-product) {
+  max-width: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .status-badge.success {
@@ -828,11 +949,15 @@
 }
 
 .table-scroll-wrapper {
-  max-height: 480px;   /* ~5 filas reales con espacio generoso */
+  max-height: 420px;
   overflow-y: auto;
-  overflow-x: auto;
+  overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: #d1d5db transparent;
+}
+
+.tables-section .table-scroll-wrapper {
+  overflow-x: hidden;
 }
 
 /* Scrollbar delgada WebKit */
@@ -855,13 +980,12 @@
 }
 
 /* Thead fijo: se pega al tope del wrapper durante el scroll */
-.table-content--scroll .dashboard-table thead th {
+.table-content--scroll .dashboard-table.admin-table thead th {
   position: sticky;
   top: 0;
   z-index: 2;
-  /* Asegura que el fondo tape las filas que pasan por debajo */
-  background: var(--color-light);
-  box-shadow: 0 1px 0 var(--border-color);
+  background: var(--brand-dark);
+  box-shadow: 0 1px 0 var(--brand-medium-dark);
 }
 
 /* La tabla ocupa el ancho completo del wrapper */
@@ -870,24 +994,27 @@
   min-width: 100%;
 }
 
-/* Encabezados siempre en una sola línea, sin saltos */
+/* Keep header labels on one line inside scrollable dashboard cards */
 .table-content--scroll .dashboard-table thead th {
   white-space: nowrap;
-}
-
-/* Ancho mínimo para que las 4 columnas de stock quepan sin comprimir */
-#low-stock-table,
-#low-stock-table + * {
-  /* aplicado directamente a la tabla padre vía el wrapper */
-}
-.table-content--scroll:has(#low-stock-table) .dashboard-table {
-  min-width: 480px;
+  word-break: keep-all;
 }
 
 /* tbody-scroll: clase legacy mantenida por compatibilidad (no hace nada extra) */
 .table-content--scroll .tbody-scroll {
   /* El scroll lo gestiona .table-scroll-wrapper; esta clase se conserva
      por si se referencia desde JS, pero no debe alterar el layout. */
+}
+
+@media (max-width: 768px) {
+  .tables-section .table-scroll-wrapper.admin-table-scroll,
+  .tables-section .table-scroll-wrapper:has(.dashboard-table) {
+    overflow-x: visible;
+  }
+
+  .dashboard-table.admin-table:has(tbody td[data-label]) {
+    min-width: 100%;
+  }
 }
 /* ============================================================
    6. ALERT INLINE (error de carga en el header)

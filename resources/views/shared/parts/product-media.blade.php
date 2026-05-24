@@ -10,7 +10,15 @@
     $imgClass = $imgClass ?? ($variant === 'thumb-card' ? 'product-card-image' : null);
     $usesPlaceholder = ProductImageUrls::usesPlaceholder($product);
     $iconClass = ProductImageUrls::placeholderIconClass($product);
-    $isAdminThumb = in_array($variant, ['thumb-table', 'thumb-card'], true);
+    $isCompactThumb = in_array($variant, ['thumb-table', 'thumb-card', 'thumb-invoice', 'cart', 'favorite', 'suggestion'], true);
+    $compactThumbSize = match ($variant) {
+        'thumb-table', 'thumb-invoice' => 48,
+        'thumb-card' => 60,
+        'cart' => 96,
+        'favorite' => 74,
+        'suggestion' => 30,
+        default => 48,
+    };
 @endphp
 @if($usesPlaceholder)
     @if($href)
@@ -24,12 +32,12 @@
             <i class="{{ $iconClass }}" aria-hidden="true"></i>
         </div>
     @endif
-@elseif($isAdminThumb)
+@elseif($isCompactThumb)
     <img src="{{ ProductImageUrls::fallbackUrl($product) }}"
          alt="{{ $alt }}"
          @if($imgClass) class="{{ $imgClass }}" @endif
-         width="{{ $variant === 'thumb-table' ? 48 : 60 }}"
-         height="{{ $variant === 'thumb-table' ? 48 : 60 }}"
+         width="{{ $compactThumbSize }}"
+         height="{{ $compactThumbSize }}"
          loading="lazy"
          decoding="async">
 @else

@@ -4595,6 +4595,17 @@ select.catalog-toolbar-select:focus,
   align-items: start;
 }
 
+.cart-items-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.cart-pagination-wrap {
+  padding-top: 0.25rem;
+}
+
 .cart-items {
   display: flex;
   flex-direction: column;

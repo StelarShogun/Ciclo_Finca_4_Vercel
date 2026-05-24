@@ -270,9 +270,6 @@
 
 <!-- Categories: carrusel de padres + chips de subcategorías -->
 @if($categories->count() > 0)
-@php
-    $categoryIcons = config('category_icons', []);
-@endphp
 <section class="categories-section" aria-labelledby="categories-heading">
     <div class="container">
         <div class="section-header">
@@ -297,15 +294,11 @@
             <div class="categories-carousel" role="region" aria-roledescription="carrusel" aria-label="Categorías de productos">
                 <div class="categories-carousel-track" data-carousel-track>
                     @foreach($categories as $category)
-                        @php
-                            $iconKey = strtolower(trim($category->name));
-                            $faIcon = $categoryIcons[$iconKey] ?? 'bicycle';
-                        @endphp
                         <article class="category-slide">
                             <div class="category-slide-card">
                                 <a href="{{ route('clients.catalog', ['category_id' => $category->category_id]) }}" class="category-slide-main">
                                     <div class="category-icon category-icon--lg" aria-hidden="true">
-                                        <i class="fas fa-{{ $faIcon }}"></i>
+                                        <i class="{{ \App\Support\ClientCategoryIcons::iconClassForName($category->name) }}"></i>
                                     </div>
                                     <h3 class="category-name">{{ $category->name }}</h3>
                                     @if($category->description)

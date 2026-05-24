@@ -21,6 +21,7 @@ use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\ProductClassificationAssignmentService;
 use App\Support\AdminPerPage;
+use App\Support\ProductImageUrls;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -147,6 +148,8 @@ class ProductController extends Controller
                 $productData['classification_value_ids'] = $product->classificationValues->pluck('id')->values()->all();
                 $productData['media_main'] = $product->getFirstMediaUrl('main_image');
                 $productData['media_gallery'] = $product->getMedia('gallery')->map(fn ($m) => $m->getUrl())->values()->toArray();
+                $productData['uses_placeholder_image'] = ProductImageUrls::usesPlaceholder($product);
+                $productData['placeholder_icon_class'] = ProductImageUrls::placeholderIconClass($product);
                 $variantIds = $product->variants->pluck('product_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
 
                 $lockedVariantIds = [];

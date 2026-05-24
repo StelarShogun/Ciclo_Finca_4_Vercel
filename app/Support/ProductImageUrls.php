@@ -50,6 +50,49 @@ class ProductImageUrls
         return asset('assets/images/products/'.($product->image ?? self::PLACEHOLDER_IMAGE));
     }
 
+    /**
+     * Image fields for client UI and JSON APIs (cart, favorites, search suggestions).
+     * When the product has no real image, image_url is null and placeholder metadata is set.
+     *
+     * @return array{image_url: ?string, uses_placeholder_image: bool, placeholder_icon_class: string}
+     */
+    public static function clientPresentation(Product $product): array
+    {
+        $iconClass = self::placeholderIconClass($product);
+
+        if (self::usesPlaceholder($product)) {
+            return [
+                'image_url' => null,
+                'uses_placeholder_image' => true,
+                'placeholder_icon_class' => $iconClass,
+            ];
+        }
+
+        $mediaUrl = $product->getFirstMediaUrl('main_image');
+        if ($mediaUrl !== '') {
+            return [
+                'image_url' => $mediaUrl,
+                'uses_placeholder_image' => false,
+                'placeholder_icon_class' => $iconClass,
+            ];
+        }
+
+        $legacy = $product->image ?? '';
+        if ($legacy !== '' && $legacy !== self::PLACEHOLDER_IMAGE) {
+            return [
+                'image_url' => asset('assets/images/products/'.$legacy),
+                'uses_placeholder_image' => false,
+                'placeholder_icon_class' => $iconClass,
+            ];
+        }
+
+        return [
+            'image_url' => null,
+            'uses_placeholder_image' => true,
+            'placeholder_icon_class' => $iconClass,
+        ];
+    }
+
     public static function webpCardUrl(?Media $media): ?string
     {
         if ($media === null || ! $media->hasGeneratedConversion('webp_480')) {

@@ -3,6 +3,7 @@
 @import "../admin/components/pagination.css";
 @import "./invoices-mobile.css";
 @import "./invoice-detail.css";
+@import "../shared/product-media-placeholder.css";
 @import "../shared/components/buttons.css";
 @import "../shared/components/form-layout.css";
 

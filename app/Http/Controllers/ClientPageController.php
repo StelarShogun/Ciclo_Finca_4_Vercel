@@ -15,7 +15,9 @@ use App\Services\Catalog\CatalogProductSearchTelemetry;
 use App\Services\InventoryMovementService;
 use App\Support\AdminPerPage;
 use App\Support\ClientCategoryIcons;
+use App\Support\ProductImageUrls;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -807,7 +809,7 @@ class ClientPageController extends Controller
      * Display cart. Session `cart` is the source of truth (minimal rows only).
      * It is only mutated via addToCart, updateCart, removeFromCart, or syncCartWithStock when stock clamps occur.
      */
-    public function cart()
+    public function cart(Request $request)
     {
         $this->syncCartWithStock();
 
@@ -828,12 +830,14 @@ class ClientPageController extends Controller
                 $subtotal = $item['price'] * $qty;
                 $total += $subtotal;
 
-                $mediaUrl = $product->getFirstMediaUrl('main_image');
+                $image = ProductImageUrls::clientPresentation($product);
                 $cartItems[] = [
                     'product_id' => $product->product_id,
                     'name' => $product->name,
                     'price' => $item['price'],
-                    'image_url' => $mediaUrl ?: asset('assets/images/products/'.($product->image ?? 'default.png')),
+                    'image_url' => $image['image_url'],
+                    'uses_placeholder_image' => $image['uses_placeholder_image'],
+                    'placeholder_icon_class' => $image['placeholder_icon_class'],
                     'quantity' => $qty,
                     'stock_available' => $product->stock_current,
                     'subtotal' => $subtotal,
@@ -843,8 +847,19 @@ class ClientPageController extends Controller
         }
 
         $cartCount = $this->getCartCount();
+        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
 
-        return view('client.cart', compact('cartItems', 'total', 'cartCount'));
+        $cartItemsPaginator = new LengthAwarePaginator(
+            collect($cartItems)->forPage($currentPage, $perPage)->values()->all(),
+            count($cartItems),
+            $perPage,
+            $currentPage,
+            ['path' => route('clients.cart')]
+        );
+        $cartItemsPaginator->withQueryString();
+
+        return view('client.cart', compact('cartItemsPaginator', 'total', 'cartCount'));
     }
 
     public function removeFromCart(int $id)

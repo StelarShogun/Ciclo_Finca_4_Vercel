@@ -95,6 +95,8 @@ const clientAssets = [
     "resources/css/client/clients-page.css",
     "resources/css/client/clients-users.css",
     "resources/css/client/legal-pages.css",
+    "resources/css/client/product-badges.css",
+    "resources/css/client/product-detail.css",
 ];
 
 export default defineConfig(({ mode }) => {

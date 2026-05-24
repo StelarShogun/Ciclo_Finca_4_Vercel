@@ -36,6 +36,11 @@ class ClientCategoryIconsTest extends TestCase
         $this->assertSame('fas fa-wine-bottle', ClientCategoryIcons::iconClassForName('Bebidas'));
     }
 
+    public function test_accesorios_category_uses_box_open_icon(): void
+    {
+        $this->assertSame('fas fa-box-open', ClientCategoryIcons::iconClassForName('Accesorios'));
+    }
+
     public function test_unknown_category_uses_default_box(): void
     {
         $this->assertSame(ClientCategoryIcons::DEFAULT_ICON, ClientCategoryIcons::iconClassForName('Misceláneo XYZ'));

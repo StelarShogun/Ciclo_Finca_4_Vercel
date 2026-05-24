@@ -56,6 +56,8 @@
                                 @endforeach
                             </tbody>
                         </table>
+
+                        <x-admin.pagination :paginator="$subcategories" label="tipos de producto" />
                     @endif
                 </div>
             </div>

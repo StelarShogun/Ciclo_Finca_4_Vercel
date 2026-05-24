@@ -103,6 +103,44 @@ class ClientInvoicesPaginationTest extends TestCase
         }
     }
 
+    public function test_invoices_canceladas_tab_paginates_with_shared_component(): void
+    {
+        $client = $this->createIsolatedClient();
+
+        try {
+            for ($i = 0; $i < 12; $i++) {
+                Sale::create([
+                    'invoice_number' => 'INV-CAN-'.uniqid('', true),
+                    'client_id' => $client->user_id,
+                    'sale_date' => now()->subMinutes(12 - $i),
+                    'payment_method' => 'cash',
+                    'status' => 'cancelled',
+                    'subtotal' => 1000,
+                    'iva' => 0,
+                    'discount' => 0,
+                    'total' => 1000,
+                    'order_source' => 'web_cart',
+                    'notes' => null,
+                ]);
+            }
+
+            $this->actingAs($client, 'clients');
+
+            $response = $this->get(route('clients.invoices', [
+                'tab' => 'canceladas',
+                'per_page' => 10,
+            ]));
+
+            $response->assertOk();
+            $response->assertSee('Canceladas', false);
+            $response->assertSee('cf4-pagination-toolbar', false);
+            $response->assertSee('Mostrando 1–10 de 12 resultados', false);
+            $response->assertSee('tab=canceladas', false);
+        } finally {
+            $this->cleanupClientSales($client);
+        }
+    }
+
     public function test_invoices_tab_query_is_preserved_in_pagination_links(): void
     {
         $client = $this->createIsolatedClient();

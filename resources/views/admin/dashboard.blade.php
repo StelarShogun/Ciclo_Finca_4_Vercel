@@ -173,43 +173,39 @@
                     </div>
                     <div class="table-content table-content--scroll">
                         <div class="table-scroll-wrapper">
-                            <table class="dashboard-table admin-table">
+                            <table class="dashboard-table dashboard-table--low-stock admin-table">
                                 <thead>
                                     <tr>
-                                        <th>Producto</th>
-                                        <th>Stock Actual</th>
-                                        <th>Stock Mínimo</th>
-                                        <th>Estado</th>
+                                        <th scope="col" class="dashboard-table__col-product">Producto</th>
+                                        <th scope="col" class="dashboard-table__col-num" title="Stock actual">Actual</th>
+                                        <th scope="col" class="dashboard-table__col-num" title="Stock mínimo">Mín.</th>
+                                        <th scope="col" class="dashboard-table__col-status">Estado</th>
                                     </tr>
                                 </thead>
                                 <tbody id="low-stock-table" class="tbody-scroll">
                                     @forelse(($lowStockProductsList ?? collect())->take(10) as $product)
                                         <tr>
-                                            <td>
+                                            <td class="dashboard-table__col-product">
                                                 <div class="product-info">
-                                                    <img src="{{ asset('assets/images/products/' . ($product->image ?? 'default-96.webp')) }}"
-                                                        alt="{{ $product->name }}" class="product-thumb"
-                                                        width="48" height="48" loading="lazy" decoding="async">
-                                                    <span>{{ $product->name }}</span>
+                                                    @include('shared.parts.product-media', [
+                                                        'product' => $product,
+                                                        'variant' => 'thumb-table',
+                                                        'alt' => $product->name,
+                                                        'imgClass' => 'product-thumb',
+                                                    ])
+                                                    <span class="dashboard-table__product-name"
+                                                        title="{{ $product->name }}">{{ $product->name }}</span>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td class="dashboard-table__col-num">
                                                 <span class="stock-badge danger">{{ $product->stock_current }}</span>
                                             </td>
-                                            <td>{{ $product->stock_minimum }}</td>
-                                            <td>
-                                                @php
-                                                    $pct =
-                                                        $product->stock_minimum > 0
-                                                            ? round(
-                                                                ($product->stock_current / $product->stock_minimum) *
-                                                                    100,
-                                                            )
-                                                            : 0;
-                                                @endphp
-                                                <span class="status-badge {{ $pct <= 0 ? 'danger' : 'warning' }}"
-                                                    title="{{ $pct }}% del mínimo requerido">
-                                                    {{ $pct <= 0 ? 'Sin Stock' : 'Stock Bajo (' . $pct . '%)' }}
+                                            <td class="dashboard-table__col-num">{{ $product->stock_minimum }}</td>
+                                            <td class="dashboard-table__col-status">
+                                                <span
+                                                    class="status-badge {{ $product->adminDashboardLowStockStatusBadgeClass() }}"
+                                                    title="{{ $product->adminDashboardLowStockStatusTitle() }}">
+                                                    {{ $product->adminDashboardLowStockStatusLabel() }}
                                                 </span>
                                             </td>
                                         </tr>
@@ -240,54 +236,78 @@
                     </div>
                     <div class="table-content table-content--scroll">
                         <div class="table-scroll-wrapper">
-                            <table class="dashboard-table admin-table">
+                            <table class="dashboard-table dashboard-table--recent-sales admin-table">
                                 <thead>
                                     <tr>
-                                        <th>Factura</th>
-                                        <th>Cliente</th>
-                                        <th>Total</th>
-                                        <th>Fecha de venta</th>
-                                        <th>Estado</th>
+                                        <th scope="col" class="dashboard-table__col-invoice">Factura</th>
+                                        <th scope="col" class="dashboard-table__col-client">Cliente</th>
+                                        <th scope="col" class="dashboard-table__col-total">Total</th>
+                                        <th scope="col" class="dashboard-table__col-date" title="Fecha de venta">Fecha</th>
+                                        <th scope="col" class="dashboard-table__col-status">Estado</th>
                                     </tr>
                                 </thead>
                                 <tbody id="recent-sales-table" class="tbody-scroll">
                                     @forelse(($recentSales ?? collect())->take(10) as $sale)
+                                        @php
+                                            $invoiceLabel = $sale->invoice_number ?? '#' . $sale->sale_id;
+                                            if ($sale->client) {
+                                                $clientLabel = trim(
+                                                    $sale->client->name .
+                                                        ' ' .
+                                                        $sale->client->first_surname .
+                                                        ' ' .
+                                                        ($sale->client->second_surname ?? ''),
+                                                );
+                                            } elseif ($sale->buyer_name) {
+                                                $clientLabel = $sale->buyer_name;
+                                            } else {
+                                                $clientLabel = 'Mostrador / sin datos';
+                                            }
+                                            $statusLabels = [
+                                                'completed' => 'Completada',
+                                                'pending' => 'Pendiente',
+                                                'ready_to_pickup' => 'Por recoger',
+                                                'cancelled' => 'Cancelada',
+                                                'canceled' => 'Cancelada',
+                                                'refunded' => 'Reembolsada',
+                                                'returned' => 'Devuelta',
+                                            ];
+                                            $statusShortLabels = [
+                                                'completed' => 'Completada',
+                                                'pending' => 'Pend.',
+                                                'ready_to_pickup' => 'Recoger',
+                                                'cancelled' => 'Cancel.',
+                                                'canceled' => 'Cancel.',
+                                                'refunded' => 'Reemb.',
+                                                'returned' => 'Devuelta',
+                                            ];
+                                            $statusText = $statusLabels[$sale->status] ?? ucfirst($sale->status);
+                                            $statusShort =
+                                                $statusShortLabels[$sale->status] ?? $statusText;
+                                            $statusBadgeClass = match ($sale->status) {
+                                                'completed' => 'success',
+                                                'pending', 'ready_to_pickup' => 'warning',
+                                                default => 'danger',
+                                            };
+                                        @endphp
                                         <tr>
-                                            <td>{{ $sale->invoice_number ?? '#' . $sale->sale_id }}</td>
-                                            <td>
-                                                @if ($sale->client)
-                                                    {{ trim($sale->client->name . ' ' . $sale->client->first_surname . ' ' . ($sale->client->second_surname ?? '')) }}
-                                                @elseif($sale->buyer_name)
-                                                    {{ $sale->buyer_name }}
-                                                @else
-                                                    Mostrador / sin datos
-                                                @endif
+                                            <td class="dashboard-table__col-invoice">
+                                                <span class="dashboard-table__cell-truncate"
+                                                    title="{{ $invoiceLabel }}">{{ $invoiceLabel }}</span>
                                             </td>
-                                            <td>₡{{ number_format($sale->total, 0, ',', '.') }}</td>
-                                            <td>{{ $sale->adminSaleDateLabel() }}</td>
-                                            <td>
-                                                @php
-                                                    $statusLabels = [
-                                                        'completed' => 'Completada',
-                                                        'pending' => 'Pendiente',
-                                                        'ready_to_pickup' => 'Por recoger',
-                                                        'cancelled' => 'Cancelada',
-                                                        'canceled' => 'Cancelada',
-                                                        'refunded' => 'Reembolsada',
-                                                        'returned' => 'Devuelta',
-                                                    ];
-
-                                                    $statusText =
-                                                        $statusLabels[$sale->status] ?? ucfirst($sale->status);
-
-                                                    $statusBadgeClass = match ($sale->status) {
-                                                        'completed' => 'success',
-                                                        'pending', 'ready_to_pickup' => 'warning',
-                                                        default => 'danger',
-                                                    };
-                                                @endphp
-                                                <span class="status-badge {{ $statusBadgeClass }}">
-                                                    {{ $statusText }}
+                                            <td class="dashboard-table__col-client">
+                                                <span class="dashboard-table__cell-truncate"
+                                                    title="{{ $clientLabel }}">{{ $clientLabel }}</span>
+                                            </td>
+                                            <td class="dashboard-table__col-total">₡{{ number_format($sale->total, 0, ',', '.') }}</td>
+                                            <td class="dashboard-table__col-date"
+                                                title="{{ $sale->adminSaleDateLabel() }}">
+                                                {{ $sale->adminSaleDateShortLabel() }}
+                                            </td>
+                                            <td class="dashboard-table__col-status">
+                                                <span class="status-badge {{ $statusBadgeClass }}"
+                                                    title="{{ $statusText }}">
+                                                    {{ $statusShort }}
                                                 </span>
                                             </td>
                                         </tr>

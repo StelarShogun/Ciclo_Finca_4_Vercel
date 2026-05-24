@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Product;
+use App\Support\GdImage;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 
@@ -10,6 +11,15 @@ class ProductImagesSeeder extends Seeder
 {
     public function run(): void
     {
+        if (! GdImage::supportsWebp()) {
+            $this->command->error(
+                'ProductImagesSeeder: PHP GD no tiene soporte WEBP (requerido para conversiones de media). '
+                .'Reconstruye el contenedor: docker compose build --no-cache app_ciclo && docker compose up -d app_ciclo'
+            );
+
+            return;
+        }
+
         $imagesBase = public_path('images');
 
         if (! is_dir($imagesBase)) {
