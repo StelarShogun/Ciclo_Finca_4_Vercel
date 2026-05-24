@@ -79,6 +79,7 @@
 
     <meta name="cf4-invoice-count" content="{{ $invoiceCount }}">
     <meta name="cf4-unseen-history-count" content="{{ $unseenHistoryCount }}">
+    <meta name="cf4-invoice-revision" content="{{ $invoicesRevision }}">
     <meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
 
     @php

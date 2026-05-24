@@ -133,6 +133,34 @@ class Sale extends Model
             ->count();
     }
 
+    /**
+     * Fingerprint of invoice rows visible to the client (all tabs).
+     * Changes when status updates even if the active-invoice count stays the same.
+     */
+    public static function clientInvoicesRevision(int $clientId): string
+    {
+        $statuses = array_merge(
+            self::activeClientInvoiceStatuses(),
+            ['completed', 'cancelled', 'canceled'],
+        );
+
+        $parts = self::query()
+            ->where('client_id', $clientId)
+            ->whereIn('status', $statuses)
+            ->orderBy('sale_id')
+            ->get(['sale_id', 'status', 'updated_at'])
+            ->map(static function (self $sale): string {
+                $updated = $sale->updated_at instanceof \DateTimeInterface
+                    ? $sale->updated_at->getTimestamp()
+                    : 0;
+
+                return $sale->sale_id.':'.$sale->status.':'.$updated;
+            })
+            ->all();
+
+        return hash('sha256', implode('|', $parts));
+    }
+
     // Integrado desde rama local: determina si una venta puede cancelarse según su estado actual.
     public function canBeCancelled(): bool
     {

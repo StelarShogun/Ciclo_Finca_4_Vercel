@@ -68,6 +68,11 @@ body.guest-layout {
   padding-top: 0;
 }
 
+/* Facturas / notificaciones: el banner verde sube hasta el header fijo (sin franja clara). */
+.cliente-main:has(.cf4-invoices-header) {
+  padding-top: 0;
+}
+
 /* ===================================================================
    5. BUTTONS (global)
    =================================================================== */
@@ -1274,7 +1279,7 @@ button.profile-quick-action {
 .cf4-invoices-header {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
     color: white;
-    padding: 40px 0;
+    padding: calc(var(--client-header-offset, 70px) + 2.5rem) 0 40px;
     margin-bottom: 32px;
     text-align: center;
 }
@@ -1302,27 +1307,44 @@ button.profile-quick-action {
 }
 
 .cf4-invoices-escape-nav {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 10px 14px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    max-width: 28rem;
     margin-top: 18px;
+    margin-inline: auto;
+}
+
+.cf4-invoices-escape-nav:has(> :only-child) {
+    grid-template-columns: minmax(0, 14rem);
+    justify-content: center;
 }
 
 .cf4-invoices-escape-link {
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 10px 18px;
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.65rem 1rem;
     border-radius: 999px;
     font-weight: 700;
     font-size: 0.9rem;
+    line-height: 1.25;
+    text-align: center;
     text-decoration: none;
     color: #fff;
     background: rgba(255, 255, 255, 0.14);
     border: 1px solid rgba(255, 255, 255, 0.38);
     transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.cf4-invoices-escape-link i {
+    flex-shrink: 0;
 }
 
 .cf4-invoices-escape-link:hover {
@@ -1341,6 +1363,25 @@ button.profile-quick-action {
     background: var(--brand-lightest);
     color: var(--brand-darkest);
     border-color: var(--brand-lightest);
+}
+
+@media (min-width: 768px) {
+    .cf4-invoices-escape-nav {
+        max-width: 32rem;
+        gap: 14px;
+    }
+
+    .cf4-invoices-escape-link {
+        min-height: 2.875rem;
+        padding: 0.7rem 1.15rem;
+        font-size: 0.95rem;
+    }
+
+    .cf4-invoices-empty .btn {
+        min-height: 2.875rem;
+        min-width: 14rem;
+        font-size: 0.95rem;
+    }
 }
 
 /* ── Page wrapper ── */
@@ -1530,6 +1571,20 @@ button.profile-quick-action {
 .cf4-invoices-empty p {
     margin: 0 0 1rem;
     font-size: 1rem;
+}
+
+.cf4-invoices-empty .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    min-width: 12rem;
+    padding: 0.65rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.25;
+    border-radius: 999px;
 }
 
 .cf4-invoices-empty--panel {

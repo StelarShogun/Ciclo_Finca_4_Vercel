@@ -196,7 +196,7 @@
     }
 
     .cf4-invoices-header {
-        padding: 1.15rem 0 0.85rem;
+        padding: calc(var(--client-header-offset, 84px) + 1.15rem) 0 0.85rem;
         margin-bottom: 1.1rem;
     }
 
@@ -222,16 +222,14 @@
 
     .cf4-invoices-escape-nav {
         margin-top: 0.75rem;
-        flex-direction: row;
-        gap: 0.45rem;
+        max-width: 100%;
+        gap: 0.5rem;
     }
 
     .cf4-invoices-escape-link {
-        flex: 1;
-        justify-content: center;
-        padding: 0.5rem 0.65rem;
-        font-size: 0.78rem;
-        min-height: 2.35rem;
+        min-height: 2.75rem;
+        padding: 0.55rem 0.5rem;
+        font-size: 0.8rem;
     }
 
     .cf4-invoices-tab-selector {

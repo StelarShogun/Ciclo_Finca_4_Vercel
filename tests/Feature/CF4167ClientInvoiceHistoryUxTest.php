@@ -131,7 +131,32 @@ class CF4167ClientInvoiceHistoryUxTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('count', 1)
-            ->assertJsonPath('unseen_history', 1);
+            ->assertJsonPath('unseen_history', 1)
+            ->assertJsonStructure(['revision']);
+    }
+
+    public function test_invoices_heartbeat_revision_changes_when_status_updates(): void
+    {
+        [, $client, $sale] = $this->seedReadyToPickupScenario('pending');
+
+        $before = $this->actingAs($client, 'clients')
+            ->getJson(route('clients.invoices.heartbeat'))
+            ->assertOk()
+            ->json('revision');
+
+        $this->assertNotEmpty($before);
+
+        $sale->update([
+            'status' => 'ready_to_pickup',
+            'ready_at' => now(),
+        ]);
+
+        $after = $this->actingAs($client, 'clients')
+            ->getJson(route('clients.invoices.heartbeat'))
+            ->assertOk()
+            ->json('revision');
+
+        $this->assertNotSame($before, $after);
     }
 
     /**

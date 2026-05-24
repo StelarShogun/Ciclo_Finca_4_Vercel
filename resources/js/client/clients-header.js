@@ -14,6 +14,7 @@ import {
     updateCartCount,
 } from './cart-shared.js';
 import { initClientHeaderMenu } from './header-menu.js';
+import { updateHeaderMenuToggleBadge } from './header-menu-alert.js';
 
 const onIdle = (cb) => {
     if (typeof window.requestIdleCallback === 'function') {
@@ -27,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initClientHeaderMenu();
     initCartBadgeFromDom();
     initGuestCartPrompt();
+    updateHeaderMenuToggleBadge();
 
     // Catalog search trending only matters once the user focuses the input.
     onIdle(() => {

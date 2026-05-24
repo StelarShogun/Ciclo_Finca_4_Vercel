@@ -35,9 +35,22 @@
             </div>
 
             {{-- Hamburger toggle: only visible on mobile (CSS controls display) --}}
-            <button class="header-menu-toggle" id="header-menu-toggle" type="button"
-                aria-label="Abrir menú de navegación" aria-controls="header-menu-panel" aria-expanded="false">
+            @php
+                $cf4HeaderMenuAlert = false;
+                if (auth('clients')->check()) {
+                    $cf4HeaderMenuUserId = (int) auth('clients')->user()->user_id;
+                    $cf4HeaderMenuAlert = ($cartCount ?? 0) > 0
+                        || \App\Models\Sale::countActiveClientInvoices($cf4HeaderMenuUserId) > 0
+                        || \App\Models\Sale::countUnseenInClientHistory($cf4HeaderMenuUserId) > 0
+                        || auth('clients')->user()->unreadNotifications()->count() > 0;
+                } elseif (! session('admin_catalog_mode')) {
+                    $cf4HeaderMenuAlert = ($cartCount ?? 0) > 0;
+                }
+            @endphp
+            <button @class(['header-menu-toggle', 'has-alert' => $cf4HeaderMenuAlert]) id="header-menu-toggle" type="button"
+                aria-label="{{ $cf4HeaderMenuAlert ? 'Abrir menú de navegación (tienes novedades)' : 'Abrir menú de navegación' }}" aria-controls="header-menu-panel" aria-expanded="false">
                 <i class="fas fa-bars" aria-hidden="true"></i>
+                <span class="header-menu-toggle-badge" @if(! $cf4HeaderMenuAlert) hidden @endif aria-hidden="true"></span>
             </button>
 
             {{-- Collapsible panel: nav + actions. aria-hidden toggled by JS. --}}

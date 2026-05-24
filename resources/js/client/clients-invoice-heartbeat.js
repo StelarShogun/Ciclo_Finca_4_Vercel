@@ -1,5 +1,7 @@
 /** Active-invoice + unseen-historial badge polling — only on pages that ship heartbeat meta. */
 
+import { updateHeaderMenuToggleBadge } from './header-menu-alert.js'
+
 function updateInvoiceCount(count) {
   const invoiceLink = document.getElementById('invoices-link')
   if (!invoiceLink) return
@@ -18,6 +20,8 @@ function updateInvoiceCount(count) {
   } else if (badge) {
     badge.style.display = 'none'
   }
+
+  updateHeaderMenuToggleBadge()
 }
 
 /** Dot badge when the client has unseen completed orders in Historial. */
@@ -45,33 +49,49 @@ function updateUnseenHistoryBadge(count) {
   if (tabBadge) {
     tabBadge.style.display = count > 0 ? 'block' : 'none'
   }
+
+  updateHeaderMenuToggleBadge()
+}
+
+function isInvoicesSectionPath() {
+  return window.location.pathname.startsWith('/invoices')
 }
 
 export function startInvoiceHeartbeat() {
   const metaUrl = document.querySelector('meta[name="cf4-invoice-heartbeat-url"]')
   const metaCount = document.querySelector('meta[name="cf4-invoice-initial-count"]')
+    || document.querySelector('meta[name="cf4-invoice-count"]')
   const metaHistory = document.querySelector('meta[name="cf4-unseen-history-initial-count"]')
+    || document.querySelector('meta[name="cf4-unseen-history-count"]')
+  const metaRevision = document.querySelector('meta[name="cf4-invoice-revision"]')
   if (!metaUrl) return
 
   let lastCount = parseInt(metaCount ? metaCount.getAttribute('content') : '0', 10)
   let lastUnseenHistory = parseInt(metaHistory ? metaHistory.getAttribute('content') : '0', 10)
+  let lastRevision = metaRevision ? metaRevision.getAttribute('content') : null
+  let hasSyncedRevision = lastRevision !== null && lastRevision !== ''
 
   updateInvoiceCount(lastCount)
   updateUnseenHistoryBadge(lastUnseenHistory)
 
   const url = metaUrl.getAttribute('content')
-  const intervalMs = 60000
+  const intervalMs = isInvoicesSectionPath() ? 15000 : 60000
 
-  setInterval(async function () {
+  const poll = async function () {
     try {
       const res = await fetch(url, {
         headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
       })
       if (!res.ok) return
       const data = await res.json()
       const unseen = parseInt(data.unseen_history, 10) || 0
       const countChanged = data.count !== lastCount
       const historyChanged = unseen !== lastUnseenHistory
+      const revision = typeof data.revision === 'string' ? data.revision : null
+      const revisionChanged = revision !== null
+        && hasSyncedRevision
+        && revision !== lastRevision
 
       if (countChanged) {
         lastCount = data.count
@@ -81,11 +101,25 @@ export function startInvoiceHeartbeat() {
         lastUnseenHistory = unseen
         updateUnseenHistoryBadge(lastUnseenHistory)
       }
-      if ((countChanged || historyChanged) && window.location.pathname.startsWith('/invoices')) {
+      if (revision !== null) {
+        if (!hasSyncedRevision) {
+          lastRevision = revision
+          hasSyncedRevision = true
+        } else if (revisionChanged) {
+          lastRevision = revision
+        }
+      }
+
+      if ((countChanged || historyChanged || revisionChanged) && isInvoicesSectionPath()) {
         location.reload()
       }
     } catch (_) {
       /* ignore network errors */
     }
-  }, intervalMs)
+  }
+
+  setInterval(poll, intervalMs)
+  if (isInvoicesSectionPath()) {
+    setTimeout(poll, 3000)
+  }
 }

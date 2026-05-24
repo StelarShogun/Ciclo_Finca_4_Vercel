@@ -23,6 +23,8 @@ export function updateCartCount(count) {
     if (cartLinkEl) {
         cartLinkEl.setAttribute('data-cart-count', count);
     }
+
+    import('./header-menu-alert.js').then((m) => m.updateHeaderMenuToggleBadge()).catch(() => {});
 }
 
 import { cf4Toast, cf4Error, cf4Warning } from './swal.js';

@@ -1112,12 +1112,14 @@ class ClientPageController extends Controller
 
         $invoiceCount = Sale::countActiveClientInvoices((int) $client->user_id);
         $unseenHistoryCount = Sale::countUnseenInClientHistory((int) $client->user_id);
+        $invoicesRevision = Sale::clientInvoicesRevision((int) $client->user_id);
 
         return view('client.Invoices', compact(
             'orders',
             'cartCount',
             'invoiceCount',
             'unseenHistoryCount',
+            'invoicesRevision',
             'tab',
             'pendingReviewProducts'
         ));
@@ -1132,6 +1134,7 @@ class ClientPageController extends Controller
         return response()->json([
             'count' => Sale::countActiveClientInvoices($clientId),
             'unseen_history' => Sale::countUnseenInClientHistory($clientId),
+            'revision' => Sale::clientInvoicesRevision($clientId),
         ]);
     }
 

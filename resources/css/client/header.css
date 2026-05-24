@@ -32,6 +32,7 @@
 /* Hamburger toggle: hidden on desktop, shown on mobile via media query */
 .header-menu-toggle {
   display: none;
+  position: relative;
   width: 42px;
   height: 42px;
   border: 1px solid rgba(142, 182, 155, 0.35);
@@ -57,6 +58,28 @@
   border-color: var(--brand-light);
   color: var(--brand-light);
   background: rgba(255, 255, 255, 0.1);
+}
+
+.header-menu-toggle-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 2px solid var(--brand-dark);
+  pointer-events: none;
+  box-sizing: content-box;
+}
+
+.header-menu-toggle.has-alert .header-menu-toggle-badge,
+.header-menu-toggle-badge:not([hidden]) {
+  display: block;
+}
+
+.header-menu-toggle-badge[hidden] {
+  display: none;
 }
 
 /* Collapsible panel: flex (nav centrado en el hueco | búsqueda + acciones a la derecha) */
