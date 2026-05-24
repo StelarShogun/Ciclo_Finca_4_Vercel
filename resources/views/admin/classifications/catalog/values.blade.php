@@ -15,6 +15,14 @@
     <main class="admin-main admin-main--content">
         <div class="admin-content-wrapper">
             <div class="form-container">
+            <nav class="reports-breadcrumb" aria-label="Migas de pan">
+                <a href="{{ route('admin.classifications.catalog.index') }}">Opciones por tipo</a>
+                <span class="sep">/</span>
+                <a href="{{ route('admin.classifications.catalog.show', $dimension->category) }}">{{ $dimension->category->name }}</a>
+                <span class="sep">/</span>
+                <span>{{ $dimension->label }}</span>
+            </nav>
+
             @component('admin.partials.page-header', [
                 'title' => 'Valores del atributo «' . $dimension->label . '»',
             ])
@@ -58,59 +66,69 @@
                 </form>
             </div>
 
-            <div class="form-card">
-                <h2 style="font-size:1.1rem; margin-bottom:1rem;">Valores cargados</h2>
+            <div class="form-card" @if (! $dimension->values->isEmpty()) style="padding: 0; overflow: hidden;" @endif>
+                <h2 style="font-size:1.1rem; margin-bottom:1rem; @if (! $dimension->values->isEmpty()) padding: 25px 25px 0; margin: 0; @endif">Valores cargados</h2>
                 @if ($dimension->values->isEmpty())
                     <p>Todavía no hay valores. Agregá al menos uno (ej. Rojo, Azul).</p>
                 @else
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Valor</th>
-                                <th>Estado</th>
-                                <th class="admin-table__col--actions" scope="col">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($dimension->values as $val)
-                                <tr style="{{ $val->trashed() ? 'opacity:0.5;' : '' }}">
-                                    <td>{{ $val->value }}</td>
-                                    <td>
-                                        @if ($val->trashed())
-                                            <span class="status-badge status-banned">Inactivo</span>
-                                        @else
-                                            <span class="status-badge status-active">Activo</span>
-                                        @endif
-                                    </td>
-                                    <td class="admin-table__col--actions">
-                                        @if (!$val->trashed())
-                                            <a href="{{ route('admin.classifications.values.edit', $val) }}"
-                                                class="btn btn-secondary"
-                                                style="padding:0.25rem 0.5rem; font-size:0.85rem;">Editar</a>
-                                            <form action="{{ route('admin.classifications.values.destroy', $val) }}"
-                                                method="POST" style="display:inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="btn btn-secondary"
-                                                    style="padding:0.25rem 0.5rem; font-size:0.85rem; color:#b91c1c;"
-                                                    data-confirm-title="¿Deseas desactivar este valor?"
-                                                    data-confirm="Se desactivará este valor. Los productos que ya lo tenían siguen igual.">Desactivar</button>
-                                            </form>
-                                        @else
-                                            <form action="{{ route('admin.classifications.values.restore', $val) }}"
-                                                method="POST" style="display:inline;">
-                                                @csrf
-                                                <button type="button" class="btn btn-primary"
-                                                    style="padding:0.25rem 0.5rem; font-size:0.85rem;"
-                                                    data-confirm-title="¿Deseas activar este valor?"
-                                                    data-confirm="Se activará de nuevo este valor.">Activar</button>
-                                            </form>
-                                        @endif
-                                    </td>
+                    <div class="admin-table-scroll">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Valor</th>
+                                    <th>Estado</th>
+                                    <th class="admin-table__col--actions" scope="col">Acciones</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach ($dimension->values as $val)
+                                    <tr style="{{ $val->trashed() ? 'opacity:0.5;' : '' }}">
+                                        <td>{{ $val->value }}</td>
+                                        <td>
+                                            @if ($val->trashed())
+                                                <span class="status-badge status-banned">Inactivo</span>
+                                            @else
+                                                <span class="status-badge status-active">Activo</span>
+                                            @endif
+                                        </td>
+                                        <td class="admin-table__col--actions">
+                                            <div class="actions-container">
+                                            @if (!$val->trashed())
+                                                <a href="{{ route('admin.classifications.values.edit', $val) }}"
+                                                    class="action-btn edit"
+                                                    title="Editar valor">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form action="{{ route('admin.classifications.values.destroy', $val) }}"
+                                                    method="POST" style="display:inline;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="button" class="action-btn delete"
+                                                        title="Desactivar valor"
+                                                        data-confirm-title="¿Deseas desactivar este valor?"
+                                                        data-confirm="Se desactivará este valor. Los productos que ya lo tenían siguen igual.">
+                                                        <i class="fas fa-ban"></i>
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <form action="{{ route('admin.classifications.values.restore', $val) }}"
+                                                    method="POST" style="display:inline;">
+                                                    @csrf
+                                                    <button type="button" class="action-btn view"
+                                                        title="Activar valor"
+                                                        data-confirm-title="¿Deseas activar este valor?"
+                                                        data-confirm="Se activará de nuevo este valor.">
+                                                        <i class="fas fa-undo"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 @endif
             </div>
 

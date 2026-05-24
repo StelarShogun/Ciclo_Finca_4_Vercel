@@ -15,7 +15,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
     {{-- Styles & Fonts --}}
-    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/products/inventory.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/components/page-header.css', 'resources/css/admin/products/inventory.css'])
 </head>
 
 <body class="admin-layout">
@@ -36,12 +36,11 @@
             <div class="inventory-container">
 
             {{-- ==================== HEADER ==================== --}}
-            <header class="usuarios-header">
-                <div>
-                    <h1>Gestión de Inventario</h1>
-                    <p>Administra los productos y el stock del sistema</p>
-                </div>
-                <div class="usuarios-actions">
+            @component('admin.partials.page-header', [
+                'title' => 'Gestión de Inventario',
+                'description' => 'Administra los productos y el stock del sistema',
+            ])
+                @slot('actions')
                     <button class="btn btn-primary" id="open-new-product-modal">
                         <i class="fas fa-plus"></i> Nuevo Producto
                     </button>
@@ -53,8 +52,8 @@
                         <i class="fas fa-sitemap"></i>
                         Crear Subcategoría
                     </a>
-                </div>
-            </header>
+                @endslot
+            @endcomponent
 
             <section class="inventory-kpi-grid" aria-label="Resumen de inventario">
                 <a class="inventory-kpi-card" href="{{ $lowStockCardUrl }}">
@@ -183,13 +182,17 @@
                 {{-- View toggle: table / grid --}}
                 <div class="products-header">
                     <div class="products-count">
-                        <span>{{ $paginator->total() }} products</span>
+                        <i class="fas fa-box-open products-count__icon"></i>
+                        <span>
+                            <strong>{{ $paginator->total() }}</strong>
+                            producto{{ $paginator->total() === 1 ? '' : 's' }}
+                        </span>
                     </div>
                     <div class="view-options">
-                        <button class="view-btn active" data-view="table">
+                        <button class="view-btn active" data-view="table" title="Vista de tabla">
                             <i class="fas fa-table"></i>
                         </button>
-                        <button class="view-btn" data-view="grid">
+                        <button class="view-btn" data-view="grid" title="Vista de tarjetas">
                             <i class="fas fa-th"></i>
                         </button>
                     </div>
@@ -442,8 +445,9 @@
                     </div>
                 </div>
 
-                {{-- Pagination component --}}
-                <x-admin.pagination :paginator="$paginator" label="inventario" />
+                <div class="pagination-wrapper">
+                    <x-admin.pagination :paginator="$paginator" label="inventario" />
+                </div>
                 </div>
 
             </section>

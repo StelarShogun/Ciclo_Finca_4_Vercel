@@ -1,4 +1,5 @@
 import { initStaticSearchCombobox } from '../shared/static-search-combobox.js';
+import { createDropdownPortal } from '../shared/combobox-dropdown-portal.js';
 import { cf4Warning } from '../shared/swal.js';
 
 function getCSRFToken() {
@@ -75,9 +76,11 @@ function init() {
         getId: (s) => s.id,
         getLabel: (s) => s.name,
         placeholder: 'Escribe para buscar un proveedor…',
-        usePortal: false,
+        usePortal: true,
         uiVariant: 'product',
     });
+
+    const productDropdownPortal = createDropdownPortal(comboboxWrapper, comboboxDropdown);
 
     const oldSupplierId = supplierHidden.value;
     if (oldSupplierId) {
@@ -173,12 +176,14 @@ function init() {
         if (!comboboxWrapper || !comboboxDropdown || searchInput.disabled) return;
         comboboxWrapper.classList.add('open');
         comboboxDropdown.classList.add('open');
+        productDropdownPortal.mount();
     }
 
     function closeCombobox() {
         if (!comboboxWrapper || !comboboxDropdown) return;
         comboboxWrapper.classList.remove('open');
         comboboxDropdown.classList.remove('open');
+        productDropdownPortal.unmount();
     }
 
     function renderSearchDropdown(list) {
@@ -213,8 +218,7 @@ function init() {
                 const p = list[idx];
                 if (p) addProductToLines(p);
                 searchInput.value = '';
-                renderSearchDropdown(allProducts);
-                searchInput.focus();
+                closeCombobox();
             });
         });
     }
@@ -245,6 +249,7 @@ function init() {
     document.addEventListener('click', (e) => {
         if (!comboboxWrapper) return;
         if (comboboxWrapper.contains(e.target)) return;
+        if (comboboxDropdown?.contains(e.target)) return;
         closeCombobox();
     });
 
@@ -339,6 +344,33 @@ function init() {
             );
         }
     });
+
+    document.addEventListener('cf4:resetCreateOrderForm', () => {
+        lines = [];
+        allProducts = [];
+        if (form) form.reset();
+        if (supplierHidden) supplierHidden.value = '';
+        const supplierSearchEl = document.getElementById('supplier-search');
+        if (supplierSearchEl) supplierSearchEl.value = '';
+        renderSupplierPreview();
+        searchInput.disabled = true;
+        searchInput.placeholder = 'Selecciona un proveedor primero…';
+        searchInput.value = '';
+        closeCombobox();
+        showItemsError('');
+        renderLines();
+    });
 }
+
+function openCreateOrderModal() {
+    document.getElementById('create-supplier-order-modal')?.classList.add('active');
+}
+
+function closeCreateOrderModal() {
+    document.getElementById('create-supplier-order-modal')?.classList.remove('active');
+    document.dispatchEvent(new CustomEvent('cf4:resetCreateOrderForm'));
+}
+
+Object.assign(window, { openCreateOrderModal, closeCreateOrderModal });
 
 document.addEventListener('DOMContentLoaded', init);

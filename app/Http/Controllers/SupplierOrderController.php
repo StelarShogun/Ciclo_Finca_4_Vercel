@@ -158,8 +158,11 @@ class SupplierOrderController extends Controller
         $openSupplierOrdersCount = Order::query()
             ->whereNotIn('state', self::FINAL_STATES)
             ->count();
+        $suppliers = Supplier::query()
+            ->orderBy('name')
+            ->get(['supplier_id', 'name', 'primary_contact', 'email', 'phone']);
 
-        return view('admin.orders.index_supplier', compact('orders', 'openSupplierOrdersCount'));
+        return view('admin.orders.index_supplier', compact('orders', 'openSupplierOrdersCount', 'suppliers'));
     }
 
     public function create()

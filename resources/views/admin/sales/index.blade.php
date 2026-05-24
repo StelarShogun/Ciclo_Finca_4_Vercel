@@ -104,28 +104,11 @@
                     <div class="filter-group">
                         <label for="date-range">Rango de Fecha</label>
                         <select id="date-range" name="date_range">
-                            <option value="today" {{ request('date_range', 'today') == 'today' ? 'selected' : '' }}>Hoy
-                            </option>
-                            <option value="week" {{ request('date_range') == 'week' ? 'selected' : '' }}>Esta semana
-                            </option>
-                            <option value="month" {{ request('date_range') == 'month' ? 'selected' : '' }}>Este mes
-                            </option>
-                            <option value="custom" {{ request('date_range') == 'custom' ? 'selected' : '' }}>Personalizado
-                            </option>
+                            <option value="today" {{ request('date_range', 'today') == 'today' ? 'selected' : '' }}>Hoy</option>
+                            <option value="week" {{ request('date_range') == 'week' ? 'selected' : '' }}>Esta semana</option>
+                            <option value="month" {{ request('date_range') == 'month' ? 'selected' : '' }}>Este mes</option>
+                            <option value="custom" {{ request('date_range') == 'custom' ? 'selected' : '' }}>Personalizado</option>
                         </select>
-                    </div>
-
-                    {{-- Custom date range inputs — shown only when "custom" is selected. --}}
-                    <div class="filter-group filter-group--date-from" id="custom-date-from-group"
-                        style="{{ request('date_range') == 'custom' ? '' : 'display:none;' }}">
-                        <label for="date-from">Fecha inicial</label>
-                        <input type="date" id="date-from" name="date_from" value="{{ request('date_from') }}">
-                    </div>
-
-                    <div class="filter-group filter-group--date-to" id="custom-date-to-group"
-                        style="{{ request('date_range') == 'custom' ? '' : 'display:none;' }}">
-                        <label for="date-to">Fecha final</label>
-                        <input type="date" id="date-to" name="date_to" value="{{ request('date_to') }}">
                     </div>
 
                     <div class="filter-group">
@@ -150,6 +133,17 @@
             @endslot
 
             @slot('footer')
+                <div id="date-range-custom-row" class="date-range-custom-row"
+                    style="{{ request('date_range') == 'custom' ? '' : 'display:none;' }}">
+                    <div class="filter-group">
+                        <label for="date-from">Fecha inicial</label>
+                        <input type="date" id="date-from" name="date_from" value="{{ request('date_from') }}">
+                    </div>
+                    <div class="filter-group">
+                        <label for="date-to">Fecha final</label>
+                        <input type="date" id="date-to" name="date_to" value="{{ request('date_to') }}">
+                    </div>
+                </div>
                 <div id="date-range-error" class="alert alert-danger" style="display:none;">
                     <i class="fas fa-exclamation-circle"></i>
                     <span id="date-range-error-msg">El rango de fechas no es válido.</span>
@@ -177,7 +171,7 @@
                 ($isCustomRange && ($hasDateFrom || $hasDateTo));
         @endphp
 
-        <div data-cf4-ajax-pagination data-cf4-ajax-scroll>
+        <div class="table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
         <div id="cf4-list-fragment">
         <div class="sales-table-container">
             <table class="sales-table admin-table">
@@ -231,7 +225,7 @@
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     @if ($sale->status === 'completed')
-                                        <a href="{{ route('sales.invoice', $sale->sale_id) }}" target="_blank"
+                                        <a href="{{ route('sales.invoice', ['id' => $sale->sale_id, 'from' => 'sales']) }}" target="_blank"
                                             rel="noopener noreferrer" class="action-link-invoice"
                                             data-confirm-invoice
                                             data-invoice-label="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}"
@@ -268,10 +262,11 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
 
-        {{-- Pagination component --}}
-        <x-admin.pagination :paginator="$sales" label="ventas" />
+            <div class="pagination-wrapper">
+                <x-admin.pagination :paginator="$sales" label="ventas" />
+            </div>
+        </div>
         </div>
         </div>
 
@@ -390,15 +385,15 @@
                         <textarea id="notes" name="notes" rows="3" placeholder="Notas adicionales (opcional)"></textarea>
                     </div>
 
-                    <div class="modal-form-footer">
-                        <button type="button" class="btn btn-secondary" onclick="closeNewSaleModal()">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Crear Venta
-                        </button>
-                    </div>
                 </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeNewSaleModal()">
+                    Cancelar
+                </button>
+                <button type="submit" form="new-sale-form" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Crear Venta
+                </button>
             </div>
         </div>
     </div>
@@ -420,6 +415,9 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" id="view-sale-print-btn" class="btn btn-primary" style="display:none;">
+                    <i class="fas fa-print"></i> Imprimir factura
+                </button>
                 <button type="button" class="btn btn-secondary" onclick="closeViewSaleModal()">
                     <i class="fas fa-times"></i> Cerrar
                 </button>

@@ -71,8 +71,8 @@
                 </form>
             </div>
 
-            <div class="form-card">
-                <h2 style="font-size:1.1rem; margin-bottom:1rem;">Atributos cargados</h2>
+            <div class="form-card" @if (! $attributes->isEmpty()) style="padding: 0; overflow: hidden;" @endif>
+                <h2 style="font-size:1.1rem; margin-bottom:1rem; @if (! $attributes->isEmpty()) padding: 25px 25px 0; margin: 0; @endif">Atributos cargados</h2>
 
                 @if ($attributes->isEmpty())
                     <p>
@@ -80,74 +80,76 @@
                         (ej. Color) y después sus valores.
                     </p>
                 @else
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Atributo</th>
-                                <th>Cantidad de valores</th>
-                                <th>Estado</th>
-                                <th class="admin-table__col--actions" scope="col">Acciones</th>
-                            </tr>
-                        </thead>
+                    <div class="admin-table-scroll">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Atributo</th>
+                                    <th>Cantidad de valores</th>
+                                    <th>Estado</th>
+                                    <th class="admin-table__col--actions" scope="col">Acciones</th>
+                                </tr>
+                            </thead>
 
-                        <tbody>
-                            @foreach ($attributes as $dim)
-                                <tr @class(['is-muted' => $dim->trashed()]) style="{{ $dim->trashed() ? 'opacity:0.5;' : '' }}">
-                                    <td>{{ $dim->label }}</td>
-                                    <td>{{ $dim->values_count }}</td>
-                                    <td>
-                                        @if ($dim->trashed())
-                                            <span class="status-badge status-banned">Inactivo</span>
-                                        @else
-                                            <span class="status-badge status-active">Activo</span>
-                                        @endif
-                                    </td>
-                                    <td class="admin-table__col--actions">
-                                        <a href="{{ route('admin.classifications.values.index', $dim) }}"
-                                            class="btn btn-secondary"
-                                            style="padding:0.25rem 0.5rem; font-size:0.85rem;">
-                                            Valores
-                                        </a>
-
-                                        @if (!$dim->trashed())
-                                            <a href="{{ route('admin.classifications.dimensions.edit', $dim) }}"
+                            <tbody>
+                                @foreach ($attributes as $dim)
+                                    <tr @class(['is-muted' => $dim->trashed()]) style="{{ $dim->trashed() ? 'opacity:0.5;' : '' }}">
+                                        <td>{{ $dim->label }}</td>
+                                        <td>{{ $dim->values_count }}</td>
+                                        <td>
+                                            @if ($dim->trashed())
+                                                <span class="status-badge status-banned">Inactivo</span>
+                                            @else
+                                                <span class="status-badge status-active">Activo</span>
+                                            @endif
+                                        </td>
+                                        <td class="admin-table__col--actions">
+                                            <a href="{{ route('admin.classifications.values.index', $dim) }}"
                                                 class="btn btn-secondary"
                                                 style="padding:0.25rem 0.5rem; font-size:0.85rem;">
-                                                Editar
+                                                Valores
                                             </a>
 
-                                            <form
-                                                action="{{ route('admin.classifications.dimensions.destroy', $dim) }}"
-                                                method="POST" style="display:inline;">
-                                                @csrf
-                                                @method('DELETE')
+                                            @if (!$dim->trashed())
+                                                <a href="{{ route('admin.classifications.dimensions.edit', $dim) }}"
+                                                    class="btn btn-secondary"
+                                                    style="padding:0.25rem 0.5rem; font-size:0.85rem;">
+                                                    Editar
+                                                </a>
 
-                                                <button type="button" class="btn btn-secondary"
-                                                    style="padding:0.25rem 0.5rem; font-size:0.85rem; color:#b91c1c;"
-                                                    data-confirm-title="¿Deseas desactivar este atributo?"
-                                                    data-confirm="Se desactivará este atributo. Los productos que ya tenían un valor siguen igual.">
-                                                    Desactivar
-                                                </button>
-                                            </form>
-                                        @else
-                                            <form
-                                                action="{{ route('admin.classifications.dimensions.restore', $dim) }}"
-                                                method="POST" style="display:inline;">
-                                                @csrf
+                                                <form
+                                                    action="{{ route('admin.classifications.dimensions.destroy', $dim) }}"
+                                                    method="POST" style="display:inline;">
+                                                    @csrf
+                                                    @method('DELETE')
 
-                                                <button type="button" class="btn btn-primary"
-                                                    style="padding:0.25rem 0.5rem; font-size:0.85rem;"
-                                                    data-confirm-title="¿Deseas activar este atributo?"
-                                                    data-confirm="Se activará de nuevo este atributo.">
-                                                    Activar
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                                                    <button type="button" class="btn btn-secondary"
+                                                        style="padding:0.25rem 0.5rem; font-size:0.85rem; color:#b91c1c;"
+                                                        data-confirm-title="¿Deseas desactivar este atributo?"
+                                                        data-confirm="Se desactivará este atributo. Los productos que ya tenían un valor siguen igual.">
+                                                        Desactivar
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <form
+                                                    action="{{ route('admin.classifications.dimensions.restore', $dim) }}"
+                                                    method="POST" style="display:inline;">
+                                                    @csrf
+
+                                                    <button type="button" class="btn btn-primary"
+                                                        style="padding:0.25rem 0.5rem; font-size:0.85rem;"
+                                                        data-confirm-title="¿Deseas activar este atributo?"
+                                                        data-confirm="Se activará de nuevo este atributo.">
+                                                        Activar
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 @endif
             </div>
 

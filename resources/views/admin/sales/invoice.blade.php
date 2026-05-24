@@ -23,18 +23,21 @@
                 <i class="fas fa-print" aria-hidden="true"></i> Imprimir
             </button>
             @php
-                $previousUrl = url()->previous();
-                $currentUrl = url()->current();
-                $fallbackUrl = route('sales.index');
-
+                $previousUrl  = url()->previous();
+                $currentUrl   = url()->current();
                 // Avoid navigating back to the sales "show" route, which returns JSON (/sales/{id}).
                 $previousPath = is_string($previousUrl) ? parse_url($previousUrl, PHP_URL_PATH) : null;
                 $looksLikeJsonSaleShow = is_string($previousPath)
                     && preg_match('~/(?:admin/)?sales/\d+/?$~', $previousPath) === 1;
-
-                $backUrl = ($previousUrl && $previousUrl !== $currentUrl && ! $looksLikeJsonSaleShow)
+                $historyUrl = ($previousUrl && $previousUrl !== $currentUrl && ! $looksLikeJsonSaleShow)
                     ? $previousUrl
-                    : $fallbackUrl;
+                    : route('sales.index');
+
+                $backUrl = match(request('from')) {
+                    'orders' => route('admin.orders.index'),
+                    'sales'  => route('sales.index'),
+                    default  => $historyUrl,
+                };
             @endphp
 
             <a href="{{ $backUrl }}" class="btn-back">
