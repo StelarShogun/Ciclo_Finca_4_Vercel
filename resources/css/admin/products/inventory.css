@@ -1708,6 +1708,10 @@ html:has(#stock-adjust-modal.is-open) {
 }
 
 /* ==================== IMPORT MODAL ==================== */
+#import-modal .cf-file-upload-field {
+  margin-bottom: 0;
+}
+
 #import-modal .modal-content.modal-auto-size {
   width: 100%;
   max-width: min(540px, calc(100vw - 2rem));

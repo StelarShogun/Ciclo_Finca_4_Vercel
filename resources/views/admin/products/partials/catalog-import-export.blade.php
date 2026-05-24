@@ -56,14 +56,16 @@
                     <span class="import-format-chip"><i class="fas fa-file-archive"></i> ZIP</span>
                     <span class="import-format-chip import-format-chip--json"><i class="fas fa-file-alt"></i> JSON</span>
                 </div>
-                <div class="file-upload-zone" id="import_file-zone">
-                    <input type="file" name="import_file" id="import_file" accept=".zip,.xml,.csv,.txt,.json" hidden>
-                    <button type="button" class="file-upload-trigger" id="import_file-trigger">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <span>Elegir archivo</span>
-                    </button>
-                    <p class="file-upload-meta" id="import_file-meta">ZIP, XML, CSV o JSON — máx. 100 MB</p>
-                </div>
+                <x-cf-file-upload
+                    id="import_file"
+                    name="import_file"
+                    accept=".zip,.xml,.csv,.txt,.json"
+                    icon="fa-cloud-upload-alt"
+                    hint="ZIP, XML, CSV o JSON — máx. 100 MB"
+                    variant="compact"
+                >
+                    Haz clic o arrastra un archivo aquí
+                </x-cf-file-upload>
                 <div id="import-file-summary" class="import-file-summary hidden" aria-live="polite"></div>
                 <p class="import-modal-requirements">
                     <i class="fas fa-info-circle" aria-hidden="true"></i>

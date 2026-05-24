@@ -51,6 +51,22 @@ class CF4ClientForbiddenFromAdminTest extends TestCase
             ->assertRedirect(route('admin.login'));
     }
 
+    public function test_client_session_cannot_open_admin_login(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Login',
+            'second_surname' => null,
+            'gmail' => 'cliente-admin-login@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $this->actingAs($client, 'clients')
+            ->get(route('admin.login'))
+            ->assertForbidden();
+    }
+
     public function test_admin_can_open_dashboard(): void
     {
         $admin = AdminUser::create([

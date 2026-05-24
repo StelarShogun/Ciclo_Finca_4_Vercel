@@ -118,6 +118,17 @@ export function initFileUploadZone({
     });
 
     if (trigger) {
+        const opensInputNatively =
+            trigger.tagName === 'LABEL' &&
+            trigger.getAttribute('for') === input.id;
+
+        if (!opensInputNatively) {
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                input.click();
+            });
+        }
+
         ['dragenter', 'dragover'].forEach((ev) => {
             trigger.addEventListener(ev, (e) => {
                 e.preventDefault();

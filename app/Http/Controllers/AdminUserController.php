@@ -11,11 +11,23 @@ class AdminUserController extends Controller
 {
     public function showLoginForm()
     {
+        if (Auth::guard('clients')->check()) {
+            abort(403, 'No tenés permiso para acceder al panel de administración.');
+        }
+
+        if (Auth::guard('admin')->check()) {
+            return redirect()->route('dashboard');
+        }
+
         return view('admin.login.login');
     }
 
     public function login(Request $request, AuditLogger $auditLogger)
     {
+        if (Auth::guard('clients')->check()) {
+            abort(403, 'No tenés permiso para acceder al panel de administración.');
+        }
+
         $request->validate([
             'g-recaptcha-response' => ['required', new Recaptcha],
         ], [
