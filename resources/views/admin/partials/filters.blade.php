@@ -30,7 +30,9 @@
                 value="{{ \App\Support\AdminPerPage::resolve(request('per_page', 10)) }}">
         @endif
         <div class="filters-grid">
-            {{ $fields }}
+            <div class="filters-grid__fields">
+                {{ $fields }}
+            </div>
 
             <div class="filter-group filter-buttons">
                 <button type="submit" class="btn btn-primary filter-btn">

@@ -121,21 +121,21 @@
                             <input type="text" id="search" name="search"
                                    placeholder="Nombre o código" value="{{ request('search') }}">
                         </div>
-
-                        <div class="filter-group filter-group--classification">
-                            <button
-                                type="button"
-                                class="btn btn-primary btn-classification-toggle"
-                                id="toggle-classification-filters"
-                                aria-expanded="{{ ($hasClassificationSelections ?? false) ? 'true' : 'false' }}"
-                                aria-controls="classification-filters-panel">
-                                <i class="fas fa-sliders-h"></i>
-                                Más filtros por clasificación
-                            </button>
-                        </div>
                 @endslot
 
                 @slot('footer')
+                    <div class="filters-classification-toggle-row">
+                        <button
+                            type="button"
+                            class="btn btn-primary btn-classification-toggle"
+                            id="toggle-classification-filters"
+                            aria-expanded="{{ ($hasClassificationSelections ?? false) ? 'true' : 'false' }}"
+                            aria-controls="classification-filters-panel">
+                            <i class="fas fa-sliders-h"></i>
+                            Más filtros por clasificación
+                        </button>
+                    </div>
+
                     <div
                         id="classification-filters-panel"
                         class="classification-filters-panel{{ ($hasClassificationSelections ?? false) ? ' is-open' : '' }}"

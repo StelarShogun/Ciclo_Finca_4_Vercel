@@ -253,20 +253,6 @@
   grid-column: 1 / -1;
 }
 
-.filter-group--classification {
-  grid-column: span 2;
-  min-width: 0;
-}
-
-.btn-classification-toggle {
-  width: 100% !important;
-  max-width: 420px;
-  min-width: clamp(280px, 34vw, 420px);
-  align-self: flex-start;
-  justify-content: flex-start;
-  white-space: nowrap;
-}
-
 .classification-filters-panel {
   margin-top: 12px;
   padding: 12px;
@@ -1677,17 +1663,14 @@ html:has(#stock-adjust-modal.is-open) {
   .admin-layout {
     padding-left: var(--sidebar-width);
   }
-  .filters-grid {
-    grid-template-columns: 1fr;
+  .filters-grid__fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .classification-filters-grid {
     grid-template-columns: 1fr;
   }
-  .filter-group--classification {
-    grid-column: auto;
-  }
-  .btn-classification-toggle {
-    width: 100% !important;
+  .filters-classification-toggle-row .btn-classification-toggle {
+    width: 100%;
     min-width: 0;
     max-width: 100%;
   }
@@ -1716,7 +1699,7 @@ html:has(#stock-adjust-modal.is-open) {
     flex-wrap: wrap;
     justify-content: center;
   }
-  .filters-grid {
+  .filters-grid__fields {
     grid-template-columns: 1fr;
   }
   .modal-content {

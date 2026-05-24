@@ -532,31 +532,43 @@
 }
 
 .table-content {
-  overflow-x: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tables-section .table-content {
-  overflow-x: hidden;
+  overflow-x: auto;
 }
 
 .dashboard-table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
-/* Fit inside half-width cards: undo shared admin-table min-width scroll forcing */
+/* Half-width cards: scroll horizontally when columns need more space */
 .dashboard-table.admin-table {
-  min-width: 0;
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   font-size: 0.8rem;
+}
+
+.tables-section .dashboard-table--low-stock.admin-table {
+  min-width: 26rem;
+}
+
+.tables-section .dashboard-table--recent-sales.admin-table {
+  min-width: 34rem;
 }
 
 .tables-section .table-scroll-wrapper.admin-table-scroll,
 .tables-section .table-content.admin-table-scroll,
 .tables-section .table-scroll-wrapper:has(.dashboard-table),
 .tables-section .table-content:has(.dashboard-table) {
-  overflow-x: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
 .tables-section .dashboard-table.admin-table thead th,
@@ -576,8 +588,6 @@
   vertical-align: middle;
   white-space: nowrap;
   word-break: keep-all;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .tables-section .dashboard-table.admin-table tbody td {
@@ -605,49 +615,47 @@
 }
 
 .dashboard-table__col-product {
-  width: 44%;
+  min-width: 11rem;
 }
 
 .dashboard-table--low-stock .dashboard-table__col-num {
-  width: 14%;
+  min-width: 4.5rem;
 }
 
 .dashboard-table--low-stock .dashboard-table__col-status {
-  width: 26%;
+  min-width: 7rem;
 }
 
 .dashboard-table--recent-sales .dashboard-table__col-invoice {
-  width: 19%;
+  min-width: 9rem;
 }
 
 .dashboard-table--recent-sales .dashboard-table__col-client {
-  width: 28%;
+  min-width: 10rem;
 }
 
 .dashboard-table--recent-sales .dashboard-table__col-total {
-  width: 17%;
+  min-width: 6.5rem;
 }
 
 .dashboard-table--recent-sales .dashboard-table__col-date {
-  width: 14%;
+  min-width: 6.5rem;
 }
 
 .dashboard-table--recent-sales .dashboard-table__col-status {
-  width: 22%;
+  min-width: 7rem;
 }
 
 .dashboard-table__cell-truncate,
 .dashboard-table__product-name {
   display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 0;
 }
 
 .dashboard-table.admin-table tbody td.dashboard-table__col-product {
   max-width: none;
   overflow: visible;
+  text-overflow: unset;
 }
 
 .product-info {
@@ -726,8 +734,9 @@
 
 .tables-section .dashboard-table.admin-table tbody td:not(.dashboard-table__col-product) {
   max-width: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: nowrap;
 }
 
 .status-badge.success {
@@ -951,13 +960,15 @@
 .table-scroll-wrapper {
   max-height: 420px;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   scrollbar-width: thin;
   scrollbar-color: #d1d5db transparent;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
 .tables-section .table-scroll-wrapper {
-  overflow-x: hidden;
+  overflow-x: auto;
 }
 
 /* Scrollbar delgada WebKit */
@@ -988,9 +999,9 @@
   box-shadow: 0 1px 0 var(--brand-medium-dark);
 }
 
-/* La tabla ocupa el ancho completo del wrapper */
+/* Grow with content; parent scrolls horizontally when needed */
 .table-content--scroll .dashboard-table {
-  width: 100%;
+  width: max-content;
   min-width: 100%;
 }
 
@@ -1009,7 +1020,7 @@
 @media (max-width: 768px) {
   .tables-section .table-scroll-wrapper.admin-table-scroll,
   .tables-section .table-scroll-wrapper:has(.dashboard-table) {
-    overflow-x: visible;
+    overflow-x: auto;
   }
 
   .dashboard-table.admin-table:has(tbody td[data-label]) {

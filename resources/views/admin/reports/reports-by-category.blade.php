@@ -40,25 +40,26 @@
 
             <form method="GET" action="{{ route('sales.reports.byCategory') }}" id="filters-form">
                 <div class="filters-grid">
+                    <div class="filters-grid__fields">
+                        <div class="filter-group">
+                            <label for="date-range">Rango de Fecha</label>
+                            <select id="date-range" name="date_range">
+                                <option value="today" {{ $dateRange == 'today' ? 'selected' : '' }}>Hoy</option>
+                                <option value="week" {{ $dateRange == 'week' ? 'selected' : '' }}>Esta semana</option>
+                                <option value="month" {{ $dateRange == 'month' ? 'selected' : '' }}>Este mes</option>
+                                <option value="custom" {{ $dateRange == 'custom' ? 'selected' : '' }}>Personalizado</option>
+                            </select>
+                        </div>
 
-                    <div class="filter-group">
-                        <label for="date-range">Rango de Fecha</label>
-                        <select id="date-range" name="date_range">
-                            <option value="today" {{ $dateRange == 'today' ? 'selected' : '' }}>Hoy</option>
-                            <option value="week" {{ $dateRange == 'week' ? 'selected' : '' }}>Esta semana</option>
-                            <option value="month" {{ $dateRange == 'month' ? 'selected' : '' }}>Este mes</option>
-                            <option value="custom" {{ $dateRange == 'custom' ? 'selected' : '' }}>Personalizado</option>
-                        </select>
-                    </div>
+                        <div class="filter-group" id="custom-from" style="{{ $dateRange == 'custom' ? '' : 'display:none' }}">
+                            <label for="date_from">Desde</label>
+                            <input type="date" id="date_from" name="date_from" value="{{ request('date_from') }}">
+                        </div>
 
-                    <div class="filter-group" id="custom-from" style="{{ $dateRange == 'custom' ? '' : 'display:none' }}">
-                        <label for="date_from">Desde</label>
-                        <input type="date" id="date_from" name="date_from" value="{{ request('date_from') }}">
-                    </div>
-
-                    <div class="filter-group" id="custom-to" style="{{ $dateRange == 'custom' ? '' : 'display:none' }}">
-                        <label for="date_to">Hasta</label>
-                        <input type="date" id="date_to" name="date_to" value="{{ request('date_to') }}">
+                        <div class="filter-group" id="custom-to" style="{{ $dateRange == 'custom' ? '' : 'display:none' }}">
+                            <label for="date_to">Hasta</label>
+                            <input type="date" id="date_to" name="date_to" value="{{ request('date_to') }}">
+                        </div>
                     </div>
 
                     <div class="filter-group filter-buttons">
@@ -66,11 +67,10 @@
                             <i class="fas fa-search"></i> Aplicar
                         </button>
 
-                        <a href="{{ route('sales.reports.byCategory') }}" class="btn btn-secondary filter-btn">
+                        <a href="{{ route('sales.reports.byCategory') }}" class="btn btn-primary filter-btn">
                             <i class="fas fa-times"></i> Limpiar
                         </a>
                     </div>
-
                 </div>
             </form>
         </div>

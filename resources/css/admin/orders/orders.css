@@ -51,6 +51,11 @@
   color: var(--color-danger);
 }
 
+/* Mismo patrón que pedidos a proveedores: filtros en .filters-section, tabla aparte */
+.cf4-orders-module .filters-section {
+  margin-bottom: 1.5rem;
+}
+
 .cf4-orders-module .orders-table-card {
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -58,6 +63,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   contain: layout;
+  margin-top: 0;
 }
 
 .cf4-orders-module .orders-table-card .sales-table-container {
