@@ -225,6 +225,10 @@ php artisan db:seed
 - Cálculo automático de IVA
 - Exportación de reportes
 
+## Catálogo: importación y exportación (inventario admin)
+
+Ver [CATALOG_IMPORT_EXPORT.md](CATALOG_IMPORT_EXPORT.md) para el flujo ZIP completo (datos + imágenes), CSV/XML/JSON de proveedores y migración entre entornos.
+
 ## Tecnologías utilizadas
 - Laravel 11
 - PHP 8.2+

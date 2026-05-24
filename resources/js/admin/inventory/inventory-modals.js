@@ -1254,7 +1254,7 @@ export async function initModals() {
         }
         const detected = detectFileFormat(file);
         if (!detected) {
-            void cf4Error('Usá un archivo XML, CSV o JSON.', 'Formato no soportado');
+            void cf4Error('Usá un archivo ZIP, XML, CSV o JSON.', 'Formato no soportado');
             importUpload?.reset();
             resetImportUi();
             return;

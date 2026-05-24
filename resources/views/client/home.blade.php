@@ -16,7 +16,7 @@
 @endpush
 
 @push('styles')
-    @vite(['resources/css/client/clients-page.css'])
+    @vite(['resources/css/client/clients-home.css'])
 @endpush
 
 @section('content')

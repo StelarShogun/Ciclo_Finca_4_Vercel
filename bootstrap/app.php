@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminOnly;
+use App\Http\Middleware\CacheStaticBuildAssets;
 use App\Http\Middleware\LogSensitiveAdminModuleAccess;
 use App\Http\Middleware\PreventDirectAccess;
 use Illuminate\Foundation\Application;
@@ -14,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->append(CacheStaticBuildAssets::class);
+
         $middleware->trustProxies(at: '*');
 
         $middleware->preventRequestForgery(except: [
