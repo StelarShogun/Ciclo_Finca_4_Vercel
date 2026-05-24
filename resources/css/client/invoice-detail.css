@@ -90,6 +90,61 @@
     box-shadow: 0 4px 18px rgba(5, 31, 32, 0.1);
 }
 
+/* Client embed: logo + comprobante header centered (mobile-friendly). */
+.cf4-invoice-document-wrap .invoice-doc__head {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    padding: 1.35rem 1rem 1.1rem;
+    gap: 1rem;
+}
+
+.cf4-invoice-document-wrap .invoice-doc__head-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.cf4-invoice-document-wrap .invoice-doc__logo img {
+    margin-inline: auto;
+    max-width: min(200px, 72vw);
+}
+
+.cf4-invoice-document-wrap .invoice-doc__brand {
+    text-align: center;
+}
+
+.cf4-invoice-document-wrap .invoice-doc__head-note {
+    max-width: 100%;
+    text-align: center;
+}
+
+.cf4-invoice-document-wrap .invoice-doc__ref {
+    text-align: center;
+    width: 100%;
+}
+
+.cf4-invoice-document-wrap .invoice-doc__ref-meta {
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .cf4-invoice-document-wrap .invoice-doc__parties--triple {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .cf4-invoice-document-wrap .invoice-doc__party-body strong,
+    .cf4-invoice-document-wrap .invoice-doc__party-email {
+        text-align: center;
+    }
+
+    .cf4-invoice-document-wrap .invoice-doc__chips {
+        justify-content: center;
+    }
+}
+
 .cf4-detail-section {
     background: #fff;
     border: 1px solid rgba(5, 31, 32, 0.07);
