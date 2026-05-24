@@ -130,8 +130,9 @@
             @endslot
         @endcomponent
 
-        <div class="orders-table-card">
+        <div class="orders-table-card table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
             <div data-cf4-orders-table-region id="cf4-orders-table-region">
+                <div id="cf4-list-fragment">
                 <div class="sales-table-container">
                     <table class="sales-table cf4-purchases-table admin-table">
                         <thead>
@@ -228,7 +229,7 @@
                                             @endif
 
                                             @if ($sale->status === 'completed')
-                                                <a href="{{ route('sales.invoice', $sale->sale_id) }}" target="_blank"
+                                                <a href="{{ route('sales.invoice', ['id' => $sale->sale_id, 'from' => 'orders']) }}" target="_blank"
                                                     rel="noopener noreferrer" class="action-link-invoice"
                                                     data-confirm-invoice
                                                     data-invoice-label="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}"
@@ -263,13 +264,14 @@
                             @endforelse
                         </tbody>
                     </table>
-                </div>
 
-                @if ($orders->count() > 0)
-                    <div class="orders-pagination-wrap">
-                        <x-pagination :paginator="$orders" label="pedidos" />
-                    </div>
-                @endif
+                    @if ($orders->count() > 0)
+                        <div class="pagination-wrapper">
+                            <x-admin.pagination :paginator="$orders" label="encargos" />
+                        </div>
+                    @endif
+                </div>
+                </div>
             </div>
         </div>
     </div>

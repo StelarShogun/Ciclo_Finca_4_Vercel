@@ -48,65 +48,64 @@ export async function initStockModal() {
     let currentStock = 0;
 
     // ── Bootstrap ─────────────────────────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', () => {
-        modal              = document.getElementById('stock-adjust-modal');
-        if (!modal) return; // Modal not present on this page
+    // This module is lazy-loaded after DOMContentLoaded has already fired,
+    // so the DOM is available immediately — no event listener needed.
+    modal              = document.getElementById('stock-adjust-modal');
+    if (!modal) return; // Modal not present on this page
 
-        backdrop           = modal.querySelector('.stock-modal-backdrop');
-        modalTitle         = document.getElementById('stock-modal-title');
-        modalTitleIcon     = document.getElementById('stock-modal-title-icon');
-        productIdInput     = document.getElementById('stock-modal-product-id');
-        productNameEl      = document.getElementById('stock-modal-product-name');
-        productStockEl     = document.getElementById('stock-modal-product-stock');
-        qtyInput           = document.getElementById('stock-modal-qty');
-        reasonInput        = document.getElementById('stock-modal-reason');
-        qtyError           = document.getElementById('stock-modal-qty-error');
-        reasonError        = document.getElementById('stock-modal-reason-error');
-        alertBanner        = document.getElementById('stock-modal-alert');
-        alertMsg           = document.getElementById('stock-modal-alert-msg');
-        confirmBtn         = document.getElementById('stock-modal-confirm-btn');
-        confirmBtnText     = document.getElementById('stock-modal-confirm-text');
-        confirmBtnSpinner  = document.getElementById('stock-modal-confirm-spinner');
-        cancelBtn          = document.getElementById('stock-modal-cancel-btn');
-        closeBtn           = document.getElementById('stock-modal-close-btn');
+    backdrop           = modal.querySelector('.stock-modal-backdrop');
+    modalTitle         = document.getElementById('stock-modal-title');
+    modalTitleIcon     = document.getElementById('stock-modal-title-icon');
+    productIdInput     = document.getElementById('stock-modal-product-id');
+    productNameEl      = document.getElementById('stock-modal-product-name');
+    productStockEl     = document.getElementById('stock-modal-product-stock');
+    qtyInput           = document.getElementById('stock-modal-qty');
+    reasonInput        = document.getElementById('stock-modal-reason');
+    qtyError           = document.getElementById('stock-modal-qty-error');
+    reasonError        = document.getElementById('stock-modal-reason-error');
+    alertBanner        = document.getElementById('stock-modal-alert');
+    alertMsg           = document.getElementById('stock-modal-alert-msg');
+    confirmBtn         = document.getElementById('stock-modal-confirm-btn');
+    confirmBtnText     = document.getElementById('stock-modal-confirm-text');
+    confirmBtnSpinner  = document.getElementById('stock-modal-confirm-spinner');
+    cancelBtn          = document.getElementById('stock-modal-cancel-btn');
+    closeBtn           = document.getElementById('stock-modal-close-btn');
 
-        // ── Event delegation: open modal from table rows and cards ────────
-        document.body.addEventListener('click', (e) => {
-            // "Add" button in table/card actions
-            const addBtn = e.target.closest('[data-stock-action="add"]');
-            if (addBtn) {
-                e.preventDefault();
-                openModal('add', addBtn);
-                return;
-            }
+    // ── Event delegation: open modal from table rows and cards ────────
+    document.body.addEventListener('click', (e) => {
+        // "Add" button in table/card actions
+        const addBtn = e.target.closest('[data-stock-action="add"]');
+        if (addBtn) {
+            e.preventDefault();
+            openModal('add', addBtn);
+            return;
+        }
 
-            // "Remove" button in table/card actions
-            const removeBtn = e.target.closest('[data-stock-action="remove"]');
-            if (removeBtn) {
-                e.preventDefault();
-                openModal('remove', removeBtn);
-                return;
-            }
-
-        });
-
-        // ── Close triggers ────────────────────────────────────────────────
-        closeBtn.addEventListener('click', closeModal);
-        cancelBtn.addEventListener('click', closeModal);
-        backdrop.addEventListener('click', closeModal);
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('is-open')) {
-                closeModal();
-            }
-        });
-
-        // ── Confirm ───────────────────────────────────────────────────────
-        confirmBtn.addEventListener('click', submitAdjustment);
-
-        qtyInput?.addEventListener('input', updateStockPreview);
-        reasonInput?.addEventListener('input', updateReasonCharCount);
+        // "Remove" button in table/card actions
+        const removeBtn = e.target.closest('[data-stock-action="remove"]');
+        if (removeBtn) {
+            e.preventDefault();
+            openModal('remove', removeBtn);
+            return;
+        }
     });
+
+    // ── Close triggers ────────────────────────────────────────────────
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', closeModal);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('is-open')) {
+            closeModal();
+        }
+    });
+
+    // ── Confirm ───────────────────────────────────────────────────────
+    confirmBtn.addEventListener('click', submitAdjustment);
+
+    qtyInput?.addEventListener('input', updateStockPreview);
+    reasonInput?.addEventListener('input', updateReasonCharCount);
 
     function updateReasonCharCount() {
         const reasonCountEl = document.getElementById('stock-modal-reason-count');

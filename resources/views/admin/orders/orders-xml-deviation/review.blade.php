@@ -7,7 +7,14 @@
     <style>
         /* ── Page layout ── */
         .xml-review-container {
-            max-width: 1300px;
+            max-width: 1100px; /* FIX: 1300px era demasiado ancho con sidebar */
+        }
+
+        /* FIX: igual que en upload — evita que el layout sales infle la altura */
+        .sales-container {
+            min-height: unset !important;
+            height: auto !important;
+            padding-bottom: 2rem;
         }
 
         .xml-review-meta {
@@ -285,26 +292,6 @@
     @include('admin.parts.aside')
 @endsection
 
-@section('header')
-    @component('admin.partials.page-header', ['title' => 'Revisión de precios XML'])
-        <p>
-            Revisa las diferencias entre los precios actuales y los precios importados desde el XML.
-            Selecciona los productos que deseas actualizar y ajusta el precio de venta cuando corresponda.
-        </p>
-
-        @slot('actions')
-            <div class="sales-header-actions">
-                <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-redo"></i> Cargar otro XML
-                </a>
-                <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-ghost btn-sm">
-                    <i class="fas fa-arrow-left"></i> Volver a pedidos
-                </a>
-            </div>
-        @endslot
-    @endcomponent
-@endsection
-
 @section('contenido')
     @php
         $items = $analysis['items'];
@@ -321,7 +308,25 @@
 
     <div class="sales-container xml-review-container">
 
-        <nav class="orders-breadcrumb" aria-label="Migas de pan">
+        @component('admin.partials.page-header', ['title' => 'Revisión de precios XML'])
+            <p>
+                Revisa las diferencias entre los precios actuales y los precios importados desde el XML.
+                Selecciona los productos que deseas actualizar y ajusta el precio de venta cuando corresponda.
+            </p>
+
+            @slot('actions')
+                <div class="sales-header-actions">
+                    <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-redo"></i> Cargar otro XML
+                    </a>
+                    <a href="{{ route('admin.supplier-orders.index') }}" class="btn btn-ghost btn-sm">
+                        <i class="fas fa-arrow-left"></i> Volver a pedidos
+                    </a>
+                </div>
+            @endslot
+        @endcomponent
+
+        <nav class="reports-breadcrumb" aria-label="Migas de pan">
             <a href="{{ route('admin.supplier-orders.index') }}">Pedidos a proveedor</a>
             <span class="sep">/</span>
             <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}">Importar XML</a>

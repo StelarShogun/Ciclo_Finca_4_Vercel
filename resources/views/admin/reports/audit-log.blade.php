@@ -7,7 +7,11 @@
 @section('Titulo pagina', 'Bitácora de auditoría - Reportes')
 
 @push('styles')
-    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/reports/reports-hub.css', 'resources/css/admin/reports/audit-log.css'])
+    @vite([
+        'resources/css/admin/shell-base.css',
+        'resources/css/admin/reports/reports-hub.css',
+        'resources/css/admin/reports/audit-log.css',
+    ])
 @endpush
 
 @section('aside')
@@ -16,6 +20,7 @@
 
 @section('contenido')
     <div class="audit-log-page">
+
         <nav class="reports-breadcrumb">
             <a href="{{ route('admin.reports.index') }}">Reportes</a>
             <span class="sep">/</span>
@@ -30,19 +35,36 @@
         @endcomponent
 
         <section class="audit-log-filters">
-            <form method="GET" action="{{ route('admin.reports.audit-log') }}" class="audit-log-filters-grid">
-                <input type="hidden" name="per_page" value="{{ \App\Support\AdminPerPage::resolve(request('per_page', 10)) }}">
+            <form
+                method="GET"
+                action="{{ route('admin.reports.audit-log') }}"
+                class="audit-log-filters-grid">
+
+                <input
+                    type="hidden"
+                    name="per_page"
+                    value="{{ \App\Support\AdminPerPage::resolve(request('per_page', 10)) }}">
+
                 <label class="filter-field">
                     <span>Usuario</span>
-                    <input type="text" name="user" value="{{ $filters['user'] }}" placeholder="Correo o nombre del admin">
+
+                    <input
+                        type="text"
+                        name="user"
+                        value="{{ $filters['user'] }}"
+                        placeholder="Correo o nombre del admin">
                 </label>
 
                 <label class="filter-field">
                     <span>Tipo de acción</span>
+
                     <select name="action_type">
                         <option value="">Todas</option>
+
                         @foreach ($actionTypes as $type)
-                            <option value="{{ $type }}" {{ $filters['action_type'] === $type ? 'selected' : '' }}>
+                            <option
+                                value="{{ $type }}"
+                                {{ $filters['action_type'] === $type ? 'selected' : '' }}>
                                 {{ $actionTypeLabels[$type] ?? AuditLogController::actionTypeLabel($type) }}
                             </option>
                         @endforeach
@@ -51,10 +73,14 @@
 
                 <label class="filter-field">
                     <span>Módulo</span>
+
                     <select name="module">
                         <option value="">Todos</option>
+
                         @foreach ($modules as $item)
-                            <option value="{{ $item }}" {{ $filters['module'] === $item ? 'selected' : '' }}>
+                            <option
+                                value="{{ $item }}"
+                                {{ $filters['module'] === $item ? 'selected' : '' }}>
                                 {{ $moduleLabels[$item] ?? AuditLogController::moduleLabel($item) }}
                             </option>
                         @endforeach
@@ -63,51 +89,99 @@
 
                 <label class="filter-field">
                     <span>Desde</span>
-                    <input type="date" name="from" value="{{ $filters['from'] }}">
+
+                    <input
+                        type="date"
+                        name="from"
+                        value="{{ $filters['from'] }}">
                 </label>
 
                 <label class="filter-field">
                     <span>Hasta</span>
-                    <input type="date" name="to" value="{{ $filters['to'] }}">
+
+                    <input
+                        type="date"
+                        name="to"
+                        value="{{ $filters['to'] }}">
                 </label>
 
                 <label class="filter-field">
                     <span>Orden por fecha</span>
+
                     <select name="dir">
-                        <option value="desc" {{ $filters['dir'] === 'desc' ? 'selected' : '' }}>Más reciente primero
+                        <option
+                            value="desc"
+                            {{ $filters['dir'] === 'desc' ? 'selected' : '' }}>
+                            Más reciente primero
                         </option>
-                        <option value="asc" {{ $filters['dir'] === 'asc' ? 'selected' : '' }}>Más antiguo primero
+
+                        <option
+                            value="asc"
+                            {{ $filters['dir'] === 'asc' ? 'selected' : '' }}>
+                            Más antiguo primero
                         </option>
                     </select>
                 </label>
 
                 <div class="filter-actions">
-                    <a href="{{ route('admin.reports.audit-log', [
-                        'user' => $filters['user'],
-                        'action_type' => $filters['action_type'],
-                        'module' => $filters['module'],
-                        'from' => \App\Support\AdminDateRange::todayDateString(),
-                        'to' => \App\Support\AdminDateRange::todayDateString(),
-                        'dir' => $filters['dir'],
-                        'per_page' => request('per_page'),
-                    ]) }}" class="btn-filter-clear">Hoy</a>
-                    <button type="submit" class="btn-filter-apply">Aplicar filtros</button>
-                    <a href="{{ route('admin.reports.audit-log') }}" class="btn-filter-clear">Limpiar</a>
+                    <a
+                        href="{{ route('admin.reports.audit-log', [
+                            'user' => $filters['user'],
+                            'action_type' => $filters['action_type'],
+                            'module' => $filters['module'],
+                            'from' => \App\Support\AdminDateRange::todayDateString(),
+                            'to' => \App\Support\AdminDateRange::todayDateString(),
+                            'dir' => $filters['dir'],
+                            'per_page' => request('per_page'),
+                        ]) }}"
+                        class="btn-filter-clear">
+                        Hoy
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="btn-filter-apply">
+                        Aplicar filtros
+                    </button>
+
+                    <a
+                        href="{{ route('admin.reports.audit-log') }}"
+                        class="btn-filter-clear">
+                        Limpiar
+                    </a>
                 </div>
+
             </form>
         </section>
 
-        <section class="audit-log-results" data-cf4-ajax-pagination data-cf4-ajax-scroll>
+        <section
+            class="audit-log-results"
+            data-cf4-ajax-pagination
+            data-cf4-ajax-scroll>
+
             @if ($logs->isEmpty())
+
                 <div class="audit-empty-state">
-                    <i class="fas fa-clipboard-list" aria-hidden="true"></i>
-                    <h2>Sin registros para los filtros aplicados</h2>
-                    <p>Probá cambiar usuario, módulo, tipo de acción o rango de fechas.</p>
+                    <i class="fas fa-clipboard-list"></i>
+
+                    <h2>
+                        Sin registros para los filtros aplicados
+                    </h2>
+
+                    <p>
+                        Probá cambiar usuario, módulo, tipo de acción o rango de fechas.
+                    </p>
                 </div>
+
             @else
+
                 <div id="cf4-list-fragment">
+
+                    {{-- Igual estructura que Client Purchases --}}
                     <div class="table-wrap">
+
                         <table class="audit-log-table admin-table">
+
                             <thead>
                                 <tr>
                                     <th>Fecha y hora</th>
@@ -117,40 +191,70 @@
                                     <th>Descripción</th>
                                 </tr>
                             </thead>
+
                             <tbody>
                                 @foreach ($logs as $log)
                                     <tr>
+
                                         <td data-label="Fecha y hora">
                                             {{ optional($log->created_at)->format('d/m/Y H:i:s') }}
                                         </td>
+
                                         <td data-label="Usuario">
                                             @if ($log->adminUser)
-                                                {{ $log->adminUser->name }} {{ $log->adminUser->first_surname }}
-                                                <div class="muted">{{ $log->adminUser->gmail }}</div>
+                                                {{ $log->adminUser->name }}
+                                                {{ $log->adminUser->first_surname }}
+
+                                                <div class="muted">
+                                                    {{ $log->adminUser->gmail }}
+                                                </div>
                                             @else
                                                 {{ $log->admin_email_snapshot ?? 'Sistema' }}
                                             @endif
                                         </td>
+
                                         <td data-label="Tipo de acción">
-                                            <code>{{ $actionTypeLabels[$log->action_type] ?? AuditLogController::actionTypeLabel($log->action_type) }}</code>
+                                            <code>
+                                                {{ $actionTypeLabels[$log->action_type]
+                                                    ?? AuditLogController::actionTypeLabel($log->action_type) }}
+                                            </code>
                                         </td>
+
                                         <td data-label="Módulo">
                                             <span class="module-pill">
-                                                {{ $moduleLabels[$log->module] ?? AuditLogController::moduleLabel($log->module) }}
+                                                {{ $moduleLabels[$log->module]
+                                                    ?? AuditLogController::moduleLabel($log->module) }}
                                             </span>
                                         </td>
+
                                         <td data-label="Descripción">
                                             {{ AuditLogController::descriptionLabel($log->description) }}
                                         </td>
+
                                     </tr>
                                 @endforeach
                             </tbody>
+
                         </table>
+
+                        {{-- PAGINACIÓN DENTRO DEL TABLE WRAP --}}
+                        <div
+                            class="pagination-wrapper"
+                            aria-live="polite">
+
+                            <x-admin.pagination
+                                :paginator="$logs"
+                                label="auditoría" />
+
+                        </div>
+
                     </div>
 
-                    <x-admin.pagination :paginator="$logs" label="auditoría" />
                 </div>
+
             @endif
+
         </section>
+
     </div>
 @endsection

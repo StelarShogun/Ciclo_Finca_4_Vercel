@@ -593,3 +593,9 @@
     font-size: 0.82rem;
   }
 }
+
+/* ── Modal: Nuevo pedido a proveedor ── */
+#create-supplier-order-modal .modal-content {
+  width: min(92vw, 920px) !important;
+  max-width: min(92vw, 920px) !important;
+}

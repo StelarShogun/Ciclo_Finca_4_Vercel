@@ -82,7 +82,7 @@
             };
         @endphp
 
-        <div class="clients-container" data-cf4-ajax-pagination data-cf4-ajax-scroll>
+        <div class="clients-container table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
             <div id="cf4-list-fragment">
             <div class="clients-table-wrapper">
                 <table class="clients-table admin-table">
@@ -207,7 +207,7 @@
                 </table>
             </div>
 
-            <div class="clients-pagination-wrapper">
+            <div class="pagination-wrapper">
                 <x-admin.pagination :paginator="$clients" label="usuarios" />
             </div>
             </div>

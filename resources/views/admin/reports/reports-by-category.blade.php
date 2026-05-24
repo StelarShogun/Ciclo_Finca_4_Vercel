@@ -3,7 +3,10 @@
 @section('Titulo pagina', 'Ventas por Categoría')
 
 @push('styles')
-    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/sales.css'])
+    @vite([
+        'resources/css/admin/shell-base.css',
+        'resources/css/admin/sales/sales.css',
+    ])
 @endpush
 
 @section('aside')
@@ -19,7 +22,6 @@
             <span>Ventas por Categoría</span>
         </nav>
 
-        {{-- ==================== HEADER ==================== --}}
         @component('admin.partials.page-header', [
             'title' => 'Ventas por categoría',
             'description' =>
@@ -27,18 +29,26 @@
         ])
             @slot('actions')
                 <a href="{{ route('admin.reports.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Volver a Reportes
+                    <i class="fas fa-arrow-left"></i>
+                    Volver a Reportes
                 </a>
             @endslot
         @endcomponent
 
         {{-- ==================== FILTROS ==================== --}}
         <div class="filters-section">
+
             <div class="filters-header">
-                <h2 class="filters-title">Filtros de Búsqueda</h2>
+                <h2 class="filters-title">
+                    Filtros de búsqueda
+                </h2>
             </div>
 
-            <form method="GET" action="{{ route('sales.reports.byCategory') }}" id="filters-form">
+            <form
+                method="GET"
+                action="{{ route('sales.reports.byCategory') }}"
+                id="filters-form">
+
                 <div class="filters-grid">
                     <div class="filters-grid__fields">
                         <div class="filter-group">
@@ -63,91 +73,160 @@
                     </div>
 
                     <div class="filter-group filter-buttons">
-                        <button type="submit" class="btn btn-primary filter-btn">
-                            <i class="fas fa-search"></i> Aplicar
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary filter-btn">
+
+                            <i class="fas fa-search"></i>
+                            Aplicar
+
                         </button>
 
-                        <a href="{{ route('sales.reports.byCategory') }}" class="btn btn-primary filter-btn">
+                        <a href="{{ route('sales.reports.byCategory') }}" class="btn btn-secondary filter-btn">
                             <i class="fas fa-times"></i> Limpiar
                         </a>
+
                     </div>
                 </div>
+
             </form>
+
         </div>
 
-        {{-- ==================== CONTENIDO PRINCIPAL ==================== --}}
+        {{-- ==================== CONTENIDO ==================== --}}
         @if ($rows->isEmpty())
+
             <div class="report-table-panel">
+
                 <div class="sales-table-container">
-                    <table class="sales-table">
+
+                    <table class="sales-table admin-table">
+
                         <thead>
                             <tr>
-                                <th>Categoria</th>
+                                <th>Categoría</th>
                                 <th class="text-center">Unidades</th>
                                 <th class="text-right">Ingresos</th>
-                                <th class="text-right">Participacion</th>
+                                <th class="text-right">Participación</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             <tr>
+
                                 <td colspan="4">
+
                                     <div class="report-empty-state">
-                                        <i class="fas fa-inbox fa-2x" aria-hidden="true"></i>
-                                        <p>No hay ventas confirmadas en el periodo seleccionado.</p>
+
+                                        <i
+                                            class="fas fa-inbox fa-2x"
+                                            aria-hidden="true">
+                                        </i>
+
+                                        <p>
+                                            No hay ventas confirmadas en el periodo seleccionado.
+                                        </p>
+
                                     </div>
+
                                 </td>
+
                             </tr>
                         </tbody>
+
                     </table>
+
+                    <div class="pagination-wrapper"></div>
+
                 </div>
+
             </div>
+
         @else
+
             {{-- KPIs --}}
             <div class="kpi-grid">
+
                 <div class="kpi-card">
                     <div class="kpi-header">
-                        <h3 class="kpi-title">Ingresos del Periodo</h3>
+
+                        <h3 class="kpi-title">
+                            Ingresos del Periodo
+                        </h3>
+
                         <div class="kpi-icon success">
                             <i class="fas fa-dollar-sign"></i>
                         </div>
+
                     </div>
-                    <p class="kpi-value">₡{{ number_format($grandTotal, 0, ',', '.') }}</p>
+
+                    <p class="kpi-value">
+                        ₡{{ number_format($grandTotal, 0, ',', '.') }}
+                    </p>
                 </div>
 
                 <div class="kpi-card">
                     <div class="kpi-header">
-                        <h3 class="kpi-title">Categorías Activas</h3>
+
+                        <h3 class="kpi-title">
+                            Categorías Activas
+                        </h3>
+
                         <div class="kpi-icon info">
                             <i class="fas fa-tags"></i>
                         </div>
+
                     </div>
-                    <p class="kpi-value">{{ $rows->count() }}</p>
+
+                    <p class="kpi-value">
+                        {{ $rows->count() }}
+                    </p>
                 </div>
 
                 <div class="kpi-card">
                     <div class="kpi-header">
-                        <h3 class="kpi-title">Unidades Vendidas</h3>
+
+                        <h3 class="kpi-title">
+                            Unidades Vendidas
+                        </h3>
+
                         <div class="kpi-icon">
                             <i class="fas fa-box"></i>
                         </div>
+
                     </div>
-                    <p class="kpi-value">{{ number_format($rows->sum('total_units'), 0, ',', '.') }}</p>
+
+                    <p class="kpi-value">
+                        {{ number_format($rows->sum('total_units'), 0, ',', '.') }}
+                    </p>
                 </div>
+
             </div>
 
-            {{-- Gráfica + Tabla --}}
+            {{-- ==================== GRÁFICA + TABLA ==================== --}}
             <div class="report-content-grid">
 
-                {{-- Pie chart --}}
                 <div class="sales-table-container report-chart-panel">
-                    <h3>Distribución por Categoría</h3>
-                    <canvas id="category-chart" data-chart="{{ json_encode($chartData) }}"></canvas>
+
+                    <h3>
+                        Distribución por Categoría
+                    </h3>
+
+                    <canvas
+                        id="category-chart"
+                        data-chart="{{ json_encode($chartData) }}">
+                    </canvas>
+
                 </div>
 
-                {{-- Tabla --}}
                 <div class="report-table-panel">
+
+                    {{-- Igual estructura que Client Purchases --}}
                     <div class="sales-table-container">
+
                         <table class="sales-table admin-table">
+
                             <thead>
                                 <tr>
                                     <th>Categoría</th>
@@ -158,45 +237,87 @@
                             </thead>
 
                             <tbody>
+
                                 @foreach ($rows as $row)
+
                                     <tr>
-                                        <td>{{ $row->category_name }}</td>
+
+                                        <td>
+                                            {{ $row->category_name }}
+                                        </td>
+
                                         <td class="text-center">
                                             {{ number_format($row->total_units, 0, ',', '.') }}
                                         </td>
+
                                         <td class="text-right">
                                             ₡{{ number_format($row->total_revenue, 0, ',', '.') }}
                                         </td>
+
                                         <td class="text-right">
+
                                             <span class="pct-cell">
-                                                <span class="pct-label">{{ $row->percentage }}%</span>
-                                                <span class="pct-bar-track">
-                                                    <span class="pct-bar-fill"
-                                                        style="width:{{ $row->percentage }}%"></span>
+
+                                                <span class="pct-label">
+                                                    {{ $row->percentage }}%
                                                 </span>
+
+                                                <span class="pct-bar-track">
+
+                                                    <span
+                                                        class="pct-bar-fill"
+                                                        style="width: {{ $row->percentage }}%">
+                                                    </span>
+
+                                                </span>
+
                                             </span>
+
                                         </td>
+
                                     </tr>
+
                                 @endforeach
+
                             </tbody>
 
                             <tfoot>
+
                                 <tr class="tfoot-total">
-                                    <td>Total</td>
+
+                                    <td>
+                                        Total
+                                    </td>
+
                                     <td class="text-center">
                                         {{ number_format($rows->sum('total_units'), 0, ',', '.') }}
                                     </td>
+
                                     <td class="text-right">
                                         ₡{{ number_format($grandTotal, 0, ',', '.') }}
                                     </td>
-                                    <td class="text-right">100%</td>
+
+                                    <td class="text-right">
+                                        100%
+                                    </td>
+
                                 </tr>
+
                             </tfoot>
+
                         </table>
+
+                        <div
+                            class="pagination-wrapper"
+                            aria-live="polite">
+                        </div>
+
                     </div>
+
                 </div>
 
             </div>
+
         @endif
 
     </div>
@@ -204,5 +325,9 @@
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/sales/reports-by-category.js'])
+
+    @vite([
+        'resources/js/admin/shell.js',
+        'resources/js/admin/sales/reports-by-category.js',
+    ])
 @endpush

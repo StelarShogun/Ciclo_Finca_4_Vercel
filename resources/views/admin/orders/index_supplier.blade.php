@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Pedidos a Proveedores - Ciclo Finca 4 Admin')
 
 @push('styles')
-    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/sales.css', 'resources/css/admin/orders/orders.css'])
+    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/sales.css', 'resources/css/admin/orders/orders.css', 'resources/css/admin/orders/supplier-order-create.css'])
 @endpush
 
 @section('aside')
@@ -43,10 +43,10 @@
                     <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}" class="btn btn-secondary btn-sm">
                         <i class="fas fa-file-import"></i> Analizar XML de proveedor
                     </a>
-                    <a href="{{ route('admin.supplier-orders.create') }}" class="btn btn-primary btn-sm">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openCreateOrderModal()">
                         <i class="fas fa-plus"></i>
                         Nuevo pedido
-                    </a>
+                    </button>
                 </div>
             @endslot
         @endcomponent
@@ -133,7 +133,7 @@
             @endslot
         @endcomponent
 
-        <div class="orders-table-card" data-cf4-ajax-pagination data-cf4-ajax-scroll>
+        <div class="orders-table-card table-section" data-cf4-ajax-pagination data-cf4-ajax-scroll>
             <div id="cf4-list-fragment">
             <div class="sales-table-container">
                 <table class="sales-table cf4-purchases-table admin-table">
@@ -323,7 +323,7 @@
                 </table>
             </div>
 
-            <div class="orders-pagination-wrap">
+            <div class="pagination-wrapper">
                 <x-admin.pagination :paginator="$orders" label="pedidos" />
             </div>
             </div>
@@ -378,8 +378,115 @@
         </div>
     </div>
 
+    {{-- Modal: Nuevo pedido a proveedor --}}
+    <div id="create-supplier-order-modal" class="edit-modal">
+        <div class="modal-backdrop" onclick="closeCreateOrderModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus"></i> Nuevo pedido a proveedor</h3>
+                <button type="button" class="modal-close" onclick="closeCreateOrderModal()" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="supplier-order-create-form" method="POST" action="{{ route('admin.supplier-orders.store') }}" class="supplier-order-create">
+                    @csrf
+
+                    <div class="create-grid">
+                        {{-- Proveedor --}}
+                        <section class="create-card" aria-labelledby="supplier-card-title">
+                            <div class="create-card-head">
+                                <h2 id="supplier-card-title"><i class="fas fa-truck"></i> Proveedor</h2>
+                                <span class="required-pill">Obligatorio</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="supplier-search">Proveedor</label>
+                                <div class="product-combobox" id="supplier-combobox">
+                                    <input type="text" id="supplier-search" class="product-combobox-input"
+                                           placeholder="Escribe para buscar un proveedor…" autocomplete="off"
+                                           aria-label="Proveedor del pedido">
+                                    <span class="product-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                    <div class="product-combobox-dropdown" id="supplier-dropdown" role="listbox"></div>
+                                </div>
+                                <input type="hidden" id="supplier_id" name="supplier_id" value="{{ old('supplier_id') }}" required>
+                                @error('supplier_id')
+                                    <p class="field-error">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div id="supplier-preview" class="supplier-preview" hidden></div>
+                        </section>
+
+                        {{-- Productos --}}
+                        <section class="create-card create-card-wide" aria-labelledby="items-card-title">
+                            <div class="create-card-head">
+                                <h2 id="items-card-title"><i class="fas fa-box"></i> Productos</h2>
+                                <span class="required-pill">Obligatorio</span>
+                            </div>
+                            <div class="items-toolbar">
+                                <div class="product-combobox" id="product-combobox">
+                                    <input id="product-search" type="text" class="product-combobox-input"
+                                           placeholder="Selecciona un proveedor primero…" autocomplete="off" disabled>
+                                    <span class="product-combobox-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                                    <div class="product-combobox-dropdown" id="product-search-dropdown"></div>
+                                </div>
+                            </div>
+                            <div class="items-table-wrap">
+                                <table class="items-table admin-table" aria-label="Líneas del pedido">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:46%;">Producto</th>
+                                            <th class="num" style="width:16%;">Cantidad</th>
+                                            <th class="num" style="width:19%;">Precio unit.</th>
+                                            <th class="num" style="width:19%;">Total</th>
+                                            <th style="width:1%;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="items-body">
+                                        {{-- JS renderiza las filas --}}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="items-footer">
+                                <div class="items-errors" id="items-errors" aria-live="polite">
+                                    @error('items')
+                                        <p class="field-error">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div class="items-summary">
+                                    <div class="summary-line">
+                                        <span>Líneas</span>
+                                        <strong id="summary-lines">0</strong>
+                                    </div>
+                                    <div class="summary-line">
+                                        <span>Total</span>
+                                        <strong id="summary-total">₡0</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" form="supplier-order-create-form" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar borrador
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="closeCreateOrderModal()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @push('scripts')
     @vite(['resources/js/admin/shell.js', 'resources/js/admin/orders/supplier-orders.js'])
+    <script>
+        window.__CF4_SUPPLIERS__ = @json($suppliers);
+        @if ($errors->has('supplier_id') || $errors->has('items'))
+            document.addEventListener('DOMContentLoaded', function () { openCreateOrderModal(); });
+        @endif
+    </script>
+    @vite(['resources/js/admin/orders/supplier-order-create.js'])
 @endpush

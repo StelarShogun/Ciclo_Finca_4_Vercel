@@ -180,9 +180,8 @@
 }
 
 .full-table-section {
-    margin-bottom: 2rem;
+    margin-bottom: 0;
     contain: layout;
-    min-height: 22rem;
 }
 
 .table-wrap {
@@ -190,7 +189,6 @@
     border-radius: var(--border-radius, 10px);
     border: 1px solid rgba(0, 0, 0, 0.08);
     background: #fff;
-    min-height: 16rem;
 }
 
 .report-table {
