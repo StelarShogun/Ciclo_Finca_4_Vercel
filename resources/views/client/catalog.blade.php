@@ -155,19 +155,59 @@
                         </div>
 
                         <div class="filter-group">
-                            <label for="brand_id">
+                            <label for="brand_id-trigger">
                                 <i class="fas fa-tag" aria-hidden="true"></i>
                                 Marca
                             </label>
-                            <select id="brand_id" name="brand_id" class="form-control">
-                                <option value="">Todas las marcas</option>
-                                @foreach($brands as $brand)
-                                    <option value="{{ $brand->id }}"
-                                        {{ (string) request('brand_id') === (string) $brand->id ? 'selected' : '' }}>
-                                        {{ $brand->name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            @php
+                                $selectedBrandLabel = $selectedBrand?->name ?? 'Todas las marcas';
+                            @endphp
+                            <div class="catalog-filter-select" data-catalog-filter-select>
+                                <select id="brand_id" name="brand_id" class="form-control catalog-filter-select__native">
+                                    <option value="" @selected(! request()->filled('brand_id'))>Todas las marcas</option>
+                                    @foreach($brands as $brand)
+                                        <option value="{{ $brand->id }}"
+                                            @selected((string) request('brand_id') === (string) $brand->id)>
+                                            {{ $brand->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button type="button"
+                                        class="catalog-filter-select__trigger"
+                                        id="brand_id-trigger"
+                                        aria-expanded="false"
+                                        aria-haspopup="listbox"
+                                        aria-controls="brand_id-menu">
+                                    <span class="catalog-filter-select__label">{{ $selectedBrandLabel }}</span>
+                                    <i class="fas fa-chevron-down catalog-filter-select__chevron" aria-hidden="true"></i>
+                                </button>
+                                <ul class="catalog-filter-select__menu"
+                                    id="brand_id-menu"
+                                    role="listbox"
+                                    aria-label="Filtrar por marca"
+                                    hidden>
+                                    <li role="presentation">
+                                        <button type="button"
+                                                class="catalog-filter-select__option @if(! request()->filled('brand_id')) is-active @endif"
+                                                role="option"
+                                                data-value=""
+                                                aria-selected="{{ request()->filled('brand_id') ? 'false' : 'true' }}">
+                                            Todas las marcas
+                                        </button>
+                                    </li>
+                                    @foreach($brands as $brand)
+                                        <li role="presentation">
+                                            <button type="button"
+                                                    class="catalog-filter-select__option @if((string) request('brand_id') === (string) $brand->id) is-active @endif"
+                                                    role="option"
+                                                    data-value="{{ $brand->id }}"
+                                                    aria-selected="{{ (string) request('brand_id') === (string) $brand->id ? 'true' : 'false' }}">
+                                                {{ $brand->name }}
+                                            </button>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
                         </div>
 
                         <div class="filter-actions">

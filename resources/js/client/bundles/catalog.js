@@ -15,9 +15,11 @@ window.__cf4ClientPageJsLoaded = true;
 
 import { initCatalogFavoriteClickDelegation } from '../catalog-product-favorites.js';
 import { initProductSpotlightCarousels } from '../init-product-spotlight-carousel.js';
+import { initCatalogFilterSelects } from '../catalog-filter-select.js';
 
 export function initClientCatalogPage() {
   initCatalogFavoriteClickDelegation();
+  initCatalogFilterSelects();
 
     document.addEventListener('click', function (e) {
         var addBtn = e.target.closest('.add-to-cart-btn');
