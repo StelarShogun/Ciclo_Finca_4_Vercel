@@ -7,7 +7,14 @@
     <style>
         /* ── Page layout ── */
         .xml-review-container {
-            max-width: 1300px;
+            max-width: 1100px; /* FIX: 1300px era demasiado ancho con sidebar */
+        }
+
+        /* FIX: igual que en upload — evita que el layout sales infle la altura */
+        .sales-container {
+            min-height: unset !important;
+            height: auto !important;
+            padding-bottom: 2rem;
         }
 
         .xml-review-meta {
@@ -319,7 +326,7 @@
             @endslot
         @endcomponent
 
-        <nav class="orders-breadcrumb" aria-label="Migas de pan">
+        <nav class="reports-breadcrumb" aria-label="Migas de pan">
             <a href="{{ route('admin.supplier-orders.index') }}">Pedidos a proveedor</a>
             <span class="sep">/</span>
             <a href="{{ route('admin.supplier-orders.xml-deviation.upload') }}">Importar XML</a>

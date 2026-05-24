@@ -70,6 +70,14 @@
             margin-top: 1.5rem;
             flex-wrap: wrap;
         }
+
+        /* FIX: el layout sales define min-height y padding pensados para listas
+           largas; en esta vista solo hay una card pequeña, así que los anulamos. */
+        .sales-container {
+            min-height: unset !important;
+            height: auto !important;
+            padding-bottom: 2rem;
+        }
     </style>
 @endpush
 
@@ -93,7 +101,7 @@
         @endslot
     @endcomponent
 
-    <nav class="orders-breadcrumb" aria-label="Migas de pan">
+    <nav class="reports-breadcrumb" aria-label="Migas de pan">
         <a href="{{ route('admin.supplier-orders.index') }}">Pedidos a proveedor</a>
         <span class="sep">/</span>
         <span>Importar XML</span>
