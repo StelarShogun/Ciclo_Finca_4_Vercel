@@ -124,6 +124,15 @@ body.guest-layout {
 .cliente-main {
   flex: 1;
   padding-top: var(--client-header-offset);
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 1024px) {
+  body.cliente-layout {
+    overflow-x: clip;
+    max-width: 100%;
+  }
 }
 
 /* Home: el espacio bajo el navbar lo ocupa .cf4-header-spacer (no la foto del hero) */
