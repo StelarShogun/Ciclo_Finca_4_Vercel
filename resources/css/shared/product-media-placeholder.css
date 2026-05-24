@@ -1,0 +1,81 @@
+/* Shared product image placeholder (catalog, home, admin inventory) */
+
+.product-media-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 35% 25%, color-mix(in srgb, var(--brand-light, #8eb69b) 35%, #fff) 0%, transparent 55%),
+    linear-gradient(160deg, var(--brand-lightest, #daf1de) 0%, #fff 55%, #f8faf9 100%);
+  border: 1px solid color-mix(in srgb, var(--brand-light, #8eb69b) 28%, #e5e7eb);
+  color: var(--brand-medium, #235347);
+  box-sizing: border-box;
+}
+
+.product-media-placeholder i {
+  opacity: 0.45;
+  line-height: 1;
+}
+
+/* Client catalog / home cards */
+.product-media-placeholder--card {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+}
+
+.product-image__frame .product-media-placeholder--card,
+.product-image .product-media-placeholder--card {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.product-image .product-image__link {
+  position: relative;
+}
+
+.product-image .product-image__link .product-media-placeholder--card {
+  position: absolute;
+  inset: 0;
+}
+
+.product-image > .product-media-placeholder--card {
+  width: 100%;
+  height: 100%;
+  min-height: clamp(140px, 14vw, 200px);
+}
+
+.catalog-main .product-card--catalog-cf128 .product-image__link .product-media-placeholder--card {
+  border-radius: 18px 18px 0 0;
+}
+
+.product-media-placeholder--card i {
+  font-size: clamp(2rem, 8vw, 3.25rem);
+}
+
+/* Admin inventory table thumb */
+.product-media-placeholder--thumb-table {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--border-radius, 8px);
+}
+
+.product-media-placeholder--thumb-table i {
+  font-size: 1.15rem;
+}
+
+/* Admin inventory grid card thumb */
+.product-media-placeholder--thumb-card {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--border-radius, 8px);
+}
+
+.product-media-placeholder--thumb-card i {
+  font-size: 1.35rem;
+}
+
+.product-thumb-wrap .product-media-placeholder {
+  display: flex;
+}

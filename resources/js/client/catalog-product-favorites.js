@@ -23,6 +23,10 @@ function setFavoriteButtonState(btn, isFavorite) {
         icon.classList.toggle('far', !isFavorite);
         icon.classList.add('fa-heart');
     }
+    var detailLabel = btn.querySelector('.product-detail-favorite__label');
+    if (detailLabel) {
+        detailLabel.textContent = isFavorite ? 'En favoritos' : 'Agregar a favoritos';
+    }
 }
 
 function notifyFavoriteChange(productId, isFavorite) {

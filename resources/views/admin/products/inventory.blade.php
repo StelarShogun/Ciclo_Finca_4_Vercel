@@ -232,8 +232,11 @@
                                         <div class="product-cell-content">
                                         <div class="product-thumb-wrap product-thumb-wrap--table">
                                             {{-- MediaLibrary image with legacy fallback --}}
-                                            <img src="{{ $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
-                                                 alt="{{ $product->name }}">
+                                            @include('shared.parts.product-media', [
+                                                'product' => $product,
+                                                'variant' => 'thumb-table',
+                                                'alt' => $product->name,
+                                            ])
                                             <button type="button"
                                                     class="featured-star-btn {{ $product->is_featured ? 'is-featured' : '' }}"
                                                     data-product-id="{{ $product->product_id }}"
@@ -332,8 +335,11 @@
                             <div class="product-card">
                                 <div class="product-card-header">
                                     <div class="product-thumb-wrap product-thumb-wrap--card">
-                                        <img src="{{ $product->getFirstMediaUrl('main_image') ?: asset('assets/images/products/' . ($product->image ?? 'default.png')) }}"
-                                             alt="{{ $product->name }}" class="product-card-image">
+                                        @include('shared.parts.product-media', [
+                                            'product' => $product,
+                                            'variant' => 'thumb-card',
+                                            'alt' => $product->name,
+                                        ])
                                         <button type="button"
                                                 class="featured-star-btn {{ $product->is_featured ? 'is-featured' : '' }}"
                                                 data-product-id="{{ $product->product_id }}"

@@ -163,14 +163,10 @@
                         <div class="product-image">
                             <a class="product-image__link" href="{{ $product->clientProductUrl() }}"
                                aria-label="Ver producto: {{ $product->name }}">
-                            @php $cardImg = \App\Support\ProductImageUrls::cardPicture($product); @endphp
-                            @include('client.parts.responsive-picture', [
-                                'desktopWebp' => $cardImg['desktopWebp'],
-                                'mobileWebp' => $cardImg['mobileWebp'],
-                                'fallback' => $cardImg['fallback'],
-                                'alt' => $product->name,
-                                'loading' => 'lazy',
-                                'sizes' => '(max-width: 767px) 45vw, 240px',
+                            @include('shared.parts.product-media', [
+                                'product' => $product,
+                                'variant' => 'card',
+                                'href' => $product->clientProductUrl(),
                             ])
                             </a>
                         </div>

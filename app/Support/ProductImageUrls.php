@@ -20,6 +20,11 @@ class ProductImageUrls
         return $image === '' || $image === self::PLACEHOLDER_IMAGE;
     }
 
+    public static function placeholderIconClass(Product $product): string
+    {
+        return ClientCategoryIcons::iconClassForProduct($product);
+    }
+
     public static function placeholderWebpDesktop(): string
     {
         return asset('assets/images/products/default-480.webp');

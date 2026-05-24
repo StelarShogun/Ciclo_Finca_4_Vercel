@@ -27,424 +27,184 @@
 @endpush
 
 @push('styles')
-    @vite(['resources/css/client/clients-page.css'])
+    @vite([
+        'resources/css/client/clients-page.css',
+        'resources/css/client/product-badges.css',
+        'resources/css/client/product-detail.css',
+    ])
 @endpush
 
 @section('content')
-<div class="product-detail-container">
+@php
+    use App\Support\ProductImageUrls;
+
+    $legacyFallback = ProductImageUrls::fallbackUrl($product);
+    $carouselSlides = [];
+
+    if ($mainMedia = $product->getFirstMedia('main_image')) {
+        $carouselSlides[] = ProductImageUrls::carouselSlide($mainMedia, $legacyFallback);
+    }
+
+    foreach ($product->getMedia('gallery') as $galleryMedia) {
+        $carouselSlides[] = ProductImageUrls::carouselSlide($galleryMedia, $galleryMedia->getUrl());
+    }
+
+    if ($carouselSlides === [] && ! ProductImageUrls::usesPlaceholder($product)) {
+        $carouselSlides[] = [
+            'fallback' => $legacyFallback,
+            'desktopWebp' => null,
+            'mobileWebp' => null,
+        ];
+    }
+
+    $showImagePlaceholder = $carouselSlides === [] && ProductImageUrls::usesPlaceholder($product);
+
+    $hasDescription = filled($product->description);
+    $hasSpecs = $product->classificationValues->isNotEmpty() || $hasDescription;
+    $hasRelated = $relatedProducts->count() > 0;
+    $defaultTab = $hasDescription
+        ? 'description'
+        : ($product->classificationValues->isNotEmpty() ? 'specs' : 'reviews');
+    if (request()->has('reviews_sort') || request()->has('review_filter') || request()->has('page')) {
+        $defaultTab = 'reviews';
+    }
+@endphp
+<div class="product-detail-container product-detail-page">
     <div class="container">
-        <!-- Breadcrumb navigation -->
-        <nav class="breadcrumb">
+        <nav class="breadcrumb product-detail-breadcrumb" aria-label="Ruta de navegación">
             <a href="{{ route('clients.home') }}">Inicio</a>
-            <span>/</span>
+            <span aria-hidden="true">/</span>
             <a href="{{ route('clients.catalog') }}">Catálogo</a>
-            <span>/</span>
-            <span>{{ $product->name }}</span>
+            @if(($taxonomy['parentCategory'] ?? null) && ($taxonomy['catalogParentUrl'] ?? null))
+                <span aria-hidden="true">/</span>
+                <a href="{{ $taxonomy['catalogParentUrl'] }}">{{ $taxonomy['parentCategory']->name }}</a>
+            @endif
+            @if(($taxonomy['subcategory'] ?? null) && ($taxonomy['catalogSubcategoryUrl'] ?? null))
+                <span aria-hidden="true">/</span>
+                <a href="{{ $taxonomy['catalogSubcategoryUrl'] }}">{{ $taxonomy['subcategory']->name }}</a>
+            @endif
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{{ $product->name }}</span>
         </nav>
 
-        @php
-            use App\Support\ProductImageUrls;
-
-            $legacyFallback = ProductImageUrls::fallbackUrl($product);
-            $carouselSlides = [];
-
-            if ($mainMedia = $product->getFirstMedia('main_image')) {
-                $carouselSlides[] = ProductImageUrls::carouselSlide($mainMedia, $legacyFallback);
-            }
-
-            foreach ($product->getMedia('gallery') as $galleryMedia) {
-                $carouselSlides[] = ProductImageUrls::carouselSlide($galleryMedia, $galleryMedia->getUrl());
-            }
-
-            if (empty($carouselSlides)) {
-                $carouselSlides[] = ProductImageUrls::usesPlaceholder($product)
-                    ? ProductImageUrls::cardPicture($product)
-                    : [
-                        'fallback' => $legacyFallback,
-                        'desktopWebp' => null,
-                        'mobileWebp' => null,
-                    ];
-            }
-        @endphp
-
-        <div class="product-detail-layout">
-            <div class="product-detail-image">
-                <div class="product-carousel" id="product-carousel">
-                    <div class="carousel-viewport">
-                        <div class="carousel-track" id="carousel-track">
-                            @foreach($carouselSlides as $slide)
-                                <div class="carousel-slide">
-                                    @include('client.parts.responsive-picture', [
-                                        'desktopWebp' => $slide['desktopWebp'] ?? null,
-                                        'mobileWebp' => $slide['mobileWebp'] ?? null,
-                                        'fallback' => $slide['fallback'],
-                                        'alt' => $product->name,
-                                        'loading' => $loop->first ? 'eager' : 'lazy',
-                                    ])
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                    @if(count($carouselSlides) > 1)
-                        <button class="carousel-btn carousel-btn--prev" id="carousel-prev" aria-label="Imagen anterior" disabled>
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <button class="carousel-btn carousel-btn--next" id="carousel-next" aria-label="Imagen siguiente">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                        <div class="carousel-dots" id="carousel-dots">
-                            @foreach($carouselSlides as $i => $slide)
-                                <button class="carousel-dot {{ $i === 0 ? 'active' : '' }}" data-index="{{ $i }}" aria-label="Imagen {{ $i + 1 }}"></button>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
+        <div class="product-detail-layout product-detail-hero">
+            <div class="product-detail-image product-detail-hero__gallery">
+                @include('client.parts.product-detail-gallery')
             </div>
-
-            <div class="product-detail-info">
-                <div class="product-detail-category">{{ $product->category->name ?? 'Uncategorized' }}</div>
-                <h1 class="product-detail-name">{{ $product->name }}</h1>
-
-                @if($product->clientCatalogAssignedSku())
-                    <p class="product-detail-sku">SKU: {{ $product->clientCatalogAssignedSku() }}</p>
-                @endif
-
-                <div class="product-detail-rating-summary">
-                    @include('client.parts.product-stars-inline', [
-                        'avgStars' => $averageStars ?? 0,
-                        'reviewCount' => $totalReviewsCount,
-                        'variant' => 'detail',
-                        'emptyLabel' => 'Aún no hay valoraciones disponibles',
-                    ])
-                </div>
-
-                @if($product->description)
-                    <div class="product-detail-description">
-                        <p>{{ $product->description }}</p>
-                    </div>
-                @endif
-
-                @if($product->classificationValues->isNotEmpty())
-                    <ul class="product-detail-classifications" style="list-style:none;padding:0;margin:0.75rem 0;font-size:0.95rem;">
-                        @foreach($product->classificationValues as $cv)
-                            <li style="margin-bottom:0.35rem;">
-                                <strong>{{ optional($cv->dimension)->label ?? '—' }}:</strong> {{ $cv->value }}
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
-
-                <div class="product-detail-price">
-                    <span class="price-label">Precio:</span>
-                    <span class="price-amount">₡{{ number_format($product->sale_price, 0, ',', '.') }}</span>
-                </div>
-
-                <div class="product-detail-stock">
-                    @if($product->isPurchasableByClient())
-                        @if($product->clientShowsLowStockWarning())
-                            <span class="stock-available stock-available--low">
-                                <i class="fas fa-exclamation-circle"></i>
-                                <span>{{ $product->clientCatalogStockLabel() }}</span>
-                                <span class="stock-detail-count">· {{ $product->stock_current }} unidades disponibles</span>
-                            </span>
-                        @else
-                            <span class="stock-available">
-                                <i class="fas fa-check-circle"></i>
-                                <span class="stock-status-word">{{ $product->clientCatalogStockLabel() }}</span>
-                                <span class="stock-detail-count stock-detail-count--plain">· {{ $product->stock_current }} unidades disponibles</span>
-                            </span>
-                        @endif
-                    @else
-                        <span class="stock-unavailable">
-                            <i class="fas fa-times-circle"></i>
-                            {{ $product->clientCatalogStockLabel() }}
-                        </span>
-                    @endif
-                </div>
-
-                @if($product->isPurchasableByClient())
-                    <div class="product-detail-actions">
-                        <div class="quantity-selector">
-                            <label>Cantidad:</label>
-                            <div class="quantity-controls">
-                                <button type="button" class="quantity-btn" id="decrease-qty">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                                <input type="number" id="product-quantity" value="1" min="1" max="{{ $product->stock_current }}">
-                                <button type="button" class="quantity-btn" id="increase-qty">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        @auth('clients')
-                            <button type="button" class="btn btn-primary btn-lg add-to-cart-btn"
-                                    data-purchasable="1"
-                                    data-product-id="{{ $product->product_id }}"
-                                    data-product-name="{{ $product->name }}"
-                                    data-product-price="{{ $product->sale_price }}"
-                                    data-product-stock="{{ $product->stock_current }}">
-                                <i class="fas fa-cart-plus"></i>
-                                Agregar al Carrito
-                            </button>
-                        @else
-                            <button type="button" class="btn btn-primary btn-lg guest-add-btn" data-purchasable="1" data-product-stock="{{ $product->stock_current }}">
-                                <i class="fas fa-cart-plus"></i>
-                                Agregar al Carrito
-                            </button>
-                        @endauth
-                    </div>
-                @endif
+            <div class="product-detail-info product-detail-hero__buy">
+                @include('client.parts.product-detail-purchase-panel')
             </div>
         </div>
 
-        <section class="related-products" style="margin-top: 2rem;">
-            <h2 class="section-title">Reseñas del producto</h2>
-
-            @if(session('status'))
-                <div class="alert alert-success" style="margin-bottom:1rem;">{{ session('status') }}</div>
-            @endif
-
-            @if($errors->has('review'))
-                <div class="alert alert-danger" style="margin-bottom:1rem;">{{ $errors->first('review') }}</div>
-            @endif
-
-            @auth('clients')
-                @if($clientCanReview)
-                    <form method="POST" action="{{ route('clients.products.review.store', ['product' => $product->product_id]) }}" style="margin-bottom:1rem;">
-                        @csrf
-                        <label for="stars"><strong>Tu reseña (1 a 5 estrellas)</strong></label>
-                        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-top:0.5rem;">
-                            <select id="stars" name="stars" class="form-control" style="max-width:220px;">
-                                <option value="">Selecciona una calificación</option>
-                                @for($star = 1; $star <= 5; $star++)
-                                    <option value="{{ $star }}" @selected((int) old('stars', $clientReview->stars ?? 0) === $star)>
-                                        {{ $star }} estrella{{ $star > 1 ? 's' : '' }}
-                                    </option>
-                                @endfor
-                            </select>
-                            <button type="submit" class="btn btn-primary">
-                                {{ $clientReview ? 'Actualizar reseña' : 'Guardar reseña' }}
-                            </button>
-                        </div>
-                        @error('stars')
-                            <small style="color:#d9534f;display:block;margin-top:0.5rem;">{{ $message }}</small>
-                        @enderror
-                    </form>
-                @else
-                    <p style="margin-bottom:1rem;">Podrás reseñar este producto cuando tengas una compra completada del mismo.</p>
+        <div class="product-detail-tabs"
+             id="product-detail-tabs"
+             data-default-tab="{{ $defaultTab }}">
+            <div class="product-detail-tabs__nav" role="tablist" aria-label="Información del producto">
+                <button type="button"
+                        role="tab"
+                        class="product-detail-tabs__btn"
+                        data-tab="description"
+                        aria-controls="product-tab-description"
+                        id="product-tab-btn-description">
+                    Descripción
+                </button>
+                <button type="button"
+                        role="tab"
+                        class="product-detail-tabs__btn"
+                        data-tab="specs"
+                        aria-controls="product-tab-specs"
+                        id="product-tab-btn-specs">
+                    Especificaciones
+                </button>
+                <button type="button"
+                        role="tab"
+                        class="product-detail-tabs__btn"
+                        data-tab="reviews"
+                        aria-controls="product-tab-reviews"
+                        id="product-tab-btn-reviews">
+                    Reseñas
+                    @if($totalReviewsCount > 0)
+                        <span class="product-detail-tabs__count">{{ $totalReviewsCount }}</span>
+                    @endif
+                </button>
+                @if($hasRelated)
+                    <button type="button"
+                            role="tab"
+                            class="product-detail-tabs__btn"
+                            data-tab="related"
+                            aria-controls="product-tab-related"
+                            id="product-tab-btn-related">
+                        Relacionados
+                    </button>
                 @endif
-            @else
-                <p style="margin-bottom:1rem;">
-                    <a href="{{ route('login.show') }}">Inicia sesión</a> para reseñar productos que hayas comprado.
-                </p>
-            @endauth
+            </div>
 
-            @php
-                $productRouteParams = ['id' => $product->product_id, 'slug' => $product->clientPublicSlug()];
-            @endphp
+            <div class="product-detail-tabs__panels">
+                <section id="product-tab-description"
+                         class="product-detail-tab-panel"
+                         data-panel="description"
+                         role="tabpanel"
+                         aria-labelledby="product-tab-btn-description"
+                         @if($defaultTab !== 'description') hidden @endif>
+                    @include('client.parts.product-detail-description-card')
+                </section>
 
-            @if($totalReviewsCount > 0)
-                <div class="product-reviews-toolbar">
-                    <div class="product-reviews-toolbar__card">
-                        <div class="product-reviews-toolbar__head">
-                            <span class="product-reviews-toolbar__head-icon" aria-hidden="true"><i class="fas fa-sliders-h"></i></span>
-                            <span class="product-reviews-toolbar__head-text">Ver y ordenar reseñas</span>
-                        </div>
-                        <div class="product-reviews-toolbar__body">
-                            <form method="get"
-                                  action="{{ route('clients.product', $productRouteParams) }}"
-                                  class="product-reviews-filter"
-                                  id="product-reviews-filter-form">
-                                <input type="hidden" name="reviews_sort" value="{{ $reviewsSort }}">
-                                <label for="review_filter" class="product-reviews-filter__label">
-                                    <i class="fas fa-star-half-alt product-reviews-filter__label-icon" aria-hidden="true"></i>
-                                    Filtrar por calificación
-                                </label>
-                                <div class="product-reviews-filter__control">
-                                    <select name="review_filter"
-                                            id="review_filter"
-                                            class="product-reviews-filter__select"
-                                            onchange="this.form.submit()">
-                                        <option value="all" @selected($reviewFilter === 'all')>
-                                            Todas las reseñas ({{ $totalReviewsCount }})
-                                        </option>
-                                        @for($level = 5; $level >= 1; $level--)
-                                            @php $cnt = (int) ($starDistribution[$level] ?? 0); @endphp
-                                            <option value="{{ $level }}" @selected((string) $reviewFilter === (string) $level)>
-                                                {{ $level }} {{ $level === 1 ? 'estrella' : 'estrellas' }} ({{ $cnt }})
-                                            </option>
-                                        @endfor
-                                    </select>
-                                </div>
-                            </form>
+                <section id="product-tab-specs"
+                         class="product-detail-tab-panel"
+                         data-panel="specs"
+                         role="tabpanel"
+                         aria-labelledby="product-tab-btn-specs"
+                         @if($defaultTab !== 'specs') hidden @endif>
+                    <article class="product-detail-card">
+                        <h2 class="product-detail-card__title">Características técnicas</h2>
+                        @include('client.parts.product-detail-specs')
+                    </article>
+                </section>
 
-                            <nav class="product-reviews-sort" aria-label="Ordenar reseñas">
-                                <span class="product-reviews-sort__label">
-                                    <i class="fas fa-sort-amount-down product-reviews-sort__label-icon" aria-hidden="true"></i>
-                                    Ordenar por
-                                </span>
-                                <div class="product-reviews-sort__chips">
-                                    <a href="{{ route('clients.product', array_merge($productRouteParams, ['reviews_sort' => 'recent', 'review_filter' => $reviewFilter])) }}"
-                                       @class(['product-reviews-sort__chip', 'is-active' => $reviewsSort === 'recent'])>Más recientes</a>
-                                    <a href="{{ route('clients.product', array_merge($productRouteParams, ['reviews_sort' => 'stars_high', 'review_filter' => $reviewFilter])) }}"
-                                       @class(['product-reviews-sort__chip', 'is-active' => $reviewsSort === 'stars_high'])>Mayor calificación</a>
-                                    <a href="{{ route('clients.product', array_merge($productRouteParams, ['reviews_sort' => 'stars_low', 'review_filter' => $reviewFilter])) }}"
-                                       @class(['product-reviews-sort__chip', 'is-active' => $reviewsSort === 'stars_low'])>Menor calificación</a>
-                                </div>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
+                <section id="product-tab-reviews"
+                         class="product-detail-tab-panel product-detail-reviews"
+                         data-panel="reviews"
+                         role="tabpanel"
+                         aria-labelledby="product-tab-btn-reviews"
+                         @if($defaultTab !== 'reviews') hidden @endif>
+                    @include('client.parts.product-detail-reviews-section')
+                </section>
 
-                @if($showMyHighlightedReview)
-                    <div class="product-reviews-highlight" role="region" aria-label="Tu reseña">
-                        @include('client.parts.product-review-row', [
-                            'review' => $myHighlightedReview,
-                            'verified' => $verifiedPurchaserIds->contains((int) $myHighlightedReview->client_id),
-                            'mine' => true,
-                        ])
-                    </div>
+                @if($hasRelated)
+                    <section id="product-tab-related"
+                             class="product-detail-tab-panel product-detail-related"
+                             data-panel="related"
+                             role="tabpanel"
+                             aria-labelledby="product-tab-btn-related"
+                             @if($defaultTab !== 'related') hidden @endif>
+                        <h2 class="product-detail-card__title">Productos relacionados</h2>
+                        @include('client.parts.product-detail-related-section')
+                    </section>
                 @endif
-
-                <div class="product-reviews-list-wrap" role="region" aria-label="Reseñas de otros compradores">
-                    @forelse($productReviewsPaginated as $review)
-                        @include('client.parts.product-review-row', [
-                            'review' => $review,
-                            'verified' => $verifiedPurchaserIds->contains((int) $review->client_id),
-                            'mine' => false,
-                        ])
-                    @empty
-                        @if($reviewFilter !== 'all')
-                            <p class="product-reviews-empty-other">No hay reseñas con esta calificación.</p>
-                        @elseif(! $showMyHighlightedReview)
-                            <p class="product-reviews-empty-other">Aún no hay valoraciones disponibles.</p>
-                        @endif
-                    @endforelse
-                </div>
-
-                @if($productReviewsPaginated->hasPages())
-                    <nav class="product-reviews-pagination" aria-label="Páginas de reseñas">
-                        <div class="product-reviews-pagination__inner">
-                            @if($productReviewsPaginated->onFirstPage())
-                                <span class="product-reviews-pagination__btn is-disabled" aria-disabled="true">Anterior</span>
-                            @else
-                                <a class="product-reviews-pagination__btn" href="{{ $productReviewsPaginated->previousPageUrl() }}" rel="prev">Anterior</a>
-                            @endif
-                            <span class="product-reviews-pagination__meta">
-                                {{ $productReviewsPaginated->firstItem() }}–{{ $productReviewsPaginated->lastItem() }}
-                                de {{ $productReviewsPaginated->total() }}
-                            </span>
-                            @if(! $productReviewsPaginated->hasMorePages())
-                                <span class="product-reviews-pagination__btn is-disabled" aria-disabled="true">Siguiente</span>
-                            @else
-                                <a class="product-reviews-pagination__btn" href="{{ $productReviewsPaginated->nextPageUrl() }}" rel="next">Siguiente</a>
-                            @endif
-                        </div>
-                    </nav>
-                @endif
-            @else
-                <p class="product-reviews-empty">Aún no hay valoraciones disponibles.</p>
-            @endif
-        </section>
-
-        <!-- Related products from the same category -->
-        @if($relatedProducts->count() > 0)
-            <section class="related-products">
-                <h2 class="section-title">Productos Relacionados</h2>
-                <div class="products-grid">
-                    @foreach($relatedProducts as $related)
-                        @php
-                            $relLabel = $related->clientCatalogStockLabel();
-                            $relCanBuy = $related->isPurchasableByClient();
-                            $relSku = $related->clientCatalogAssignedSku();
-                        @endphp
-                        <div class="product-card @if($relLabel === 'Agotado') product-card--out-of-stock @endif">
-                            <div class="product-image">
-                                <a class="product-image__link" href="{{ $related->clientProductUrl() }}"
-                                   aria-label="Ver producto: {{ $related->name }}">
-                                    @php $cardImg = \App\Support\ProductImageUrls::cardPicture($related); @endphp
-                                    @include('client.parts.responsive-picture', [
-                                        'desktopWebp' => $cardImg['desktopWebp'],
-                                        'mobileWebp' => $cardImg['mobileWebp'],
-                                        'fallback' => $cardImg['fallback'],
-                                        'alt' => $related->name,
-                                        'loading' => 'lazy',
-                                        'sizes' => '(max-width: 767px) 45vw, 240px',
-                                    ])
-                                </a>
-                            </div>
-                            <div class="product-info">
-                                <div class="product-category">{{ $related->category->name ?? 'Uncategorized' }}</div>
-                                <h3 class="product-name">
-                                    <a href="{{ $related->clientProductUrl() }}">
-                                        {{ $related->name }}
-                                    </a>
-                                </h3>
-                                @php $relRs = $productReviewStats[(int) $related->product_id] ?? null; @endphp
-                                @include('client.parts.product-stars-inline', [
-                                    'avgStars' => (float) data_get($relRs, 'avg', 0),
-                                    'reviewCount' => (int) data_get($relRs, 'count', 0),
-                                    'variant' => 'related',
-                                ])
-                                @if($relSku)
-                                    <p class="product-card-sku">SKU: {{ $relSku }}</p>
-                                @endif
-                                <p @class([
-                                    'product-availability-text',
-                                    'product-stock-badge',
-                                    'is-available' => $relLabel === 'En stock',
-                                    'is-low' => $relLabel === 'Últimas unidades',
-                                    'is-out' => $relLabel === 'Agotado',
-                                    'is-na' => $relLabel === 'No disponible',
-                                ])>{{ $relLabel }}</p>
-                                @if($relCanBuy)
-                                    <p class="product-stock-qty">{{ number_format((int) ($related->stock_current ?? 0), 0, ',', '.') }} unidades disponibles</p>
-                                @endif
-                                <div class="product-footer">
-                                    <div class="product-price">₡{{ number_format($related->sale_price, 0, ',', '.') }}</div>
-                                    <div class="product-actions">
-                                        <a href="{{ $related->clientProductUrl() }}" class="btn-product btn-ver-detalles">
-                                            <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                                            Ver detalles
-                                        </a>
-                                        @if($relCanBuy)
-                                            @auth('clients')
-                                                <button type="button" class="btn-product btn-agregar add-to-cart-btn"
-                                                        data-purchasable="1"
-                                                        data-product-id="{{ $related->product_id }}"
-                                                        data-product-name="{{ $related->name }}"
-                                                        data-product-price="{{ $related->sale_price }}"
-                                                        data-product-stock="{{ $related->stock_current }}">
-                                                    <i class="fas fa-cart-plus" aria-hidden="true"></i>
-                                                    Agregar
-                                                </button>
-                                            @else
-                                                <button type="button" class="btn-product btn-agregar guest-add-btn"
-                                                        data-purchasable="1"
-                                                        data-product-stock="{{ $related->stock_current }}">
-                                                    <i class="fas fa-cart-plus" aria-hidden="true"></i>
-                                                    Agregar
-                                                </button>
-                                            @endauth
-                                        @else
-                                            <button type="button" class="btn-product btn-agotado" disabled>
-                                                <i class="fas fa-ban" aria-hidden="true"></i>
-                                                {{ $relLabel === 'Agotado' ? 'Agotado' : 'No disponible' }}
-                                            </button>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </section>
-        @endif
+            </div>
+        </div>
     </div>
 </div>
 @endsection
 
 @push('scripts')
+    @auth('clients')
+        @php
+            $favoriteToggleUrl = \Illuminate\Support\Facades\Route::has('clients.favorites.toggle')
+                ? route('clients.favorites.toggle')
+                : url('/favorites/toggle');
+        @endphp
+        <script>
+            window.catalogFavoriteConfig = {
+                toggleUrl: @json($favoriteToggleUrl),
+            };
+        </script>
+    @else
+        <script>
+            window.catalogFavoriteConfig = {
+                loginUrl: @json(route('login.show')),
+            };
+        </script>
+    @endauth
     @vite(['resources/js/client/clients-product.js'])
 @endpush
