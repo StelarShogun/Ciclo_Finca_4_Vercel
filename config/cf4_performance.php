@@ -11,9 +11,9 @@ return [
     | store (file/redis). Lower values if admins need changes visible instantly.
     |
     */
-    'client_root_categories_ttl' => (int) env('CF4_CACHE_CLIENT_CATEGORIES', 600),
-    'client_brands_catalog_ttl' => (int) env('CF4_CACHE_CLIENT_BRANDS', 300),
-    'client_catalog_spotlight_ttl' => (int) env('CF4_CACHE_CLIENT_SPOTLIGHT', 120),
+    'client_root_categories_ttl' => (int) env('CF4_CACHE_CLIENT_CATEGORIES', 60),
+    'client_brands_catalog_ttl' => (int) env('CF4_CACHE_CLIENT_BRANDS', 60),
+    'client_catalog_spotlight_ttl' => (int) env('CF4_CACHE_CLIENT_SPOTLIGHT', 60),
 
     /*
     |--------------------------------------------------------------------------

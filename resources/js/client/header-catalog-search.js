@@ -59,7 +59,7 @@ export function initHeaderCatalogSearch() {
     }
 
     function syncMobileSuggestionsPosition() {
-        if (window.innerWidth > 900) {
+        if (window.innerWidth > 1024) {
             restoreListToDom();
             return;
         }

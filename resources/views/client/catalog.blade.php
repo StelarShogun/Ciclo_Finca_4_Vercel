@@ -2,6 +2,11 @@
 
 @section('title', 'Catálogo - Ciclo Finca 4')
 
+@push('meta')
+    <meta name="cf4-catalog-heartbeat-url" content="{{ route('api.catalog.heartbeat') }}">
+    <meta name="cf4-catalog-initial-version" content="{{ $catalogVersion ?? '' }}">
+@endpush
+
 @push('styles')
     @vite(['resources/css/client/clients-page.css'])
 @endpush

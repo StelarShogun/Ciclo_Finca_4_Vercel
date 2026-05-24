@@ -93,7 +93,7 @@ export function initClientHeaderMenu() {
     });
 
     window.addEventListener('resize', () => {
-        if (window.innerWidth > 900) {
+        if (window.innerWidth > 1024) {
             setHeaderMenuOpen(false);
         }
         if (typeof window.cf4SyncMobileUserDropdownPosition === 'function') {

@@ -7,7 +7,7 @@ function syncMobileUserDropdownPosition() {
     var header = document.querySelector('.cliente-header');
     var trigger = document.getElementById('user-menu-trigger');
     if (!header || !trigger) return;
-    if (window.innerWidth > 900) {
+    if (window.innerWidth > 1024) {
         header.style.removeProperty('--cf4-user-dropdown-top');
         return;
     }
