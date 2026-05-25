@@ -1,5 +1,13 @@
 /* Shared file upload zones (admin). */
 
+.cf-file-upload-field {
+  position: relative;
+}
+
+.cf-file-upload-field.is-file-selected .cf-file-upload {
+  display: none;
+}
+
 .cf-file-upload {
   display: flex;
   flex-direction: column;
@@ -62,6 +70,13 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+  pointer-events: none;
+}
+
+.cf-file-upload-field .cf-file-upload__input {
+  /* Keep the native input inside the field box (avoids overlay glitches in modals). */
+  top: 0;
+  left: 0;
 }
 
 .cf-file-upload-meta {

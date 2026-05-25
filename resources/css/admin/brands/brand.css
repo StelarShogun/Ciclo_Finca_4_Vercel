@@ -205,6 +205,10 @@
     padding: 20px;
 }
 
+.modal-overlay.active {
+    display: flex;
+}
+
 .modal-container {
     background: white;
     border-radius: 12px;

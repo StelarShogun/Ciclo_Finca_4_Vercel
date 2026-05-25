@@ -10,6 +10,10 @@ import {
     buildProductMediaPlaceholderHtml,
     productUsesPlaceholderImage,
 } from '../../shared/product-media-placeholder.js';
+import {
+    closeOtherModals,
+    setModalLoading as setModalLoadingUtil,
+} from '../shared/modal-utils.js';
 
 // Selector shortcuts
 const qs = (s, r = document) => r.querySelector(s);
@@ -626,15 +630,14 @@ function showErrorFeedback(button, message = 'Error') {
     }, 2000);
 }
 
-// Disable a modal during async operations
+/** Disable a modal during async operations (backdrop/close remain usable). */
 function setModalLoading(modal, isLoading) {
-    if (isLoading) {
-        modal.classList.add('loading');
-        modal.style.pointerEvents = 'none';
-    } else {
-        modal.classList.remove('loading');
-        modal.style.pointerEvents = 'auto';
-    }
+    setModalLoadingUtil(modal, isLoading, { blockShell: false });
+}
+
+/** Close every inventory modal except the one being opened (prevents stacked blank overlays). */
+function closeOtherInventoryModals(exceptId = null) {
+    closeOtherModals('.edit-modal', exceptId);
 }
 
 
@@ -666,6 +669,7 @@ export {
     setEditCurrentProductImage,
     setEditCurrentProductImagePreview,
     setModalLoading,
+    closeOtherInventoryModals,
     showErrorFeedback,
     showLongOperationIndicator,
     showProgressBar,

@@ -2,11 +2,20 @@
  * Styled file upload zone (label trigger + hidden input + meta preview).
  */
 
+import { escapeHtml } from '../../shared/escape-html.js';
+
 function formatFileSize(bytes) {
     if (!bytes) return '';
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return `${Math.round((bytes / 1024 ** i) * 100) / 100} ${sizes[i]}`;
+}
+
+function fileLooksLikeImage(file) {
+    if (!file) return false;
+    if (file.type?.startsWith('image/')) return true;
+
+    return /\.(jpe?g|png|gif|webp)$/i.test(file.name || '');
 }
 
 export function initFileUploadZone({
@@ -21,13 +30,24 @@ export function initFileUploadZone({
     const trigger = triggerId
         ? document.getElementById(triggerId)
         : document.querySelector(`label[for="${inputId}"]`);
+    const field = input?.closest('.cf-file-upload-field') ?? null;
 
     if (!input) return null;
+
+    function setSelectedState(selected) {
+        if (field) {
+            field.classList.toggle('is-file-selected', selected);
+        }
+        if (trigger) {
+            trigger.style.display = selected ? 'none' : '';
+        }
+    }
 
     function hideMeta() {
         if (!meta) return;
         meta.classList.add('hidden');
         meta.innerHTML = '';
+        setSelectedState(false);
     }
 
     function showMeta({ name, size, previewUrl, onRemove }) {
@@ -39,15 +59,14 @@ export function initFileUploadZone({
         meta.innerHTML = `
             ${thumb}
             <div class="cf-file-upload-meta__body">
-                <div class="cf-file-upload-meta__name">${name}</div>
-                <div class="cf-file-upload-meta__size">${size}</div>
+                <div class="cf-file-upload-meta__name">${escapeHtml(name)}</div>
+                <div class="cf-file-upload-meta__size">${escapeHtml(size)}</div>
             </div>
             <button type="button" class="cf-file-upload-meta__remove">Quitar</button>
         `;
         meta.querySelector('.cf-file-upload-meta__remove')?.addEventListener('click', () => {
             input.value = '';
             hideMeta();
-            if (trigger) trigger.style.display = '';
             if (typeof onRemove === 'function') onRemove();
             if (typeof onChange === 'function') onChange(null);
         });
@@ -57,12 +76,11 @@ export function initFileUploadZone({
         const file = fileList?.[0];
         if (!file) {
             hideMeta();
-            if (trigger) trigger.style.display = '';
             if (typeof onChange === 'function') onChange(null);
             return;
         }
 
-        if (imagePreview && file.type.startsWith('image/')) {
+        if (imagePreview && fileLooksLikeImage(file)) {
             const reader = new FileReader();
             reader.onload = () => {
                 showMeta({
@@ -70,7 +88,15 @@ export function initFileUploadZone({
                     size: formatFileSize(file.size),
                     previewUrl: reader.result,
                 });
-                if (trigger) trigger.style.display = 'none';
+                setSelectedState(true);
+                if (typeof onChange === 'function') onChange(file);
+            };
+            reader.onerror = () => {
+                showMeta({
+                    name: file.name,
+                    size: formatFileSize(file.size),
+                });
+                setSelectedState(true);
                 if (typeof onChange === 'function') onChange(file);
             };
             reader.readAsDataURL(file);
@@ -81,7 +107,7 @@ export function initFileUploadZone({
             name: file.name,
             size: formatFileSize(file.size),
         });
-        if (trigger) trigger.style.display = 'none';
+        setSelectedState(true);
         if (typeof onChange === 'function') onChange(file);
     }
 
@@ -91,7 +117,7 @@ export function initFileUploadZone({
             return;
         }
         const images = Array.from(fileList).filter((f) => f.type?.startsWith('image/'));
-        const names = images.slice(0, 5).map((f) => f.name).join(', ');
+        const names = images.slice(0, 5).map((f) => escapeHtml(f.name)).join(', ');
         const more = images.length > 5 ? ` y ${images.length - 5} más` : '';
         meta.classList.remove('hidden');
         meta.innerHTML = `
@@ -106,6 +132,7 @@ export function initFileUploadZone({
             hideMeta();
             if (typeof onChange === 'function') onChange(null);
         });
+        setSelectedState(images.length > 0);
         if (typeof onChange === 'function') onChange(images);
     }
 
@@ -153,7 +180,6 @@ export function initFileUploadZone({
         reset() {
             input.value = '';
             hideMeta();
-            if (trigger) trigger.style.display = '';
         },
         showGallerySummary,
     };

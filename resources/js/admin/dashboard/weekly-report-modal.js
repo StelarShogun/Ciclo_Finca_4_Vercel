@@ -1,3 +1,5 @@
+import { escapeHtml } from '../../shared/escape-html.js';
+
 function showCf4Toast(toast, toastIcon, toastTitle, toastMsg, type, title, msg, timerRef) {
     toast.className = `cf4-toast cf4-toast--${type}`;
     toastIcon.className = `cf4-toast__icon fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`;
@@ -95,7 +97,7 @@ export function initWeeklyReportModal() {
             <div class="wr-recipient-input-wrap">
                 <i class="fas fa-envelope wr-recipient-icon"></i>
                 <input class="wr-input wr-recipient-input" type="email" name="weekly_report_recipients[]"
-                    placeholder="correo@ejemplo.com" value="${value}" autocomplete="email">
+                    placeholder="correo@ejemplo.com" value="${escapeHtml(value)}" autocomplete="email">
             </div>
             <button type="button" class="wr-recipient-remove" aria-label="Eliminar destinatario" title="Eliminar">
                 <i class="fas fa-trash-alt"></i>
