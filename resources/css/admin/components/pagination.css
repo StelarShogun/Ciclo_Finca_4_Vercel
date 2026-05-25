@@ -79,12 +79,22 @@
   font-size: 0.72rem;
 }
 
+/* --- Fila de controles (nav + jump) — scrollable en móvil --- */
+.cf4-pagination-controls-row {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
 /* --- Navegación numérica --- */
 .cf4-pagination-toolbar .admin-pagination-nav {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.25rem;
+  flex-shrink: 0;
 }
 
 .cf4-pagination-toolbar .admin-pagination-ellipsis {
@@ -257,74 +267,93 @@
   white-space: nowrap;
 }
 
-/* Móvil catálogo: resumen arriba; controles (flechas + páginas + Ir) en una sola fila */
-@media (max-width: 640px) {
+/* Mobile + tablet: results-info above, controls row scrolls inside the card */
+@media (max-width: 1024px) {
   .catalog-shell .cf4-pagination-toolbar.pagination {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
     margin: 1rem 0;
-    padding: 0.55rem 0.6rem;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
+    padding: 0.6rem 0.75rem;
+    /* clip overflow so the card never widens the page */
+    overflow: hidden;
   }
 
   .catalog-shell .cf4-pagination-toolbar .results-info {
-    flex: 1 0 100%;
     width: 100%;
     justify-content: center;
     text-align: center;
-    font-size: 0.72rem;
-    padding: 0.4rem 0.55rem;
   }
 
-  .catalog-shell .cf4-pagination-toolbar .admin-pagination-per-page-form,
-  .catalog-shell .cf4-pagination-toolbar .admin-pagination-per-page-form--static {
-    flex: 1 0 100%;
-    justify-content: center;
-  }
-
-  .catalog-shell .cf4-pagination-toolbar .admin-pagination-nav,
-  .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump {
-    flex: 0 0 auto;
-    display: inline-flex;
+  /*
+   * The controls row (nav buttons + jump) scrolls horizontally INSIDE the
+   * clipped card. The page itself never gets a horizontal scrollbar.
+   *
+   * IMPORTANT: do NOT use justify-content:center here. When combined with
+   * overflow-x:auto the browser positions content symmetrically so the
+   * left overflow is unreachable by scrolling — page-1 button disappears.
+   * Instead we use flex-start + auto margins on the inner nav to center it
+   * when it fits, while keeping the scroll origin at the left edge.
+   */
+  .catalog-shell .cf4-pagination-toolbar .cf4-pagination-controls-row {
+    display: flex;
+    flex-wrap: nowrap;
     align-items: center;
-    width: auto;
-    max-width: none;
+    justify-content: flex-start;
+    gap: 0.3rem;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    /* Center the nav within the row when it is shorter than the container */
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .catalog-shell .cf4-pagination-toolbar .cf4-pagination-controls-row::-webkit-scrollbar {
+    display: none;
   }
 
   .catalog-shell .cf4-pagination-toolbar .admin-pagination-nav {
+    display: inline-flex;
     flex-wrap: nowrap;
-    gap: 0.28rem;
-  }
-
-  .catalog-shell .cf4-pagination-toolbar .admin-pagination-nav .button {
     flex-shrink: 0;
-    min-width: 2rem;
-    height: 2rem;
-    padding: 0.3rem 0.45rem;
-    font-size: 0.68rem;
+    gap: 0.25rem;
+    /* Push the nav to the center of the row when it is narrower than the
+       available space; has no effect when the row overflows (scroll mode). */
+    margin: 0 auto;
   }
 
   .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump {
-    gap: 0.28rem;
+    flex-shrink: 0;
+    gap: 0.25rem;
+    /* Keep the jump input anchored right when the row is wide enough */
+    margin-left: 0.25rem;
+  }
+}
+
+/* Extra-small phones: shrink buttons slightly to fit more without scrolling */
+@media (max-width: 400px) {
+  .catalog-shell .cf4-pagination-toolbar .admin-pagination-nav .button {
+    min-width: 1.9rem;
+    height: 1.9rem;
+    padding: 0.2rem 0.35rem;
+    font-size: 0.65rem;
   }
 
   .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump input[type="number"] {
-    width: 2.35rem;
-    height: 2rem;
-    font-size: 0.68rem;
+    width: 2.2rem;
+    height: 1.9rem;
+    font-size: 0.65rem;
   }
 
   .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump .go-button,
   .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump .pagination-go-button {
-    height: 2rem;
-    min-width: 2.35rem;
-    padding: 0.3rem 0.5rem;
-    font-size: 0.68rem;
+    height: 1.9rem;
+    min-width: 2.1rem;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.65rem;
   }
 }
 
