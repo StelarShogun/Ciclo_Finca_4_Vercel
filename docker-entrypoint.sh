@@ -17,6 +17,25 @@ mkdir -p bootstrap/cache
 # but teams often set MYSQL_ATTR_SSL_CA=/etc/secrets/ca.pem even when the file is not present at that path.
 # Copy a usable CA bundle into storage (writable) and default MYSQL_ATTR_SSL_CA if unset.
 if [ -n "${RENDER:-}" ]; then
+    # Render exposes RENDER_EXTERNAL_URL automatically for web services.
+    # Use it as a reliable APP_URL fallback so email templates never show http://localhost.
+    if [ -n "${RENDER_EXTERNAL_URL:-}" ]; then
+        if [ -z "${APP_URL:-}" ] || [ "${APP_URL:-}" = "http://localhost" ]; then
+            export APP_URL="${RENDER_EXTERNAL_URL}"
+            echo ">>> Render: APP_URL no estaba definido o era localhost; usando RENDER_EXTERNAL_URL=${APP_URL}"
+        fi
+        # Keep FRONTEND_URL in sync so mail templates that read config('app.frontend_url') also get the correct URL.
+        if [ -z "${FRONTEND_URL:-}" ] || [ "${FRONTEND_URL:-}" = "http://localhost" ]; then
+            export FRONTEND_URL="${APP_URL}"
+        fi
+    else
+        if [ -z "${APP_URL:-}" ] || [ "${APP_URL:-}" = "http://localhost" ]; then
+            echo ">>> ADVERTENCIA: APP_URL no está definido en las variables de entorno de Render."
+            echo ">>>   Los correos mostrarán http://localhost en los enlaces."
+            echo ">>>   Agrega APP_URL=https://ciclo-finca-4-app-4ccw.onrender.com en el Dashboard de Render."
+        fi
+    fi
+
     mkdir -p storage/certs
     if [ -f /etc/secrets/ca.pem ]; then
         cp -f /etc/secrets/ca.pem storage/certs/ca.pem
@@ -72,6 +91,14 @@ else
     fi
 fi
 
+# Run pending migrations automatically on every deploy.
+# This is a no-op when schema is already up to date and safely handles the
+# jobs/failed_jobs tables required by QUEUE_CONNECTION=database.
+if [ -n "${RENDER:-}" ] || [ "${APP_ENV:-}" = "production" ]; then
+    echo ">>> Ejecutando migraciones pendientes…"
+    php artisan migrate --force 2>&1 | tail -30 || echo ">>> ADVERTENCIA: migrate devolvió un error; revisa los logs."
+fi
+
 # Laravel cache
 php artisan config:clear
 php artisan view:clear
@@ -97,5 +124,28 @@ chown www-data:www-data storage/logs/scheduler.log
 ) &
 
 echo ">>> Scheduler loop iniciado (schedule:run cada 60s)"
+
+# Queue worker — processes DB-queued jobs (email notifications, etc.) in the background.
+# This prevents SMTP calls from blocking HTTP responses (which caused ~15 s delays on Render).
+# The worker restarts automatically on exit so transient failures don't leave the queue stalled.
+touch storage/logs/queue-worker.log
+chown www-data:www-data storage/logs/queue-worker.log
+(
+  su -s /bin/bash www-data -c '
+    cd /var/www/html
+    while true; do
+      php artisan queue:work \
+        --sleep=3 \
+        --tries=3 \
+        --max-time=3600 \
+        --no-interaction \
+        >> storage/logs/queue-worker.log 2>&1
+      echo "[queue-worker] Reiniciando worker tras salida inesperada..." >> storage/logs/queue-worker.log
+      sleep 5
+    done
+  '
+) &
+
+echo ">>> Queue worker iniciado en background (QUEUE_CONNECTION=${QUEUE_CONNECTION:-database})"
 echo ">>> Iniciando Apache..."
 exec apache2-foreground
