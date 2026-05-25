@@ -167,7 +167,10 @@
                     </div>
 
                     <div class="cf4-summary-actions cf4-invoices-td-actions">
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-cf4-confirm-print>
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                data-cf4-confirm-print
+                                data-print-url="{{ route('clients.invoices.print', $sale) }}">
                             <i class="fas fa-print" aria-hidden="true"></i> Imprimir comprobante
                         </button>
                         <a href="{{ $backUrl }}" class="btn btn-outline-primary btn-sm">

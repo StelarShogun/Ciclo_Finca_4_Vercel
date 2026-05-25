@@ -1,6 +1,8 @@
 /** Lazy SweetAlert2 — avoid loading on pages that never open a dialog. */
 
-export { escapeHtml } from '../shared/escape-html.js';
+import { escapeHtml } from '../shared/escape-html.js';
+
+export { escapeHtml };
 
 let swalModulePromise = null;
 
@@ -148,6 +150,57 @@ export async function cf4Toast({
     });
 }
 
+/** Floating toast for order status updates — ~5s, readable, with optional action link. */
+export async function cf4OrderStatusToast({
+    title = '¡Listo para recoger!',
+    message = '',
+    actionUrl = '',
+    actionLabel = '',
+    timer = 5000,
+    kind = 'ready_to_pickup',
+} = {}) {
+    const Swal = await getSwal();
+
+    const iconColors = {
+        ready_to_pickup: '#235347',
+        completed: '#235347',
+        cancelled: '#c0392b',
+    };
+    const borderColor = iconColors[kind] ?? '#235347';
+
+    const actionHtml = actionUrl
+        ? `<a href="${actionUrl}" class="cf4-order-status-toast-action">${escapeHtml(actionLabel || 'Ver pedido')}</a>`
+        : '';
+    const bodyHtml = (message || actionHtml)
+        ? `<div class="cf4-order-status-toast-content">`
+          + (message ? `<p class="cf4-order-status-toast-body">${escapeHtml(message)}</p>` : '')
+          + actionHtml
+          + `</div>`
+        : '';
+
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top',
+        showConfirmButton: false,
+        timer,
+        timerProgressBar: true,
+        showCloseButton: true,
+        didOpen(popup) {
+            popup.style.setProperty('border-left-color', borderColor, 'important');
+            popup.addEventListener('mouseenter', Swal.stopTimer);
+            popup.addEventListener('mouseleave', Swal.resumeTimer);
+        },
+        customClass: {
+            popup: 'cf4-swal-toast cf4-order-status-toast-popup',
+            htmlContainer: 'cf4-order-status-toast-html',
+            title: 'cf4-order-status-toast-title',
+            timerProgressBar: 'cf4-order-status-toast-progress',
+        },
+    });
+
+    return Toast.fire({ icon: false, title, html: bodyHtml });
+}
+
 /** Persistent success dialog — user must tap Entendido (e.g. post-checkout). */
 export async function cf4CheckoutSuccessDialog({
     title = '¡Pedido confirmado!',
@@ -155,12 +208,15 @@ export async function cf4CheckoutSuccessDialog({
     confirmButtonText = 'Entendido',
 } = {}) {
     const Swal = await getSwal();
+    const bodyHtml = text
+        ? `<p class="cf4-swal-checkout-body">${escapeHtml(text)}</p>`
+        : '';
 
     return Swal.fire({
         ...cf4DialogDefaults(),
         icon: 'success',
         title,
-        text,
+        html: bodyHtml,
         showCancelButton: false,
         showConfirmButton: true,
         confirmButtonText,
@@ -168,7 +224,32 @@ export async function cf4CheckoutSuccessDialog({
         allowEscapeKey: true,
         customClass: {
             ...cf4SwalClasses,
+            popup: 'cf4-swal-popup cf4-swal-popup--checkout-success',
             confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
+        },
+        didOpen(popup) {
+            const actions = popup.querySelector('.swal2-actions');
+            if (actions) {
+                actions.style.setProperty('display', 'flex', 'important');
+                actions.style.setProperty('justify-content', 'center', 'important');
+                actions.style.setProperty('align-items', 'center', 'important');
+                actions.style.setProperty('width', '100%', 'important');
+                actions.style.setProperty('flex-wrap', 'nowrap', 'important');
+            }
+
+            const btn = popup.querySelector('.swal2-confirm');
+            if (btn) {
+                btn.style.setProperty('width', 'auto', 'important');
+                btn.style.setProperty('min-width', '10rem', 'important');
+                btn.style.setProperty('margin-left', 'auto', 'important');
+                btn.style.setProperty('margin-right', 'auto', 'important');
+                btn.style.setProperty('flex', '0 0 auto', 'important');
+            }
+
+            const htmlContainer = popup.querySelector('.swal2-html-container');
+            if (htmlContainer) {
+                htmlContainer.style.setProperty('text-align', 'justify', 'important');
+            }
         },
     });
 }

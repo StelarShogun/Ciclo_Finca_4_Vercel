@@ -4,9 +4,13 @@
  * - Cart badge from DOM (cheap, prevents badge flicker)
  * - Guest "must sign in" cart message (tiny click handler)
  *
- * Everything else (catalog search trending fetch, favorites click delegation,
- * authenticated user menu binds on DOMContentLoaded; favorites drawer / invoice
- * heartbeat stay deferred where applicable so they never block FCP/LCP.
+ * Everything else is deferred to idle so it never blocks FCP/LCP.
+ *
+ * Single polling loop: clients-notification-toasts.js handles BOTH toast
+ * notifications AND invoice/history badge updates (the notifications heartbeat
+ * endpoint returns all of that data). The old clients-invoice-heartbeat.js
+ * is kept for pages that explicitly need it (e.g. invoice-detail without auth
+ * header), but the header no longer starts it — one loop, one interval.
  */
 import {
     initCartBadgeFromDom,
@@ -47,9 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
         import('./clients-header-auth.js').then((m) => m.initClientHeaderAuth());
     }
 
-    if (document.querySelector('meta[name="cf4-invoice-heartbeat-url"]')) {
+    // Single unified polling loop: handles toasts, notification badge,
+    // invoice count badge and unseen-history badge — all at the same interval.
+    if (document.querySelector('meta[name="cf4-notifications-heartbeat-url"]')) {
         onIdle(() => {
-            import('./clients-invoice-heartbeat.js').then((m) => m.startInvoiceHeartbeat());
+            import('./clients-notification-toasts.js').then((m) => m.startNotificationToasts());
         });
     }
 });

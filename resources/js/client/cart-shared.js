@@ -17,8 +17,6 @@ export function updateCartCount(count) {
     const cartLinkEl = document.getElementById('cart-link');
     const mobileCountEl = document.getElementById('header-mobile-cart-count');
     const mobileLinkEl = document.getElementById('header-mobile-cart-link');
-    const fabEl = document.getElementById('cf4-mobile-cart-fab');
-    const fabCountEl = document.getElementById('cf4-mobile-cart-fab-count');
 
     if (cartCountEl) {
         cartCountEl.textContent = count;
@@ -36,16 +34,6 @@ export function updateCartCount(count) {
         mobileLinkEl.setAttribute(
             'aria-label',
             count > 0 ? `Ver carrito (${count} productos)` : 'Ver carrito',
-        );
-    }
-    if (fabCountEl) {
-        fabCountEl.textContent = String(count);
-    }
-    if (fabEl) {
-        fabEl.classList.toggle('is-visible', count > 0);
-        fabEl.setAttribute(
-            'aria-label',
-            count > 0 ? `Ir al carrito (${count} productos)` : 'Ir al carrito',
         );
     }
 

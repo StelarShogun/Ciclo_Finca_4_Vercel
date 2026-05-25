@@ -10,6 +10,9 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Notifications\OrderCancelledNotification;
+use App\Notifications\OrderCompletedNotification;
+use App\Notifications\OrderReadyToPickupNotification;
 use App\Services\CartService;
 use App\Services\Catalog\CatalogProductSearchTelemetry;
 use App\Services\InventoryMovementService;
@@ -1143,6 +1146,56 @@ class ClientPageController extends Controller
         ]);
     }
 
+    public function notificationsHeartbeat()
+    {
+        /** @var Client $client */
+        $client = Auth::guard('clients')->user();
+        $clientId = (int) $client->user_id;
+
+        $typeMap = [
+            OrderReadyToPickupNotification::class => [
+                'kind'  => 'ready_to_pickup',
+                'title' => '¡Listo para recoger!',
+            ],
+            OrderCompletedNotification::class => [
+                'kind'  => 'completed',
+                'title' => '¡Pedido confirmado!',
+            ],
+            OrderCancelledNotification::class => [
+                'kind'  => 'cancelled',
+                'title' => 'Pedido cancelado',
+            ],
+        ];
+
+        $toasts = $client->unreadNotifications()
+            ->whereIn('type', array_keys($typeMap))
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(static function ($notification) use ($typeMap) {
+                $data = is_array($notification->data) ? $notification->data : [];
+                $meta = $typeMap[$notification->type] ?? ['kind' => 'info', 'title' => 'Notificación'];
+
+                return [
+                    'id'           => (string) $notification->id,
+                    'kind'         => $meta['kind'],
+                    'title'        => $meta['title'],
+                    'message'      => (string) ($data['message'] ?? ''),
+                    'action_url'   => (string) ($data['action_url'] ?? route('clients.invoices', [], false)),
+                    'action_label' => (string) ($data['action_label'] ?? 'Ver facturas'),
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'unread_count'   => $client->unreadNotifications()->count(),
+            'invoice_count'  => Sale::countActiveClientInvoices($clientId),
+            'unseen_history' => Sale::countUnseenInClientHistory($clientId),
+            'revision'       => Sale::clientInvoicesRevision($clientId),
+            'toasts'         => $toasts,
+        ]);
+    }
+
     public function notifications(Request $request)
     {
         /** @var Client $client */
@@ -1174,6 +1227,19 @@ class ClientPageController extends Controller
         $invoiceCount = Sale::countActiveClientInvoices((int) $client->user_id);
 
         return view('client.invoice-detail', compact('sale', 'cartCount', 'invoiceCount'));
+    }
+
+    public function printInvoice(Sale $sale)
+    {
+        $client = Auth::guard('clients')->user();
+
+        if ((int) $sale->client_id !== (int) $client->user_id) {
+            abort(404);
+        }
+
+        $sale->load(['saleItems.product', 'client', 'sellerAdmin']);
+
+        return view('client.invoice-print', compact('sale'));
     }
 
     private function getCartTotal(): float

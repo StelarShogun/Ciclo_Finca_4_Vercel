@@ -608,3 +608,43 @@
         min-width: 100%;
     }
 }
+
+@media print {
+    .cliente-header,
+    .cliente-footer,
+    .swal2-container,
+    .cf4-invoices-header,
+    .breadcrumb,
+    .cf4-mobile-back-nav,
+    .cf4-detail-status-banner,
+    .cf4-ready-pickup-banner,
+    .cf4-pickup-policy,
+    .cf4-detail-cancel-reason,
+    .cf4-detail-stack,
+    .cf4-detail-invoice-doc .cf4-detail-section-head {
+        display: none !important;
+    }
+
+    body.cliente-layout,
+    .cliente-main,
+    .cf4-invoice-detail-page,
+    .cf4-invoices-wrapper,
+    .cf4-detail-invoice-doc,
+    .cf4-invoice-document-wrap {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    .invoice-doc,
+    .invoice-doc__sheet {
+        display: block !important;
+        visibility: visible !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+    }
+}

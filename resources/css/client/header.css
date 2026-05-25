@@ -581,6 +581,11 @@
 .cart-btn:hover { background: var(--color-primary-dark); }
 .cart-btn-link  { text-decoration: none; }
 
+/* Compact cart icon in mobile header (desktop: hidden; ≤1024px: shown beside menu) */
+.header-mobile-cart-btn {
+  display: none;
+}
+
 .cart-count {
   background: var(--color-accent);
   color: white;
@@ -1220,17 +1225,81 @@ button.user-dropdown-item {
 
   .header-menu-toggle {
     display: inline-flex;
-    order: 2;
+    order: 3;
     flex-shrink: 0;
-    margin-left: auto;
+    margin-left: 0.45rem;
     z-index: 3;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0;
+    border-radius: 12px;
+    border: 2px solid rgba(218, 241, 222, 0.45);
+    background: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(35, 83, 71, 0.28);
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .header-menu-toggle:hover {
+    border-color: rgba(218, 241, 222, 0.65);
+    background: var(--color-primary-dark);
+    color: #fff;
+  }
+
+  .header-menu-toggle:active {
+    transform: scale(0.97);
+  }
+
+  .header-mobile-cart-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    order: 2;
+    margin-left: auto;
+    position: relative;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0;
+    border-radius: 12px;
+    border: 2px solid rgba(218, 241, 222, 0.45);
+    background: var(--color-primary);
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(35, 83, 71, 0.28);
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .header-mobile-cart-btn:hover {
+    border-color: rgba(218, 241, 222, 0.65);
+    background: var(--color-primary-dark);
+    color: #fff;
+  }
+
+  .header-mobile-cart-btn:active {
+    transform: scale(0.97);
+  }
+
+  .header-mobile-cart-btn .cart-count {
+    top: -4px;
+    right: -4px;
+    min-width: 22px;
+    width: auto;
+    padding: 0 0.25rem;
+    border: 2px solid var(--brand-dark);
   }
 
   .logo-section {
     order: 1;
     flex: 1 1 auto;
     min-width: 0;
-    max-width: calc(100% - 52px);
+    max-width: calc(100% - 7.5rem);
   }
 
   .logo-link { gap: 10px; }

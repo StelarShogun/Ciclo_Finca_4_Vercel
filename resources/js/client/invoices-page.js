@@ -59,6 +59,17 @@ function initInvoicesTabDropdown() {
     });
 }
 
+function initInvoiceAutoPrint() {
+    const meta = document.querySelector('meta[name="cf4-auto-print"]');
+    if (!meta || meta.content !== '1') {
+        return;
+    }
+
+    window.addEventListener('load', () => {
+        window.setTimeout(() => window.print(), 400);
+    }, { once: true });
+}
+
 function initInvoiceConfirmHandlers() {
     document.addEventListener('click', async (e) => {
         const printLink = e.target.closest('[data-cf4-confirm-print]');
@@ -75,11 +86,18 @@ function initInvoiceConfirmHandlers() {
 
             if (!result.isConfirmed) return;
 
+            const printUrl = printLink.getAttribute('data-print-url');
+            if (printUrl) {
+                window.open(printUrl, '_blank', 'noopener,noreferrer');
+                return;
+            }
+
             if (printLink.tagName === 'A') {
                 window.location.href = printLink.href;
-            } else {
-                window.print();
+                return;
             }
+
+            window.setTimeout(() => window.print(), 350);
 
             return;
         }
@@ -107,8 +125,10 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         initInvoicesTabDropdown();
         initInvoiceConfirmHandlers();
+        initInvoiceAutoPrint();
     }, { once: true });
 } else {
     initInvoicesTabDropdown();
     initInvoiceConfirmHandlers();
+    initInvoiceAutoPrint();
 }

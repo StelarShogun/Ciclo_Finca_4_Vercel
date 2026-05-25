@@ -190,9 +190,9 @@
                                     <span class="user-avatar-bubble">
                                         {{ strtoupper(substr(Auth::guard('clients')->user()->name, 0, 1)) }}{{ strtoupper(substr(Auth::guard('clients')->user()->first_surname, 0, 1)) }}
                                     </span>
-                                    @if($unreadNotificationCount > 0)
-                                        <span class="cf4-invoice-count user-menu-trigger-notification-badge" id="nav-notification-badge">{{ $notificationBadgeLabel }}</span>
-                                    @endif
+                                    <span class="cf4-invoice-count user-menu-trigger-notification-badge"
+                                          id="nav-notification-badge"
+                                          style="{{ $unreadNotificationCount > 0 ? '' : 'display:none' }}">{{ $notificationBadgeLabel ?: '0' }}</span>
                                 </span>
                                 <span class="user-trigger-name">
                                     {{ Auth::guard('clients')->user()->name }}
@@ -222,9 +222,8 @@
                                         role="menuitem">
                                         <i class="fas fa-bell"></i>
                                         <span>Notificaciones</span>
-                                        @if($unreadNotificationCount > 0)
-                                            <span class="cf4-nav-badge cf4-nav-badge--inline">{{ $notificationBadgeLabel }}</span>
-                                        @endif
+                                        <span class="cf4-nav-badge cf4-nav-badge--inline"
+                                              style="{{ $unreadNotificationCount > 0 ? '' : 'display:none' }}">{{ $notificationBadgeLabel ?: '0' }}</span>
                                     </a>
                                     <a href="{{ route('clients.profile') }}"
                                         class="user-dropdown-item {{ request()->routeIs('clients.profile') ? 'active' : '' }}"
@@ -384,9 +383,10 @@
     <meta name="cf4-header-alert-notifications" content="0">
 @endif
 
-{{-- Invoice heartbeat: badge updates on catalog + invoices + cart + profile. --}}
+{{-- Invoice + notification heartbeats: badge + toast polling on all auth pages. --}}
 @auth('clients')
-@if(request()->routeIs('clients.invoices*', 'clients.profile', 'clients.cart', 'clients.catalog'))
+@if(! session('admin_catalog_mode'))
+<meta name="cf4-notifications-heartbeat-url" content="{{ route('clients.notifications.heartbeat') }}">
 <meta name="cf4-invoice-heartbeat-url" content="{{ route('clients.invoices.heartbeat') }}">
 <meta name="cf4-invoice-initial-count" content="{{ $activeInvoiceCount ?? \App\Models\Sale::countActiveClientInvoices((int) auth('clients')->user()->user_id) }}">
 <meta name="cf4-unseen-history-initial-count" content="{{ $unseenHistoryCount ?? \App\Models\Sale::countUnseenInClientHistory((int) auth('clients')->user()->user_id) }}">
@@ -395,16 +395,5 @@
 
 {{-- Ventana para retiro tras "listo para recoger" (copia post-checkout; respeta AppSetting / READY_TO_PICKUP_EXPIRATION_HOURS). --}}
 <meta name="cf4-ready-to-pickup-expiration-hours" content="{{ \App\Models\Sale::getReadyToPickupExpirationHours() }}">
-
-@if(! session('admin_catalog_mode'))
-    <a href="{{ route('clients.cart') }}"
-       id="cf4-mobile-cart-fab"
-       class="cf4-mobile-cart-fab @if(($cartCount ?? 0) > 0) is-visible @endif"
-       aria-label="Ir al carrito{{ ($cartCount ?? 0) > 0 ? ' ('.$cartCount.' productos)' : '' }}">
-        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
-        <span>Carrito</span>
-        <span class="cf4-mobile-cart-fab__count" id="cf4-mobile-cart-fab-count">{{ $cartCount ?? 0 }}</span>
-    </a>
-@endif
 
 @vite('resources/js/client/clients-header.js')

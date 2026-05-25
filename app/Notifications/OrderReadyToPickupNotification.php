@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Sale;
+use App\Support\ClientPickupPolicy;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -44,8 +45,9 @@ class OrderReadyToPickupNotification extends Notification
             'sale_id' => $this->sale->sale_id,
             'invoice_number' => $this->sale->invoice_number,
             'message' => sprintf(
-                'Tu pedido %s está listo para recoger en tienda. Revísalo en Facturas.',
-                $invoiceLabel
+                'Tu pedido %s ya está listo para recoger en tienda. %s',
+                $invoiceLabel,
+                ClientPickupPolicy::summaryLine(),
             ),
             'action_url' => $this->actionUrlRelative(),
             'action_label' => $this->actionLabel(),

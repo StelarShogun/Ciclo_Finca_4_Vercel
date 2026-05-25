@@ -172,7 +172,7 @@
             <span>Mis Facturas</span>
         </nav>
 
-        @if(($readyToPickupCount ?? 0) > 0)
+        @if(($readyToPickupCount ?? 0) > 0 && $tab === 'facturas')
             <div class="cf4-ready-pickup-banner" role="status" aria-live="polite">
                 <div class="cf4-ready-pickup-banner__icon" aria-hidden="true">
                     <i class="fas fa-box-open"></i>

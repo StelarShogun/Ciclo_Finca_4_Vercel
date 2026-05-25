@@ -76,8 +76,124 @@
     color: #0f172a !important;
 }
 
+/*
+ * Container que SweetAlert2 crea para position='top'.
+ * Solo nuestros toasts de estado usan esta posición; los diálogos usan 'center'.
+ */
+.swal2-container.swal2-top {
+    padding: calc(env(safe-area-inset-top, 0px) + 0.65rem) 0.75rem 0.75rem !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+}
+
+/* Popup del toast — ancho 100% del espacio interior del contenedor */
+.cf4-order-status-toast-popup.swal2-toast {
+    width: min(22rem, 100%) !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0.9rem 2.5rem 0.85rem 1rem !important;   /* derecha amplia pa el botón × */
+    border-left: 4px solid var(--brand-medium, #235347) !important;
+    align-items: flex-start !important;
+    overflow: hidden !important;
+}
+
+.cf4-order-status-toast-popup .cf4-order-status-toast-html {
+    margin: 0.3rem 0 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.cf4-order-status-toast-popup .cf4-order-status-toast-title {
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    color: var(--brand-darkest, #051F20) !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+    text-align: left !important;
+}
+
+.cf4-order-status-toast-body {
+    margin: 0;
+    font-size: 0.82rem !important;
+    line-height: 1.5 !important;
+    color: #4b5563 !important;
+    text-align: left !important;
+    white-space: normal !important;
+}
+
+.cf4-order-status-toast-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.cf4-order-status-toast-action {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--brand-medium, #235347);
+    text-decoration: none;
+    padding: 0.2rem 0;
+    border-bottom: 1.5px solid currentColor;
+    line-height: 1.3;
+    transition: opacity 0.15s ease;
+}
+
+.cf4-order-status-toast-action:hover {
+    opacity: 0.7;
+}
+
+.cf4-order-status-toast-popup .cf4-order-status-toast-progress {
+    background: var(--brand-medium, #235347) !important;
+}
+
+/* Botón cerrar bien posicionado */
+.cf4-order-status-toast-popup .swal2-close {
+    position: absolute !important;
+    inset: 0.5rem 0.5rem auto auto !important;
+    width: 1.6rem !important;
+    height: 1.6rem !important;
+    font-size: 1.15rem !important;
+    line-height: 1.6rem !important;
+    color: #6b7280 !important;
+}
+
 .cf4-swal-loader {
     border-color: var(--brand-medium, #235347) transparent var(--brand-medium, #235347) transparent !important;
+}
+
+/* Post-checkout success: justified copy + centered primary action */
+.cf4-swal-popup--checkout-success .cf4-swal-checkout-body,
+.cf4-swal-popup--checkout-success .cf4-swal-html,
+.cf4-swal-popup--checkout-success .swal2-html-container {
+    margin: 0 !important;
+    width: 100% !important;
+    text-align: justify !important;
+    text-align-last: left;
+    hyphens: auto;
+}
+
+.cf4-swal-popup--checkout-success .cf4-swal-actions,
+.cf4-swal-popup--checkout-success .swal2-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.cf4-swal-popup--checkout-success .cf4-swal-btn,
+.cf4-swal-popup--checkout-success .swal2-confirm {
+    width: auto !important;
+    min-width: 9.5rem;
+    max-width: 100%;
+    flex: 0 0 auto !important;
+    margin-inline: auto !important;
 }
 
 @media (max-width: 640px) {
@@ -103,7 +219,7 @@
         line-height: 1.45 !important;
     }
 
-    .cf4-swal-actions {
+    .cf4-swal-popup:not(.cf4-swal-popup--checkout-success) .cf4-swal-actions {
         width: 100% !important;
         display: flex !important;
         flex-direction: row !important;
@@ -117,7 +233,7 @@
         grid-template-columns: 1fr 1fr !important;
     }
 
-    .cf4-swal-btn {
+    .cf4-swal-popup:not(.cf4-swal-popup--checkout-success) .cf4-swal-btn {
         width: 100% !important;
         min-height: 44px !important;
         justify-content: center !important;
@@ -125,13 +241,51 @@
         white-space: normal !important;
     }
 
-    .cf4-swal-toast {
-        width: calc(100vw - 1.5rem) !important;
-        max-width: calc(100vw - 1.5rem) !important;
-        margin: 0 auto !important;
+    .cf4-swal-popup--checkout-success .cf4-swal-actions,
+    .cf4-swal-popup--checkout-success .swal2-actions {
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    .cf4-swal-popup--checkout-success .cf4-swal-checkout-body,
+    .cf4-swal-popup--checkout-success .cf4-swal-html,
+    .cf4-swal-popup--checkout-success .swal2-html-container {
+        text-align: justify !important;
+        text-align-last: left;
+    }
+
+    .cf4-swal-popup--checkout-success .cf4-swal-btn,
+    .cf4-swal-popup--checkout-success .swal2-confirm {
+        width: auto !important;
+        min-width: 10rem;
+        max-width: 100%;
+        margin-inline: auto !important;
     }
 
     .swal2-toast-shown .swal2-container {
         align-items: flex-start !important;
+        justify-content: center !important;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    .cf4-swal-popup--checkout-success .cf4-swal-actions,
+    .cf4-swal-popup--checkout-success .swal2-actions {
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    .cf4-swal-popup--checkout-success .cf4-swal-btn,
+    .cf4-swal-popup--checkout-success .swal2-confirm {
+        width: auto !important;
+        min-width: 10rem;
+        margin-inline: auto !important;
+    }
+
+    .cf4-swal-popup--checkout-success .cf4-swal-checkout-body,
+    .cf4-swal-popup--checkout-success .cf4-swal-html,
+    .cf4-swal-popup--checkout-success .swal2-html-container {
+        text-align: justify !important;
+        text-align-last: left;
     }
 }

@@ -200,4 +200,40 @@ class ClientInvoiceDetailTest extends TestCase
             $this->cleanup($sale, $product, $client);
         }
     }
+
+    public function test_authenticated_owner_can_open_invoice_print_view(): void
+    {
+        $client = $this->createIsolatedClient('cp89-print');
+        $product = $this->createIsolatedProduct('Detalle Print');
+        [$sale] = $this->createIsolatedSale($client, $product, 'CF4-P'.substr(uniqid('', true), -5));
+
+        try {
+            $this->actingAs($client, 'clients');
+
+            $response = $this->get(route('clients.invoices.print', $sale));
+            $response->assertOk();
+            $response->assertViewIs('client.invoice-print');
+            $response->assertDontSee('cliente-header', false);
+            $response->assertDontSee('header-menu-toggle', false);
+            $response->assertSee($sale->invoice_number, false);
+            $response->assertSee('Detalle Print', false);
+            $response->assertSee('cf4-auto-print', false);
+        } finally {
+            $this->cleanup($sale, $product, $client);
+        }
+    }
+
+    public function test_guest_cannot_open_invoice_print_view(): void
+    {
+        $client = $this->createIsolatedClient('cp89-print-guest');
+        $product = $this->createIsolatedProduct('Print Guest');
+        [$sale] = $this->createIsolatedSale($client, $product);
+
+        try {
+            $response = $this->get(route('clients.invoices.print', $sale));
+            $this->assertContains($response->status(), [302, 401]);
+        } finally {
+            $this->cleanup($sale, $product, $client);
+        }
+    }
 }
