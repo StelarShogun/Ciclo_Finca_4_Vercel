@@ -56,6 +56,10 @@ class MissingProductMediaConversionServiceTest extends TestCase
         $media = $product->addMedia($path)->preservingOriginal()->toMediaCollection('main_image');
         @unlink($path);
 
+        // Conversions may run synchronously in tests; force "missing" state for the assertion.
+        $media->forceFill(['generated_conversions' => []])->save();
+        $media->refresh();
+
         $service = app(MissingProductMediaConversionService::class);
 
         $missing = $service->mediaIdsMissingConversions([(int) $media->id]);

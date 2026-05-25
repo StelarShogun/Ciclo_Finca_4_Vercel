@@ -48,9 +48,10 @@ final class ProductCatalogImporter
      */
     public function import(UploadedFile $file, ?string $extractedDir = null): array
     {
-        return CatalogImportContext::runFastImport(function () use ($file, $extractedDir) {
+        return CatalogImportContext::runFastImportStats(function () use ($file, $extractedDir) {
             $this->importedMediaIds = [];
             $this->autoCreateCategories = false;
+            /** @var array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int} $stats */
             $stats = ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => [], 'media_conversions_queued' => 0];
             $bundleDir = $extractedDir;
 

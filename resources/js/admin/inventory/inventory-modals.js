@@ -1325,7 +1325,7 @@ export async function initModals() {
                 setButtonLoading(confirmImportBtn, true, 'Importando...');
 
                 try {
-                    await cf4Loading(
+                    void cf4Loading(
                         'Importando productos…',
                         'Esto puede tardar varios minutos si el ZIP incluye muchas imágenes.',
                     );

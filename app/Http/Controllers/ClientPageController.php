@@ -1154,15 +1154,15 @@ class ClientPageController extends Controller
 
         $typeMap = [
             OrderReadyToPickupNotification::class => [
-                'kind'  => 'ready_to_pickup',
+                'kind' => 'ready_to_pickup',
                 'title' => '¡Listo para recoger!',
             ],
             OrderCompletedNotification::class => [
-                'kind'  => 'completed',
+                'kind' => 'completed',
                 'title' => '¡Pedido confirmado!',
             ],
             OrderCancelledNotification::class => [
-                'kind'  => 'cancelled',
+                'kind' => 'cancelled',
                 'title' => 'Pedido cancelado',
             ],
         ];
@@ -1177,22 +1177,22 @@ class ClientPageController extends Controller
                 $meta = $typeMap[$notification->type] ?? ['kind' => 'info', 'title' => 'Notificación'];
 
                 return [
-                    'id'           => (string) $notification->id,
-                    'kind'         => $meta['kind'],
-                    'title'        => $meta['title'],
-                    'message'      => (string) ($data['message'] ?? ''),
-                    'action_url'   => (string) ($data['action_url'] ?? route('clients.invoices', [], false)),
+                    'id' => (string) $notification->id,
+                    'kind' => $meta['kind'],
+                    'title' => $meta['title'],
+                    'message' => (string) ($data['message'] ?? ''),
+                    'action_url' => (string) ($data['action_url'] ?? route('clients.invoices', [], false)),
                     'action_label' => (string) ($data['action_label'] ?? 'Ver facturas'),
                 ];
             })
             ->values();
 
         return response()->json([
-            'unread_count'   => $client->unreadNotifications()->count(),
-            'invoice_count'  => Sale::countActiveClientInvoices($clientId),
+            'unread_count' => $client->unreadNotifications()->count(),
+            'invoice_count' => Sale::countActiveClientInvoices($clientId),
             'unseen_history' => Sale::countUnseenInClientHistory($clientId),
-            'revision'       => Sale::clientInvoicesRevision($clientId),
-            'toasts'         => $toasts,
+            'revision' => Sale::clientInvoicesRevision($clientId),
+            'toasts' => $toasts,
         ]);
     }
 

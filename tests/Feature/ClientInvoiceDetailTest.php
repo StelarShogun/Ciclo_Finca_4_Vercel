@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Enums\MovementType;
 use App\Models\Client;
+use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -174,10 +176,10 @@ class ClientInvoiceDetailTest extends TestCase
         try {
             $sale->update(['status' => 'cancelled']);
 
-            \App\Models\InventoryMovement::create([
+            InventoryMovement::create([
                 'product_id' => $product->product_id,
                 'user_id' => null,
-                'type' => \App\Enums\MovementType::CANCELADO,
+                'type' => MovementType::CANCELADO,
                 'origin' => 'cancellation',
                 'quantity' => 1,
                 'stock_before' => 10,
@@ -196,7 +198,7 @@ class ClientInvoiceDetailTest extends TestCase
             $response->assertSee('Detalle de productos', false);
             $response->assertSee('Cancelada', false);
         } finally {
-            \App\Models\InventoryMovement::where('reference_id', $sale->sale_id)->delete();
+            InventoryMovement::where('reference_id', $sale->sale_id)->delete();
             $this->cleanup($sale, $product, $client);
         }
     }

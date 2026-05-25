@@ -40,15 +40,15 @@ class OrderCancelledNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'sale_id'      => $this->sale->sale_id,
-            'reason'       => $this->reason,
+            'sale_id' => $this->sale->sale_id,
+            'reason' => $this->reason,
             'cancelled_at' => $this->cancelledAt->toIso8601String(),
-            'message'      => sprintf(
+            'message' => sprintf(
                 'Tu pedido %s fue cancelado. Motivo: %s.',
                 $this->sale->invoice_number ?? '#'.$this->sale->sale_id,
                 $this->reason
             ),
-            'action_url'   => route('clients.invoices', ['tab' => 'canceladas'], absolute: false),
+            'action_url' => route('clients.invoices', ['tab' => 'canceladas'], absolute: false),
             'action_label' => 'Ver en Canceladas',
         ];
     }

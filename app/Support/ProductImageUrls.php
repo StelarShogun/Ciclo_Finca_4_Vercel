@@ -36,7 +36,7 @@ class ProductImageUrls
             try {
                 $path = $media->getPath();
 
-                return is_string($path) && $path !== '' && is_file($path);
+                return $path !== '' && is_file($path);
             } catch (\Throwable) {
                 return false;
             }

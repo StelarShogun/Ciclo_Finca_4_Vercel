@@ -6,6 +6,8 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Notifications\OrderCancelledNotification;
+use App\Notifications\OrderCompletedNotification;
 use App\Notifications\OrderReadyToPickupNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
@@ -194,7 +196,7 @@ class ClientNotificationsMarkReadTest extends TestCase
             'quantity' => 1, 'unit_price' => 100, 'unit_discount' => 0, 'total' => 100,
         ]);
 
-        $client->notify(new \App\Notifications\OrderCompletedNotification($sale));
+        $client->notify(new OrderCompletedNotification($sale));
 
         $response = $this->actingAs($client, 'clients')->getJson(route('clients.notifications.heartbeat'));
 
@@ -239,7 +241,7 @@ class ClientNotificationsMarkReadTest extends TestCase
             'quantity' => 1, 'unit_price' => 100, 'unit_discount' => 0, 'total' => 100,
         ]);
 
-        $client->notify(new \App\Notifications\OrderCancelledNotification(
+        $client->notify(new OrderCancelledNotification(
             $sale,
             'Pedido vencido',
             now(),
