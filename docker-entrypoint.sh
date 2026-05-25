@@ -72,9 +72,22 @@ else
     fi
 fi
 
-# Laravel cache
-php artisan config:clear
-php artisan view:clear
+# Laravel cache / production bootstrap
+if [ -n "${RENDER:-}" ]; then
+    # Single-instance Render web: file cache avoids ~130ms round-trips to remote MySQL per key.
+    export CACHE_STORE="${CACHE_STORE:-file}"
+    export SESSION_DRIVER="${SESSION_DRIVER:-file}"
+
+    php artisan optimize:clear
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    php artisan event:cache
+    echo ">>> Render: Laravel caches warmed (config, routes, views, events)"
+else
+    php artisan config:clear
+    php artisan view:clear
+fi
 
 # Storage link
 php artisan storage:link --force 2>/dev/null || true

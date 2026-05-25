@@ -10,6 +10,7 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 # Node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
