@@ -413,20 +413,32 @@ function getCsrfToken() {
 }
 
 async function markReadyToPickup(saleId, label) {
-    const result = await cf4Confirm({
-        title: '¿Marcar como listo para recoger?',
-        text: `El pedido ${label} pasará a estado "Listo para recoger". El stock ya fue reservado al crear el pedido.`,
-        icon: 'question',
-        confirmButtonText: 'Sí, marcar',
-        cancelButtonText: 'Cancelar',
-    });
+    // Prevent double-submission: disable every "marcar" button for this sale
+    // so a second click while the request is in-flight does nothing.
+    const triggerBtn = document.querySelector(
+        `button[onclick*="markReadyToPickup"][onclick*="${saleId}"]`,
+    );
+    if (triggerBtn) triggerBtn.disabled = true;
 
-    if (!result.isConfirmed) return;
+    try {
+        const result = await cf4Confirm({
+            title: '¿Marcar como listo para recoger?',
+            text: `El pedido ${label} pasará a estado "Listo para recoger". El stock ya fue reservado al crear el pedido.`,
+            icon: 'question',
+            confirmButtonText: 'Sí, marcar',
+            cancelButtonText: 'Cancelar',
+        });
 
-    await doOrderAction(`/orders/${saleId}/ready-to-pickup`, {
-        method: 'PATCH',
-        successTitle: () => 'Actualizado',
-    });
+        if (!result.isConfirmed) return;
+
+        await doOrderAction(`/orders/${saleId}/ready-to-pickup`, {
+            method: 'PATCH',
+            successTitle: () => 'Actualizado',
+        });
+    } finally {
+        // Re-enable in case the user cancelled (page reloads on success/error anyway)
+        if (triggerBtn) triggerBtn.disabled = false;
+    }
 }
 
 async function doOrderAction(url, {
@@ -491,18 +503,28 @@ async function doOrderAction(url, {
 
         const message = data.message || `No se pudo completar la acción. Código: ${res.status}`;
 
+        // After any server-side error the table may be stale (e.g. another request
+        // already changed the status). Reload so the UI matches the DB.
         await cf4Error(message, 'Error');
+        window.location.reload();
     } catch (error) {
         window.clearTimeout(timeoutId);
+        window.cf4OrdersActionInProgress = false;
         await cf4Close();
 
         const isTimeout = error.name === 'AbortError';
         const title = isTimeout ? 'La acción tardó más de lo esperado' : 'Error de red';
         const message = isTimeout
-            ? 'El servidor pudo haber procesado la acción. Recargá la página para verificar el estado actual del pedido.'
+            ? 'El servidor pudo haber procesado la acción. Recargando la página para verificar…'
             : 'No se pudo conectar con el servidor. Verificá tu conexión e intentá de nuevo.';
 
-        await cf4Error(message, title);
+        if (isTimeout) {
+            // Don't wait for user to dismiss — show brief toast and reload
+            void cf4Toast({ icon: 'warning', title, text: message, timer: 3500 });
+            window.setTimeout(() => window.location.reload(), 3500);
+        } else {
+            await cf4Error(message, title);
+        }
     }
 }
 

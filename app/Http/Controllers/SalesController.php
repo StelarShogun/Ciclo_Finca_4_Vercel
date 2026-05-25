@@ -544,6 +544,20 @@ class SalesController extends Controller
         try {
             $sale = Sale::findOrFail($id);
 
+            // Idempotent: if already ready_to_pickup (e.g. a slow first request that
+            // the client retried), return success so the UI reloads correctly.
+            if ($sale->status === 'ready_to_pickup') {
+                return response()->json([
+                    'success' => true,
+                    'already_done' => true,
+                    'message' => 'El pedido ya estaba marcado como listo para recoger.',
+                    'sale' => [
+                        'sale_id' => $sale->sale_id,
+                        'status' => $sale->status,
+                    ],
+                ]);
+            }
+
             if ($sale->status !== 'pending') {
                 return response()->json([
                     'success' => false,
