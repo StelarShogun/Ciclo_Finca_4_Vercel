@@ -267,73 +267,79 @@
   white-space: nowrap;
 }
 
-/* Móvil catálogo: resumen arriba; controles (flechas + páginas + Ir) en fila scrollable */
-@media (max-width: 640px) {
+/* Mobile + tablet: results-info above, controls row scrolls inside the card */
+@media (max-width: 1024px) {
   .catalog-shell .cf4-pagination-toolbar.pagination {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 0.5rem;
     margin: 1rem 0;
-    padding: 0.6rem 0.65rem;
-    overflow: visible;
+    padding: 0.6rem 0.75rem;
+    /* clip overflow so the card never widens the page */
+    overflow: hidden;
   }
 
   .catalog-shell .cf4-pagination-toolbar .results-info {
     width: 100%;
     justify-content: center;
     text-align: center;
-    font-size: 0.72rem;
-    padding: 0.4rem 0.55rem;
   }
 
-  /* Controls row: scrolls horizontally so buttons never overflow viewport */
+  /*
+   * The controls row (nav buttons + jump) scrolls horizontally INSIDE the
+   * clipped card. The page itself never gets a horizontal scrollbar.
+   */
   .catalog-shell .cf4-pagination-toolbar .cf4-pagination-controls-row {
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
+    justify-content: center;      /* start centered; user scrolls if needed */
     gap: 0.3rem;
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;        /* Firefox */
-    padding-bottom: 2px;          /* room for focus rings */
+    scrollbar-width: none;
+    padding-bottom: 2px;
   }
   .catalog-shell .cf4-pagination-toolbar .cf4-pagination-controls-row::-webkit-scrollbar {
-    display: none;                /* Chrome/Safari */
+    display: none;
   }
 
   .catalog-shell .cf4-pagination-toolbar .admin-pagination-nav {
+    display: inline-flex;
     flex-wrap: nowrap;
     flex-shrink: 0;
     gap: 0.25rem;
-  }
-
-  .catalog-shell .cf4-pagination-toolbar .admin-pagination-nav .button {
-    flex-shrink: 0;
-    min-width: 2rem;
-    height: 2rem;
-    padding: 0.25rem 0.4rem;
-    font-size: 0.68rem;
   }
 
   .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump {
     flex-shrink: 0;
     gap: 0.25rem;
   }
+}
+
+/* Extra-small phones: shrink buttons slightly to fit more without scrolling */
+@media (max-width: 400px) {
+  .catalog-shell .cf4-pagination-toolbar .admin-pagination-nav .button {
+    min-width: 1.9rem;
+    height: 1.9rem;
+    padding: 0.2rem 0.35rem;
+    font-size: 0.65rem;
+  }
 
   .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump input[type="number"] {
-    width: 2.35rem;
-    height: 2rem;
-    font-size: 0.68rem;
+    width: 2.2rem;
+    height: 1.9rem;
+    font-size: 0.65rem;
   }
 
   .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump .go-button,
   .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump .pagination-go-button {
-    height: 2rem;
-    min-width: 2.35rem;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.68rem;
+    height: 1.9rem;
+    min-width: 2.1rem;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.65rem;
   }
 }
 
