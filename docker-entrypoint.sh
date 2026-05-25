@@ -79,7 +79,12 @@ if [ ! -f .env ]; then
     fi
 fi
 
-# Generar APP_KEY si no existe
+# Ensure APP_KEY is always set so session cookies survive container restarts.
+#
+# On Render the .env file is deleted; APP_KEY must come from the service's
+# Environment Variables. If it is missing we generate one and persist it to
+# storage/app/.app_key (survives within the running container but NOT across
+# new deploys — set APP_KEY in the Render dashboard for true persistence).
 if [ -f .env ]; then
     if ! grep -q "APP_KEY=" .env || grep -q "APP_KEY=$" .env; then
         php artisan key:generate --force
@@ -87,7 +92,28 @@ if [ -f .env ]; then
     fi
 else
     if [ -z "${APP_KEY:-}" ]; then
-        echo ">>> ADVERTENCIA: falta APP_KEY en el entorno y no existe .env; define APP_KEY en Render (o crea .env con APP_KEY)."
+        # Try to recover a previously generated key from storage (survives restarts
+        # within the same Render instance even though .env is deleted).
+        PERSISTED_KEY_FILE="storage/app/.app_key"
+        if [ -f "${PERSISTED_KEY_FILE}" ]; then
+            SAVED_KEY="$(cat "${PERSISTED_KEY_FILE}")"
+            if [ -n "${SAVED_KEY}" ]; then
+                export APP_KEY="${SAVED_KEY}"
+                echo ">>> APP_KEY recuperada desde ${PERSISTED_KEY_FILE}"
+            fi
+        fi
+
+        if [ -z "${APP_KEY:-}" ]; then
+            # No key anywhere — generate one now and save it to storage so the
+            # next hot-reload (scheduler wakeup, etc.) reuses it within this instance.
+            GENERATED=$(php -r "echo 'base64:'.base64_encode(random_bytes(32));")
+            export APP_KEY="${GENERATED}"
+            mkdir -p storage/app
+            echo "${GENERATED}" > "${PERSISTED_KEY_FILE}"
+            chmod 600 "${PERSISTED_KEY_FILE}"
+            echo ">>> ADVERTENCIA: APP_KEY no definida en Render — generada temporalmente."
+            echo ">>>   Agrega APP_KEY=${GENERATED} en el Dashboard de Render para persistir entre deploys."
+        fi
     fi
 fi
 
@@ -97,6 +123,12 @@ fi
 if [ -n "${RENDER:-}" ] || [ "${APP_ENV:-}" = "production" ]; then
     echo ">>> Ejecutando migraciones pendientes…"
     php artisan migrate --force 2>&1 | tail -30 || echo ">>> ADVERTENCIA: migrate devolvió un error; revisa los logs."
+fi
+
+# Extend session lifetime on Render so admins are not logged out during
+# container sleep/wake cycles. Only set a default when the variable is absent.
+if [ -z "${SESSION_LIFETIME:-}" ]; then
+    export SESSION_LIFETIME=10080  # 1 week in minutes
 fi
 
 # Laravel cache

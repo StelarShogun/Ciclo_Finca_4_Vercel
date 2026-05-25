@@ -289,18 +289,27 @@
   /*
    * The controls row (nav buttons + jump) scrolls horizontally INSIDE the
    * clipped card. The page itself never gets a horizontal scrollbar.
+   *
+   * IMPORTANT: do NOT use justify-content:center here. When combined with
+   * overflow-x:auto the browser positions content symmetrically so the
+   * left overflow is unreachable by scrolling — page-1 button disappears.
+   * Instead we use flex-start + auto margins on the inner nav to center it
+   * when it fits, while keeping the scroll origin at the left edge.
    */
   .catalog-shell .cf4-pagination-toolbar .cf4-pagination-controls-row {
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
-    justify-content: center;      /* start centered; user scrolls if needed */
+    justify-content: flex-start;
     gap: 0.3rem;
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     padding-bottom: 2px;
+    /* Center the nav within the row when it is shorter than the container */
+    padding-left: 0;
+    padding-right: 0;
   }
   .catalog-shell .cf4-pagination-toolbar .cf4-pagination-controls-row::-webkit-scrollbar {
     display: none;
@@ -311,11 +320,16 @@
     flex-wrap: nowrap;
     flex-shrink: 0;
     gap: 0.25rem;
+    /* Push the nav to the center of the row when it is narrower than the
+       available space; has no effect when the row overflows (scroll mode). */
+    margin: 0 auto;
   }
 
   .catalog-shell .cf4-pagination-toolbar .cf4-pagination-jump {
     flex-shrink: 0;
     gap: 0.25rem;
+    /* Keep the jump input anchored right when the row is wide enough */
+    margin-left: 0.25rem;
   }
 }
 
