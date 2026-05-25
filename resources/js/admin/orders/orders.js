@@ -439,9 +439,10 @@ async function doOrderAction(url, {
 
     window.cf4OrdersActionInProgress = true;
 
+    // 50 s — generous for cloud deployments (Render free tier + cold DB + notification)
     const timeoutId = window.setTimeout(() => {
         controller.abort();
-    }, 15000);
+    }, 50000);
 
     void cf4Loading('Procesando…', 'Espere mientras se completa la acción.');
 
@@ -496,10 +497,10 @@ async function doOrderAction(url, {
         await cf4Close();
 
         const isTimeout = error.name === 'AbortError';
-        const title = isTimeout ? 'Tiempo de espera agotado' : 'Error de red';
+        const title = isTimeout ? 'La acción tardó más de lo esperado' : 'Error de red';
         const message = isTimeout
-            ? 'El servidor tardó demasiado en responder. Revise el controlador, la ruta o la lógica del backend.'
-            : 'No se pudo conectar con el servidor.';
+            ? 'El servidor pudo haber procesado la acción. Recargá la página para verificar el estado actual del pedido.'
+            : 'No se pudo conectar con el servidor. Verificá tu conexión e intentá de nuevo.';
 
         await cf4Error(message, title);
     }
