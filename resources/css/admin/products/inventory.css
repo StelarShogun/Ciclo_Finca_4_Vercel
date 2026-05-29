@@ -373,7 +373,7 @@
   align-items: center;
   padding: 0.65rem 1rem;
   margin-bottom: 1rem;
-  background: color-mix(in srgb, var(--color-primary) 6%, white);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--background-white, white));
   border: 1px solid var(--border-color);
   border-radius: 8px;
 }
@@ -397,7 +397,7 @@
 }
 
 .view-btn {
-  background: white;
+  background: var(--background-white, #fff);
   border: 1px solid var(--border-color);
   padding: 0.4rem 0.6rem;
   border-radius: 6px;
@@ -433,7 +433,8 @@
 }
 
 .products-table.table-view tbody tr:hover {
-  background: #f8f9fa;
+  background: var(--table-row-hover-bg, #f8f9fa);
+  color: var(--text-primary);
 }
 
 .product-cell-content {
@@ -558,7 +559,7 @@
   padding: 0.75rem 1rem;
   border: 1px solid var(--border-color, #e5e7eb);
   border-radius: 10px;
-  background: #f9fafb;
+  background: var(--background-light, #f9fafb);
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -1124,6 +1125,24 @@
 }
 
 .action-btn.delete:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.action-btn.stock-adjust[data-stock-action="add"] {
+  color: var(--color-primary);
+}
+
+.action-btn.stock-adjust[data-stock-action="add"]:hover {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.action-btn.stock-adjust[data-stock-action="remove"] {
+  color: var(--color-danger);
+}
+
+.action-btn.stock-adjust[data-stock-action="remove"]:hover {
   background: var(--color-danger-bg);
   color: var(--color-danger);
 }

@@ -5,6 +5,7 @@ import '../shared/admin-table-responsive.js';
 import '../shared/ajax-pagination.js';
 import { getSwal, cf4Toast, cf4Error, cf4Warning } from './shared/swal.js';
 import { bindModalEscapeClose } from './shared/modal-utils.js';
+import { initSidebarAccountMenu } from './sidebar-account-menu.js';
 
 bindModalEscapeClose();
 
@@ -55,5 +56,6 @@ async function renderCf4FlashMessages() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    initSidebarAccountMenu();
     void renderCf4FlashMessages();
 });

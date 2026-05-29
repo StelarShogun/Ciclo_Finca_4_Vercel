@@ -8,6 +8,7 @@
 @import "../../shared/components/file-upload.css";
 @import "../../shared/components/form-layout.css";
 @import "../../components/modals.css";
+@import "../components/product-combobox.css";
 
 /* ============================================================
   1. MAIN LAYOUT
@@ -355,7 +356,7 @@
 }
 
 .sales-table-container--empty:hover .table-empty-state--fill {
-  background: var(--brand-lightest, var(--color-light));
+  background: var(--table-row-hover-bg, var(--color-light));
 }
 
 .sales-table { width: 100%; border-collapse: collapse; }
@@ -375,7 +376,10 @@
   vertical-align: middle;
 }
 
-.sales-table tbody tr:hover { background: var(--color-light); }
+.sales-table tbody tr:hover {
+  background: var(--table-row-hover-bg, var(--color-light));
+  color: var(--text-primary);
+}
 
 /* ============================================================
   8. MODALS (form overlays — view details use .edit-modal via modals.css)
@@ -393,7 +397,7 @@
 .modal-overlay.active { display: flex; }
 
 .modal-overlay .modal-content {
-  background: white;
+  background: var(--background-white);
   border-radius: 12px;
   width: 90vw;
   max-width: 700px;
@@ -597,12 +601,13 @@
 .remove-product:hover { background: #b71c1c; transform: scale(1.05); }
 
 .sale-totals {
-  background: linear-gradient(135deg, var(--color-info-bg) 0%, #f8f9fa 100%);
+  background: var(--color-info-bg);
   border: 2px solid var(--color-primary);
   border-radius: 12px;
   padding: 25px;
   margin-top: 20px;
   box-shadow: var(--shadow-sm);
+  color: var(--color-dark);
 }
 
 .sale-totals--discount-over {
@@ -617,6 +622,7 @@
   margin-bottom: 12px;
   padding: 8px 0;
   font-size: 1rem;
+  color: var(--color-dark);
 }
 
 .total-row input {

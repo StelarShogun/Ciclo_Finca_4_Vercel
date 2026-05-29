@@ -86,20 +86,9 @@
             </li>
         </ul>
     </nav>
-    <!-- Footer fijo en la parte inferior -->
     <div class="sidebar-footer">
         @auth('admin')
-            <a href="{{ route('admin.visit-store') }}" class="sidebar-catalog-btn sidebar-footer-web-btn" title="Abrir la página principal del sitio web (mantiene la sesión de administrador)">
-                <i class="fas fa-globe"></i>
-                <span class="sidebar-label">Ir a sitio web</span>
-            </a>
-            <form action="{{ route('admin.logout') }}" method="POST" style="margin: 0;">
-                @csrf
-                <button type="submit" class="logout-btn" title="Cerrar sesión">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span class="sidebar-label">Cerrar Sesión</span>
-                </button>
-            </form>
+            @include('admin.partials.sidebar-account-menu', ['adminUser' => auth('admin')->user()])
         @endauth
     </div>
 </aside>

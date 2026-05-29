@@ -53,8 +53,10 @@ class SupplierOrderController extends Controller
         $q = trim((string) $request->query('q', ''));
         $supplierId = (int) $request->query('supplier_id', 0);
 
+        $forSale = $request->query('context') === 'sale';
+
         $products = Product::query()
-            ->select(['product_id', 'name', 'purchase_price', 'sale_price', 'sku'])
+            ->select(['product_id', 'name', 'purchase_price', 'sale_price', 'sku', 'stock_current'])
             ->when($supplierId > 0, fn ($query) => $query->where('supplier_id', $supplierId))
             ->when($q !== '' && mb_strlen($q) >= 2, function ($query) use ($q) {
                 $query->where(function ($inner) use ($q) {
@@ -66,19 +68,28 @@ class SupplierOrderController extends Controller
             ->orderBy('name')
             ->limit(20)
             ->get()
-            ->map(function (Product $product) {
-                $unitPrice = (float) ($product->purchase_price ?: $product->sale_price);
-
-                if ($unitPrice <= 0) {
+            ->map(function (Product $product) use ($forSale) {
+                if ($forSale) {
                     $unitPrice = (float) $product->sale_price;
+                } else {
+                    $unitPrice = (float) ($product->purchase_price ?: $product->sale_price);
+                    if ($unitPrice <= 0) {
+                        $unitPrice = (float) $product->sale_price;
+                    }
                 }
 
-                return [
+                $row = [
                     'product_id' => (int) $product->product_id,
                     'name' => (string) $product->name,
                     'sku' => $product->displaySku(),
                     'unit_price' => round($unitPrice, 2),
                 ];
+
+                if ($forSale) {
+                    $row['stock'] = (int) $product->stock_current;
+                }
+
+                return $row;
             })
             ->values();
 

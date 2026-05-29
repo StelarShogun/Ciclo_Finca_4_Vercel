@@ -47,7 +47,7 @@
 
 .audit-log-filters {
     margin-top: 1rem;
-    background: #ffffff;
+    background: var(--background-white, #ffffff);
     border: 1px solid var(--color-border, #e5e7eb);
     border-radius: 14px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
@@ -137,14 +137,14 @@
 }
 
 .btn-filter-clear {
-    background: #f3f4f6;
+    background: var(--cf4-filter-btn-muted-bg, #f3f4f6);
     border-color: var(--color-border, #d1d5db);
     color: var(--color-text, #374151);
 }
 
 .btn-filter-clear:hover {
-    background: #e5e7eb;
-    border-color: #c7cdd6;
+    background: var(--cf4-filter-btn-muted-hover, #e5e7eb);
+    border-color: var(--color-border, #c7cdd6);
 }
 
 .audit-log-results {
@@ -155,7 +155,7 @@
     overflow-x: auto;
     border-radius: 14px;
     border: 1px solid var(--color-border, #e5e7eb);
-    background: #ffffff;
+    background: var(--background-white, #ffffff);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
@@ -167,19 +167,20 @@
 
 .audit-log-table th,
 .audit-log-table td {
-    border-bottom: 1px solid #eef2f7;
+    border-bottom: 1px solid var(--border-color, #eef2f7);
     padding: 0.72rem 0.78rem;
-    text-align: left;
-    vertical-align: top;
+    text-align: center;
+    vertical-align: middle;
     font-size: 0.86rem;
 }
 
 .audit-log-table tbody tr:hover td {
-    background: #fbfcfe;
+    background: var(--table-row-hover-bg, #fbfcfe);
+    color: var(--text-primary);
 }
 
 .muted {
-    color: #6b7280;
+    color: var(--cf4-text-muted, #6b7280);
     font-size: 0.82rem;
 }
 

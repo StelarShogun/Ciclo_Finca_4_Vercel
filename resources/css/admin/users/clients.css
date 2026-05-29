@@ -223,7 +223,8 @@
 }
 
 .clients-table tbody tr:hover {
-    background: var(--color-light);
+    background: var(--table-row-hover-bg, var(--color-light));
+    color: var(--text-primary);
 }
 
 /* ============================================================

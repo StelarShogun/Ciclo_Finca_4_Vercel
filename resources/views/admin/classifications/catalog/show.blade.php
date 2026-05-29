@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Atributos para {{ $category->name }} - Ciclo Finca 4 Admin</title>
+
+    @include('admin.partials.cf4-theme-head')
+
     @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/components/page-header.css', 'resources/css/admin/suppliers/suppliers.css', 'resources/js/admin/classifications/catalog.js'])
 </head>
 
@@ -161,6 +164,8 @@
             </div>
         </div>
     </main>
+
+    @include('admin.partials.cf4-theme-scripts')
 </body>
 
 </html>

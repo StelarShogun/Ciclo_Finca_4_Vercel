@@ -35,7 +35,7 @@
         </nav>
 
         <div class="xml-upload-card">
-            <h2><i class="fas fa-file-import" style="color:var(--color-primary,#235347);margin-right:.4rem;"></i>Seleccionar archivo XML</h2>
+            <h2><i class="fas fa-file-import xml-upload-card__icon" aria-hidden="true"></i>Seleccionar archivo XML</h2>
             <p class="subtitle">
                 El sistema comparará los precios del XML contra el precio de compra actual de cada
                 producto y le mostrará las diferencias antes de aplicar cualquier cambio.
@@ -110,13 +110,13 @@
             </form>
 
             <details class="xml-formats-help" style="margin-top:1.5rem;">
-                <summary style="cursor:pointer;font-size:.875rem;font-weight:500;color:var(--color-text-secondary,#6b7280);">
-                    <i class="fas fa-info-circle" style="margin-right:.35rem;"></i>Formatos XML aceptados
+                <summary>
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>Formatos XML aceptados
                 </summary>
-                <div style="margin-top:.75rem;font-size:.8rem;color:var(--color-text-secondary,#6b7280);display:flex;flex-direction:column;gap:.75rem;">
+                <div class="xml-formats-help__body">
                     <div>
-                        <strong style="color:var(--color-text-primary,#111827);">Formato A — genérico <code>&lt;items&gt;</code></strong>
-                        <pre style="background:#f3f4f6;border-radius:6px;padding:.6rem .85rem;margin:.35rem 0 0;font-size:.75rem;overflow-x:auto;">&lt;items&gt;
+                        <strong>Formato A — genérico <code>&lt;items&gt;</code></strong>
+                        <pre>&lt;items&gt;
   &lt;item&gt;
     &lt;code&gt;ACT-001&lt;/code&gt;
     &lt;name&gt;Aceite 10W-40&lt;/name&gt;
@@ -126,8 +126,8 @@
 &lt;/items&gt;</pre>
                     </div>
                     <div>
-                        <strong style="color:var(--color-text-primary,#111827);">Formato B — <code>&lt;products&gt;</code></strong>
-                        <pre style="background:#f3f4f6;border-radius:6px;padding:.6rem .85rem;margin:.35rem 0 0;font-size:.75rem;overflow-x:auto;">&lt;products&gt;
+                        <strong>Formato B — <code>&lt;products&gt;</code></strong>
+                        <pre>&lt;products&gt;
   &lt;product&gt;
     &lt;sku&gt;ACT-001&lt;/sku&gt;
     &lt;description&gt;Aceite 10W-40&lt;/description&gt;
@@ -137,8 +137,8 @@
 &lt;/products&gt;</pre>
                     </div>
                     <div>
-                        <strong style="color:var(--color-text-primary,#111827);">Formato C — factura electrónica Costa Rica</strong>
-                        <pre style="background:#f3f4f6;border-radius:6px;padding:.6rem .85rem;margin:.35rem 0 0;font-size:.75rem;overflow-x:auto;">&lt;invoice&gt;
+                        <strong>Formato C — factura electrónica Costa Rica</strong>
+                        <pre>&lt;invoice&gt;
   &lt;line&gt;
     &lt;CodigoComercial&gt;ACT-001&lt;/CodigoComercial&gt;
     &lt;Detalle&gt;Aceite 10W-40&lt;/Detalle&gt;

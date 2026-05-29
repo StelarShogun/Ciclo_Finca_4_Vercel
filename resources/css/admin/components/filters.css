@@ -65,7 +65,8 @@
   width: 100%;
   box-sizing: border-box;
   min-height: 42px;
-  background: #fff;
+  background: var(--background-white, #fff);
+  color: var(--text-primary, inherit);
 }
 
 .filter-group input[type="date"] {

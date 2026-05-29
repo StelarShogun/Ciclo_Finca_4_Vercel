@@ -14,6 +14,8 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
+    @include('admin.partials.cf4-theme-head')
+
     {{-- Styles & Fonts --}}
     @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/components/page-header.css', 'resources/css/admin/products/inventory.css'])
 </head>
@@ -324,7 +326,7 @@
                                                     data-product-name="{{ $product->name }}"
                                                     data-product-stock="{{ $product->stock_current }}"
                                                     title="Add stock">
-                                                <i class="fas fa-plus-circle" style="color:#235347;"></i>
+                                                <i class="fas fa-plus-circle" aria-hidden="true"></i>
                                             </button>
                                             <button class="action-btn stock-adjust"
                                                     data-stock-action="remove"
@@ -332,7 +334,7 @@
                                                     data-product-name="{{ $product->name }}"
                                                     data-product-stock="{{ $product->stock_current }}"
                                                     title="Remove stock">
-                                                <i class="fas fa-minus-circle" style="color:#dc2626;"></i>
+                                                <i class="fas fa-minus-circle" aria-hidden="true"></i>
                                             </button>
                                             @include('admin.products.partials.inventory-status-action', ['product' => $product])
                                         </div>
@@ -438,7 +440,7 @@
                                                 data-product-name="{{ $product->name }}"
                                                 data-product-stock="{{ $product->stock_current }}"
                                                 title="Add stock">
-                                            <i class="fas fa-plus-circle" style="color:#235347;"></i>
+                                            <i class="fas fa-plus-circle" aria-hidden="true"></i>
                                         </button>
                                         {{-- Remove stock (red minus) --}}
                                         <button class="action-btn stock-adjust"
@@ -447,7 +449,7 @@
                                                 data-product-name="{{ $product->name }}"
                                                 data-product-stock="{{ $product->stock_current }}"
                                                 title="Remove stock">
-                                            <i class="fas fa-minus-circle" style="color:#dc2626;"></i>
+                                            <i class="fas fa-minus-circle" aria-hidden="true"></i>
                                         </button>
                                         @include('admin.products.partials.inventory-status-action', ['product' => $product])
                                     </div>
@@ -1048,5 +1050,6 @@
     @include('admin.partials.cf4-flash-swal')
 
     @vite(['resources/js/admin/shell.js', 'resources/js/admin/inventory/inventory-entry.js'])
+    @include('admin.partials.cf4-theme-scripts')
 </body>
 </html>

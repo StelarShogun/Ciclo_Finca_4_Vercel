@@ -7,11 +7,17 @@
     <title>Iniciar Sesión - Ciclo Finca 4</title>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+
+    @include('admin.partials.cf4-theme-head')
+
     @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/login/login.css'])
 </head>
 <body>
 
     <div class="auth-container">
+        <div class="auth-theme-toggle">
+            @include('admin.partials.cf4-theme-toggle', ['variant' => 'floating'])
+        </div>
 
         {{-- Login form --}}
         <div id="loginForm" class="auth-form active">
@@ -75,6 +81,7 @@
 
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     @vite(['resources/js/admin/shell.js', 'resources/js/admin/login/login.js'])
+    @include('admin.partials.cf4-theme-scripts')
 
 </body>
 </html>

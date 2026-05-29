@@ -1,3 +1,5 @@
+@import './admin-dark-mode.css';
+
 /* ============================================================
    1. VARIABLES
    ============================================================ */
@@ -81,6 +83,11 @@
  
     /* Transición */
     --transition: all 0.3s ease;
+
+    /* Hover de filas en tablas admin */
+    --table-row-hover-bg: var(--brand-lightest);
+
+    --cf4-modal-loading-scrim: rgba(255, 255, 255, 0.55);
 }
  
 /* ============================================================
@@ -111,3 +118,341 @@ a { color: inherit; text-decoration: none; }
 img, svg { max-width: 100%; height: auto; }
 h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.2; margin-bottom: 0.5rem; }
 p { margin-bottom: 1rem; }
+
+/* ===================================================================
+   CF4 DARK MODE — Admin
+   =================================================================== */
+
+:root {
+    color-scheme: light;
+}
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+
+    --brand-darkest: #020F10;
+    --brand-dark: #061817;
+    --brand-medium-dark: #163832;
+    --brand-medium: #235347;
+    --brand-light: #81c784;
+    --brand-lightest: #EEF8F0;
+
+    --color-darkest: #020F10;
+    --color-medium-dark: #163832;
+    --color-medium: #235347;
+    --color-lightest: #EEF8F0;
+
+    --color-primary: #163832;
+    --color-primary-dark: #235347;
+    --color-primary-light: rgba(22, 56, 50, 0.42);
+    --color-accent: #FFB86B;
+
+    --color-success: #81c784;
+    --color-success-bg: rgba(129, 199, 132, 0.14);
+    --color-success-light: rgba(129, 199, 132, 0.14);
+
+    --color-danger: #F87171;
+    --color-danger-bg: rgba(248, 113, 113, 0.14);
+    --color-danger-light: rgba(248, 113, 113, 0.14);
+
+    --color-warning: #FBBF24;
+    --color-warning-bg: rgba(251, 191, 36, 0.14);
+    --color-warning-light: rgba(251, 191, 36, 0.14);
+
+    --color-info: #60A5FA;
+    --color-info-bg: rgba(96, 165, 250, 0.14);
+    --color-info-light: rgba(96, 165, 250, 0.14);
+
+    --color-secondary: #2d4a35;
+    --color-secondary-bg: rgba(45, 74, 53, 0.35);
+    --color-secondary-light: rgba(45, 74, 53, 0.35);
+
+    --color-light: #0B2B26;
+    --color-dark: #EAF5ED;
+    --color-muted: #A7BCAE;
+
+    --text-primary: #EEF8F0;
+    --text-secondary: #B6CABB;
+
+    --background-main: #020F10;
+    --background-white: #071F1F;
+    --background-light: #0B2B26;
+
+    --table-row-hover-bg: rgba(22, 56, 50, 0.28);
+
+    --cf4-modal-loading-scrim: rgba(2, 15, 16, 0.72);
+
+    --border-color: rgba(142, 182, 155, 0.22);
+    --border-color-strong: rgba(218, 241, 222, 0.34);
+
+    --sidebar-bg: #020F10;
+    --sidebar-border: rgba(142, 182, 155, 0.22);
+    --sidebar-border-strong: rgba(218, 241, 222, 0.34);
+    --sidebar-text: rgba(238, 248, 240, 0.92);
+    --sidebar-hover: #0B2B26;
+    --sidebar-active: rgba(22, 56, 50, 0.55);
+    --sidebar-active-dark: rgba(35, 83, 71, 0.65);
+
+    --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.28);
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.34);
+    --shadow-medium: 0 12px 34px rgba(0, 0, 0, 0.36);
+    --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.38);
+    --shadow-heavy: 0 18px 48px rgba(0, 0, 0, 0.42);
+    --shadow-lg: 0 22px 54px rgba(0, 0, 0, 0.42);
+    --shadow-xl: 0 28px 72px rgba(0, 0, 0, 0.48);
+
+    --cf4-surface-0: #020F10;
+    --cf4-surface-1: #071F1F;
+    --cf4-surface-2: #0B2B26;
+    --cf4-surface-elevated: rgba(7, 31, 31, 0.92);
+
+    --cf4-text-strong: #F4FFF6;
+    --cf4-text-main: #EEF8F0;
+    --cf4-text-muted: #B6CABB;
+
+    --cf4-border-soft: rgba(45, 74, 53, 0.55);
+    --cf4-glow-green: rgba(22, 56, 50, 0.35);
+
+    --cf4-filter-btn-muted-bg: rgba(22, 56, 50, 0.45);
+    --cf4-filter-btn-muted-hover: rgba(22, 56, 50, 0.62);
+
+    --cf4-admin-card-bg: #212121;
+    --cf4-admin-card-border: #2d4a35;
+    --cf4-admin-panel-bg: #1a1a1a;
+
+    /* Badges de iconos (KPI, vacíos, métricas) */
+    --cf4-icon-badge-bg: rgba(22, 56, 50, 0.55);
+    --cf4-icon-badge-bg-info: rgba(96, 165, 250, 0.22);
+    --cf4-icon-badge-bg-success: rgba(134, 239, 172, 0.2);
+    --cf4-icon-badge-bg-warning: rgba(251, 191, 36, 0.22);
+    --cf4-icon-badge-bg-danger: rgba(248, 113, 113, 0.2);
+    --cf4-icon-badge-bg-muted: rgba(148, 163, 184, 0.18);
+    --cf4-icon-badge-bg-accent: rgba(251, 191, 36, 0.22);
+    --cf4-icon-badge-fg: var(--brand-light);
+    --cf4-icon-badge-fg-info: #93c5fd;
+    --cf4-icon-badge-fg-success: #86efac;
+    --cf4-icon-badge-fg-warning: #fbbf24;
+    --cf4-icon-badge-fg-danger: #fca5a5;
+    --cf4-icon-badge-fg-muted: #cbd5e1;
+    --cf4-icon-badge-fg-accent: #fcd34d;
+}
+
+html[data-theme="dark"],
+html[data-theme="dark"] body.admin-layout {
+    background:
+        radial-gradient(circle at top left, rgba(142, 182, 155, 0.12), transparent 34rem),
+        radial-gradient(circle at bottom right, rgba(35, 83, 71, 0.18), transparent 30rem),
+        #020F10;
+    color: var(--text-primary);
+}
+
+html[data-theme="dark"] img,
+html[data-theme="dark"] picture,
+html[data-theme="dark"] video,
+html[data-theme="dark"] canvas,
+html[data-theme="dark"] svg {
+    filter: none;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+    background-color: rgba(218, 241, 222, 0.06);
+    color: var(--text-primary);
+    border-color: rgba(142, 182, 155, 0.26);
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+    color: rgba(218, 241, 222, 0.45);
+}
+
+.theme-toggle-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    max-width: fit-content;
+    flex: 0 0 auto;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid rgba(45, 74, 53, 0.42);
+    background: transparent;
+    cursor: pointer;
+    overflow: hidden;
+    flex-shrink: 0;
+    transition:
+        border-color 280ms ease,
+        box-shadow 280ms ease,
+        transform 180ms ease;
+}
+
+.theme-toggle-btn:hover {
+    border-color: rgba(129, 199, 132, 0.45);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+.theme-toggle-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(129, 199, 132, 0.35);
+}
+
+.theme-toggle-btn__track {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.35rem;
+    min-width: 3.35rem;
+    max-width: 3.35rem;
+    height: 1.85rem;
+    border-radius: 999px;
+    overflow: hidden;
+    flex: 0 0 auto;
+    transition:
+        background 0.45s cubic-bezier(0.34, 1.2, 0.64, 1),
+        box-shadow 0.45s ease;
+}
+
+html[data-theme="light"] .theme-toggle-btn__track {
+    background: transparent;
+    box-shadow: none;
+}
+
+html[data-theme="dark"] .theme-toggle-btn__track {
+    background: transparent;
+    box-shadow: none;
+}
+
+.theme-toggle-btn__icon {
+    position: absolute;
+    inset: 0;
+    display: block;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+    transition:
+        opacity 0.35s ease,
+        transform 0.45s cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+
+.theme-toggle-btn__icon .cf4-theme-glyph {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+}
+
+html[data-theme="light"] .theme-toggle-btn__icon--sun {
+    opacity: 1;
+    transform: scale(1);
+}
+
+html[data-theme="light"] .theme-toggle-btn__icon--moon {
+    opacity: 0;
+    transform: scale(0.5);
+}
+
+html[data-theme="dark"] .theme-toggle-btn__icon--moon {
+    opacity: 1;
+    transform: scale(1);
+}
+
+html[data-theme="dark"] .theme-toggle-btn__icon--sun {
+    opacity: 0;
+    transform: scale(0.5);
+}
+
+.cf4-theme-glyph {
+    display: block;
+    flex-shrink: 0;
+}
+
+.cf4-theme-glyph.is-muted {
+    opacity: 0.72;
+}
+
+html[data-theme="light"] .theme-toggle-btn {
+    border-color: rgba(234, 88, 12, 0.38);
+    box-shadow: 0 2px 8px rgba(180, 83, 9, 0.22);
+}
+
+html[data-theme="dark"] .theme-toggle-btn {
+    border-color: rgba(100, 116, 139, 0.42);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.42);
+}
+
+.theme-toggle-btn.is-toggling .theme-toggle-btn__track {
+    animation: cf4-theme-track-pulse 0.48s cubic-bezier(0.34, 1.45, 0.64, 1);
+}
+
+@keyframes cf4-theme-track-pulse {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.theme-toggle-btn--admin-floating {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1200;
+    box-shadow: var(--shadow-lg);
+}
+
+.theme-toggle-btn--admin-floating .theme-toggle-btn__track {
+    --cf4-theme-track-height: 1.82rem;
+    height: var(--cf4-theme-track-height);
+    width: calc(var(--cf4-theme-track-height) * 52 / 28);
+    min-width: calc(var(--cf4-theme-track-height) * 52 / 28);
+    max-width: calc(var(--cf4-theme-track-height) * 52 / 28);
+}
+
+/* Toggle compacto (navbar cliente, menú cuenta admin) */
+.theme-toggle-btn--compact {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 999px;
+    box-sizing: border-box;
+}
+
+.theme-toggle-btn--compact .theme-toggle-btn__track {
+    --cf4-theme-track-height: 1.85rem;
+    height: var(--cf4-theme-track-height);
+    width: calc(var(--cf4-theme-track-height) * 52 / 28);
+    min-width: calc(var(--cf4-theme-track-height) * 52 / 28);
+    max-width: calc(var(--cf4-theme-track-height) * 52 / 28);
+}
+
+html[data-theme="dark"] .sidebar-account-panel {
+    background: var(--sidebar-bg);
+    border-color: var(--sidebar-border);
+    box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.48);
+}
+
+html[data-theme="dark"] .sidebar-account-trigger {
+    background: rgba(22, 56, 50, 0.35);
+    border-color: var(--sidebar-border);
+}
+
+html[data-theme="dark"] .sidebar-account-menu.is-open .sidebar-account-trigger {
+    background: rgba(22, 56, 50, 0.55);
+    border-color: rgba(129, 199, 132, 0.42);
+}
+
+html[data-theme="dark"] .admin-content-wrapper,
+html[data-theme="dark"] .admin-main,
+html[data-theme="dark"] .admin-main--content {
+    background: transparent;
+}

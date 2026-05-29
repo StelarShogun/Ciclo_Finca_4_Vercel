@@ -452,10 +452,10 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
     border-radius: 10px;
     overflow: hidden;
-    background: #fafafa;
+    background: var(--background-light, #fafafa);
 }
 
 .sales-comparison-row {
@@ -472,7 +472,7 @@
 }
 
 .sales-comparison-label {
-    color: #444;
+    color: var(--text-secondary, #444);
     font-weight: 500;
 }
 

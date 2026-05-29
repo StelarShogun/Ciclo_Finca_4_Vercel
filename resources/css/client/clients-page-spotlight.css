@@ -38,21 +38,29 @@
   gap: 14px;
 }
 
-.catalog-spotlight-carousel {
+.catalog-spotlight-carousel,
+.featured-products-carousel {
   position: relative;
+  max-width: 100%;
+  overflow: hidden;
   padding: 2px 44px 6px;
+  contain: inline-size;
 }
 
-@media (min-width: 1200px) {
-  .catalog-spotlight-carousel {
-    padding: 2px 40px 6px;
-  }
-}
-
-.catalog-spotlight-carousel .swiper {
+.catalog-spotlight-carousel .swiper,
+.featured-products-carousel .swiper {
   overflow: hidden;
   padding: 2px 4px 4px;
   margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 1200px) {
+  .catalog-spotlight-carousel,
+  .featured-products-carousel {
+    padding: 2px 40px 6px;
+  }
 }
 
 .catalog-spotlight-carousel .swiper-wrapper {

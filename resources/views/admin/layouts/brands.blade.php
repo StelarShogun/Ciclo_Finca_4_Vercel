@@ -13,6 +13,8 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
+    @include('admin.partials.cf4-theme-head')
+
     @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/components/page-header.css', 'resources/css/admin/brands/brand.css'])
     @stack('styles')
 </head>
@@ -31,6 +33,7 @@
     @include('admin.partials.cf4-flash-swal')
     @vite(['resources/js/admin/shell.js', 'resources/js/admin/brand/brand.js'])
     @stack('scripts')
+    @include('admin.partials.cf4-theme-scripts')
 
 </body>
 

@@ -14,6 +14,32 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#051F20" id="cf4-theme-color">
+
+    <script>
+        (() => {
+            const STORAGE_KEY = 'cf4-theme';
+
+            try {
+                const savedTheme = localStorage.getItem(STORAGE_KEY);
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.style.colorScheme = theme;
+
+                const themeColor = document.querySelector('#cf4-theme-color');
+                if (themeColor) {
+                    themeColor.setAttribute('content', theme === 'dark' ? '#051F20' : '#DAF1DE');
+                }
+            } catch (error) {
+                document.documentElement.dataset.theme = 'light';
+                document.documentElement.style.colorScheme = 'light';
+            }
+        })();
+    </script>
+
     @vite([
         'resources/css/client/fonts.css',
         'resources/css/client/fontawesome.css',
@@ -42,6 +68,7 @@
         @include('client.parts.footer')
     @endunless
 
+    @vite(['resources/js/shared/theme-toggle.js'])
     @stack('scripts')
     @if (session('client_success_modal'))
         @vite(['resources/js/client/auth-welcome-toast.js'])

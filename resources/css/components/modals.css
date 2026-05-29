@@ -156,7 +156,7 @@ html:has(.modal-overlay.active) {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--cf4-modal-loading-scrim, rgba(255, 255, 255, 0.55));
   z-index: 2;
   pointer-events: none;
 }

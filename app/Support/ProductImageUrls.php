@@ -138,6 +138,23 @@ class ProductImageUrls
         return $media->getUrl('webp_480') ?: null;
     }
 
+    public static function webp768Url(?Media $media): ?string
+    {
+        if ($media === null || ! self::mediaIsDisplayable($media) || ! $media->hasGeneratedConversion('webp_768')) {
+            return null;
+        }
+
+        return $media->getUrl('webp_768') ?: null;
+    }
+
+    /**
+     * WebP for product cards on viewports ≤767px. Uses card-sized assets (768/480), not webp_96 thumbnails.
+     */
+    public static function webpCardMobileUrl(?Media $media): ?string
+    {
+        return self::webp768Url($media) ?? self::webpCardUrl($media);
+    }
+
     public static function webpDesktopUrl(?Media $media): ?string
     {
         if ($media === null || ! self::mediaIsDisplayable($media) || ! $media->hasGeneratedConversion('webp_1920')) {
@@ -186,7 +203,7 @@ class ProductImageUrls
             return [
                 'fallback' => self::fallbackUrl($product),
                 'desktopWebp' => self::placeholderWebpDesktop(),
-                'mobileWebp' => self::placeholderWebpMobile(),
+                'mobileWebp' => self::placeholderWebpDesktop(),
             ];
         }
 
@@ -196,7 +213,7 @@ class ProductImageUrls
         return [
             'fallback' => self::fallbackUrl($product),
             'desktopWebp' => $cardWebp ?? self::webpDesktopUrl($media),
-            'mobileWebp' => self::webpMobileUrl($media) ?? $cardWebp,
+            'mobileWebp' => self::webpCardMobileUrl($media),
         ];
     }
 

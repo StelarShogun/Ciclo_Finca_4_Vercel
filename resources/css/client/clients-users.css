@@ -62,6 +62,20 @@ body.guest-layout {
 .cliente-main {
   flex: 1;
   padding-top: 80px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 1024px) {
+  body.cliente-layout,
+  body.guest-layout {
+    overflow-x: clip;
+    max-width: 100%;
+  }
+
+  .cliente-main {
+    overflow-x: clip;
+  }
 }
 
 /* Login/registro ocultan el header: no reservar franja superior vacía */

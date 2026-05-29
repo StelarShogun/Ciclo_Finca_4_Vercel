@@ -69,11 +69,11 @@
 }
 
 .sidebar-header-admin {
-    font-size: 0.625rem;
+    font-size: 0.6875rem;
     font-weight: 700;
-    letter-spacing: 0.24em;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: rgba(218, 241, 222, 0.55);
+    color: rgba(218, 241, 222, 0.82);
 }
 
 .sidebar-header-title {
@@ -151,45 +151,208 @@
 .sidebar-nav li a span { font-weight: 500; }
  
 .sidebar-footer {
-    padding: 1rem 1.5rem;
+    position: relative;
+    padding: 0.75rem 0.85rem 1rem;
     border-top: 0.125rem solid var(--sidebar-border);
     background: var(--sidebar-bg);
     margin-top: auto;
-}
- 
-.logout-btn {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 1rem 1.5rem;
-    background: transparent;
-    border: none;
-    color: var(--color-danger);
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    font-family: inherit;
-    text-decoration: none;
-    border-left: 0.1875rem solid transparent;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-}
- 
-.logout-btn:hover {
-    background: rgba(211,47,47,0.10);
-    border-left-color: var(--color-danger);
-}
- 
-.logout-btn i { width: 1.25rem; margin-right: 1rem; font-size: 1.1rem; }
-/* ============================================================
-   PRIMARY ACTION (ej. ir al sitio web — sidebar footer)
-   ============================================================ */
-.sidebar-footer .sidebar-footer-web-btn {
-    width: 100%;
-    justify-content: center;
-    margin-bottom: 0.75rem;
-    box-sizing: border-box;
+    z-index: 2;
 }
 
+/* Menú de cuenta — se despliega hacia arriba */
+.sidebar-account-menu {
+    position: relative;
+    width: 100%;
+}
+
+.sidebar-account-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--sidebar-border);
+    border-radius: 0.65rem;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--sidebar-text);
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.sidebar-account-trigger:hover,
+.sidebar-account-menu.is-open .sidebar-account-trigger {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(129, 199, 132, 0.45);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.sidebar-account-avatar {
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #fff;
+    background: linear-gradient(145deg, var(--brand-medium) 0%, var(--brand-light) 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.sidebar-account-meta {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.sidebar-account-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-account-email {
+    font-size: 0.72rem;
+    line-height: 1.2;
+    color: rgba(238, 248, 240, 0.72);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-account-chevron {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    color: rgba(238, 248, 240, 0.75);
+    transition: transform 0.25s ease;
+}
+
+.sidebar-account-menu.is-open .sidebar-account-chevron {
+    transform: rotate(180deg);
+}
+
+.sidebar-account-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 0.5rem);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--sidebar-border);
+    background: var(--sidebar-bg);
+    box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.38);
+    transform-origin: bottom center;
+    animation: sidebar-account-panel-in 0.22s ease;
+}
+
+@keyframes sidebar-account-panel-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.sidebar-account-panel[hidden] {
+    display: none !important;
+}
+
+.sidebar-account-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.6rem;
+    border: none;
+    border-radius: 0.55rem;
+    background: transparent;
+    color: var(--sidebar-text);
+    font-family: inherit;
+    font-size: 0.86rem;
+    font-weight: 500;
+    text-decoration: none;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-account-row i {
+    width: 1.1rem;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.sidebar-account-row--theme {
+    justify-content: space-between;
+    cursor: default;
+    padding-top: 0.45rem;
+    padding-bottom: 0.45rem;
+}
+
+.sidebar-account-row__label {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: rgba(238, 248, 240, 0.92);
+}
+
+.sidebar-account-row--link:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.sidebar-account-row--logout,
+.sidebar-account-row--logout:hover {
+    color: var(--color-danger);
+}
+
+.sidebar-account-row--logout:hover {
+    background: rgba(248, 113, 113, 0.12);
+}
+
+.sidebar-account-logout-form {
+    margin: 0;
+    width: 100%;
+}
+
+.admin-sidebar:not(.expanded) .sidebar-account-meta,
+.admin-sidebar:not(.expanded) .sidebar-account-chevron {
+    display: none;
+}
+
+.admin-sidebar:not(.expanded) .sidebar-account-trigger {
+    justify-content: center;
+    padding: 0.55rem;
+}
+
+.admin-sidebar:not(.expanded) .sidebar-account-panel {
+    left: 0.25rem;
+    right: 0.25rem;
+}
+
+/* Catálogo / enlaces legacy en otras vistas */
 .sidebar-catalog-btn {
     display: flex;
     align-items: center;
@@ -214,14 +377,4 @@
 
 .sidebar-catalog-btn i {
     font-size: 1rem;
-}
-
-/* Hide text label when sidebar is collapsed */
-.admin-sidebar:not(.expanded) .sidebar-catalog-btn .sidebar-label {
-    display: none;
-}
-
-.admin-sidebar:not(.expanded) .sidebar-catalog-btn {
-    padding: 0.5rem;
-    justify-content: center;
 }

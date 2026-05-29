@@ -323,20 +323,27 @@
                         <h4>Productos</h4>
                         <div class="product-row">
                             <div class="form-row">
-                                <div class="form-group">
-                                    <label>Producto</label>
-                                    <select name="items[0][product_id]" class="product-select" required>
-                                        <option value="">Selecciona un producto</option>
-                                        @foreach (\App\Models\Product::where('status', 'active')->get() as $product)
-                                            <option value="{{ $product->product_id }}"
-                                                data-precio="{{ $product->sale_price }}"
-                                                data-stock="{{ $product->stock_current }}">
-                                                {{ $product->name }} -
-                                                ₡{{ number_format((float) $product->sale_price, 0, ',', '.') }} (Stock:
-                                                {{ $product->stock_current }})
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                <div class="form-group form-group--product-combobox">
+                                    <label for="sale-product-search-0">Producto</label>
+                                    <div class="product-combobox sale-product-combobox" id="sale-product-combobox-0">
+                                        <input
+                                            type="text"
+                                            id="sale-product-search-0"
+                                            class="product-combobox-input sale-product-search"
+                                            placeholder="Buscar por nombre o SKU…"
+                                            autocomplete="off"
+                                            role="combobox"
+                                            aria-expanded="false"
+                                            aria-controls="sale-product-dropdown-0"
+                                        >
+                                        <input type="hidden" name="items[0][product_id]" class="sale-product-id" value="" required>
+                                        <i class="fas fa-chevron-down product-combobox-chevron" aria-hidden="true"></i>
+                                        <div
+                                            id="sale-product-dropdown-0"
+                                            class="product-combobox-dropdown sale-product-dropdown"
+                                            role="listbox"
+                                        ></div>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label>Cantidad</label>

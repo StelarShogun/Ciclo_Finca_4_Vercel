@@ -2,6 +2,7 @@
 
 - Write Git commit subjects/bodies and GitHub/GitLab PR titles and descriptions in English; Jira ticket IDs may appear alongside that text.
 - When this stack runs in containers, run Laravel/PHP CLI (e.g. Artisan) inside the project Docker setup instead of assuming host PHP works the same.
+- Always respond to the user in Spanish unless they explicitly request another language.
 
 ## Learned Workspace Facts
 
@@ -15,3 +16,8 @@
 - Storefront performance: home loads `clients-home.css` (home + spotlight chunks) instead of full `clients-page.css`; production sets long-cache headers on `/build/*` via `CacheStaticBuildAssets` middleware.
 - Admin category create/subcategory pages use `admin-shell` + shared SweetAlert (`data-cf4-confirm`); catalog import/export documented in `docs/CATALOG_IMPORT_EXPORT.md`.
 - If category-trigger markup changes, refresh assertions in tests such as `CF4ClientCatalogCategoryMenuTest`.
+- Dark mode uses `html[data-theme="dark|light"]` with semantic tokens in client and admin `variables-reset.css`; preference persists in `localStorage` (`cf4-theme`) via `resources/js/shared/theme-toggle.js`—extend tokens/overrides, not color filters or global inversion.
+- Client dark palette: deep-green primary `#163832` / hover `#235347`; catalog surfaces use `--cf4-catalog-*` tokens (e.g. page `#0e1b11`, cards `#212121`, borders `#2d4a35`) in `resources/css/client/variables-reset.css`.
+- Admin dark mode: module overrides in `resources/css/admin/admin-dark-mode.css` (imported from `admin/variables-reset.css`); every admin page needs `admin.partials.cf4-theme-head` in `<head>` and `cf4-theme-scripts` before `</body>`—not only `admin-shell` (also `sales`/`suppliers`/`brands` layouts, inventory, users, classifications, login).
+- Admin account menu in sidebar footer (`admin.partials.sidebar-account-menu`): opens upward with admin name, theme toggle (`cf4-theme-toggle` compact), visit store, logout; shared sun/moon glyphs in `shared/partials/cf4-theme-glyph.blade.php`.
+- Product card imagery: `ProductImageUrls::cardPicture()` serves `webp_768` then `webp_480` on mobile (≤767px); reserve `webp_96` for small thumbnails (cart, favorites), not catalog/home cards.

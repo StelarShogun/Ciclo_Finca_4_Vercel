@@ -117,6 +117,26 @@
   min-width: 0;
 }
 
+@media (min-width: 1025px) {
+  .header-right-cluster .cart-btn,
+  .header-right-cluster .cf4-invoices-btn {
+    min-height: var(--cf4-header-control-height, 44px);
+    box-sizing: border-box;
+  }
+
+  .header-right-cluster .user-menu-trigger {
+    min-height: var(--cf4-header-control-height, 44px);
+    box-sizing: border-box;
+  }
+
+  .header-right-cluster .header-actions .btn-primary.btn-sm {
+    min-height: var(--cf4-header-control-height, 44px);
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
 /* Logo: no encoger; separación clara del panel para que el nav no lo pise al expandir búsqueda */
 .logo-section {
   display: flex;
@@ -135,11 +155,11 @@
   color: var(--brand-lightest);
   font-weight: 600;
   font-size: 1.25rem;
-  cursor: default;
+  cursor: pointer;
 }
 
 .logo-link * {
-  cursor: default;
+  cursor: inherit;
 }
 
 .logo-img:not(.logo-img--icon-only) {
@@ -1015,6 +1035,25 @@
 .user-dropdown-foot {
   padding: 4px 0;
   border-top: 1px solid var(--border-color);
+}
+
+.user-dropdown-theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.user-dropdown-theme-row__label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.user-dropdown-theme-row .theme-toggle-btn {
+  flex-shrink: 0;
 }
 
 .user-dropdown-item {

@@ -4,6 +4,13 @@ import laravel from "laravel-vite-plugin";
 const vitePort = Number(process.env.VITE_PORT) || 5173;
 
 // =======================
+// SHARED ASSETS
+// =======================
+const sharedAssets = [
+    "resources/js/shared/theme-toggle.js",
+];
+
+// =======================
 // ADMIN ASSETS
 // =======================
 const adminAssets = [
@@ -116,7 +123,7 @@ export default defineConfig(({ command }) => {
         plugins: [
             laravel({
                 detectTls: false,
-                input: [...adminAssets, ...clientAssets, ...errorAssets],
+                input: [...sharedAssets, ...adminAssets, ...clientAssets, ...errorAssets],
                 refresh: true,
             }),
         ],

@@ -7,8 +7,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Usuarios - Ciclo Finca 4 Admin</title>
 
-    {{-- Styles & Fonts --}}
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+
+    @include('admin.partials.cf4-theme-head')
+
     @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/components/page-header.css', 'resources/css/admin/users/clients.css'])
 </head>
 
@@ -220,6 +222,7 @@
 
     {{-- User management scripts --}}
     @vite(['resources/js/admin/shell.js', 'resources/js/admin/users/clients.js'])
+    @include('admin.partials.cf4-theme-scripts')
 
 </body>
 </html>

@@ -9,6 +9,10 @@ import {
     escapeHtml,
 } from '../shared/swal.js';
 import { closeOtherModals } from '../shared/modal-utils.js';
+import {
+    initSaleProductCombobox,
+    productRowComboboxMarkup,
+} from './sale-product-combobox.js';
 
 const SALES_MODAL_SELECTOR = '#new-sale-modal, #return-sale-modal, #view-sale-modal';
 
@@ -16,9 +20,27 @@ function closeOtherSalesModals(exceptId = null) {
     closeOtherModals(SALES_MODAL_SELECTOR, exceptId);
 }
 
+/** @type {WeakMap<HTMLElement, { reset: () => void, destroy: () => void }>} */
+const saleProductComboboxByRow = new WeakMap();
+
+function mountSaleProductCombobox(row) {
+    const prev = saleProductComboboxByRow.get(row);
+    prev?.destroy?.();
+
+    const api = initSaleProductCombobox(row, {
+        onSelected: () => calculateProductTotal(row),
+    });
+    saleProductComboboxByRow.set(row, api);
+}
+
+function destroySaleProductCombobox(row) {
+    saleProductComboboxByRow.get(row)?.destroy?.();
+    saleProductComboboxByRow.delete(row);
+}
+
 function formatColones(amount) {
     const value = Math.round(parseFloat(amount) || 0);
-    return '₡' + value.toLocaleString('es-CR', { maximumFractionDigits: 0 });
+    return '\u20A1' + value.toLocaleString('es-CR', { maximumFractionDigits: 0 });
 }
 
 function updateSalesDailyKpis(data) {
@@ -101,6 +123,7 @@ function resetNewSaleForm() {
     const container = document.getElementById('productos-container');
     container?.querySelectorAll('.product-row').forEach((row, index) => {
         if (index > 0) {
+            destroySaleProductCombobox(row);
             row.remove();
         }
     });
@@ -119,10 +142,7 @@ function resetNewSaleForm() {
             }
         });
 
-        const select = firstRow.querySelector('.product-select');
-        if (select) {
-            select.selectedIndex = 0;
-        }
+        saleProductComboboxByRow.get(firstRow)?.reset?.();
     }
 
     calculateTotals();
@@ -220,22 +240,22 @@ function confirmReturn() {
         if (data.success) {
             void cf4Toast({
                 icon: 'success',
-                title: 'Devolución registrada',
-                text: data.message || 'La devolución fue procesada correctamente.',
+                title: 'Devoluci?n registrada',
+                text: data.message || 'La devoluci?n fue procesada correctamente.',
                 timer: 3000,
             }).then(() => location.reload());
         } else {
-            void cf4Error(data.message || 'No se pudo registrar la devolución.', 'Error');
+            void cf4Error(data.message || 'No se pudo registrar la devoluci?n.', 'Error');
         }
     })
     .catch(() => {
         closeReturnModal();
-        void cf4Error('No se pudo conectar con el servidor. Intente nuevamente.', 'Error de conexión');
+        void cf4Error('No se pudo conectar con el servidor. Intente nuevamente.', 'Error de conexi?n');
     })
     .finally(() => {
         if (btn) {
             btn.disabled  = false;
-            btn.innerHTML = '<i class="fas fa-rotate-left"></i> Confirmar devolución';
+            btn.innerHTML = '<i class="fas fa-rotate-left"></i> Confirmar devoluci?n';
         }
     });
 }
@@ -247,22 +267,16 @@ let productIndex = 1;
 
 // Add a new product row to the sale form
 function addProduct() {
-    const container   = document.getElementById('productos-container');
-    const firstSelect = container?.querySelector('.product-select');
-    const optionsHTML = firstSelect
-        ? firstSelect.innerHTML
-        : '<option value="">Seleccionar producto</option>';
+    const container = document.getElementById('productos-container');
+    if (!container) {
+        return;
+    }
 
     const newRow = document.createElement('div');
     newRow.className = 'product-row';
     newRow.innerHTML = `
         <div class="form-row">
-            <div class="form-group">
-                <label>Producto</label>
-                <select name="items[${productIndex}][product_id]" class="product-select" required>
-                    ${optionsHTML}
-                </select>
-            </div>
+            ${productRowComboboxMarkup(productIndex)}
             <div class="form-group">
                 <label>Cantidad</label>
                 <input type="number" name="items[${productIndex}][quantity]" min="1" value="1" required>
@@ -280,13 +294,18 @@ function addProduct() {
         </div>`;
 
     container.appendChild(newRow);
+    mountSaleProductCombobox(newRow);
     productIndex++;
     updateRemoveButtons();
 }
 
 // Remove a product row from the sale form
 function removeProduct(button) {
-    button.closest('.product-row').remove();
+    const row = button.closest('.product-row');
+    if (row) {
+        destroySaleProductCombobox(row);
+        row.remove();
+    }
     updateRemoveButtons();
     calculateTotals();
 }
@@ -377,7 +396,7 @@ function validateDateRange() {
 
     if ((fromVal && fromVal > today) || (toVal && toVal > today)) {
         if (errorBox && errorMsg) {
-            errorMsg.textContent = 'Las fechas no pueden ser posteriores al día de hoy.';
+            errorMsg.textContent = 'Las fechas no pueden ser posteriores al d?a de hoy.';
             errorBox.style.display = '';
         }
         errorBox?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -413,7 +432,7 @@ function viewSale(id) {
     body.innerHTML = `
         <div class="loading-spinner" role="status">
             <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
-            <p>Cargando detalles…</p>
+            <p>Cargando detalles���</p>
         </div>`;
     modal.classList.add('active');
     modal.setAttribute('aria-hidden', 'false');
@@ -433,18 +452,18 @@ function viewSale(id) {
         const isWebOrder    = sale.order_source === 'web_cart' || sale.order_source == null;
         const saleDateLabel = isWebOrder ? 'Fecha de pedido' : 'Fecha de venta';
         const saleDateValue = isWebOrder
-            ? (sale.order_placed_at_label || sale.sale_date_label || '—')
-            : (sale.sale_date_label || '—');
+            ? (sale.order_placed_at_label || sale.sale_date_label || '���')
+            : (sale.sale_date_label || '���');
         const confirmedAtRow = sale.status === 'completed'
-            ? '<div class="detail-item"><label>Fecha de confirmación:</label><span>'
-                + escapeHtml(sale.confirmed_at_label || '—') + '</span></div>'
+            ? '<div class="detail-item"><label>Fecha de confirmaci?n:</label><span>'
+                + escapeHtml(sale.confirmed_at_label || '���') + '</span></div>'
             : '';
         const statusLabels  = {
             pending:         'Pendiente',
             ready_to_pickup: 'Por recoger',
             completed:       'Confirmado',
             cancelled:       'Rechazado',
-            refunded:        'Reembolsado (histórico)',
+            refunded:        'Reembolsado (hist?rico)',
             returned:        'Devuelta',
         };
         const paymentLabels = { cash: 'Efectivo', sinpe: 'SINPE movil', transfer: 'Transferencia' };
@@ -481,30 +500,30 @@ function viewSale(id) {
 
         let returnSection = '';
         if (sale.status === 'returned') {
-            const returnedAt = sale.returned_at ? new Date(sale.returned_at).toLocaleString('es-CR') : '—';
+            const returnedAt = sale.returned_at ? new Date(sale.returned_at).toLocaleString('es-CR') : '���';
             const returnedBy = sale.returned_by ? sale.returned_by.name : 'Administrador';
             returnSection = '<div class="detail-section">'
-                + '<h4><i class="fas fa-rotate-left"></i> Datos de la devolución</h4>'
+                + '<h4><i class="fas fa-rotate-left"></i> Datos de la devoluci?n</h4>'
                 + '<div class="detail-grid">'
-                + '<div class="detail-item"><label>Fecha de devolución:</label><span>' + escapeHtml(returnedAt) + '</span></div>'
+                + '<div class="detail-item"><label>Fecha de devoluci?n:</label><span>' + escapeHtml(returnedAt) + '</span></div>'
                 + '<div class="detail-item"><label>Registrado por:</label><span>' + escapeHtml(returnedBy) + '</span></div>'
                 + '</div></div>';
         }
 
         const statusClass = escapeHtml(sale.status || '');
-        const statusText = escapeHtml(statusLabels[sale.status] || sale.status || '—');
-        const paymentText = escapeHtml(paymentLabels[sale.payment_method] || sale.payment_method || '—');
+        const statusText = escapeHtml(statusLabels[sale.status] || sale.status || '���');
+        const paymentText = escapeHtml(paymentLabels[sale.payment_method] || sale.payment_method || '���');
 
         body.innerHTML = '<div class="sale-details">'
             + '<div class="detail-section">'
-            + '<h4><i class="fas fa-info-circle"></i> Información general</h4>'
+            + '<h4><i class="fas fa-info-circle"></i> Informaci?n general</h4>'
             + '<div class="detail-grid">'
             + '<div class="detail-item"><label>Factura:</label><span><strong>' + escapeHtml(sale.invoice_number || ('#' + sale.sale_id)) + '</strong></span></div>'
             + '<div class="detail-item"><label>' + escapeHtml(saleDateLabel) + ':</label><span>' + escapeHtml(saleDateValue) + '</span></div>'
             + confirmedAtRow
             + '<div class="detail-item"><label>Cliente:</label><span>' + escapeHtml(customerName) + '</span></div>'
             + '<div class="detail-item"><label>Estado:</label><span class="status-badge ' + statusClass + '">' + statusText + '</span></div>'
-            + '<div class="detail-item"><label>Método de pago:</label><span>' + paymentText + '</span></div>'
+            + '<div class="detail-item"><label>M?todo de pago:</label><span>' + paymentText + '</span></div>'
             + refRow
             + '</div></div>'
             + '<div class="detail-section"><h4><i class="fas fa-shopping-cart"></i> Productos</h4>'
@@ -531,7 +550,7 @@ function viewSale(id) {
         }
     })
     .catch(() => {
-        body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Error de conexión al cargar los detalles.</div>';
+        body.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Error de conexi?n al cargar los detalles.</div>';
     });
 }
 
@@ -556,19 +575,19 @@ function _saleAction(url, successMsg, payload = null) {
             void cf4Toast({ icon: 'success', title: 'Listo', text, timer: 3000 })
                 .then(() => location.reload());
         } else {
-            void cf4Error(data.message || 'No se pudo completar la acción.', 'Error');
+            void cf4Error(data.message || 'No se pudo completar la acci?n.', 'Error');
         }
     })
-    .catch(() => void cf4Error('Intente nuevamente.', 'Error de conexión'));
+    .catch(() => void cf4Error('Intente nuevamente.', 'Error de conexi?n'));
 }
 
 async function completeSale(id, invoiceNumber) {
     const invoiceLabel = invoiceNumber || ('#' + id);
     const result = await cf4Confirm({
         title: 'Confirmar encargo con factura: ' + invoiceLabel + '?',
-        text: 'El encargo pasará a confirmado y quedará registrado como venta con su factura.',
+        text: 'El encargo pasar? a confirmado y quedar? registrado como venta con su factura.',
         icon: 'question',
-        confirmButtonText: 'Sí, confirmar',
+        confirmButtonText: 'S?, confirmar',
         cancelButtonText: 'Cancelar',
     });
     if (result.isConfirmed) {
@@ -580,9 +599,9 @@ async function cancelSale(id, invoiceNumber) {
     const invoiceLabel = invoiceNumber || ('#' + id);
     const result = await cf4PromptTextarea({
         title: 'Rechazar encargo con factura: ' + invoiceLabel + '?',
-        text: 'Ingrese el motivo de cancelación. El stock reservado se devolverá al inventario.',
-        placeholder: 'Motivo de cancelación',
-        confirmButtonText: 'Sí, rechazar',
+        text: 'Ingrese el motivo de cancelaci?n. El stock reservado se devolver? al inventario.',
+        placeholder: 'Motivo de cancelaci?n',
+        confirmButtonText: 'S?, rechazar',
         cancelButtonText: 'Cancelar',
         minLength: 3,
         maxLength: 500,
@@ -612,9 +631,9 @@ async function confirmInvoiceAction({ title, text, confirmText, onConfirm }) {
 }
 
 function confirmInvoiceOpen(url, target, label) {
-    const text = label ? `Factura: ${label}` : 'Se abrirá la factura en una nueva pestaña.';
+    const text = label ? `Factura: ${label}` : 'Se abrir? la factura en una nueva pesta?a.';
     confirmInvoiceAction({
-        title: '¿Deseas ver la factura?',
+        title: '?Deseas ver la factura?',
         text,
         confirmText: 'Ver factura',
         onConfirm: () => {
@@ -629,9 +648,9 @@ function confirmInvoiceOpen(url, target, label) {
 }
 
 function confirmInvoicePrint(label, onConfirm) {
-    const text = label ? `Factura: ${label}` : 'Se abrirá el diálogo de impresión del navegador.';
+    const text = label ? `Factura: ${label}` : 'Se abrir? el di?logo de impresi?n del navegador.';
     confirmInvoiceAction({
-        title: '¿Deseas imprimir esta factura?',
+        title: '?Deseas imprimir esta factura?',
         text,
         confirmText: 'Imprimir',
         onConfirm,
@@ -777,8 +796,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const disc = roundMoney(parseFloat(document.getElementById('discount')?.value) || 0);
             if (disc > sub) {
                 void cf4Warning(
-                    'El descuento no puede ser mayor que el subtotal (₡' + sub.toFixed(2) + ').',
+                    `El descuento no puede ser mayor que el subtotal (${formatColones(sub)}).`,
                     'Descuento inválido'
+                );
+                return;
+            }
+
+            let missingProduct = false;
+            document.querySelectorAll('#productos-container .product-row').forEach((row) => {
+                const id = row.querySelector('.sale-product-id')?.value?.trim();
+                const combo = row.querySelector('.sale-product-combobox');
+                if (!id) {
+                    missingProduct = true;
+                    combo?.classList.add('error');
+                } else {
+                    combo?.classList.remove('error');
+                }
+            });
+            if (missingProduct) {
+                void cf4Warning(
+                    'Elegí un producto de la lista en cada línea (buscá por nombre o SKU).',
+                    'Producto requerido'
                 );
                 return;
             }
@@ -803,7 +841,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     void cf4Toast({
                         icon: 'success',
                         title: 'Venta creada',
-                        text: data.message || 'La venta se registró correctamente.',
+                        text: data.message || 'La venta se registr? correctamente.',
                         timer: 3000,
                     });
                     void afterSalesListMutation();
@@ -811,20 +849,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     void cf4Error(data.message || 'No se pudo crear la venta', 'Error');
                 }
             })
-            .catch(() => void cf4Error('Error de conexión', 'Error'));
+            .catch(() => void cf4Error('Error de conexi?n', 'Error'));
         });
     }
 
+    document.querySelectorAll('#productos-container .product-row').forEach(mountSaleProductCombobox);
+
     // Event delegation for dynamic product rows
     document.addEventListener('change', function (e) {
-        if (e.target.classList.contains('product-select')) {
-            const opt = e.target.selectedOptions[0];
-            if (opt?.dataset?.precio) {
-                const row = e.target.closest('.product-row');
-                row.querySelector('input[name*="[precio_unitario]"]').value = opt.dataset.precio;
-                calculateProductTotal(row);
-            }
-        }
         if (e.target.name?.includes('[quantity]')) {
             calculateProductTotal(e.target.closest('.product-row'));
         }

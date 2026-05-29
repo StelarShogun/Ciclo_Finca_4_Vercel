@@ -5,6 +5,7 @@
 @import "../../shared/components/buttons.css";
 @import "../../shared/components/file-upload.css";
 @import "../../shared/components/form-layout.css";
+@import "../components/product-combobox.css";
 
 .supplier-order-create .create-grid {
   display: grid;
@@ -48,8 +49,9 @@
   text-transform: uppercase;
   padding: 0.25rem 0.5rem;
   border-radius: 999px;
-  background: rgba(35, 83, 71, 0.12);
-  color: var(--color-primary, #235347);
+  background: var(--color-success-bg, rgba(35, 83, 71, 0.12));
+  color: var(--brand-medium, var(--color-primary, #235347));
+  border: 1px solid var(--border-color, transparent);
 }
 
 .supplier-order-create .form-group {
@@ -209,112 +211,9 @@
   .supplier-order-create .create-grid { grid-template-columns: 1fr; }
 }
 
-/* ─── Product / supplier combobox (mismo patrón en Proveedor y Productos) ─ */
+/* ─── Product combobox (base en components/product-combobox.css) ─ */
 .supplier-order-create .form-group .product-combobox {
   width: 100%;
-}
-
-.product-combobox {
-  position: relative;
-  flex: 1;
-}
-
-.product-combobox-input {
-  width: 100%;
-  padding: 0.6rem 2.4rem 0.6rem 0.85rem;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-family: inherit;
-  background: #fff;
-  cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  outline: none;
-  min-height: 42px;
-  box-sizing: border-box;
-}
-
-.product-combobox-input:focus,
-.product-combobox.open .product-combobox-input {
-  border-color: var(--color-primary, #235347);
-  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.18);
-}
-
-.product-combobox-input:disabled {
-  background: rgba(0, 0, 0, 0.03);
-  cursor: not-allowed;
-  color: var(--color-muted);
-}
-
-.product-combobox-chevron {
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  color: #6b7280;
-  font-size: 0.75rem;
-  transition: transform 0.2s;
-}
-
-.product-combobox.open .product-combobox-chevron {
-  transform: translateY(-50%) rotate(180deg);
-}
-
-.product-combobox-dropdown {
-  display: none;
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  max-height: 260px;
-  overflow-y: auto;
-  z-index: 1200;
-  padding: 4px;
-}
-
-.product-combobox-dropdown.open {
-  display: block;
-}
-
-.product-combobox-option {
-  padding: 0.5rem 0.6rem;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  transition: background 0.12s;
-}
-
-.product-combobox-option:hover {
-  background: #f0fdf4;
-}
-
-.product-combobox-option-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.product-combobox-option-name {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: #111827;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.product-combobox-option-meta {
-  font-size: 0.82rem;
-  color: #6b7280;
-  margin-top: 2px;
-  display: flex;
-  gap: 0.5rem;
 }
 
 .product-combobox-add-btn {

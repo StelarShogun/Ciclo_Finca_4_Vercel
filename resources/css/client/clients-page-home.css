@@ -129,9 +129,8 @@ body.guest-layout {
 }
 
 @media (max-width: 1024px) {
-  body.cliente-layout {
+  .cliente-main {
     overflow-x: clip;
-    max-width: 100%;
   }
 }
 
@@ -1550,17 +1549,20 @@ body.guest-layout {
   justify-content: center;
   gap: 5px;
   padding: 0.4rem 0.7rem;
-  height: 2.1rem;
+  min-height: 2.1rem;
+  height: auto;
   border: none;
   border-radius: 0.5rem;
   font-size: 0.78rem;
   font-weight: 600;
+  line-height: 1.2;
   cursor: pointer;
   text-decoration: none;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
   flex: 1;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 /* Botón secundario “Ver producto” — solo texto centrado (escritorio; oculto en móvil vía media query) */
@@ -1571,14 +1573,15 @@ body.guest-layout {
   box-shadow:
     0 1px 3px rgba(5, 31, 32, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.92);
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
   justify-content: center;
   text-align: center;
   gap: 0;
-  padding-inline: 0.55rem;
+  padding: 0.35rem 0.5rem;
   font-size: 0.78rem;
   min-width: 0;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .btn-ver-detalles:hover {
@@ -1733,13 +1736,16 @@ body.guest-layout {
   display: flex;
   align-items: stretch;
   gap: 8px;
-  margin: 0 -8px;
+  max-width: 100%;
+  margin: 0;
 }
 
 .categories-carousel {
   flex: 1;
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
+  contain: inline-size;
   border-radius: var(--border-radius-large);
 }
 
@@ -1752,12 +1758,13 @@ body.guest-layout {
   padding: 8px 4px 16px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
+  max-width: 100%;
 }
 
 .category-slide {
   flex: 0 0 min(100%, 340px);
   scroll-snap-align: start;
-  min-width: min(88vw, 340px);
+  min-width: min(100%, 340px);
 }
 
 .category-slide-card {

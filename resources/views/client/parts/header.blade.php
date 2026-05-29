@@ -4,7 +4,7 @@
 
             {{-- Logo --}}
             <div class="logo-section">
-                <div class="logo-link" aria-label="Marca Ciclo Finca 4">
+                <a href="{{ route('clients.home') }}" class="logo-link" aria-label="Marca Ciclo Finca 4">
                     <span class="logo-icon-wrap" aria-hidden="true">
                         <picture>
                             <source
@@ -31,7 +31,7 @@
                         <span class="logo-text logo-text--green">FINCA</span>
                         <span class="logo-text logo-text--dark">4</span>
                     </span>
-                </div>
+                </a>
             </div>
 
             {{-- Hamburger toggle: only visible on mobile (CSS controls display) --}}
@@ -86,10 +86,11 @@
                 @php
                     $cf4SearchSuggestionsUrl = route('api.products.suggestions');
                     $cf4SearchTrendingUrl = route('api.catalog.search-trending');
+                    $cf4ShowHeaderCatalogSearch = request()->routeIs('clients.catalog', 'clients.product');
                 @endphp
-                {{-- Búsqueda de catálogo: solo en ruta /catalog (GET); en otras páginas no se muestra. --}}
+                {{-- Búsqueda: catálogo y detalle de producto (envía al listado con ?search=). --}}
                 <div class="header-right-cluster">
-                    @if(request()->routeIs('clients.catalog'))
+                    @if($cf4ShowHeaderCatalogSearch)
                     <div class="header-catalog-search"
                          data-catalog-suggestions
                          data-suggestions-url="{{ $cf4SearchSuggestionsUrl }}"
@@ -233,6 +234,7 @@
                                     </a>
                                 </div>
                                 <div class="user-dropdown-foot">
+                                    @include('shared.partials.cf4-theme-dropdown-row')
                                     <form action="{{ route('logout') }}" method="POST" class="logout-form">
                                         @csrf
                                         <button type="submit" class="user-dropdown-item user-dropdown-logout" role="menuitem">
@@ -271,6 +273,7 @@
                                     </span>
                                 </div>
                                 <div class="user-dropdown-foot">
+                                    @include('shared.partials.cf4-theme-dropdown-row')
                                     <a href="{{ route('admin.catalog.exit') }}" class="user-dropdown-item"
                                        role="menuitem" style="color:var(--color-primary);text-decoration:none;">
                                         <i class="fas fa-arrow-left"></i>

@@ -22,6 +22,14 @@
     --admin-scrollbar-sidebar-thumb-hover: var(--cf4-scrollbar-thumb-on-dark-hover);
 }
 
+html[data-theme="dark"] {
+    --cf4-scrollbar-thumb: rgba(142, 182, 155, 0.38);
+    --cf4-scrollbar-thumb-hover: rgba(218, 241, 222, 0.52);
+    --cf4-scrollbar-track: transparent;
+    --cf4-scrollbar-thumb-on-dark: rgba(142, 182, 155, 0.42);
+    --cf4-scrollbar-thumb-on-dark-hover: rgba(218, 241, 222, 0.58);
+}
+
 /* ---- Scopes: viewport ---- */
 html:has(body.admin-layout),
 html:has(body.cliente-layout),

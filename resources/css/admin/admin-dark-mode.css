@@ -1,0 +1,1606 @@
+/*
+ * CF4 admin dark mode — module-wide overrides (loaded via shell-base.css).
+ * Tokens live in variables-reset.css; this file maps hardcoded light surfaces to dark palette.
+ */
+
+/* ===================================================================
+   Surfaces — cards, panels, tables, filters
+   =================================================================== */
+
+html[data-theme="dark"] :is(
+  .kpi-card,
+  .stat-card,
+  .report-card,
+  .action-card,
+  .chart-container,
+  .table-container,
+  .sales-table-container,
+  .orders-table-card,
+  .filters-section,
+  .filters-container,
+  .form-container,
+  .admin-card,
+  .detail-card,
+  .summary-card,
+  .info-panel,
+  .classification-filters-panel,
+  .supplier-detail-card,
+  .order-summary-panel,
+  .xml-review-panel,
+  .xml-upload-card,
+  .report-panel,
+  .exports-card,
+  .audit-log-filters,
+  .product-sales-filters,
+  .client-purchase-summary,
+  .brand-form-card,
+  .page-header:not(.cf4-admin-page-header),
+  .csr-metric-card,
+  .catalog-search-report .report-table-wrap,
+  .inventory-kpi-card,
+  .inv-toolbar-card,
+  .inv-classification-card,
+  .inv-bulk-bar,
+  .cf-combobox__list,
+  .products-table.table-view,
+  .table-view-toolbar
+) {
+  background: var(--cf4-admin-card-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .chart-btn {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .chart-btn:hover,
+html[data-theme="dark"] .chart-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .table-header {
+  background: var(--cf4-admin-panel-bg);
+  border-bottom-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .category-chart-legend-item:hover {
+  background: rgba(22, 56, 50, 0.35);
+}
+
+html[data-theme="dark"] .category-chart-legend-name {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .kpi-content h3,
+html[data-theme="dark"] .kpi-title,
+html[data-theme="dark"] .chart-header h3,
+html[data-theme="dark"] .table-header h3,
+html[data-theme="dark"] .quick-actions h3,
+html[data-theme="dark"] .filters-title {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .kpi-value,
+html[data-theme="dark"] .stat-value,
+html[data-theme="dark"] .report-card-body h2 {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .report-card-body p,
+html[data-theme="dark"] .report-card-arrow {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .report-card-icon {
+  background: rgba(22, 56, 50, 0.55);
+  color: var(--brand-light);
+  border: 1px solid rgba(129, 199, 132, 0.28);
+}
+
+html[data-theme="dark"] .action-card:hover {
+  border-color: rgba(129, 199, 132, 0.45);
+}
+
+html[data-theme="dark"] .cf4-orders-module .orders-toolbar {
+  background: var(--cf4-admin-panel-bg);
+  border-bottom-color: var(--cf4-admin-card-border);
+}
+
+/* ===================================================================
+   Tablas admin — beat admin-table.css :is() hovers and module tr:hover rules
+   =================================================================== */
+
+html[data-theme="dark"] :is(
+    .admin-table,
+    table.admin-table,
+    .sales-table.admin-table,
+    .dashboard-table.admin-table,
+    .report-table.admin-table,
+    .audit-log-table.admin-table,
+    .inv-table.admin-table,
+    .xml-review-table.admin-table,
+    .items-table.admin-table,
+    .brands-table.admin-table,
+    .clients-table.admin-table,
+    .cf4-purchases-table.admin-table,
+    .cf4-invoices-list-table.admin-table,
+    .cf4-items-table.admin-table,
+    .sale-products-table.admin-table,
+    .products-table.table-view table.admin-table,
+    .inv-index-report .sales-table.admin-table,
+    .cf4-orders-module .orders-table-card .sales-table.admin-table
+  ) tbody td {
+  color: var(--text-primary);
+  border-bottom-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] :is(
+    .admin-table,
+    table.admin-table,
+    .sales-table.admin-table,
+    .dashboard-table.admin-table,
+    .report-table.admin-table,
+    .audit-log-table.admin-table,
+    .inv-table.admin-table,
+    .xml-review-table.admin-table,
+    .items-table.admin-table,
+    .brands-table.admin-table,
+    .clients-table.admin-table,
+    .cf4-purchases-table.admin-table,
+    .cf4-invoices-list-table.admin-table,
+    .cf4-items-table.admin-table,
+    .sale-products-table.admin-table,
+    .products-table.table-view table.admin-table,
+    .inv-index-report .sales-table.admin-table,
+    .cf4-orders-module .orders-table-card .sales-table.admin-table
+  ) tbody tr {
+  background-color: var(--cf4-admin-card-bg);
+}
+
+html[data-theme="dark"] :is(
+    .admin-table,
+    table.admin-table,
+    .sales-table.admin-table,
+    .dashboard-table.admin-table,
+    .report-table.admin-table,
+    .audit-log-table.admin-table,
+    .inv-table.admin-table,
+    .xml-review-table.admin-table,
+    .items-table.admin-table,
+    .brands-table.admin-table,
+    .clients-table.admin-table,
+    .cf4-purchases-table.admin-table,
+    .cf4-invoices-list-table.admin-table,
+    .cf4-items-table.admin-table,
+    .sale-products-table.admin-table,
+    .products-table.table-view table.admin-table,
+    .inv-index-report .sales-table.admin-table,
+    .cf4-orders-module .orders-table-card .sales-table.admin-table
+  ) tbody tr:hover {
+  background-color: rgba(22, 56, 50, 0.22);
+  color: var(--text-primary);
+}
+
+/* Sticky acciones: mismo fondo que la fila (sin segundo color ni transición desfasada) */
+html[data-theme="dark"] .admin-table tbody td.admin-table__col--actions,
+html[data-theme="dark"] .admin-table tbody td.col-actions,
+html[data-theme="dark"] .admin-table tbody td.actions-cell {
+  background-color: inherit;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.28);
+}
+
+html[data-theme="dark"] .sales-table tbody tr,
+html[data-theme="dark"] .dashboard-table tbody tr,
+html[data-theme="dark"] .clients-table tbody tr,
+html[data-theme="dark"] .products-table.table-view tbody tr {
+  background-color: var(--cf4-admin-card-bg);
+}
+
+html[data-theme="dark"] .sales-table tbody tr:hover,
+html[data-theme="dark"] .dashboard-table tbody tr:hover,
+html[data-theme="dark"] .clients-table tbody tr:hover,
+html[data-theme="dark"] .products-table.table-view tbody tr:hover {
+  background-color: rgba(22, 56, 50, 0.22);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .tables-section .dashboard-table.admin-table tbody tr:hover {
+  background-color: rgba(22, 56, 50, 0.22);
+}
+
+html[data-theme="dark"] .audit-log-table.admin-table tbody tr:hover td,
+html[data-theme="dark"] .inv-table.admin-table tbody tr:hover td,
+html[data-theme="dark"] .inv-table tbody tr:hover td {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .client-orders-table.report-table.admin-table tbody tr:hover,
+html[data-theme="dark"] .client-purchases-show-table.admin-table tbody tr:hover {
+  background: rgba(22, 56, 50, 0.22);
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  html[data-theme="dark"] .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody tr {
+    background: var(--cf4-admin-card-bg);
+    border-color: var(--cf4-admin-card-border);
+  }
+
+  html[data-theme="dark"] .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody tr:hover {
+    background-color: rgba(22, 56, 50, 0.22);
+    color: var(--text-primary);
+  }
+
+  html[data-theme="dark"] .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td {
+    border-bottom-color: var(--cf4-admin-card-border);
+    color: var(--text-primary);
+  }
+}
+
+html[data-theme="dark"] .admin-table .admin-table-card-row {
+  background: var(--cf4-admin-card-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+/* ===================================================================
+   Filtros y formularios
+   =================================================================== */
+
+html[data-theme="dark"] .filter-group label,
+html[data-theme="dark"] .filter-group legend,
+html[data-theme="dark"] .form-group label,
+html[data-theme="dark"] .filter-field {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .filters-section .filter-group label {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .filter-group input,
+html[data-theme="dark"] .filter-group select,
+html[data-theme="dark"] .cf4-orders-module .orders-toolbar select,
+html[data-theme="dark"] .cf4-orders-module .orders-toolbar input[type="text"],
+html[data-theme="dark"] .wr-input,
+html[data-theme="dark"] .wr-select {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .filters-quick-label {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .filters-active-summary {
+  background: rgba(22, 56, 50, 0.35);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .filters-active-summary strong {
+  color: var(--brand-light);
+}
+
+/* ===================================================================
+   Admin — texto legible (alias usados en módulos con fallback oscuro)
+   =================================================================== */
+
+html[data-theme="dark"] .admin-layout {
+  --color-text: var(--text-primary);
+  --color-text-muted: var(--cf4-text-muted);
+  color: var(--text-primary);
+}
+
+/* ===================================================================
+   Modales admin (compartidos + por módulo)
+   =================================================================== */
+
+html[data-theme="dark"] :is(
+  .modal-content,
+  .modal-container,
+  .modal-overlay .modal-content,
+  .edit-modal .modal-content,
+  .stock-modal-box,
+  .cf4-export-modal__inner
+) {
+  background: var(--cf4-admin-card-bg);
+  color: var(--text-primary);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .modal-header,
+html[data-theme="dark"] .modal-overlay .modal-header {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .modal-header :is(h2, h3, .modal-title),
+html[data-theme="dark"] .modal-close {
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .modal-body,
+html[data-theme="dark"] .modal-footer,
+html[data-theme="dark"] .modal-overlay .modal-body,
+html[data-theme="dark"] .modal-overlay .modal-footer,
+html[data-theme="dark"] .stock-modal-body,
+html[data-theme="dark"] .cf4-export-modal__body,
+html[data-theme="dark"] .cf4-export-modal__footer {
+  background: transparent;
+  color: var(--text-primary);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .modal-container .modal-footer,
+html[data-theme="dark"] .modal-overlay .modal-container .modal-footer {
+  background: var(--cf4-admin-panel-bg);
+}
+
+html[data-theme="dark"] .modal-body :is(
+  .form-group label,
+  .detail-label,
+  .stock-form-group label,
+  .cf4-export-modal__label,
+  .product-detail-field.form-group label,
+  .product-card-detail-label
+) {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .modal-body :is(
+  .form-group input,
+  .form-group select,
+  .form-group textarea,
+  .stock-form-control,
+  .cf4-export-modal__control,
+  .cf-toolbar-input,
+  .brand-combobox-input
+) {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .modal-body .detail-item span,
+html[data-theme="dark"] #view-product-modal .product-details-value,
+html[data-theme="dark"] .stock-modal-product-info .product-name {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .loading-spinner {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .loading-spinner i {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] :is(
+  .edit-modal.loading .modal-body::after,
+  .modal-overlay.loading .modal-content::after,
+  .modal-overlay.loading .modal-container::after
+) {
+  background: rgba(2, 15, 16, 0.55);
+}
+
+html[data-theme="dark"] .modal-body .error-message {
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+html[data-theme="dark"] .modal-body .error-message i {
+  color: #f87171;
+}
+
+/* Secciones dentro de modales (producto, venta, etc.) */
+html[data-theme="dark"] .modal-body .form-section,
+html[data-theme="dark"] .sale-details .detail-section {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .modal-body .form-section__toggle {
+  background: rgba(22, 56, 50, 0.35);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .modal-body .form-section__toggle:hover {
+  background: rgba(22, 56, 50, 0.5);
+}
+
+html[data-theme="dark"] .modal-body .form-section__toggle i.fa-chevron-down {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .sale-details .detail-section h4 {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .sale-details .detail-item label {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .sale-details .total-item.total-final {
+  border-top-color: var(--brand-light);
+  color: var(--text-primary);
+}
+
+/* Inventario — ver producto / importar / clasificación */
+html[data-theme="dark"] #view-product-modal .product-detail-field.form-group label {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] #view-product-modal .product-details-empty,
+html[data-theme="dark"] .import-modal-intro {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .import-format-chip {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .import-modal-requirements {
+  color: var(--text-primary);
+  background: rgba(22, 56, 50, 0.35);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .classification-placeholder,
+html[data-theme="dark"] .classification-card {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .classification-placeholder__title,
+html[data-theme="dark"] .classification-empty__title {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .classification-placeholder__text,
+html[data-theme="dark"] .classification-empty__text,
+html[data-theme="dark"] .classification-loading {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .classification-editor__toolbar {
+  background: rgba(22, 56, 50, 0.35);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .classification-parent-only-msg {
+  color: #fde68a;
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+html[data-theme="dark"] #view-product-modal .product-details-carousel-outer > .carousel-btn {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] #view-product-modal .product-details-carousel-outer > .carousel-btn:hover:not(:disabled) {
+  background: rgba(22, 56, 50, 0.45);
+}
+
+html[data-theme="dark"] #view-product-modal .product-details-media-frame {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+/* Stock adjust modal */
+html[data-theme="dark"] .stock-modal-header {
+  background: var(--color-primary);
+}
+
+html[data-theme="dark"] .stock-modal-product-info {
+  background: rgba(22, 56, 50, 0.35);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .stock-modal-product-info__icon,
+html[data-theme="dark"] .stock-modal-product-info .stock-pill {
+  background: var(--cf4-admin-card-bg);
+  color: var(--brand-light);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .stock-modal-product-info .product-stock__label {
+  color: var(--cf4-text-muted);
+}
+
+/* Encargos — modal vencimiento */
+html[data-theme="dark"] #order-expiration-modal .cf4-order-expiry-modal-intro,
+html[data-theme="dark"] #order-expiration-modal .cf4-order-expiry-modal-hint,
+html[data-theme="dark"] #order-expiration-modal .form-help {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] #order-expiration-modal .orders-settings-form label {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] #order-expiration-modal .cf4-order-expiry-modal-hint {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] #order-expiration-modal .orders-settings-form input[type="number"] {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+/* Export modal (reportes — <dialog>) */
+html[data-theme="dark"] .cf4-export-modal {
+  background: var(--cf4-admin-card-bg);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .cf4-export-modal__header {
+  border-bottom-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .cf4-export-modal__title {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .cf4-export-modal__subtitle {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .cf4-export-modal__scope {
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .cf4-export-modal__radio {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .cf4-export-modal__radio:has(input:checked) {
+  background: rgba(22, 56, 50, 0.55);
+  border-color: var(--brand-light);
+}
+
+html[data-theme="dark"] .cf4-export-modal__btn--ghost {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .cf4-export-modal__close {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .cf4-export-modal__close:hover {
+  color: var(--text-primary);
+  background: rgba(22, 56, 50, 0.35);
+}
+
+/* SweetAlert2 en admin */
+html[data-theme="dark"] .admin-layout .cf4-swal-popup {
+  background: var(--cf4-admin-card-bg) !important;
+  border-color: var(--cf4-admin-card-border) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .admin-layout .cf4-swal-title {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .admin-layout .cf4-swal-html,
+html[data-theme="dark"] .admin-layout .cf4-swal-text {
+  color: var(--cf4-text-muted) !important;
+}
+
+html[data-theme="dark"] .admin-layout .cf4-swal-btn-muted {
+  background: var(--cf4-admin-panel-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--cf4-admin-card-border) !important;
+}
+
+html[data-theme="dark"] .admin-layout .cf4-swal-toast .swal2-title {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .inventory-export-menu {
+  background: var(--cf4-admin-card-bg);
+  border-color: var(--cf4-admin-card-border);
+  box-shadow: var(--shadow-lg);
+}
+
+html[data-theme="dark"] .cf4-admin-page-header .inventory-export-menu,
+html[data-theme="dark"] .cf4-admin-page-header .inventory-export-menu__item {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .cf4-admin-page-header .inventory-export-menu__item i,
+html[data-theme="dark"] .cf4-admin-page-header .inventory-export-menu__item--primary {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .inventory-export-menu__item:hover {
+  background: rgba(22, 56, 50, 0.45);
+}
+
+html[data-theme="dark"] .wr-modal-panel {
+  background: var(--cf4-admin-card-bg);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .wr-modal-header {
+  background: linear-gradient(135deg, rgba(22, 56, 50, 0.65) 0%, rgba(7, 31, 31, 0.95) 100%);
+  border-bottom-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .wr-modal-header__title,
+html[data-theme="dark"] .wr-label {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .wr-modal-header__sub,
+html[data-theme="dark"] .wr-hint {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .wr-section {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .wr-modal-close {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--cf4-text-muted);
+}
+
+/* ===================================================================
+   Breadcrumbs y enlaces en contenido
+   =================================================================== */
+
+html[data-theme="dark"] :is(
+  .reports-breadcrumb,
+  .admin-breadcrumb,
+  .catalog-search-report .reports-breadcrumb
+) {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] :is(
+  .reports-breadcrumb a,
+  .admin-breadcrumb a,
+  .catalog-search-report .reports-breadcrumb a
+) {
+  color: #81c784;
+}
+
+html[data-theme="dark"] :is(
+  .reports-breadcrumb a:hover,
+  .admin-breadcrumb a:hover,
+  .catalog-search-report .reports-breadcrumb a:hover
+) {
+  color: #daf1de;
+}
+
+html[data-theme="dark"] :is(
+  .reports-breadcrumb .sep,
+  .admin-breadcrumb .sep,
+  .catalog-search-report .reports-breadcrumb .sep
+) {
+  color: rgba(218, 241, 222, 0.45);
+}
+
+/* ===================================================================
+   Botones compartidos
+   =================================================================== */
+
+html[data-theme="dark"] .btn-outline-primary {
+  color: var(--brand-light);
+  border-color: var(--brand-light);
+}
+
+html[data-theme="dark"] .btn-outline-primary:hover:not(:disabled) {
+  background: rgba(22, 56, 50, 0.45);
+  color: #ffffff;
+  border-color: #81c784;
+}
+
+html[data-theme="dark"] .btn-primary {
+  background: #163832;
+  border-color: #163832;
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .btn-primary:hover:not(:disabled) {
+  background: #235347;
+  border-color: #235347;
+}
+
+html[data-theme="dark"] .btn-secondary {
+  background: #212121;
+  border-color: #2d4a35;
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+  background: #1a1a1a;
+  border-color: #81c784;
+  color: #ffffff;
+}
+
+/* ===================================================================
+   Paginación (importada en módulos con listados)
+   =================================================================== */
+
+html[data-theme="dark"] .cf4-pagination-toolbar.pagination,
+html[data-theme="dark"] .catalog-shell .pagination-wrapper .pagination.is-compact:not(.cf4-pagination-toolbar) {
+  background: var(--cf4-admin-card-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .cf4-pagination-toolbar .results-info {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--cf4-text-main);
+}
+
+html[data-theme="dark"] .cf4-pagination-toolbar .admin-pagination-per-page-label {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .cf4-pagination-toolbar .admin-pagination-per-page-select {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--cf4-text-main);
+}
+
+html[data-theme="dark"] .cf4-pagination-toolbar .button:not(.button-primary):not([aria-label="Anterior"]):not([aria-label="Siguiente"]):not([aria-label="Previous"]):not([aria-label="Next"]) {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--cf4-text-main);
+}
+
+html[data-theme="dark"] .cf4-pagination-toolbar .button:hover:not(.is-disabled):not([aria-disabled="true"]):not(.button-primary) {
+  background: rgba(22, 56, 50, 0.45);
+  border-color: rgba(129, 199, 132, 0.35);
+}
+
+html[data-theme="dark"] .cf4-pagination-toolbar .button-primary,
+html[data-theme="dark"] .cf4-pagination-toolbar .button.is-active,
+html[data-theme="dark"] .cf4-pagination-toolbar .button[aria-label="Siguiente"]:not(.is-disabled),
+html[data-theme="dark"] .cf4-pagination-toolbar .button[aria-label="Anterior"]:not(.is-disabled) {
+  background: #163832;
+  border-color: #163832;
+  color: #ffffff;
+}
+
+/* ===================================================================
+   Alertas, toasts, avisos
+   =================================================================== */
+
+html[data-theme="dark"] .alert-inline-error {
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.35);
+  color: #fde68a;
+}
+
+html[data-theme="dark"] .ls-toast {
+  background: var(--cf4-admin-card-bg);
+  border-left-color: var(--color-warning);
+  box-shadow: var(--shadow-lg);
+}
+
+html[data-theme="dark"] .ls-toast__title {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .ls-toast__msg {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .expiry-warning {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fde68a;
+}
+
+html[data-theme="dark"] .empty-state,
+html[data-theme="dark"] .empty-state i {
+  color: var(--cf4-text-muted);
+}
+
+/* ===================================================================
+   Login admin
+   =================================================================== */
+
+html[data-theme="dark"] .auth-container {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(45, 74, 53, 0.22), transparent 28rem),
+    var(--background-main);
+}
+
+html[data-theme="dark"] .inventory-kpi-card {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .cf-combobox__list .cf-list__item {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .cf-combobox__list .cf-list__item:hover,
+html[data-theme="dark"] .cf-combobox__list .cf-list__item.is-active {
+  background: rgba(22, 56, 50, 0.45);
+}
+
+/* ===================================================================
+   Reportes — bloques con fondos claros hardcodeados
+   =================================================================== */
+
+@media not print {
+  html[data-theme="dark"] :is(
+    .period-btn,
+    .top10-btn:not(.is-active),
+    .top10-section,
+    .full-table-section,
+    .table-wrap,
+    .audit-log-results,
+    .sales-perf-filters,
+    .sales-perf-results,
+    .inv-index-search-input,
+    .inv-mov-filters,
+    .inv-metric-card,
+    .inv-table-section,
+    .inv-table-wrap,
+    .csr-ranking-panel,
+    .csr-kpi-card,
+    .exports-section,
+    .cf4-export-field input,
+    .cf4-export-field select,
+    .cf4-export-modal__btn--ghost,
+    .table-section,
+    .modal-container
+  ) {
+    background: var(--cf4-admin-card-bg);
+    border-color: var(--cf4-admin-card-border);
+    color: var(--text-primary);
+  }
+
+  html[data-theme="dark"] .period-btn.active,
+  html[data-theme="dark"] .top10-btn.is-active {
+    background: var(--color-primary);
+    color: #ffffff;
+  }
+
+  html[data-theme="dark"] .period-btn:not(.active):hover,
+  html[data-theme="dark"] .top10-btn:not(.is-active):hover {
+    background: rgba(22, 56, 50, 0.45);
+    color: var(--text-primary);
+  }
+
+  html[data-theme="dark"] .inv-index-report .orders-toolbar-actions .btn-secondary {
+    background: var(--cf4-admin-panel-bg);
+    border-color: var(--cf4-admin-card-border);
+    color: var(--text-primary);
+  }
+
+  html[data-theme="dark"] .inv-mov-row-card {
+    background: var(--cf4-admin-card-bg);
+    border-color: var(--cf4-admin-card-border);
+  }
+
+  @media (max-width: 768px) {
+    html[data-theme="dark"] .audit-log-table tbody tr {
+      background: var(--cf4-admin-card-bg);
+      border-color: var(--cf4-admin-card-border);
+    }
+  }
+}
+
+/* Pantallas de factura en pantalla (impresión sigue en blanco vía @media print del módulo) */
+@media not print {
+  html[data-theme="dark"] .invoice-document-shell,
+  html[data-theme="dark"] .invoice-preview-panel {
+    background: var(--background-main);
+    color: var(--text-primary);
+  }
+}
+
+/* ===================================================================
+   Legibilidad extra — formularios, ventas, combobox, uploads
+   =================================================================== */
+
+html[data-theme="dark"] :is(
+  .form-card,
+  .create-card,
+  .add-attribute-section,
+  .attributes-loaded-section,
+  .classification-form-panel
+) {
+  background: var(--cf4-admin-card-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] :is(
+  .form-card h2,
+  .form-card h3,
+  .create-card h2,
+  .add-attribute-section h3,
+  .attributes-loaded-section h3
+) {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .supplier-name-btn {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .supplier-name-btn:hover {
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .sale-totals {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--brand-light);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .sale-totals .total-row,
+html[data-theme="dark"] .sale-totals #subtotal {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .sale-totals .total-row input,
+html[data-theme="dark"] .sale-totals #discount {
+  background: var(--cf4-admin-card-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .sale-totals .total-final {
+  color: var(--brand-light);
+  border-top-color: var(--brand-light);
+}
+
+html[data-theme="dark"] .sales-table-container--empty:hover .table-empty-state--fill {
+  background: var(--table-row-hover-bg);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] :is(
+  .sales-metric-card,
+  .sales-perf-filters,
+  .sales-comparison-section
+) {
+  background: var(--cf4-admin-card-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .sales-metric-value {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .inv-index-search-input {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .inv-index-search-input::placeholder {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .reports-breadcrumb,
+html[data-theme="dark"] .sales-container .reports-breadcrumb,
+html[data-theme="dark"] .inv-mov-breadcrumb {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .reports-breadcrumb a {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] select option {
+  background: var(--cf4-admin-card-bg);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] :is(
+  .cf-file-upload,
+  .cf-file-upload--compact
+) {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .cf-file-upload__text,
+html[data-theme="dark"] .cf-file-upload__hint {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .product-combobox-input {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .product-combobox-dropdown {
+  background: var(--cf4-admin-card-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .product-combobox-option-name {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .product-combobox-option-meta {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .product-combobox-option:hover,
+html[data-theme="dark"] .product-combobox-option.selected {
+  background: rgba(22, 56, 50, 0.45);
+}
+
+html[data-theme="dark"] .product-combobox.error .product-combobox-input {
+  border-color: var(--color-danger);
+}
+
+/* ===================================================================
+   Botones de acción en tablas (encargos, proveedores, inventario)
+   =================================================================== */
+
+html[data-theme="dark"] .action-btn {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .action-btn:hover {
+  background: rgba(22, 56, 50, 0.45);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .action-btn.view,
+html[data-theme="dark"] a.action-btn.view {
+  color: #93c5fd;
+  background: rgba(96, 165, 250, 0.14);
+}
+
+html[data-theme="dark"] .action-btn.view:hover,
+html[data-theme="dark"] a.action-btn.view:hover {
+  background: rgba(96, 165, 250, 0.28);
+  color: #e0f2fe;
+}
+
+html[data-theme="dark"] .action-btn.secondary {
+  color: var(--brand-light);
+  background: rgba(142, 182, 155, 0.14);
+}
+
+html[data-theme="dark"] .action-btn.secondary:hover {
+  background: rgba(142, 182, 155, 0.28);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .action-btn.success {
+  color: #86efac;
+  background: rgba(134, 239, 172, 0.12);
+}
+
+html[data-theme="dark"] .action-btn.success:hover {
+  background: rgba(134, 239, 172, 0.22);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .action-btn.stock-adjust[data-stock-action="add"] {
+  color: #86efac;
+  background: rgba(134, 239, 172, 0.14);
+}
+
+html[data-theme="dark"] .action-btn.stock-adjust[data-stock-action="add"]:hover {
+  background: rgba(134, 239, 172, 0.26);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .action-btn.stock-adjust[data-stock-action="remove"] {
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.14);
+}
+
+html[data-theme="dark"] .action-btn.stock-adjust[data-stock-action="remove"]:hover {
+  background: rgba(248, 113, 113, 0.26);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .action-btn.edit,
+html[data-theme="dark"] a.action-btn.edit {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.14);
+}
+
+html[data-theme="dark"] .action-btn.edit:hover,
+html[data-theme="dark"] a.action-btn.edit:hover {
+  background: rgba(251, 191, 36, 0.26);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .action-btn.delete,
+html[data-theme="dark"] .action-btn.danger,
+html[data-theme="dark"] a.action-btn.delete,
+html[data-theme="dark"] a.action-btn.danger {
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.14);
+}
+
+html[data-theme="dark"] .action-btn.delete:hover,
+html[data-theme="dark"] .action-btn.danger:hover,
+html[data-theme="dark"] a.action-btn.delete:hover,
+html[data-theme="dark"] a.action-btn.danger:hover {
+  background: rgba(248, 113, 113, 0.26);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .action-btn.warning {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.14);
+}
+
+html[data-theme="dark"] .action-btn.warning:hover {
+  background: rgba(251, 191, 36, 0.26);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .admin-table .btn-icon,
+html[data-theme="dark"] .brands-table .btn-icon {
+  background: rgba(22, 56, 50, 0.35);
+  border: 1px solid var(--cf4-admin-card-border);
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .admin-table .btn-icon:hover,
+html[data-theme="dark"] .brands-table .btn-icon:hover {
+  background: rgba(22, 56, 50, 0.55);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-table .btn-icon.btn-edit,
+html[data-theme="dark"] .brands-table .btn-icon.btn-edit {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+html[data-theme="dark"] .admin-table .btn-icon.btn-edit:hover,
+html[data-theme="dark"] .brands-table .btn-icon.btn-edit:hover {
+  background: rgba(251, 191, 36, 0.26);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .admin-table .btn-icon.btn-delete,
+html[data-theme="dark"] .brands-table .btn-icon.btn-delete {
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.14);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+html[data-theme="dark"] .admin-table .btn-icon.btn-delete:hover,
+html[data-theme="dark"] .brands-table .btn-icon.btn-delete:hover {
+  background: rgba(248, 113, 113, 0.26);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .admin-table .actions-container .btn-secondary {
+  background: rgba(22, 56, 50, 0.45);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-table .actions-container .btn-secondary:hover:not(:disabled) {
+  background: rgba(22, 56, 50, 0.62);
+  border-color: var(--brand-light);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .brands-table.admin-table thead th.admin-table__col--actions,
+html[data-theme="dark"] .brands-table.admin-table tbody td.admin-table__col--actions {
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .sidebar-header-admin {
+  color: rgba(238, 248, 240, 0.92);
+}
+
+html[data-theme="dark"] .audit-log-page .muted {
+  color: var(--brand-light);
+  opacity: 0.92;
+}
+
+html[data-theme="dark"] .btn-filter-clear {
+  background: var(--cf4-filter-btn-muted-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .btn-filter-clear:hover {
+  background: var(--cf4-filter-btn-muted-hover);
+  border-color: var(--brand-light);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .inv-index-report .orders-toolbar label,
+html[data-theme="dark"] .cf4-orders-module .orders-toolbar label {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .inv-index-report .orders-search-field input[type="search"],
+html[data-theme="dark"] .cf4-orders-module .orders-search-field input {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .inv-index-report .orders-search-field input::placeholder,
+html[data-theme="dark"] .cf4-orders-module .orders-search-field input::placeholder {
+  color: var(--cf4-text-muted);
+  opacity: 1;
+}
+
+html[data-theme="dark"] .filter-field input,
+html[data-theme="dark"] .filter-field select {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .action-link-invoice {
+  color: var(--brand-light);
+  background: rgba(142, 182, 155, 0.12);
+  border-color: rgba(142, 182, 155, 0.45);
+}
+
+html[data-theme="dark"] .action-link-invoice:hover {
+  background: rgba(22, 56, 50, 0.55);
+  border-color: var(--brand-light);
+  color: #ffffff;
+}
+
+/* Desempeño de ventas — diferencia real */
+html[data-theme="dark"] .sales-comparison-list {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .sales-comparison-row {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .sales-comparison-row + .sales-comparison-row {
+  border-top-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .sales-comparison-label {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .sales-comparison-value.trend-up {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .sales-comparison-value.trend-down {
+  color: #fca5a5;
+}
+
+html[data-theme="dark"] .sales-comparison-value.trend-flat {
+  color: var(--cf4-text-muted);
+}
+
+/* Inventario — barra de conteo / vista tabla */
+html[data-theme="dark"] .products-header {
+  background: color-mix(in srgb, var(--brand-medium) 22%, var(--cf4-admin-card-bg));
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .products-count {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .view-btn {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .view-btn.active,
+html[data-theme="dark"] .view-btn:hover {
+  background: var(--color-primary);
+  border-color: var(--brand-light);
+  color: #ffffff;
+}
+
+/* Destacado en tienda (nuevo / editar producto) */
+html[data-theme="dark"] .featured-store-toggle {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .featured-store-toggle__title {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .featured-store-toggle__desc {
+  color: var(--cf4-text-muted);
+}
+
+/* Compras por cliente */
+html[data-theme="dark"] .btn-client-orders-open {
+  background: var(--cf4-admin-panel-bg);
+  border-color: rgba(142, 182, 155, 0.45);
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .btn-client-orders-open:hover {
+  background: var(--color-primary);
+  border-color: var(--brand-light);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .client-purchases-search {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+/* Pedido a proveedor — modal / pills */
+html[data-theme="dark"] .required-pill {
+  background: rgba(129, 199, 132, 0.16);
+  color: var(--brand-light);
+  border-color: rgba(142, 182, 155, 0.35);
+}
+
+html[data-theme="dark"] .supplier-order-create .create-card {
+  background: var(--cf4-admin-card-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .supplier-order-create label {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .product-combobox-input:disabled {
+  background: var(--cf4-admin-panel-bg);
+  color: var(--cf4-text-muted);
+  opacity: 0.85;
+}
+
+/* Importar XML de proveedor */
+html[data-theme="dark"] .xml-upload-card h2 i {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .xml-field-group input[type="number"]:focus {
+  box-shadow: 0 0 0 3px rgba(142, 182, 155, 0.22);
+}
+
+html[data-theme="dark"] .xml-actions .btn-ghost {
+  border-color: var(--cf4-admin-card-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .xml-actions .btn-ghost:hover {
+  background: rgba(22, 56, 50, 0.45);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .xml-form-error {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+}
+
+html[data-theme="dark"] .xml-field-error {
+  color: #fca5a5;
+}
+
+html[data-theme="dark"] .xml-upload-card .cf-file-upload {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+/* Modal loading — sin destello blanco (token en variables-reset) */
+html[data-theme="dark"] .edit-modal.loading .modal-body::after,
+html[data-theme="dark"] .modal-overlay.loading .modal-content::after,
+html[data-theme="dark"] .modal-overlay.loading .modal-container::after {
+  background: var(--cf4-modal-loading-scrim);
+}
+
+/* ===================================================================
+   Modal detalle de encargo (cf4-order-detail)
+   =================================================================== */
+
+html[data-theme="dark"] .cf4-order-detail__item {
+  background: var(--cf4-admin-panel-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .cf4-order-detail__item span {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .cf4-order-detail__item strong {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .cf4-order-detail__products {
+  background: var(--cf4-admin-card-bg);
+  border-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .cf4-order-detail__products h4,
+html[data-theme="dark"] .cf4-order-detail__products h4 i {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .cf4-order-detail__products h4 i {
+  color: var(--brand-light);
+}
+
+/* ===================================================================
+   Iconos decorativos admin (KPI, vacíos, métricas) — contraste en dark
+   =================================================================== */
+
+html[data-theme="dark"] .kpi-icon {
+  background: linear-gradient(
+    145deg,
+    rgba(35, 83, 71, 0.9) 0%,
+    rgba(22, 56, 50, 0.75) 100%
+  );
+  color: #ffffff;
+  border: 1px solid rgba(142, 182, 155, 0.25);
+}
+
+html[data-theme="dark"] .kpi-icon.success,
+html[data-theme="dark"] .stat-icon.green {
+  background: var(--cf4-icon-badge-bg-success);
+  color: var(--cf4-icon-badge-fg-success);
+  border-color: rgba(134, 239, 172, 0.28);
+}
+
+html[data-theme="dark"] .kpi-icon.info,
+html[data-theme="dark"] .stat-icon.blue {
+  background: var(--cf4-icon-badge-bg-info);
+  color: var(--cf4-icon-badge-fg-info);
+  border-color: rgba(147, 197, 253, 0.28);
+}
+
+html[data-theme="dark"] .kpi-icon.warning,
+html[data-theme="dark"] .stat-icon.yellow {
+  background: var(--cf4-icon-badge-bg-warning);
+  color: var(--cf4-icon-badge-fg-warning);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+html[data-theme="dark"] .kpi-icon.danger,
+html[data-theme="dark"] .stat-icon.red {
+  background: var(--cf4-icon-badge-bg-danger);
+  color: var(--cf4-icon-badge-fg-danger);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+html[data-theme="dark"] .stat-icon {
+  background: var(--cf4-icon-badge-bg-muted);
+  color: var(--cf4-icon-badge-fg-muted);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+html[data-theme="dark"] .sales-metric-icon {
+  color: var(--brand-light);
+  opacity: 1;
+}
+
+html[data-theme="dark"] .csr-kpi-icon {
+  background: var(--cf4-icon-badge-bg-success);
+  color: var(--cf4-icon-badge-fg-success);
+  border-color: rgba(134, 239, 172, 0.28);
+}
+
+html[data-theme="dark"] .csr-kpi-icon--muted {
+  background: var(--cf4-icon-badge-bg-info);
+  color: var(--cf4-icon-badge-fg-info);
+  border-color: rgba(147, 197, 253, 0.28);
+}
+
+html[data-theme="dark"] .csr-kpi-icon--accent {
+  background: var(--cf4-icon-badge-bg-accent);
+  color: var(--cf4-icon-badge-fg-accent);
+  border-color: rgba(252, 211, 77, 0.35);
+}
+
+html[data-theme="dark"] .csr-empty-icon {
+  background: var(--cf4-icon-badge-bg);
+  color: var(--cf4-icon-badge-fg);
+  border: 1px solid rgba(142, 182, 155, 0.28);
+}
+
+html[data-theme="dark"] .table-empty-icon {
+  color: var(--brand-light);
+  opacity: 0.85;
+}
+
+html[data-theme="dark"] .orders-empty-icon,
+html[data-theme="dark"] .cf4-orders-module .orders-empty .orders-empty-icon {
+  opacity: 1;
+}
+
+html[data-theme="dark"] .orders-empty-icon i,
+html[data-theme="dark"] .cf4-orders-module .orders-empty .orders-empty-icon i {
+  color: var(--brand-light);
+  opacity: 0.9;
+}
+
+html[data-theme="dark"] .inv-metric-icon {
+  background: var(--cf4-icon-badge-bg-muted);
+  color: var(--cf4-icon-badge-fg-muted);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+html[data-theme="dark"] .inv-metric-card--entrada .inv-metric-icon {
+  background: var(--cf4-icon-badge-bg-success);
+  color: var(--cf4-icon-badge-fg-success);
+  border-color: rgba(134, 239, 172, 0.28);
+}
+
+html[data-theme="dark"] .inv-metric-card--salida .inv-metric-icon {
+  background: var(--cf4-icon-badge-bg-danger);
+  color: var(--cf4-icon-badge-fg-danger);
+  border-color: rgba(248, 113, 113, 0.28);
+}
+
+html[data-theme="dark"] .report-card-icon {
+  background: linear-gradient(
+    145deg,
+    rgba(35, 83, 71, 0.85) 0%,
+    rgba(22, 56, 50, 0.7) 100%
+  );
+  color: #ffffff;
+  border: 1px solid rgba(142, 182, 155, 0.3);
+}
+
+html[data-theme="dark"] .action-icon {
+  background: var(--cf4-icon-badge-bg);
+  color: var(--brand-light);
+  border: 1px solid rgba(142, 182, 155, 0.22);
+}
+
+html[data-theme="dark"] .export-icon {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .products-count__icon {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .csr-kpi-label,
+html[data-theme="dark"] .csr-kpi-leader-name,
+html[data-theme="dark"] .csr-kpi-period-text,
+html[data-theme="dark"] .csr-empty-title {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .csr-empty,
+html[data-theme="dark"] .csr-kpi-period-long,
+html[data-theme="dark"] .csr-ranking-panel-meta {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .csr-ranking-row:hover {
+  background: var(--table-row-hover-bg);
+}

@@ -92,7 +92,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-muted);
+  color: var(--text-secondary, var(--color-muted));
 }
 
 .cf4-orders-module .orders-toolbar select,
@@ -103,7 +103,8 @@
   font-size: 0.9rem;
   font-family: inherit;
   min-height: 40px;
-  background: #fff;
+  background: var(--background-white, #fff);
+  color: var(--text-primary, inherit);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -539,8 +540,8 @@
 }
 
 .cf4-order-detail__item {
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
+  background: var(--cf4-admin-panel-bg, var(--background-light, #f8fafc));
+  border: 1px solid var(--border-color, #e5e7eb);
   border-radius: 14px;
   padding: 0.85rem 1rem;
   min-width: 0;
@@ -549,18 +550,18 @@
 .cf4-order-detail__item span {
   display: block;
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--text-secondary, var(--color-muted, #64748b));
   margin-bottom: 0.25rem;
 }
 
 .cf4-order-detail__item strong {
-  color: #0f172a;
+  color: var(--text-primary, #0f172a);
   word-break: break-word;
 }
 
 .cf4-order-detail__products {
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--cf4-admin-card-bg, var(--background-white, #fff));
+  border: 1px solid var(--border-color, #e5e7eb);
   border-radius: 14px;
   padding: 1rem;
   min-width: 0;
@@ -572,6 +573,11 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  color: var(--text-primary);
+}
+
+.cf4-order-detail__products h4 i {
+  color: var(--brand-medium, var(--color-primary));
 }
 
 .cf4-order-detail__products .admin-table-responsive {
@@ -601,22 +607,30 @@
 }
 
 .xml-upload-card {
-  background: var(--color-surface, #fff);
-  border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: var(--radius-md, 10px);
+  background: var(--cf4-admin-card-bg, var(--background-white, #fff));
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: var(--border-radius-large, 10px);
   padding: 2rem 2.25rem;
+  color: var(--text-primary);
 }
 
 .xml-upload-card h2 {
   font-size: 1.15rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
-  color: var(--color-text-primary, #111827);
+  color: var(--text-primary, #111827);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.xml-upload-card__icon {
+  color: var(--color-primary, #235347);
 }
 
 .xml-upload-card p.subtitle {
   font-size: 0.875rem;
-  color: var(--color-text-secondary, #6b7280);
+  color: var(--text-secondary, var(--color-muted, #6b7280));
   margin-bottom: 1.5rem;
 }
 
@@ -629,7 +643,7 @@
 .xml-field-group label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-text-primary, #111827);
+  color: var(--text-primary, #111827);
   display: block;
   margin-bottom: 0.35rem;
 }
@@ -638,18 +652,29 @@
 .xml-field-group select {
   width: 100%;
   padding: 0.55rem 0.75rem;
-  border: 1px solid var(--color-border, #d1d5db);
-  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: var(--border-radius-small, 6px);
   font-size: 0.9rem;
-  background: var(--color-input-bg, #f9fafb);
-  color: var(--color-text-primary, #111827);
+  background: var(--cf4-admin-panel-bg, var(--background-light, #f9fafb));
+  color: var(--text-primary, #111827);
   box-sizing: border-box;
+}
+
+.xml-field-group input[type="number"]:focus,
+.xml-field-group select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.18);
 }
 
 .xml-field-group .field-hint {
   font-size: 0.8rem;
-  color: var(--color-text-secondary, #6b7280);
+  color: var(--text-secondary, var(--color-muted, #6b7280));
   margin-top: 0.3rem;
+}
+
+.xml-field-group .field-hint strong {
+  color: var(--text-primary);
 }
 
 .xml-form-error {
@@ -675,6 +700,62 @@
   align-items: center;
   margin-top: 1.5rem;
   flex-wrap: wrap;
+}
+
+.xml-actions .btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius, 8px);
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary, var(--color-muted));
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: var(--transition, background 0.15s ease, color 0.15s ease);
+}
+
+.xml-actions .btn-ghost:hover {
+  background: var(--color-light);
+  color: var(--text-primary);
+  border-color: var(--border-color-strong, var(--border-color));
+}
+
+.xml-formats-help summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary, var(--color-muted));
+}
+
+.xml-formats-help summary i {
+  margin-right: 0.35rem;
+}
+
+.xml-formats-help__body {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary, var(--color-muted));
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.xml-formats-help__body strong {
+  color: var(--text-primary);
+}
+
+.xml-formats-help__body pre {
+  background: var(--cf4-admin-panel-bg, #f3f4f6);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-radius: 6px;
+  padding: 0.6rem 0.85rem;
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  overflow-x: auto;
+  color: var(--text-primary);
 }
 
 .sales-container.xml-upload-page {

@@ -123,9 +123,9 @@
   gap: 0.65rem;
   padding: 1.15rem 1.2rem;
   border-radius: var(--border-radius, 12px);
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  background: #fff;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.07));
+  background: var(--cf4-admin-card-bg, var(--background-white, #fff));
+  box-shadow: var(--shadow-sm, 0 2px 10px rgba(0, 0, 0, 0.06));
   min-height: 118px;
   box-sizing: border-box;
 }
@@ -146,18 +146,19 @@
   justify-content: center;
   font-size: 1rem;
   flex-shrink: 0;
-  background: rgba(35, 83, 71, 0.12);
-  color: var(--color-primary, #235347);
+  background: var(--cf4-icon-badge-bg-success, rgba(35, 83, 71, 0.12));
+  color: var(--cf4-icon-badge-fg-success, var(--color-primary, #235347));
+  border: 1px solid transparent;
 }
 
 .csr-kpi-icon--muted {
-  background: rgba(69, 90, 100, 0.1);
-  color: #455a64;
+  background: var(--cf4-icon-badge-bg-muted, rgba(69, 90, 100, 0.1));
+  color: var(--cf4-icon-badge-fg-muted, #455a64);
 }
 
 .csr-kpi-icon--accent {
-  background: rgba(251, 191, 36, 0.22);
-  color: #b45309;
+  background: var(--cf4-icon-badge-bg-accent, rgba(251, 191, 36, 0.22));
+  color: var(--cf4-icon-badge-fg-accent, #b45309);
 }
 
 .csr-kpi-label {
@@ -173,7 +174,7 @@
 .csr-kpi-value {
   font-size: 1.65rem;
   font-weight: 700;
-  color: var(--color-dark, #111827);
+  color: var(--text-primary, var(--color-dark, #111827));
   margin: 0;
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -228,9 +229,9 @@
 
 .csr-ranking-panel {
   border-radius: var(--border-radius, 12px);
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  background: #fff;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.07));
+  background: var(--cf4-admin-card-bg, var(--background-white, #fff));
+  box-shadow: var(--shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.06));
   overflow: hidden;
 }
 
@@ -248,7 +249,7 @@
   margin: 0;
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--color-dark, #1b1b1b);
+  color: var(--text-primary, var(--color-dark, #1b1b1b));
 }
 
 .csr-ranking-panel-meta {
@@ -415,8 +416,9 @@
   height: 3.5rem;
   margin: 0 auto 1rem;
   border-radius: 50%;
-  background: rgba(35, 83, 71, 0.1);
-  color: var(--color-primary, #235347);
+  background: var(--cf4-icon-badge-bg, rgba(35, 83, 71, 0.1));
+  color: var(--cf4-icon-badge-fg, var(--color-primary, #235347));
+  border: 1px solid rgba(142, 182, 155, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;

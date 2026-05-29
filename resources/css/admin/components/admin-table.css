@@ -52,7 +52,7 @@
     background: var(--brand-dark);
     color: var(--brand-lightest);
     padding: 0.75rem 1rem;
-    text-align: left;
+    text-align: center;
     font-weight: 600;
     font-size: 0.8rem;
     letter-spacing: 0.02em;
@@ -113,6 +113,7 @@
     padding: 0.75rem 1rem;
     border-bottom: 1px solid var(--border-color, #e5e7eb);
     vertical-align: middle;
+    text-align: center;
     color: var(--color-dark, #212529);
 }
 
@@ -136,7 +137,7 @@
     .inv-index-report .sales-table.admin-table,
     .cf4-orders-module .orders-table-card .sales-table.admin-table
 ) tbody tr {
-    transition: background-color 0.12s ease;
+    background-color: var(--background-white, #fff);
 }
 
 :is(
@@ -159,7 +160,8 @@
     .inv-index-report .sales-table.admin-table,
     .cf4-orders-module .orders-table-card .sales-table.admin-table
 ) tbody tr:hover {
-    background: var(--brand-lightest);
+    background: var(--table-row-hover-bg);
+    color: var(--text-primary);
 }
 
 :is(
@@ -188,7 +190,7 @@
 :is(
     .admin-table
 ) tbody td.col-actions {
-    text-align: right;
+    text-align: center;
     white-space: nowrap;
     min-width: 7.5rem;
 }
@@ -196,14 +198,15 @@
 .admin-table .actions-container {
     display: inline-flex;
     flex-wrap: nowrap;
-    justify-content: flex-end;
+    justify-content: center;
     align-items: center;
     gap: 0.35rem;
     max-width: none;
+    width: 100%;
 }
 
 .admin-table td.actions-cell {
-    text-align: right;
+    text-align: center;
     white-space: nowrap;
 }
 
@@ -377,14 +380,8 @@
     position: sticky;
     right: 0;
     z-index: 2;
-    background: #fff;
+    background-color: inherit;
     box-shadow: -4px 0 8px rgba(0, 0, 0, 0.05);
-}
-
-.admin-table tbody tr:hover td.admin-table__col--actions,
-.admin-table tbody tr:hover td.col-actions,
-.admin-table tbody tr:hover td.actions-cell {
-    background: var(--brand-lightest);
 }
 
 /* Compact two-column lists (brands): sticky actions + shadow reads as a vertical seam */
@@ -397,12 +394,10 @@
 }
 
 .brands-table.admin-table thead th.admin-table__col--actions {
+    position: static;
+    box-shadow: none;
+    z-index: auto;
     background: var(--brand-dark);
-}
-
-.brands-table.admin-table tbody tr:hover td.admin-table__col--actions,
-.brands-table.admin-table tbody tr:hover td.actions-cell {
-    background: var(--brand-lightest);
 }
 
 .brands-table.admin-table tbody td:not(.admin-table__col--actions):not(.actions-cell) {
@@ -410,7 +405,7 @@
 }
 
 .admin-table .actions-container {
-    justify-content: flex-end;
+    justify-content: center;
     flex-shrink: 0;
 }
 
@@ -468,7 +463,8 @@
     }
 
     .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody tr:hover {
-        background: #fff;
+        background: var(--table-row-hover-bg, #fff);
+        color: var(--text-primary);
     }
 
     .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td {
