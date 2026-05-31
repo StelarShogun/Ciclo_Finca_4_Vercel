@@ -377,6 +377,8 @@ class ClientUserController extends Controller
     // Process verification code
     public function verify(Request $request)
     {
+        $wantsJson = $request->ajax() || $request->wantsJson();
+
         $request->validate(
             ['verification_code' => 'required|digits:6'],
             [
@@ -387,18 +389,33 @@ class ClientUserController extends Controller
 
         $clientId = session('pending_client_id');
         if (! $clientId) {
+            $msg = 'Sesión expirada. Regístrate de nuevo.';
+            if ($wantsJson) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+
             return redirect()->route('clients.register.form')
-                ->withErrors(['verification_code' => 'Sesión expirada. Regístrate de nuevo.']);
+                ->withErrors(['verification_code' => $msg]);
         }
 
         $client = Client::find($clientId);
 
         if (! $client || $client->verification_code !== $request->verification_code) {
-            return back()->withErrors(['verification_code' => 'Código incorrecto. Inténtalo de nuevo.']);
+            $msg = 'Código incorrecto. Inténtalo de nuevo.';
+            if ($wantsJson) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+
+            return back()->withErrors(['verification_code' => $msg]);
         }
 
         if (now()->isAfter($client->verification_code_expires_at)) {
-            return back()->withErrors(['verification_code' => 'El código ha expirado. Solicita uno nuevo.']);
+            $msg = 'El código ha expirado. Solicita uno nuevo.';
+            if ($wantsJson) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+
+            return back()->withErrors(['verification_code' => $msg]);
         }
 
         $client->update([
@@ -417,6 +434,12 @@ class ClientUserController extends Controller
             'client_first_surname' => $client->first_surname,
             'client_second_surname' => $client->second_surname,
         ]);
+
+        if ($wantsJson) {
+            session()->flash('success', '¡Cuenta verificada y creada exitosamente!');
+
+            return response()->json(['success' => true, 'redirect' => route('clients.catalog')]);
+        }
 
         return redirect()->route('clients.catalog')->with('success', '¡Cuenta verificada y creada exitosamente!');
     }
@@ -648,7 +671,14 @@ class ClientUserController extends Controller
         session()->forget(['pending_recovery_id', 'pending_recovery_gmail', 'pending_recovery_password']);
 
         if ($request->ajax() || $request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Contraseña actualizada correctamente.']);
+            // Flash persists for the next request, so the login modal still shows.
+            session()->flash('recovery_success_modal', 'Contraseña actualizada. Ya puedes iniciar sesión.');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Contraseña actualizada correctamente.',
+                'redirect' => route('login.show'),
+            ]);
         }
 
         return redirect()->route('login.show')

@@ -826,6 +826,7 @@ html[data-theme="dark"] .input-ok    { border-color: var(--color-success) !impor
    Usa tokens semánticos → válido en modo claro y oscuro.
    =================================================================== */
 .otp-inputs {
+    position: relative;
     display: flex;
     justify-content: center;
     gap: clamp(6px, 2.5vw, 12px);
@@ -894,6 +895,62 @@ html[data-theme="dark"] .input-ok    { border-color: var(--color-success) !impor
 .otp-inputs.is-verifying .otp-box:nth-child(5) { animation-delay: 0.4s; }
 .otp-inputs.is-verifying .otp-box:nth-child(6) { animation-delay: 0.5s; }
 
+/* Resultado: las casillas se unen en una sola insignia (check o X).
+   El glifo (✓ / ✕) lo escribe el JS como textContent. */
+.otp-success {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: clamp(50px, 15vw, 64px);
+    height: clamp(50px, 15vw, 64px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: clamp(1.7rem, 6vw, 2.2rem);
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    background: var(--color-success);
+    box-shadow: 0 0 0 6px var(--color-success-bg);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+    pointer-events: none;
+    transition: opacity 0.25s ease,
+                transform 0.4s cubic-bezier(0.18, 0.9, 0.32, 1.4),
+                background 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Estado de error: insignia roja con la X */
+.otp-inputs.is-fail .otp-success {
+    background: var(--color-danger);
+    box-shadow: 0 0 0 6px var(--color-danger-bg);
+}
+
+/* Colapsa las casillas hacia el centro en ambos resultados */
+.otp-inputs.is-success,
+.otp-inputs.is-fail {
+    gap: 0;
+}
+
+.otp-inputs.is-success .otp-box,
+.otp-inputs.is-fail .otp-box {
+    width: 0;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border-width: 0;
+    opacity: 0;
+    transform: scale(0.4);
+    transition: width 0.35s ease, opacity 0.3s ease, transform 0.35s ease;
+}
+
+.otp-inputs.is-success .otp-success,
+.otp-inputs.is-fail .otp-success {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
 /* Spinner del botón mientras verifica */
 .otp-loading {
     display: inline-flex;
@@ -945,6 +1002,9 @@ html[data-theme="dark"] .otp-box {
     .otp-box.is-filled,
     .otp-inputs.is-error,
     .otp-inputs.is-verifying .otp-box,
+    .otp-inputs.is-success .otp-box,
+    .otp-inputs.is-fail .otp-box,
+    .otp-success,
     .otp-spinner {
         animation: none !important;
         transition: none !important;

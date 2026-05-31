@@ -61,6 +61,8 @@
                     <input type="text" class="otp-box" inputmode="numeric" autocomplete="off" maxlength="1" aria-label="Dígito 4">
                     <input type="text" class="otp-box" inputmode="numeric" autocomplete="off" maxlength="1" aria-label="Dígito 5">
                     <input type="text" class="otp-box" inputmode="numeric" autocomplete="off" maxlength="1" aria-label="Dígito 6">
+                    {{-- Success badge: boxes merge into this single checkbox before navigating --}}
+                    <span class="otp-success" aria-hidden="true"></span>
                 </div>
                 {{-- The backend keeps reading a single "verification_code" field --}}
                 <input type="hidden" name="verification_code" id="verification_code">

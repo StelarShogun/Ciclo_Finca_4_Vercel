@@ -793,41 +793,103 @@ function sendPassword(form) {
         });
     });
 
-    // How long the "verifying" wave stays on screen before the real navigation.
-    var VERIFY_HOLD_MS = reduce ? 0 : 1200;
+    var successBadge = container.querySelector('.otp-success');
+
+    // Animation timing.
+    var WAVE_MS         = reduce ? 0 : 650; // minimum "verifying" wave
+    var SUCCESS_HOLD_MS = reduce ? 0 : 750; // check shown before redirect
+    var FAIL_HOLD_MS    = reduce ? 0 : 900; // X shown before letting the user retry
+
+    function setButtonLoading(btnRefs, loading) {
+        if (btnRefs.icon)     btnRefs.icon.style.display     = loading ? 'none' : '';
+        if (btnRefs.texto)    btnRefs.texto.style.display    = loading ? 'none' : '';
+        if (btnRefs.cargando) btnRefs.cargando.style.display = loading ? 'inline-flex' : 'none';
+        if (btnRefs.btn)      btnRefs.btn.disabled           = loading;
+    }
 
     form.addEventListener('submit', function (e) {
-        // Once we are holding for the animation, allow the native submit through.
+        // JS always drives the submission so we can show check / X feedback.
+        e.preventDefault();
         if (submitting) return;
 
         var code = syncHidden();
-
         if (code.length !== 6) {
-            e.preventDefault();
+            if (errEl) errEl.textContent = 'El código debe tener exactamente 6 dígitos.';
             showError();
             var empty = firstEmptyIndex();
             focusBox(empty === -1 ? 0 : empty);
             return;
         }
 
-        // Hold the submission briefly so the wave + spinner are actually visible.
-        e.preventDefault();
         submitting = true;
         clearError();
-        container.classList.add('is-verifying');
         boxes.forEach(function (b) { b.readOnly = true; });
 
-        var btnTexto    = document.getElementById('btnVerificarTexto');
-        var btnCargando = document.getElementById('btnVerificarCargando');
-        var btnIcon     = document.getElementById('btnVerificarIcon');
-        var btn         = document.getElementById('btnVerificar');
-        if (btnIcon)     btnIcon.style.display     = 'none';
-        if (btnTexto)    btnTexto.style.display    = 'none';
-        if (btnCargando) btnCargando.style.display = 'inline-flex';
-        if (btn)         btn.disabled              = true;
+        var btnRefs = {
+            texto:    document.getElementById('btnVerificarTexto'),
+            cargando: document.getElementById('btnVerificarCargando'),
+            icon:     document.getElementById('btnVerificarIcon'),
+            btn:      document.getElementById('btnVerificar')
+        };
+        setButtonLoading(btnRefs, true);
+        container.classList.add('is-verifying');
 
-        // form.submit() does not re-fire this listener, so no re-entry guard needed.
-        setTimeout(function () { form.submit(); }, VERIFY_HOLD_MS);
+        function showResultBadge(state, glyph) {
+            container.classList.remove('is-verifying');
+            if (successBadge) successBadge.textContent = glyph;
+            container.classList.add(state);
+        }
+
+        function onSuccess(redirectUrl) {
+            showResultBadge('is-success', '\u2713'); // ✓
+            setTimeout(function () {
+                window.location.href = redirectUrl || '/';
+            }, SUCCESS_HOLD_MS);
+        }
+
+        function onFailure(message) {
+            showResultBadge('is-fail', '\u2715'); // ✕
+            setTimeout(function () {
+                container.classList.remove('is-fail', 'is-success');
+                boxes.forEach(function (b) {
+                    b.value = '';
+                    b.readOnly = false;
+                    markFilled(b);
+                });
+                syncHidden();
+                setButtonLoading(btnRefs, false);
+                if (errEl) {
+                    errEl.textContent = message || 'Código incorrecto. Inténtalo de nuevo.';
+                }
+                submitting = false;
+                showError(); // re-expanded boxes shake in red + message
+                focusBox(0);
+            }, FAIL_HOLD_MS);
+        }
+
+        // Keep the wave visible at least WAVE_MS, even if the server replies instantly.
+        var minWait = new Promise(function (resolve) { setTimeout(resolve, WAVE_MS); });
+        var request = fetch(form.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            body: new FormData(form),
+            credentials: 'same-origin'
+        }).then(function (res) {
+            return res.json().catch(function () { return {}; }).then(function (data) {
+                return { ok: res.ok, data: data || {} };
+            });
+        });
+
+        Promise.all([request, minWait]).then(function (results) {
+            var r = results[0];
+            if (r.ok && r.data.success) {
+                onSuccess(r.data.redirect);
+            } else {
+                onFailure(r.data.message);
+            }
+        }).catch(function () {
+            onFailure('No se pudo verificar. Revisa tu conexión e inténtalo de nuevo.');
+        });
     });
 
     focusBox(0);
