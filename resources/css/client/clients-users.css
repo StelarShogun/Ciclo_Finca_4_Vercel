@@ -265,6 +265,12 @@ body.guest-layout {
   border: 1px solid var(--color-danger);
 }
 
+.alert-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning);
+}
+
 /* ===================================================================
    10. LOGIN / REGISTER FORMS (opcional, ya existía)
    =================================================================== */
@@ -709,6 +715,110 @@ body.guest-layout {
 /* ── Borde rojo/verde en input según estado ── */
 .input-error { border-color: #e74c3c !important; box-shadow: 0 0 0 2px rgba(231, 76, 60, .15) !important; }
 .input-ok    { border-color: #27ae60 !important; box-shadow: 0 0 0 2px rgba(39, 174, 96, .12) !important; }
+
+/* ===================================================================
+   10.b LOGIN / REGISTER / RECOVERY / VERIFY — MODO OSCURO
+   Overrides de superficies, textos y bordes para las pantallas de auth.
+   El modo claro permanece intacto; aquí solo se reasignan tokens dark.
+   (tokens definidos en variables-reset.css → html[data-theme="dark"])
+   =================================================================== */
+
+/* Deja ver el degradado oscuro del body en lugar del gris claro */
+html[data-theme="dark"] .login-page-center {
+    background: transparent;
+}
+
+html[data-theme="dark"] .login-form-box {
+    background: var(--cf4-surface-1);
+    border: 1px solid var(--cf4-border-soft);
+    box-shadow: var(--shadow-lg);
+}
+
+html[data-theme="dark"] .login-form-box h2 {
+    color: var(--cf4-text-strong);
+}
+
+html[data-theme="dark"] .login-subtitle,
+html[data-theme="dark"] .login-form-box .text-muted,
+html[data-theme="dark"] .login-back-link,
+html[data-theme="dark"] .login-field-icon,
+html[data-theme="dark"] .login-footer-text,
+html[data-theme="dark"] .cf4-oauth-legal-note,
+html[data-theme="dark"] .login-pass-toggle {
+    color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .login-field-label,
+html[data-theme="dark"] .checkbox-label,
+html[data-theme="dark"] .login-form-box label {
+    color: var(--cf4-text-main);
+}
+
+html[data-theme="dark"] .login-auth-logo img {
+    background: var(--cf4-surface-2);
+}
+
+/* Inputs del formulario auth */
+html[data-theme="dark"] .login-form-box .form-control {
+    background: var(--cf4-surface-2);
+    border-color: var(--border-color);
+    color: var(--cf4-text-main);
+}
+
+html[data-theme="dark"] .login-form-box .form-control::placeholder {
+    color: var(--cf4-text-muted);
+}
+
+/* Divider "o" */
+html[data-theme="dark"] .login-divider {
+    color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .login-divider::before,
+html[data-theme="dark"] .login-divider::after {
+    background: var(--cf4-border-soft);
+}
+
+/* Botones secundarios (OAuth / crear cuenta) */
+html[data-theme="dark"] .oauth-btn,
+html[data-theme="dark"] .login-register-btn {
+    background: var(--cf4-surface-2);
+    border-color: var(--border-color);
+    color: var(--cf4-text-main);
+}
+
+html[data-theme="dark"] .login-register-btn {
+    color: var(--brand-light);
+}
+
+html[data-theme="dark"] .oauth-btn:hover,
+html[data-theme="dark"] .login-register-btn:hover {
+    background: var(--cf4-surface-elevated);
+    border-color: var(--brand-light);
+    color: var(--cf4-text-main);
+}
+
+/* Enlaces de pie y de alerta */
+html[data-theme="dark"] .login-footer a,
+html[data-theme="dark"] .alert-link {
+    color: var(--brand-light);
+}
+
+/* Mensajes inline por campo */
+html[data-theme="dark"] .field-msg.error {
+    color: var(--color-danger);
+    background: var(--color-danger-bg);
+    border-color: var(--color-danger);
+}
+
+html[data-theme="dark"] .field-msg.success {
+    color: var(--color-success);
+    background: var(--color-success-bg);
+    border-color: var(--color-success);
+}
+
+html[data-theme="dark"] .input-error { border-color: var(--color-danger) !important; }
+html[data-theme="dark"] .input-ok    { border-color: var(--color-success) !important; }
 
 /* ===================================================================
    11. MY PROFILE (profile.blade.php)

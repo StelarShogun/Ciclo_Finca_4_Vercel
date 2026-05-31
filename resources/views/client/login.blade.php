@@ -68,7 +68,7 @@
                     </button>
                 </div>
                 <div class="text-right mt-1" style="text-align:right;">
-                    <a href="{{ route('clients.recovery.form') }}" class="login-field-label" style="font-size:0.85rem;color:#2d7a2d;">
+                    <a href="{{ route('clients.recovery.form') }}" class="login-field-label" style="font-size:0.85rem;color:var(--color-success);">
                         ¿Olvidó su contraseña?
                     </a>
                 </div>
@@ -76,7 +76,16 @@
 
             {{-- reCAPTCHA v2 widget --}}
             <div class="form-group recaptcha-wrap">
-                <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
+                {{-- data-theme set to match the active CF4 theme before api.js auto-renders --}}
+                <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}" data-theme="light"></div>
+                <script>
+                    (function () {
+                        var widget = document.currentScript.previousElementSibling;
+                        if (widget && document.documentElement.dataset.theme === 'dark') {
+                            widget.setAttribute('data-theme', 'dark');
+                        }
+                    })();
+                </script>
             </div>
 
             <button type="submit" class="btn btn-primary btn-login-submit" id="login-submit-btn">
