@@ -10,9 +10,6 @@
 @endpush
 
 @section('content')
-@php
-    $isRecoveryFlow = session()->has('pending_recovery_id');
-@endphp
 <div class="login-page-center">
     <div class="login-form-box" style="max-width:420px;width:100%;">
 
@@ -24,8 +21,8 @@
         <h2 class="text-center mb-2" style="font-size:1.5rem;font-weight:700;">Verifica que eres tú</h2>
         <p class="text-center text-muted mb-4" style="font-size:0.95rem;">
             Código de verificación ha sido enviado a tu correo
-            @if(session('pending_gmail'))
-                <br><strong>{{ session('pending_gmail') }}</strong>
+            @if(session('pending_gmail') || session('pending_recovery_gmail'))
+                <br><strong>{{ session('pending_gmail') ?? session('pending_recovery_gmail') }}</strong>
             @endif
         </p>
 

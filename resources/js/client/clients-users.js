@@ -670,6 +670,7 @@ function sendPassword(form) {
     var errEl  = document.getElementById('code-error');
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var submitting = false;
+    var autoSubmitTimer = null;
 
     function syncHidden() {
         var value = '';
@@ -734,13 +735,14 @@ function sendPassword(form) {
 
     // Mirror the reel's "auto-verify once entered" behaviour.
     function maybeAutoSubmit() {
-        if (!submitting && allFilled()) {
-            setTimeout(function () {
-                if (submitting) return;
-                if (typeof form.requestSubmit === 'function') form.requestSubmit();
-                else form.submit();
-            }, reduce ? 0 : 180);
-        }
+        if (submitting || !allFilled()) return;
+        if (autoSubmitTimer) clearTimeout(autoSubmitTimer);
+        autoSubmitTimer = setTimeout(function () {
+            autoSubmitTimer = null;
+            if (submitting || !allFilled()) return;
+            if (typeof form.requestSubmit === 'function') form.requestSubmit();
+            else form.submit();
+        }, reduce ? 0 : 180);
     }
 
     boxes.forEach(function (box, index) {
@@ -850,7 +852,8 @@ function sendPassword(form) {
         function onFailure(message) {
             showResultBadge('is-fail', '\u2715'); // ✕
             setTimeout(function () {
-                container.classList.remove('is-fail', 'is-success');
+                container.classList.remove('is-fail', 'is-success', 'is-verifying');
+                if (successBadge) successBadge.textContent = '';
                 boxes.forEach(function (b) {
                     b.value = '';
                     b.readOnly = false;
@@ -865,6 +868,15 @@ function sendPassword(form) {
                 showError(); // re-expanded boxes shake in red + message
                 focusBox(0);
             }, FAIL_HOLD_MS);
+        }
+
+        function extractErrorMessage(data) {
+            if (!data) return '';
+            if (data.message) return data.message;
+            if (data.errors && data.errors.verification_code && data.errors.verification_code[0]) {
+                return data.errors.verification_code[0];
+            }
+            return '';
         }
 
         // Keep the wave visible at least WAVE_MS, even if the server replies instantly.
@@ -885,7 +897,7 @@ function sendPassword(form) {
             if (r.ok && r.data.success) {
                 onSuccess(r.data.redirect);
             } else {
-                onFailure(r.data.message);
+                onFailure(extractErrorMessage(r.data));
             }
         }).catch(function () {
             onFailure('No se pudo verificar. Revisa tu conexión e inténtalo de nuevo.');
@@ -899,15 +911,10 @@ function sendPassword(form) {
 // RECOVERY PASSWORD PAGE
 // ============================================================
 
+// Step 1: email only — sends the verification code.
 (function initRecovery() {
     var formRecovery = document.getElementById('formRecovery');
     if (!formRecovery) return;
-
-    // Password toggle buttons.
-    var togglePassBtn    = document.getElementById('toggle-recovery-password');
-    var toggleConfirmBtn = document.getElementById('toggle-recovery-confirm');
-    if (togglePassBtn)    togglePassBtn.addEventListener('click',    function () { togglePass('recovery-password',         'eye-recovery-password'); });
-    if (toggleConfirmBtn) toggleConfirmBtn.addEventListener('click', function () { togglePass('recovery-password-confirm', 'eye-recovery-confirm'); });
 
     // Gmail validation for recovery email.
     var recEmailInput = document.getElementById('recovery-email');
@@ -931,39 +938,6 @@ function sendPassword(form) {
         });
     }
 
-    // Password length indicator.
-    var recPassInput = document.getElementById('recovery-password');
-    if (recPassInput) {
-        recPassInput.addEventListener('input', function () {
-            var v = this.value;
-            if (v.length === 0)    { clearMsg('msg-recovery-password'); setInputState(this, null); }
-            else if (v.length < 8) { showMsg('msg-recovery-password', 'error', 'Mínimo 8 caracteres (' + v.length + '/8).'); setInputState(this, 'input-error'); }
-            else                   { showMsg('msg-recovery-password', 'success', 'Longitud correcta.'); setInputState(this, 'input-ok'); }
-            checkRecoveryMatch();
-        });
-    }
-
-    // Password confirmation match.
-    function checkRecoveryMatch() {
-        var passEl    = document.getElementById('recovery-password');
-        var confirmEl = document.getElementById('recovery-password-confirm');
-        if (!passEl || !confirmEl) return;
-        var p  = passEl.value;
-        var pc = confirmEl.value;
-        if (pc.length === 0) { clearMsg('msg-recovery-confirm'); setInputState(confirmEl, null); return; }
-        if (p !== pc) {
-            showMsg('msg-recovery-confirm', 'error', 'Las contraseñas no coinciden.');
-            setInputState(confirmEl, 'input-error');
-        } else {
-            showMsg('msg-recovery-confirm', 'success', 'Las contraseñas coinciden.');
-            setInputState(confirmEl, 'input-ok');
-        }
-    }
-
-    var recConfirmInput = document.getElementById('recovery-password-confirm');
-    if (recConfirmInput) recConfirmInput.addEventListener('input', checkRecoveryMatch);
-
-    // Final validation before submitting recovery form.
     formRecovery.addEventListener('submit', function (e) {
         var valid = true;
 
@@ -978,33 +952,85 @@ function sendPassword(form) {
             valid = false;
         }
 
-        var passVal = recPassInput ? recPassInput.value : '';
-        if (passVal.length === 0) {
-            showMsg('msg-recovery-password', 'error', 'La contraseña es obligatoria.');
-            setInputState(recPassInput, 'input-error');
-            valid = false;
-        } else if (passVal.length < 8) {
-            showMsg('msg-recovery-password', 'error', 'Mínimo 8 caracteres.');
-            setInputState(recPassInput, 'input-error');
-            valid = false;
-        }
-
-        var confVal = recConfirmInput ? recConfirmInput.value : '';
-        if (confVal.length === 0) {
-            showMsg('msg-recovery-confirm', 'error', 'Debes confirmar la contraseña.');
-            setInputState(recConfirmInput, 'input-error');
-            valid = false;
-        } else if (passVal !== confVal) {
-            showMsg('msg-recovery-confirm', 'error', 'Las contraseñas no coinciden.');
-            setInputState(recConfirmInput, 'input-error');
-            valid = false;
-        }
-
         if (!valid) { e.preventDefault(); return; }
 
         var btn         = document.getElementById('btnRecovery');
         var btnTexto    = document.getElementById('btnRecoveryTexto');
         var btnCargando = document.getElementById('btnRecoveryCargando');
+        if (btn)         btn.disabled              = true;
+        if (btnTexto)    btnTexto.style.display    = 'none';
+        if (btnCargando) btnCargando.style.display = 'inline';
+    });
+})();
+
+// Step 3: set the new password (after the code was verified).
+(function initRecoveryReset() {
+    var form = document.getElementById('formRecoveryReset');
+    if (!form) return;
+
+    var passInput    = document.getElementById('reset-password');
+    var confirmInput = document.getElementById('reset-password-confirm');
+
+    var togglePassBtn    = document.getElementById('toggle-reset-password');
+    var toggleConfirmBtn = document.getElementById('toggle-reset-confirm');
+    if (togglePassBtn)    togglePassBtn.addEventListener('click',    function () { togglePass('reset-password',         'eye-reset-password'); });
+    if (toggleConfirmBtn) toggleConfirmBtn.addEventListener('click', function () { togglePass('reset-password-confirm', 'eye-reset-confirm'); });
+
+    function checkMatch() {
+        if (!passInput || !confirmInput) return;
+        var p  = passInput.value;
+        var pc = confirmInput.value;
+        if (pc.length === 0) { clearMsg('msg-reset-confirm'); setInputState(confirmInput, null); return; }
+        if (p !== pc) {
+            showMsg('msg-reset-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(confirmInput, 'input-error');
+        } else {
+            showMsg('msg-reset-confirm', 'success', 'Las contraseñas coinciden.');
+            setInputState(confirmInput, 'input-ok');
+        }
+    }
+
+    if (passInput) {
+        passInput.addEventListener('input', function () {
+            var v = this.value;
+            if (v.length === 0)    { clearMsg('msg-reset-password'); setInputState(this, null); }
+            else if (v.length < 8) { showMsg('msg-reset-password', 'error', 'Mínimo 8 caracteres (' + v.length + '/8).'); setInputState(this, 'input-error'); }
+            else                   { showMsg('msg-reset-password', 'success', 'Longitud correcta.'); setInputState(this, 'input-ok'); }
+            checkMatch();
+        });
+    }
+    if (confirmInput) confirmInput.addEventListener('input', checkMatch);
+
+    form.addEventListener('submit', function (e) {
+        var valid = true;
+        var passVal = passInput ? passInput.value : '';
+        var confVal = confirmInput ? confirmInput.value : '';
+
+        if (passVal.length === 0) {
+            showMsg('msg-reset-password', 'error', 'La contraseña es obligatoria.');
+            setInputState(passInput, 'input-error');
+            valid = false;
+        } else if (passVal.length < 8) {
+            showMsg('msg-reset-password', 'error', 'Mínimo 8 caracteres.');
+            setInputState(passInput, 'input-error');
+            valid = false;
+        }
+
+        if (confVal.length === 0) {
+            showMsg('msg-reset-confirm', 'error', 'Debes confirmar la contraseña.');
+            setInputState(confirmInput, 'input-error');
+            valid = false;
+        } else if (passVal !== confVal) {
+            showMsg('msg-reset-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(confirmInput, 'input-error');
+            valid = false;
+        }
+
+        if (!valid) { e.preventDefault(); return; }
+
+        var btn         = document.getElementById('btnRecoveryReset');
+        var btnTexto    = document.getElementById('btnRecoveryResetTexto');
+        var btnCargando = document.getElementById('btnRecoveryResetCargando');
         if (btn)         btn.disabled              = true;
         if (btnTexto)    btnTexto.style.display    = 'none';
         if (btnCargando) btnCargando.style.display = 'inline';

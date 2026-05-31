@@ -376,9 +376,11 @@ Route::post('/verify/resend', [ClientUserController::class, 'resendCode'])->name
 
 // Password recovery routes.
 Route::get('/recovery', [ClientUserController::class, 'showRecoveryForm'])->name('clients.recovery.form');
-Route::post('/recovery', [ClientUserController::class, 'resetPassword'])->name('clients.recovery');
+Route::post('/recovery', [ClientUserController::class, 'sendRecoveryCode'])->name('clients.recovery');
 Route::get('/recovery/verify', [ClientUserController::class, 'showRecoveryVerifyForm'])->name('clients.recovery.verify.form');
-Route::post('/recovery/verify', [ClientUserController::class, 'verifyRecoveryAndReset'])->name('clients.recovery.verify');
+Route::post('/recovery/verify', [ClientUserController::class, 'verifyRecoveryCode'])->name('clients.recovery.verify');
+Route::get('/recovery/reset', [ClientUserController::class, 'showRecoveryResetForm'])->name('clients.recovery.reset.form');
+Route::post('/recovery/reset', [ClientUserController::class, 'updateRecoveryPassword'])->name('clients.recovery.reset');
 
 // Logs out the client while preserving the admin session when both are active.
 Route::post('/logout', function () {

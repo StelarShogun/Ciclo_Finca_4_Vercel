@@ -133,3 +133,33 @@
   color: var(--brand-medium);
   font-weight: 600;
 }
+
+/* ── Modo oscuro ──
+   La tarjeta tenía fondo blanco fijo; en oscuro el texto (--text-primary)
+   quedaba casi blanco sobre blanco. Se cambia a superficie oscura. */
+html[data-theme="dark"] .legal-page-body {
+  background: var(--cf4-surface-1);
+  border-color: var(--cf4-border-soft);
+  box-shadow: var(--shadow-md);
+  color: var(--cf4-text-main);
+}
+
+html[data-theme="dark"] .legal-page-title {
+  color: var(--cf4-text-strong);
+}
+
+html[data-theme="dark"] .legal-page-body h2 {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .legal-page-back,
+html[data-theme="dark"] .legal-page-body a,
+html[data-theme="dark"] .legal-page-related-list a,
+html[data-theme="dark"] .cf4-legal-consent-label a,
+html[data-theme="dark"] .cart-legal-notice a {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .legal-page-back:hover {
+  color: var(--brand-lightest);
+}
