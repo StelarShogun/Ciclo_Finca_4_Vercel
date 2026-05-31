@@ -821,6 +821,137 @@ html[data-theme="dark"] .input-error { border-color: var(--color-danger) !import
 html[data-theme="dark"] .input-ok    { border-color: var(--color-success) !important; }
 
 /* ===================================================================
+   10.c CÓDIGO OTP (verify_gmail_code.blade.php)
+   Casillas individuales con animación de entrada, error y espera.
+   Usa tokens semánticos → válido en modo claro y oscuro.
+   =================================================================== */
+.otp-inputs {
+    display: flex;
+    justify-content: center;
+    gap: clamp(6px, 2.5vw, 12px);
+    width: 100%;
+    margin-top: 6px;
+}
+
+.otp-box {
+    width: clamp(42px, 13vw, 56px);
+    height: clamp(50px, 15vw, 64px);
+    padding: 0;
+    text-align: center;
+    font-size: clamp(1.4rem, 6vw, 1.9rem);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-primary);
+    background: var(--background-white);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    outline: none;
+    box-sizing: border-box;
+    caret-color: var(--color-success);
+    transition: border-color 0.18s ease, box-shadow 0.18s ease,
+                transform 0.12s ease, background 0.18s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.otp-box:hover {
+    border-color: var(--color-success);
+}
+
+.otp-box:focus {
+    border-color: var(--color-success);
+    box-shadow: 0 0 0 4px var(--color-success-bg);
+    transform: translateY(-2px);
+}
+
+/* Pop al recibir un dígito */
+.otp-box.is-filled {
+    border-color: var(--color-success);
+    animation: otp-pop 0.25s ease;
+}
+
+/* Error: sacudida del grupo + casillas en rojo */
+.otp-inputs.is-error {
+    animation: otp-shake 0.4s ease;
+}
+
+.otp-inputs.is-error .otp-box {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px var(--color-danger-bg);
+}
+
+/* "Verificando…": onda secuencial mientras espera la respuesta del token */
+.otp-inputs.is-verifying .otp-box {
+    border-color: var(--color-success);
+    animation: otp-wave 0.9s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.otp-inputs.is-verifying .otp-box:nth-child(1) { animation-delay: 0s; }
+.otp-inputs.is-verifying .otp-box:nth-child(2) { animation-delay: 0.1s; }
+.otp-inputs.is-verifying .otp-box:nth-child(3) { animation-delay: 0.2s; }
+.otp-inputs.is-verifying .otp-box:nth-child(4) { animation-delay: 0.3s; }
+.otp-inputs.is-verifying .otp-box:nth-child(5) { animation-delay: 0.4s; }
+.otp-inputs.is-verifying .otp-box:nth-child(6) { animation-delay: 0.5s; }
+
+/* Spinner del botón mientras verifica */
+.otp-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.otp-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #fff;
+    border-radius: 50%;
+    display: inline-block;
+    animation: otp-spin 0.7s linear infinite;
+}
+
+@keyframes otp-pop {
+    0%   { transform: scale(0.82); }
+    60%  { transform: scale(1.12); }
+    100% { transform: scale(1); }
+}
+
+@keyframes otp-shake {
+    10%, 90%      { transform: translateX(-1px); }
+    20%, 80%      { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-5px); }
+    40%, 60%      { transform: translateX(5px); }
+}
+
+@keyframes otp-wave {
+    0%, 100% { transform: translateY(0);    opacity: 0.55; }
+    50%      { transform: translateY(-7px); opacity: 1; }
+}
+
+@keyframes otp-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Modo oscuro: superficie elevada para contraste */
+html[data-theme="dark"] .otp-box {
+    background: var(--cf4-surface-2);
+    color: var(--cf4-text-strong);
+}
+
+/* Respeta la preferencia de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+    .otp-box,
+    .otp-box.is-filled,
+    .otp-inputs.is-error,
+    .otp-inputs.is-verifying .otp-box,
+    .otp-spinner {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* ===================================================================
    11. MY PROFILE (profile.blade.php)
    =================================================================== */
 

@@ -659,36 +659,178 @@ function sendPassword(form) {
 // ============================================================
 
 (function initVerificacion() {
-    var codeInput     = document.getElementById('verification_code');
-    var formVerificar = document.getElementById('formVerificar');
-    if (!codeInput || !formVerificar) return;
+    var container = document.getElementById('otpInputs');
+    var hidden    = document.getElementById('verification_code');
+    var form      = document.getElementById('formVerificar');
+    if (!container || !hidden || !form) return;
 
-    // Restrict input to 6 digits.
-    codeInput.addEventListener('input', function () {
-        this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    var boxes = Array.prototype.slice.call(container.querySelectorAll('.otp-box'));
+    if (!boxes.length) return;
+
+    var errEl  = document.getElementById('code-error');
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var submitting = false;
+
+    function syncHidden() {
+        var value = '';
+        for (var i = 0; i < boxes.length; i++) value += boxes[i].value;
+        hidden.value = value;
+        return value;
+    }
+
+    function clearError() {
+        if (errEl) errEl.style.display = 'none';
+        container.classList.remove('is-error');
+    }
+
+    function showError() {
+        if (errEl) errEl.style.display = 'block';
+        container.classList.remove('is-error');
+        void container.offsetWidth; // reflow so the shake restarts
+        container.classList.add('is-error');
+    }
+
+    // Pop animation when a digit lands in a box.
+    function markFilled(box) {
+        if (box.value) {
+            box.classList.remove('is-filled');
+            void box.offsetWidth;
+            box.classList.add('is-filled');
+        } else {
+            box.classList.remove('is-filled');
+        }
+    }
+
+    function focusBox(index) {
+        if (index >= 0 && index < boxes.length) {
+            boxes[index].focus();
+            boxes[index].select();
+        }
+    }
+
+    function firstEmptyIndex() {
+        for (var i = 0; i < boxes.length; i++) {
+            if (!boxes[i].value) return i;
+        }
+        return -1;
+    }
+
+    function allFilled() {
+        return firstEmptyIndex() === -1;
+    }
+
+    // Spread a (pasted / autofilled) string across the boxes from startIndex.
+    function distribute(str, startIndex) {
+        var digits = (str || '').replace(/\D/g, '').split('');
+        var i = startIndex;
+        for (var d = 0; d < digits.length && i < boxes.length; d++, i++) {
+            boxes[i].value = digits[d];
+            markFilled(boxes[i]);
+        }
+        syncHidden();
+        focusBox(Math.min(i, boxes.length - 1));
+        maybeAutoSubmit();
+    }
+
+    // Mirror the reel's "auto-verify once entered" behaviour.
+    function maybeAutoSubmit() {
+        if (!submitting && allFilled()) {
+            setTimeout(function () {
+                if (submitting) return;
+                if (typeof form.requestSubmit === 'function') form.requestSubmit();
+                else form.submit();
+            }, reduce ? 0 : 180);
+        }
+    }
+
+    boxes.forEach(function (box, index) {
+        box.addEventListener('input', function () {
+            clearError();
+            var v = box.value.replace(/\D/g, '');
+
+            // Paste / autofill landed in a single box: spread it out.
+            if (v.length > 1) {
+                box.value = '';
+                distribute(v, index);
+                return;
+            }
+
+            box.value = v;
+            markFilled(box);
+            syncHidden();
+            if (v) focusBox(index + 1);
+            maybeAutoSubmit();
+        });
+
+        box.addEventListener('keydown', function (e) {
+            if (e.key === 'Backspace') {
+                e.preventDefault();
+                clearError();
+                if (box.value) {
+                    box.value = '';
+                    markFilled(box);
+                } else if (boxes[index - 1]) {
+                    boxes[index - 1].value = '';
+                    markFilled(boxes[index - 1]);
+                    focusBox(index - 1);
+                }
+                syncHidden();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                focusBox(index - 1);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                focusBox(index + 1);
+            }
+        });
+
+        box.addEventListener('focus', function () { box.select(); });
+
+        box.addEventListener('paste', function (e) {
+            e.preventDefault();
+            var text = (e.clipboardData || window.clipboardData).getData('text');
+            distribute(text, index);
+        });
     });
 
-    formVerificar.addEventListener('submit', function (e) {
-        var code = codeInput.value.trim();
-        var err  = document.getElementById('code-error');
+    // How long the "verifying" wave stays on screen before the real navigation.
+    var VERIFY_HOLD_MS = reduce ? 0 : 1200;
+
+    form.addEventListener('submit', function (e) {
+        // Once we are holding for the animation, allow the native submit through.
+        if (submitting) return;
+
+        var code = syncHidden();
 
         if (code.length !== 6) {
-            if (err) err.style.display    = 'block';
-            codeInput.style.borderColor   = '#e74c3c';
             e.preventDefault();
+            showError();
+            var empty = firstEmptyIndex();
+            focusBox(empty === -1 ? 0 : empty);
             return;
         }
 
-        if (err) err.style.display  = 'none';
-        codeInput.style.borderColor = '#dadce0';
+        // Hold the submission briefly so the wave + spinner are actually visible.
+        e.preventDefault();
+        submitting = true;
+        clearError();
+        container.classList.add('is-verifying');
+        boxes.forEach(function (b) { b.readOnly = true; });
 
         var btnTexto    = document.getElementById('btnVerificarTexto');
         var btnCargando = document.getElementById('btnVerificarCargando');
+        var btnIcon     = document.getElementById('btnVerificarIcon');
         var btn         = document.getElementById('btnVerificar');
+        if (btnIcon)     btnIcon.style.display     = 'none';
         if (btnTexto)    btnTexto.style.display    = 'none';
-        if (btnCargando) btnCargando.style.display = 'inline';
+        if (btnCargando) btnCargando.style.display = 'inline-flex';
         if (btn)         btn.disabled              = true;
+
+        // form.submit() does not re-fire this listener, so no re-entry guard needed.
+        setTimeout(function () { form.submit(); }, VERIFY_HOLD_MS);
     });
+
+    focusBox(0);
 })();
 
 // ============================================================

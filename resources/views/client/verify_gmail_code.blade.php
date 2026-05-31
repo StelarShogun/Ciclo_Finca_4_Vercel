@@ -52,29 +52,32 @@
             @csrf
 
             <div class="form-group mb-4">
-                <label for="verification_code" class="login-field-label" style="font-weight:600;">Código de verificación</label>
-                {{-- inputmode="numeric" opens the numeric keyboard on mobile --}}
-                <input type="text"
-                       id="verification_code"
-                       name="verification_code"
-                       class="form-control"
-                       maxlength="6"
-                       placeholder="_ _ _ _ _ _"
-                       autocomplete="one-time-code"
-                       inputmode="numeric"
-                       style="font-size:clamp(1.3rem, 8vw, 1.8rem);letter-spacing:0.5rem;font-weight:700;text-align:center;">
+                <label class="login-field-label" id="otpLabel" style="font-weight:600;justify-content:center;">Código de verificación</label>
+                {{-- Six single-digit boxes; JS mirrors their value into the hidden field --}}
+                <div class="otp-inputs" id="otpInputs" role="group" aria-labelledby="otpLabel">
+                    <input type="text" class="otp-box" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-label="Dígito 1">
+                    <input type="text" class="otp-box" inputmode="numeric" autocomplete="off" maxlength="1" aria-label="Dígito 2">
+                    <input type="text" class="otp-box" inputmode="numeric" autocomplete="off" maxlength="1" aria-label="Dígito 3">
+                    <input type="text" class="otp-box" inputmode="numeric" autocomplete="off" maxlength="1" aria-label="Dígito 4">
+                    <input type="text" class="otp-box" inputmode="numeric" autocomplete="off" maxlength="1" aria-label="Dígito 5">
+                    <input type="text" class="otp-box" inputmode="numeric" autocomplete="off" maxlength="1" aria-label="Dígito 6">
+                </div>
+                {{-- The backend keeps reading a single "verification_code" field --}}
+                <input type="hidden" name="verification_code" id="verification_code">
                 {{-- Shown by JS when the code length is not exactly 6 digits --}}
-                <div id="code-error" style="display:none;color:var(--color-danger);text-align:center;font-size:0.82rem;margin-top:6px;">
+                <div id="code-error" style="display:none;color:var(--color-danger);text-align:center;font-size:0.82rem;margin-top:10px;">
                     El código debe tener exactamente 6 dígitos.
                 </div>
             </div>
 
             {{-- Loading state swaps button text during submission --}}
-            <button type="submit" id="btnVerificar" class="btn btn-login-submit"
-                style="margin-top:0;">
-                <i class="fas fa-check-circle"></i>
+            <button type="submit" id="btnVerificar" class="btn btn-login-submit" style="margin-top:0;">
+                <i class="fas fa-check-circle" id="btnVerificarIcon"></i>
                 <span id="btnVerificarTexto">Verificar Código</span>
-                <span id="btnVerificarCargando" style="display:none;">Verificando...</span>
+                <span id="btnVerificarCargando" class="otp-loading" style="display:none;">
+                    <span class="otp-spinner" aria-hidden="true"></span>
+                    Verificando...
+                </span>
             </button>
         </form>
 
