@@ -340,6 +340,7 @@ class ClientUserController extends Controller
             'pending_client_id' => $client->user_id,
             'pending_gmail' => $client->gmail,
         ]);
+        $this->clearPendingRecoverySession();
 
         $mailWarning = null;
         try {
@@ -364,19 +365,25 @@ class ClientUserController extends Controller
             ->with('mail_warning', $mailWarning);
     }
 
-    // Show verify form
+    // Show verify form (registration — after OTP the user is logged in, not sent to reset password).
     public function showVerifyForm()
     {
         if (! session('pending_client_id')) {
             return redirect()->route('clients.register.form');
         }
 
-        return view('client.verify_gmail_code');
+        $this->clearPendingRecoverySession();
+
+        return view('client.verify_gmail_code', [
+            'isRecoveryFlow' => false,
+        ]);
     }
 
     // Process verification code
     public function verify(Request $request)
     {
+        $wantsJson = $request->ajax() || $request->wantsJson();
+
         $request->validate(
             ['verification_code' => 'required|digits:6'],
             [
@@ -387,18 +394,33 @@ class ClientUserController extends Controller
 
         $clientId = session('pending_client_id');
         if (! $clientId) {
+            $msg = 'Sesión expirada. Regístrate de nuevo.';
+            if ($wantsJson) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+
             return redirect()->route('clients.register.form')
-                ->withErrors(['verification_code' => 'Sesión expirada. Regístrate de nuevo.']);
+                ->withErrors(['verification_code' => $msg]);
         }
 
         $client = Client::find($clientId);
 
         if (! $client || $client->verification_code !== $request->verification_code) {
-            return back()->withErrors(['verification_code' => 'Código incorrecto. Inténtalo de nuevo.']);
+            $msg = 'Código incorrecto. Inténtalo de nuevo.';
+            if ($wantsJson) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+
+            return back()->withErrors(['verification_code' => $msg]);
         }
 
         if (now()->isAfter($client->verification_code_expires_at)) {
-            return back()->withErrors(['verification_code' => 'El código ha expirado. Solicita uno nuevo.']);
+            $msg = 'El código ha expirado. Solicita uno nuevo.';
+            if ($wantsJson) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+
+            return back()->withErrors(['verification_code' => $msg]);
         }
 
         $client->update([
@@ -408,6 +430,7 @@ class ClientUserController extends Controller
         ]);
 
         session()->forget(['pending_client_id', 'pending_gmail']);
+        $this->clearPendingRecoverySession();
 
         Auth::guard('clients')->login($client);
 
@@ -417,6 +440,12 @@ class ClientUserController extends Controller
             'client_first_surname' => $client->first_surname,
             'client_second_surname' => $client->second_surname,
         ]);
+
+        if ($wantsJson) {
+            session()->flash('success', '¡Cuenta verificada y creada exitosamente!');
+
+            return response()->json(['success' => true, 'redirect' => route('clients.catalog')]);
+        }
 
         return redirect()->route('clients.catalog')->with('success', '¡Cuenta verificada y creada exitosamente!');
     }
@@ -501,22 +530,14 @@ class ClientUserController extends Controller
         return view('client.recovery');
     }
 
-    // Recovery step 1: validate form, send verification code, store pending password in session.
-    public function resetPassword(Request $request)
+    // Recovery step 1: validate the email and send a verification code.
+    public function sendRecoveryCode(Request $request)
     {
         $request->validate(
-            [
-                'gmail' => 'required|email',
-                'new_password' => 'required|string|min:8|confirmed',
-                'new_password_confirmation' => 'required|string',
-            ],
+            ['gmail' => 'required|email'],
             [
                 'gmail.required' => 'El correo es obligatorio.',
                 'gmail.email' => 'Ingresa un correo válido.',
-                'new_password.required' => 'La nueva contraseña es obligatoria.',
-                'new_password.min' => 'La contraseña debe tener al menos 8 caracteres.',
-                'new_password.confirmed' => 'Las contraseñas no coinciden.',
-                'new_password_confirmation.required' => 'Debes confirmar la nueva contraseña.',
             ]
         );
 
@@ -540,12 +561,13 @@ class ClientUserController extends Controller
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expires = now()->addMinutes(15);
 
-        // Store pending password hash in session — only written to DB after code is verified.
+        // Only the identity is kept in session; the new password is captured in step 3.
         session([
             'pending_recovery_id' => $client->user_id,
             'pending_recovery_gmail' => $client->gmail,
-            'pending_recovery_password' => Hash::make($request->new_password),
         ]);
+        session()->forget('recovery_code_verified');
+        $this->clearPendingRegistrationSession();
 
         DB::table('client_table')
             ->where('user_id', $client->user_id)
@@ -586,15 +608,24 @@ class ClientUserController extends Controller
     // Recovery step 2: show code-entry form.
     public function showRecoveryVerifyForm()
     {
-        if (! session('pending_recovery_id')) {
-            return redirect()->route('clients.recovery.form');
+        $client = $this->resolvePendingRecoveryClient();
+        if (! $client) {
+            $this->clearPendingRecoverySession();
+
+            return redirect()->route('clients.recovery.form')
+                ->withErrors(['gmail' => 'Sesión expirada. Solicita un nuevo código.']);
         }
 
-        return view('client.verify_gmail_code');
+        $this->syncPendingRecoverySession($client);
+        $this->clearPendingRegistrationSession();
+
+        return view('client.verify_gmail_code', [
+            'isRecoveryFlow' => true,
+        ]);
     }
 
-    // Recovery step 3: verify code and write the new password to DB.
-    public function verifyRecoveryAndReset(Request $request)
+    // Recovery step 2: verify the code, then advance to the new-password form.
+    public function verifyRecoveryCode(Request $request)
     {
         $request->validate(
             ['verification_code' => 'required|digits:6'],
@@ -604,18 +635,19 @@ class ClientUserController extends Controller
             ]
         );
 
-        $clientId = session('pending_recovery_id');
-        if (! $clientId) {
-            $msg = 'Sesión expirada. Vuelve a intentar la recuperación.';
+        $client = $this->resolvePendingRecoveryClient();
+        if (! $client) {
+            $msg = 'Sesión expirada. Vuelve a solicitar el código.';
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg]);
             }
 
-            return redirect()->route('clients.recovery.form')->withErrors(['verification_code' => $msg]);
+            return redirect()->route('clients.recovery.form')->withErrors(['gmail' => $msg]);
         }
 
-        $client = Client::find($clientId);
-        if (! $client || $client->verification_code !== $request->verification_code) {
+        $this->syncPendingRecoverySession($client);
+
+        if ($client->verification_code !== $request->verification_code) {
             $msg = 'Código incorrecto. Inténtalo de nuevo.';
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg]);
@@ -633,26 +665,135 @@ class ClientUserController extends Controller
             return redirect()->route('clients.recovery.form')->withErrors(['verification_code' => $msg]);
         }
 
-        $hashedPassword = session('pending_recovery_password');
+        // Consume the code so it cannot be reused, and unlock step 3.
+        DB::table('client_table')
+            ->where('user_id', $client->user_id)
+            ->update([
+                'verification_code' => null,
+                'verification_code_expires_at' => null,
+            ]);
+
+        session(['recovery_code_verified' => true]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Código verificado.',
+                'redirect' => route('clients.recovery.reset.form'),
+            ]);
+        }
+
+        return redirect()->route('clients.recovery.reset.form');
+    }
+
+    // Recovery step 3: show the new-password form (only after the code is verified).
+    public function showRecoveryResetForm()
+    {
+        $client = $this->resolvePendingRecoveryClient();
+        if (! $client || ! session('recovery_code_verified')) {
+            $this->clearPendingRecoverySession();
+
+            return redirect()->route('clients.recovery.form');
+        }
+
+        $this->syncPendingRecoverySession($client);
+
+        return view('client.recovery_reset', [
+            'gmail' => $client->gmail,
+        ]);
+    }
+
+    // Recovery step 3: persist the new password and finish the flow.
+    public function updateRecoveryPassword(Request $request)
+    {
+        $request->validate(
+            [
+                'new_password' => 'required|string|min:8|confirmed',
+                'new_password_confirmation' => 'required|string',
+            ],
+            [
+                'new_password.required' => 'La nueva contraseña es obligatoria.',
+                'new_password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+                'new_password.confirmed' => 'Las contraseñas no coinciden.',
+                'new_password_confirmation.required' => 'Debes confirmar la nueva contraseña.',
+            ]
+        );
+
+        $client = $this->resolvePendingRecoveryClient();
+        if (! $client || ! session('recovery_code_verified')) {
+            $this->clearPendingRecoverySession();
+
+            return redirect()->route('clients.recovery.form')
+                ->withErrors(['new_password' => 'Sesión expirada. Vuelve a intentar la recuperación.']);
+        }
+
+        $this->syncPendingRecoverySession($client);
 
         DB::table('client_table')
             ->where('user_id', $client->user_id)
             ->update([
-                'password' => $hashedPassword,
+                'password' => Hash::make($request->new_password),
                 'provider' => 'local',
                 'verification_code' => null,
                 'verification_code_expires_at' => null,
                 'updated_at' => now(),
             ]);
 
-        session()->forget(['pending_recovery_id', 'pending_recovery_gmail', 'pending_recovery_password']);
-
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Contraseña actualizada correctamente.']);
-        }
+        $this->clearPendingRecoverySession();
 
         return redirect()->route('login.show')
             ->with('recovery_success_modal', 'Contraseña actualizada. Ya puedes iniciar sesión.');
+    }
+
+    /**
+     * Resolves the pending recovery client from session, self-healing when
+     * pending_recovery_id is stale but pending_recovery_gmail still matches.
+     */
+    protected function resolvePendingRecoveryClient(): ?Client
+    {
+        $clientId = session('pending_recovery_id');
+        $gmail = session('pending_recovery_gmail');
+
+        if ($clientId) {
+            $client = Client::find($clientId);
+            if ($client) {
+                return $client;
+            }
+        }
+
+        if ($gmail) {
+            $client = Client::where('gmail', strtolower($gmail))->first();
+            if ($client) {
+                return $client;
+            }
+        }
+
+        return null;
+    }
+
+    protected function syncPendingRecoverySession(Client $client): void
+    {
+        session([
+            'pending_recovery_id' => $client->user_id,
+            'pending_recovery_gmail' => $client->gmail,
+        ]);
+    }
+
+    protected function clearPendingRecoverySession(): void
+    {
+        session()->forget([
+            'pending_recovery_id',
+            'pending_recovery_gmail',
+            'recovery_code_verified',
+        ]);
+    }
+
+    protected function clearPendingRegistrationSession(): void
+    {
+        session()->forget([
+            'pending_client_id',
+            'pending_gmail',
+        ]);
     }
 
     /** Public display name for welcome toasts (name + surnames, or email). */
