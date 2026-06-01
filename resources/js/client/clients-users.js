@@ -659,51 +659,262 @@ function sendPassword(form) {
 // ============================================================
 
 (function initVerificacion() {
-    var codeInput     = document.getElementById('verification_code');
-    var formVerificar = document.getElementById('formVerificar');
-    if (!codeInput || !formVerificar) return;
+    var container = document.getElementById('otpInputs');
+    var hidden    = document.getElementById('verification_code');
+    var form      = document.getElementById('formVerificar');
+    if (!container || !hidden || !form) return;
 
-    // Restrict input to 6 digits.
-    codeInput.addEventListener('input', function () {
-        this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    var boxes = Array.prototype.slice.call(container.querySelectorAll('.otp-box'));
+    if (!boxes.length) return;
+
+    var errEl  = document.getElementById('code-error');
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var submitting = false;
+    var autoSubmitTimer = null;
+
+    function syncHidden() {
+        var value = '';
+        for (var i = 0; i < boxes.length; i++) value += boxes[i].value;
+        hidden.value = value;
+        return value;
+    }
+
+    function clearError() {
+        if (errEl) errEl.style.display = 'none';
+        container.classList.remove('is-error');
+    }
+
+    function showError() {
+        if (errEl) errEl.style.display = 'block';
+        container.classList.remove('is-error');
+        void container.offsetWidth; // reflow so the shake restarts
+        container.classList.add('is-error');
+    }
+
+    // Pop animation when a digit lands in a box.
+    function markFilled(box) {
+        if (box.value) {
+            box.classList.remove('is-filled');
+            void box.offsetWidth;
+            box.classList.add('is-filled');
+        } else {
+            box.classList.remove('is-filled');
+        }
+    }
+
+    function focusBox(index) {
+        if (index >= 0 && index < boxes.length) {
+            boxes[index].focus();
+            boxes[index].select();
+        }
+    }
+
+    function firstEmptyIndex() {
+        for (var i = 0; i < boxes.length; i++) {
+            if (!boxes[i].value) return i;
+        }
+        return -1;
+    }
+
+    function allFilled() {
+        return firstEmptyIndex() === -1;
+    }
+
+    // Spread a (pasted / autofilled) string across the boxes from startIndex.
+    function distribute(str, startIndex) {
+        var digits = (str || '').replace(/\D/g, '').split('');
+        var i = startIndex;
+        for (var d = 0; d < digits.length && i < boxes.length; d++, i++) {
+            boxes[i].value = digits[d];
+            markFilled(boxes[i]);
+        }
+        syncHidden();
+        focusBox(Math.min(i, boxes.length - 1));
+        maybeAutoSubmit();
+    }
+
+    // Mirror the reel's "auto-verify once entered" behaviour.
+    function maybeAutoSubmit() {
+        if (submitting || !allFilled()) return;
+        if (autoSubmitTimer) clearTimeout(autoSubmitTimer);
+        autoSubmitTimer = setTimeout(function () {
+            autoSubmitTimer = null;
+            if (submitting || !allFilled()) return;
+            if (typeof form.requestSubmit === 'function') form.requestSubmit();
+            else form.submit();
+        }, reduce ? 0 : 180);
+    }
+
+    boxes.forEach(function (box, index) {
+        box.addEventListener('input', function () {
+            clearError();
+            var v = box.value.replace(/\D/g, '');
+
+            // Paste / autofill landed in a single box: spread it out.
+            if (v.length > 1) {
+                box.value = '';
+                distribute(v, index);
+                return;
+            }
+
+            box.value = v;
+            markFilled(box);
+            syncHidden();
+            if (v) focusBox(index + 1);
+            maybeAutoSubmit();
+        });
+
+        box.addEventListener('keydown', function (e) {
+            if (e.key === 'Backspace') {
+                e.preventDefault();
+                clearError();
+                if (box.value) {
+                    box.value = '';
+                    markFilled(box);
+                } else if (boxes[index - 1]) {
+                    boxes[index - 1].value = '';
+                    markFilled(boxes[index - 1]);
+                    focusBox(index - 1);
+                }
+                syncHidden();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                focusBox(index - 1);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                focusBox(index + 1);
+            }
+        });
+
+        box.addEventListener('focus', function () { box.select(); });
+
+        box.addEventListener('paste', function (e) {
+            e.preventDefault();
+            var text = (e.clipboardData || window.clipboardData).getData('text');
+            distribute(text, index);
+        });
     });
 
-    formVerificar.addEventListener('submit', function (e) {
-        var code = codeInput.value.trim();
-        var err  = document.getElementById('code-error');
+    var successBadge = container.querySelector('.otp-success');
 
+    // Animation timing.
+    var WAVE_MS         = reduce ? 0 : 650; // minimum "verifying" wave
+    var SUCCESS_HOLD_MS = reduce ? 0 : 750; // check shown before redirect
+    var FAIL_HOLD_MS    = reduce ? 0 : 900; // X shown before letting the user retry
+
+    function setButtonLoading(btnRefs, loading) {
+        if (btnRefs.icon)     btnRefs.icon.style.display     = loading ? 'none' : '';
+        if (btnRefs.texto)    btnRefs.texto.style.display    = loading ? 'none' : '';
+        if (btnRefs.cargando) btnRefs.cargando.style.display = loading ? 'inline-flex' : 'none';
+        if (btnRefs.btn)      btnRefs.btn.disabled           = loading;
+    }
+
+    form.addEventListener('submit', function (e) {
+        // JS always drives the submission so we can show check / X feedback.
+        e.preventDefault();
+        if (submitting) return;
+
+        var code = syncHidden();
         if (code.length !== 6) {
-            if (err) err.style.display    = 'block';
-            codeInput.style.borderColor   = '#e74c3c';
-            e.preventDefault();
+            if (errEl) errEl.textContent = 'El código debe tener exactamente 6 dígitos.';
+            showError();
+            var empty = firstEmptyIndex();
+            focusBox(empty === -1 ? 0 : empty);
             return;
         }
 
-        if (err) err.style.display  = 'none';
-        codeInput.style.borderColor = '#dadce0';
+        submitting = true;
+        clearError();
+        boxes.forEach(function (b) { b.readOnly = true; });
 
-        var btnTexto    = document.getElementById('btnVerificarTexto');
-        var btnCargando = document.getElementById('btnVerificarCargando');
-        var btn         = document.getElementById('btnVerificar');
-        if (btnTexto)    btnTexto.style.display    = 'none';
-        if (btnCargando) btnCargando.style.display = 'inline';
-        if (btn)         btn.disabled              = true;
+        var btnRefs = {
+            texto:    document.getElementById('btnVerificarTexto'),
+            cargando: document.getElementById('btnVerificarCargando'),
+            icon:     document.getElementById('btnVerificarIcon'),
+            btn:      document.getElementById('btnVerificar')
+        };
+        setButtonLoading(btnRefs, true);
+        container.classList.add('is-verifying');
+
+        function showResultBadge(state, glyph) {
+            container.classList.remove('is-verifying');
+            if (successBadge) successBadge.textContent = glyph;
+            container.classList.add(state);
+        }
+
+        function onSuccess(redirectUrl) {
+            showResultBadge('is-success', '\u2713'); // ✓
+            setTimeout(function () {
+                window.location.href = redirectUrl || '/';
+            }, SUCCESS_HOLD_MS);
+        }
+
+        function onFailure(message) {
+            showResultBadge('is-fail', '\u2715'); // ✕
+            setTimeout(function () {
+                container.classList.remove('is-fail', 'is-success', 'is-verifying');
+                if (successBadge) successBadge.textContent = '';
+                boxes.forEach(function (b) {
+                    b.value = '';
+                    b.readOnly = false;
+                    markFilled(b);
+                });
+                syncHidden();
+                setButtonLoading(btnRefs, false);
+                if (errEl) {
+                    errEl.textContent = message || 'Código incorrecto. Inténtalo de nuevo.';
+                }
+                submitting = false;
+                showError(); // re-expanded boxes shake in red + message
+                focusBox(0);
+            }, FAIL_HOLD_MS);
+        }
+
+        function extractErrorMessage(data) {
+            if (!data) return '';
+            if (data.message) return data.message;
+            if (data.errors && data.errors.verification_code && data.errors.verification_code[0]) {
+                return data.errors.verification_code[0];
+            }
+            return '';
+        }
+
+        // Keep the wave visible at least WAVE_MS, even if the server replies instantly.
+        var minWait = new Promise(function (resolve) { setTimeout(resolve, WAVE_MS); });
+        var request = fetch(form.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            body: new FormData(form),
+            credentials: 'same-origin'
+        }).then(function (res) {
+            return res.json().catch(function () { return {}; }).then(function (data) {
+                return { ok: res.ok, data: data || {} };
+            });
+        });
+
+        Promise.all([request, minWait]).then(function (results) {
+            var r = results[0];
+            if (r.ok && r.data.success) {
+                onSuccess(r.data.redirect);
+            } else {
+                onFailure(extractErrorMessage(r.data));
+            }
+        }).catch(function () {
+            onFailure('No se pudo verificar. Revisa tu conexión e inténtalo de nuevo.');
+        });
     });
+
+    focusBox(0);
 })();
 
 // ============================================================
 // RECOVERY PASSWORD PAGE
 // ============================================================
 
+// Step 1: email only — sends the verification code.
 (function initRecovery() {
     var formRecovery = document.getElementById('formRecovery');
     if (!formRecovery) return;
-
-    // Password toggle buttons.
-    var togglePassBtn    = document.getElementById('toggle-recovery-password');
-    var toggleConfirmBtn = document.getElementById('toggle-recovery-confirm');
-    if (togglePassBtn)    togglePassBtn.addEventListener('click',    function () { togglePass('recovery-password',         'eye-recovery-password'); });
-    if (toggleConfirmBtn) toggleConfirmBtn.addEventListener('click', function () { togglePass('recovery-password-confirm', 'eye-recovery-confirm'); });
 
     // Gmail validation for recovery email.
     var recEmailInput = document.getElementById('recovery-email');
@@ -727,39 +938,6 @@ function sendPassword(form) {
         });
     }
 
-    // Password length indicator.
-    var recPassInput = document.getElementById('recovery-password');
-    if (recPassInput) {
-        recPassInput.addEventListener('input', function () {
-            var v = this.value;
-            if (v.length === 0)    { clearMsg('msg-recovery-password'); setInputState(this, null); }
-            else if (v.length < 8) { showMsg('msg-recovery-password', 'error', 'Mínimo 8 caracteres (' + v.length + '/8).'); setInputState(this, 'input-error'); }
-            else                   { showMsg('msg-recovery-password', 'success', 'Longitud correcta.'); setInputState(this, 'input-ok'); }
-            checkRecoveryMatch();
-        });
-    }
-
-    // Password confirmation match.
-    function checkRecoveryMatch() {
-        var passEl    = document.getElementById('recovery-password');
-        var confirmEl = document.getElementById('recovery-password-confirm');
-        if (!passEl || !confirmEl) return;
-        var p  = passEl.value;
-        var pc = confirmEl.value;
-        if (pc.length === 0) { clearMsg('msg-recovery-confirm'); setInputState(confirmEl, null); return; }
-        if (p !== pc) {
-            showMsg('msg-recovery-confirm', 'error', 'Las contraseñas no coinciden.');
-            setInputState(confirmEl, 'input-error');
-        } else {
-            showMsg('msg-recovery-confirm', 'success', 'Las contraseñas coinciden.');
-            setInputState(confirmEl, 'input-ok');
-        }
-    }
-
-    var recConfirmInput = document.getElementById('recovery-password-confirm');
-    if (recConfirmInput) recConfirmInput.addEventListener('input', checkRecoveryMatch);
-
-    // Final validation before submitting recovery form.
     formRecovery.addEventListener('submit', function (e) {
         var valid = true;
 
@@ -774,33 +952,85 @@ function sendPassword(form) {
             valid = false;
         }
 
-        var passVal = recPassInput ? recPassInput.value : '';
-        if (passVal.length === 0) {
-            showMsg('msg-recovery-password', 'error', 'La contraseña es obligatoria.');
-            setInputState(recPassInput, 'input-error');
-            valid = false;
-        } else if (passVal.length < 8) {
-            showMsg('msg-recovery-password', 'error', 'Mínimo 8 caracteres.');
-            setInputState(recPassInput, 'input-error');
-            valid = false;
-        }
-
-        var confVal = recConfirmInput ? recConfirmInput.value : '';
-        if (confVal.length === 0) {
-            showMsg('msg-recovery-confirm', 'error', 'Debes confirmar la contraseña.');
-            setInputState(recConfirmInput, 'input-error');
-            valid = false;
-        } else if (passVal !== confVal) {
-            showMsg('msg-recovery-confirm', 'error', 'Las contraseñas no coinciden.');
-            setInputState(recConfirmInput, 'input-error');
-            valid = false;
-        }
-
         if (!valid) { e.preventDefault(); return; }
 
         var btn         = document.getElementById('btnRecovery');
         var btnTexto    = document.getElementById('btnRecoveryTexto');
         var btnCargando = document.getElementById('btnRecoveryCargando');
+        if (btn)         btn.disabled              = true;
+        if (btnTexto)    btnTexto.style.display    = 'none';
+        if (btnCargando) btnCargando.style.display = 'inline';
+    });
+})();
+
+// Step 3: set the new password (after the code was verified).
+(function initRecoveryReset() {
+    var form = document.getElementById('formRecoveryReset');
+    if (!form) return;
+
+    var passInput    = document.getElementById('reset-password');
+    var confirmInput = document.getElementById('reset-password-confirm');
+
+    var togglePassBtn    = document.getElementById('toggle-reset-password');
+    var toggleConfirmBtn = document.getElementById('toggle-reset-confirm');
+    if (togglePassBtn)    togglePassBtn.addEventListener('click',    function () { togglePass('reset-password',         'eye-reset-password'); });
+    if (toggleConfirmBtn) toggleConfirmBtn.addEventListener('click', function () { togglePass('reset-password-confirm', 'eye-reset-confirm'); });
+
+    function checkMatch() {
+        if (!passInput || !confirmInput) return;
+        var p  = passInput.value;
+        var pc = confirmInput.value;
+        if (pc.length === 0) { clearMsg('msg-reset-confirm'); setInputState(confirmInput, null); return; }
+        if (p !== pc) {
+            showMsg('msg-reset-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(confirmInput, 'input-error');
+        } else {
+            showMsg('msg-reset-confirm', 'success', 'Las contraseñas coinciden.');
+            setInputState(confirmInput, 'input-ok');
+        }
+    }
+
+    if (passInput) {
+        passInput.addEventListener('input', function () {
+            var v = this.value;
+            if (v.length === 0)    { clearMsg('msg-reset-password'); setInputState(this, null); }
+            else if (v.length < 8) { showMsg('msg-reset-password', 'error', 'Mínimo 8 caracteres (' + v.length + '/8).'); setInputState(this, 'input-error'); }
+            else                   { showMsg('msg-reset-password', 'success', 'Longitud correcta.'); setInputState(this, 'input-ok'); }
+            checkMatch();
+        });
+    }
+    if (confirmInput) confirmInput.addEventListener('input', checkMatch);
+
+    form.addEventListener('submit', function (e) {
+        var valid = true;
+        var passVal = passInput ? passInput.value : '';
+        var confVal = confirmInput ? confirmInput.value : '';
+
+        if (passVal.length === 0) {
+            showMsg('msg-reset-password', 'error', 'La contraseña es obligatoria.');
+            setInputState(passInput, 'input-error');
+            valid = false;
+        } else if (passVal.length < 8) {
+            showMsg('msg-reset-password', 'error', 'Mínimo 8 caracteres.');
+            setInputState(passInput, 'input-error');
+            valid = false;
+        }
+
+        if (confVal.length === 0) {
+            showMsg('msg-reset-confirm', 'error', 'Debes confirmar la contraseña.');
+            setInputState(confirmInput, 'input-error');
+            valid = false;
+        } else if (passVal !== confVal) {
+            showMsg('msg-reset-confirm', 'error', 'Las contraseñas no coinciden.');
+            setInputState(confirmInput, 'input-error');
+            valid = false;
+        }
+
+        if (!valid) { e.preventDefault(); return; }
+
+        var btn         = document.getElementById('btnRecoveryReset');
+        var btnTexto    = document.getElementById('btnRecoveryResetTexto');
+        var btnCargando = document.getElementById('btnRecoveryResetCargando');
         if (btn)         btn.disabled              = true;
         if (btnTexto)    btnTexto.style.display    = 'none';
         if (btnCargando) btnCargando.style.display = 'inline';

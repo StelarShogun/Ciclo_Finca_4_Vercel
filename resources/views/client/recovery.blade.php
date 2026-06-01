@@ -19,7 +19,7 @@
         </div>
 
         <h2 class="text-center mb-2">Recuperar Contraseña</h2>
-        <p class="login-subtitle text-center mb-4">Ingresa tu correo y define una nueva contraseña</p>
+        <p class="login-subtitle text-center mb-4">Ingresa tu correo y te enviaremos un código de verificación</p>
 
         @if (session('unregistered_recovery_email'))
             <div class="alert alert-danger mb-3" role="alert">
@@ -39,8 +39,8 @@
         <form id="formRecovery" method="POST" action="{{ route('clients.recovery') }}" novalidate>
             @csrf
 
-            {{-- Correo --}}
-            <div class="form-group mb-3">
+            {{-- Step 1: email only — the password is set after the code is verified --}}
+            <div class="form-group mb-4">
                 <label for="recovery-email" class="login-field-label">
                     <i class="fas fa-envelope login-field-icon" aria-hidden="true"></i>
                     Correo Electrónico
@@ -54,50 +54,10 @@
                 <div id="msg-recovery-email" class="field-msg"></div>
             </div>
 
-            {{-- Nueva contraseña --}}
-            <div class="form-group mb-3">
-                <label for="recovery-password" class="login-field-label">
-                    <i class="fas fa-lock login-field-icon" aria-hidden="true"></i>
-                    Nueva Contraseña
-                </label>
-                <div class="login-pass-wrap">
-                    <input type="password" id="recovery-password" name="new_password"
-                           class="form-control"
-                           required
-                           minlength="8"
-                           placeholder="Mínimo 8 caracteres"
-                           autocomplete="new-password">
-                    <button type="button" id="toggle-recovery-password" class="login-pass-toggle">
-                        <i class="fas fa-eye" id="eye-recovery-password"></i>
-                    </button>
-                </div>
-                <div id="msg-recovery-password" class="field-msg"></div>
-            </div>
-
-            {{-- Confirmar contraseña --}}
-            <div class="form-group mb-4">
-                <label for="recovery-password-confirm" class="login-field-label">
-                    <i class="fas fa-lock login-field-icon" aria-hidden="true"></i>
-                    Confirmar Nueva Contraseña
-                </label>
-                <div class="login-pass-wrap">
-                    <input type="password" id="recovery-password-confirm" name="new_password_confirmation"
-                           class="form-control"
-                           required
-                           minlength="8"
-                           placeholder="Repite la contraseña"
-                           autocomplete="new-password">
-                    <button type="button" id="toggle-recovery-confirm" class="login-pass-toggle">
-                        <i class="fas fa-eye" id="eye-recovery-confirm"></i>
-                    </button>
-                </div>
-                <div id="msg-recovery-confirm" class="field-msg"></div>
-            </div>
-
             <button type="submit" id="btnRecovery" class="btn btn-primary btn-block btn-lg mt-2">
-                <i class="fas fa-key"></i>
-                <span id="btnRecoveryTexto">Actualizar Contraseña</span>
-                <span id="btnRecoveryCargando" style="display:none;">Actualizando...</span>
+                <i class="fas fa-paper-plane"></i>
+                <span id="btnRecoveryTexto">Enviar código</span>
+                <span id="btnRecoveryCargando" style="display:none;">Enviando...</span>
             </button>
         </form>
 

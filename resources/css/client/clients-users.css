@@ -265,6 +265,12 @@ body.guest-layout {
   border: 1px solid var(--color-danger);
 }
 
+.alert-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning);
+}
+
 /* ===================================================================
    10. LOGIN / REGISTER FORMS (opcional, ya existía)
    =================================================================== */
@@ -709,6 +715,301 @@ body.guest-layout {
 /* ── Borde rojo/verde en input según estado ── */
 .input-error { border-color: #e74c3c !important; box-shadow: 0 0 0 2px rgba(231, 76, 60, .15) !important; }
 .input-ok    { border-color: #27ae60 !important; box-shadow: 0 0 0 2px rgba(39, 174, 96, .12) !important; }
+
+/* ===================================================================
+   10.b LOGIN / REGISTER / RECOVERY / VERIFY — MODO OSCURO
+   Overrides de superficies, textos y bordes para las pantallas de auth.
+   El modo claro permanece intacto; aquí solo se reasignan tokens dark.
+   (tokens definidos en variables-reset.css → html[data-theme="dark"])
+   =================================================================== */
+
+/* Deja ver el degradado oscuro del body en lugar del gris claro */
+html[data-theme="dark"] .login-page-center {
+    background: transparent;
+}
+
+html[data-theme="dark"] .login-form-box {
+    background: var(--cf4-surface-1);
+    border: 1px solid var(--cf4-border-soft);
+    box-shadow: var(--shadow-lg);
+}
+
+html[data-theme="dark"] .login-form-box h2 {
+    color: var(--cf4-text-strong);
+}
+
+html[data-theme="dark"] .login-subtitle,
+html[data-theme="dark"] .login-form-box .text-muted,
+html[data-theme="dark"] .login-back-link,
+html[data-theme="dark"] .login-field-icon,
+html[data-theme="dark"] .login-footer-text,
+html[data-theme="dark"] .cf4-oauth-legal-note,
+html[data-theme="dark"] .login-pass-toggle {
+    color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .login-field-label,
+html[data-theme="dark"] .checkbox-label,
+html[data-theme="dark"] .login-form-box label {
+    color: var(--cf4-text-main);
+}
+
+html[data-theme="dark"] .login-auth-logo img {
+    background: var(--cf4-surface-2);
+}
+
+/* Inputs del formulario auth */
+html[data-theme="dark"] .login-form-box .form-control {
+    background: var(--cf4-surface-2);
+    border-color: var(--border-color);
+    color: var(--cf4-text-main);
+}
+
+html[data-theme="dark"] .login-form-box .form-control::placeholder {
+    color: var(--cf4-text-muted);
+}
+
+/* Divider "o" */
+html[data-theme="dark"] .login-divider {
+    color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .login-divider::before,
+html[data-theme="dark"] .login-divider::after {
+    background: var(--cf4-border-soft);
+}
+
+/* Botones secundarios (OAuth / crear cuenta) */
+html[data-theme="dark"] .oauth-btn,
+html[data-theme="dark"] .login-register-btn {
+    background: var(--cf4-surface-2);
+    border-color: var(--border-color);
+    color: var(--cf4-text-main);
+}
+
+html[data-theme="dark"] .login-register-btn {
+    color: var(--brand-light);
+}
+
+html[data-theme="dark"] .oauth-btn:hover,
+html[data-theme="dark"] .login-register-btn:hover {
+    background: var(--cf4-surface-elevated);
+    border-color: var(--brand-light);
+    color: var(--cf4-text-main);
+}
+
+/* Enlaces de pie y de alerta */
+html[data-theme="dark"] .login-footer a,
+html[data-theme="dark"] .alert-link {
+    color: var(--brand-light);
+}
+
+/* Mensajes inline por campo */
+html[data-theme="dark"] .field-msg.error {
+    color: var(--color-danger);
+    background: var(--color-danger-bg);
+    border-color: var(--color-danger);
+}
+
+html[data-theme="dark"] .field-msg.success {
+    color: var(--color-success);
+    background: var(--color-success-bg);
+    border-color: var(--color-success);
+}
+
+html[data-theme="dark"] .input-error { border-color: var(--color-danger) !important; }
+html[data-theme="dark"] .input-ok    { border-color: var(--color-success) !important; }
+
+/* ===================================================================
+   10.c CÓDIGO OTP (verify_gmail_code.blade.php)
+   Casillas individuales con animación de entrada, error y espera.
+   Usa tokens semánticos → válido en modo claro y oscuro.
+   =================================================================== */
+.otp-inputs {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    gap: clamp(6px, 2.5vw, 12px);
+    width: 100%;
+    margin-top: 6px;
+}
+
+.otp-box {
+    width: clamp(42px, 13vw, 56px);
+    height: clamp(50px, 15vw, 64px);
+    padding: 0;
+    text-align: center;
+    font-size: clamp(1.4rem, 6vw, 1.9rem);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-primary);
+    background: var(--background-white);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    outline: none;
+    box-sizing: border-box;
+    caret-color: var(--color-success);
+    transition: border-color 0.18s ease, box-shadow 0.18s ease,
+                transform 0.12s ease, background 0.18s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.otp-box:hover {
+    border-color: var(--color-success);
+}
+
+.otp-box:focus {
+    border-color: var(--color-success);
+    box-shadow: 0 0 0 4px var(--color-success-bg);
+    transform: translateY(-2px);
+}
+
+/* Pop al recibir un dígito */
+.otp-box.is-filled {
+    border-color: var(--color-success);
+    animation: otp-pop 0.25s ease;
+}
+
+/* Error: sacudida del grupo + casillas en rojo */
+.otp-inputs.is-error {
+    animation: otp-shake 0.4s ease;
+}
+
+.otp-inputs.is-error .otp-box {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px var(--color-danger-bg);
+}
+
+/* "Verificando…": onda secuencial mientras espera la respuesta del token */
+.otp-inputs.is-verifying .otp-box {
+    border-color: var(--color-success);
+    animation: otp-wave 0.9s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.otp-inputs.is-verifying .otp-box:nth-child(1) { animation-delay: 0s; }
+.otp-inputs.is-verifying .otp-box:nth-child(2) { animation-delay: 0.1s; }
+.otp-inputs.is-verifying .otp-box:nth-child(3) { animation-delay: 0.2s; }
+.otp-inputs.is-verifying .otp-box:nth-child(4) { animation-delay: 0.3s; }
+.otp-inputs.is-verifying .otp-box:nth-child(5) { animation-delay: 0.4s; }
+.otp-inputs.is-verifying .otp-box:nth-child(6) { animation-delay: 0.5s; }
+
+/* Resultado: las casillas se unen en una sola insignia (check o X).
+   El glifo (✓ / ✕) lo escribe el JS como textContent. */
+.otp-success {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: clamp(50px, 15vw, 64px);
+    height: clamp(50px, 15vw, 64px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: clamp(1.7rem, 6vw, 2.2rem);
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    background: var(--color-success);
+    box-shadow: 0 0 0 6px var(--color-success-bg);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+    pointer-events: none;
+    transition: opacity 0.25s ease,
+                transform 0.4s cubic-bezier(0.18, 0.9, 0.32, 1.4),
+                background 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Estado de error: insignia roja con la X */
+.otp-inputs.is-fail .otp-success {
+    background: var(--color-danger);
+    box-shadow: 0 0 0 6px var(--color-danger-bg);
+}
+
+/* Colapsa las casillas hacia el centro en ambos resultados */
+.otp-inputs.is-success,
+.otp-inputs.is-fail {
+    gap: 0;
+}
+
+.otp-inputs.is-success .otp-box,
+.otp-inputs.is-fail .otp-box {
+    width: 0;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border-width: 0;
+    opacity: 0;
+    transform: scale(0.4);
+    transition: width 0.35s ease, opacity 0.3s ease, transform 0.35s ease;
+}
+
+.otp-inputs.is-success .otp-success,
+.otp-inputs.is-fail .otp-success {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Spinner del botón mientras verifica */
+.otp-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.otp-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #fff;
+    border-radius: 50%;
+    display: inline-block;
+    animation: otp-spin 0.7s linear infinite;
+}
+
+@keyframes otp-pop {
+    0%   { transform: scale(0.82); }
+    60%  { transform: scale(1.12); }
+    100% { transform: scale(1); }
+}
+
+@keyframes otp-shake {
+    10%, 90%      { transform: translateX(-1px); }
+    20%, 80%      { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-5px); }
+    40%, 60%      { transform: translateX(5px); }
+}
+
+@keyframes otp-wave {
+    0%, 100% { transform: translateY(0);    opacity: 0.55; }
+    50%      { transform: translateY(-7px); opacity: 1; }
+}
+
+@keyframes otp-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Modo oscuro: superficie elevada para contraste */
+html[data-theme="dark"] .otp-box {
+    background: var(--cf4-surface-2);
+    color: var(--cf4-text-strong);
+}
+
+/* Respeta la preferencia de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+    .otp-box,
+    .otp-box.is-filled,
+    .otp-inputs.is-error,
+    .otp-inputs.is-verifying .otp-box,
+    .otp-inputs.is-success .otp-box,
+    .otp-inputs.is-fail .otp-box,
+    .otp-success,
+    .otp-spinner {
+        animation: none !important;
+        transition: none !important;
+    }
+}
 
 /* ===================================================================
    11. MY PROFILE (profile.blade.php)
