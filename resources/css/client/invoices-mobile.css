@@ -94,19 +94,39 @@
         font-size: 0.8rem;
     }
 
+    /* Tabs: fila horizontal deslizable (mejor que 3 bloques apilados) */
     .cf4-invoices-tab-cards {
+        display: flex;
+        flex-wrap: nowrap;
         gap: 0.5rem;
         margin-bottom: 1rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+        padding-bottom: 0.15rem;
+    }
+
+    .cf4-invoices-tab-cards::-webkit-scrollbar {
+        display: none;
     }
 
     .cf4-invoices-tab-card {
+        flex: 0 0 auto;
+        min-width: min(78vw, 17.5rem);
+        max-width: 85vw;
         min-height: 2.75rem;
-        padding: 0.65rem 0.85rem;
-        font-size: 0.85rem;
+        padding: 0.65rem 0.9rem;
+        font-size: 0.82rem;
+        scroll-snap-align: start;
+    }
+
+    .cf4-invoices-tab-card:not(.is-active) {
+        opacity: 0.88;
     }
 
     .cf4-invoices-wrapper {
-        padding: 0 1rem 2rem;
+        padding: 0 0.75rem 2rem;
         overflow-x: hidden;
     }
 
@@ -116,21 +136,24 @@
     }
 
     .cf4-invoices-card {
-        border-radius: 14px;
-        box-shadow: 0 2px 12px rgba(5, 31, 32, 0.06);
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
     }
 
     .cf4-invoices-table-scroll {
-        padding: 0.65rem;
-        background: rgba(218, 241, 222, 0.25);
+        padding: 0;
+        background: transparent;
     }
 
-    /* Mobile-first invoice cards */
+    /* Tarjetas de factura (móvil) */
     .cf4-invoices-list-table.admin-table {
         min-width: 100% !important;
         width: 100%;
         border-collapse: separate;
-        border-spacing: 0 0.65rem;
+        border-spacing: 0;
     }
 
     .cf4-invoices-list-table.admin-table thead {
@@ -138,24 +161,23 @@
     }
 
     .cf4-invoices-list-table.admin-table tbody {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
     }
 
     .cf4-invoices-list-table.admin-table tbody tr {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        grid-template-areas:
-            "invoice status"
-            "date date"
-            "total total"
-            "action action";
-        gap: 0.45rem 0.65rem;
-        padding: 1rem 1.05rem;
-        background: #fff;
-        border: 1px solid rgba(5, 31, 32, 0.07);
-        border-radius: 14px;
-        box-shadow: 0 2px 10px rgba(5, 31, 32, 0.06);
-        margin-bottom: 0.65rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        background: var(--cf4-catalog-card-bg, #fff);
+        border: 1px solid var(--cf4-catalog-card-border, rgba(5, 31, 32, 0.1));
+        border-radius: 16px;
+        box-shadow: 0 4px 16px rgba(5, 31, 32, 0.08);
+        overflow: hidden;
         transition: box-shadow 0.2s ease, transform 0.15s ease;
     }
 
@@ -164,81 +186,107 @@
     }
 
     .cf4-invoices-list-table.admin-table tbody td {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.65rem;
+        width: 100%;
         padding: 0;
         border: none;
         max-width: none;
         position: static;
         box-shadow: none;
+        background: transparent;
     }
 
     .cf4-invoices-list-table.admin-table tbody td::before {
-        display: none;
+        flex: 0 0 auto;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--cf4-text-muted, #94a3b8);
     }
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Factura"] {
-        grid-area: invoice;
-        font-size: 1.05rem;
+        padding: 0.9rem 1rem 0.65rem;
+        justify-content: flex-start;
+        font-size: 1.08rem;
         font-weight: 700;
-        color: var(--brand-darkest, #051f20);
+        color: var(--cf4-text-main, var(--brand-darkest, #051f20));
         line-height: 1.25;
     }
 
+    .cf4-invoices-list-table.admin-table tbody td[data-label="Factura"]::before {
+        display: none;
+    }
+
     .cf4-invoices-list-table.admin-table tbody td[data-label="Estado"] {
-        grid-area: status;
-        align-self: start;
-        justify-self: end;
+        position: absolute;
+        top: 0.85rem;
+        right: 1rem;
+        width: auto;
+        justify-content: flex-end;
+    }
+
+    .cf4-invoices-list-table.admin-table tbody td[data-label="Estado"]::before {
+        display: none;
+    }
+
+    .cf4-invoices-list-table.admin-table tbody tr {
+        position: relative;
     }
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Fecha"] {
-        grid-area: date;
-        font-size: 0.8rem;
-        color: var(--color-muted, #6c757d);
+        padding: 0.6rem 1rem;
+        font-size: 0.84rem;
+        color: var(--cf4-text-muted, #6c757d);
+        border-top: 1px solid var(--cf4-catalog-card-border, rgba(5, 31, 32, 0.1));
     }
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Fecha"]::before {
-        display: inline;
-        content: "Fecha · ";
-        font-weight: 600;
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: #94a3b8;
+        content: "Fecha";
     }
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Total"],
     .cf4-invoices-list-table.admin-table tbody td[data-label="Total pagado"] {
-        grid-area: total;
-        padding-top: 0.35rem;
-        margin-top: 0.15rem;
-        border-top: 1px dashed rgba(5, 31, 32, 0.1);
-        font-size: 1.12rem;
+        padding: 0.75rem 1rem;
+        font-size: 1.15rem;
         font-weight: 700;
-        color: var(--color-primary, #235347);
+        color: var(--brand-medium, #235347);
+        border-top: 1px solid var(--cf4-catalog-card-border, rgba(5, 31, 32, 0.1));
+        align-items: flex-end;
     }
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Total"]::before,
     .cf4-invoices-list-table.admin-table tbody td[data-label="Total pagado"]::before {
-        display: block;
         content: attr(data-label);
-        font-size: 0.68rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #94a3b8;
-        margin-bottom: 0.15rem;
+        align-self: center;
+    }
+
+    .cf4-invoices-list-table.admin-table tbody td[data-label="Total"] strong,
+    .cf4-invoices-list-table.admin-table tbody td[data-label="Total pagado"] strong {
+        font-weight: 800;
+        color: inherit;
     }
 
     .cf4-invoices-list-table.admin-table tbody td.cf4-invoices-td-actions {
-        grid-area: action;
-        padding-top: 0.35rem;
+        display: block;
+        padding: 0 1rem 1rem;
+        border-top: none;
+    }
+
+    .cf4-invoices-list-table.admin-table tbody td.cf4-invoices-td-actions::before {
+        display: none;
     }
 
     .cf4-invoices-td-actions .cf4-invoice-detail-btn {
         width: 100%;
-        min-height: 2.75rem;
-        font-size: 0.88rem;
+        min-height: 2.85rem;
+        font-size: 0.9rem;
+        font-weight: 700;
         justify-content: center;
+        border-radius: 12px;
     }
 
     .cf4-invoices-empty--panel {
@@ -248,5 +296,18 @@
     .cf4-invoice-status-badge {
         padding: 0.4rem 0.75rem;
         font-size: 0.72rem;
+    }
+
+    html[data-theme="dark"] .cf4-invoices-list-table.admin-table tbody tr {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.32);
+    }
+
+    html[data-theme="dark"] .cf4-invoices-list-table.admin-table tbody td[data-label="Total"],
+    html[data-theme="dark"] .cf4-invoices-list-table.admin-table tbody td[data-label="Total pagado"] {
+        color: #81c784;
+    }
+
+    html[data-theme="dark"] .cf4-invoices-tab-card:not(.is-active) {
+        opacity: 0.75;
     }
 }

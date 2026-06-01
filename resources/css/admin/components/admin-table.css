@@ -439,21 +439,21 @@
         overflow-x: visible;
     }
 
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) {
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) {
         min-width: 100%;
         border-collapse: separate;
         border-spacing: 0 0.65rem;
     }
 
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) thead {
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) thead {
         display: none;
     }
 
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody {
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) tbody {
         display: block;
     }
 
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody tr {
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) tbody tr {
         display: block;
         background: #fff;
         border: 1px solid var(--border-color, #e5e7eb);
@@ -462,12 +462,12 @@
         margin-bottom: 0.5rem;
     }
 
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody tr:hover {
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) tbody tr:hover {
         background: var(--table-row-hover-bg, #fff);
         color: var(--text-primary);
     }
 
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td {
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) tbody td {
         display: grid;
         grid-template-columns: minmax(5.5rem, 38%) 1fr;
         gap: 0.35rem 0.65rem;
@@ -483,11 +483,11 @@
         background: transparent;
     }
 
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td:last-child {
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) tbody td:last-child {
         border-bottom: none;
     }
 
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td::before {
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) tbody td::before {
         content: attr(data-label);
         font-size: 0.72rem;
         font-weight: 700;
@@ -497,20 +497,20 @@
         line-height: 1.35;
     }
 
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td.admin-table__col--actions,
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td.col-actions,
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) tbody td.actions-cell {
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) tbody td.admin-table__col--actions,
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) tbody td.col-actions,
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) tbody td.actions-cell {
         text-align: right;
     }
 
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) .actions-container {
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) .actions-container {
         justify-content: flex-end;
         flex-wrap: wrap;
         gap: 0.35rem;
     }
 
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) .action-btn,
-    .admin-table:has(tbody td[data-label]):not(.cf4-items-table) .btn-icon {
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) .action-btn,
+    .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) .btn-icon {
         width: 2.25rem;
         height: 2.25rem;
     }
