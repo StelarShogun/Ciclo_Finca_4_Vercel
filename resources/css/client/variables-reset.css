@@ -1085,11 +1085,30 @@ html[data-theme="dark"] .cf4-pagination-toolbar .admin-pagination-per-page-selec
   border-color: var(--border-color);
 }
 
-/* Detalle de producto — panel compra y textos */
-html[data-theme="dark"] .product-detail-purchase-panel {
+/* Detalle de producto — panel compra, tarjetas de contenido y textos */
+html[data-theme="dark"] .product-detail-purchase-panel,
+html[data-theme="dark"] .product-detail-card {
   background: var(--cf4-surface-elevated);
   border-color: var(--border-color);
   box-shadow: var(--shadow-md);
+}
+
+html[data-theme="dark"] .product-detail-spec-chip {
+  background: var(--cf4-surface-1);
+  border-color: var(--border-color);
+}
+
+html[data-theme="dark"] .product-detail-spec-chip__label {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .product-detail-spec-chip__label::after {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .product-detail-spec-chip--highlight {
+  background: rgba(22, 56, 50, 0.55);
+  border-color: rgba(142, 182, 155, 0.28);
 }
 
 html[data-theme="dark"] .product-detail-price__amount {
