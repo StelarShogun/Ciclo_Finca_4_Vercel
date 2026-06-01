@@ -237,22 +237,27 @@
 
 .cf4-pagination-toolbar .sr-only {
   position: absolute;
+  left: 0;
+  top: 0;
   width: 1px;
   height: 1px;
   padding: 0;
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }
 
 /* Ir a página (input + botón siempre en la misma fila) */
 .cf4-pagination-jump {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   flex: 0 0 auto;
+  max-width: 100%;
 }
 
 .cf4-pagination-jump .pagination-go-input,
@@ -303,6 +308,8 @@
     justify-content: flex-start;
     gap: 0.3rem;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;

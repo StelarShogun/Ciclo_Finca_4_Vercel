@@ -1,9 +1,17 @@
 .catalog-spotlight.catalog-spotlight-section,
 .catalog-spotlight-section {
   margin-bottom: 1.2rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
 }
 
 .catalog-spotlight-inner {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: clamp(1rem, 1.5vw, 1.4rem);
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.62);
@@ -45,6 +53,29 @@
   overflow: hidden;
   padding: 2px 44px 6px;
   contain: inline-size;
+}
+
+@media (max-width: 1024px) {
+  .catalog-spotlight-carousel,
+  .featured-products-carousel {
+    padding-inline: 12px;
+    contain: none;
+  }
+
+  .catalog-spotlight-carousel .swiper,
+  .featured-products-carousel .swiper {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .catalog-spotlight-carousel .swiper-wrapper {
+    max-width: 100%;
+  }
+
+  .catalog-spotlight-carousel .swiper-slide {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }
 
 .catalog-spotlight-carousel .swiper,
@@ -147,6 +178,23 @@
 .catalog-spotlight-slide {
   position: relative;
   overflow: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.catalog-spotlight-slide .product-info,
+.catalog-spotlight-slide .catalog-spotlight-card-link {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.catalog-spotlight-slide .product-name,
+.catalog-spotlight-slide .product-price-value,
+.catalog-spotlight-slide .product-stars-inline {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .catalog-spotlight-card-link {

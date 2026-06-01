@@ -25,8 +25,10 @@ function initCarouselRoot(root, Swiper, { Navigation, Autoplay, A11y }) {
     const maxSlidesPerView =
         parseInt(root.getAttribute('data-max-slides-per-view'), 10) || DEFAULT_MAX_SLIDES_PER_VIEW;
     const minSlidesForLoop = maxSlidesPerView * 2;
+    const isNarrowViewport = window.matchMedia('(max-width: 1023px)').matches;
+    const enableLoop = slides.length > 1 && !isNarrowViewport;
 
-    if (wrapperEl && slides.length > 1 && slides.length < minSlidesForLoop) {
+    if (enableLoop && wrapperEl && slides.length > 1 && slides.length < minSlidesForLoop) {
         const originalSlides = Array.from(slides);
         while (wrapperEl.querySelectorAll('.swiper-slide').length < minSlidesForLoop) {
             originalSlides.forEach((slide) => {
@@ -38,8 +40,6 @@ function initCarouselRoot(root, Swiper, { Navigation, Autoplay, A11y }) {
 
     let delay = parseInt(root.getAttribute('data-autoplay-delay'), 10);
     if (!Number.isFinite(delay) || delay <= 0) delay = 4000;
-
-    const enableLoop = slides.length > 1;
     const prevLabel =
         root.getAttribute('data-a11y-prev') || 'Producto destacado anterior';
     const nextLabel =

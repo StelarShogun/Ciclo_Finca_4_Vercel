@@ -130,7 +130,12 @@ body.guest-layout {
 
 @media (max-width: 1024px) {
   .cliente-main {
-    overflow-x: clip;
+    overflow-x: hidden;
+  }
+
+  .cliente-main:has(.catalog-shell) {
+    max-width: 100%;
+    min-width: 0;
   }
 }
 

@@ -90,17 +90,6 @@
             default => 'Pedidos pendientes o listos para recoger.',
         };
 
-        $selectIcon = match ($tab) {
-            'historial' => 'fas fa-history',
-            'canceladas' => 'fas fa-ban',
-            default => 'fas fa-file-invoice',
-        };
-
-        $activeTabLabel = match ($tab) {
-            'historial' => 'Historial de compras',
-            'canceladas' => 'Canceladas',
-            default => 'Pendientes / Por recoger',
-        };
     @endphp
 
     <div class="cf4-invoices-header">
@@ -116,52 +105,6 @@
                 </a>
             </nav>
         </div>
-        <div class="cf4-invoices-tab-selector">
-            <div class="cf4-invoices-tab-dropdown" data-cf4-invoices-tab-dropdown>
-                <button type="button"
-                        class="cf4-invoices-tab-trigger"
-                        id="cf4-invoice-tab-trigger"
-                        aria-expanded="false"
-                        aria-haspopup="listbox"
-                        aria-controls="cf4-invoice-tab-menu">
-                    <i class="{{ $selectIcon }} cf4-invoices-tab-trigger__icon" aria-hidden="true"></i>
-                    <span class="cf4-invoices-tab-trigger__label">{{ $activeTabLabel }}</span>
-                    <i class="fas fa-chevron-down cf4-invoices-tab-trigger__chevron" aria-hidden="true"></i>
-                    @if($unseenHistoryCount > 0 && $tab !== 'historial')
-                        <span class="cf4-invoices-tab-trigger__badge" id="history-tab-badge" title="Compras nuevas en Historial"></span>
-                    @endif
-                </button>
-                <ul class="cf4-invoices-tab-menu" id="cf4-invoice-tab-menu" role="listbox" hidden>
-                    <li role="presentation">
-                        <a href="{{ route('clients.invoices', ['tab' => 'facturas']) }}"
-                           role="option"
-                           @class(['cf4-invoices-tab-option', 'is-active' => $tab === 'facturas'])>
-                            <i class="fas fa-file-invoice" aria-hidden="true"></i>
-                            Pendientes / Por recoger
-                        </a>
-                    </li>
-                    <li role="presentation">
-                        <a href="{{ route('clients.invoices', ['tab' => 'canceladas']) }}"
-                           role="option"
-                           @class(['cf4-invoices-tab-option', 'is-active' => $tab === 'canceladas'])>
-                            <i class="fas fa-ban" aria-hidden="true"></i>
-                            Canceladas
-                        </a>
-                    </li>
-                    <li role="presentation">
-                        <a href="{{ route('clients.invoices', ['tab' => 'historial']) }}"
-                           role="option"
-                           @class(['cf4-invoices-tab-option', 'is-active' => $tab === 'historial'])>
-                            <i class="fas fa-history" aria-hidden="true"></i>
-                            Historial de compras
-                            @if($unseenHistoryCount > 0 && $tab !== 'historial')
-                                <span class="cf4-invoices-tab-option__badge" title="Compras nuevas"></span>
-                            @endif
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
     </div>
 
     <div class="cf4-invoices-wrapper">
@@ -170,6 +113,30 @@
             <a href="{{ route('clients.home') }}">Inicio</a>
             <span>/</span>
             <span>Mis Facturas</span>
+        </nav>
+
+        <nav class="cf4-invoices-tab-cards" aria-label="Filtrar facturas">
+            <a href="{{ route('clients.invoices', ['tab' => 'facturas']) }}"
+               @class(['cf4-invoices-tab-card', 'is-active' => $tab === 'facturas'])
+               @if($tab === 'facturas') aria-current="page" @endif>
+                <i class="fas fa-file-invoice cf4-invoices-tab-card__icon" aria-hidden="true"></i>
+                <span class="cf4-invoices-tab-card__label">Pendientes / Por recoger</span>
+            </a>
+            <a href="{{ route('clients.invoices', ['tab' => 'canceladas']) }}"
+               @class(['cf4-invoices-tab-card', 'is-active' => $tab === 'canceladas'])
+               @if($tab === 'canceladas') aria-current="page" @endif>
+                <i class="fas fa-ban cf4-invoices-tab-card__icon" aria-hidden="true"></i>
+                <span class="cf4-invoices-tab-card__label">Canceladas</span>
+            </a>
+            <a href="{{ route('clients.invoices', ['tab' => 'historial']) }}"
+               @class(['cf4-invoices-tab-card', 'is-active' => $tab === 'historial'])
+               @if($tab === 'historial') aria-current="page" @endif>
+                <i class="fas fa-history cf4-invoices-tab-card__icon" aria-hidden="true"></i>
+                <span class="cf4-invoices-tab-card__label">Historial de compras</span>
+                @if($unseenHistoryCount > 0 && $tab !== 'historial')
+                    <span class="cf4-invoices-tab-card__badge" id="history-tab-badge" title="Compras nuevas en Historial"></span>
+                @endif
+            </a>
         </nav>
 
         @if(($readyToPickupCount ?? 0) > 0 && $tab === 'facturas')

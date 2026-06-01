@@ -899,7 +899,6 @@ class ClientUserController extends Controller
 
             $googleUser = $profileResponse->json();
             $email = strtolower((string) data_get($googleUser, 'email', ''));
-            $fullName = trim((string) data_get($googleUser, 'name', ''));
 
             if ($email === '') {
                 throw new \RuntimeException('Google no devolvió un correo electrónico.');
@@ -920,14 +919,11 @@ class ClientUserController extends Controller
                     $client->update(['email_verified' => true]);
                 }
             } else {
-                $partes = array_filter(explode(' ', $fullName, 3));
-                $nombre = $partes[0] ?? ($fullName !== '' ? $fullName : 'Usuario');
-                $apellido1 = $partes[1] ?? null;
-                $apellido2 = $partes[2] ?? null;
+                $parsedNames = $this->namesFromGoogleProfile($googleUser);
                 $data = [
-                    'name' => $nombre,
-                    'first_surname' => $apellido1,
-                    'second_surname' => $apellido2,
+                    'name' => $parsedNames['name'],
+                    'first_surname' => $parsedNames['first_surname'],
+                    'second_surname' => $parsedNames['second_surname'],
                     'gmail' => $email,
                     'password' => Hash::make(Str::random(32)),
                     'provider' => 'google',
@@ -968,6 +964,52 @@ class ClientUserController extends Controller
 
             return redirect()->route('clients.home')->with('error', $message);
         }
+    }
+
+    /**
+     * Map Google userinfo to client_table name fields (first_surname is NOT NULL).
+     * Uses given_name/family_name when present; otherwise splits full name.
+     * Single-name accounts (e.g. "Dilan") get a placeholder surname for DB constraints.
+     *
+     * @param  array<string, mixed>  $googleUser
+     * @return array{name: string, first_surname: string, second_surname: ?string}
+     */
+    private function namesFromGoogleProfile(array $googleUser): array
+    {
+        $given = trim((string) data_get($googleUser, 'given_name', ''));
+        $family = trim((string) data_get($googleUser, 'family_name', ''));
+        $full = trim((string) data_get($googleUser, 'name', ''));
+
+        $nombre = 'Usuario';
+        $apellido1 = null;
+        $apellido2 = null;
+
+        if ($given !== '') {
+            $nombre = $given;
+            if ($family !== '') {
+                $familyParts = array_values(array_filter(preg_split('/\s+/u', $family) ?: []));
+                $apellido1 = $familyParts[0] ?? null;
+                $apellido2 = count($familyParts) > 1
+                    ? implode(' ', array_slice($familyParts, 1))
+                    : null;
+            }
+        } elseif ($full !== '') {
+            $partes = array_values(array_filter(explode(' ', $full, 3)));
+            $nombre = $partes[0] ?? $full;
+            $apellido1 = $partes[1] ?? null;
+            $apellido2 = $partes[2] ?? null;
+        }
+
+        if ($apellido1 === null || trim($apellido1) === '') {
+            // Placeholder for NOT NULL column; omitted from welcome display (see clientWelcomeDisplayName).
+            $apellido1 = '-';
+        }
+
+        return [
+            'name' => $nombre,
+            'first_surname' => $apellido1,
+            'second_surname' => $apellido2,
+        ];
     }
 
     /** Issue a one-time OAuth state token persisted outside the session (Render-safe). */
