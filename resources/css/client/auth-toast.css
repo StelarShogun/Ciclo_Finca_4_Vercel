@@ -1,14 +1,29 @@
 /* SweetAlert2 client auth toasts — uses palette from variables-reset.css (:root). */
 
 .swal2-client-auth-toast-popup.swal2-toast {
+  position: relative;
   background: var(--background-white) !important;
   border: 1px solid var(--border-color) !important;
   border-left: 4px solid var(--color-primary) !important;
   border-radius: var(--border-radius) !important;
   box-shadow: var(--shadow-md) !important;
-  padding: 0.75rem 0.9rem !important;
+  padding: 0.75rem 2.25rem 0.75rem 0.9rem !important;
   font-family: 'Poppins', sans-serif !important;
   min-width: min(18rem, calc(100vw - 1.5rem)) !important;
+}
+
+.swal2-client-auth-toast-popup .swal2-close {
+  position: absolute !important;
+  inset: 0.45rem 0.45rem auto auto !important;
+  width: 1.6rem !important;
+  height: 1.6rem !important;
+  font-size: 1.15rem !important;
+  line-height: 1.6rem !important;
+  color: var(--text-secondary, #6b7280) !important;
+}
+
+.swal2-client-auth-toast-popup .swal2-close:hover {
+  color: var(--color-dark, #0f172a) !important;
 }
 
 .swal2-client-auth-toast-popup .swal2-client-auth-toast-html {

@@ -109,6 +109,9 @@ async function cf4AuthWelcomeToast(opts) {
         toast: true,
         position: 'top-end',
         showConfirmButton: false,
+        showCloseButton: true,
+        closeButtonHtml: '&times;',
+        closeButtonAriaLabel: 'Cerrar',
         timer,
         timerProgressBar: true,
         didOpen() {
