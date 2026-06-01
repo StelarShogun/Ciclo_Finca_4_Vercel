@@ -1921,7 +1921,17 @@ html[data-theme="dark"] .cf4-invoices-card .admin-table tbody td {
 }
 
 html[data-theme="dark"] .cf4-invoices-card .admin-table tbody tr:hover td {
-  background: rgba(22, 56, 50, 0.35);
+  background: transparent;
+}
+
+@media (max-width: 768px) {
+  html[data-theme="dark"] .cf4-invoices-list-table.admin-table tbody tr:hover {
+    background: var(--cf4-catalog-card-bg);
+  }
+
+  html[data-theme="dark"] .cf4-invoices-list-table.admin-table tbody tr:hover td {
+    background: transparent !important;
+  }
 }
 
 html[data-theme="dark"] .cf4-invoices-empty,

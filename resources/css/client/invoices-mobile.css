@@ -94,35 +94,41 @@
         font-size: 0.8rem;
     }
 
-    /* Tabs: fila horizontal deslizable (mejor que 3 bloques apilados) */
+    /* Tabs: 3 chips compactos en una fila */
     .cf4-invoices-tab-cards {
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 0.5rem;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.4rem;
         margin-bottom: 1rem;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x proximity;
-        scrollbar-width: none;
-        padding-bottom: 0.15rem;
-    }
-
-    .cf4-invoices-tab-cards::-webkit-scrollbar {
-        display: none;
     }
 
     .cf4-invoices-tab-card {
-        flex: 0 0 auto;
-        min-width: min(78vw, 17.5rem);
-        max-width: 85vw;
-        min-height: 2.75rem;
-        padding: 0.65rem 0.9rem;
-        font-size: 0.82rem;
-        scroll-snap-align: start;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        min-height: 4.25rem;
+        padding: 0.55rem 0.35rem;
+        font-size: 0.68rem;
+        line-height: 1.2;
+        text-align: center;
+    }
+
+    .cf4-invoices-tab-card__icon {
+        font-size: 0.95rem;
+    }
+
+    .cf4-invoices-tab-card__label {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        text-align: center;
+        line-height: 1.15;
     }
 
     .cf4-invoices-tab-card:not(.is-active) {
-        opacity: 0.88;
+        opacity: 0.82;
     }
 
     .cf4-invoices-wrapper {
@@ -148,10 +154,11 @@
         background: transparent;
     }
 
-    /* Tarjetas de factura (móvil) */
+    /* Tarjetas de factura (móvil): romper tabla para layout en columna */
     .cf4-invoices-list-table.admin-table {
-        min-width: 100% !important;
-        width: 100%;
+        display: block !important;
+        min-width: 0 !important;
+        width: 100% !important;
         border-collapse: separate;
         border-spacing: 0;
     }
@@ -161,24 +168,33 @@
     }
 
     .cf4-invoices-list-table.admin-table tbody {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
+        display: block !important;
     }
 
     .cf4-invoices-list-table.admin-table tbody tr {
-        display: flex;
-        flex-direction: column;
+        display: grid !important;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "invoice status"
+            "date date"
+            "total total"
+            "action action";
         gap: 0;
         width: 100%;
+        max-width: 100%;
         padding: 0;
-        margin: 0;
+        margin: 0 0 0.75rem;
         background: var(--cf4-catalog-card-bg, #fff);
-        border: 1px solid var(--cf4-catalog-card-border, rgba(5, 31, 32, 0.1));
+        border: 1px solid var(--cf4-catalog-card-border, rgba(5, 31, 32, 0.12));
         border-radius: 16px;
-        box-shadow: 0 4px 16px rgba(5, 31, 32, 0.08);
+        box-shadow: 0 4px 14px rgba(5, 31, 32, 0.1);
         overflow: hidden;
+        position: static !important;
         transition: box-shadow 0.2s ease, transform 0.15s ease;
+    }
+
+    .cf4-invoices-list-table.admin-table tbody tr:last-child {
+        margin-bottom: 0;
     }
 
     .cf4-invoices-list-table.admin-table tbody tr:active {
@@ -186,22 +202,27 @@
     }
 
     .cf4-invoices-list-table.admin-table tbody td {
-        display: flex;
+        display: flex !important;
         align-items: center;
         justify-content: space-between;
-        gap: 0.65rem;
-        width: 100%;
-        padding: 0;
-        border: none;
-        max-width: none;
-        position: static;
-        box-shadow: none;
-        background: transparent;
+        gap: 0.75rem;
+        width: 100% !important;
+        max-width: none !important;
+        padding: 0.65rem 1rem;
+        border: none !important;
+        border-bottom: none !important;
+        position: static !important;
+        right: auto !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        white-space: normal !important;
     }
 
     .cf4-invoices-list-table.admin-table tbody td::before {
         flex: 0 0 auto;
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -209,39 +230,41 @@
     }
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Factura"] {
-        padding: 0.9rem 1rem 0.65rem;
+        grid-area: invoice;
         justify-content: flex-start;
-        font-size: 1.08rem;
+        padding-top: 0.95rem;
+        padding-bottom: 0.5rem;
+        font-size: 1.1rem;
         font-weight: 700;
         color: var(--cf4-text-main, var(--brand-darkest, #051f20));
         line-height: 1.25;
     }
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Factura"]::before {
-        display: none;
+        display: none !important;
+        content: none !important;
     }
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Estado"] {
-        position: absolute;
-        top: 0.85rem;
-        right: 1rem;
-        width: auto;
+        grid-area: status;
         justify-content: flex-end;
+        align-self: start;
+        padding-top: 0.85rem;
+        padding-bottom: 0.5rem;
+        padding-left: 0.5rem;
+        width: auto !important;
     }
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Estado"]::before {
-        display: none;
-    }
-
-    .cf4-invoices-list-table.admin-table tbody tr {
-        position: relative;
+        display: none !important;
+        content: none !important;
     }
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Fecha"] {
-        padding: 0.6rem 1rem;
+        grid-area: date;
         font-size: 0.84rem;
         color: var(--cf4-text-muted, #6c757d);
-        border-top: 1px solid var(--cf4-catalog-card-border, rgba(5, 31, 32, 0.1));
+        border-top: 1px solid var(--cf4-catalog-card-border, rgba(5, 31, 32, 0.12));
     }
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Fecha"]::before {
@@ -250,40 +273,44 @@
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Total"],
     .cf4-invoices-list-table.admin-table tbody td[data-label="Total pagado"] {
-        padding: 0.75rem 1rem;
-        font-size: 1.15rem;
+        grid-area: total;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+        font-size: 1.12rem;
         font-weight: 700;
         color: var(--brand-medium, #235347);
-        border-top: 1px solid var(--cf4-catalog-card-border, rgba(5, 31, 32, 0.1));
-        align-items: flex-end;
+        border-top: 1px solid var(--cf4-catalog-card-border, rgba(5, 31, 32, 0.12));
+        align-items: center;
     }
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Total"]::before,
     .cf4-invoices-list-table.admin-table tbody td[data-label="Total pagado"]::before {
         content: attr(data-label);
-        align-self: center;
     }
 
     .cf4-invoices-list-table.admin-table tbody td[data-label="Total"] strong,
     .cf4-invoices-list-table.admin-table tbody td[data-label="Total pagado"] strong {
         font-weight: 800;
+        font-size: 1.2rem;
         color: inherit;
     }
 
     .cf4-invoices-list-table.admin-table tbody td.cf4-invoices-td-actions {
-        display: block;
+        grid-area: action;
+        display: block !important;
         padding: 0 1rem 1rem;
-        border-top: none;
     }
 
     .cf4-invoices-list-table.admin-table tbody td.cf4-invoices-td-actions::before {
-        display: none;
+        display: none !important;
+        content: none !important;
     }
 
     .cf4-invoices-td-actions .cf4-invoice-detail-btn {
+        display: flex;
         width: 100%;
-        min-height: 2.85rem;
-        font-size: 0.9rem;
+        min-height: 2.9rem;
+        font-size: 0.92rem;
         font-weight: 700;
         justify-content: center;
         border-radius: 12px;

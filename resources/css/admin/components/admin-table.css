@@ -432,6 +432,10 @@
 
 /* Phone: card rows when cells have data-label (set by admin-table-responsive.js) */
 @media (max-width: 768px) {
+    .cf4-invoices-list-table.admin-table {
+        min-width: 0 !important;
+    }
+
     .admin-table-scroll,
     .sales-table-container:has(.admin-table),
     .table-wrap:has(.admin-table),
