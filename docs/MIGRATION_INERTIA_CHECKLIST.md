@@ -40,7 +40,7 @@
 
 | Ruta | Controller | Estado recomendado |
 |---|---|---|
-| `/cart` | `ClientPageController@cart` | Migrada (`Client/Cart/Index`); acciones JSON siguen en controller |
+| `/cart` | `ClientPageController@cart` | Migrada React puro (`Client/Cart/Index`); acciones JSON siguen en controller |
 | `/products/{product}/review` | `ProductReviewController` | Request/redirect JSON-Inertia según página migrada |
 | `/invoices` | `ClientPageController@invoices` | Migrada (`Client/Invoices/Index`) |
 | `/invoices/{sale}` | `ClientPageController@showInvoice` | Migrada (`Client/Invoices/Show`; sin thumbs de imagen en React — print sigue Blade) |
@@ -98,6 +98,23 @@
 - **Re-exports temporales** en `Components/`, `Layouts/`, `hooks/`, `lib/`, `types/` — retirar cuando no queden imports legacy.
 - **Pendiente naming**: `Invoices` vs `Orders` en rutas/copy (no renombrado en esta corrida).
 
+## Organización Blade (2026-06-02)
+
+- Vistas de categorías admin movidas a `resources/views/admin/categories/{parents,subcategories}`.
+- Layout de errores movido a `resources/views/errors/layouts/error.blade.php`; `errors/*` sigue como carpeta propia.
+- Componentes renombrados:
+  - `x-admin.admin-alert`
+  - `x-shared.file-upload`
+  - `x-shared.state-card`
+  - `x-shared.pagination`
+- Wrappers temporales `@deprecated` conservan compatibilidad con:
+  - `x-admin-alert`
+  - `x-cf-file-upload`
+  - `x-cf4.state-card`
+  - `x-pagination`
+- `resources/views/vendor/pagination` se mantiene intacto.
+- No movidos: `resources/views/emails/*` por ser vistas transaccionales y `resources/views/app.blade.php` por ser el root view de Inertia.
+
 ## Backlog de componentes
 
 MVP creado (canónicos en `shared/` o `features/`):
@@ -121,6 +138,11 @@ MVP creado (canónicos en `shared/` o `features/`):
 - `CategoryRail`
 - `CatalogProductCard`
 - `CatalogPagination`
+- `CartItemRow`
+- `CartQuantitySelector`
+- `CartSummary`
+- `CartEmptyState`
+- `CartCheckoutActions`
 
 Pendiente:
 
@@ -143,7 +165,7 @@ Pendiente:
 ## Orden de siguientes PRs
 
 1. ~~Detalle de producto + favoritos + reseñas.~~ (Inertia + refactor feature `product`)
-2. ~~Carrito~~ (página Inertia; reducir `bundles/cart.js`)
+2. ~~Carrito~~ (React puro; `bundles/cart.js` queda sólo para Blade residual)
 3. ~~Auth cliente.~~
 4. ~~Cuenta cliente.~~
 5. ~~Facturas/pedidos (listado/detalle).~~ — miniaturas en detalle Inertia pendientes

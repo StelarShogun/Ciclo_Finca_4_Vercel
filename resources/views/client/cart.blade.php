@@ -172,7 +172,7 @@
 
                         @if($cartItemsPaginator->hasPages())
                             <div class="cart-pagination-wrap">
-                                <x-pagination :paginator="$cartItemsPaginator" label="productos del carrito" />
+                                <x-shared.pagination :paginator="$cartItemsPaginator" label="productos del carrito" />
                             </div>
                         @endif
                         </div>

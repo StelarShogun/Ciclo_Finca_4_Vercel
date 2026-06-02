@@ -1,24 +1,48 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { CatalogPagination } from '@/features/client/catalog/components/CatalogPagination';
-import { useCartPageInit } from '@/features/client/cart/hooks/useCartPageInit';
-import type { CartPageProps } from '@/types/cart';
+import { CartEmptyState } from '@/features/client/cart/components/CartEmptyState';
+import { CartItemRow } from '@/features/client/cart/components/CartItemRow';
+import { CartSummary } from '@/features/client/cart/components/CartSummary';
+import { useCartActions } from '@/features/client/cart/hooks/useCartActions';
+import type { CartPageProps, CartPaymentMethod } from '@/features/client/cart/types';
+import { normalizeCartItems } from '@/features/client/cart/types';
 import { ClientLayout } from '@/shared/components/layout/ClientLayout';
+import type { InertiaSharedProps } from '@/shared/types/models';
 
 import '../../../../../css/client/clients-page.css';
 import '../../../../../css/client/legal-pages.css';
 
+function formatCurrency(amount: number): string {
+  return `₡${amount.toLocaleString('es-CR', { maximumFractionDigits: 0 })}`;
+}
+
 export default function CartIndexPage({
-  items,
+  items: initialItems,
   pagination,
   pickupPolicyLine,
   pickupPolicyNotice,
   stockAdjustedMessage,
-  totalFormatted,
 }: CartPageProps) {
-  useCartPageInit();
+  const { csrfToken } = usePage<InertiaSharedProps>().props;
+  const [items, setItems] = useState(() => normalizeCartItems(initialItems));
+  const [paymentMethod, setPaymentMethod] = useState<CartPaymentMethod>('cash');
 
-  const hasItems = pagination.total > 0;
+  useEffect(() => {
+    setItems(normalizeCartItems(initialItems));
+  }, [initialItems]);
+
+  const subtotal = useMemo(() => items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0), [items]);
+  const subtotalFormatted = useMemo(() => formatCurrency(subtotal), [subtotal]);
+  const totalQuantity = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
+  const hasItems = items.length > 0;
+
+  const cartActions = useCartActions({
+    csrfToken,
+    items,
+    setItems,
+  });
 
   return (
     <>
@@ -63,7 +87,7 @@ export default function CartIndexPage({
                   <span className="cart-toolbar-label">Resumen rápido</span>
                   {hasItems ? (
                     <span className="cart-toolbar-count">
-                      {pagination.total} {pagination.total === 1 ? 'artículo' : 'artículos'}
+                      {totalQuantity} {totalQuantity === 1 ? 'artículo' : 'artículos'}
                     </span>
                   ) : null}
                 </div>
@@ -75,9 +99,14 @@ export default function CartIndexPage({
                   </Link>
 
                   {hasItems ? (
-                    <button type="button" className="btn btn-outline-danger btn-sm" id="btn-clear-cart">
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger btn-sm"
+                      disabled={cartActions.isClearing}
+                      onClick={cartActions.clearItems}
+                    >
                       <i className="fas fa-trash-alt" aria-hidden="true" />
-                      Vaciar carrito
+                      {cartActions.isClearing ? 'Vaciando...' : 'Vaciar carrito'}
                     </button>
                   ) : null}
                 </div>
@@ -88,102 +117,13 @@ export default function CartIndexPage({
                   <div className="cart-items-panel">
                     <div className="cart-items" role="list" aria-label="Productos en el carrito">
                       {items.map((item) => (
-                        <article
-                          key={item.product_id}
-                          className="cart-item"
-                          role="listitem"
-                          data-product-id={item.product_id}
-                        >
-                          <Link href={item.product_url} className="cart-item-image" tabIndex={-1} aria-hidden="true">
-                            {item.uses_placeholder_image ? (
-                              <div
-                                className="product-media-placeholder product-media-placeholder--cart"
-                                role="img"
-                                aria-label={`Sin imagen: ${item.name}`}
-                              >
-                                <i className={item.placeholder_icon_class} aria-hidden="true" />
-                              </div>
-                            ) : (
-                              <img
-                                src={item.image_url}
-                                alt=""
-                                data-fallback-src="/favicon.svg"
-                                onError={(e) => {
-                                  const img = e.currentTarget;
-                                  img.src = img.dataset.fallbackSrc ?? '/favicon.svg';
-                                }}
-                              />
-                            )}
-                          </Link>
-
-                          <div className="cart-item-main">
-                            <h3 className="item-name">
-                              <Link href={item.product_url}>{item.name}</Link>
-                            </h3>
-                            <div className="cart-item-meta">
-                              <span className="item-price">
-                                {item.priceFormatted}
-                                <span className="item-price-unit">c/u</span>
-                              </span>
-                              <span className="item-stock-badge" title="Stock disponible en tienda">
-                                <i className="fas fa-boxes-stacked" aria-hidden="true" />
-                                {item.stock_available} disponibles
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="item-controls" aria-label="Cantidad">
-                            <span className="item-controls-label" id={`qty-label-${item.product_id}`}>
-                              Cantidad
-                            </span>
-                            <div className="quantity-controls cart-qty-controls">
-                              <button
-                                type="button"
-                                className="quantity-btn"
-                                data-action="decrease"
-                                data-product-id={item.product_id}
-                                aria-label="Disminuir cantidad"
-                              >
-                                <i className="fas fa-minus" aria-hidden="true" />
-                              </button>
-                              <input
-                                type="number"
-                                className="quantity-input"
-                                defaultValue={item.quantity}
-                                min={1}
-                                max={item.stock_available}
-                                data-product-id={item.product_id}
-                                aria-labelledby={`qty-label-${item.product_id}`}
-                              />
-                              <button
-                                type="button"
-                                className="quantity-btn"
-                                data-action="increase"
-                                data-product-id={item.product_id}
-                                aria-label="Aumentar cantidad"
-                              >
-                                <i className="fas fa-plus" aria-hidden="true" />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="cart-item-right">
-                            <div className="item-subtotal">
-                              <span className="subtotal-label">Subtotal</span>
-                              <span className="subtotal-amount">{item.subtotalFormatted}</span>
-                            </div>
-                            <button
-                              type="button"
-                              className="btn btn-icon-danger cart-remove-item"
-                              data-product-id={item.product_id}
-                              data-product-name={item.name}
-                              title="Quitar del carrito"
-                              aria-label={`Quitar ${item.name} del carrito`}
-                            >
-                              <i className="fas fa-trash-alt" aria-hidden="true" />
-                            </button>
-                          </div>
-                        </article>
+                        <CartItemRow
+                          key={item.productId}
+                          item={item}
+                          isBusy={cartActions.busyItemId === item.productId}
+                          onQuantityChange={cartActions.updateQuantity}
+                          onRemove={cartActions.removeItem}
+                        />
                       ))}
                     </div>
 
@@ -194,100 +134,18 @@ export default function CartIndexPage({
                     ) : null}
                   </div>
 
-                  <aside className="cart-summary" aria-labelledby="cart-summary-title">
-                    <div className="summary-card">
-                      <h2 id="cart-summary-title" className="summary-title">
-                        Total del pedido
-                      </h2>
-
-                      <fieldset className="cart-payment-fieldset">
-                        <legend className="cart-payment-legend" id="cart-payment-legend">
-                          Forma de pago
-                        </legend>
-                        <p className="cart-payment-hint">Podés cambiarla luego; usamos esto para preparar tu pedido.</p>
-                        <div className="cart-payment-options" role="radiogroup" aria-labelledby="cart-payment-legend">
-                          {(['cash', 'sinpe', 'transfer'] as const).map((method, index) => (
-                            <label key={method} className="cart-payment-option">
-                              <input
-                                type="radio"
-                                name="checkout_payment_method"
-                                value={method}
-                                className="cart-payment-input"
-                                defaultChecked={index === 0}
-                              />
-                              <span className="cart-payment-card">
-                                <i
-                                  className={
-                                    method === 'cash'
-                                      ? 'fas fa-money-bill-wave'
-                                      : method === 'sinpe'
-                                        ? 'fas fa-mobile-screen-button'
-                                        : 'fas fa-building-columns'
-                                  }
-                                  aria-hidden="true"
-                                />
-                                <span className="cart-payment-label">
-                                  {method === 'cash' ? 'Efectivo' : method === 'sinpe' ? 'SINPE Móvil' : 'Transferencia'}
-                                </span>
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </fieldset>
-
-                      <div className="summary-details">
-                        <div className="summary-row">
-                          <span>Subtotal</span>
-                          <span id="cart-subtotal">{totalFormatted}</span>
-                        </div>
-                        <div className="summary-row summary-row--muted">
-                          <span>Impuestos</span>
-                          <span id="cart-taxes">Incluidos / no aplican</span>
-                        </div>
-                        <div className="summary-row summary-total">
-                          <span>Total estimado</span>
-                          <span id="cart-total-amount">{totalFormatted}</span>
-                        </div>
-                      </div>
-
-                      <div className="summary-actions">
-                        <button type="button" className="btn btn-primary btn-block btn-lg" id="proceed-checkout">
-                          <i className="fas fa-check" aria-hidden="true" />
-                          Confirmar pedido
-                        </button>
-                        <p className="checkout-note">
-                          <i className="fas fa-circle-info" aria-hidden="true" />
-                          {pickupPolicyLine}
-                        </p>
-                      </div>
-                    </div>
-                  </aside>
+                  <CartSummary
+                    subtotalFormatted={subtotalFormatted}
+                    totalFormatted={subtotalFormatted}
+                    paymentMethod={paymentMethod}
+                    pickupPolicyLine={pickupPolicyLine}
+                    isCheckingOut={cartActions.isCheckingOut}
+                    onCheckout={() => cartActions.checkout(paymentMethod)}
+                    onPaymentMethodChange={setPaymentMethod}
+                  />
                 </div>
               ) : (
-                <div className="cart-empty">
-                  <div className="cart-empty-inner">
-                    <div className="cart-empty-icon" aria-hidden="true">
-                      <i className="fas fa-cart-shopping" />
-                    </div>
-                    <h2 className="cart-empty-title">Tu carrito está vacío</h2>
-                    <p className="cart-empty-text">Explorá el catálogo y agregá productos para armar tu solicitud.</p>
-                    <div className="cart-empty-actions">
-                      <Link href="/catalog" className="btn btn-primary btn-lg">
-                        <i className="fas fa-bicycle" aria-hidden="true" />
-                        Ir al catálogo
-                      </Link>
-                      <Link href="/catalog#catalog-spotlight-heading" className="btn btn-ghost-cart btn-lg">
-                        <i className="fas fa-star" aria-hidden="true" />
-                        Ver destacados
-                      </Link>
-                    </div>
-                    <p className="cart-empty-home-link">
-                      <Link href="/" className="cart-empty-home-anchor">
-                        Volver al inicio
-                      </Link>
-                    </p>
-                  </div>
-                </div>
+                <CartEmptyState />
               )}
             </div>
           </div>

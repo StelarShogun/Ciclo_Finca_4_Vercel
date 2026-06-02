@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Support\ProductImageUrls;
 use Illuminate\Support\Facades\Storage;
 use Mockery;
+use Mockery\MockInterface;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Tests\TestCase;
 
@@ -15,7 +16,7 @@ class ProductImageUrlsTest extends TestCase
         Storage::fake('public');
         Storage::disk('public')->put('media/test.jpg', 'fake-image');
 
-        /** @var Media&\Mockery\MockInterface $media */
+        /** @var Media&MockInterface $media */
         $media = Mockery::mock(Media::class)->makePartial();
         $media->forceFill(['disk' => 'public']);
         $media->shouldReceive('getPathRelativeToRoot')->andReturn('media/test.jpg');

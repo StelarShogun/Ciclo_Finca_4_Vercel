@@ -1,9 +1,9 @@
-@extends('layouts.error')
+@extends('errors.layouts.error')
 
 @section('title', 'Error del servidor — Ciclo Finca 4')
 
 @section('content')
-    <x-cf4.state-card
+    <x-shared.state-card
         eyebrow="Error interno"
         code="500"
         title="Tuvimos una falla en el taller"
@@ -24,7 +24,7 @@
                 Ver catálogo
             </a>
         </x-slot>
-    </x-cf4.state-card>
+    </x-shared.state-card>
 @endsection
 
 @push('scripts')

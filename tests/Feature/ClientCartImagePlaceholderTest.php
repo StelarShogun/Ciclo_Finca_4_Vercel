@@ -57,9 +57,9 @@ class ClientCartImagePlaceholderTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Client/Cart/Index', false)
                 ->has('items', 1)
-                ->where('items.0.uses_placeholder_image', true)
-                ->where('items.0.placeholder_icon_class', fn (string $icon) => str_contains($icon, 'fa-bicycle'))
-                ->where('items.0.image_url', null)
+                ->where('items.0.image.usesPlaceholder', true)
+                ->where('items.0.image.placeholderIconClass', fn (string $icon) => str_contains($icon, 'fa-bicycle'))
+                ->where('items.0.image.fallback', fn (string $fallback) => str_contains($fallback, 'default.png'))
             );
     }
 }

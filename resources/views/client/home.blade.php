@@ -163,7 +163,7 @@
                         <div class="product-image">
                             <a class="product-image__link" href="{{ $product->clientProductUrl() }}"
                                aria-label="Ver producto: {{ $product->name }}">
-                            @include('shared.parts.product-media', [
+                            @include('shared.media.product-media', [
                                 'product' => $product,
                                 'variant' => 'card',
                                 'href' => null,

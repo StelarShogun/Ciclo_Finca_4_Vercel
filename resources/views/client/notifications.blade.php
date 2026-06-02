@@ -70,7 +70,7 @@
 
         @if($notifications->hasPages())
             <div class="cf4-invoices-pagination-wrap">
-                <x-pagination :paginator="$notifications" label="notificaciones" />
+                <x-shared.pagination :paginator="$notifications" label="notificaciones" />
             </div>
         @endif
     </div>

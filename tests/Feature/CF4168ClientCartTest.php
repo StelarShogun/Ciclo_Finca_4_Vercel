@@ -10,6 +10,7 @@ use App\Models\SaleItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Session;
+use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 class CF4168ClientCartTest extends TestCase
@@ -55,6 +56,7 @@ class CF4168ClientCartTest extends TestCase
         ]);
         $addRes->assertStatus(200);
         $this->assertTrue($addRes->json('success'));
+        $this->assertSame(1, $addRes->json('cart_count'));
         $this->assertEquals(180, $addRes->json('cart_total'));
 
         $updateRes = $this->putJson(route('clients.cart.update'), [
@@ -63,24 +65,24 @@ class CF4168ClientCartTest extends TestCase
         ]);
         $updateRes->assertStatus(200);
         $this->assertTrue($updateRes->json('success'));
+        $this->assertSame(1, $updateRes->json('cart_count'));
         $this->assertEquals(90, $updateRes->json('cart_total'));
         $this->assertSame(1, $updateRes->json('quantity_applied'));
         $this->assertFalse($updateRes->json('stock_clamped'));
         $this->assertEquals(90.0, $updateRes->json('line_subtotal'));
 
-        $clampRes = $this->putJson(route('clients.cart.update'), [
+        $stockExceededRes = $this->putJson(route('clients.cart.update'), [
             'product_id' => $product->product_id,
             'quantity' => 99,
         ]);
-        $clampRes->assertStatus(200);
-        $this->assertTrue($clampRes->json('success'));
-        $this->assertSame(10, $clampRes->json('quantity_applied'));
-        $this->assertTrue($clampRes->json('stock_clamped'));
-        $this->assertEquals(900.0, $clampRes->json('line_subtotal'));
+        $stockExceededRes->assertStatus(400);
+        $this->assertFalse($stockExceededRes->json('success'));
+        $this->assertSame(Product::MSG_CLIENT_STOCK_INSUFICIENTE, $stockExceededRes->json('message'));
 
         $removeRes = $this->deleteJson(route('clients.cart.remove', $product->product_id));
         $removeRes->assertStatus(200);
         $this->assertTrue($removeRes->json('success'));
+        $this->assertSame(0, $removeRes->json('cart_count'));
         $this->assertEquals(0, $removeRes->json('cart_total'));
 
         // CF4: eliminar cuando el carrito está vacío.
@@ -91,11 +93,197 @@ class CF4168ClientCartTest extends TestCase
 
         $this->get(route('clients.cart'))
             ->assertOk()
-            ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('Client/Cart/Index', false)
                 ->where('pagination.total', 0)
+                ->where('total', 0)
+                ->where('totalFormatted', '₡0')
                 ->has('items', 0)
             );
+    }
+
+    public function test_cart_item_payload_uses_frontend_camel_case_shape(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Payload',
+            'second_surname' => null,
+            'gmail' => 'cliente-cart-payload@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $product = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Producto Payload CF4',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 1234,
+            'purchase_price' => 10,
+            'stock_current' => 7,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($client, 'clients')
+            ->withSession([
+                'cart' => [[
+                    'product_id' => $product->product_id,
+                    'name' => $product->name,
+                    'price' => 1234.0,
+                    'quantity' => 2,
+                    'image' => '',
+                ]],
+            ])
+            ->get(route('clients.cart'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Client/Cart/Index', false)
+                ->has('items', 1)
+                ->where('items.0.productId', (int) $product->product_id)
+                ->where('items.0.name', 'Producto Payload CF4')
+                ->where('items.0.unitPrice', 1234)
+                ->where('items.0.unitPriceFormatted', '₡1.234')
+                ->where('items.0.quantity', 2)
+                ->where('items.0.subtotal', 2468)
+                ->where('items.0.subtotalFormatted', '₡2.468')
+                ->where('items.0.stockCurrent', 7)
+                ->where('items.0.canUpdate', true)
+                ->where('items.0.image.usesPlaceholder', true)
+                ->where('items.0.image.placeholderIconClass', fn (string $icon) => $icon !== '')
+            );
+    }
+
+    public function test_update_cart_rejects_invalid_quantity(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'InvalidQty',
+            'second_surname' => null,
+            'gmail' => 'cliente-invalid-qty@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $product = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Producto cantidad inválida',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 100,
+            'purchase_price' => 10,
+            'stock_current' => 5,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($client, 'clients');
+
+        $this->postJson(route('clients.cart.add'), [
+            'product_id' => $product->product_id,
+            'quantity' => 1,
+        ])->assertOk();
+
+        $this->putJson(route('clients.cart.update'), [
+            'product_id' => $product->product_id,
+            'quantity' => 0,
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['quantity']);
+    }
+
+    public function test_update_cart_rejects_quantity_greater_than_stock(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Stock',
+            'second_surname' => null,
+            'gmail' => 'cliente-stock-cart@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $product = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Producto stock limitado',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 100,
+            'purchase_price' => 10,
+            'stock_current' => 2,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($client, 'clients');
+
+        $this->postJson(route('clients.cart.add'), [
+            'product_id' => $product->product_id,
+            'quantity' => 1,
+        ])->assertOk();
+
+        $response = $this->putJson(route('clients.cart.update'), [
+            'product_id' => $product->product_id,
+            'quantity' => 3,
+        ]);
+
+        $response->assertStatus(400);
+        $this->assertFalse($response->json('success'));
+        $this->assertSame(Product::MSG_CLIENT_STOCK_INSUFICIENTE, $response->json('message'));
+    }
+
+    public function test_clear_cart_empties_session_and_returns_cart_count(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Clear',
+            'second_surname' => null,
+            'gmail' => 'cliente-clear-cart@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $product = Product::create([
+            'category_id' => null,
+            'supplier_id' => null,
+            'name' => 'Producto limpiar carrito',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 100,
+            'purchase_price' => 10,
+            'stock_current' => 5,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($client, 'clients');
+
+        $this->postJson(route('clients.cart.add'), [
+            'product_id' => $product->product_id,
+            'quantity' => 1,
+        ])->assertOk();
+
+        $response = $this->deleteJson(route('clients.cart.clear'));
+
+        $response->assertOk();
+        $this->assertTrue($response->json('success'));
+        $this->assertSame(0, $response->json('cart_count'));
+        $this->assertEquals(0.0, $response->json('cart_total'));
+        $this->assertSame([], Session::get('cart', []));
+    }
+
+    public function test_guest_cart_routes_keep_client_auth_protection(): void
+    {
+        $this->get(route('clients.cart'))
+            ->assertRedirect(route('login.show'));
+
+        $this->postJson(route('clients.cart.add'), [
+            'product_id' => 999,
+            'quantity' => 1,
+        ])->assertUnauthorized();
     }
 
     public function test_checkout_creates_pending_web_cart_sale_and_clears_session_cart(): void
@@ -151,6 +339,7 @@ class CF4168ClientCartTest extends TestCase
         ]);
         $checkoutRes->assertStatus(200);
         $this->assertTrue($checkoutRes->json('success'));
+        $this->assertSame(0, $checkoutRes->json('cart_count'));
 
         $saleId = $checkoutRes->json('sale_id');
         $this->assertNotEmpty($saleId);
@@ -175,7 +364,7 @@ class CF4168ClientCartTest extends TestCase
 
         $this->get(route('clients.cart'))
             ->assertOk()
-            ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('Client/Cart/Index', false)
                 ->where('pagination.total', 0)
                 ->has('items', 0)

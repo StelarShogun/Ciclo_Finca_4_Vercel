@@ -240,7 +240,7 @@
                                         <div class="cf4-order-line-card__product">
                                             <div class="cf4-product-thumb">
                                                 @if($product)
-                                                    @include('shared.parts.product-media', [
+                                                    @include('shared.media.product-media', [
                                                         'product' => $product,
                                                         'variant' => 'thumb-invoice',
                                                         'alt' => $productName,

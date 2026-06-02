@@ -171,10 +171,38 @@ Patrón de filtros: `CatalogFilters` usa `router.get('/catalog', params, { prese
 - Payload Laravel: `ProductDetailPayloadBuilder::build(ProductDetailPayloadContext $context)`.
 - `ImageFallback` canónico: `shared/components/ui/ImageFallback.tsx` (eliminado duplicado en `features/client/home`).
 
-### Carrito (página delgada)
+### Carrito React puro
 
 - `Pages/Client/Cart/Index.tsx` re-exporta `features/client/cart/pages/CartIndexPage.tsx`.
-- Acciones de línea siguen en `bundles/cart.js` vía `useCartPageInit` (**temporal**).
+- Las acciones principales ya corren en React/TypeScript: actualizar cantidad, eliminar línea, vaciar carrito y checkout.
+- Componentes canónicos:
+  - `CartItemRow`
+  - `CartQuantitySelector`
+  - `CartSummary`
+  - `CartEmptyState`
+  - `CartCheckoutActions`
+- Hook de acciones: `features/client/cart/hooks/useCartActions.ts`.
+- API TS: `features/client/cart/api.ts`; `resources/js/lib/cart.ts` queda como re-export `@deprecated`.
+- Payload Inertia del carrito usa camelCase (`productId`, `unitPrice`, `stockCurrent`, `image.usesPlaceholder`, etc.) y normaliza snake_case sólo como compatibilidad al entrar a React.
+- Laravel sigue validando stock y checkout; React sólo previene cantidades obviamente inválidas.
+- Después de cada acción React actualiza estado local y ejecuta `router.reload({ only: [...] })` para resincronizar con Laravel.
+
+### Vistas Blade reorganizadas (2026-06-02)
+
+- Categorías admin: `resources/views/admin/categories/{parents,subcategories}/create.blade.php`.
+- Layout de errores: `resources/views/errors/layouts/error.blade.php`.
+- Componentes movidos:
+  - `x-admin.admin-alert` → `resources/views/components/admin/admin-alert.blade.php`.
+  - `x-shared.file-upload` → `resources/views/components/shared/file-upload.blade.php`.
+  - `x-shared.state-card` → `resources/views/components/shared/state-card.blade.php`.
+  - `x-shared.pagination` → `resources/views/components/shared/pagination.blade.php`.
+- Wrappers temporales `@deprecated` conservados:
+  - `x-admin-alert`
+  - `x-cf-file-upload`
+  - `x-cf4.state-card`
+  - `x-pagination`
+- `resources/views/vendor/pagination` y `resources/views/errors` permanecen como carpetas propias.
+- `resources/views/emails/*` y `resources/views/app.blade.php` no se movieron: emails son canal transaccional Blade separado y `app.blade.php` es root view de Inertia.
 
 ### Re-exports eliminados (2026-06)
 
@@ -187,25 +215,35 @@ Se quitaron shims `@deprecated` ya sin consumidores: `Components/{Home,Catalog,U
 | `useCatalogPageInit` → `bundles/catalog.js`, `clients-catalog-heartbeat.js` | **temporal** | Rail, flyouts, filtros móviles, spotlight Swiper |
 | `bundles/product.js` + `clients-product.js` | **A. Blade** (`product.blade.php`) | Cantidad, carrusel, add-to-cart DOM en detalle Blade |
 | Detalle Inertia (`Client/Products/Show`) | **React puro** | `QuantitySelector` controlado, subtotal en React, `addToCart`/`toggleFavorite` TS, carrusel en `ProductGallery` |
-| `useCartPageInit` → `bundles/cart.js` | **temporal** | Acciones de línea y checkout en carrito migrado |
+| Carrito Inertia (`Client/Cart/Index`) | **React puro** | `useCartActions`, API TS, estado local + `router.reload` parcial |
+| `bundles/cart.js` + `clients-cart.js` | **A. Blade residual** | Sólo para `resources/views/client/cart.blade.php`; no se importa desde React |
 | `FavoritesDrawer` → `clients-header-auth.js` | **temporal** | Drawer y lista AJAX de favoritos |
-| `lib/cart.ts`, `lib/favorites.ts` | **mantener** | Puente TS hasta acciones 100% React |
+| `lib/cart.ts` | **shim @deprecated** | Re-exporta `@/features/client/cart/api` para imports existentes |
+| `lib/favorites.ts` | **mantener** | Puente TS de favoritos |
 | `catalog-product-favorites.js` (Vite) | **temporal** | Favoritos en cards cuando legacy catalog bundle corre |
 | `clients-home.js`, `clients-catalog.js`, `clients-product.js`, `clients-cart.js` | **B. bridge** en `vite.config.js` | Entradas Blade residual o bridge; no eliminar sin mapa de vistas Blade |
 | `checkout-copy.js`, `invoice-print.css`, `clients-users.css` | **A. Blade residual** | Checkout/copy y estilos no-Inertia |
 | `auth-welcome-toast.js`, `client-flash.js` | **A / temporal** | Blade auth; toasts Inertia usan `ToastProvider` |
 
-## Carrito Legacy Desde React
+## API TS de carrito
 
-El carrito **página** está en Inertia; las acciones de línea siguen parcialmente en `bundles/cart.js`. Para acciones puntuales desde otras páginas Inertia existe:
+La API canónica está en:
 
 ```txt
-resources/js/lib/cart.ts
+resources/js/features/client/cart/api.ts
 ```
 
-`addToCart(productId, quantity, csrfToken)` encapsula `fetch('/cart/add')`, headers JSON, CSRF y normalización de `cart_count` a `cartCount`.
+Funciones disponibles:
 
-Mientras carrito/catálogo/detalle de producto no estén migrados, los componentes React pueden seguir emitiendo el evento temporal `cf4:cart-count` para sincronizar el contador visual del header. Cuando carrito sea migrado, este helper debe convertirse en la API común de Home, catálogo y detalle.
+- `addToCart(productId, quantity, csrfToken)`
+- `updateCartItem(productId, quantity, csrfToken)`
+- `removeCartItem(productId, csrfToken)`
+- `clearCart(csrfToken)`
+- `checkoutCart(csrfToken, paymentMethod)`
+
+Cada función usa `fetch`, envía CSRF, valida `content-type`, maneja 419 con mensaje claro, tolera respuestas no JSON y normaliza `cart_count` a `cartCount`.
+
+`resources/js/lib/cart.ts` queda como shim temporal para Home, catálogo y detalle de producto. Los componentes React siguen emitiendo `cf4:cart-count` para sincronizar el contador visual del header hasta reemplazar ese puente por estado compartido Inertia.
 
 ## Favoritos Legacy Desde React
 

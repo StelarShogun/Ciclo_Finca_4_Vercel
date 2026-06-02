@@ -1,9 +1,9 @@
-@extends('layouts.error')
+@extends('errors.layouts.error')
 
 @section('title', 'En mantenimiento — Ciclo Finca 4')
 
 @section('content')
-    <x-cf4.state-card
+    <x-shared.state-card
         eyebrow="Mantenimiento"
         code="503"
         title="Estamos ajustando la cadena"
@@ -24,7 +24,7 @@
                 Catálogo
             </a>
         </x-slot>
-    </x-cf4.state-card>
+    </x-shared.state-card>
 @endsection
 
 @push('scripts')

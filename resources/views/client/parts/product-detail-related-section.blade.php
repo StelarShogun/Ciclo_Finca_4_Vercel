@@ -22,7 +22,7 @@
                     @endauth
                     <a class="product-image__link" href="{{ $related->clientProductUrl() }}"
                        aria-label="Ver producto: {{ $related->name }}">
-                        @include('shared.parts.product-media', [
+                        @include('shared.media.product-media', [
                             'product' => $related,
                             'variant' => 'card',
                             'href' => null,

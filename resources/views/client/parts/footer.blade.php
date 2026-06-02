@@ -77,9 +77,6 @@
                     <a href="{{ route('clients.contact') }}">Contacto</a>
                 </nav>
             </div>
-            <a href="{{ route('clients.catalog') }}" class="footer-bottom-cta">
-                Explorar catálogo <i class="fas fa-arrow-right" aria-hidden="true"></i>
-            </a>
         </div>
     </div>
 </footer>

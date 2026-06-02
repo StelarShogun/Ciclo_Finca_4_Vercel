@@ -27,13 +27,13 @@
                     @csrf
                     @method('PUT')
                     @if ($errors->any())
-                        <x-admin-alert type="error" title="Revisa los campos marcados antes de continuar.">
+                        <x-admin.admin-alert type="error" title="Revisa los campos marcados antes de continuar.">
                             <ul style="margin: 0; padding-left: 1.25rem;">
                                 @foreach ($errors->all() as $err)
                                     <li>{{ $err }}</li>
                                 @endforeach
                             </ul>
-                        </x-admin-alert>
+                        </x-admin.admin-alert>
                     @endif
                     <div class="form-group">
                         <label for="label">Nombre del atributo *</label>

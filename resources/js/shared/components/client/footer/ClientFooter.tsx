@@ -73,9 +73,6 @@ export function ClientFooter({ auth }: ClientFooterProps) {
               <Link href="/contacto">Contacto</Link>
             </nav>
           </div>
-          <Link href="/catalog" className="footer-bottom-cta">
-            Explorar catálogo <i className="fas fa-arrow-right" aria-hidden="true" />
-          </Link>
         </div>
       </div>
     </footer>

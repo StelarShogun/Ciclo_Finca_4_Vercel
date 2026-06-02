@@ -319,7 +319,7 @@ class ClientPageController extends Controller
     }
 
     /**
-     * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>  $props
      */
     private function clientCatalogResponse(string $component, array $props)
     {
@@ -989,10 +989,8 @@ class ClientPageController extends Controller
         }
 
         $requestedQty = (int) $request->quantity;
-        $quantityApplied = min($requestedQty, (int) $product->stock_current);
-        $stockClamped = $quantityApplied < $requestedQty;
 
-        if ($quantityApplied < 1) {
+        if ($product->stock_current < 1 || $requestedQty > (int) $product->stock_current) {
             return response()->json([
                 'success' => false,
                 'message' => $product->stock_current < 1
@@ -1007,17 +1005,17 @@ class ClientPageController extends Controller
 
         foreach ($cart as $index => $item) {
             if ($item['product_id'] == $request->product_id) {
-                $cart[$index]['quantity'] = $quantityApplied;
+                $cart[$index]['quantity'] = $requestedQty;
                 // Keep only minimal keys so the session never retains inflated rows.
                 $cart[$index] = [
                     'product_id' => (int) $item['product_id'],
                     'name' => (string) ($item['name'] ?? ''),
                     'price' => (float) $item['price'],
-                    'quantity' => $quantityApplied,
+                    'quantity' => $requestedQty,
                     'image' => (string) ($item['image'] ?? ''),
                 ];
                 $unitPrice = (float) $item['price'];
-                $lineSubtotal = $unitPrice * $quantityApplied;
+                $lineSubtotal = $unitPrice * $requestedQty;
                 $found = true;
                 break;
             }
@@ -1040,8 +1038,8 @@ class ClientPageController extends Controller
             'cart_count' => $this->getCartCount(),
             'cart_total' => $this->getCartTotal(),
             'line_subtotal' => $lineSubtotal,
-            'quantity_applied' => $quantityApplied,
-            'stock_clamped' => $stockClamped,
+            'quantity_applied' => $requestedQty,
+            'stock_clamped' => false,
         ]);
     }
 
@@ -1245,6 +1243,7 @@ class ClientPageController extends Controller
                 'sale_id' => $sale->sale_id,
                 'invoice_number' => $sale->invoice_number,
                 'payment_method' => $sale->payment_method,
+                'cart_count' => 0,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();

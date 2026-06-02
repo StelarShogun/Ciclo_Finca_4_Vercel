@@ -256,7 +256,7 @@
                                         <div class="product-cell-content">
                                         <div class="product-thumb-wrap product-thumb-wrap--table">
                                             {{-- MediaLibrary image with legacy fallback --}}
-                                            @include('shared.parts.product-media', [
+                                            @include('shared.media.product-media', [
                                                 'product' => $product,
                                                 'variant' => 'thumb-table',
                                                 'alt' => $product->name,
@@ -353,7 +353,7 @@
                             <div class="product-card">
                                 <div class="product-card-header">
                                     <div class="product-thumb-wrap product-thumb-wrap--card">
-                                        @include('shared.parts.product-media', [
+                                        @include('shared.media.product-media', [
                                             'product' => $product,
                                             'variant' => 'thumb-card',
                                             'alt' => $product->name,
@@ -605,7 +605,7 @@
                             <i class="fas fa-chevron-down" aria-hidden="true"></i>
                         </button>
                         <div class="form-section__body">
-                            <x-cf-file-upload
+                            <x-shared.file-upload
                                 id="new-image"
                                 name="image"
                                 label="Imagen del Producto"
@@ -614,8 +614,8 @@
                                 icon="fa-image"
                                 meta-id="new-image-meta">
                                 Haz clic o arrastra la imagen principal
-                            </x-cf-file-upload>
-                            <x-cf-file-upload
+                            </x-shared.file-upload>
+                            <x-shared.file-upload
                                 id="new-images"
                                 name="images[]"
                                 label="Imágenes adicionales (carrusel)"
@@ -626,7 +626,7 @@
                                 meta-id="new-images-meta"
                                 icon="fa-images">
                                 Seleccioná una carpeta o varios archivos
-                            </x-cf-file-upload>
+                            </x-shared.file-upload>
                         </div>
                     </section>
 
@@ -799,7 +799,7 @@
                         <div class="form-section__body form-section__body--images">
                             <input type="hidden" id="edit-remove-main-image" name="remove_main_image" value="0">
                             <div id="current-image-preview" class="cf-product-current-image" hidden></div>
-                            <x-cf-file-upload
+                            <x-shared.file-upload
                                 id="edit-image"
                                 name="image"
                                 label="Imagen del Producto"
@@ -808,8 +808,8 @@
                                 icon="fa-image"
                                 meta-id="edit-image-meta">
                                 Haz clic o arrastra para reemplazar la imagen principal
-                            </x-cf-file-upload>
-                            <x-cf-file-upload
+                            </x-shared.file-upload>
+                            <x-shared.file-upload
                                 id="edit-images"
                                 name="images[]"
                                 label="Imágenes adicionales (carrusel)"
@@ -820,7 +820,7 @@
                                 meta-id="edit-images-meta"
                                 icon="fa-images">
                                 Seleccioná una carpeta o varios archivos
-                            </x-cf-file-upload>
+                            </x-shared.file-upload>
                         </div>
                     </section>
 

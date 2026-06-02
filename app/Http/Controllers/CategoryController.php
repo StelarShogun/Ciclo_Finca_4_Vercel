@@ -11,7 +11,7 @@ class CategoryController extends Controller
 {
     public function createParentCategory()
     {
-        return view('categories.parents.create');
+        return view('admin.categories.parents.create');
     }
 
     public function storeParentCategory(Request $request)
@@ -74,7 +74,7 @@ class CategoryController extends Controller
 
         $subcategoriesByParent = Category::subcategoriesGroupedByCanonicalParent();
 
-        return view('categories.subcategories.create', compact('categories', 'categoriesHierarchy', 'subcategoriesByParent'));
+        return view('admin.categories.subcategories.create', compact('categories', 'categoriesHierarchy', 'subcategoriesByParent'));
     }
 
     public function store(Request $request)

@@ -48,10 +48,10 @@
 
                         @if ($subcategories->isEmpty())
 
-                            <x-admin-alert type="info" title="No hay registros disponibles para mostrar." dismissible>
+                            <x-admin.admin-alert type="info" title="No hay registros disponibles para mostrar." dismissible>
                                 Aún no hay tipos de producto. Crea uno en
                                 <a href="{{ route('categories.subcategories.create') }}">categorías</a>.
-                            </x-admin-alert>
+                            </x-admin.admin-alert>
 
                         @else
 

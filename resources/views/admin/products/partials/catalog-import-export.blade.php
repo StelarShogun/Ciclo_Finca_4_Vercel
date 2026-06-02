@@ -56,7 +56,7 @@
                     <span class="import-format-chip"><i class="fas fa-file-archive"></i> ZIP</span>
                     <span class="import-format-chip import-format-chip--json"><i class="fas fa-file-alt"></i> JSON</span>
                 </div>
-                <x-cf-file-upload
+                <x-shared.file-upload
                     id="import_file"
                     name="import_file"
                     accept=".zip,.xml,.csv,.txt,.json"
@@ -65,7 +65,7 @@
                     variant="compact"
                 >
                     Haz clic o arrastra un archivo aquí
-                </x-cf-file-upload>
+                </x-shared.file-upload>
                 <div id="import-file-summary" class="import-file-summary hidden" aria-live="polite"></div>
                 <p class="import-modal-requirements">
                     <i class="fas fa-info-circle" aria-hidden="true"></i>

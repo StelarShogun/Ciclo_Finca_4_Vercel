@@ -37,7 +37,7 @@
             @endcomponent
 
             @if (session('status'))
-                <x-admin-alert type="success" :message="session('status')" dismissible />
+                <x-admin.admin-alert type="success" :message="session('status')" dismissible />
             @endif
 
             <div class="form-card" style="margin-bottom:1.5rem;">
@@ -49,13 +49,13 @@
                     data-confirm-text="Se agregará un nuevo valor al atributo.">
                     @csrf
                     @if ($errors->any())
-                        <x-admin-alert type="error" title="Revisa los campos marcados antes de continuar.">
+                        <x-admin.admin-alert type="error" title="Revisa los campos marcados antes de continuar.">
                             <ul style="margin: 0; padding-left: 1.25rem;">
                                 @foreach ($errors->all() as $err)
                                     <li>{{ $err }}</li>
                                 @endforeach
                             </ul>
-                        </x-admin-alert>
+                        </x-admin.admin-alert>
                     @endif
                     <div class="form-row" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
                         <div class="form-group">

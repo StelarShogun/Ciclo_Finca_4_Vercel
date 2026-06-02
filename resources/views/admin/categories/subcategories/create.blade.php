@@ -125,7 +125,7 @@
             </div>
             @if ($categoriesHierarchy->total() > 0)
                 <div class="category-hierarchy-pagination" style="margin-top: 12px;">
-                    <x-pagination :paginator="$categoriesHierarchy" label="categorías" />
+                    <x-shared.pagination :paginator="$categoriesHierarchy" label="categorías" />
                 </div>
             @endif
         </div>

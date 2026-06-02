@@ -394,7 +394,7 @@
                                                    aria-label="Ver producto: {{ $product->name }}">
                                                     <div class="product-image product-image--catalog-cf128">
                                                         <div class="product-image__frame">
-                                                            @include('shared.parts.product-media', [
+                                                            @include('shared.media.product-media', [
                                                                 'product' => $product,
                                                                 'variant' => 'card',
                                                                 'alt' => '',
@@ -552,7 +552,7 @@
                                         </button>
                                         <div class="product-image__frame">
                                             <a class="product-image__link" href="{{ $product->clientProductUrl() }}">
-                                                @include('shared.parts.product-media', [
+                                                @include('shared.media.product-media', [
                                                     'product' => $product,
                                                     'variant' => 'card',
                                                     'href' => null,
@@ -633,14 +633,14 @@
                         </div>
 
                         <div class="pagination-wrapper">
-                            <x-pagination :paginator="$products" label="productos" />
+                            <x-shared.pagination :paginator="$products" label="productos" />
                         </div>
                     @else
                         @pushOnce('styles', 'cf4-state-card-css')
                             @vite(['resources/css/errors/state-card.css'])
                         @endPushOnce
                         @if($emptyCategoryNoProducts)
-                            <x-cf4.state-card
+                            <x-shared.state-card
                                 variant="embed"
                                 :bare="true"
                                 title-tag="h3"
@@ -656,12 +656,12 @@
                                         Ir al catálogo
                                     </a>
                                 </x-slot>
-                            </x-cf4.state-card>
+                            </x-shared.state-card>
                         @else
                             @pushOnce('scripts', 'cf4-scenes-js')
                                 @vite(['resources/js/errors/scenes.js'])
                             @endPushOnce
-                            <x-cf4.state-card
+                            <x-shared.state-card
                                 variant="embed"
                                 :bare="true"
                                 title-tag="h3"
@@ -690,7 +690,7 @@
                                         Catálogo completo
                                     </a>
                                 </x-slot>
-                            </x-cf4.state-card>
+                            </x-shared.state-card>
                         @endif
                     @endif
                     </div>

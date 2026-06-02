@@ -174,7 +174,7 @@
                                         <tr>
                                             <td class="dashboard-table__col-product">
                                                 <div class="product-info">
-                                                    @include('shared.parts.product-media', [
+                                                    @include('shared.media.product-media', [
                                                         'product' => $product,
                                                         'variant' => 'thumb-table',
                                                         'alt' => $product->name,

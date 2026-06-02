@@ -10,7 +10,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 class CartPagePayloadBuilder
 {
     /**
-     * @param  list<array<string, mixed>>  $cartItems
+     * @param  LengthAwarePaginator<int, array<string, mixed>>  $cartItemsPaginator
      * @return array<string, mixed>
      */
     public function build(LengthAwarePaginator $cartItemsPaginator, float $total): array
@@ -46,22 +46,28 @@ class CartPagePayloadBuilder
             return null;
         }
 
-        $image = ProductImageUrls::clientPresentation($product);
+        $image = ProductImageUrls::cardPicture($product);
         $subtotal = $linePrice * $qty;
 
         return [
-            'product_id' => (int) $product->product_id,
+            'productId' => (int) $product->product_id,
             'name' => (string) $product->name,
-            'price' => $linePrice,
-            'priceFormatted' => '₡'.number_format($linePrice, 0, ',', '.'),
-            'image_url' => $image['image_url'],
-            'uses_placeholder_image' => $image['uses_placeholder_image'],
-            'placeholder_icon_class' => $image['placeholder_icon_class'],
+            'slug' => null,
+            'productUrl' => $product->clientProductUrl(),
+            'unitPrice' => $linePrice,
+            'unitPriceFormatted' => '₡'.number_format($linePrice, 0, ',', '.'),
             'quantity' => $qty,
-            'stock_available' => (int) $product->stock_current,
             'subtotal' => $subtotal,
             'subtotalFormatted' => '₡'.number_format($subtotal, 0, ',', '.'),
-            'product_url' => $product->clientProductUrl(),
+            'stockCurrent' => (int) $product->stock_current,
+            'canUpdate' => true,
+            'image' => [
+                'fallback' => $image['fallback'],
+                'desktopWebp' => $image['desktopWebp'],
+                'mobileWebp' => $image['mobileWebp'],
+                'usesPlaceholder' => ProductImageUrls::usesPlaceholder($product),
+                'placeholderIconClass' => ProductImageUrls::placeholderIconClass($product),
+            ],
         ];
     }
 }

@@ -40,14 +40,14 @@
         @endcomponent
 
         @if (session('status'))
-            <x-admin-alert
+            <x-admin.admin-alert
                 type="success"
                 :message="session('status')"
                 dismissible />
         @endif
 
         @if (session('error'))
-            <x-admin-alert
+            <x-admin.admin-alert
                 type="error"
                 :message="session('error')" />
         @endif
@@ -62,7 +62,7 @@
 
                 @if ($products->isEmpty())
 
-                    <x-admin-alert
+                    <x-admin.admin-alert
                         type="info"
                         title="No hay registros disponibles para mostrar."
                         dismissible>
@@ -94,7 +94,7 @@
 
                         </div>
 
-                    </x-admin-alert>
+                    </x-admin.admin-alert>
 
                 @else
 

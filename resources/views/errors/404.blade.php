@@ -1,4 +1,4 @@
-@extends('layouts.error')
+@extends('errors.layouts.error')
 
 @section('title', 'Página no encontrada — Ciclo Finca 4')
 
@@ -7,7 +7,7 @@
 @endpush
 
 @section('content')
-    <x-cf4.state-card
+    <x-shared.state-card
         class="cf4-error-404-override"
         eyebrow="Página no encontrada"
         code="404"
@@ -37,7 +37,7 @@
                 Ir al inicio
             </a>
         </x-slot>
-    </x-cf4.state-card>
+    </x-shared.state-card>
 @endsection
 
 @push('scripts')

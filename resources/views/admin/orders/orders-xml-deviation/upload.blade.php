@@ -63,7 +63,7 @@
                 <div class="xml-field-group">
 
                     <div>
-                        <x-cf-file-upload
+                        <x-shared.file-upload
                             id="xml_file"
                             name="xml_file"
                             label="Archivo XML del proveedor"
@@ -73,7 +73,7 @@
                             meta-id="xml_file-meta"
                             hint="Tamaño máximo: 5 MB. Solo archivos .xml.">
                             Haz clic o arrastra el archivo XML aquí
-                        </x-cf-file-upload>
+                        </x-shared.file-upload>
                         @error('xml_file')
                             <p class="xml-field-error" role="alert">{{ $message }}</p>
                         @enderror
