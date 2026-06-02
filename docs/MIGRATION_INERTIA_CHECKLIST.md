@@ -23,50 +23,50 @@
 
 | Ruta | Controller | Estado recomendado |
 |---|---|---|
-| `/` | `ClientPageController@home` | Migrada |
-| `/catalog` | `ClientPageController@catalog` | Migrada |
-| `/product/{id}/{slug?}` | `ClientPageController@product` | Migrada (`Client/Products/Show`) |
-| `/legal/terminos` | `ClientLegalController@terms` | Migrada |
-| `/legal/privacidad` | `ClientLegalController@privacy` | Migrada (`Client/Legal/Privacy`) |
-| `/legal/cambios-devoluciones` | `ClientLegalController@returns` | Migrada (`Client/Legal/Returns`) |
-| `/contacto` | `ClientLegalController@contact` | Migrada (`Client/Legal/Contact`) |
-| `/login` | `ClientUserController` | Migrada (`Client/Auth/Login`) |
-| `/register` | `ClientUserController` | Migrada (`Client/Auth/Register`) |
-| `/verify` | `ClientUserController` | Migrada (`Client/Auth/VerifyCode`) |
-| `/recovery*` | `ClientUserController` | Migrada (`Client/Auth/RecoveryRequest`, `Client/Auth/RecoveryReset`) |
-| `/auth/google*` | `ClientUserController` | Laravel redirect/callback; mantener controller |
+| `/` | `Client\StorefrontController@home` | Migrada |
+| `/catalog` | `Client\StorefrontController@catalog` | Migrada |
+| `/product/{id}/{slug?}` | `Client\ProductPageController` → `BuildProductDetailPage` | Migrada (`Client/Products/Show`) |
+| `/legal/terminos` | `Client\LegalController@terms` | Migrada |
+| `/legal/privacidad` | `Client\LegalController@privacy` | Migrada (`Client/Legal/Privacy`) |
+| `/legal/cambios-devoluciones` | `Client\LegalController@returns` | Migrada (`Client/Legal/Returns`) |
+| `/contacto` | `Client\LegalController@contact` | Migrada (`Client/Legal/Contact`) |
+| `/login` | `Client\Auth\LoginController` | Migrada (`Client/Auth/Login`) |
+| `/register` | `Client\Auth\RegisterController` | Migrada (`Client/Auth/Register`) |
+| `/verify` | `Client\Auth\VerificationController` | Migrada (`Client/Auth/VerifyCode`) |
+| `/recovery*` | `Client\Auth\PasswordRecoveryController` | Migrada (`Client/Auth/RecoveryRequest`, `Client/Auth/RecoveryReset`) |
+| `/auth/google*` | `Client\Auth\GoogleOAuthController` | Laravel redirect/callback |
 
 ## Cliente autenticado
 
 | Ruta | Controller | Estado recomendado |
 |---|---|---|
-| `/cart` | `ClientPageController@cart` | Migrada React puro (`Client/Cart/Index`); acciones JSON siguen en controller |
-| `/products/{product}/review` | `ProductReviewController` | Request/redirect JSON-Inertia según página migrada |
-| `/invoices` | `ClientPageController@invoices` | Migrada (`Client/Invoices/Index`) |
-| `/invoices/{sale}` | `ClientPageController@showInvoice` | Migrada (`Client/Invoices/Show`; sin thumbs de imagen en React — print sigue Blade) |
-| `/invoices/{sale}/print` | `ClientPageController@printInvoice` | Blade permanente |
-| `/notifications` | `ClientPageController@notifications` | Migrada (`Client/Notifications/Index`) |
-| `/profile` | `ClientUserController@show` | Migrada |
-| `/favorites` | `FavoriteProductController@index` | JSON + drawer en `ClientLayout` (Inertia) |
+| `/cart` | `Client\CartController` | Migrada React (`Client/Cart/Index`); JSON vía Actions |
+| `/products/{product}/review` | `Client\ProductReviewController` | JSON/redirect |
+| `/invoices` | `Client\InvoiceController@invoices` | Migrada (`Client/Invoices/Index`) |
+| `/invoices/{sale}` | `Client\InvoiceController@showInvoice` | Migrada (`Client/Invoices/Show`) |
+| `/invoices/{sale}/print` | `Client\InvoiceController@printInvoice` | Blade permanente |
+| `/notifications` | `Client\NotificationController` | Migrada (`Client/Notifications/Index`) |
+| `/profile` | `Client\ProfileController@show` | Migrada |
+| `/favorites` | `Client\FavoriteController@index` | JSON + drawer en `ClientLayout` |
 
 ## Admin
 
 | Ruta / módulo | Controller | Estado recomendado |
 |---|---|---|
-| `/admin/login` | `AdminUserController` | Blade temporal |
-| `/dashboard` | `DashboardController@index` | Blade temporal; mantener hasta migrar dashboard completo |
-| `/dashboard/inertia-pilot` | `DashboardController@inertiaPilot` | Piloto |
-| `/inventory*` | `ProductController`, `InventoryMovementController` | Blade temporal |
-| `/products*` | `ProductController`, `ProductVariantController` | Blade temporal |
-| `/categories*` | `CategoryController` | Blade temporal |
-| `/brands*` | `BrandController` | Blade temporal |
-| `/sales*` | `SalesController` | Blade temporal |
-| `/orders*` | `AdminOrderController`, settings controllers | Blade temporal |
-| `/suppliers*` | `SupplierController` | Blade temporal |
-| `/supplier-orders*` | `SupplierOrderController`, `XmlPriceDeviationController` | Blade temporal |
-| `/reports*` | Reports controllers | Blade temporal |
-| `/clientes*` | `AdminClientController` | Blade temporal |
-| `/classifications*` | Classification controllers | Blade temporal |
+| `/admin/login` | `Admin\Auth\AdminUserController` | Blade temporal |
+| `/dashboard` | `Admin\DashboardController@index` | Blade temporal |
+| `/dashboard/inertia-pilot` | `Admin\DashboardController@inertiaPilot` | Piloto |
+| `/inventory*` | `Admin\Products\ProductInventoryController`, filtros `ProductClassificationFilterController`, `Admin\Inventory\InventoryMovementController` | Blade temporal |
+| `/products*` | `Admin\Products\ProductController`, `ProductStatusController`, `ProductVariantController` | Blade temporal |
+| `/categories*` | `Admin\Categories\CategoryController` | Blade temporal |
+| `/brands*` | `Admin\Brands\BrandController` | Blade temporal |
+| `/sales*` | `Admin\Sales\SalesController` | Blade temporal |
+| `/orders*` | `Admin\Orders\OrderController`, settings controllers | Blade temporal |
+| `/suppliers*` | `Admin\Suppliers\SupplierController` | Blade temporal |
+| `/supplier-orders*` | `Admin\Suppliers\SupplierOrderController`, `XmlPriceDeviationController` | Blade temporal |
+| `/reports*` | `Admin\Reports\*` | Blade temporal |
+| `/clientes*` | `Admin\Clients\ClientController` | Blade temporal |
+| `/classifications*` | `Admin\Classifications\ClassificationCatalogController` | Blade temporal |
 
 ## JSON / endpoints dinámicos
 
@@ -178,7 +178,7 @@ Pendiente:
 ## Detalle de Home migrada
 
 - Ruta: `/` (`clients.home`).
-- Controller: `ClientPageController@home`.
+- Controller: `Client\StorefrontController@home`.
 - Página React: `resources/js/Pages/Client/Home/Index.tsx`.
 - Props propias: `featuredProducts`, `categories`, `showGuestRegisterCta`, `hero`.
 - Props compartidas usadas: `auth.client`, `cartCount`, `csrfToken`, `flash`, `theme`.
@@ -192,7 +192,7 @@ Pendiente:
 ## Detalle de Catálogo migrado
 
 - Ruta: `/catalog` (`clients.catalog`).
-- Controller: `ClientPageController@catalog`.
+- Controller: `Client\StorefrontController@catalog`.
 - Página React: `resources/js/Pages/Client/Catalog/Index.tsx`.
 - Props propias: `products`, `pagination`, `categories`, `brands`, `filters`, `selectedCategory`, `subcategories`, `parentCategoryForSubcats`, `catalogSpotlight`, `favoriteProductIds`, `emptyCategoryNoProducts`, `catalogVersion`, `summary`.
 - Props compartidas usadas: `auth.client`, `cartCount`, `csrfToken`, `flash`, `theme`.

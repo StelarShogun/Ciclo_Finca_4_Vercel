@@ -24,12 +24,24 @@ final class CartDatabaseStore
             )
             ->delete();
 
-        foreach ($cart as $item) {
-            CartItem::updateOrCreate(
-                ['client_id' => $clientId, 'product_id' => $item['product_id']],
-                ['quantity' => (int) $item['quantity']]
-            );
+        if ($cart === []) {
+            return;
         }
+
+        $now = now();
+        $rows = [];
+
+        foreach ($cart as $item) {
+            $rows[] = [
+                'client_id' => $clientId,
+                'product_id' => (int) $item['product_id'],
+                'quantity' => (int) $item['quantity'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        CartItem::upsert($rows, ['client_id', 'product_id'], ['quantity', 'updated_at']);
     }
 
     /**

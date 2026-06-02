@@ -3,7 +3,7 @@
 namespace App\Actions\Admin\Products;
 
 use App\Data\Admin\Products\ProductMutationResult;
-use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\Admin\Products\StoreProductRequest;
 use App\Models\Product;
 use App\Services\Admin\Products\ProductMediaService;
 use App\Services\ProductClassificationAssignmentService;

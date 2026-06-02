@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Http\Requests\SalesPerformanceRangeRequest;
+use App\Http\Requests\Admin\Reports\SalesPerformanceRangeRequest;
 use App\Models\AdminUser;
 use App\Models\Sale;
 use Carbon\Carbon;

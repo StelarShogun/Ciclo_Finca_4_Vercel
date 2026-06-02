@@ -2,6 +2,8 @@
 
 namespace App\Services\Client\Auth;
 
+use App\Mail\ClientRecoveryCodeMail;
+use App\Mail\ClientVerificationCodeMail;
 use App\Models\Client;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -22,8 +24,7 @@ final class ClientVerificationCodeIssuer
     public function assignAndSend(Client $client, string $context): ?string
     {
         $code = $this->generateCode();
-        [$ttlMinutes, $subject, $bodyTemplate] = $this->messageForContext($client, $context);
-        $body = str_replace('{code}', $code, $bodyTemplate);
+        $ttlMinutes = $this->ttlMinutesForContext($context);
 
         $client->update([
             'verification_code' => $code,
@@ -31,9 +32,11 @@ final class ClientVerificationCodeIssuer
         ]);
 
         try {
-            Mail::raw($body, function ($message) use ($client, $subject) {
-                $message->to($client->gmail)->subject($subject);
-            });
+            $mailable = $context === self::CONTEXT_RECOVERY
+                ? new ClientRecoveryCodeMail($client, $code)
+                : new ClientVerificationCodeMail($client, $code, $context);
+
+            Mail::to($client->gmail)->send($mailable);
         } catch (\Exception $e) {
             Log::error('Mail send failed: client verification code', [
                 'context' => $context,
@@ -57,32 +60,11 @@ final class ClientVerificationCodeIssuer
         return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * @return array{0: int, 1: string, 2: string}
-     */
-    private function messageForContext(Client $client, string $context): array
+    private function ttlMinutesForContext(string $context): int
     {
         return match ($context) {
-            self::CONTEXT_REGISTRATION => [
-                10,
-                'Código de verificación - Ciclo Finca',
-                "Hola {$client->name},\n\nTu código de verificación es: {code}\n\nExpira en 10 minutos.\n\nSi no creaste esta cuenta, ignora este correo.",
-            ],
-            self::CONTEXT_LOGIN => [
-                10,
-                'Código de verificación - Ciclo Finca',
-                "Hola {$client->name},\n\nTu código de verificación es: {code}\n\nExpira en 10 minutos.",
-            ],
-            self::CONTEXT_RESEND => [
-                10,
-                'Nuevo código de verificación - Ciclo Finca',
-                "Hola {$client->name},\n\nTu nuevo código de verificación es: {code}\n\nExpira en 10 minutos.",
-            ],
-            self::CONTEXT_RECOVERY => [
-                15,
-                'Código de recuperación de contraseña - Ciclo Finca 4',
-                "Hola {$client->name},\n\nTu código de verificación para recuperar tu contraseña es: {code}\n\nExpira en 15 minutos.\n\nSi no solicitaste este cambio, ignora este correo.",
-            ],
+            self::CONTEXT_RECOVERY => 15,
+            self::CONTEXT_REGISTRATION, self::CONTEXT_LOGIN, self::CONTEXT_RESEND => 10,
             default => throw new \InvalidArgumentException("Unknown verification context: {$context}"),
         };
     }

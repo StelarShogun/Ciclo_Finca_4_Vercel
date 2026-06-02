@@ -82,7 +82,7 @@ Reports are written under **`./lighthouse/`** (default `outputPath`). Browser pr
 ### Client
 
 1. **Artisan (local only):** `docker exec laravel_app_ciclo php artisan unlighthouse:client-cookie` → set `UNLIGHTHOUSE_CLIENT_COOKIE`.
-2. **Programmatic** (default in config): set `UNLIGHTHOUSE_CLIENT_EMAIL` and `UNLIGHTHOUSE_CLIENT_PASSWORD` in `.env.unlighthouse.local`. Works only if `RECAPTCHA_SITE_KEY` is not set in the app `.env` ([`ClientUserController`](../app/Http/Controllers/ClientUserController.php)).
+2. **Programmatic** (default in config): set `UNLIGHTHOUSE_CLIENT_EMAIL` and `UNLIGHTHOUSE_CLIENT_PASSWORD` in `.env.unlighthouse.local`. Works only if `RECAPTCHA_SITE_KEY` is not set in the app `.env` (login flow: [`Client\Auth\LoginController`](../app/Http/Controllers/Client/Auth/LoginController.php)).
 3. **Cookies**: log in at `/login`, DevTools → Application → Cookies → copy `ciclo-finca-session` (or your `SESSION_COOKIE` name). Set `UNLIGHTHOUSE_CLIENT_COOKIE` to `name=value` or the raw value.
 
 ### Admin

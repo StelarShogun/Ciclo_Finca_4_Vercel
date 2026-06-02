@@ -25,7 +25,7 @@ class OrderSeeder extends Seeder
     {
         if (DB::table('orders')->exists()) {
             $this->command?->warn(
-                'OrderSeeder: ya hay pedidos; se omite. Usa migrate:fresh --seed o db:setup para repoblar desde cero.'
+                'OrderSeeder: ya hay pedidos; se omite. Usa migrate:fresh --seed o dev:setup-database para repoblar desde cero.'
             );
 
             return;

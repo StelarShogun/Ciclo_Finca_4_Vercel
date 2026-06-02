@@ -2,7 +2,7 @@
 
 namespace App\Actions\Admin\Products;
 
-use App\Http\Requests\ImportCatalogRequest;
+use App\Http\Requests\Admin\Products\ImportCatalogRequest;
 use App\Services\Admin\Products\ProductAuditLogger;
 use App\Support\ProductCatalog\ProductCatalogImporter;
 use Illuminate\Http\JsonResponse;

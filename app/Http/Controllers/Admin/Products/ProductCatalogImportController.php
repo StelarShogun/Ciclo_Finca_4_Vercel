@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin\Products;
 use App\Actions\Admin\Products\ExportProductCatalog;
 use App\Actions\Admin\Products\ImportProductCatalog;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ImportCatalogRequest;
+use App\Http\Requests\Admin\Products\ImportCatalogRequest;
 use Illuminate\Http\Request;
 
 class ProductCatalogImportController extends Controller

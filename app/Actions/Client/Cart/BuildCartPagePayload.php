@@ -2,8 +2,8 @@
 
 namespace App\Actions\Client\Cart;
 
-use App\Models\Product;
 use App\Services\Client\Cart\CartManager;
+use App\Services\Client\Cart\CartProductLookup;
 use App\Support\AdminPerPage;
 use App\Support\ClientInertia\CartPagePayloadBuilder;
 use Illuminate\Http\Request;
@@ -13,6 +13,7 @@ final class BuildCartPagePayload
 {
     public function __construct(
         private CartManager $cart,
+        private CartProductLookup $products,
         private CartPagePayloadBuilder $payloadBuilder,
     ) {}
 
@@ -24,11 +25,12 @@ final class BuildCartPagePayload
         $this->cart->syncWithStock();
 
         $cart = $this->cart->lines();
+        $productsById = $this->products->indexedByProductId($cart);
         $cartItems = [];
         $total = 0.0;
 
         foreach ($cart as $item) {
-            $product = Product::find($item['product_id']);
+            $product = $productsById->get((int) ($item['product_id'] ?? 0));
 
             if ($product && $product->isPurchasableByClient()) {
                 $qty = min((int) $item['quantity'], $product->stock_current);

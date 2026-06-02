@@ -85,25 +85,25 @@ No se envían passwords, tokens persistentes ni modelos completos.
 
 | Ruta | Nombre | Controller | Página React |
 |---|---|---|---|
-| `/` | `clients.home` | `ClientPageController@home` | `Client/Home/Index` |
-| `/catalog` | `clients.catalog` | `ClientPageController@catalog` | `Client/Catalog/Index` |
-| `/legal/terminos` | `clients.legal.terms` | `ClientLegalController@terms` | `Client/Legal/Terms` |
-| `/legal/privacidad` | `clients.legal.privacy` | `ClientLegalController@privacy` | `Client/Legal/Privacy` |
-| `/legal/cambios-devoluciones` | `clients.legal.returns` | `ClientLegalController@returns` | `Client/Legal/Returns` |
-| `/contacto` | `clients.contact` | `ClientLegalController@contact` | `Client/Legal/Contact` |
-| `/product/{id}/{slug?}` | `clients.product` | `ClientPageController@product` | `Client/Products/Show` |
-| `/cart` | `clients.cart` | `ClientPageController@cart` | `Client/Cart/Index` |
-| `/login`, `/register`, `/verify`, `/recovery*` | `ClientUserController` | Auth pages bajo `Client/Auth/*` |
-| `/profile` | `ClientUserController@show` | `Client/Profile/Index` |
-| `/invoices`, `/invoices/{sale}` | `ClientPageController` | `Client/Invoices/Index`, `Client/Invoices/Show` |
-| `/notifications` | `ClientPageController@notifications` | `Client/Notifications/Index` |
-| `/favorites` (JSON) | `FavoriteProductController` | Drawer en layout; página `Client/Favorites/Index` si aplica |
+| `/` | `clients.home` | `Client\StorefrontController@home` | `Client/Home/Index` |
+| `/catalog` | `clients.catalog` | `Client\StorefrontController@catalog` | `Client/Catalog/Index` |
+| `/legal/terminos` | `clients.legal.terms` | `Client\LegalController@terms` | `Client/Legal/Terms` |
+| `/legal/privacidad` | `clients.legal.privacy` | `Client\LegalController@privacy` | `Client/Legal/Privacy` |
+| `/legal/cambios-devoluciones` | `clients.legal.returns` | `Client\LegalController@returns` | `Client/Legal/Returns` |
+| `/contacto` | `clients.contact` | `Client\LegalController@contact` | `Client/Legal/Contact` |
+| `/product/{id}/{slug?}` | `clients.product` | `Client\ProductPageController` → `BuildProductDetailPage` | `Client/Products/Show` |
+| `/cart` | `clients.cart` | `Client\CartController` | `Client/Cart/Index` |
+| `/login`, `/register`, `/verify`, `/recovery*` | `Client\Auth\*` | Auth pages bajo `Client/Auth/*` |
+| `/profile` | `clients.profile` | `Client\ProfileController@show` | `Client/Profile/Index` |
+| `/invoices`, `/invoices/{sale}` | `Client\InvoiceController` | `Client/Invoices/Index`, `Client/Invoices/Show` |
+| `/notifications` | `clients.notifications` | `Client\NotificationController` | `Client/Notifications/Index` |
+| `/favorites` (JSON) | `Client\FavoriteController` | Drawer en layout |
 
 ### Home cliente
 
 La Home cliente conserva la URL `/` y el nombre de ruta `clients.home`.
 
-Props enviadas por `ClientPageController@home`:
+Props enviadas por `Client\StorefrontController@home`:
 
 - `featuredProducts`: productos destacados serializados para tarjetas de Home.
 - `categories`: categorías raíz con subcategorías e iconos.
@@ -139,7 +139,7 @@ La Home usa `Link` de Inertia para navegación interna y `usePage().url` desde `
 
 El catálogo cliente conserva la URL `/catalog` y el nombre de ruta `clients.catalog`.
 
-Props enviadas por `ClientPageController@catalog`:
+Props enviadas por `Client\StorefrontController@catalog`:
 
 - `products`: productos paginados serializados para cards.
 - `pagination`: metadatos y links de paginación.

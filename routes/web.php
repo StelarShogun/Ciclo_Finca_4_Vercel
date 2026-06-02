@@ -1,36 +1,48 @@
 <?php
 
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\Auth\AdminUserController;
+use App\Http\Controllers\Admin\Brands\BrandController;
+use App\Http\Controllers\Admin\Categories\CategoryController;
+use App\Http\Controllers\Admin\Classifications\ClassificationCatalogController;
 use App\Http\Controllers\Admin\ClientPurchaseHistoryController;
+use App\Http\Controllers\Admin\Clients\ClientController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\Inventory\InventoryMovementController;
+use App\Http\Controllers\Admin\Orders\OrderController;
+use App\Http\Controllers\Admin\Orders\OrderSettingsController;
+use App\Http\Controllers\Admin\Orders\WeeklyReportSettingsController;
 use App\Http\Controllers\Admin\Products\ProductCatalogImportController;
+use App\Http\Controllers\Admin\Products\ProductClassificationController;
+use App\Http\Controllers\Admin\Products\ProductClassificationFilterController;
+use App\Http\Controllers\Admin\Products\ProductController;
 use App\Http\Controllers\Admin\Products\ProductGalleryController;
+use App\Http\Controllers\Admin\Products\ProductInventoryController;
 use App\Http\Controllers\Admin\Products\ProductManualStockController;
+use App\Http\Controllers\Admin\Products\ProductStatusController;
+use App\Http\Controllers\Admin\Products\ProductVariantController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\ReportsRegistryExportController;
-use App\Http\Controllers\AdminClientController;
-use App\Http\Controllers\AdminOrderController;
-use App\Http\Controllers\AdminOrderSettingsController;
-use App\Http\Controllers\AdminUserController;
-use App\Http\Controllers\AdminWeeklyReportSettingsController;
-use App\Http\Controllers\BrandController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\ClassificationCatalogController;
-use App\Http\Controllers\ClientCatalogProductSuggestionsController;
-use App\Http\Controllers\ClientCatalogSearchTrendingController;
-use App\Http\Controllers\ClientLegalController;
-use App\Http\Controllers\ClientPageController;
-use App\Http\Controllers\ClientUserController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\FavoriteProductController;
-use App\Http\Controllers\InventoryMovementController;
-use App\Http\Controllers\ProductClassificationController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ProductReviewController;
-use App\Http\Controllers\ProductVariantController;
-use App\Http\Controllers\SalesController;
-use App\Http\Controllers\SupplierController;
-use App\Http\Controllers\SupplierOrderController;
-use App\Http\Controllers\XmlPriceDeviationController;
+use App\Http\Controllers\Admin\Sales\SalesController;
+use App\Http\Controllers\Admin\Suppliers\SupplierController;
+use App\Http\Controllers\Admin\Suppliers\SupplierOrderController;
+use App\Http\Controllers\Admin\Suppliers\XmlPriceDeviationController;
+use App\Http\Controllers\Client\Auth\GoogleOAuthController;
+use App\Http\Controllers\Client\Auth\LoginController;
+use App\Http\Controllers\Client\Auth\PasswordRecoveryController;
+use App\Http\Controllers\Client\Auth\RegisterController;
+use App\Http\Controllers\Client\Auth\VerificationController;
+use App\Http\Controllers\Client\CartController;
+use App\Http\Controllers\Client\Catalog\ProductSuggestionsController;
+use App\Http\Controllers\Client\Catalog\SearchTrendingController;
+use App\Http\Controllers\Client\FavoriteController;
+use App\Http\Controllers\Client\InvoiceController;
+use App\Http\Controllers\Client\LegalController;
+use App\Http\Controllers\Client\NotificationController;
+use App\Http\Controllers\Client\ProductPageController;
+use App\Http\Controllers\Client\ProductReviewController;
+use App\Http\Controllers\Client\ProfileController;
+use App\Http\Controllers\Client\StorefrontController;
 use App\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -167,12 +179,12 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/reports/audit-log', [AuditLogController::class, 'index'])->name('admin.reports.audit-log');
 
     // Inventory routes.
-    Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory');
-    Route::get('/inventory/classification-filters', [ProductController::class, 'inventoryClassificationFiltersOptions'])
+    Route::get('/inventory', [ProductInventoryController::class, 'index'])->name('inventory');
+    Route::get('/inventory/classification-filters', [ProductClassificationFilterController::class, 'options'])
         ->name('inventory.classification-filters');
-    Route::get('/inventory/classification-filters/dimensions', [ProductController::class, 'inventoryClassificationFilterDimensions'])
+    Route::get('/inventory/classification-filters/dimensions', [ProductClassificationFilterController::class, 'dimensions'])
         ->name('inventory.classification-filters.dimensions');
-    Route::get('/inventory/classification-filters/{slug}/suggest', [ProductController::class, 'inventoryClassificationFilterSuggest'])
+    Route::get('/inventory/classification-filters/{slug}/suggest', [ProductClassificationFilterController::class, 'suggest'])
         ->where('slug', '[a-z0-9_-]+')
         ->name('inventory.classification-filters.suggest');
 
@@ -212,13 +224,14 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
 
     // Featured product toggle route.
     Route::post('/products/{id}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
-    Route::patch('/products/{id}/activate', [ProductController::class, 'activate'])->name('products.activate')->whereNumber('id');
+    Route::patch('/products/{id}/activate', [ProductStatusController::class, 'activate'])->name('products.activate')->whereNumber('id');
 
     // Product media management routes.
     Route::post('/products/{id}/gallery/{mediaId}/promote', [ProductGalleryController::class, 'promoteToMain'])->name('products.gallery.promote');
     Route::delete('/products/{id}/gallery/{mediaId}', [ProductGalleryController::class, 'destroy'])->name('products.gallery.destroy');
-    Route::resource('products', ProductController::class)->except(['create']);
-    Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
+    Route::resource('products', ProductController::class)->except(['create', 'destroy']);
+    Route::delete('/products/{id}', [ProductStatusController::class, 'destroy'])->name('products.destroy')->whereNumber('id');
+    Route::delete('/products/{id}/force-delete', [ProductStatusController::class, 'forceDelete'])->name('products.force-delete')->whereNumber('id');
     Route::get('/inventory/export/{format?}', [ProductCatalogImportController::class, 'export'])->name('products.export');
     Route::post('/inventory/import', [ProductCatalogImportController::class, 'import'])->name('products.import');
     Route::post('/inventory/add-manual/{id}', [ProductManualStockController::class, 'add'])
@@ -259,11 +272,11 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
         ->name('admin.orders.ready-to-pickup');
 
     // Client order management routes.
-    Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
-    Route::put('/orders/settings/order-expiration', [AdminOrderSettingsController::class, 'update'])
+    Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
+    Route::put('/orders/settings/order-expiration', [OrderSettingsController::class, 'update'])
         ->name('admin.orders.settings.order-expiration.update');
 
-    Route::put('/orders/settings/weekly-report', [AdminWeeklyReportSettingsController::class, 'update'])
+    Route::put('/orders/settings/weekly-report', [WeeklyReportSettingsController::class, 'update'])
         ->name('admin.orders.settings.weekly-report.update');
 
     // Supplier order routes.
@@ -293,9 +306,9 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::get('/supplier/details/{id}', [SupplierOrderController::class, 'supplierDetails'])->name('admin.supplier-orders.supplier');
 
     // Admin client management routes.
-    Route::get('/clientes', [AdminClientController::class, 'index'])->name('admin.clients.index');
-    Route::patch('/clientes/{id}/ban', [AdminClientController::class, 'ban'])->name('admin.clients.ban');
-    Route::patch('/clientes/{id}/unban', [AdminClientController::class, 'unban'])->name('admin.clients.unban');
+    Route::get('/clientes', [ClientController::class, 'index'])->name('admin.clients.index');
+    Route::patch('/clientes/{id}/ban', [ClientController::class, 'ban'])->name('admin.clients.ban');
+    Route::patch('/clientes/{id}/unban', [ClientController::class, 'unban'])->name('admin.clients.unban');
 
     // Enables catalog preview without leaving the admin session.
     Route::get('/admin/catalog-preview', function () {
@@ -340,51 +353,51 @@ Route::get('/admin/catalog-exit', function () {
 })->name('admin.catalog.exit');
 
 // Public client pages.
-Route::get('/', [ClientPageController::class, 'home'])->name('clients.home');
-Route::get('/catalog', [ClientPageController::class, 'catalog'])->name('clients.catalog');
-Route::get('/api/catalog/heartbeat', [ClientPageController::class, 'catalogHeartbeat'])->name('api.catalog.heartbeat');
+Route::get('/', [StorefrontController::class, 'home'])->name('clients.home');
+Route::get('/catalog', [StorefrontController::class, 'catalog'])->name('clients.catalog');
+Route::get('/api/catalog/heartbeat', [StorefrontController::class, 'catalogHeartbeat'])->name('api.catalog.heartbeat');
 
-Route::get('/legal/terminos', [ClientLegalController::class, 'terms'])->name('clients.legal.terms');
-Route::get('/legal/privacidad', [ClientLegalController::class, 'privacy'])->name('clients.legal.privacy');
-Route::get('/legal/cambios-devoluciones', [ClientLegalController::class, 'returns'])->name('clients.legal.returns');
-Route::get('/contacto', [ClientLegalController::class, 'contact'])->name('clients.contact');
+Route::get('/legal/terminos', [LegalController::class, 'terms'])->name('clients.legal.terms');
+Route::get('/legal/privacidad', [LegalController::class, 'privacy'])->name('clients.legal.privacy');
+Route::get('/legal/cambios-devoluciones', [LegalController::class, 'returns'])->name('clients.legal.returns');
+Route::get('/contacto', [LegalController::class, 'contact'])->name('clients.contact');
 
 // Predictive suggestions for the public client catalog search bar.
-Route::get('/api/products/suggestions', ClientCatalogProductSuggestionsController::class)
+Route::get('/api/products/suggestions', ProductSuggestionsController::class)
     ->middleware('throttle:60,1')
     ->name('api.products.suggestions');
 
-Route::get('/api/catalog/search-trending', ClientCatalogSearchTrendingController::class)
+Route::get('/api/catalog/search-trending', SearchTrendingController::class)
     ->middleware('throttle:60,1')
     ->name('api.catalog.search-trending');
 
 // Product route with numeric ID and optional SEO slug.
-Route::get('/product/{id}/{slug?}', [ClientPageController::class, 'product'])
+Route::get('/product/{id}/{slug?}', [ProductPageController::class, 'product'])
     ->where(['id' => '[0-9]+', 'slug' => '[a-z0-9\-]*'])
     ->name('clients.product');
 
 // Public client authentication routes.
-Route::get('/login', [ClientUserController::class, 'showLoginForm'])->name('login.show');
-Route::get('/register', [ClientUserController::class, 'showRegisterForm'])->name('clients.register.form');
-Route::post('/register', [ClientUserController::class, 'register'])->name('clients.register');
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login.show');
+Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('clients.register.form');
+Route::post('/register', [RegisterController::class, 'register'])->name('clients.register');
 
 // Throttle login attempts to reduce brute-force abuse.
-Route::post('/login', [ClientUserController::class, 'login'])
+Route::post('/login', [LoginController::class, 'login'])
     ->middleware('throttle:5,1')
     ->name('login');
 
 // Email verification routes.
-Route::get('/verify', [ClientUserController::class, 'showVerifyForm'])->name('clients.verify.form');
-Route::post('/verify', [ClientUserController::class, 'verify'])->name('clients.verify');
-Route::post('/verify/resend', [ClientUserController::class, 'resendCode'])->name('clients.verify.resend');
+Route::get('/verify', [VerificationController::class, 'showVerifyForm'])->name('clients.verify.form');
+Route::post('/verify', [VerificationController::class, 'verify'])->name('clients.verify');
+Route::post('/verify/resend', [VerificationController::class, 'resendCode'])->name('clients.verify.resend');
 
 // Password recovery routes.
-Route::get('/recovery', [ClientUserController::class, 'showRecoveryForm'])->name('clients.recovery.form');
-Route::post('/recovery', [ClientUserController::class, 'sendRecoveryCode'])->name('clients.recovery');
-Route::get('/recovery/verify', [ClientUserController::class, 'showRecoveryVerifyForm'])->name('clients.recovery.verify.form');
-Route::post('/recovery/verify', [ClientUserController::class, 'verifyRecoveryCode'])->name('clients.recovery.verify');
-Route::get('/recovery/reset', [ClientUserController::class, 'showRecoveryResetForm'])->name('clients.recovery.reset.form');
-Route::post('/recovery/reset', [ClientUserController::class, 'updateRecoveryPassword'])->name('clients.recovery.reset');
+Route::get('/recovery', [PasswordRecoveryController::class, 'showRecoveryForm'])->name('clients.recovery.form');
+Route::post('/recovery', [PasswordRecoveryController::class, 'sendRecoveryCode'])->name('clients.recovery');
+Route::get('/recovery/verify', [PasswordRecoveryController::class, 'showRecoveryVerifyForm'])->name('clients.recovery.verify.form');
+Route::post('/recovery/verify', [PasswordRecoveryController::class, 'verifyRecoveryCode'])->name('clients.recovery.verify');
+Route::get('/recovery/reset', [PasswordRecoveryController::class, 'showRecoveryResetForm'])->name('clients.recovery.reset.form');
+Route::post('/recovery/reset', [PasswordRecoveryController::class, 'updateRecoveryPassword'])->name('clients.recovery.reset');
 
 // Logs out the client while preserving the admin session when both are active.
 Route::post('/logout', function () {
@@ -437,19 +450,19 @@ Route::get('/csrf-token', function (Request $request) {
 })->name('csrf.token');
 
 // Google OAuth routes.
-Route::get('/auth/google', [ClientUserController::class, 'redirectToGoogle'])->name('auth.google');
-Route::get('/auth/google/callback', [ClientUserController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+Route::get('/auth/google', [GoogleOAuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [GoogleOAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
 // Authenticated client routes.
 Route::middleware(['auth:clients'])->group(function () {
 
     // Cart routes.
-    Route::get('/cart', [ClientPageController::class, 'cart'])->name('clients.cart');
-    Route::post('/cart/add', [ClientPageController::class, 'addToCart'])->name('clients.cart.add');
-    Route::put('/cart/update', [ClientPageController::class, 'updateCart'])->name('clients.cart.update');
-    Route::delete('/cart/remove/{id}', [ClientPageController::class, 'removeFromCart'])->name('clients.cart.remove');
-    Route::delete('/cart/clear', [ClientPageController::class, 'clearCart'])->name('clients.cart.clear');
-    Route::post('/cart/checkout', [ClientPageController::class, 'checkout'])->name('clients.cart.checkout');
+    Route::get('/cart', [CartController::class, 'cart'])->name('clients.cart');
+    Route::post('/cart/add', [CartController::class, 'addToCart'])->name('clients.cart.add');
+    Route::put('/cart/update', [CartController::class, 'updateCart'])->name('clients.cart.update');
+    Route::delete('/cart/remove/{id}', [CartController::class, 'removeFromCart'])->name('clients.cart.remove');
+    Route::delete('/cart/clear', [CartController::class, 'clearCart'])->name('clients.cart.clear');
+    Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('clients.cart.checkout');
 
     // Product reviews.
     Route::post('/products/{product}/review', [ProductReviewController::class, 'storeOrUpdate'])
@@ -459,23 +472,23 @@ Route::middleware(['auth:clients'])->group(function () {
         ->name('clients.products.review.batch');
 
     // Invoice routes.
-    Route::get('/invoices', [ClientPageController::class, 'invoices'])->name('clients.invoices');
-    Route::get('/invoices/heartbeat', [ClientPageController::class, 'invoicesHeartbeat'])->name('clients.invoices.heartbeat');
-    Route::get('/notifications/heartbeat', [ClientPageController::class, 'notificationsHeartbeat'])->name('clients.notifications.heartbeat');
-    Route::get('/notifications', [ClientPageController::class, 'notifications'])->name('clients.notifications');
-    Route::get('/invoices/{sale}/print', [ClientPageController::class, 'printInvoice'])
+    Route::get('/invoices', [InvoiceController::class, 'invoices'])->name('clients.invoices');
+    Route::get('/invoices/heartbeat', [InvoiceController::class, 'invoicesHeartbeat'])->name('clients.invoices.heartbeat');
+    Route::get('/notifications/heartbeat', [NotificationController::class, 'notificationsHeartbeat'])->name('clients.notifications.heartbeat');
+    Route::get('/notifications', [NotificationController::class, 'notifications'])->name('clients.notifications');
+    Route::get('/invoices/{sale}/print', [InvoiceController::class, 'printInvoice'])
         ->whereNumber('sale')
         ->name('clients.invoices.print');
-    Route::get('/invoices/{sale}', [ClientPageController::class, 'showInvoice'])
+    Route::get('/invoices/{sale}', [InvoiceController::class, 'showInvoice'])
         ->whereNumber('sale')
         ->name('clients.invoices.show');
 
     // Profile routes.
-    Route::get('/profile', [ClientUserController::class, 'show'])->name('clients.profile');
-    Route::put('/profile', [ClientUserController::class, 'update'])->name('clients.profile.update');
-    Route::put('/profile/password', [ClientUserController::class, 'updatePassword'])->name('clients.profile.password');
+    Route::get('/profile', [ProfileController::class, 'show'])->name('clients.profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('clients.profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('clients.profile.password');
 
     // Favorite products routes.
-    Route::get('/favorites', [FavoriteProductController::class, 'index'])->name('clients.favorites.index');
-    Route::post('/favorites/toggle', [FavoriteProductController::class, 'toggle'])->name('clients.favorites.toggle');
+    Route::get('/favorites', [FavoriteController::class, 'index'])->name('clients.favorites.index');
+    Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])->name('clients.favorites.toggle');
 });

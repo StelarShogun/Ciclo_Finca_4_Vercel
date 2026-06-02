@@ -2,37 +2,23 @@
 
 namespace App\Rules;
 
-use Illuminate\Contracts\Validation\Rule;
-use ReCaptcha\ReCaptcha as GoogleReCaptcha;
+use App\Services\Security\RecaptchaVerifier;
+use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
 
-class Recaptcha implements Rule
+final class Recaptcha implements ValidationRule
 {
-    /**
-     * Determine if the validation rule passes.
-     *
-     * @param  string  $attribute
-     * @param  mixed  $value
-     * @return bool
-     */
-    public function passes($attribute, $value)
+    public function __construct(
+        private ?RecaptchaVerifier $verifier = null,
+    ) {}
+
+    public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (empty($value)) {
-            return false;
+        $verifier = $this->verifier ?? app(RecaptchaVerifier::class);
+        $token = is_string($value) ? $value : null;
+
+        if (! $verifier->verify($token)) {
+            $fail('La verificación reCAPTCHA ha fallado.');
         }
-
-        $recaptcha = new GoogleReCaptcha(config('services.recaptcha.secret'));
-        $resp = $recaptcha->verify($value, request()->ip());
-
-        return $resp->isSuccess();
-    }
-
-    /**
-     * Get the validation error message.
-     *
-     * @return string
-     */
-    public function message()
-    {
-        return 'La verificación reCAPTCHA ha fallado.';
     }
 }

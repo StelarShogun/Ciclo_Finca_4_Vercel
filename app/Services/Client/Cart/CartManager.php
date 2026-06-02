@@ -2,7 +2,6 @@
 
 namespace App\Services\Client\Cart;
 
-use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 
 final class CartManager
@@ -10,6 +9,7 @@ final class CartManager
     public function __construct(
         private CartSessionStore $session,
         private CartDatabaseStore $database,
+        private CartProductLookup $products,
     ) {}
 
     /**
@@ -116,6 +116,7 @@ final class CartManager
     public function syncWithStock(): void
     {
         $before = $this->session->get();
+        $productsById = $this->products->indexedByProductId($before);
         $synced = [];
         $adjustedNames = [];
 
@@ -124,7 +125,7 @@ final class CartManager
                 continue;
             }
 
-            $product = Product::find($item['product_id']);
+            $product = $productsById->get((int) $item['product_id']);
 
             if (! $product || ! $product->isPurchasableByClient()) {
                 continue;

@@ -2,8 +2,8 @@
 
 namespace App\Services\Admin\Products;
 
-use App\Http\Requests\StoreProductRequest;
-use App\Http\Requests\UpdateProductRequest;
+use App\Http\Requests\Admin\Products\StoreProductRequest;
+use App\Http\Requests\Admin\Products\UpdateProductRequest;
 use App\Models\Product;
 use App\Services\Admin\Images\ProductImageOptimizerService;
 use Illuminate\Http\UploadedFile;

@@ -53,7 +53,7 @@ docker compose exec app_ciclo php artisan key:generate
 docker compose exec app_ciclo php artisan migrate --seed
 ```
 
-(Si este proyecto tiene el comando `db:setup`, puedes usar en su lugar: `docker compose exec app php artisan db:setup`.)
+(En local puedes usar: `docker compose exec app_ciclo php artisan dev:setup-database`.)
 
 ### 5. URLs de acceso
 
@@ -129,7 +129,7 @@ touch database/database.sqlite
 
 ### 5. Ejecutar migraciones y seeders
 ```bash
-php artisan db:setup
+php artisan dev:setup-database
 ```
 
 Este comando ejecutará:
@@ -185,12 +185,12 @@ docker compose exec app_ciclo npm ci && npm run build
 
 ### Limpiar base de datos
 ```bash
-php artisan db:clean
+php artisan dev:clean-demo-data
 ```
 
 ### Configurar base de datos desde cero
 ```bash
-php artisan db:setup
+php artisan dev:setup-database
 ```
 
 ### Ejecutar migraciones individuales

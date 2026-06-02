@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ClientPurchaseHistoryTableRequest;
+use App\Http\Requests\Admin\Clients\ClientPurchaseHistoryTableRequest;
 use App\Models\Client;
 use App\Services\Admin\ClientPurchaseHistoryQuery;
 use App\Support\AdminPerPage;
