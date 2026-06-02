@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import laravel from "laravel-vite-plugin";
+import react from "@vitejs/plugin-react";
 
 const vitePort = Number(process.env.VITE_PORT) || 5173;
 
@@ -7,6 +8,7 @@ const vitePort = Number(process.env.VITE_PORT) || 5173;
 // SHARED ASSETS
 // =======================
 const sharedAssets = [
+    "resources/js/app.tsx",
     "resources/js/shared/theme-toggle.js",
 ];
 
@@ -121,6 +123,7 @@ export default defineConfig(({ command }) => {
         // into public/build — CI has no storage:link and public/storage would ENOENT.
         publicDir: isDevServer ? "public" : false,
         plugins: [
+            react(),
             laravel({
                 detectTls: false,
                 input: [...sharedAssets, ...adminAssets, ...clientAssets, ...errorAssets],

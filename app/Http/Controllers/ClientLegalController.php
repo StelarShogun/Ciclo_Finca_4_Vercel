@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use Inertia\Inertia;
+use Inertia\Response;
+
 class ClientLegalController extends Controller
 {
-    public function terms()
+    public function terms(): Response
     {
-        return view('client.legal.terms', [
+        return Inertia::render('Client/Legal/Terms', [
             'legalTitle' => 'Términos y condiciones',
             'legalUpdated' => 'mayo 2026',
+            'businessName' => config('cf4_legal.business_name'),
+            'contactEmail' => config('cf4_legal.contact_email'),
         ]);
     }
 

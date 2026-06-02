@@ -119,6 +119,7 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
 
     // Dashboard routes.
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/inertia-pilot', [DashboardController::class, 'inertiaPilot'])->name('dashboard.inertia-pilot');
     Route::get('/dashboard/data', [DashboardController::class, 'getDashboardData'])->name('dashboard.data');
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
     Route::get('/dashboard/export', [DashboardController::class, 'exportReport'])->name('dashboard.export');

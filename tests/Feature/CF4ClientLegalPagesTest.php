@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF4ClientLegalPagesTest extends TestCase
@@ -11,7 +12,13 @@ class CF4ClientLegalPagesTest extends TestCase
 
     public function test_legal_pages_are_accessible(): void
     {
-        $this->get(route('clients.legal.terms'))->assertOk()->assertSee('Términos y condiciones', false);
+        $this->get(route('clients.legal.terms'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Legal/Terms', false)
+                ->where('legalTitle', 'Términos y condiciones')
+            );
+
         $this->get(route('clients.legal.privacy'))->assertOk()->assertSee('Política de privacidad', false);
         $this->get(route('clients.legal.returns'))->assertOk()->assertSee('Cambios, devoluciones', false);
         $this->get(route('clients.contact'))->assertOk()->assertSee('Contacto', false);

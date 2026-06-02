@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AdminOnly;
 use App\Http\Middleware\CacheStaticBuildAssets;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\LogSensitiveAdminModuleAccess;
 use App\Http\Middleware\PreventDirectAccess;
 use Illuminate\Foundation\Application;
@@ -16,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(CacheStaticBuildAssets::class);
+        $middleware->web(append: [
+            HandleInertiaRequests::class,
+        ]);
 
         $middleware->trustProxies(at: '*');
 

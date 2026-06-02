@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class DashboardController extends Controller
 {
@@ -66,6 +68,40 @@ class DashboardController extends Controller
                 'monthlyTrend' => 0,
                 'topProducts' => collect(),
                 'topSuppliers' => collect(),
+                'error' => 'Error al cargar datos del dashboard',
+            ]);
+        }
+    }
+
+    public function inertiaPilot(): Response
+    {
+        if (! Auth::guard('admin')->check()) {
+            abort(403);
+        }
+
+        try {
+            $ttl = max(15, (int) config('cf4_performance.admin_dashboard_index_ttl', 60));
+            $data = Cache::remember('cf4:admin:dashboard_index', $ttl, fn () => $this->gatherDashboardData());
+
+            $data['todaySales'] = DashboardTodaySales::sumToday();
+            $data['salesTrend'] = DashboardTodaySales::salesTrendPercent();
+
+            return Inertia::render('Admin/Dashboard/Index', $this->dashboardInertiaPayload($data));
+        } catch (\Exception $e) {
+            Log::error('Error en DashboardController Inertia pilot: '.$e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return Inertia::render('Admin/Dashboard/Index', [
+                'totalProducts' => 0,
+                'totalSuppliers' => 0,
+                'totalCategories' => 0,
+                'todaySales' => 0,
+                'lowStockProducts' => 0,
+                'salesTrend' => 0,
+                'monthlySales' => 0,
+                'monthlyTrend' => 0,
                 'error' => 'Error al cargar datos del dashboard',
             ]);
         }
@@ -381,6 +417,25 @@ class DashboardController extends Controller
         }
 
         return round((($current - $previous) / $previous) * 100, 1);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function dashboardInertiaPayload(array $data): array
+    {
+        return [
+            'totalProducts' => (int) ($data['totalProducts'] ?? 0),
+            'totalSuppliers' => (int) ($data['totalSuppliers'] ?? 0),
+            'totalCategories' => (int) ($data['totalCategories'] ?? 0),
+            'todaySales' => (float) ($data['todaySales'] ?? 0),
+            'lowStockProducts' => (int) ($data['lowStockProducts'] ?? 0),
+            'salesTrend' => (float) ($data['salesTrend'] ?? 0),
+            'monthlySales' => (float) ($data['monthlySales'] ?? 0),
+            'monthlyTrend' => (float) ($data['monthlyTrend'] ?? 0),
+            'error' => $data['error'] ?? null,
+        ];
     }
 
     private function getStartDate($period)

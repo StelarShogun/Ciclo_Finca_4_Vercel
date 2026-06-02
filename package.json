@@ -7,6 +7,8 @@
         "build": "vite build",
         "build:fa-subset": "node scripts/fonts/build-fa-subset.mjs",
         "dev": "vite",
+        "typecheck": "tsc --noEmit",
+        "lint:react": "npx react-doctor@latest",
         "serve:php": "serve.cmd",
         "k6:home": "bash scripts/k6/run-homepage.sh",
         "unlighthouse": "bash scripts/unlighthouse/run.sh guest",
@@ -28,9 +30,16 @@
         "@fontsource/dm-sans": "^5.2.8",
         "@fontsource/poppins": "^5.2.7",
         "@fortawesome/fontawesome-free": "^6.7.2",
+        "@inertiajs/react": "^3.3.0",
+        "@types/react": "^19.2.16",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^5.2.0",
         "chart.js": "^4.5.1",
         "gsap": "^3.15.0",
+        "react": "^19.2.7",
+        "react-dom": "^19.2.7",
         "sweetalert2": "^11.23.0",
-        "swiper": "^12.1.4"
+        "swiper": "^12.1.4",
+        "typescript": "^6.0.3"
     }
 }
