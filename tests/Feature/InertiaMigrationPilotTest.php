@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\AdminUser;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Client;
+use App\Models\FavoriteProduct;
 use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -129,6 +131,77 @@ class InertiaMigrationPilotTest extends TestCase
                 ->has('categories.0.iconClass')
                 ->has('categories.0.children', 1)
                 ->where('categories.0.children.0.name', 'MTB')
+            );
+    }
+
+    public function test_client_catalog_page_serializes_filters_products_and_favorites(): void
+    {
+        Cache::flush();
+
+        $category = Category::create([
+            'name' => 'Accesorios Catalog',
+            'description' => null,
+            'parent_category_id' => null,
+        ]);
+        $supplier = Supplier::create([
+            'name' => 'Proveedor Catalog',
+            'primary_contact' => 'Contacto Catalog',
+            'phone' => '88887777',
+            'email' => 'catalog-supplier@example.com',
+            'address' => 'Tienda',
+            'delivery_time' => 2,
+            'rating' => 4.7,
+            'status' => 'active',
+        ]);
+        $brand = Brand::create(['name' => 'Marca Catalog Inertia']);
+        $product = Product::create([
+            'category_id' => $category->category_id,
+            'supplier_id' => $supplier->supplier_id,
+            'name' => 'Producto Catalog Alpha',
+            'sku' => 'CAT-ALPHA-1',
+            'description' => 'Producto para probar catálogo Inertia.',
+            'purchase_price' => 10000,
+            'sale_price' => 25000,
+            'stock_current' => 3,
+            'stock_minimum' => 1,
+            'status' => 'active',
+            'is_featured' => false,
+        ]);
+        $product->brands()->attach($brand->id);
+
+        $this->get(route('clients.catalog', ['search' => 'Alpha', 'brand_id' => $brand->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('filters.search', 'Alpha')
+                ->where('filters.brandId', $brand->id)
+                ->where('products.0.name', 'Producto Catalog Alpha')
+                ->where('products.0.brands.0.name', 'Marca Catalog Inertia')
+                ->where('products.0.image.usesPlaceholder', true)
+                ->where('favoriteProductIds', [])
+            );
+
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Catalog',
+            'second_surname' => null,
+            'gmail' => 'cliente-catalog@example.com',
+            'password' => bcrypt('password'),
+            'email_verified' => true,
+            'active' => true,
+        ]);
+        FavoriteProduct::create([
+            'user_id' => $client->user_id,
+            'product_id' => $product->product_id,
+        ]);
+
+        $this->actingAs($client, 'clients')
+            ->get(route('clients.catalog', ['search' => 'Alpha']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('products.0.isFavorite', true)
+                ->where('favoriteProductIds.0', $product->product_id)
             );
     }
 

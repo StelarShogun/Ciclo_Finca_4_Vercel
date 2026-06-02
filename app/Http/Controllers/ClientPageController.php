@@ -239,7 +239,6 @@ class ClientPageController extends Controller
 
         $brands = $this->cachedClientBrandsForCatalog();
 
-        $cartCount = $this->getCartCount();
         $catalogSpotlight = $this->cachedCatalogSpotlightProductRows();
         $favoriteProductIds = collect();
 
@@ -268,23 +267,39 @@ class ClientPageController extends Controller
 
         $catalogVersion = ClientStorefrontCache::catalogVersion();
 
-        return $this->clientCatalogResponse('client.catalog', compact(
-            'products',
-            'categories',
-            'cartCount',
-            'selectedCategory',
-            'subcategories',
-            'parentCategoryForSubcats',
-            'catalogSpotlight',
-            'favoriteProductIds',
-            'catalogParams',
-            'catalogCategoryNav',
-            'emptyCategoryNoProducts',
-            'brands',
-            'selectedBrand',
-            'productReviewStats',
-            'catalogVersion',
-        ));
+        return $this->clientCatalogResponse('Client/Catalog/Index', [
+            'products' => $products->getCollection()
+                ->map(fn (Product $product): array => $this->catalogProductPayload($product, $productReviewStats, $favoriteProductIds))
+                ->values(),
+            'pagination' => $this->catalogPaginationPayload($products),
+            'categories' => $catalogCategoryNav,
+            'brands' => $brands
+                ->map(fn (Brand $brand): array => [
+                    'id' => (int) $brand->id,
+                    'name' => (string) $brand->name,
+                ])
+                ->values(),
+            'filters' => $this->catalogFiltersPayload($request, $selectedCategory, $selectedBrand),
+            'selectedCategory' => $selectedCategory ? $this->catalogCategorySummaryPayload($selectedCategory) : null,
+            'subcategories' => $subcategories
+                ->map(fn (Category $category): array => $this->catalogCategorySummaryPayload($category))
+                ->values(),
+            'parentCategoryForSubcats' => $parentCategoryForSubcats ? $this->catalogCategorySummaryPayload($parentCategoryForSubcats) : null,
+            'catalogSpotlight' => $catalogSpotlight
+                ->map(fn (array $row): array => [
+                    'kind' => (string) $row['spotlight'],
+                    'product' => $this->catalogProductPayload($row['product'], $productReviewStats, $favoriteProductIds),
+                ])
+                ->values(),
+            'favoriteProductIds' => $favoriteProductIds->values(),
+            'emptyCategoryNoProducts' => $emptyCategoryNoProducts,
+            'catalogVersion' => $catalogVersion,
+            'summary' => [
+                'totalProducts' => (int) $products->total(),
+                'totalCategories' => (int) $categories->count(),
+                'activeFilterCount' => $this->catalogActiveFilterCount($request),
+            ],
+        ]);
     }
 
     public function catalogHeartbeat()
@@ -299,12 +314,123 @@ class ClientPageController extends Controller
     /**
      * @param  array<string, mixed>  $data
      */
-    private function clientCatalogResponse(string $view, array $data)
+    private function clientCatalogResponse(string $component, array $props)
     {
-        return response()
-            ->view($view, $data)
+        return Inertia::render($component, $props)
+            ->toResponse(request())
             ->header('Cache-Control', 'private, no-cache, max-age=0, must-revalidate')
             ->header('Pragma', 'no-cache');
+    }
+
+    /**
+     * @param  array<int, array{avg: float|int|string|null, count: int|string|null}>  $productReviewStats
+     * @param  Collection<int, int>  $favoriteProductIds
+     * @return array<string, mixed>
+     */
+    private function catalogProductPayload(Product $product, array $productReviewStats, Collection $favoriteProductIds): array
+    {
+        $picture = ProductImageUrls::cardPicture($product);
+        $reviewStats = $productReviewStats[(int) $product->product_id] ?? null;
+        $category = $product->category;
+        $parentCategory = $category?->parent;
+        $stockLabel = $product->clientCatalogStockLabel();
+
+        return [
+            'id' => (int) $product->product_id,
+            'name' => (string) $product->name,
+            'description' => $product->description ? Str::limit((string) $product->description, 120) : null,
+            'price' => (float) $product->sale_price,
+            'priceFormatted' => '₡'.number_format((float) $product->sale_price, 0, ',', '.'),
+            'stockCurrent' => (int) ($product->stock_current ?? 0),
+            'stockLabel' => $stockLabel,
+            'canBuy' => $product->isPurchasableByClient(),
+            'isFeatured' => (bool) $product->is_featured,
+            'isNew' => $product->created_at !== null && $product->created_at->greaterThanOrEqualTo(now()->subDays(self::PRODUCT_NOVELTY_DAYS)),
+            'isFavorite' => $favoriteProductIds->contains((int) $product->product_id),
+            'sku' => $product->clientCatalogAssignedSku(),
+            'url' => $product->clientProductUrl(),
+            'category' => $category ? [
+                'id' => (int) $category->category_id,
+                'name' => (string) $category->name,
+            ] : null,
+            'parentCategory' => $parentCategory ? [
+                'id' => (int) $parentCategory->category_id,
+                'name' => (string) $parentCategory->name,
+            ] : null,
+            'brands' => $product->brands
+                ->map(fn (Brand $brand): array => [
+                    'id' => (int) $brand->id,
+                    'name' => (string) $brand->name,
+                ])
+                ->values(),
+            'image' => [
+                'fallback' => $picture['fallback'],
+                'desktopWebp' => $picture['desktopWebp'],
+                'mobileWebp' => $picture['mobileWebp'],
+                'usesPlaceholder' => ProductImageUrls::usesPlaceholder($product),
+                'placeholderIconClass' => ProductImageUrls::placeholderIconClass($product),
+            ],
+            'reviews' => [
+                'avg' => (float) data_get($reviewStats, 'avg', 0),
+                'count' => (int) data_get($reviewStats, 'count', 0),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function catalogPaginationPayload(LengthAwarePaginator $products): array
+    {
+        return [
+            'currentPage' => (int) $products->currentPage(),
+            'lastPage' => (int) $products->lastPage(),
+            'perPage' => (int) $products->perPage(),
+            'total' => (int) $products->total(),
+            'from' => $products->firstItem(),
+            'to' => $products->lastItem(),
+            'links' => collect($products->linkCollection())->map(fn (array $link): array => [
+                'url' => $link['url'],
+                'label' => (string) $link['label'],
+                'active' => (bool) $link['active'],
+            ])->values(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function catalogFiltersPayload(Request $request, ?Category $selectedCategory, ?Brand $selectedBrand): array
+    {
+        return [
+            'search' => (string) $request->input('search', ''),
+            'categoryId' => $selectedCategory ? (int) $selectedCategory->category_id : null,
+            'brandId' => $selectedBrand ? (int) $selectedBrand->id : null,
+            'minPrice' => $request->filled('min_price') ? (string) $request->input('min_price') : '',
+            'maxPrice' => $request->filled('max_price') ? (string) $request->input('max_price') : '',
+            'sort' => (string) $request->input('sort', 'created_at'),
+            'direction' => (string) $request->input('direction', 'desc'),
+            'perPage' => AdminPerPage::resolve($request->input('per_page', 10)),
+        ];
+    }
+
+    /**
+     * @return array{id: int, name: string, url: string}
+     */
+    private function catalogCategorySummaryPayload(Category $category): array
+    {
+        return [
+            'id' => (int) $category->category_id,
+            'name' => (string) $category->name,
+            'url' => route('clients.catalog', ['category_id' => $category->category_id]),
+        ];
+    }
+
+    private function catalogActiveFilterCount(Request $request): int
+    {
+        return collect(['min_price', 'max_price', 'brand_id', 'search'])
+            ->filter(fn (string $key): bool => $request->filled($key))
+            ->count();
     }
 
     /**

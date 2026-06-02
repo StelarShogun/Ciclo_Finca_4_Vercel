@@ -58,6 +58,7 @@ resources/js/
 | Ruta | Nombre | Controller | Página React |
 |---|---|---|---|
 | `/` | `clients.home` | `ClientPageController@home` | `Client/Home/Index` |
+| `/catalog` | `clients.catalog` | `ClientPageController@catalog` | `Client/Catalog/Index` |
 | `/legal/terminos` | `clients.legal.terms` | `ClientLegalController@terms` | `Client/Legal/Terms` |
 
 ### Home cliente
@@ -96,6 +97,34 @@ La vista Blade antigua `resources/views/client/home.blade.php` se mantiene tempo
 
 La Home usa `Link` de Inertia para navegación interna y `usePage().url` desde `ClientLayout` para estado activo de menú. Esto evita depender de `window.location.pathname` y mantiene la base lista para una futura estrategia SSR si se habilita.
 
+### Catálogo cliente
+
+El catálogo cliente conserva la URL `/catalog` y el nombre de ruta `clients.catalog`.
+
+Props enviadas por `ClientPageController@catalog`:
+
+- `products`: productos paginados serializados para cards.
+- `pagination`: metadatos y links de paginación.
+- `categories`: árbol de categorías raíz e hijas con URLs.
+- `brands`: marcas disponibles para filtros.
+- `filters`: búsqueda, categoría, marca, rango de precio, orden y `perPage`.
+- `catalogSpotlight`: destacados/novedades.
+- `favoriteProductIds`: ids favoritos del cliente autenticado; vacío para invitados.
+- `summary`: totales y cantidad de filtros activos.
+
+Componentes creados para catálogo:
+
+- `CatalogFilters`
+- `CategoryRail`
+- `CatalogProductCard`
+- `CatalogPagination`
+
+Tipos específicos:
+
+- `resources/js/types/catalog.ts`
+
+Patrón de filtros: `CatalogFilters` usa `router.get('/catalog', params, { preserveScroll: true })`, conservando query string y dejando Laravel como fuente de verdad para validaciones de precio, filtros, orden y paginación.
+
 ## Carrito Legacy Desde React
 
 El carrito completo sigue en Blade/legacy y no se migra todavía. Para acciones puntuales desde páginas Inertia existe:
@@ -107,6 +136,16 @@ resources/js/lib/cart.ts
 `addToCart(productId, quantity, csrfToken)` encapsula `fetch('/cart/add')`, headers JSON, CSRF y normalización de `cart_count` a `cartCount`.
 
 Mientras carrito/catálogo/detalle de producto no estén migrados, los componentes React pueden seguir emitiendo el evento temporal `cf4:cart-count` para sincronizar el contador visual del header. Cuando carrito sea migrado, este helper debe convertirse en la API común de Home, catálogo y detalle.
+
+## Favoritos Legacy Desde React
+
+Favoritos todavía mantiene backend legacy. Para acciones puntuales desde catálogo existe:
+
+```txt
+resources/js/lib/favorites.ts
+```
+
+`toggleFavorite(productId, csrfToken)` encapsula `POST /favorites/toggle` y normaliza `is_favorite` a `isFavorite`.
 
 ## Cómo crear una página Inertia
 
@@ -157,7 +196,7 @@ El sistema visual sigue usando:
 - `resources/css/admin/shell-base.css`
 - `resources/css/admin/dashboard/dashboard.css`
 
-`resources/js/app.tsx` se mantiene como entrypoint liviano. El CSS cliente se importa desde `ClientLayout` y páginas cliente específicas; el CSS admin se importa desde `AdminLayout`. Esto evita mezclar CSS admin en pantallas cliente antes de migrar catálogo.
+`resources/js/app.tsx` se mantiene como entrypoint liviano. El CSS cliente se importa desde `ClientLayout` y páginas cliente específicas; el CSS admin se importa desde `AdminLayout`. Esto evita mezclar CSS admin en pantallas cliente durante la migración progresiva.
 
 No usar CSS-in-JS ni reescribir tokens globales en esta fase.
 
@@ -171,6 +210,13 @@ docker exec laravel_app_ciclo php artisan test --filter=InertiaMigrationPilotTes
 docker exec laravel_app_ciclo php artisan test --filter=CF4ClientLegalPagesTest
 docker exec laravel_app_ciclo php artisan test
 ```
+
+Última validación registrada:
+
+- `docker exec laravel_app_ciclo php artisan test`: `221 passed`, `192 skipped`, `952 assertions`.
+- `npm run build`: OK.
+- `npm run typecheck`: OK.
+- `npm run lint:react`: OK, React Doctor `90 / 100`, warnings opcionales.
 
 Si Docker no está disponible, `php artisan test --filter=InertiaMigrationPilotTest` puede ejecutarse en host, pero este proyecto normalmente valida Artisan dentro del contenedor.
 

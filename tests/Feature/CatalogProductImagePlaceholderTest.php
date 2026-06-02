@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CatalogProductImagePlaceholderTest extends TestCase
@@ -36,11 +37,14 @@ class CatalogProductImagePlaceholderTest extends TestCase
             'is_featured' => true,
         ]);
 
-        $response = $this->get(route('clients.catalog'));
-        $response->assertOk();
-        $response->assertSee('product-media-placeholder', false);
-        $response->assertSee('fa-bicycle', false);
-        $response->assertSee('Bike Sin Foto Catalog', false);
+        $this->get(route('clients.catalog'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('products.0.name', 'Bike Sin Foto Catalog')
+                ->where('products.0.image.usesPlaceholder', true)
+                ->where('products.0.image.placeholderIconClass', 'fas fa-bicycle')
+            );
     }
 
     public function test_catalog_shows_placeholder_when_media_file_is_missing(): void
@@ -72,10 +76,13 @@ class CatalogProductImagePlaceholderTest extends TestCase
             ->toMediaCollection('main_image');
         Storage::disk($media->disk)->delete($media->getPathRelativeToRoot());
 
-        $response = $this->get(route('clients.catalog'));
-        $response->assertOk();
-        $response->assertSee('product-media-placeholder', false);
-        $response->assertSee('fa-lock', false);
-        $response->assertSee('Candado Sin Archivo', false);
+        $this->get(route('clients.catalog'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('products.0.name', 'Candado Sin Archivo')
+                ->where('products.0.image.usesPlaceholder', true)
+                ->where('products.0.image.placeholderIconClass', 'fas fa-lock')
+            );
     }
 }

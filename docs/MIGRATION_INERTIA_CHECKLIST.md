@@ -15,6 +15,7 @@
 | Ruta | Nombre | Estado | Componente |
 |---|---|---|---|
 | `/` | `clients.home` | Migrada | `Client/Home/Index` |
+| `/catalog` | `clients.catalog` | Migrada | `Client/Catalog/Index` |
 | `/legal/terminos` | `clients.legal.terms` | Migrada | `Client/Legal/Terms` |
 | `/dashboard/inertia-pilot` | `dashboard.inertia-pilot` | Piloto admin | `Admin/Dashboard/Index` |
 
@@ -23,7 +24,7 @@
 | Ruta | Controller | Estado recomendado |
 |---|---|---|
 | `/` | `ClientPageController@home` | Migrada |
-| `/catalog` | `ClientPageController@catalog` | Blade temporal; migrar como módulo completo |
+| `/catalog` | `ClientPageController@catalog` | Migrada |
 | `/product/{id}/{slug?}` | `ClientPageController@product` | Blade temporal |
 | `/legal/terminos` | `ClientLegalController@terms` | Migrada |
 | `/legal/privacidad` | `ClientLegalController@privacy` | Blade temporal |
@@ -108,6 +109,10 @@ MVP creado:
 - `CategoryPreview`
 - `ProductCard`
 - `ImageFallback`
+- `CatalogFilters`
+- `CategoryRail`
+- `CatalogProductCard`
+- `CatalogPagination`
 
 Pendiente:
 
@@ -129,16 +134,16 @@ Pendiente:
 
 ## Orden de siguientes PRs
 
-1. Catálogo completo.
-2. Producto + favoritos + reseñas.
-3. Carrito + checkout.
-4. Auth cliente.
-5. Cuenta cliente.
-6. Legal restante.
-7. Admin shell + dashboard completo.
-8. Inventario.
-9. Ventas/pedidos.
-10. Proveedores/reportes/resto admin.
+1. Detalle de producto + favoritos + reseñas.
+2. Carrito + checkout.
+3. Auth cliente.
+4. Cuenta cliente.
+5. Facturas/pedidos.
+6. Favoritos y notificaciones.
+7. Legal restante.
+8. Admin shell + dashboard completo.
+9. Inventario.
+10. Ventas/proveedores/reportes/resto admin.
 
 ## Detalle de Home migrada
 
@@ -152,7 +157,21 @@ Pendiente:
 - Helper creado: `resources/js/lib/cart.ts` para encapsular el POST legacy `/cart/add`.
 - CSS: `app.tsx` queda liviano; CSS cliente/admin se carga desde layouts/páginas.
 - Tests: `InertiaMigrationPilotTest`, `CF4ClientHomeGuestCtaTest`, `CF4ClientLegalPagesTest`.
-- Siguen en Blade: catálogo, detalle de producto, carrito, checkout, perfil, favoritos, notificaciones, dashboard admin real y módulos operativos.
+- Siguen en Blade: detalle de producto, carrito, checkout, perfil, favoritos, notificaciones, dashboard admin real y módulos operativos.
+
+## Detalle de Catálogo migrado
+
+- Ruta: `/catalog` (`clients.catalog`).
+- Controller: `ClientPageController@catalog`.
+- Página React: `resources/js/Pages/Client/Catalog/Index.tsx`.
+- Props propias: `products`, `pagination`, `categories`, `brands`, `filters`, `selectedCategory`, `subcategories`, `parentCategoryForSubcats`, `catalogSpotlight`, `favoriteProductIds`, `emptyCategoryNoProducts`, `catalogVersion`, `summary`.
+- Props compartidas usadas: `auth.client`, `cartCount`, `csrfToken`, `flash`, `theme`.
+- Componentes creados: `CatalogFilters`, `CategoryRail`, `CatalogProductCard`, `CatalogPagination`.
+- Tipos creados: `resources/js/types/catalog.ts`.
+- Helper creado: `resources/js/lib/favorites.ts` para `POST /favorites/toggle`.
+- Reutiliza `resources/js/lib/cart.ts` para `POST /cart/add`.
+- Mantiene endpoints JSON legacy: `/api/catalog/heartbeat`, `/api/products/suggestions`, `/api/catalog/search-trending`.
+- Siguen en Blade tras este corte: detalle de producto, carrito, checkout, auth cliente, perfil, facturas/pedidos, favoritos index, notificaciones y legales restantes.
 
 ## Criterio por ruta
 
@@ -164,3 +183,14 @@ Una ruta se marca como migrada solo si:
 - Mantiene URL y nombre de ruta.
 - Pasa build, typecheck y prueba Feature.
 - No rompe light/dark mode ni responsive.
+
+## Última validación
+
+- `InertiaMigrationPilotTest`: 7 tests passed.
+- `CF4ClientHomeGuestCtaTest`: 2 tests passed.
+- `CF4ClientLegalPagesTest`: 3 tests passed.
+- `php artisan test --filter=Catalog`: passed, con skips esperados de MySQL.
+- `php artisan test`: `221 passed`, `192 skipped`, `952 assertions`.
+- `npm run build`: OK.
+- `npm run typecheck`: OK.
+- `npm run lint:react`: OK, React Doctor `90 / 100`, warnings opcionales.
