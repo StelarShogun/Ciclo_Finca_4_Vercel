@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Http\Controllers\ClientUserController;
+use App\Support\Client\Auth\GoogleProfileNameParser;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -11,11 +11,8 @@ class NamesFromGoogleProfileTest extends TestCase
     #[DataProvider('googleProfileProvider')]
     public function test_names_from_google_profile(array $googleUser, array $expected): void
     {
-        $controller = new ClientUserController;
-        $method = new \ReflectionMethod(ClientUserController::class, 'namesFromGoogleProfile');
-        $method->setAccessible(true);
-
-        $result = $method->invoke($controller, $googleUser);
+        $parser = new GoogleProfileNameParser;
+        $result = $parser->parse($googleUser);
 
         $this->assertSame($expected, $result);
     }

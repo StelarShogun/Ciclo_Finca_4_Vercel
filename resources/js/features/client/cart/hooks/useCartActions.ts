@@ -4,7 +4,7 @@ import type { Dispatch, SetStateAction } from 'react';
 
 import { checkoutCart, clearCart, removeCartItem, updateCartItem } from '@/features/client/cart/api';
 import type { CartItem, CartPaymentMethod } from '@/features/client/cart/types';
-import { confirm } from '@/lib/confirm';
+import { confirm } from '@/shared/lib/confirm';
 import { useToast } from '@/shared/hooks/useToast';
 
 type UseCartActionsOptions = {

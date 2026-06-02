@@ -3,8 +3,8 @@ import { useState } from 'react';
 
 import { ImageFallback } from '@/shared/components/ui/ImageFallback';
 import { useToast } from '@/shared/hooks/useToast';
-import { addToCart } from '@/lib/cart';
-import { toggleFavorite } from '@/lib/favorites';
+import { addToCart } from '@/features/client/cart/api';
+import { toggleFavorite } from '@/features/client/favorites/api';
 import type { CatalogProduct } from '@/types/catalog';
 
 type CatalogProductCardProps = {

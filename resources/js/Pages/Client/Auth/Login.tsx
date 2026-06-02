@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { ClientAuthLayout } from '@/shared/components/layout/ClientAuthLayout';
 import { useRecaptchaV2 } from '@/hooks/useRecaptchaV2';
 import { InlineAlert } from '@/shared/components/ui/InlineAlert';
-import { firstError } from '@/lib/inertiaErrors';
+import { firstError } from '@/shared/lib/inertiaErrors';
 
 import type { InertiaSharedProps } from '@/types/models';
 

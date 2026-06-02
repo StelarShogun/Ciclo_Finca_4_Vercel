@@ -63,20 +63,7 @@ export type CatalogFilters = {
   perPage: number;
 };
 
-export type CatalogPagination = {
-  currentPage: number;
-  lastPage: number;
-  perPage: number;
-  total: number;
-  from?: number | null;
-  to?: number | null;
-  links: Array<{
-    url?: string | null;
-    label: string;
-    active: boolean;
-    page?: number | null;
-  }>;
-};
+export type { InertiaListPagination as CatalogPagination } from '@/types/pagination';
 
 export type CatalogSpotlightItem = {
   kind: 'featured' | 'novelty' | string;

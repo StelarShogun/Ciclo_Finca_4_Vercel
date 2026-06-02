@@ -13,6 +13,7 @@ final class ListPaginationPayload
      * @return array{
      *     currentPage: int,
      *     lastPage: int,
+     *     perPage: int,
      *     total: int,
      *     from: int|null,
      *     to: int|null,
@@ -24,6 +25,7 @@ final class ListPaginationPayload
         return [
             'currentPage' => (int) $paginator->currentPage(),
             'lastPage' => (int) $paginator->lastPage(),
+            'perPage' => (int) $paginator->perPage(),
             'total' => (int) $paginator->total(),
             'from' => $paginator->firstItem(),
             'to' => $paginator->lastItem(),

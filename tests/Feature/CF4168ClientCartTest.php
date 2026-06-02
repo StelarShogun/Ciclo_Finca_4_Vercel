@@ -56,7 +56,7 @@ class CF4168ClientCartTest extends TestCase
         ]);
         $addRes->assertStatus(200);
         $this->assertTrue($addRes->json('success'));
-        $this->assertSame(1, $addRes->json('cart_count'));
+        $this->assertSame(2, $addRes->json('cart_count'));
         $this->assertEquals(180, $addRes->json('cart_total'));
 
         $updateRes = $this->putJson(route('clients.cart.update'), [

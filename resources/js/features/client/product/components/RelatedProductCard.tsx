@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { ProductStarsInline } from '@/features/client/product/components/ProductStarsInline';
 import { ResponsivePicture } from '@/features/client/product/components/ResponsivePicture';
 import type { ProductDetailPageProps } from '@/features/client/product/types';
-import { addToCart } from '@/lib/cart';
-import { toggleFavorite } from '@/lib/favorites';
+import { addToCart } from '@/features/client/cart/api';
+import { toggleFavorite } from '@/features/client/favorites/api';
 import { useToast } from '@/shared/hooks/useToast';
 
 type RelatedProductCardProps = {

@@ -2,7 +2,7 @@ import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import { ImageFallback } from '@/shared/components/ui/ImageFallback';
-import { addToCart } from '@/lib/cart';
+import { addToCart } from '@/features/client/cart/api';
 import type { HomeProduct } from '@/types/home';
 
 type ProductCardProps = {

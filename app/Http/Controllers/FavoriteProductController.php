@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\FavoriteProduct;
 use App\Support\AdminPerPage;
 use App\Support\ClientFavoriteFormatter;
+use App\Support\ClientInertia\ListPaginationPayload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -49,7 +50,7 @@ class FavoriteProductController extends Controller
 
         return Inertia::render('Client/Favorites/Index', [
             'favorites' => $favorites,
-            'pagination' => \App\Support\ClientInertia\ListPaginationPayload::from($paginator),
+            'pagination' => ListPaginationPayload::from($paginator),
         ]);
     }
 

@@ -2,6 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Client\Cart\AddCartItem;
+use App\Actions\Client\Cart\BuildCartPagePayload;
+use App\Actions\Client\Cart\CheckoutCart;
+use App\Actions\Client\Cart\ClearCart;
+use App\Actions\Client\Cart\RemoveCartItem;
+use App\Actions\Client\Cart\UpdateCartItem;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Client;
@@ -13,12 +19,12 @@ use App\Models\SaleItem;
 use App\Notifications\OrderCancelledNotification;
 use App\Notifications\OrderCompletedNotification;
 use App\Notifications\OrderReadyToPickupNotification;
-use App\Services\CartService;
 use App\Services\Catalog\CatalogProductSearchTelemetry;
+use App\Services\Client\Cart\CartManager;
 use App\Services\InventoryMovementService;
 use App\Support\AdminPerPage;
 use App\Support\ClientCategoryIcons;
-use App\Support\ClientInertia\CartPagePayloadBuilder;
+use App\Support\ClientInertia\ListPaginationPayload;
 use App\Support\ClientInertia\ProductDetailPayloadBuilder;
 use App\Support\ClientInertia\ProductDetailPayloadContext;
 use App\Support\ClientStorefrontCache;
@@ -28,17 +34,17 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ClientPageController extends Controller
 {
     private const PRODUCT_NOVELTY_DAYS = 30;
+
+    public function __construct(
+        private readonly CartManager $cartManager,
+    ) {}
 
     public function home(): Response
     {
@@ -593,7 +599,7 @@ class ClientPageController extends Controller
         $isNoveltyProduct = $product->created_at !== null
             && $product->created_at->greaterThanOrEqualTo(now()->subDays(self::PRODUCT_NOVELTY_DAYS));
 
-        $cartCount = $this->getCartCount();
+        $cartCount = $this->cartManager->totalItemCount();
 
         $clientCanReview = false;
         $clientReview = null;
@@ -788,468 +794,37 @@ class ClientPageController extends Controller
         ];
     }
 
-    public function addToCart(Request $request)
+    public function addToCart(Request $request, AddCartItem $action)
     {
-        $request->validate([
-            'product_id' => 'required|exists:products,product_id',
-            'quantity' => 'required|integer|min:1',
-        ]);
-
-        $product = Product::findOrFail($request->product_id);
-
-        if (! $product->isPurchasableByClient()) {
-            return response()->json(['success' => false, 'message' => Product::MSG_CLIENT_AGOTADO], 400);
-        }
-
-        if ($product->stock_current < $request->quantity) {
-            return response()->json([
-                'success' => false,
-                'message' => $product->stock_current < 1
-                    ? Product::MSG_CLIENT_AGOTADO
-                    : Product::MSG_CLIENT_STOCK_INSUFICIENTE,
-            ], 400);
-        }
-
-        $cart = Session::get('cart', []);
-        $existingIndex = null;
-
-        foreach ($cart as $index => $item) {
-            if ($item['product_id'] == $request->product_id) {
-                $existingIndex = $index;
-                break;
-            }
-        }
-
-        // Increase quantity when the product already exists in the cart.
-        if ($existingIndex !== null) {
-            $newQuantity = ($cart[$existingIndex]['quantity'] ?? 0) + $request->quantity;
-
-            if ($newQuantity > $product->stock_current) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $product->stock_current < 1
-                        ? Product::MSG_CLIENT_AGOTADO
-                        : Product::MSG_CLIENT_STOCK_INSUFICIENTE,
-                ], 400);
-            }
-
-            $cart[$existingIndex]['quantity'] = $newQuantity;
-        } else {
-            $mediaUrl = $product->getFirstMediaUrl('main_image');
-            $cart[] = [
-                'product_id' => $product->product_id,
-                'name' => $product->name,
-                'price' => $product->sale_price,
-                'quantity' => $request->quantity,
-                'image' => $mediaUrl,
-            ];
-        }
-
-        Session::put('cart', $cart);
-
-        $authClient = Auth::guard('clients')->user();
-        if ($authClient) {
-            CartService::saveToDb($authClient->user_id, $cart);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Producto agregado al carrito',
-            'cart_count' => $this->getCartCount(),
-            'cart_total' => $this->getCartTotal(),
-        ]);
+        return $action->handle($request)->toJsonResponse();
     }
 
-    /**
-     * Clamp quantities to current stock and drop unpurchasable lines. Updates session only when it changes.
-     */
-    private function syncCartWithStock(): void
+    public function updateCart(Request $request, UpdateCartItem $action)
     {
-        $before = Session::get('cart', []);
-        $synced = [];
-        $adjustedNames = [];
-
-        foreach ($before as $item) {
-            if (! isset($item['product_id'])) {
-                continue;
-            }
-
-            $product = Product::find($item['product_id']);
-
-            if (! $product || ! $product->isPurchasableByClient()) {
-                continue;
-            }
-
-            $requested = (int) ($item['quantity'] ?? 0);
-            $qty = min($requested, (int) $product->stock_current);
-
-            if ($qty < 1) {
-                continue;
-            }
-
-            if ($qty < $requested) {
-                $adjustedNames[] = $product->name;
-            }
-
-            $synced[] = [
-                'product_id' => (int) $product->product_id,
-                'name' => (string) ($item['name'] ?? $product->name),
-                'price' => (float) ($item['price'] ?? $product->sale_price),
-                'quantity' => $qty,
-                'image' => (string) ($item['image'] ?? ''),
-            ];
-        }
-
-        $needsPut = ! $this->cartsAreEquivalent($before, $synced)
-            || $this->sessionCartHasNonMinimalKeys($before);
-
-        if ($needsPut) {
-            Session::put('cart', $synced);
-            $authClient = Auth::guard('clients')->user();
-            if ($authClient) {
-                CartService::saveToDb($authClient->user_id, $synced);
-            }
-        }
-
-        if ($adjustedNames !== []) {
-            session()->flash(
-                'cart_stock_adjusted',
-                'Ajustamos el carrito al stock disponible para: '.implode(', ', array_unique($adjustedNames)).'.'
-            );
-        }
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $a
-     * @param  array<int, array<string, mixed>>  $b
-     */
-    private function cartsAreEquivalent(array $a, array $b): bool
-    {
-        return json_encode($this->normalizeCartForComparison($a)) === json_encode($this->normalizeCartForComparison($b));
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $cart
-     * @return array<int, array{product_id:int, quantity:int, price:float, name:string, image:string}>
-     */
-    private function normalizeCartForComparison(array $cart): array
-    {
-        $rows = [];
-        foreach ($cart as $item) {
-            if (! isset($item['product_id'])) {
-                continue;
-            }
-            $rows[] = [
-                'product_id' => (int) $item['product_id'],
-                'quantity' => (int) ($item['quantity'] ?? 0),
-                'price' => (float) ($item['price'] ?? 0),
-                'name' => (string) ($item['name'] ?? ''),
-                'image' => (string) ($item['image'] ?? ''),
-            ];
-        }
-        usort($rows, fn ($x, $y) => $x['product_id'] <=> $y['product_id']);
-
-        return $rows;
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $cart
-     */
-    private function sessionCartHasNonMinimalKeys(array $cart): bool
-    {
-        $allowed = ['product_id', 'name', 'price', 'quantity', 'image'];
-
-        foreach ($cart as $item) {
-            foreach (array_keys($item) as $key) {
-                if (! in_array($key, $allowed, true)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private function getCartCount(): int
-    {
-        return count(Session::get('cart', []));
-    }
-
-    public function updateCart(Request $request)
-    {
-        $request->validate([
-            'product_id' => 'required|exists:products,product_id',
-            'quantity' => 'required|integer|min:1',
-        ]);
-
-        $product = Product::findOrFail($request->product_id);
-
-        if (! $product->isPurchasableByClient()) {
-            return response()->json(['success' => false, 'message' => Product::MSG_CLIENT_AGOTADO], 400);
-        }
-
-        $requestedQty = (int) $request->quantity;
-
-        if ($product->stock_current < 1 || $requestedQty > (int) $product->stock_current) {
-            return response()->json([
-                'success' => false,
-                'message' => $product->stock_current < 1
-                    ? Product::MSG_CLIENT_AGOTADO
-                    : Product::MSG_CLIENT_STOCK_INSUFICIENTE,
-            ], 400);
-        }
-
-        $cart = Session::get('cart', []);
-        $lineSubtotal = 0.0;
-        $found = false;
-
-        foreach ($cart as $index => $item) {
-            if ($item['product_id'] == $request->product_id) {
-                $cart[$index]['quantity'] = $requestedQty;
-                // Keep only minimal keys so the session never retains inflated rows.
-                $cart[$index] = [
-                    'product_id' => (int) $item['product_id'],
-                    'name' => (string) ($item['name'] ?? ''),
-                    'price' => (float) $item['price'],
-                    'quantity' => $requestedQty,
-                    'image' => (string) ($item['image'] ?? ''),
-                ];
-                $unitPrice = (float) $item['price'];
-                $lineSubtotal = $unitPrice * $requestedQty;
-                $found = true;
-                break;
-            }
-        }
-
-        if (! $found) {
-            return response()->json(['success' => false, 'message' => 'El producto no está en el carrito'], 404);
-        }
-
-        Session::put('cart', $cart);
-
-        $authClient = Auth::guard('clients')->user();
-        if ($authClient) {
-            CartService::saveToDb($authClient->user_id, $cart);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Carrito actualizado',
-            'cart_count' => $this->getCartCount(),
-            'cart_total' => $this->getCartTotal(),
-            'line_subtotal' => $lineSubtotal,
-            'quantity_applied' => $requestedQty,
-            'stock_clamped' => false,
-        ]);
+        return $action->handle($request)->toJsonResponse();
     }
 
     /**
      * Display cart. Session `cart` is the source of truth (minimal rows only).
-     * It is only mutated via addToCart, updateCart, removeFromCart, or syncCartWithStock when stock clamps occur.
      */
-    public function cart(Request $request)
+    public function cart(Request $request, BuildCartPagePayload $buildCartPagePayload)
     {
-        $this->syncCartWithStock();
-
-        $cart = Session::get('cart', []);
-        $cartItems = [];
-        $total = 0;
-
-        foreach ($cart as $item) {
-            $product = Product::find($item['product_id']);
-
-            if ($product && $product->isPurchasableByClient()) {
-                $qty = min((int) $item['quantity'], $product->stock_current);
-                $row = CartPagePayloadBuilder::itemFromProduct($product, $qty, (float) $item['price']);
-                if ($row !== null) {
-                    $total += (float) $row['subtotal'];
-                    $cartItems[] = $row;
-                }
-            }
-        }
-
-        $cartCount = $this->getCartCount();
-        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-
-        $cartItemsPaginator = new LengthAwarePaginator(
-            collect($cartItems)->forPage($currentPage, $perPage)->values()->all(),
-            count($cartItems),
-            $perPage,
-            $currentPage,
-            ['path' => route('clients.cart')]
-        );
-        $cartItemsPaginator->withQueryString();
-
-        return Inertia::render('Client/Cart/Index', app(CartPagePayloadBuilder::class)->build($cartItemsPaginator, $total));
+        return Inertia::render('Client/Cart/Index', $buildCartPagePayload->handle($request));
     }
 
-    public function removeFromCart(int $id)
+    public function removeFromCart(int $id, RemoveCartItem $action)
     {
-        $cart = Session::get('cart', []);
-
-        if (empty($cart)) {
-            return response()->json(['success' => false, 'message' => 'El carrito está vacío', 'cart_count' => 0, 'cart_total' => 0], 400);
-        }
-
-        $cart = array_values(array_filter($cart, fn ($item) => $item['product_id'] != $id));
-
-        Session::put('cart', $cart);
-
-        $authClient = Auth::guard('clients')->user();
-        if ($authClient) {
-            CartService::saveToDb($authClient->user_id, $cart);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Producto eliminado del carrito',
-            'cart_count' => $this->getCartCount(),
-            'cart_total' => $this->getCartTotal(),
-        ]);
+        return $action->handle($id)->toJsonResponse();
     }
 
-    /** Empty the session cart (AJAX from cart page). */
-    public function clearCart()
+    public function clearCart(ClearCart $action)
     {
-        Session::put('cart', []);
-
-        $authClient = Auth::guard('clients')->user();
-        if ($authClient) {
-            CartService::saveToDb($authClient->user_id, []);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Carrito vaciado',
-            'cart_count' => 0,
-            'cart_total' => 0.0,
-        ]);
+        return $action->handle()->toJsonResponse();
     }
 
-    // Creates a pending web order and reserves stock immediately.
-    public function checkout(Request $request, InventoryMovementService $inventoryService)
+    public function checkout(Request $request, CheckoutCart $action, InventoryMovementService $inventoryService)
     {
-        $cart = Session::get('cart', []);
-
-        if (empty($cart)) {
-            return response()->json(['success' => false, 'message' => 'El carrito está vacío'], 400);
-        }
-
-        $validatedCheckout = $request->validate([
-            'payment_method' => ['required', Rule::in(['cash', 'sinpe', 'transfer'])],
-        ], [
-            'payment_method.required' => 'Seleccione un método de pago.',
-            'payment_method.in' => 'Método de pago no válido.',
-        ]);
-
-        DB::beginTransaction();
-        try {
-            $subtotal = 0;
-            $validatedItems = [];
-
-            foreach ($cart as $item) {
-                $product = Product::find($item['product_id']);
-
-                if (! $product || ! $product->isPurchasableByClient()) {
-                    DB::rollBack();
-
-                    return response()->json(['success' => false, 'message' => Product::MSG_CLIENT_AGOTADO], 400);
-                }
-
-                $quantity = (int) ($item['quantity'] ?? 0);
-                if ($quantity < 1) {
-                    Log::warning('checkout_invalid_quantity', [
-                        'product_id' => $item['product_id'] ?? null,
-                        'raw_quantity' => $item['quantity'] ?? null,
-                    ]);
-                    DB::rollBack();
-
-                    return response()->json(['success' => false, 'message' => 'Cantidad inválida en el carrito. Actualiza la página e inténtalo de nuevo.'], 400);
-                }
-
-                if ($product->stock_current < $quantity) {
-                    DB::rollBack();
-
-                    return response()->json([
-                        'success' => false,
-                        'message' => $product->stock_current < 1
-                            ? Product::MSG_CLIENT_AGOTADO
-                            : Product::MSG_CLIENT_STOCK_INSUFICIENTE,
-                    ], 400);
-                }
-
-                $itemTotal = $item['price'] * $quantity;
-                $subtotal += $itemTotal;
-
-                $validatedItems[] = [
-                    'product' => $product,
-                    'quantity' => $quantity,
-                    'price' => $item['price'],
-                    'total' => $itemTotal,
-                ];
-            }
-
-            Log::info('checkout_persisting_items', [
-                'items' => collect($validatedItems)->map(fn ($i) => [
-                    'product_id' => $i['product']->product_id,
-                    'qty' => $i['quantity'],
-                ])->values()->all(),
-            ]);
-
-            /** @var Client|null $client */
-            $client = Auth::guard('clients')->user();
-
-            $sale = Sale::create([
-                'invoice_number' => (new Sale)->generateInvoiceNumber(),
-                'client_id' => $client?->user_id,
-                'sale_date' => now(),
-                'payment_method' => $validatedCheckout['payment_method'],
-                'status' => 'pending',
-                'order_source' => 'web_cart',
-                'subtotal' => $subtotal,
-                'iva' => 0,
-                'discount' => 0,
-                'total' => $subtotal,
-                'notes' => 'Pedido realizado desde la tienda en línea',
-            ]);
-
-            foreach ($validatedItems as $item) {
-                SaleItem::create([
-                    'sale_id' => $sale->sale_id,
-                    'product_id' => $item['product']->product_id,
-                    'quantity' => (int) $item['quantity'],
-                    'unit_price' => $item['price'],
-                    'unit_discount' => 0,
-                    'total' => $item['total'],
-                ]);
-
-                $inventoryService->recordWebCartSale(
-                    product: $item['product'],
-                    quantity: (int) $item['quantity'],
-                    saleId: $sale->sale_id,
-                );
-            }
-
-            Session::forget('cart');
-            if ($client) {
-                CartService::saveToDb($client->user_id, []);
-            }
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Pedido creado exitosamente',
-                'sale_id' => $sale->sale_id,
-                'invoice_number' => $sale->invoice_number,
-                'payment_method' => $sale->payment_method,
-                'cart_count' => 0,
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json(['success' => false, 'message' => 'Error al procesar el pedido: '.$e->getMessage()], 500);
-        }
+        return $action->handle($request, $inventoryService)->toJsonResponse();
     }
 
     public function invoices(Request $request)
@@ -1305,7 +880,7 @@ class ClientPageController extends Controller
                 ->withQueryString();
         }
 
-        $cartCount = $this->getCartCount();
+        $cartCount = $this->cartManager->totalItemCount();
 
         $invoiceCount = Sale::countActiveClientInvoices((int) $client->user_id);
         $unseenHistoryCount = Sale::countUnseenInClientHistory((int) $client->user_id);
@@ -1346,7 +921,7 @@ class ClientPageController extends Controller
         return Inertia::render('Client/Invoices/Index', [
             'tab' => $tab,
             'orders' => $ordersRows,
-            'pagination' => \App\Support\ClientInertia\ListPaginationPayload::from($orders),
+            'pagination' => ListPaginationPayload::from($orders),
             'cartCount' => $cartCount,
             'invoiceCount' => $invoiceCount,
             'unseenHistoryCount' => $unseenHistoryCount,
@@ -1426,7 +1001,7 @@ class ClientPageController extends Controller
         $client = Auth::guard('clients')->user();
         $client->unreadNotifications->markAsRead();
 
-        $cartCount = $this->getCartCount();
+        $cartCount = $this->cartManager->totalItemCount();
 
         $notifications = $client->notifications()
             ->latest()
@@ -1447,7 +1022,7 @@ class ClientPageController extends Controller
 
         return Inertia::render('Client/Notifications/Index', [
             'notifications' => $rows,
-            'pagination' => \App\Support\ClientInertia\ListPaginationPayload::from($notifications),
+            'pagination' => ListPaginationPayload::from($notifications),
             'cartCount' => $cartCount,
         ]);
     }
@@ -1462,7 +1037,7 @@ class ClientPageController extends Controller
 
         $sale->load(['saleItems.product', 'client', 'sellerAdmin']);
 
-        $cartCount = $this->getCartCount();
+        $cartCount = $this->cartManager->totalItemCount();
 
         $invoiceCount = Sale::countActiveClientInvoices((int) $client->user_id);
 
@@ -1556,15 +1131,6 @@ class ClientPageController extends Controller
         $sale->load(['saleItems.product', 'client', 'sellerAdmin']);
 
         return view('client.invoice-print', compact('sale'));
-    }
-
-    private function getCartTotal(): float
-    {
-        return array_reduce(
-            Session::get('cart', []),
-            fn ($carry, $item) => $carry + $item['price'] * $item['quantity'],
-            0
-        );
     }
 
     private function activeClientInvoiceStatuses(): array

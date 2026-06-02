@@ -17,18 +17,7 @@ class CartPagePayloadBuilder
     {
         return [
             'items' => collect($cartItemsPaginator->items())->values()->all(),
-            'pagination' => [
-                'currentPage' => (int) $cartItemsPaginator->currentPage(),
-                'lastPage' => (int) $cartItemsPaginator->lastPage(),
-                'perPage' => (int) $cartItemsPaginator->perPage(),
-                'total' => (int) $cartItemsPaginator->total(),
-                'links' => collect($cartItemsPaginator->linkCollection())->map(fn (array $link): array => [
-                    'url' => $link['url'],
-                    'label' => (string) $link['label'],
-                    'active' => (bool) $link['active'],
-                    'page' => $link['page'] ?? null,
-                ])->values()->all(),
-            ],
+            'pagination' => ListPaginationPayload::from($cartItemsPaginator),
             'total' => $total,
             'totalFormatted' => '₡'.number_format($total, 0, ',', '.'),
             'pickupPolicyLine' => ClientPickupPolicy::summaryLine(),

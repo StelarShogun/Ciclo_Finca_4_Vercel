@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\ClientPurchaseHistoryController;
+use App\Http\Controllers\Admin\Products\ProductCatalogImportController;
+use App\Http\Controllers\Admin\Products\ProductGalleryController;
+use App\Http\Controllers\Admin\Products\ProductManualStockController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\ReportsRegistryExportController;
 use App\Http\Controllers\AdminClientController;
@@ -212,16 +215,16 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::patch('/products/{id}/activate', [ProductController::class, 'activate'])->name('products.activate')->whereNumber('id');
 
     // Product media management routes.
-    Route::post('/products/{id}/gallery/{mediaId}/promote', [ProductController::class, 'promoteToMain'])->name('products.gallery.promote');
-    Route::delete('/products/{id}/gallery/{mediaId}', [ProductController::class, 'removeGalleryImage'])->name('products.gallery.destroy');
+    Route::post('/products/{id}/gallery/{mediaId}/promote', [ProductGalleryController::class, 'promoteToMain'])->name('products.gallery.promote');
+    Route::delete('/products/{id}/gallery/{mediaId}', [ProductGalleryController::class, 'destroy'])->name('products.gallery.destroy');
     Route::resource('products', ProductController::class)->except(['create']);
     Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
-    Route::get('/inventory/export/{format?}', [ProductController::class, 'export'])->name('products.export');
-    Route::post('/inventory/import', [ProductController::class, 'importCatalog'])->name('products.import');
-    Route::post('/inventory/add-manual/{id}', [ProductController::class, 'addManualStock'])
+    Route::get('/inventory/export/{format?}', [ProductCatalogImportController::class, 'export'])->name('products.export');
+    Route::post('/inventory/import', [ProductCatalogImportController::class, 'import'])->name('products.import');
+    Route::post('/inventory/add-manual/{id}', [ProductManualStockController::class, 'add'])
         ->name('products.stock.add')
         ->whereNumber('id');
-    Route::post('/inventory/remove-manual/{id}', [ProductController::class, 'removeManualStock'])
+    Route::post('/inventory/remove-manual/{id}', [ProductManualStockController::class, 'remove'])
         ->name('products.stock.remove')
         ->whereNumber('id');
 

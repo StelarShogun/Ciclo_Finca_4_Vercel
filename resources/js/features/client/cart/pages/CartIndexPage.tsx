@@ -1,7 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 
-import { CatalogPagination } from '@/features/client/catalog/components/CatalogPagination';
+import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { CartEmptyState } from '@/features/client/cart/components/CartEmptyState';
 import { CartItemRow } from '@/features/client/cart/components/CartItemRow';
 import { CartSummary } from '@/features/client/cart/components/CartSummary';
@@ -129,7 +129,7 @@ export default function CartIndexPage({
 
                     {pagination.lastPage > 1 ? (
                       <div className="cart-pagination-wrap">
-                        <CatalogPagination pagination={pagination} />
+                        <InertiaListPagination pagination={pagination} label="carrito" />
                       </div>
                     ) : null}
                   </div>

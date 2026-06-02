@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -49,7 +50,7 @@ class CF4ClientStorefrontUxImprovementsTest extends TestCase
             $this->markTestSkipped('Products table missing.');
         }
 
-        $product = \App\Models\Product::query()->first();
+        $product = Product::query()->first();
         if ($product === null) {
             $this->markTestSkipped('No products seeded for product page UX test.');
         }
@@ -70,7 +71,7 @@ class CF4ClientStorefrontUxImprovementsTest extends TestCase
             $this->markTestSkipped('Products table missing.');
         }
 
-        $product = \App\Models\Product::query()->first();
+        $product = Product::query()->first();
         if ($product === null) {
             $this->markTestSkipped('No products seeded for header nav test.');
         }

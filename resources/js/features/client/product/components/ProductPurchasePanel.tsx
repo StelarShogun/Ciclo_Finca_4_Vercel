@@ -5,8 +5,8 @@ import { ProductStarsInline } from '@/features/client/product/components/Product
 import { ProductStockCard } from '@/features/client/product/components/ProductStockCard';
 import { QuantitySelector } from '@/features/client/product/components/QuantitySelector';
 import type { ProductDetail, ProductDetailPageProps } from '@/features/client/product/types';
-import { addToCart } from '@/lib/cart';
-import { toggleFavorite } from '@/lib/favorites';
+import { addToCart } from '@/features/client/cart/api';
+import { toggleFavorite } from '@/features/client/favorites/api';
 import { useToast } from '@/shared/hooks/useToast';
 import type { InertiaSharedProps } from '@/shared/types/models';
 

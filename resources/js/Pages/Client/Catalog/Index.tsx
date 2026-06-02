@@ -3,7 +3,7 @@ import '../../../../css/client/clients-page.css';
 
 import { CatalogFilters } from '@/features/client/catalog/components/CatalogFilters';
 import { CatalogMobileControls } from '@/features/client/catalog/components/CatalogMobileControls';
-import { CatalogPagination } from '@/features/client/catalog/components/CatalogPagination';
+import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { CatalogProductCard } from '@/features/client/catalog/components/CatalogProductCard';
 import { CatalogSpotlightCarousel } from '@/features/client/catalog/components/CatalogSpotlightCarousel';
 import { CatalogToolbar } from '@/features/client/catalog/components/CatalogToolbar';
@@ -146,7 +146,7 @@ export default function CatalogIndex({
                   </div>
                 )}
 
-                <CatalogPagination pagination={pagination} />
+                <InertiaListPagination pagination={pagination} label="productos" />
               </div>
             </div>
           </main>

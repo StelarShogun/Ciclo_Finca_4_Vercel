@@ -2,9 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Client\Cart\CartManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -22,7 +22,7 @@ class HandleInertiaRequests extends Middleware
                 'client' => fn () => $this->clientPayload(),
                 'admin' => fn () => $this->adminPayload(),
             ],
-            'cartCount' => fn () => collect(Session::get('cart', []))->sum(fn ($item) => (int) ($item['quantity'] ?? 0)),
+            'cartCount' => fn () => app(CartManager::class)->totalItemCount(),
             'csrfToken' => fn () => csrf_token(),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
