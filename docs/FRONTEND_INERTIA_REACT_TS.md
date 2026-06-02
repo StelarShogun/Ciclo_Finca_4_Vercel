@@ -10,17 +10,63 @@ Esta guía documenta la migración progresiva de Ciclo Finca 4 desde Blade + Jav
 - Emails, PDF, vistas imprimibles y exports binarios permanecen en Blade/Laravel.
 - React se encarga de presentación, estado de UI, formularios y componentes.
 
+## Arquitectura frontend (por características + shared)
+
+Inertia resuelve páginas solo desde `resources/js/Pages`. Esas páginas deben ser **delgadas** (re-export del módulo real):
+
+```tsx
+// resources/js/Pages/Client/Products/Show.tsx
+export { default } from '@/features/client/product/pages/ProductShowPage';
+```
+
+### Reglas de ubicación
+
+| Ubicación | Cuándo |
+|---|---|
+| `features/client/{feature}/` | Lógica, componentes y hooks de un solo módulo (home, catalog, product, cart, auth, profile, invoices, favorites, notifications, legal) |
+| `shared/` | UI reutilizable, layouts, hooks globales, helpers genéricos, tipos compartidos |
+| `Pages/` | Solo entrada Inertia (re-exports) |
+| `Layouts/`, `Components/`, `hooks/`, `lib/`, `types/` (raíz) | **Re-exports temporales** `@deprecated` hacia `shared/` o `features/` — eliminar cuando no queden imports |
+
+### Estructura aplicada
+
+```txt
+resources/js/
+  app.tsx
+  bootstrap.ts
+  Pages/Client/...          # capa delgada Inertia
+  features/client/
+    home|catalog|product|cart|auth|profile|invoices|favorites|notifications|legal/
+      components/
+      hooks/
+      types.ts
+      pages/               # product: ProductShowPage.tsx
+  shared/
+    components/ui/          # Button, ToastProvider, ImageFallback, …
+    components/layout/      # ClientLayout, ClientAuthLayout
+    components/client/      # header/*, footer/*
+    hooks/                  # useToast, useFlashToasts
+    lib/                    # parseJsonResponse, confirm, inertiaErrors
+    types/                  # models.ts, inertia.d.ts
+```
+
+`FavoritesDrawer` vive en `features/client/favorites/components/` porque es específico del flujo de favoritos del cliente, aunque se monte desde `ClientLayout`.
+
+### Pendiente de naming
+
+- Rutas y dominio siguen usando **Invoices** (`/invoices`, `Client/Invoices/*`). Renombrar a **Orders** en UI/estructura sería un cambio transversal (rutas, copy, tests, admin); documentado como pendiente, no aplicado en esta corrida.
+
 ## Archivos base
 
 - Root Inertia: `resources/views/app.blade.php`
 - Entrypoint React: `resources/js/app.tsx`
 - Bootstrap TS/axios: `resources/js/bootstrap.ts`
 - Middleware compartido: `app/Http/Middleware/HandleInertiaRequests.php`
-- Tipos compartidos: `resources/js/types/`
-- Layouts: `resources/js/Layouts/`
-- Componentes UI: `resources/js/Components/UI/`
-- Componentes Home: `resources/js/Components/Home/`
-- Helpers reutilizables: `resources/js/lib/`
+- Tipos compartidos: `resources/js/shared/types/` (+ re-exports en `resources/js/types/`)
+- Layouts canónicos: `resources/js/shared/components/layout/`
+- UI compartida: `resources/js/shared/components/ui/`
+- Módulos: `resources/js/features/client/*`
+- Helpers de dominio (cart/favorites API): `resources/js/lib/` (sin mover lógica de negocio a React)
 
 ## Props compartidas
 
@@ -35,31 +81,23 @@ Esta guía documenta la migración progresiva de Ciclo Finca 4 desde Blade + Jav
 
 No se envían passwords, tokens persistentes ni modelos completos.
 
-## Estructura objetivo
-
-```txt
-resources/js/
-  app.tsx
-  bootstrap.ts
-  Pages/
-    Client/
-    Admin/
-  Layouts/
-  Components/
-    UI/
-    Home/
-  hooks/
-  lib/
-  types/
-```
-
-## Rutas migradas
+## Rutas migradas (cliente)
 
 | Ruta | Nombre | Controller | Página React |
 |---|---|---|---|
 | `/` | `clients.home` | `ClientPageController@home` | `Client/Home/Index` |
 | `/catalog` | `clients.catalog` | `ClientPageController@catalog` | `Client/Catalog/Index` |
 | `/legal/terminos` | `clients.legal.terms` | `ClientLegalController@terms` | `Client/Legal/Terms` |
+| `/legal/privacidad` | `clients.legal.privacy` | `ClientLegalController@privacy` | `Client/Legal/Privacy` |
+| `/legal/cambios-devoluciones` | `clients.legal.returns` | `ClientLegalController@returns` | `Client/Legal/Returns` |
+| `/contacto` | `clients.contact` | `ClientLegalController@contact` | `Client/Legal/Contact` |
+| `/product/{id}/{slug?}` | `clients.product` | `ClientPageController@product` | `Client/Products/Show` |
+| `/cart` | `clients.cart` | `ClientPageController@cart` | `Client/Cart/Index` |
+| `/login`, `/register`, `/verify`, `/recovery*` | `ClientUserController` | Auth pages bajo `Client/Auth/*` |
+| `/profile` | `ClientUserController@show` | `Client/Profile/Index` |
+| `/invoices`, `/invoices/{sale}` | `ClientPageController` | `Client/Invoices/Index`, `Client/Invoices/Show` |
+| `/notifications` | `ClientPageController@notifications` | `Client/Notifications/Index` |
+| `/favorites` (JSON) | `FavoriteProductController` | Drawer en layout; página `Client/Favorites/Index` si aplica |
 
 ### Home cliente
 
@@ -87,7 +125,7 @@ Componentes creados para Home:
 - `CategoryPreview`
 - `HomeSection`
 - `ProductCard`
-- `ImageFallback`
+- `ImageFallback` → canónico en `shared/components/ui/ImageFallback.tsx`
 
 Tipos específicos:
 
@@ -125,9 +163,29 @@ Tipos específicos:
 
 Patrón de filtros: `CatalogFilters` usa `router.get('/catalog', params, { preserveScroll: true })`, conservando query string y dejando Laravel como fuente de verdad para validaciones de precio, filtros, orden y paginación.
 
+### Detalle de producto
+
+- Página Inertia: `Client/Products/Show` (antes `Client/Product/Index`).
+- Lógica UI: `features/client/product/` (`ProductShowPage`, `ProductGallery`, `ProductPurchasePanel`, `QuantitySelector`, pestañas y reseñas).
+- Payload Laravel: `ProductDetailPayloadBuilder::build(ProductDetailPayloadContext $context)` — contexto readonly en `App\Support\ClientInertia\ProductDetailPayloadContext`.
+
+## JS legacy en páginas Inertia (clasificación)
+
+| Asset / hook | Clasificación | Notas |
+|---|---|---|
+| `useCatalogPageInit` → `bundles/catalog.js`, `clients-catalog-heartbeat.js` | **temporal** | Rail, flyouts, filtros móviles, spotlight Swiper |
+| `useProductPageInit` → `bundles/product.js` | **temporal** | Carrusel, cantidad, subtotal, add-to-cart DOM |
+| `useCartPageInit` → `bundles/cart.js` | **temporal** | Acciones de línea y checkout en carrito migrado |
+| `FavoritesDrawer` → `clients-header-auth.js` | **temporal** | Drawer y lista AJAX de favoritos |
+| `lib/cart.ts`, `lib/favorites.ts` | **mantener** | Puente TS hasta acciones 100% React |
+| `catalog-product-favorites.js` (Vite) | **temporal** | Favoritos en cards cuando legacy catalog bundle corre |
+| `clients-home.js`, `clients-catalog.js`, `clients-product.js`, `clients-cart.js` | **B. bridge** en `vite.config.js` | Entradas Blade residual o bridge; no eliminar sin mapa de vistas Blade |
+| `checkout-copy.js`, `invoice-print.css`, `clients-users.css` | **A. Blade residual** | Checkout/copy y estilos no-Inertia |
+| `auth-welcome-toast.js`, `client-flash.js` | **A / temporal** | Blade auth; toasts Inertia usan `ToastProvider` |
+
 ## Carrito Legacy Desde React
 
-El carrito completo sigue en Blade/legacy y no se migra todavía. Para acciones puntuales desde páginas Inertia existe:
+El carrito **página** está en Inertia; las acciones de línea siguen parcialmente en `bundles/cart.js`. Para acciones puntuales desde otras páginas Inertia existe:
 
 ```txt
 resources/js/lib/cart.ts
@@ -176,11 +234,12 @@ Laravel mantiene la validación; React muestra errores desde `form.errors`.
 
 ## Layouts
 
-- `ClientLayout`: cabecera cliente, navegación, carrito, cuenta y footer.
-- `AdminLayout`: shell admin piloto con sidebar y contenedor estándar.
-- `AuthLayout`: base para futuras pantallas de login/registro.
+- `shared/components/layout/ClientLayout.tsx`: composición de `ClientHeader`, `FavoritesDrawer`, `main`, `ClientFooter`.
+- `shared/components/layout/ClientAuthLayout.tsx`: auth cliente sin shell completo.
+- `AdminLayout`: shell admin piloto (`resources/js/Layouts/AdminLayout.tsx`); **no migrar admin** en esta fase.
+- Re-export: `@/Layouts/ClientLayout` → shared.
 
-Los layouts importan y reutilizan clases CSS existentes; no introducen Tailwind como sistema visual.
+Los layouts importan CSS cliente existente; no introducen Tailwind como sistema visual.
 
 El dashboard admin Inertia sigue siendo piloto (`/dashboard/inertia-pilot`) y no reemplaza el dashboard real `/dashboard`.
 
@@ -211,12 +270,15 @@ docker exec laravel_app_ciclo php artisan test --filter=CF4ClientLegalPagesTest
 docker exec laravel_app_ciclo php artisan test
 ```
 
-Última validación registrada:
+Documentación restaurada desde `main` (no eliminada sin motivo): `docs/CATALOG_IMPORT_EXPORT.md`, `docs/CRON_RENDER_LARAVEL.md`. `CF4-146-PR-BODY.md` era artefacto local de PR y no se restauró.
 
-- `docker exec laravel_app_ciclo php artisan test`: `221 passed`, `192 skipped`, `952 assertions`.
+Última validación (corrida arquitectónica):
+
+- `docker exec laravel_app_ciclo php artisan test`: **228 passed**, 192 skipped.
 - `npm run build`: OK.
 - `npm run typecheck`: OK.
-- `npm run lint:react`: OK, React Doctor `90 / 100`, warnings opcionales.
+- `npm run lint:react`: OK, React Doctor **82 / 100** (warnings opcionales).
+- Eliminado `tsconfig.tmp.json` (ruido de trabajo).
 
 Si Docker no está disponible, `php artisan test --filter=InertiaMigrationPilotTest` puede ejecutarse en host, pero este proyecto normalmente valida Artisan dentro del contenedor.
 

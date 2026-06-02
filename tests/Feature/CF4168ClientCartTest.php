@@ -89,11 +89,13 @@ class CF4168ClientCartTest extends TestCase
         $this->assertFalse($removeEmptyRes->json('success'));
         $this->assertEquals('El carrito está vacío', $removeEmptyRes->json('message'));
 
-        $cartViewRes = $this->get(route('clients.cart'));
-        $cartViewRes->assertStatus(200);
-        $cartViewRes->assertSee('Tu carrito está vacío', false);
-        $cartViewRes->assertSee('cart-empty-icon', false);
-        $cartViewRes->assertSee('fa-cart-shopping', false);
+        $this->get(route('clients.cart'))
+            ->assertOk()
+            ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+                ->component('Client/Cart/Index', false)
+                ->where('pagination.total', 0)
+                ->has('items', 0)
+            );
     }
 
     public function test_checkout_creates_pending_web_cart_sale_and_clears_session_cart(): void
@@ -171,11 +173,13 @@ class CF4168ClientCartTest extends TestCase
         $this->assertEquals(50, (float) $line1->unit_price);
         $this->assertEquals(40, (float) $line2->unit_price);
 
-        $cartViewRes = $this->get(route('clients.cart'));
-        $cartViewRes->assertStatus(200);
-        $cartViewRes->assertSee('Tu carrito está vacío', false);
-        $cartViewRes->assertSee('cart-empty-title', false);
-        $cartViewRes->assertSee('fa-cart-shopping', false);
+        $this->get(route('clients.cart'))
+            ->assertOk()
+            ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+                ->component('Client/Cart/Index', false)
+                ->where('pagination.total', 0)
+                ->has('items', 0)
+            );
     }
 
     public function test_add_to_cart_rejects_out_of_stock_with_message_producto_agotado(): void

@@ -9,68 +9,74 @@ use App\Models\ClassificationValue;
 use App\Models\Client;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ProductDetailDisplayTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_product_detail_shows_stepper_and_max_hint(): void
+    public function test_product_detail_serializes_purchasable_quantity_context(): void
     {
         $product = $this->seedActiveProduct('Stepper Product', stock: 6);
 
-        $response = $this->get($this->productUrl($product));
-        $response->assertOk();
-        $response->assertSee('id="product-quantity"', false);
-        $response->assertSee('id="decrease-qty"', false);
-        $response->assertSee('id="increase-qty"', false);
-        $response->assertSee('id="product-qty-max-hint"', false);
-        $response->assertSee('Máximo disponible: 6 unidades', false);
-        $response->assertSee('product-detail-qty-stepper', false);
+        $this->get($this->productUrl($product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->where('product.stockCurrent', 6)
+                ->where('product.canBuy', true)
+                ->where('product.priceFormatted', fn (string $formatted) => str_contains($formatted, '₡'))
+            );
     }
 
-    public function test_product_detail_shows_featured_badge_and_brand(): void
+    public function test_product_detail_serializes_featured_badge_and_brand(): void
     {
         $product = $this->seedActiveProduct('Featured Branded Bike', featured: true);
         $brand = Brand::create(['name' => 'Trek Test '.uniqid()]);
         $product->brands()->attach($brand->id);
 
-        $response = $this->get($this->productUrl($product->fresh(['brands'])));
-        $response->assertOk();
-        $response->assertSee('Destacado', false);
-        $response->assertSee($brand->name, false);
-        $response->assertSee('product-badge--brand', false);
-        $response->assertSee('product-badge--featured', false);
-        $response->assertSee('fa-star', false);
+        $this->get($this->productUrl($product->fresh(['brands'])))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->where('product.isFeatured', true)
+                ->where('primaryBrand.name', $brand->name)
+                ->has('primaryBrand.catalogUrl')
+            );
     }
 
-    public function test_product_detail_shows_classification_spec_chips(): void
+    public function test_product_detail_serializes_classification_spec_chips(): void
     {
-        [$sub, $product, $value] = $this->seedProductWithClassification('Negro');
+        [, $product] = $this->seedProductWithClassification('Negro');
 
-        $response = $this->get($this->productUrl($product));
-        $response->assertOk();
-        $response->assertSee('product-detail-spec-chip', false);
-        $response->assertSee('Color', false);
-        $response->assertSee('Negro', false);
-        $response->assertSee('Características técnicas', false);
+        $this->get($this->productUrl($product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->where('tabs.hasSpecs', true)
+                ->has('specs', 1)
+                ->where('specs.0.dimensionLabel', 'Color')
+                ->where('specs.0.value', 'Negro')
+            );
     }
 
-    public function test_product_detail_shows_tabs_trust_and_subtotal(): void
+    public function test_product_detail_serializes_tabs_trust_and_pricing(): void
     {
         $product = $this->seedActiveProduct('Tabs Product', stock: 3);
 
-        $response = $this->get($this->productUrl($product));
-        $response->assertOk();
-        $response->assertSee('id="product-detail-tabs"', false);
-        $response->assertSee('id="product-qty-subtotal"', false);
-        $response->assertSee('Subtotal:', false);
-        $response->assertSee('product-detail-trust', false);
-        $response->assertSee('Pago al retirar', false);
-        $response->assertSee('product-detail-purchase-panel', false);
+        $this->get($this->productUrl($product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->has('tabs.defaultTab')
+                ->where('product.stockCurrent', 3)
+                ->where('orderReservationHours', fn (int $hours) => $hours >= 1)
+                ->has('whatsappConsultUrl')
+            );
     }
 
-    public function test_product_detail_shows_taxonomy_badges_for_subcategory(): void
+    public function test_product_detail_serializes_taxonomy_badges_for_subcategory(): void
     {
         $root = Category::create([
             'name' => 'Bicicletas Test',
@@ -84,27 +90,28 @@ class ProductDetailDisplayTest extends TestCase
         ]);
         $product = $this->seedActiveProduct('MTB Detail', categoryId: $sub->category_id);
 
-        $response = $this->get($this->productUrl($product));
-        $response->assertOk();
-        $response->assertSee('product-badge--category', false);
-        $response->assertSee('product-badge--subcategory', false);
-        $response->assertSee('Bicicletas Test', false);
-        $response->assertSee('MTB Test', false);
-        $response->assertSee(route('clients.catalog', ['category_id' => $root->category_id]), false);
-        $response->assertSee(route('clients.catalog', ['category_id' => $sub->category_id]), false);
+        $this->get($this->productUrl($product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->where('taxonomy.parentCategory.name', 'Bicicletas Test')
+                ->where('taxonomy.subcategory.name', 'MTB Test')
+                ->where('taxonomy.parentCategory.url', route('clients.catalog', ['category_id' => $root->category_id]))
+                ->where('taxonomy.subcategory.url', route('clients.catalog', ['category_id' => $sub->category_id]))
+            );
     }
 
-    public function test_product_detail_shows_premium_placeholder_without_thumbs(): void
+    public function test_product_detail_serializes_premium_placeholder_without_carousel(): void
     {
         $product = $this->seedActiveProduct('No Image Product');
 
-        $response = $this->get($this->productUrl($product));
-        $response->assertOk();
-        $response->assertSee('product-image-placeholder', false);
-        $response->assertSee('Imagen no disponible', false);
-        $response->assertSee('Próximamente fotografía del producto', false);
-        $response->assertDontSee('id="product-detail-thumbs"', false);
-        $response->assertDontSee('id="carousel-track"', false);
+        $this->get($this->productUrl($product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->where('product.showImagePlaceholder', true)
+                ->where('product.carouselSlides', [])
+            );
     }
 
     public function test_product_detail_placeholder_uses_bicycle_icon_for_mtb_category(): void
@@ -119,9 +126,12 @@ class ProductDetailDisplayTest extends TestCase
         ]);
         $product = $this->seedActiveProduct('MTB Sin Foto', categoryId: $sub->category_id);
 
-        $response = $this->get($this->productUrl($product));
-        $response->assertOk();
-        $response->assertSee('fa-bicycle', false);
+        $this->get($this->productUrl($product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->where('product.placeholderIconClass', fn (string $icon) => str_contains($icon, 'fa-bicycle'))
+            );
     }
 
     public function test_product_detail_placeholder_uses_parent_icon_when_subcategory_name_is_generic(): void
@@ -136,23 +146,29 @@ class ProductDetailDisplayTest extends TestCase
         ]);
         $product = $this->seedActiveProduct('Gravel Sin Foto', categoryId: $sub->category_id);
 
-        $response = $this->get($this->productUrl($product));
-        $response->assertOk();
-        $response->assertSee('fa-bicycle', false);
+        $this->get($this->productUrl($product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->where('product.placeholderIconClass', fn (string $icon) => str_contains($icon, 'fa-bicycle'))
+            );
     }
 
-    public function test_product_detail_shows_low_stock_badge(): void
+    public function test_product_detail_serializes_low_stock_state(): void
     {
         $product = $this->seedActiveProduct('Low Stock Product', stock: 3);
 
-        $response = $this->get($this->productUrl($product));
-        $response->assertOk();
-        $response->assertSee('product-badge--low-stock', false);
-        $response->assertSee('Últimas unidades', false);
-        $response->assertSee('fa-exclamation-triangle', false);
+        $this->get($this->productUrl($product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->where('product.stockLabel', 'Últimas unidades')
+                ->where('product.isLowStock', true)
+                ->where('product.stockCurrent', 3)
+            );
     }
 
-    public function test_product_detail_shows_favorite_button_markup(): void
+    public function test_product_detail_serializes_favorite_state_for_authenticated_client(): void
     {
         $client = Client::create([
             'name' => 'Cliente',
@@ -164,10 +180,14 @@ class ProductDetailDisplayTest extends TestCase
         ]);
         $product = $this->seedActiveProduct('Favorite Product');
 
-        $response = $this->actingAs($client, 'clients')->get($this->productUrl($product));
-        $response->assertOk();
-        $response->assertSee('product-detail-favorite', false);
-        $response->assertSee('product-detail-favorite__label', false);
+        $this->actingAs($client, 'clients')
+            ->get($this->productUrl($product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->has('favoriteConfig.toggleUrl')
+                ->where('product.isFavorite', false)
+            );
     }
 
     private function productUrl(Product $product): string

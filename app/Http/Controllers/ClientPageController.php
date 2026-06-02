@@ -20,6 +20,7 @@ use App\Support\AdminPerPage;
 use App\Support\ClientCategoryIcons;
 use App\Support\ClientInertia\CartPagePayloadBuilder;
 use App\Support\ClientInertia\ProductDetailPayloadBuilder;
+use App\Support\ClientInertia\ProductDetailPayloadContext;
 use App\Support\ClientStorefrontCache;
 use App\Support\ProductImageUrls;
 use Illuminate\Http\Request;
@@ -697,30 +698,35 @@ class ClientPageController extends Controller
 
         $product->load(['classificationValues.dimension']);
 
-        return Inertia::render('Client/Product/Index', app(ProductDetailPayloadBuilder::class)->build(
-            $product,
-            $relatedProducts,
-            $favoriteProductIds,
-            $taxonomy,
-            $primaryBrand,
-            $catalogBrandUrl,
-            $isNoveltyProduct,
-            $whatsappConsultUrl,
-            $orderReservationHours,
-            $clientCanReview,
-            $clientReview,
-            $myHighlightedReview,
-            $showMyHighlightedReview,
-            $productReviewsPaginated,
-            $totalReviewsCount,
-            $averageStars,
-            $starDistribution,
-            $verifiedPurchaserIds,
-            $reviewsSort,
-            $reviewFilter,
-            $productReviewStats,
-            $isProductFavorite,
-        ));
+        $productDetailContext = new ProductDetailPayloadContext(
+            product: $product,
+            relatedProducts: $relatedProducts,
+            favoriteProductIds: $favoriteProductIds,
+            taxonomy: $taxonomy,
+            primaryBrand: $primaryBrand,
+            catalogBrandUrl: $catalogBrandUrl,
+            isNoveltyProduct: $isNoveltyProduct,
+            whatsappConsultUrl: $whatsappConsultUrl,
+            orderReservationHours: $orderReservationHours,
+            clientCanReview: $clientCanReview,
+            clientReview: $clientReview,
+            myHighlightedReview: $myHighlightedReview,
+            showMyHighlightedReview: $showMyHighlightedReview,
+            productReviewsPaginated: $productReviewsPaginated,
+            totalReviewsCount: $totalReviewsCount,
+            averageStars: $averageStars,
+            starDistribution: $starDistribution,
+            verifiedPurchaserIds: $verifiedPurchaserIds,
+            reviewsSort: $reviewsSort,
+            reviewFilter: $reviewFilter,
+            productReviewStats: $productReviewStats,
+            isProductFavorite: $isProductFavorite,
+        );
+
+        return Inertia::render(
+            'Client/Products/Show',
+            app(ProductDetailPayloadBuilder::class)->build($productDetailContext),
+        );
     }
 
     private function productWhatsappConsultUrl(Product $product): ?string
@@ -1319,7 +1325,7 @@ class ClientPageController extends Controller
             ->values()
             ->all();
 
-        $ordersRows = collect($orders->items())->map(function (Sale $sale) use ($tab) {
+        $ordersRows = collect($orders->items())->map(function (Sale $sale) {
             $statusLabel = match ($sale->status) {
                 'pending' => 'Pendiente',
                 'ready_to_pickup' => 'Por recoger',
@@ -1448,6 +1454,7 @@ class ClientPageController extends Controller
 
         $rows = collect($notifications->items())->map(function ($notification) {
             $data = is_array($notification->data) ? $notification->data : [];
+
             return [
                 'id' => (string) $notification->id,
                 'createdAtLabel' => optional($notification->created_at)->format('d/m/Y H:i') ?? '',
@@ -1544,6 +1551,7 @@ class ClientPageController extends Controller
                 $total = $item->total !== null
                     ? (float) $item->total
                     : ((float) $item->unit_price * (int) $item->quantity);
+
                 return [
                     'productId' => (int) $item->product_id,
                     'name' => (string) ($item->product->name ?? 'Producto'),

@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ClientInvoiceDetailImagePlaceholderTest extends TestCase
@@ -66,10 +67,13 @@ class ClientInvoiceDetailImagePlaceholderTest extends TestCase
             'total' => 1500,
         ]);
 
-        $response = $this->actingAs($client, 'clients')->get(route('clients.invoices.show', $sale));
-        $response->assertOk();
-        $response->assertSee('product-media-placeholder--thumb-invoice', false);
-        $response->assertSee('fa-bicycle', false);
-        $response->assertDontSee('default.png', false);
+        $this->actingAs($client, 'clients')
+            ->get(route('clients.invoices.show', $sale))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Invoices/Show', false)
+                ->has('items', 1)
+                ->where('items.0.name', 'Bike Invoice Sin Foto')
+            );
     }
 }

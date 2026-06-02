@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import type { ComponentType } from 'react';
 
 import '../css/client/toasts.css';
-import { ToastProvider } from '@/Components/UI/ToastProvider';
+import { ToastProvider } from '@/shared/components/ui/ToastProvider';
 
 const pages = import.meta.glob<{ default: ComponentType }>(
   './Pages/**/*.tsx',

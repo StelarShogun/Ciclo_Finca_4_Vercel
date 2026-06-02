@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Client;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ClientCartImagePlaceholderTest extends TestCase
@@ -50,10 +51,15 @@ class ClientCartImagePlaceholderTest extends TestCase
             ])
             ->assertOk();
 
-        $response = $this->actingAs($client, 'clients')->get(route('clients.cart'));
-        $response->assertOk();
-        $response->assertSee('product-media-placeholder--cart', false);
-        $response->assertSee('fa-bicycle', false);
-        $response->assertDontSee('default.png', false);
+        $this->actingAs($client, 'clients')
+            ->get(route('clients.cart'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Cart/Index', false)
+                ->has('items', 1)
+                ->where('items.0.uses_placeholder_image', true)
+                ->where('items.0.placeholder_icon_class', fn (string $icon) => str_contains($icon, 'fa-bicycle'))
+                ->where('items.0.image_url', null)
+            );
     }
 }

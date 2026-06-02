@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Client;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -55,16 +56,25 @@ class ClientCartPaginationTest extends TestCase
             ])->assertOk();
         }
 
-        $page1 = $this->get(route('clients.cart', ['per_page' => 10]));
-        $page1->assertOk();
-        $page1->assertSee('cf4-pagination-toolbar', false);
-        $page1->assertSee('Mostrando 1–10 de 12 resultados', false);
-        $page1->assertSee('12 artículos', false);
-        $page1->assertSee('₡1.200', false);
+        $this->get(route('clients.cart', ['per_page' => 10]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Cart/Index', false)
+                ->where('pagination.currentPage', 1)
+                ->where('pagination.perPage', 10)
+                ->where('pagination.total', 12)
+                ->where('totalFormatted', '₡1.200')
+                ->has('items', 10)
+            );
 
-        $page2 = $this->get(route('clients.cart', ['per_page' => 10, 'page' => 2]));
-        $page2->assertOk();
-        $page2->assertSee('Mostrando 11–12 de 12 resultados', false);
-        $page2->assertSee('₡1.200', false);
+        $this->get(route('clients.cart', ['per_page' => 10, 'page' => 2]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Cart/Index', false)
+                ->where('pagination.currentPage', 2)
+                ->where('pagination.total', 12)
+                ->where('totalFormatted', '₡1.200')
+                ->has('items', 2)
+            );
     }
 }

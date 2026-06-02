@@ -19,9 +19,26 @@ class CF4ClientLegalPagesTest extends TestCase
                 ->where('legalTitle', 'Términos y condiciones')
             );
 
-        $this->get(route('clients.legal.privacy'))->assertOk()->assertSee('Política de privacidad', false);
-        $this->get(route('clients.legal.returns'))->assertOk()->assertSee('Cambios, devoluciones', false);
-        $this->get(route('clients.contact'))->assertOk()->assertSee('Contacto', false);
+        $this->get(route('clients.legal.privacy'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Legal/Privacy', false)
+                ->where('legalTitle', 'Política de privacidad')
+            );
+
+        $this->get(route('clients.legal.returns'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Legal/Returns', false)
+                ->where('legalTitle', 'Cambios, devoluciones y cancelaciones')
+            );
+
+        $this->get(route('clients.contact'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Legal/Contact', false)
+                ->where('legalTitle', 'Contacto')
+            );
     }
 
     public function test_home_is_accessible_after_inertia_migration(): void

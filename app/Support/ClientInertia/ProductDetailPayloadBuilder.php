@@ -2,7 +2,6 @@
 
 namespace App\Support\ClientInertia;
 
-use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductReview;
@@ -16,35 +15,33 @@ class ProductDetailPayloadBuilder
     private const PRODUCT_NOVELTY_DAYS = 30;
 
     /**
-     * @param  Collection<int, int>  $favoriteProductIds
-     * @param  array<int, array{avg: float|int|string|null, count: int|string|null}>  $productReviewStats
-     * @param  Collection<int, int>  $verifiedPurchaserIds
      * @return array<string, mixed>
      */
-    public function build(
-        Product $product,
-        Collection $relatedProducts,
-        Collection $favoriteProductIds,
-        array $taxonomy,
-        ?Brand $primaryBrand,
-        ?string $catalogBrandUrl,
-        bool $isNoveltyProduct,
-        ?string $whatsappConsultUrl,
-        int $orderReservationHours,
-        bool $clientCanReview,
-        ?ProductReview $clientReview,
-        ?ProductReview $myHighlightedReview,
-        bool $showMyHighlightedReview,
-        LengthAwarePaginator $productReviewsPaginated,
-        int $totalReviewsCount,
-        ?float $averageStars,
-        array $starDistribution,
-        Collection $verifiedPurchaserIds,
-        string $reviewsSort,
-        string|int $reviewFilter,
-        array $productReviewStats,
-        bool $isProductFavorite,
-    ): array {
+    public function build(ProductDetailPayloadContext $context): array
+    {
+        $product = $context->product;
+        $relatedProducts = $context->relatedProducts;
+        $favoriteProductIds = $context->favoriteProductIds;
+        $taxonomy = $context->taxonomy;
+        $primaryBrand = $context->primaryBrand;
+        $catalogBrandUrl = $context->catalogBrandUrl;
+        $isNoveltyProduct = $context->isNoveltyProduct;
+        $whatsappConsultUrl = $context->whatsappConsultUrl;
+        $orderReservationHours = $context->orderReservationHours;
+        $clientCanReview = $context->clientCanReview;
+        $clientReview = $context->clientReview;
+        $myHighlightedReview = $context->myHighlightedReview;
+        $showMyHighlightedReview = $context->showMyHighlightedReview;
+        $productReviewsPaginated = $context->productReviewsPaginated;
+        $totalReviewsCount = $context->totalReviewsCount;
+        $averageStars = $context->averageStars;
+        $starDistribution = $context->starDistribution;
+        $verifiedPurchaserIds = $context->verifiedPurchaserIds;
+        $reviewsSort = $context->reviewsSort;
+        $reviewFilter = $context->reviewFilter;
+        $productReviewStats = $context->productReviewStats;
+        $isProductFavorite = $context->isProductFavorite;
+
         $carouselSlides = $this->carouselSlides($product);
         $showImagePlaceholder = ProductImageUrls::usesPlaceholder($product) && $carouselSlides === [];
 

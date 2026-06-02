@@ -1,17 +1,2 @@
-import { useEffect } from 'react';
-
-export function useCartPageInit() {
-  useEffect(() => {
-    let cancelled = false;
-
-    void import('@/client/bundles/cart.js').then((module) => {
-      if (!cancelled) {
-        module.initClientCartPage();
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-}
+/** @deprecated Temporary re-export — import from `@/features/client/cart/hooks/useCartPageInit`. */
+export { useCartPageInit } from '@/features/client/cart/hooks/useCartPageInit';

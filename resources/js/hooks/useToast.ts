@@ -1,12 +1,2 @@
-import { useContext } from 'react';
-
-import { ToastContext } from '@/Components/UI/ToastProvider';
-
-export function useToast() {
-  const ctx = useContext(ToastContext);
-  if (!ctx) {
-    throw new Error('useToast debe usarse dentro de ToastProvider');
-  }
-  return ctx;
-}
-
+/** @deprecated Temporary re-export — import from `@/shared/hooks/useToast`. */
+export { useToast } from '@/shared/hooks/useToast';

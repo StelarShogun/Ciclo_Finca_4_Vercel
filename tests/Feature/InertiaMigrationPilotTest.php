@@ -326,7 +326,7 @@ class InertiaMigrationPilotTest extends TestCase
         $this->get(route('clients.product', ['id' => $product->product_id, 'slug' => $product->clientPublicSlug()]))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('Client/Product/Index', false)
+                ->component('Client/Products/Show', false)
                 ->where('product.name', 'Bici Producto Inertia')
                 ->where('product.canBuy', true)
                 ->has('reviews')
