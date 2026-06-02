@@ -280,6 +280,10 @@ class ClientPageController extends Controller
                 ])
                 ->values(),
             'filters' => $this->catalogFiltersPayload($request, $selectedCategory, $selectedBrand),
+            'selectedBrand' => $selectedBrand ? [
+                'id' => (int) $selectedBrand->id,
+                'name' => (string) $selectedBrand->name,
+            ] : null,
             'selectedCategory' => $selectedCategory ? $this->catalogCategorySummaryPayload($selectedCategory) : null,
             'subcategories' => $subcategories
                 ->map(fn (Category $category): array => $this->catalogCategorySummaryPayload($category))
@@ -393,6 +397,7 @@ class ClientPageController extends Controller
                 'url' => $link['url'],
                 'label' => (string) $link['label'],
                 'active' => (bool) $link['active'],
+                'page' => $link['page'] ?? null,
             ])->values(),
         ];
     }

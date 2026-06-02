@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 
 import type { CatalogBrand, CatalogFilters as CatalogFiltersType } from '@/types/catalog';
@@ -7,18 +7,32 @@ import type { CatalogBrand, CatalogFilters as CatalogFiltersType } from '@/types
 type CatalogFiltersProps = {
   brands: CatalogBrand[];
   filters: CatalogFiltersType;
+  activeFilterCount?: number;
+  currentPage?: number;
 };
 
-export function CatalogFilters({ brands, filters }: CatalogFiltersProps) {
-  const [search, setSearch] = useState(filters.search);
+export function CatalogFilters({
+  activeFilterCount = 0,
+  brands,
+  currentPage = 1,
+  filters,
+}: CatalogFiltersProps) {
   const [brandId, setBrandId] = useState(filters.brandId?.toString() ?? '');
   const [minPrice, setMinPrice] = useState(filters.minPrice);
   const [maxPrice, setMaxPrice] = useState(filters.maxPrice);
 
+  const selectedBrandLabel = useMemo(() => {
+    if (!brandId) {
+      return 'Todas las marcas';
+    }
+
+    return brands.find((brand) => String(brand.id) === brandId)?.name ?? 'Todas las marcas';
+  }, [brandId, brands]);
+
   function submitFilters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     router.get('/catalog', compactParams({
-      search,
+      search: readHeaderSearchValue(),
       category_id: filters.categoryId,
       brand_id: brandId,
       min_price: minPrice,
@@ -37,18 +51,26 @@ export function CatalogFilters({ brands, filters }: CatalogFiltersProps) {
           <span className="filters-title-text">Refinar búsqueda</span>
         </h3>
 
-        <form id="filter-form" autoComplete="off" onSubmit={submitFilters}>
-          <div className="filter-group">
-            <label htmlFor="catalog-search">Buscar</label>
-            <input
-              type="search"
-              id="catalog-search"
-              className="form-control"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar productos"
-            />
-          </div>
+        {activeFilterCount > 0 ? (
+          <p className="filters-active-summary" role="status">
+            <strong>
+              {activeFilterCount} filtro{activeFilterCount === 1 ? '' : 's'} activo{activeFilterCount === 1 ? '' : 's'}.
+            </strong>{' '}
+            Ajustá precio o marca y tocá «Ver resultados».
+          </p>
+        ) : (
+          <p className="filters-active-summary" role="note">
+            Elegí precio y/o marca para acotar los productos del catálogo.
+          </p>
+        )}
+
+        <form id="filter-form" method="GET" action="/catalog" autoComplete="off" onSubmit={submitFilters}>
+          <input type="hidden" name="search" id="catalog-filter-search-fallback" defaultValue={filters.search} />
+          <input type="hidden" name="page" id="catalog-list-page" defaultValue={String(currentPage)} />
+          {filters.categoryId ? <input type="hidden" name="category_id" value={filters.categoryId} /> : null}
+          <input type="hidden" name="sort" value={filters.sort} />
+          <input type="hidden" name="direction" value={filters.direction} />
+          <input type="hidden" name="per_page" value={filters.perPage} />
 
           <div className="filter-group">
             <label htmlFor="min_price">Precio mínimo y máximo (₡)</label>
@@ -56,6 +78,7 @@ export function CatalogFilters({ brands, filters }: CatalogFiltersProps) {
               <input
                 type="number"
                 id="min_price"
+                name="min_price"
                 className="form-control"
                 min="0"
                 step="1"
@@ -67,6 +90,7 @@ export function CatalogFilters({ brands, filters }: CatalogFiltersProps) {
               <input
                 type="number"
                 id="max_price"
+                name="max_price"
                 className="form-control"
                 min="0"
                 step="1"
@@ -78,22 +102,69 @@ export function CatalogFilters({ brands, filters }: CatalogFiltersProps) {
           </div>
 
           <div className="filter-group">
-            <label htmlFor="brand_id">
+            <label htmlFor="brand_id-trigger">
               <i className="fas fa-tag" aria-hidden="true" />
               Marca
             </label>
-            <select id="brand_id" className="form-control" value={brandId} onChange={(event) => setBrandId(event.target.value)}>
-              <option value="">Todas las marcas</option>
-              {brands.map((brand) => (
-                <option value={brand.id} key={brand.id}>
-                  {brand.name}
-                </option>
-              ))}
-            </select>
+            <div className="catalog-filter-select" data-catalog-filter-select>
+              <select
+                id="brand_id"
+                name="brand_id"
+                className="form-control catalog-filter-select__native"
+                value={brandId}
+                onChange={(event) => setBrandId(event.target.value)}
+              >
+                <option value="">Todas las marcas</option>
+                {brands.map((brand) => (
+                  <option value={brand.id} key={brand.id}>
+                    {brand.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="catalog-filter-select__trigger"
+                id="brand_id-trigger"
+                aria-expanded="false"
+                aria-haspopup="listbox"
+                aria-controls="brand_id-menu"
+              >
+                <span className="catalog-filter-select__label">{selectedBrandLabel}</span>
+                <i className="fas fa-chevron-down catalog-filter-select__chevron" aria-hidden="true" />
+              </button>
+              <ul className="catalog-filter-select__menu" id="brand_id-menu" role="listbox" aria-label="Filtrar por marca" hidden>
+                <li role="presentation">
+                  <button
+                    type="button"
+                    className={`catalog-filter-select__option ${brandId === '' ? 'is-active' : ''}`}
+                    role="option"
+                    data-value=""
+                    aria-selected={brandId === ''}
+                    onClick={() => setBrandId('')}
+                  >
+                    Todas las marcas
+                  </button>
+                </li>
+                {brands.map((brand) => (
+                  <li role="presentation" key={brand.id}>
+                    <button
+                      type="button"
+                      className={`catalog-filter-select__option ${brandId === String(brand.id) ? 'is-active' : ''}`}
+                      role="option"
+                      data-value={brand.id}
+                      aria-selected={brandId === String(brand.id)}
+                      onClick={() => setBrandId(String(brand.id))}
+                    >
+                      {brand.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           <div className="filter-actions">
-            <button type="submit" className="btn btn-primary btn-block">
+            <button type="submit" className="btn btn-primary btn-block" id="filter-submit-btn">
               <i className="fas fa-sliders" aria-hidden="true" />
               <span className="btn-text">Ver resultados</span>
             </button>
@@ -106,6 +177,16 @@ export function CatalogFilters({ brands, filters }: CatalogFiltersProps) {
       </div>
     </aside>
   );
+}
+
+function readHeaderSearchValue(): string {
+  const navSearch = document.getElementById('catalog-nav-search') as HTMLInputElement | null;
+  if (navSearch) {
+    return navSearch.value.trim();
+  }
+
+  const fallback = document.getElementById('catalog-filter-search-fallback') as HTMLInputElement | null;
+  return fallback?.value.trim() ?? '';
 }
 
 function compactParams(params: Record<string, string | number | null | undefined>) {

@@ -74,6 +74,7 @@ export type CatalogPagination = {
     url?: string | null;
     label: string;
     active: boolean;
+    page?: number | null;
   }>;
 };
 

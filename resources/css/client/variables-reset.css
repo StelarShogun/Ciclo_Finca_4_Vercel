@@ -595,6 +595,13 @@ html[data-theme="dark"] .catalog-category-flyout-portal .catalog-category-flyout
   color: var(--text-primary);
 }
 
+html[data-theme="dark"] .catalog-category-flyout,
+html[data-theme="dark"] .catalog-category-flyout-portal {
+  background: rgba(7, 31, 31, 0.92) !important;
+  border-color: rgba(142, 182, 155, 0.28) !important;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.5) !important;
+}
+
 html[data-theme="dark"] .catalog-category-sidebar-all:hover,
 html[data-theme="dark"] .catalog-category-sidebar-link:hover,
 html[data-theme="dark"] .catalog-category-subitem:hover,

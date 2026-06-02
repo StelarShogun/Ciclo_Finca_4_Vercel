@@ -9,6 +9,7 @@ import '../../css/client/legal-pages.css';
 import { useEffect, useMemo, useState } from 'react';
 import type { PropsWithChildren } from 'react';
 
+import { HeaderCatalogSearch } from '@/Components/Catalog/HeaderCatalogSearch';
 import type { InertiaSharedProps } from '@/types/models';
 
 export function ClientLayout({ children }: PropsWithChildren) {
@@ -114,6 +115,7 @@ export function ClientLayout({ children }: PropsWithChildren) {
               </div>
 
               <div className="header-right-cluster">
+                {isCatalog ? <HeaderCatalogSearch /> : null}
                 <div className="header-actions">
                   <Link href="/cart" className="cart-btn cart-btn-link" aria-label={`Ver carrito (${liveCartCount} productos)`} title="Ver carrito">
                     <i className="fas fa-shopping-cart" aria-hidden="true" />

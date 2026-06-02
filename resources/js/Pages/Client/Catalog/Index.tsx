@@ -1,11 +1,15 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import '../../../../css/client/clients-page.css';
 
 import { CatalogFilters } from '@/Components/Catalog/CatalogFilters';
+import { CatalogMobileControls } from '@/Components/Catalog/CatalogMobileControls';
 import { CatalogPagination } from '@/Components/Catalog/CatalogPagination';
 import { CatalogProductCard } from '@/Components/Catalog/CatalogProductCard';
+import { CatalogSpotlightCarousel } from '@/Components/Catalog/CatalogSpotlightCarousel';
+import { CatalogToolbar } from '@/Components/Catalog/CatalogToolbar';
 import { CategoryRail } from '@/Components/Catalog/CategoryRail';
 import { ClientLayout } from '@/Layouts/ClientLayout';
+import { useCatalogPageInit } from '@/hooks/useCatalogPageInit';
 import type {
   CatalogBrand,
   CatalogCategory,
@@ -24,6 +28,7 @@ type CatalogIndexProps = {
   brands: CatalogBrand[];
   filters: CatalogFiltersType;
   selectedCategory?: CatalogTaxonomy | null;
+  selectedBrand?: CatalogBrand | null;
   subcategories: CatalogTaxonomy[];
   parentCategoryForSubcats?: CatalogTaxonomy | null;
   catalogSpotlight: CatalogSpotlightItem[];
@@ -46,19 +51,17 @@ export default function CatalogIndex({
   filters,
   pagination,
   products,
+  selectedBrand,
   selectedCategory,
   summary,
 }: CatalogIndexProps) {
   const { auth, csrfToken } = usePage<InertiaSharedProps>().props;
   const isAuthenticated = auth.client !== null;
 
-  function updateSort(sort: string, direction: string) {
-    router.get('/catalog', compactParams({
-      ...filtersToQuery(filters),
-      sort,
-      direction,
-    }), { preserveScroll: true });
-  }
+  useCatalogPageInit();
+
+  const hasActiveCatalogFilters = summary.activeFilterCount > 0 || Boolean(filters.categoryId);
+  const showCatalogSpotlight = catalogSpotlight.length > 0 && pagination.currentPage === 1 && !hasActiveCatalogFilters;
 
   return (
     <ClientLayout>
@@ -81,97 +84,74 @@ export default function CatalogIndex({
         </header>
 
         <div className="catalog-container">
-          <CategoryRail categories={categories} activeCategoryId={filters.categoryId ?? null} />
-          <CatalogFilters brands={brands} filters={filters} />
+          <div className="catalog-sidebar-stack">
+            <CategoryRail categories={categories} activeCategoryId={filters.categoryId ?? null} />
+            <CatalogFilters
+              brands={brands}
+              filters={filters}
+              activeFilterCount={summary.activeFilterCount}
+              currentPage={pagination.currentPage}
+            />
+          </div>
 
           <main className="catalog-main catalog-content">
-            {catalogSpotlight.length > 0 ? (
-              <section className="catalog-spotlight catalog-spotlight-section" aria-label="Destacados y novedades">
-                <div className="catalog-spotlight-header">
-                  <h2 className="catalog-spotlight-title">Destacados y novedades</h2>
-                  <p className="catalog-spotlight-subtitle">Productos seleccionados y recién agregados.</p>
-                </div>
-                <div className="catalog-spotlight-grid">
-                  {catalogSpotlight.slice(0, 4).map((item) => (
-                    <CatalogProductCard
-                      key={`${item.kind}-${item.product.id}`}
-                      product={item.product}
-                      csrfToken={csrfToken}
-                      isAuthenticated={isAuthenticated}
-                    />
-                  ))}
-                </div>
-              </section>
+            <CatalogMobileControls
+              categories={categories}
+              activeCategoryId={filters.categoryId ?? null}
+              activeFilterCount={summary.activeFilterCount}
+            />
+
+            {showCatalogSpotlight ? (
+              <CatalogSpotlightCarousel
+                items={catalogSpotlight}
+                csrfToken={csrfToken}
+                isAuthenticated={isAuthenticated}
+              />
             ) : null}
 
-            <div className="catalog-toolbar">
-              <div className="catalog-toolbar-meta">
-                <h2>{selectedCategory ? selectedCategory.name : 'Todos los productos'}</h2>
-                <p>
-                  Mostrando {pagination.from ?? 0}-{pagination.to ?? 0} de {pagination.total.toLocaleString('es-CR')} productos.
-                  {summary.activeFilterCount > 0 ? ` ${summary.activeFilterCount} filtros activos.` : ''}
-                </p>
-              </div>
+            <div className="catalog-results" data-cf4-ajax-pagination data-cf4-ajax-scroll>
+              <div id="cf4-list-fragment">
+                <CatalogToolbar
+                  filters={filters}
+                  selectedCategory={selectedCategory}
+                  selectedBrand={selectedBrand}
+                  paginationFrom={pagination.from}
+                  paginationTo={pagination.to}
+                  paginationTotal={pagination.total}
+                  activeFilterCount={summary.activeFilterCount}
+                />
 
-              <div className="catalog-toolbar-sort" aria-label="Ordenamiento del catálogo">
-                <button type="button" className="btn btn-secondary" onClick={() => updateSort('created_at', 'desc')}>
-                  Recientes
-                </button>
-                <button type="button" className="btn btn-secondary" onClick={() => updateSort('price', 'asc')}>
-                  Menor precio
-                </button>
-                <button type="button" className="btn btn-secondary" onClick={() => updateSort('price', 'desc')}>
-                  Mayor precio
-                </button>
+                {emptyCategoryNoProducts ? (
+                  <div className="empty-state">
+                    <i className="fas fa-box-open" aria-hidden="true" />
+                    <h2>No hay productos en esta categoría</h2>
+                    <p>Probá con otra categoría o quitá los filtros aplicados.</p>
+                  </div>
+                ) : products.length === 0 ? (
+                  <div className="empty-state">
+                    <i className="fas fa-search" aria-hidden="true" />
+                    <h2>No encontramos productos</h2>
+                    <p>Ajustá la búsqueda, marca o rango de precios para ver más resultados.</p>
+                  </div>
+                ) : (
+                  <div className="products-grid">
+                    {products.map((product) => (
+                      <CatalogProductCard
+                        key={product.id}
+                        product={product}
+                        csrfToken={csrfToken}
+                        isAuthenticated={isAuthenticated}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                <CatalogPagination pagination={pagination} />
               </div>
             </div>
-
-            {emptyCategoryNoProducts ? (
-              <div className="empty-state">
-                <i className="fas fa-box-open" aria-hidden="true" />
-                <h2>No hay productos en esta categoría</h2>
-                <p>Probá con otra categoría o quitá los filtros aplicados.</p>
-              </div>
-            ) : products.length === 0 ? (
-              <div className="empty-state">
-                <i className="fas fa-search" aria-hidden="true" />
-                <h2>No encontramos productos</h2>
-                <p>Ajustá la búsqueda, marca o rango de precios para ver más resultados.</p>
-              </div>
-            ) : (
-              <div className="products-grid">
-                {products.map((product) => (
-                  <CatalogProductCard
-                    key={product.id}
-                    product={product}
-                    csrfToken={csrfToken}
-                    isAuthenticated={isAuthenticated}
-                  />
-                ))}
-              </div>
-            )}
-
-            <CatalogPagination pagination={pagination} />
           </main>
         </div>
       </section>
     </ClientLayout>
-  );
-}
-
-function filtersToQuery(filters: CatalogFiltersType) {
-  return {
-    search: filters.search,
-    category_id: filters.categoryId,
-    brand_id: filters.brandId,
-    min_price: filters.minPrice,
-    max_price: filters.maxPrice,
-    per_page: filters.perPage,
-  };
-}
-
-function compactParams(params: Record<string, string | number | null | undefined>) {
-  return Object.fromEntries(
-    Object.entries(params).filter(([, value]) => value !== null && value !== undefined && value !== ''),
   );
 }
