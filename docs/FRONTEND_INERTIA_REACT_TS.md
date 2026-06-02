@@ -19,6 +19,7 @@ Esta guía documenta la migración progresiva de Ciclo Finca 4 desde Blade + Jav
 - Tipos compartidos: `resources/js/types/`
 - Layouts: `resources/js/Layouts/`
 - Componentes UI: `resources/js/Components/UI/`
+- Componentes Home: `resources/js/Components/Home/`
 
 ## Props compartidas
 
@@ -45,10 +46,52 @@ resources/js/
   Layouts/
   Components/
     UI/
+    Home/
   hooks/
   lib/
   types/
 ```
+
+## Rutas migradas
+
+| Ruta | Nombre | Controller | Página React |
+|---|---|---|---|
+| `/` | `clients.home` | `ClientPageController@home` | `Client/Home/Index` |
+| `/legal/terminos` | `clients.legal.terms` | `ClientLegalController@terms` | `Client/Legal/Terms` |
+
+### Home cliente
+
+La Home cliente conserva la URL `/` y el nombre de ruta `clients.home`.
+
+Props enviadas por `ClientPageController@home`:
+
+- `featuredProducts`: productos destacados serializados para tarjetas de Home.
+- `categories`: categorías raíz con subcategorías e iconos.
+- `showGuestRegisterCta`: controla CTAs para invitados.
+- `hero`: textos del hero.
+
+Props compartidas usadas por layout/componentes:
+
+- `auth.client`
+- `cartCount`
+- `csrfToken`
+- `flash`
+- `theme`
+
+Componentes creados para Home:
+
+- `HeroSection`
+- `FeaturedProducts`
+- `CategoryPreview`
+- `HomeSection`
+- `ProductCard`
+- `ImageFallback`
+
+Tipos específicos:
+
+- `resources/js/types/home.ts`
+
+La vista Blade antigua `resources/views/client/home.blade.php` se mantiene temporalmente como referencia hasta completar validaciones visuales y siguientes migraciones.
 
 ## Cómo crear una página Inertia
 
@@ -92,6 +135,7 @@ El sistema visual sigue usando:
 - `resources/css/client/variables-reset.css`
 - `resources/css/client/header.css`
 - `resources/css/client/footer.css`
+- `resources/css/client/clients-home.css`
 - `resources/css/client/clients-page.css`
 - `resources/css/admin/shell-base.css`
 - `resources/css/admin/dashboard/dashboard.css`
@@ -105,6 +149,8 @@ npm run build
 npm run typecheck
 npm run lint:react
 docker exec laravel_app_ciclo php artisan test --filter=InertiaMigrationPilotTest
+docker exec laravel_app_ciclo php artisan test --filter=CF4ClientLegalPagesTest
+docker exec laravel_app_ciclo php artisan test
 ```
 
 Si Docker no está disponible, `php artisan test --filter=InertiaMigrationPilotTest` puede ejecutarse en host, pero este proyecto normalmente valida Artisan dentro del contenedor.

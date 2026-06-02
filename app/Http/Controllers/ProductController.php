@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -89,7 +90,7 @@ class ProductController extends Controller
                 $file = $request->file('image');
                 $ext = $file->extension() ?: $file->getClientOriginalExtension();
                 $filename = $slug.'_main.'.$ext;
-                $file->move($folderPath, $filename);
+                $this->moveUploadedProductImage($file, $folderPath, $filename, 'image');
                 $this->addSanitizedMedia($product, $folderPath.'/'.$filename, 'main_image');
             }
 
@@ -101,7 +102,7 @@ class ProductController extends Controller
                     }
                     $ext = $file->extension() ?: $file->getClientOriginalExtension();
                     $filename = $slug.'_'.$i.'.'.$ext;
-                    $file->move($folderPath, $filename);
+                    $this->moveUploadedProductImage($file, $folderPath, $filename, 'images');
                     $this->addSanitizedMedia($product, $folderPath.'/'.$filename, 'gallery');
                     $i++;
                 }
@@ -131,6 +132,11 @@ class ProductController extends Controller
 
             return redirect()->back()->withErrors($errors)->withInput();
         } catch (\Throwable $e) {
+            Log::error('Product store failed.', [
+                'error' => $e->getMessage(),
+                'exception' => $e::class,
+            ]);
+
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
@@ -346,7 +352,7 @@ class ProductController extends Controller
                     @unlink($old);
                 }
                 $filename = $slug.'_main.'.$ext;
-                $file->move($folderPath, $filename);
+                $this->moveUploadedProductImage($file, $folderPath, $filename, 'image');
                 $this->addSanitizedMedia($product, $folderPath.'/'.$filename, 'main_image');
             }
 
@@ -364,7 +370,7 @@ class ProductController extends Controller
                     }
                     $ext = $file->extension() ?: $file->getClientOriginalExtension();
                     $filename = $slug.'_'.$i.'.'.$ext;
-                    $file->move($folderPath, $filename);
+                    $this->moveUploadedProductImage($file, $folderPath, $filename, 'images');
                     $this->addSanitizedMedia($product, $folderPath.'/'.$filename, 'gallery');
                     $i++;
                 }
@@ -1338,13 +1344,63 @@ class ProductController extends Controller
 
     protected function productImageFolderPath(Product $product): string
     {
-        $folderPath = public_path('images/'.$this->productImageSlug($product));
+        $slug = $this->productImageSlug($product);
+        $folderPath = public_path('images/'.$slug);
 
-        if (! is_dir($folderPath)) {
-            mkdir($folderPath, 0755, true);
+        if (is_dir($folderPath) || is_writable(dirname($folderPath))) {
+            File::ensureDirectoryExists($folderPath, 0755);
+
+            if (is_dir($folderPath) && ! is_writable($folderPath)) {
+                @chmod($folderPath, 0755);
+            }
+
+            if (is_writable($folderPath)) {
+                return $folderPath;
+            }
         }
 
-        return $folderPath;
+        $fallbackPath = storage_path('app/product-images/'.$slug);
+        File::ensureDirectoryExists($fallbackPath, 0755);
+
+        return $fallbackPath;
+    }
+
+    protected function moveUploadedProductImage(
+        UploadedFile $file,
+        string $folderPath,
+        string $filename,
+        string $field
+    ): void {
+        $destination = rtrim($folderPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$filename;
+
+        if (is_file($destination)) {
+            @unlink($destination);
+        }
+
+        try {
+            $file->move($folderPath, $filename);
+        } catch (\Throwable $e) {
+            if (is_file($destination)) {
+                @unlink($destination);
+            }
+
+            if (is_readable($file->getPathname()) && @copy($file->getPathname(), $destination)) {
+                @unlink($file->getPathname());
+
+                return;
+            }
+
+            Log::warning('cf4_image_sanitize_failed', [
+                'path' => $destination,
+                'collection' => $field === 'image' ? 'main_image' : 'gallery',
+                'stage' => 'move',
+                'error' => $e->getMessage(),
+            ]);
+
+            throw ValidationException::withMessages([
+                $field => ['No se pudo procesar la imagen de forma segura. Usá JPEG, PNG, GIF o WebP.'],
+            ]);
+        }
     }
 
     protected function addSanitizedMedia(Product $product, string $absolutePath, string $collection): void

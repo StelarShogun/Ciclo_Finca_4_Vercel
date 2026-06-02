@@ -24,14 +24,13 @@ class CF4ClientLegalPagesTest extends TestCase
         $this->get(route('clients.contact'))->assertOk()->assertSee('Contacto', false);
     }
 
-    public function test_home_footer_shows_legal_links(): void
+    public function test_home_is_accessible_after_inertia_migration(): void
     {
         $this->get(route('clients.home'))
             ->assertOk()
-            ->assertSee(route('clients.legal.terms'), false)
-            ->assertSee(route('clients.legal.privacy'), false)
-            ->assertSee(route('clients.legal.returns'), false)
-            ->assertSee(route('clients.contact'), false);
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Home/Index', false)
+            );
     }
 
     public function test_register_requires_terms_acceptance(): void

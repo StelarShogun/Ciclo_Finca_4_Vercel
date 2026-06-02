@@ -4,6 +4,7 @@ import '../css/client/fontawesome.css';
 import '../css/client/variables-reset.css';
 import '../css/client/header.css';
 import '../css/client/footer.css';
+import '../css/client/clients-home.css';
 import '../css/client/clients-page.css';
 import '../css/client/legal-pages.css';
 import '../css/admin/shell-base.css';

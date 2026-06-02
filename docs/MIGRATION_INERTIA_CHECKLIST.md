@@ -14,6 +14,7 @@
 
 | Ruta | Nombre | Estado | Componente |
 |---|---|---|---|
+| `/` | `clients.home` | Migrada | `Client/Home/Index` |
 | `/legal/terminos` | `clients.legal.terms` | Migrada | `Client/Legal/Terms` |
 | `/dashboard/inertia-pilot` | `dashboard.inertia-pilot` | Piloto admin | `Admin/Dashboard/Index` |
 
@@ -21,7 +22,7 @@
 
 | Ruta | Controller | Estado recomendado |
 |---|---|---|
-| `/` | `ClientPageController@home` | Blade temporal |
+| `/` | `ClientPageController@home` | Migrada |
 | `/catalog` | `ClientPageController@catalog` | Blade temporal; migrar como módulo completo |
 | `/product/{id}/{slug?}` | `ClientPageController@product` | Blade temporal |
 | `/legal/terminos` | `ClientLegalController@terms` | Migrada |
@@ -101,6 +102,12 @@ MVP creado:
 - `LoadingState`
 - `EmptyState`
 - `Pagination`
+- `HeroSection`
+- `HomeSection`
+- `FeaturedProducts`
+- `CategoryPreview`
+- `ProductCard`
+- `ImageFallback`
 
 Pendiente:
 
@@ -108,8 +115,6 @@ Pendiente:
 - `Textarea`
 - `Checkbox`
 - `StatusBadge`
-- `ProductCard`
-- `ProductImageFallback`
 - `QuantitySelector`
 - `Modal`
 - `ConfirmDialog`
@@ -124,16 +129,28 @@ Pendiente:
 
 ## Orden de siguientes PRs
 
-1. Legal restante + home.
-2. Auth cliente.
-3. Catálogo completo.
-4. Producto + favoritos + reseñas.
-5. Carrito + checkout.
-6. Cuenta cliente.
+1. Catálogo completo.
+2. Producto + favoritos + reseñas.
+3. Carrito + checkout.
+4. Auth cliente.
+5. Cuenta cliente.
+6. Legal restante.
 7. Admin shell + dashboard completo.
 8. Inventario.
 9. Ventas/pedidos.
 10. Proveedores/reportes/resto admin.
+
+## Detalle de Home migrada
+
+- Ruta: `/` (`clients.home`).
+- Controller: `ClientPageController@home`.
+- Página React: `resources/js/Pages/Client/Home/Index.tsx`.
+- Props propias: `featuredProducts`, `categories`, `showGuestRegisterCta`, `hero`.
+- Props compartidas usadas: `auth.client`, `cartCount`, `csrfToken`, `flash`, `theme`.
+- Componentes creados: `HeroSection`, `FeaturedProducts`, `CategoryPreview`, `HomeSection`, `ProductCard`, `ImageFallback`.
+- Tipos creados: `resources/js/types/home.ts`.
+- Tests: `InertiaMigrationPilotTest`, `CF4ClientHomeGuestCtaTest`, `CF4ClientLegalPagesTest`.
+- Siguen en Blade: catálogo, detalle de producto, carrito, checkout, perfil, favoritos, notificaciones, admin real y módulos operativos.
 
 ## Criterio por ruta
 

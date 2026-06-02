@@ -28,16 +28,24 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ClientPageController extends Controller
 {
     private const PRODUCT_NOVELTY_DAYS = 30;
 
-    public function home()
+    public function home(): Response
     {
         // Load featured products that are active, in stock, and recently created.
-        $featuredProducts = Product::with(['category.parent'])
+        $featuredProducts = Product::with([
+            'category.parent',
+            'media' => static function ($q): void {
+                $q->where('collection_name', 'main_image');
+            },
+        ])
             ->activeInClientStore()
             ->where('is_featured', true)
             ->where('stock_current', '>', 0)
@@ -47,21 +55,84 @@ class ClientPageController extends Controller
 
         $categories = $this->cachedClientRootCategories();
 
-        $cartCount = $this->getCartCount();
-
         $productReviewStats = ProductReview::aggregatesForProductIds(
             $featuredProducts->pluck('product_id')->map(fn ($id) => (int) $id)->all()
         );
 
         $showGuestRegisterCta = ! Auth::guard('clients')->check() && ! session('admin_catalog_mode');
 
-        return view('client.home', compact(
-            'featuredProducts',
-            'categories',
-            'cartCount',
-            'productReviewStats',
-            'showGuestRegisterCta',
-        ));
+        return Inertia::render('Client/Home/Index', [
+            'featuredProducts' => $featuredProducts
+                ->map(fn (Product $product): array => $this->homeProductPayload($product, $productReviewStats))
+                ->values(),
+            'categories' => $categories
+                ->map(fn (Category $category): array => $this->homeCategoryPayload($category))
+                ->values(),
+            'showGuestRegisterCta' => $showGuestRegisterCta,
+            'hero' => [
+                'title' => 'Equípate para rodar',
+                'emphasis' => 'con asesoría real en tienda',
+                'subtitle' => 'Bicicletas, componentes y accesorios listos para encargo con retiro rápido.',
+                'description' => 'Te guiamos en elección, ajuste y preparación para que retires con confianza.',
+            ],
+        ]);
+    }
+
+    /**
+     * @param  array<int, array{avg: float|int|string|null, count: int|string|null}>  $productReviewStats
+     * @return array<string, mixed>
+     */
+    private function homeProductPayload(Product $product, array $productReviewStats): array
+    {
+        $stockLabel = $product->clientCatalogStockLabel();
+        $picture = ProductImageUrls::cardPicture($product);
+        $reviewStats = $productReviewStats[(int) $product->product_id] ?? null;
+
+        return [
+            'id' => (int) $product->product_id,
+            'name' => (string) $product->name,
+            'description' => $product->description ? Str::limit((string) $product->description, 80) : null,
+            'category' => $product->category?->name ?? 'Uncategorized',
+            'price' => (float) $product->sale_price,
+            'priceFormatted' => '₡'.number_format((float) $product->sale_price, 0, ',', '.'),
+            'stockCurrent' => (int) ($product->stock_current ?? 0),
+            'stockLabel' => $stockLabel,
+            'canBuy' => $product->isPurchasableByClient(),
+            'sku' => $product->clientCatalogAssignedSku(),
+            'url' => $product->clientProductUrl(),
+            'image' => [
+                'fallback' => $picture['fallback'],
+                'desktopWebp' => $picture['desktopWebp'],
+                'mobileWebp' => $picture['mobileWebp'],
+                'usesPlaceholder' => ProductImageUrls::usesPlaceholder($product),
+                'placeholderIconClass' => ProductImageUrls::placeholderIconClass($product),
+            ],
+            'reviews' => [
+                'avg' => (float) data_get($reviewStats, 'avg', 0),
+                'count' => (int) data_get($reviewStats, 'count', 0),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function homeCategoryPayload(Category $category): array
+    {
+        return [
+            'id' => (int) $category->category_id,
+            'name' => (string) $category->name,
+            'description' => $category->description ? Str::limit((string) $category->description, 72) : null,
+            'url' => route('clients.catalog', ['category_id' => $category->category_id]),
+            'iconClass' => ClientCategoryIcons::iconClassForName((string) $category->name),
+            'children' => $category->childCategories
+                ->map(fn (Category $child): array => [
+                    'id' => (int) $child->category_id,
+                    'name' => (string) $child->name,
+                    'url' => route('clients.catalog', ['category_id' => $child->category_id]),
+                ])
+                ->values(),
+        ];
     }
 
     public function catalog(Request $request)
