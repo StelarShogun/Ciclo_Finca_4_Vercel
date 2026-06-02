@@ -6,6 +6,7 @@ export type FlashMessage = {
     authIcon?: string;
     title?: string;
     text?: string;
+    displayName?: string;
   } | null;
 };
 
@@ -16,6 +17,8 @@ export type ClientUser = {
   second_surname?: string | null;
   gmail: string;
   email_verified?: boolean;
+  provider?: string;
+  avatarUrl?: string | null;
 };
 
 export type AdminUser = {
@@ -49,6 +52,11 @@ export type CartItem = {
   subtotal: number;
 };
 
+export type FavoritesShared = {
+  indexUrl: string;
+  toggleUrl: string;
+};
+
 export type InertiaSharedProps = {
   auth: {
     client: ClientUser | null;
@@ -58,4 +66,5 @@ export type InertiaSharedProps = {
   csrfToken: string;
   flash: FlashMessage;
   theme?: string | null;
+  favorites?: FavoritesShared | null;
 };

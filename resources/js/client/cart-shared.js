@@ -45,6 +45,14 @@ export function updateCartCount(count) {
 
 import { cf4Toast, cf4Error, cf4Warning } from './swal.js';
 
+function showToast(payload) {
+    if (typeof window !== 'undefined' && typeof window.cf4ShowToast === 'function') {
+        window.cf4ShowToast(payload);
+        return true;
+    }
+    return false;
+}
+
 /** Add product to cart via AJAX. */
 export function addToCart(productId, quantity, triggerBtn) {
     quantity = quantity || 1;
@@ -63,25 +71,33 @@ export function addToCart(productId, quantity, triggerBtn) {
         .then(function (data) {
             if (data.success) {
                 updateCartCount(data.cart_count);
-                void cf4Toast({
-                    icon: 'success',
-                    title: '¡Agregado!',
-                    text: data.message || 'Producto agregado al carrito',
-                    timer: 2000,
-                });
+                if (!showToast({ variant: 'success', title: '¡Agregado!', message: data.message || 'Producto agregado al carrito', durationMs: 2000 })) {
+                    void cf4Toast({
+                        icon: 'success',
+                        title: '¡Agregado!',
+                        text: data.message || 'Producto agregado al carrito',
+                        timer: 2000,
+                    });
+                }
             } else {
                 const msg = data.message || 'No se pudo agregar el producto al carrito';
                 const stockShort = isClientStockShortMessage(msg);
                 if (stockShort) {
-                    void cf4Warning(msg, 'Atención');
+                    if (!showToast({ variant: 'warning', title: 'Atención', message: msg, durationMs: 3500 })) {
+                        void cf4Warning(msg, 'Atención');
+                    }
                 } else {
-                    void cf4Error(msg, 'Error');
+                    if (!showToast({ variant: 'error', title: 'Error', message: msg })) {
+                        void cf4Error(msg, 'Error');
+                    }
                 }
             }
         })
         .catch(function (err) {
             console.error('Error adding to cart:', err);
-            void cf4Error('Ocurrió un error al agregar el producto al carrito.', 'Error');
+            if (!showToast({ variant: 'error', title: 'Error', message: 'Ocurrió un error al agregar el producto al carrito.' })) {
+                void cf4Error('Ocurrió un error al agregar el producto al carrito.', 'Error');
+            }
         });
 }
 
@@ -101,6 +117,8 @@ export function initGuestCartPrompt() {
     if (!cartGuestEl) return;
 
     cartGuestEl.addEventListener('click', function () {
-        void cf4Warning('Debes iniciar sesión para ver tu carrito.', 'Inicia sesión');
+        if (!showToast({ variant: 'warning', title: 'Inicia sesión', message: 'Debes iniciar sesión para ver tu carrito.' })) {
+            void cf4Warning('Debes iniciar sesión para ver tu carrito.', 'Inicia sesión');
+        }
     });
 }

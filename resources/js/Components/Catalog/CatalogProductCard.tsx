@@ -2,6 +2,7 @@ import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import { ImageFallback } from '@/Components/Home/ImageFallback';
+import { useToast } from '@/hooks/useToast';
 import { addToCart } from '@/lib/cart';
 import { toggleFavorite } from '@/lib/favorites';
 import type { CatalogProduct } from '@/types/catalog';
@@ -15,11 +16,15 @@ type CatalogProductCardProps = {
 export function CatalogProductCard({ csrfToken, isAuthenticated, product }: CatalogProductCardProps) {
   const [isFavorite, setIsFavorite] = useState(product.isFavorite);
   const [isBusy, setIsBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   async function handleAddToCart() {
     if (!product.canBuy) {
-      setMessage('Este producto no está disponible para compra.');
+      showToast({
+        variant: 'warning',
+        title: 'No disponible',
+        message: 'Este producto no está disponible para compra.',
+      });
       return;
     }
 
@@ -29,19 +34,30 @@ export function CatalogProductCard({ csrfToken, isAuthenticated, product }: Cata
     }
 
     setIsBusy(true);
-    setMessage(null);
 
     try {
       const result = await addToCart(product.id, 1, csrfToken);
       if (!result.success) {
-        setMessage(result.message ?? 'No se pudo agregar el producto.');
+        showToast({
+          variant: 'error',
+          title: 'No se pudo agregar',
+          message: result.message ?? 'No se pudo agregar el producto.',
+        });
         return;
       }
 
-      setMessage(result.message ?? 'Producto agregado al carrito.');
+      showToast({
+        variant: 'success',
+        title: 'Producto agregado',
+        message: result.message ?? `${product.name} se agregó al carrito.`,
+      });
       window.dispatchEvent(new CustomEvent('cf4:cart-count', { detail: { count: result.cartCount } }));
     } catch {
-      setMessage('No se pudo agregar el producto. Inténtalo de nuevo.');
+      showToast({
+        variant: 'error',
+        title: 'Error',
+        message: 'No se pudo agregar el producto. Inténtalo de nuevo.',
+      });
     } finally {
       setIsBusy(false);
     }
@@ -54,18 +70,30 @@ export function CatalogProductCard({ csrfToken, isAuthenticated, product }: Cata
     }
 
     setIsBusy(true);
-    setMessage(null);
 
     try {
       const result = await toggleFavorite(product.id, csrfToken);
       if (!result.success) {
-        setMessage(result.message ?? 'No se pudo actualizar el favorito.');
+        showToast({
+          variant: 'error',
+          title: 'No se pudo actualizar',
+          message: result.message ?? 'No se pudo actualizar el favorito.',
+        });
         return;
       }
 
       setIsFavorite(result.isFavorite);
+      showToast({
+        variant: 'success',
+        title: result.isFavorite ? 'Agregado a favoritos' : 'Quitado de favoritos',
+        message: result.message ?? product.name,
+      });
     } catch {
-      setMessage('No se pudo actualizar el favorito.');
+      showToast({
+        variant: 'error',
+        title: 'Error',
+        message: 'No se pudo actualizar el favorito.',
+      });
     } finally {
       setIsBusy(false);
     }
@@ -134,7 +162,7 @@ export function CatalogProductCard({ csrfToken, isAuthenticated, product }: Cata
           </div>
         </div>
 
-        {message ? <p className="product-card-status" role="status">{message}</p> : null}
+        {null}
       </div>
     </article>
   );

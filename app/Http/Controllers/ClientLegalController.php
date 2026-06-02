@@ -19,23 +19,26 @@ class ClientLegalController extends Controller
 
     public function privacy()
     {
-        return view('client.legal.privacy', [
+        return Inertia::render('Client/Legal/Privacy', [
             'legalTitle' => 'Política de privacidad',
             'legalUpdated' => 'mayo 2026',
+            'businessName' => config('cf4_legal.business_name'),
+            'contactEmail' => config('cf4_legal.contact_email'),
         ]);
     }
 
     public function returns()
     {
-        return view('client.legal.returns', [
+        return Inertia::render('Client/Legal/Returns', [
             'legalTitle' => 'Cambios, devoluciones y cancelaciones',
             'legalUpdated' => 'mayo 2026',
+            'businessName' => config('cf4_legal.business_name'),
         ]);
     }
 
     public function contact()
     {
-        return view('client.legal.contact', [
+        return Inertia::render('Client/Legal/Contact', [
             'legalTitle' => 'Contacto',
             'legal' => config('cf4_legal'),
         ]);

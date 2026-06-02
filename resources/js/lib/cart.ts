@@ -4,6 +4,8 @@ type AddToCartResponse = {
   cartCount?: number;
 };
 
+import { parseJsonResponse } from '@/lib/parseJsonResponse';
+
 type CartApiPayload = {
   success?: boolean;
   message?: string;
@@ -26,7 +28,12 @@ export async function addToCart(
     body: JSON.stringify({ product_id: productId, quantity }),
   });
 
-  const payload = (await response.json()) as CartApiPayload;
+  const parsed = await parseJsonResponse<CartApiPayload>(response);
+  if (!parsed.ok) {
+    return { success: false, message: parsed.message };
+  }
+
+  const payload = parsed.data;
 
   return {
     success: response.ok && payload.success === true,

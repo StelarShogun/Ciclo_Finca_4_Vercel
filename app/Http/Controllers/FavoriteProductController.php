@@ -8,6 +8,7 @@ use App\Support\ClientFavoriteFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Inertia;
 
 class FavoriteProductController extends Controller
 {
@@ -31,17 +32,33 @@ class FavoriteProductController extends Controller
 
         $favorites = ClientFavoriteFormatter::collect($paginator->items());
 
-        return response()->json([
-            'success' => true,
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'favorites' => $favorites,
+                'pagination' => [
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'per_page' => $paginator->perPage(),
+                    'total' => $paginator->total(),
+                    'from' => $paginator->firstItem(),
+                    'to' => $paginator->lastItem(),
+                ],
+            ]);
+        }
+
+        $links = collect($paginator->toArray()['links'] ?? [])
+            ->map(fn ($link) => [
+                'url' => $link['url'] ?? null,
+                'label' => $link['label'] ?? '',
+                'active' => (bool) ($link['active'] ?? false),
+            ])
+            ->values()
+            ->all();
+
+        return Inertia::render('Client/Favorites/Index', [
             'favorites' => $favorites,
-            'pagination' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-                'from' => $paginator->firstItem(),
-                'to' => $paginator->lastItem(),
-            ],
+            'links' => $links,
         ]);
     }
 
@@ -73,6 +90,7 @@ class FavoriteProductController extends Controller
                 return response()->json([
                     'success' => true,
                     'is_favorite' => false,
+                    'message' => 'Quitado de favoritos.',
                 ]);
             }
 
@@ -84,6 +102,7 @@ class FavoriteProductController extends Controller
             return response()->json([
                 'success' => true,
                 'is_favorite' => true,
+                'message' => 'Agregado a favoritos.',
             ]);
         } catch (\Throwable $e) {
             report($e);

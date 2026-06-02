@@ -25,29 +25,29 @@
 |---|---|---|
 | `/` | `ClientPageController@home` | Migrada |
 | `/catalog` | `ClientPageController@catalog` | Migrada |
-| `/product/{id}/{slug?}` | `ClientPageController@product` | Blade temporal |
+| `/product/{id}/{slug?}` | `ClientPageController@product` | Migrada |
 | `/legal/terminos` | `ClientLegalController@terms` | Migrada |
 | `/legal/privacidad` | `ClientLegalController@privacy` | Blade temporal |
 | `/legal/cambios-devoluciones` | `ClientLegalController@returns` | Blade temporal |
 | `/contacto` | `ClientLegalController@contact` | Blade temporal |
-| `/login` | `ClientUserController` | Blade temporal |
-| `/register` | `ClientUserController` | Blade temporal |
-| `/verify` | `ClientUserController` | Blade temporal |
-| `/recovery*` | `ClientUserController` | Blade temporal |
+| `/login` | `ClientUserController` | Migrada (`Client/Auth/Login`) |
+| `/register` | `ClientUserController` | Migrada (`Client/Auth/Register`) |
+| `/verify` | `ClientUserController` | Migrada (`Client/Auth/VerifyCode`) |
+| `/recovery*` | `ClientUserController` | Migrada (`Client/Auth/RecoveryRequest`, `Client/Auth/RecoveryReset`) |
 | `/auth/google*` | `ClientUserController` | Laravel redirect/callback; mantener controller |
 
 ## Cliente autenticado
 
 | Ruta | Controller | Estado recomendado |
 |---|---|---|
-| `/cart` + acciones | `ClientPageController` | Blade temporal; React usa helper `resources/js/lib/cart.ts` para `addToCart` |
+| `/cart` | `ClientPageController@cart` | Migrada (`Client/Cart/Index`); acciones JSON siguen en controller |
 | `/products/{product}/review` | `ProductReviewController` | Request/redirect JSON-Inertia según página migrada |
 | `/invoices` | `ClientPageController@invoices` | Blade temporal |
 | `/invoices/{sale}` | `ClientPageController@showInvoice` | Blade temporal |
 | `/invoices/{sale}/print` | `ClientPageController@printInvoice` | Blade permanente |
 | `/notifications` | `ClientPageController@notifications` | Blade temporal |
-| `/profile` | `ClientUserController@show` | Blade temporal |
-| `/favorites` | `FavoriteProductController@index` | Blade temporal |
+| `/profile` | `ClientUserController@show` | Migrada |
+| `/favorites` | `FavoriteProductController@index` | JSON + drawer en `ClientLayout` (Inertia) |
 
 ## Admin
 

@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
 import type { CatalogPagination as CatalogPaginationType } from '@/types/catalog';
@@ -8,19 +8,24 @@ type CatalogPaginationProps = {
 };
 
 export function CatalogPagination({ pagination }: CatalogPaginationProps) {
-  if (pagination.lastPage <= 1) {
-    return null;
-  }
-
   const inertiaPage = usePage();
   const uid = useMemo(() => `cpg-${Math.random().toString(16).slice(2)}`, []);
   const [target, setTarget] = useState(String(pagination.currentPage));
+
+  if (pagination.lastPage <= 1) {
+    return null;
+  }
 
   function navigateToPage(nextPage: number) {
     const base = inertiaPage.url || '/catalog';
     const url = new URL(base, window.location.origin);
     url.searchParams.set('page', String(nextPage));
-    window.location.assign(url.toString());
+
+    router.visit(`${url.pathname}${url.search}`, {
+      preserveScroll: true,
+      preserveState: true,
+      replace: true,
+    });
   }
 
   function commitGo() {

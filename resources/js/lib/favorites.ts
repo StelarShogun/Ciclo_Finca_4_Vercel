@@ -1,3 +1,5 @@
+import { parseJsonResponse } from '@/lib/parseJsonResponse';
+
 type FavoriteTogglePayload = {
   success?: boolean;
   is_favorite?: boolean;
@@ -22,7 +24,12 @@ export async function toggleFavorite(productId: number, csrfToken: string): Prom
     body: JSON.stringify({ product_id: productId }),
   });
 
-  const payload = (await response.json()) as FavoriteTogglePayload;
+  const parsed = await parseJsonResponse<FavoriteTogglePayload>(response);
+  if (!parsed.ok) {
+    return { success: false, isFavorite: false, message: parsed.message };
+  }
+
+  const payload = parsed.data;
 
   return {
     success: response.ok && payload.success === true,

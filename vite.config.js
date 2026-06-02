@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import inertia from "@inertiajs/vite";
 import laravel from "laravel-vite-plugin";
 import react from "@vitejs/plugin-react";
 
@@ -129,6 +130,7 @@ export default defineConfig(({ command }) => {
                 input: [...sharedAssets, ...adminAssets, ...clientAssets, ...errorAssets],
                 refresh: true,
             }),
+            inertia(),
         ],
         server: {
             host: "0.0.0.0",

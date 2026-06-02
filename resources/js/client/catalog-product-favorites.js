@@ -5,6 +5,14 @@
  */
 import { cf4Error } from './swal.js';
 
+function showToast(payload) {
+    if (typeof window !== 'undefined' && typeof window.cf4ShowToast === 'function') {
+        window.cf4ShowToast(payload);
+        return true;
+    }
+    return false;
+}
+
 function getCsrfToken() {
     const meta = document.querySelector('meta[name="csrf-token"]');
     if (meta) return meta.content;
@@ -83,10 +91,10 @@ export function toggleFavoriteProduct(btn) {
         })
         .catch(function (err) {
             console.error('Error toggling favorite:', err);
-            void cf4Error(
-                err && err.message ? err.message : 'No se pudo actualizar tu favorito.',
-                'Error'
-            );
+            const msg = err && err.message ? err.message : 'No se pudo actualizar tu favorito.';
+            if (!showToast({ variant: 'error', title: 'Error', message: msg })) {
+                void cf4Error(msg, 'Error');
+            }
         })
         .finally(function () {
             btn.disabled = false;

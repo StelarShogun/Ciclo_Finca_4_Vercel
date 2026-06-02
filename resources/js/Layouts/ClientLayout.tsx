@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import '../../css/client/fonts.css';
 import '../../css/client/fontawesome.css';
 import '../../css/client/variables-reset.css';
@@ -9,7 +9,9 @@ import '../../css/client/legal-pages.css';
 import { useEffect, useMemo, useState } from 'react';
 import type { PropsWithChildren } from 'react';
 
+import { FavoritesDrawer } from '@/Components/Client/FavoritesDrawer';
 import { HeaderCatalogSearch } from '@/Components/Catalog/HeaderCatalogSearch';
+import { useFlashToasts } from '@/hooks/useFlashToasts';
 import type { InertiaSharedProps } from '@/types/models';
 
 export function ClientLayout({ children }: PropsWithChildren) {
@@ -28,6 +30,10 @@ export function ClientLayout({ children }: PropsWithChildren) {
     return `${auth.client.name.charAt(0)}${auth.client.first_surname?.charAt(0) ?? ''}`.toUpperCase();
   }, [auth.client]);
 
+  function logout() {
+    router.post('/logout', {}, { preserveScroll: true });
+  }
+
   useEffect(() => {
     document.body.classList.add('cliente-layout');
 
@@ -37,6 +43,8 @@ export function ClientLayout({ children }: PropsWithChildren) {
   useEffect(() => {
     setLiveCartCount(cartCount);
   }, [cartCount]);
+
+  useFlashToasts();
 
   useEffect(() => {
     function handleCartCount(event: Event) {
@@ -148,7 +156,22 @@ export function ClientLayout({ children }: PropsWithChildren) {
                         title="Mi cuenta"
                         onClick={() => setIsUserMenuOpen((open) => !open)}
                       >
-                        <span className="user-avatar-bubble">{clientInitials}</span>
+                        <span className="user-avatar-bubble">
+                          {auth.client.avatarUrl ? (
+                            <img
+                              src={auth.client.avatarUrl}
+                              alt=""
+                              width={32}
+                              height={32}
+                              style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }}
+                              referrerPolicy="no-referrer"
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          ) : (
+                            clientInitials
+                          )}
+                        </span>
                         <span className="user-trigger-name">{auth.client.name}</span>
                         <i className="fas fa-chevron-down user-trigger-caret" aria-hidden="true" />
                       </button>
@@ -164,6 +187,10 @@ export function ClientLayout({ children }: PropsWithChildren) {
                             <i className="fas fa-user" aria-hidden="true" />
                             <span>Mi perfil</span>
                           </Link>
+                          <button type="button" className="user-dropdown-item cf4-favorites-open-trigger" role="menuitem">
+                            <i className="fas fa-heart" aria-hidden="true" />
+                            <span>Mis favoritos</span>
+                          </button>
                           <Link className="user-dropdown-item" href="/invoices" role="menuitem">
                             <i className="fas fa-file-invoice" aria-hidden="true" />
                             <span>Mis facturas</span>
@@ -172,6 +199,12 @@ export function ClientLayout({ children }: PropsWithChildren) {
                             <i className="fas fa-bell" aria-hidden="true" />
                             <span>Notificaciones</span>
                           </Link>
+                        </div>
+                        <div className="user-dropdown-foot">
+                          <button type="button" className="user-dropdown-item" role="menuitem" onClick={logout}>
+                            <i className="fas fa-right-from-bracket" aria-hidden="true" />
+                            <span>Cerrar sesión</span>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -193,9 +226,9 @@ export function ClientLayout({ children }: PropsWithChildren) {
         </div>
       </header>
 
+      <FavoritesDrawer />
+
       <main className="cliente-main">
-        {flash.success ? <div className="cf4-flash cf4-flash--success">{flash.success}</div> : null}
-        {flash.error ? <div className="cf4-flash cf4-flash--error">{flash.error}</div> : null}
         {children}
       </main>
 

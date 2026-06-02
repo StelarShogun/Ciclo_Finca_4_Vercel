@@ -12,6 +12,7 @@ use Illuminate\Notifications\Notifiable;
  * @property string|null $first_surname
  * @property string|null $second_surname
  * @property string $gmail
+ * @property string|null $avatar_url
  */
 class Client extends Authenticatable
 {
@@ -33,6 +34,7 @@ class Client extends Authenticatable
         'active',
         'provider',
         'provider_id',
+        'avatar_url',
         'remember_token',
     ];
 

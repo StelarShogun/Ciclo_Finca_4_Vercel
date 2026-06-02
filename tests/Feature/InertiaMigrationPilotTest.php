@@ -18,6 +18,60 @@ class InertiaMigrationPilotTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_client_login_page_is_rendered_by_inertia(): void
+    {
+        $this->get(route('login.show'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Auth/Login', false)
+                ->has('recaptchaSiteKey')
+                ->has('recoverySuccessModal')
+                ->has('sessionExpired')
+            );
+    }
+
+    public function test_client_register_page_is_rendered_by_inertia(): void
+    {
+        $this->get(route('clients.register.form'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Auth/Register', false)
+                ->has('recaptchaSiteKey')
+            );
+    }
+
+    public function test_client_recovery_request_page_is_rendered_by_inertia(): void
+    {
+        $this->get(route('clients.recovery.form'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Auth/RecoveryRequest', false)
+            );
+    }
+
+    public function test_client_verify_page_is_rendered_by_inertia(): void
+    {
+        $client = Client::create([
+            'name' => 'Pendiente',
+            'first_surname' => 'Verificacion',
+            'second_surname' => null,
+            'gmail' => 'pending-verify@example.com',
+            'password' => bcrypt('password'),
+            'email_verified' => false,
+            'active' => true,
+        ]);
+
+        $this->withSession([
+            'pending_client_id' => $client->user_id,
+            'pending_gmail' => $client->gmail,
+        ])->get(route('clients.verify.form'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Auth/VerifyCode', false)
+                ->where('isRecoveryFlow', false)
+            );
+    }
+
     public function test_terms_page_is_rendered_by_inertia(): void
     {
         $this->get(route('clients.legal.terms'))
@@ -209,6 +263,136 @@ class InertiaMigrationPilotTest extends TestCase
     {
         $this->get(route('dashboard.inertia-pilot'))
             ->assertRedirect(route('admin.login'));
+    }
+
+    public function test_client_profile_page_is_rendered_by_inertia_for_authenticated_client(): void
+    {
+        $client = Client::create([
+            'name' => 'Perfil',
+            'first_surname' => 'Cliente',
+            'second_surname' => 'Inertia',
+            'gmail' => 'perfil-inertia@example.com',
+            'password' => bcrypt('password'),
+            'email_verified' => true,
+            'active' => true,
+            'provider' => 'local',
+        ]);
+
+        $this->actingAs($client, 'clients')
+            ->get(route('clients.profile'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Profile/Index', false)
+                ->where('profile.name', 'Perfil')
+                ->where('profile.gmail', 'perfil-inertia@example.com')
+                ->where('isGoogleOnly', false)
+                ->where('auth.client.gmail', 'perfil-inertia@example.com')
+            );
+    }
+
+    public function test_client_product_page_is_rendered_by_inertia(): void
+    {
+        Cache::flush();
+
+        $category = Category::create([
+            'name' => 'Producto Cat',
+            'description' => null,
+            'parent_category_id' => null,
+        ]);
+        $supplier = Supplier::create([
+            'name' => 'Proveedor Producto',
+            'primary_contact' => 'Contacto',
+            'phone' => '88880000',
+            'email' => 'producto@example.com',
+            'address' => 'Tienda',
+            'delivery_time' => 2,
+            'rating' => 4.5,
+            'status' => 'active',
+        ]);
+        $product = Product::create([
+            'category_id' => $category->category_id,
+            'supplier_id' => $supplier->supplier_id,
+            'name' => 'Bici Producto Inertia',
+            'sku' => 'PROD-INERTIA-1',
+            'description' => 'Descripción de prueba.',
+            'purchase_price' => 50000,
+            'sale_price' => 99000,
+            'stock_current' => 4,
+            'stock_minimum' => 1,
+            'status' => 'active',
+            'is_featured' => false,
+        ]);
+
+        $this->get(route('clients.product', ['id' => $product->product_id, 'slug' => $product->clientPublicSlug()]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Product/Index', false)
+                ->where('product.name', 'Bici Producto Inertia')
+                ->where('product.canBuy', true)
+                ->has('reviews')
+                ->has('seo.canonicalUrl')
+            );
+    }
+
+    public function test_client_cart_page_is_rendered_by_inertia(): void
+    {
+        $category = Category::create([
+            'name' => 'Cart Cat',
+            'description' => null,
+            'parent_category_id' => null,
+        ]);
+        $supplier = Supplier::create([
+            'name' => 'Proveedor Cart',
+            'primary_contact' => 'Contacto',
+            'phone' => '88881111',
+            'email' => 'cart@example.com',
+            'address' => 'Tienda',
+            'delivery_time' => 2,
+            'rating' => 4.5,
+            'status' => 'active',
+        ]);
+        $product = Product::create([
+            'category_id' => $category->category_id,
+            'supplier_id' => $supplier->supplier_id,
+            'name' => 'Item Carrito',
+            'sku' => 'CART-1',
+            'description' => null,
+            'purchase_price' => 10000,
+            'sale_price' => 15000,
+            'stock_current' => 5,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Carrito',
+            'second_surname' => null,
+            'gmail' => 'cart-inertia@example.com',
+            'password' => bcrypt('password'),
+            'email_verified' => true,
+            'active' => true,
+        ]);
+
+        $this->actingAs($client, 'clients')
+            ->withSession([
+                'cart' => [
+                    [
+                        'product_id' => $product->product_id,
+                        'name' => $product->name,
+                        'price' => 15000,
+                        'quantity' => 2,
+                    ],
+                ],
+            ])
+            ->get(route('clients.cart'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Cart/Index', false)
+                ->where('pagination.total', 1)
+                ->where('items.0.name', 'Item Carrito')
+                ->where('total', 30000)
+            );
     }
 
     public function test_admin_dashboard_inertia_pilot_renders_for_admin(): void

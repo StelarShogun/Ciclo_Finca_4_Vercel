@@ -30,6 +30,12 @@ class HandleInertiaRequests extends Middleware
                 'clientSuccessModal' => fn () => $request->session()->get('client_success_modal'),
             ],
             'theme' => fn () => $request->cookie('cf4-theme'),
+            'favorites' => fn () => Auth::guard('clients')->check()
+                ? [
+                    'indexUrl' => route('clients.favorites.index'),
+                    'toggleUrl' => route('clients.favorites.toggle'),
+                ]
+                : null,
         ];
     }
 
@@ -50,6 +56,8 @@ class HandleInertiaRequests extends Middleware
             'second_surname' => $client->second_surname,
             'gmail' => $client->gmail,
             'email_verified' => (bool) ($client->email_verified ?? false),
+            'provider' => $client->provider ?? 'local',
+            'avatarUrl' => $client->avatar_url ?? null,
         ];
     }
 

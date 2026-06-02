@@ -18,6 +18,8 @@ use App\Services\Catalog\CatalogProductSearchTelemetry;
 use App\Services\InventoryMovementService;
 use App\Support\AdminPerPage;
 use App\Support\ClientCategoryIcons;
+use App\Support\ClientInertia\CartPagePayloadBuilder;
+use App\Support\ClientInertia\ProductDetailPayloadBuilder;
 use App\Support\ClientStorefrontCache;
 use App\Support\ProductImageUrls;
 use Illuminate\Http\Request;
@@ -693,30 +695,31 @@ class ClientPageController extends Controller
             )))
         );
 
-        return view('client.product', compact(
-            'product',
-            'relatedProducts',
-            'cartCount',
-            'clientCanReview',
-            'clientReview',
-            'myHighlightedReview',
-            'showMyHighlightedReview',
-            'productReviewsPaginated',
-            'totalReviewsCount',
-            'averageStars',
-            'starDistribution',
-            'verifiedPurchaserIds',
-            'reviewsSort',
-            'reviewFilter',
-            'productReviewStats',
-            'favoriteProductIds',
-            'isProductFavorite',
-            'taxonomy',
-            'primaryBrand',
-            'catalogBrandUrl',
-            'isNoveltyProduct',
-            'whatsappConsultUrl',
-            'orderReservationHours',
+        $product->load(['classificationValues.dimension']);
+
+        return Inertia::render('Client/Product/Index', app(ProductDetailPayloadBuilder::class)->build(
+            $product,
+            $relatedProducts,
+            $favoriteProductIds,
+            $taxonomy,
+            $primaryBrand,
+            $catalogBrandUrl,
+            $isNoveltyProduct,
+            $whatsappConsultUrl,
+            $orderReservationHours,
+            $clientCanReview,
+            $clientReview,
+            $myHighlightedReview,
+            $showMyHighlightedReview,
+            $productReviewsPaginated,
+            $totalReviewsCount,
+            $averageStars,
+            $starDistribution,
+            $verifiedPurchaserIds,
+            $reviewsSort,
+            $reviewFilter,
+            $productReviewStats,
+            $isProductFavorite,
         ));
     }
 
@@ -1051,29 +1054,13 @@ class ClientPageController extends Controller
         foreach ($cart as $item) {
             $product = Product::find($item['product_id']);
 
-            // Rebuild cart rows using the latest product availability (display only).
             if ($product && $product->isPurchasableByClient()) {
                 $qty = min((int) $item['quantity'], $product->stock_current);
-                if ($qty < 1) {
-                    continue;
+                $row = CartPagePayloadBuilder::itemFromProduct($product, $qty, (float) $item['price']);
+                if ($row !== null) {
+                    $total += (float) $row['subtotal'];
+                    $cartItems[] = $row;
                 }
-
-                $subtotal = $item['price'] * $qty;
-                $total += $subtotal;
-
-                $image = ProductImageUrls::clientPresentation($product);
-                $cartItems[] = [
-                    'product_id' => $product->product_id,
-                    'name' => $product->name,
-                    'price' => $item['price'],
-                    'image_url' => $image['image_url'],
-                    'uses_placeholder_image' => $image['uses_placeholder_image'],
-                    'placeholder_icon_class' => $image['placeholder_icon_class'],
-                    'quantity' => $qty,
-                    'stock_available' => $product->stock_current,
-                    'subtotal' => $subtotal,
-                    'product_url' => $product->clientProductUrl(),
-                ];
             }
         }
 
@@ -1090,7 +1077,7 @@ class ClientPageController extends Controller
         );
         $cartItemsPaginator->withQueryString();
 
-        return view('client.cart', compact('cartItemsPaginator', 'total', 'cartCount'));
+        return Inertia::render('Client/Cart/Index', app(CartPagePayloadBuilder::class)->build($cartItemsPaginator, $total));
     }
 
     public function removeFromCart(int $id)
@@ -1323,16 +1310,55 @@ class ClientPageController extends Controller
             ->where('status', 'ready_to_pickup')
             ->count();
 
-        return view('client.Invoices', compact(
-            'orders',
-            'cartCount',
-            'invoiceCount',
-            'unseenHistoryCount',
-            'invoicesRevision',
-            'readyToPickupCount',
-            'tab',
-            'pendingReviewProducts'
-        ));
+        $links = collect($orders->toArray()['links'] ?? [])
+            ->map(fn ($link) => [
+                'url' => $link['url'] ?? null,
+                'label' => $link['label'] ?? '',
+                'active' => (bool) ($link['active'] ?? false),
+            ])
+            ->values()
+            ->all();
+
+        $ordersRows = collect($orders->items())->map(function (Sale $sale) use ($tab) {
+            $statusLabel = match ($sale->status) {
+                'pending' => 'Pendiente',
+                'ready_to_pickup' => 'Por recoger',
+                'cancelled', 'canceled' => 'Cancelada',
+                'completed' => 'Confirmado',
+                default => ucfirst(str_replace('_', ' ', (string) $sale->status)),
+            };
+
+            $statusTone = match ($sale->status) {
+                'pending' => 'pending',
+                'ready_to_pickup' => 'ready',
+                'cancelled', 'canceled' => 'cancelled',
+                'completed' => 'completed',
+                default => 'default',
+            };
+
+            return [
+                'id' => (int) $sale->sale_id,
+                'invoiceNumber' => $sale->invoice_number ? (string) $sale->invoice_number : null,
+                'saleDateLabel' => $sale->sale_date ? $sale->sale_date->format('d/m/Y H:i') : 'Sin fecha',
+                'statusLabel' => $statusLabel,
+                'statusTone' => $statusTone,
+                'totalFormatted' => '₡'.number_format((float) $sale->total, 0, ',', '.'),
+                'showUrl' => route('clients.invoices.show', $sale, false),
+            ];
+        })->values()->all();
+
+        return Inertia::render('Client/Invoices/Index', [
+            'tab' => $tab,
+            'orders' => $ordersRows,
+            'links' => $links,
+            'cartCount' => $cartCount,
+            'invoiceCount' => $invoiceCount,
+            'unseenHistoryCount' => $unseenHistoryCount,
+            'invoicesRevision' => $invoicesRevision,
+            'readyToPickupCount' => (int) $readyToPickupCount,
+            'heartbeatUrl' => route('clients.invoices.heartbeat', [], false),
+            'pendingReviewProducts' => $pendingReviewProducts,
+        ]);
     }
 
     public function invoicesHeartbeat()
@@ -1411,7 +1437,31 @@ class ClientPageController extends Controller
             ->paginate(AdminPerPage::resolve($request->input('per_page', 10)))
             ->withQueryString();
 
-        return view('client.notifications', compact('notifications', 'cartCount'));
+        $links = collect($notifications->toArray()['links'] ?? [])
+            ->map(fn ($link) => [
+                'url' => $link['url'] ?? null,
+                'label' => $link['label'] ?? '',
+                'active' => (bool) ($link['active'] ?? false),
+            ])
+            ->values()
+            ->all();
+
+        $rows = collect($notifications->items())->map(function ($notification) {
+            $data = is_array($notification->data) ? $notification->data : [];
+            return [
+                'id' => (string) $notification->id,
+                'createdAtLabel' => optional($notification->created_at)->format('d/m/Y H:i') ?? '',
+                'message' => (string) ($data['message'] ?? 'Notificación del sistema'),
+                'actionUrl' => $data['action_url'] ?? null,
+                'actionLabel' => $data['action_label'] ?? 'Abrir enlace',
+            ];
+        })->values()->all();
+
+        return Inertia::render('Client/Notifications/Index', [
+            'notifications' => $rows,
+            'links' => $links,
+            'cartCount' => $cartCount,
+        ]);
     }
 
     public function showInvoice(Sale $sale)
@@ -1428,7 +1478,82 @@ class ClientPageController extends Controller
 
         $invoiceCount = Sale::countActiveClientInvoices((int) $client->user_id);
 
-        return view('client.invoice-detail', compact('sale', 'cartCount', 'invoiceCount'));
+        $documentKind = $sale->clientInvoiceDocumentKind();
+        $documentTitle = $documentKind === 'invoice' ? 'Factura' : 'Comprobante';
+        $items = $sale->saleItems ?? collect();
+        $itemsCount = $items->sum(fn ($item) => (int) $item->quantity);
+
+        $subtotalCalc = $items->sum(function ($item) {
+            return $item->total !== null
+                ? (float) $item->total
+                : ((float) $item->unit_price * (int) $item->quantity);
+        });
+
+        $subtotalDisplay = $sale->subtotal !== null ? (float) $sale->subtotal : $subtotalCalc;
+        $ivaDisplay = (float) ($sale->iva ?? 0);
+        $discountDisplay = (float) ($sale->discount ?? 0);
+        $totalDisplay = $sale->total !== null
+            ? (float) $sale->total
+            : ($subtotalDisplay + $ivaDisplay - $discountDisplay);
+
+        $paymentLabels = [
+            'cash' => 'Efectivo',
+            'card' => 'Tarjeta',
+            'transfer' => 'Transferencia',
+            'sinpe' => 'SINPE Móvil',
+        ];
+        $paymentDisplay = $sale->payment_method
+            ? ($paymentLabels[strtolower((string) $sale->payment_method)] ?? ucfirst((string) $sale->payment_method))
+            : 'No registrado';
+
+        $sourceLabels = [
+            'web_cart' => 'Tienda web',
+            'pos' => 'Punto de venta',
+            'in_store' => 'Tienda física',
+        ];
+        $sourceDisplay = $sale->order_source
+            ? ($sourceLabels[strtolower((string) $sale->order_source)] ?? ucfirst((string) $sale->order_source))
+            : 'Tienda web';
+
+        $backUrl = route('clients.invoices', ['tab' => $sale->clientInvoicesBackTab()], false);
+
+        return Inertia::render('Client/Invoices/Show', [
+            'invoiceCount' => (int) $invoiceCount,
+            'backUrl' => $backUrl,
+            'cartCount' => $cartCount,
+            'documentTitle' => $documentTitle,
+            'invoiceNumber' => $sale->invoice_number ? (string) $sale->invoice_number : null,
+            'orderMeta' => [
+                'saleId' => (int) $sale->sale_id,
+                'saleDateLabel' => $sale->sale_date ? $sale->sale_date->format('d/m/Y H:i') : 'Sin fecha',
+                'statusLabel' => $sale->clientStatusLabel(),
+                'statusPillClass' => $sale->clientStatusPillClass(),
+                'statusIconClass' => $sale->clientStatusIconClass(),
+                'cancellationReason' => $sale->clientCancellationReason(),
+                'paymentDisplay' => $paymentDisplay,
+                'sourceDisplay' => $sourceDisplay,
+            ],
+            'totals' => [
+                'subtotalFormatted' => '₡'.number_format($subtotalDisplay, 0, ',', '.'),
+                'ivaFormatted' => '₡'.number_format($ivaDisplay, 0, ',', '.'),
+                'discountFormatted' => '₡'.number_format($discountDisplay, 0, ',', '.'),
+                'totalFormatted' => '₡'.number_format($totalDisplay, 0, ',', '.'),
+                'itemsCount' => (int) $itemsCount,
+            ],
+            'items' => collect($items)->map(function (SaleItem $item) {
+                $total = $item->total !== null
+                    ? (float) $item->total
+                    : ((float) $item->unit_price * (int) $item->quantity);
+                return [
+                    'productId' => (int) $item->product_id,
+                    'name' => (string) ($item->product->name ?? 'Producto'),
+                    'quantity' => (int) $item->quantity,
+                    'unitPriceFormatted' => '₡'.number_format((float) $item->unit_price, 0, ',', '.'),
+                    'totalFormatted' => '₡'.number_format($total, 0, ',', '.'),
+                ];
+            })->values()->all(),
+            'printUrl' => route('clients.invoices.print', $sale, false),
+        ]);
     }
 
     public function printInvoice(Sale $sale)

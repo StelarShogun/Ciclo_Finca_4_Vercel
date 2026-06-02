@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Cookie as SymfonyCookie;
 
 class ClientUserController extends Controller
@@ -35,7 +36,21 @@ class ClientUserController extends Controller
 
         $isGoogleOnly = $client->provider === 'google';
 
-        return view('client.profile', compact('client', 'isGoogleOnly'));
+        return Inertia::render('Client/Profile/Index', [
+            'profile' => [
+                'name' => $client->name,
+                'first_surname' => $client->first_surname,
+                'second_surname' => $client->second_surname ?? '',
+                'gmail' => $client->gmail,
+                'provider' => $client->provider ?? 'local',
+            ],
+            'isGoogleOnly' => $isGoogleOnly,
+            'profileFlash' => [
+                'profileUpdated' => (bool) session('profile_updated'),
+                'passwordUpdated' => (bool) session('password_updated'),
+                'passwordDefined' => (bool) session('password_defined'),
+            ],
+        ]);
     }
 
     // Update the authenticated client's personal data.
@@ -165,7 +180,16 @@ class ClientUserController extends Controller
     // Show the login form.
     public function showLoginForm()
     {
-        return view('client.login');
+        $recaptchaEnabled = (bool) config('recaptcha.site_key');
+        $recaptchaSiteKey = $recaptchaEnabled
+            ? (string) (config('services.recaptcha.key') ?? config('services.recaptcha.site_key') ?? '')
+            : null;
+
+        return Inertia::render('Client/Auth/Login', [
+            'recaptchaSiteKey' => $recaptchaSiteKey !== '' ? $recaptchaSiteKey : null,
+            'recoverySuccessModal' => session('recovery_success_modal'),
+            'sessionExpired' => request()->get('session_expired') ? true : false,
+        ]);
     }
 
     // Process a login attempt.
@@ -267,7 +291,11 @@ class ClientUserController extends Controller
                 ]);
             }
 
-            return redirect()->route('clients.catalog');
+            return redirect()->route('clients.catalog')->with('client_success_modal', [
+                'kind' => 'welcome',
+                'authIcon' => 'user',
+                'displayName' => $this->clientWelcomeDisplayName($client),
+            ]);
         }
 
         if ($request->ajax() || $request->wantsJson()) {
@@ -285,7 +313,9 @@ class ClientUserController extends Controller
     // Show register form
     public function showRegisterForm()
     {
-        return view('client.register');
+        return Inertia::render('Client/Auth/Register', [
+            'recaptchaSiteKey' => null,
+        ]);
     }
 
     // Process registration
@@ -374,8 +404,10 @@ class ClientUserController extends Controller
 
         $this->clearPendingRecoverySession();
 
-        return view('client.verify_gmail_code', [
+        return Inertia::render('Client/Auth/VerifyCode', [
             'isRecoveryFlow' => false,
+            'destinationEmail' => session('pending_gmail'),
+            'mailWarning' => session('mail_warning'),
         ]);
     }
 
@@ -527,7 +559,9 @@ class ClientUserController extends Controller
     // Show the password-recovery form.
     public function showRecoveryForm()
     {
-        return view('client.recovery');
+        return Inertia::render('Client/Auth/RecoveryRequest', [
+            'unregisteredRecoveryEmail' => session('unregistered_recovery_email') ? true : false,
+        ]);
     }
 
     // Recovery step 1: validate the email and send a verification code.
@@ -619,8 +653,10 @@ class ClientUserController extends Controller
         $this->syncPendingRecoverySession($client);
         $this->clearPendingRegistrationSession();
 
-        return view('client.verify_gmail_code', [
+        return Inertia::render('Client/Auth/VerifyCode', [
             'isRecoveryFlow' => true,
+            'destinationEmail' => session('pending_gmail') ?? session('pending_recovery_gmail'),
+            'mailWarning' => session('mail_warning'),
         ]);
     }
 
@@ -698,7 +734,7 @@ class ClientUserController extends Controller
 
         $this->syncPendingRecoverySession($client);
 
-        return view('client.recovery_reset', [
+        return Inertia::render('Client/Auth/RecoveryReset', [
             'gmail' => $client->gmail,
         ]);
     }
@@ -918,6 +954,22 @@ class ClientUserController extends Controller
                 if (Schema::hasColumn((new Client)->getTable(), 'email_verified')) {
                     $client->update(['email_verified' => true]);
                 }
+
+                $update = [];
+                $providerId = (string) data_get($googleUser, 'sub', '');
+                if ($providerId !== '' && Schema::hasColumn((new Client)->getTable(), 'provider_id')) {
+                    $update['provider_id'] = $providerId;
+                }
+                $picture = (string) data_get($googleUser, 'picture', '');
+                if ($picture !== '' && Schema::hasColumn((new Client)->getTable(), 'avatar_url')) {
+                    $update['avatar_url'] = $picture;
+                }
+                if (Schema::hasColumn((new Client)->getTable(), 'provider')) {
+                    $update['provider'] = 'google';
+                }
+                if (! empty($update)) {
+                    $client->update($update);
+                }
             } else {
                 $parsedNames = $this->namesFromGoogleProfile($googleUser);
                 $data = [
@@ -927,9 +979,14 @@ class ClientUserController extends Controller
                     'gmail' => $email,
                     'password' => Hash::make(Str::random(32)),
                     'provider' => 'google',
+                    'provider_id' => (string) data_get($googleUser, 'sub', ''),
                 ];
                 if (Schema::hasColumn((new Client)->getTable(), 'email_verified')) {
                     $data['email_verified'] = true;
+                }
+                $picture = (string) data_get($googleUser, 'picture', '');
+                if ($picture !== '' && Schema::hasColumn((new Client)->getTable(), 'avatar_url')) {
+                    $data['avatar_url'] = $picture;
                 }
                 $client = Client::create($data);
             }
@@ -945,7 +1002,7 @@ class ClientUserController extends Controller
 
             CartService::mergeOnLogin($client->user_id);
 
-            return redirect()->route('clients.home')->with('client_success_modal', [
+            return redirect()->route('clients.catalog')->with('client_success_modal', [
                 'kind' => 'welcome',
                 'authIcon' => 'google',
                 'displayName' => $this->clientWelcomeDisplayName($client),
