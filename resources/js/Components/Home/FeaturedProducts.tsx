@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import { useRef } from 'react';
 
 import { ProductCard } from '@/Components/Home/ProductCard';
@@ -64,10 +65,10 @@ export function FeaturedProducts({ products, isAuthenticated, csrfToken }: Featu
           </div>
 
           <div className="section-footer">
-            <a href="/catalog" className="btn btn-secondary">
+            <Link href="/catalog" className="btn btn-secondary">
               Ver Todos los Productos
               <i className="fas fa-arrow-right" aria-hidden="true" />
-            </a>
+            </Link>
           </div>
         </>
       ) : (

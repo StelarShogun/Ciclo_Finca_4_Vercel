@@ -1,15 +1,23 @@
 import { Link, usePage } from '@inertiajs/react';
+import '../../css/client/fonts.css';
+import '../../css/client/fontawesome.css';
+import '../../css/client/variables-reset.css';
+import '../../css/client/header.css';
+import '../../css/client/footer.css';
+import '../../css/client/clients-page.css';
+import '../../css/client/legal-pages.css';
 import { useEffect, useMemo, useState } from 'react';
 import type { PropsWithChildren } from 'react';
 
 import type { InertiaSharedProps } from '@/types/models';
 
 export function ClientLayout({ children }: PropsWithChildren) {
-  const { auth, cartCount, flash } = usePage<InertiaSharedProps>().props;
+  const page = usePage<InertiaSharedProps>();
+  const { auth, cartCount, flash } = page.props;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [liveCartCount, setLiveCartCount] = useState(cartCount);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
+  const pathname = page.url.split('?')[0] || '/';
   const isCatalog = pathname.startsWith('/catalog') || pathname.startsWith('/product');
   const clientInitials = useMemo(() => {
     if (!auth.client) {

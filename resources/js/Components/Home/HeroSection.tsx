@@ -1,3 +1,5 @@
+import { Link } from '@inertiajs/react';
+
 import type { HomeHero } from '@/types/home';
 
 type HeroSectionProps = {
@@ -49,10 +51,10 @@ export function HeroSection({ hero }: HeroSectionProps) {
             <p className="hero-description">{hero.description}</p>
 
             <div className="hero-actions">
-              <a href="/catalog" className="btn btn-primary">
+              <Link href="/catalog" className="btn btn-primary">
                 <span>Ver Catálogo</span>
                 <i className="fas fa-arrow-right" aria-hidden="true" />
-              </a>
+              </Link>
 
               <a href="#benefits-section" className="btn btn-secondary">
                 Cómo funciona el retiro

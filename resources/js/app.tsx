@@ -1,15 +1,4 @@
 import './bootstrap';
-import '../css/client/fonts.css';
-import '../css/client/fontawesome.css';
-import '../css/client/variables-reset.css';
-import '../css/client/header.css';
-import '../css/client/footer.css';
-import '../css/client/clients-home.css';
-import '../css/client/clients-page.css';
-import '../css/client/legal-pages.css';
-import '../css/admin/shell-base.css';
-import '../css/admin/components/page-header.css';
-import '../css/admin/dashboard/dashboard.css';
 
 import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';

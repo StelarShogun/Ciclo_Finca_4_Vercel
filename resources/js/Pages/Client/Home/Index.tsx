@@ -1,4 +1,5 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import '../../../../css/client/clients-home.css';
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 
@@ -156,9 +157,9 @@ function HowItWorksSection({
     >
       <div className="steps-grid" role="list" aria-label="Pasos del encargo">
         <StepCard number="1" title="Explora el catálogo" text="Busca bicicletas, componentes y accesorios según tu estilo de ciclismo.">
-          <a href="/catalog" className="btn btn-primary btn-lg step-cta">
+          <Link href="/catalog" className="btn btn-primary btn-lg step-cta">
             Ver catálogo
-          </a>
+          </Link>
         </StepCard>
         <StepCard
           number="2"
@@ -166,13 +167,13 @@ function HowItWorksSection({
           text="Agrega los productos al carrito y finaliza tu solicitud para que podamos confirmarte disponibilidad."
         >
           {isAuthenticated ? (
-            <a href="/cart" className="btn btn-secondary btn-lg step-cta">
+            <Link href="/cart" className="btn btn-secondary btn-lg step-cta">
               Ir al carrito
-            </a>
+            </Link>
           ) : showGuestRegisterCta ? (
-            <a href="/login" className="btn btn-secondary btn-lg step-cta">
+            <Link href="/login" className="btn btn-secondary btn-lg step-cta">
               Inicia sesión
-            </a>
+            </Link>
           ) : null}
         </StepCard>
         <StepCard number="3" title="Retira en tienda" text="Te confirmamos cuando esté listo para retirar y coordinamos tu visita.">
@@ -254,20 +255,20 @@ function FinalCta({
             <p className="final-cta-subtitle">Explora el catálogo y deja tu solicitud para prepararlo en tienda con respaldo técnico.</p>
           </div>
           <div className="final-cta-actions">
-            <a href="/catalog" className="btn btn-primary btn-lg">
+            <Link href="/catalog" className="btn btn-primary btn-lg">
               <i className="fas fa-bicycle" aria-hidden="true" />
               Ver Catálogo
-            </a>
+            </Link>
             {isAuthenticated ? (
-              <a href="/cart" className="btn btn-secondary btn-lg">
+              <Link href="/cart" className="btn btn-secondary btn-lg">
                 <i className="fas fa-shopping-cart" aria-hidden="true" />
                 Ir al carrito
-              </a>
+              </Link>
             ) : showGuestRegisterCta ? (
-              <a href="/register" className="btn btn-secondary btn-lg">
+              <Link href="/register" className="btn btn-secondary btn-lg">
                 <i className="fas fa-user-plus" aria-hidden="true" />
                 Crear cuenta
-              </a>
+              </Link>
             ) : null}
           </div>
         </div>

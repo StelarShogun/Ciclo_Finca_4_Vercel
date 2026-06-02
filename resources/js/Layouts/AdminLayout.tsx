@@ -1,4 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
+import '../../css/admin/shell-base.css';
+import '../../css/admin/components/page-header.css';
+import '../../css/admin/dashboard/dashboard.css';
 import type { PropsWithChildren } from 'react';
 
 import type { InertiaSharedProps } from '@/types/models';

@@ -20,6 +20,7 @@ Esta guía documenta la migración progresiva de Ciclo Finca 4 desde Blade + Jav
 - Layouts: `resources/js/Layouts/`
 - Componentes UI: `resources/js/Components/UI/`
 - Componentes Home: `resources/js/Components/Home/`
+- Helpers reutilizables: `resources/js/lib/`
 
 ## Props compartidas
 
@@ -93,6 +94,20 @@ Tipos específicos:
 
 La vista Blade antigua `resources/views/client/home.blade.php` se mantiene temporalmente como referencia hasta completar validaciones visuales y siguientes migraciones.
 
+La Home usa `Link` de Inertia para navegación interna y `usePage().url` desde `ClientLayout` para estado activo de menú. Esto evita depender de `window.location.pathname` y mantiene la base lista para una futura estrategia SSR si se habilita.
+
+## Carrito Legacy Desde React
+
+El carrito completo sigue en Blade/legacy y no se migra todavía. Para acciones puntuales desde páginas Inertia existe:
+
+```txt
+resources/js/lib/cart.ts
+```
+
+`addToCart(productId, quantity, csrfToken)` encapsula `fetch('/cart/add')`, headers JSON, CSRF y normalización de `cart_count` a `cartCount`.
+
+Mientras carrito/catálogo/detalle de producto no estén migrados, los componentes React pueden seguir emitiendo el evento temporal `cf4:cart-count` para sincronizar el contador visual del header. Cuando carrito sea migrado, este helper debe convertirse en la API común de Home, catálogo y detalle.
+
 ## Cómo crear una página Inertia
 
 1. Crear el componente en `resources/js/Pages/...`.
@@ -128,6 +143,8 @@ Laravel mantiene la validación; React muestra errores desde `form.errors`.
 
 Los layouts importan y reutilizan clases CSS existentes; no introducen Tailwind como sistema visual.
 
+El dashboard admin Inertia sigue siendo piloto (`/dashboard/inertia-pilot`) y no reemplaza el dashboard real `/dashboard`.
+
 ## CSS y dark mode
 
 El sistema visual sigue usando:
@@ -139,6 +156,8 @@ El sistema visual sigue usando:
 - `resources/css/client/clients-page.css`
 - `resources/css/admin/shell-base.css`
 - `resources/css/admin/dashboard/dashboard.css`
+
+`resources/js/app.tsx` se mantiene como entrypoint liviano. El CSS cliente se importa desde `ClientLayout` y páginas cliente específicas; el CSS admin se importa desde `AdminLayout`. Esto evita mezclar CSS admin en pantallas cliente antes de migrar catálogo.
 
 No usar CSS-in-JS ni reescribir tokens globales en esta fase.
 

@@ -39,7 +39,7 @@
 
 | Ruta | Controller | Estado recomendado |
 |---|---|---|
-| `/cart` + acciones | `ClientPageController` | Blade temporal; migrar después de catálogo/producto |
+| `/cart` + acciones | `ClientPageController` | Blade temporal; React usa helper `resources/js/lib/cart.ts` para `addToCart` |
 | `/products/{product}/review` | `ProductReviewController` | Request/redirect JSON-Inertia según página migrada |
 | `/invoices` | `ClientPageController@invoices` | Blade temporal |
 | `/invoices/{sale}` | `ClientPageController@showInvoice` | Blade temporal |
@@ -149,8 +149,10 @@ Pendiente:
 - Props compartidas usadas: `auth.client`, `cartCount`, `csrfToken`, `flash`, `theme`.
 - Componentes creados: `HeroSection`, `FeaturedProducts`, `CategoryPreview`, `HomeSection`, `ProductCard`, `ImageFallback`.
 - Tipos creados: `resources/js/types/home.ts`.
+- Helper creado: `resources/js/lib/cart.ts` para encapsular el POST legacy `/cart/add`.
+- CSS: `app.tsx` queda liviano; CSS cliente/admin se carga desde layouts/páginas.
 - Tests: `InertiaMigrationPilotTest`, `CF4ClientHomeGuestCtaTest`, `CF4ClientLegalPagesTest`.
-- Siguen en Blade: catálogo, detalle de producto, carrito, checkout, perfil, favoritos, notificaciones, admin real y módulos operativos.
+- Siguen en Blade: catálogo, detalle de producto, carrito, checkout, perfil, favoritos, notificaciones, dashboard admin real y módulos operativos.
 
 ## Criterio por ruta
 

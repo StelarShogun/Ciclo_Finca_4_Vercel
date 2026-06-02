@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import { useRef } from 'react';
 
 import type { HomeCategory } from '@/types/home';
@@ -35,10 +36,10 @@ export function CategoryPreview({ categories }: CategoryPreviewProps) {
         </div>
 
         <div className="categories-top-actions">
-          <a href="/catalog" className="categories-all-link">
+          <Link href="/catalog" className="categories-all-link">
             <i className="fas fa-bicycle" aria-hidden="true" />
             Ver todo el catálogo
-          </a>
+          </Link>
           <span className="categories-swipe-hint">
             <i className="fas fa-hand-point-right" aria-hidden="true" />
             Desliza para descubrir más
@@ -59,7 +60,7 @@ export function CategoryPreview({ categories }: CategoryPreviewProps) {
               {categories.map((category) => (
                 <article className="category-slide" key={category.id}>
                   <div className="category-slide-card">
-                    <a href={category.url} className="category-slide-main">
+                    <Link href={category.url} className="category-slide-main">
                       <div className="category-icon category-icon--lg" aria-hidden="true">
                         <i className={category.iconClass} />
                       </div>
@@ -69,14 +70,14 @@ export function CategoryPreview({ categories }: CategoryPreviewProps) {
                         Ver todo en {category.name}
                         <i className="fas fa-arrow-right" aria-hidden="true" />
                       </span>
-                    </a>
+                    </Link>
 
                     {category.children.length > 0 ? (
                       <div className="category-subchips" role="group" aria-label={`Subcategorías de ${category.name}`}>
                         {category.children.map((child) => (
-                          <a href={child.url} className="category-subchip" key={child.id}>
+                          <Link href={child.url} className="category-subchip" key={child.id}>
                             {child.name}
-                          </a>
+                          </Link>
                         ))}
                       </div>
                     ) : null}

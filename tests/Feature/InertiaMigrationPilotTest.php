@@ -3,8 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\AdminUser;
+use App\Models\Category;
 use App\Models\Client;
+use App\Models\Product;
+use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -64,6 +68,67 @@ class InertiaMigrationPilotTest extends TestCase
                 ->where('auth.client.gmail', 'cliente-inertia@example.com')
                 ->where('showGuestRegisterCta', false)
                 ->has('cartCount')
+            );
+    }
+
+    public function test_client_home_page_serializes_featured_products_and_categories(): void
+    {
+        Cache::flush();
+
+        $parent = Category::create([
+            'name' => 'Bicicletas',
+            'description' => 'Familia principal de bicicletas para ruta, montaña y ciudad.',
+            'parent_category_id' => null,
+        ]);
+        $child = Category::create([
+            'name' => 'MTB',
+            'description' => 'Montaña',
+            'parent_category_id' => $parent->category_id,
+        ]);
+        $supplier = Supplier::create([
+            'name' => 'Proveedor Home',
+            'primary_contact' => 'Contacto Home',
+            'phone' => '88888888',
+            'email' => 'home-supplier@example.com',
+            'address' => 'Tienda',
+            'delivery_time' => 2,
+            'rating' => 4.8,
+            'status' => 'active',
+        ]);
+
+        Product::create([
+            'category_id' => $child->category_id,
+            'supplier_id' => $supplier->supplier_id,
+            'name' => 'Bicicleta Trail Inertia',
+            'sku' => 'HOME-TRAIL-1',
+            'description' => 'Bicicleta destacada para validar payload de Home.',
+            'purchase_price' => 100000,
+            'sale_price' => 150000,
+            'stock_current' => 7,
+            'stock_minimum' => 2,
+            'status' => 'active',
+            'is_featured' => true,
+        ]);
+
+        $this->get(route('clients.home'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Home/Index', false)
+                ->has('featuredProducts', 1)
+                ->where('featuredProducts.0.name', 'Bicicleta Trail Inertia')
+                ->where('featuredProducts.0.priceFormatted', '₡150.000')
+                ->where('featuredProducts.0.stockLabel', 'En stock')
+                ->where('featuredProducts.0.canBuy', true)
+                ->where('featuredProducts.0.sku', 'HOME-TRAIL-1')
+                ->has('featuredProducts.0.image.fallback')
+                ->where('featuredProducts.0.image.usesPlaceholder', true)
+                ->has('featuredProducts.0.image.placeholderIconClass')
+                ->has('featuredProducts.0.reviews.avg')
+                ->has('categories', 1)
+                ->where('categories.0.name', 'Bicicletas')
+                ->has('categories.0.iconClass')
+                ->has('categories.0.children', 1)
+                ->where('categories.0.children.0.name', 'MTB')
             );
     }
 

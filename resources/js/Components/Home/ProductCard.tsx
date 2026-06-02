@@ -1,6 +1,8 @@
+import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import { ImageFallback } from '@/Components/Home/ImageFallback';
+import { addToCart } from '@/lib/cart';
 import type { HomeProduct } from '@/types/home';
 
 type ProductCardProps = {
@@ -21,7 +23,7 @@ export function ProductCard({ product, isAuthenticated, csrfToken }: ProductCard
     }
 
     if (!isAuthenticated) {
-      window.location.href = '/login';
+      router.visit('/login');
       return;
     }
 
@@ -29,19 +31,9 @@ export function ProductCard({ product, isAuthenticated, csrfToken }: ProductCard
     setStatusMessage(null);
 
     try {
-      const response = await fetch('/cart/add', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken,
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-        body: JSON.stringify({ product_id: product.id, quantity: 1 }),
-      });
-      const payload = (await response.json()) as { success?: boolean; message?: string; cart_count?: number };
+      const payload = await addToCart(product.id, 1, csrfToken);
 
-      if (!response.ok || !payload.success) {
+      if (!payload.success) {
         setStatusMessage(payload.message ?? 'No se pudo agregar el producto.');
         return;
       }
@@ -49,7 +41,7 @@ export function ProductCard({ product, isAuthenticated, csrfToken }: ProductCard
       setStatusMessage(payload.message ?? 'Producto agregado al carrito.');
       window.dispatchEvent(
         new CustomEvent('cf4:cart-count', {
-          detail: { count: payload.cart_count },
+          detail: { count: payload.cartCount },
         }),
       );
     } catch {
@@ -65,9 +57,9 @@ export function ProductCard({ product, isAuthenticated, csrfToken }: ProductCard
       style={{ flex: '0 0 min(100%, 300px)', scrollSnapAlign: 'start' }}
     >
       <div className="product-image">
-        <a className="product-image__link" href={product.url} aria-label={`Ver producto: ${product.name}`}>
+        <Link className="product-image__link" href={product.url} aria-label={`Ver producto: ${product.name}`}>
           <ImageFallback image={product.image} alt={product.name} />
-        </a>
+        </Link>
       </div>
 
       <div className="product-info">
@@ -101,9 +93,9 @@ export function ProductCard({ product, isAuthenticated, csrfToken }: ProductCard
         <div className="product-footer">
           <div className="product-price">{product.priceFormatted}</div>
           <div className="product-actions">
-            <a href={product.url} className="btn-product btn-ver-detalles" title="Ver ficha del producto">
+            <Link href={product.url} className="btn-product btn-ver-detalles" title="Ver ficha del producto">
               Ver producto
-            </a>
+            </Link>
             {product.canBuy ? (
               <button type="button" className="btn-product btn-agregar" onClick={handleAddToCart} disabled={isAdding}>
                 <i className="fas fa-cart-plus" aria-hidden="true" />
