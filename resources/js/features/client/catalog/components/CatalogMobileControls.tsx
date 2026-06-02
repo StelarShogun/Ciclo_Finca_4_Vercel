@@ -50,11 +50,9 @@ export function CatalogMobileControls({
 
       <div id="catalog-category-backdrop" className="catalog-category-backdrop" aria-hidden="true" data-catalog-category-backdrop />
 
-      <div
+      <dialog
         id="catalog-category-panel"
         className="catalog-category-panel"
-        role="dialog"
-        aria-modal="true"
         aria-labelledby="catalog-category-panel-title"
         aria-hidden="true"
         data-active-category-id={String(activeId)}
@@ -136,7 +134,7 @@ export function CatalogMobileControls({
             </div>
           </div>
         </div>
-      </div>
+      </dialog>
 
       <script
         type="application/json"

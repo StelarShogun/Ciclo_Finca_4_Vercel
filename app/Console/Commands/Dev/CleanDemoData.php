@@ -2,17 +2,15 @@
 
 namespace App\Console\Commands\Dev;
 
-use App\Models\Category;
 use App\Models\Product;
-use App\Models\Supplier;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class CleanDemoData extends Command
 {
-    protected $signature = 'dev:clean-demo-data';
+    protected $signature = 'dev:clean-demo-data {--force : Execute deletion without interactive confirmation}';
 
-    protected $description = 'Remove demo/test products by name patterns (local/testing only)';
+    protected $description = 'Remove demo/test products by explicit name or SKU patterns (local/testing only)';
 
     public function handle(): int
     {
@@ -22,79 +20,34 @@ class CleanDemoData extends Command
             return self::FAILURE;
         }
 
-        $this->info('🧹 Starting database cleaning...');
+        if (! $this->option('force') && ! $this->confirm('Esto eliminará productos demo/test. ¿Continuar?')) {
+            $this->info('Operación cancelada.');
+
+            return self::SUCCESS;
+        }
+
+        $this->info('🧹 Starting demo data cleaning...');
 
         try {
             DB::beginTransaction();
 
-            $productsRemoved = Product::where(function ($query) {
-                $query->where('name', 'like', '%test%')
-                    ->orWhere('name', 'like', '%prueba%')
-                    ->orWhere('name', 'like', '%sample%')
-                    ->orWhere('name', 'like', '%demo%')
-                    ->orWhere('name', 'like', '%lorem%')
-                    ->orWhere('name', 'like', '%ipsum%')
-                    ->orWhere('name', 'like', '%dolor%')
-                    ->orWhere('name', 'like', '%sit%')
-                    ->orWhere('name', 'like', '%amet%')
-                    ->orWhere('name', 'like', '%consectetur%')
-                    ->orWhere('name', 'like', '%adipiscing%')
-                    ->orWhere('name', 'like', '%elit%')
-                    ->orWhere('name', 'like', '%sed%')
-                    ->orWhere('name', 'like', '%do%')
-                    ->orWhere('name', 'like', '%eiusmod%')
-                    ->orWhere('name', 'like', '%tempor%')
-                    ->orWhere('name', 'like', '%incididunt%')
-                    ->orWhere('name', 'like', '%labore%')
-                    ->orWhere('name', 'like', '%dolore%')
-                    ->orWhere('name', 'like', '%magna%')
-                    ->orWhere('name', 'like', '%aliqua%')
-                    ->orWhere('name', 'like', '%ut%')
-                    ->orWhere('name', 'like', '%enim%')
-                    ->orWhere('name', 'like', '%ad%')
-                    ->orWhere('name', 'like', '%minim%')
-                    ->orWhere('name', 'like', '%veniam%')
-                    ->orWhere('name', 'like', '%quis%')
-                    ->orWhere('name', 'like', '%nostrud%')
-                    ->orWhere('name', 'like', '%exercitation%')
-                    ->orWhere('name', 'like', '%ullamco%')
-                    ->orWhere('name', 'like', '%laboris%')
-                    ->orWhere('name', 'like', '%nisi%')
-                    ->orWhere('name', 'like', '%aliquip%')
-                    ->orWhere('name', 'like', '%ex%')
-                    ->orWhere('name', 'like', '%ea%')
-                    ->orWhere('name', 'like', '%commodo%')
-                    ->orWhere('name', 'like', '%consequat%')
-                    ->orWhere('name', 'like', '%duis%')
-                    ->orWhere('name', 'like', '%aute%')
-                    ->orWhere('name', 'like', '%irure%')
-                    ->orWhere('name', 'like', '%reprehenderit%')
-                    ->orWhere('name', 'like', '%voluptate%')
-                    ->orWhere('name', 'like', '%velit%')
-                    ->orWhere('name', 'like', '%esse%')
-                    ->orWhere('name', 'like', '%cillum%')
-                    ->orWhere('name', 'like', '%fugiat%')
-                    ->orWhere('name', 'like', '%nulla%')
-                    ->orWhere('name', 'like', '%pariatur%')
-                    ->orWhere('name', 'like', '%excepteur%')
-                    ->orWhere('name', 'like', '%sint%')
-                    ->orWhere('name', 'like', '%occaecat%')
-                    ->orWhere('name', 'like', '%cupidatat%')
-                    ->orWhere('name', 'like', '%non%')
-                    ->orWhere('name', 'like', '%proident%')
-                    ->orWhere('name', 'like', '%sunt%')
-                    ->orWhere('name', 'like', '%culpa%')
-                    ->orWhere('name', 'like', '%qui%')
-                    ->orWhere('name', 'like', '%officia%')
-                    ->orWhere('name', 'like', '%deserunt%')
-                    ->orWhere('name', 'like', '%mollit%')
-                    ->orWhere('name', 'like', '%anim%')
-                    ->orWhere('name', 'like', '%id%')
-                    ->orWhere('name', 'like', '%est%')
-                    ->orWhere('name', 'like', '%laborum%');
-            })->delete();
+            $productsRemoved = Product::query()
+                ->where(function ($query) {
+                    $query->where('name', 'like', '[TEST]%')
+                        ->orWhere('name', 'like', '[DEMO]%')
+                        ->orWhere('name', 'like', '[FAKE]%')
+                        ->orWhere('sku', 'like', 'TEST-%')
+                        ->orWhere('sku', 'like', 'DEMO-%')
+                        ->orWhere('sku', 'like', 'FAKE-%')
+                        ->orWhere(function ($nameQuery) {
+                            foreach (['test', 'prueba', 'sample', 'demo', 'lorem', 'ipsum', 'dummy', 'fake'] as $pattern) {
+                                $nameQuery->orWhere('name', 'like', '%'.$pattern.'%');
+                            }
+                        });
+                })
+                ->delete();
 
-            $this->info("✅ Removed {$productsRemoved} test products");
+            $this->info("✅ Removed {$productsRemoved} demo/test products");
 
             try {
                 $historyRemoved = DB::table('inventory_history')->where('reason', 'like', '%test%')->delete();
@@ -103,12 +56,6 @@ class CleanDemoData extends Command
                 $this->warn('⚠️  Table inventory_history not found, continuing...');
             }
 
-            $categoriesCount = Category::count();
-            $suppliersCount = Supplier::count();
-
-            $this->info('📊 Current database state:');
-            $this->info("   - Categories: {$categoriesCount}");
-            $this->info("   - Suppliers: {$suppliersCount}");
             $this->info('   - Remaining products: '.Product::count());
 
             DB::commit();

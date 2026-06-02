@@ -2,8 +2,11 @@
 
 namespace App\Support\ProductCatalog;
 
+use App\Data\Admin\ProductCatalog\CatalogImportOptions;
+use App\Services\Admin\ProductCatalog\CatalogImportState;
+
 /**
- * Runtime flags for bulk catalog import (ZIP/CSV/XML).
+ * @deprecated Use {@see CatalogImportOptions} and {@see CatalogImportState}.
  */
 final class CatalogImportContext
 {
@@ -11,7 +14,7 @@ final class CatalogImportContext
 
     public static function isFastImport(): bool
     {
-        return self::$fastImport;
+        return CatalogImportState::isFastImport();
     }
 
     /**
@@ -22,14 +25,7 @@ final class CatalogImportContext
      */
     public static function runFastImport(callable $callback): mixed
     {
-        $previous = self::$fastImport;
-        self::$fastImport = true;
-
-        try {
-            return $callback();
-        } finally {
-            self::$fastImport = $previous;
-        }
+        return CatalogImportState::runFastImport($callback);
     }
 
     /**
@@ -38,7 +34,6 @@ final class CatalogImportContext
      */
     public static function runFastImportStats(callable $callback): array
     {
-        /** @var array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int, rows_total: int, duration_ms: int, media_count: int} */
-        return self::runFastImport($callback);
+        return CatalogImportOptions::default()->runImportStats($callback);
     }
 }

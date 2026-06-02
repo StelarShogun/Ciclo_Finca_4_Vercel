@@ -201,7 +201,7 @@ export async function cf4OrderStatusToast({
     return Toast.fire({ icon: false, title, html: bodyHtml });
 }
 
-/** Persistent success dialog — user must confirm (e.g. post-checkout). */
+/** Persistent success dialog — requires explicit dismissal (e.g. post-checkout). */
 export async function cf4CheckoutSuccessDialog({
     title = '¡Pedido confirmado!',
     text = '',

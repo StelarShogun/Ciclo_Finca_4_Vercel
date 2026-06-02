@@ -3,8 +3,8 @@
 namespace App\Actions\Admin\Products;
 
 use App\Http\Requests\Admin\Products\ImportCatalogRequest;
+use App\Services\Admin\ProductCatalog\ProductCatalogImporter;
 use App\Services\Admin\Products\ProductAuditLogger;
-use App\Support\ProductCatalog\ProductCatalogImporter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;

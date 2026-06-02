@@ -55,7 +55,7 @@ export function CategoryPreview({ categories }: CategoryPreviewProps) {
           >
             <i className="fas fa-chevron-left" aria-hidden="true" />
           </button>
-          <div className="categories-carousel" role="region" aria-roledescription="carrusel" aria-label="Categorías de productos">
+          <section className="categories-carousel" aria-roledescription="carrusel" aria-label="Categorías de productos">
             <div className="categories-carousel-track" ref={trackRef}>
               {categories.map((category) => (
                 <article className="category-slide" key={category.id}>
@@ -73,19 +73,19 @@ export function CategoryPreview({ categories }: CategoryPreviewProps) {
                     </Link>
 
                     {category.children.length > 0 ? (
-                      <div className="category-subchips" role="group" aria-label={`Subcategorías de ${category.name}`}>
+                      <fieldset className="category-subchips" aria-label={`Subcategorías de ${category.name}`}>
                         {category.children.map((child) => (
                           <Link href={child.url} className="category-subchip" key={child.id}>
                             {child.name}
                           </Link>
                         ))}
-                      </div>
+                      </fieldset>
                     ) : null}
                   </div>
                 </article>
               ))}
             </div>
-          </div>
+          </section>
           <button
             type="button"
             className="categories-carousel-btn categories-carousel-btn--next"

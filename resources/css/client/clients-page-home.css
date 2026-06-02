@@ -883,6 +883,14 @@ body.guest-layout {
   margin-bottom: 18px;
 }
 
+.trust-items,
+.benefits-grid,
+.steps-grid,
+.testimonials-grid {
+  list-style: none;
+  margin: 0;
+}
+
 .trust-items {
   background: var(--background-white);
   border: 1px solid var(--border-color);
@@ -1833,6 +1841,8 @@ body.guest-layout {
 }
 
 .category-subchips {
+  border: 0;
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;

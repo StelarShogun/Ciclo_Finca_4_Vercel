@@ -82,7 +82,7 @@ export default function InvoicesIndex(props: InvoiceListPageProps) {
         </nav>
 
         {props.readyToPickupCount > 0 && props.tab === 'facturas' ? (
-          <div className="cf4-ready-pickup-banner" role="status" aria-live="polite">
+          <output className="cf4-ready-pickup-banner" aria-live="polite">
             <div className="cf4-ready-pickup-banner__icon" aria-hidden="true">
               <i className="fas fa-box-open" />
             </div>
@@ -92,7 +92,7 @@ export default function InvoicesIndex(props: InvoiceListPageProps) {
                 {props.readyToPickupCount === 1 ? 'Tienes 1 pedido' : `Tienes ${props.readyToPickupCount} pedidos`} listo{props.readyToPickupCount === 1 ? '' : 's'} en tienda.
               </p>
             </div>
-          </div>
+          </output>
         ) : null}
 
         <div className="cf4-invoices-card">

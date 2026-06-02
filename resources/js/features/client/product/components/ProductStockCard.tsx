@@ -8,11 +8,10 @@ export function ProductStockCard({ product }: ProductStockCardProps) {
   const purchasable = product.canBuy;
 
   return (
-    <div
+    <output
       className={`product-detail-stock-card product-detail-stock-card--${
         purchasable && !product.isLowStock ? 'available' : purchasable && product.isLowStock ? 'low' : 'unavailable'
       }`}
-      role="status"
     >
       {purchasable && product.isLowStock ? (
         <>
@@ -43,6 +42,6 @@ export function ProductStockCard({ product }: ProductStockCardProps) {
           </div>
         </>
       )}
-    </div>
+    </output>
   );
 }

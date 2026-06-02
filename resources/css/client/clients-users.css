@@ -826,6 +826,10 @@ html[data-theme="dark"] .input-ok    { border-color: var(--color-success) !impor
    Usa tokens semánticos → válido en modo claro y oscuro.
    =================================================================== */
 .otp-inputs {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
     position: relative;
     display: flex;
     justify-content: center;

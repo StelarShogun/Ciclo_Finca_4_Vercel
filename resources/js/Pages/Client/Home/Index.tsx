@@ -91,11 +91,11 @@ function TrustStrip() {
   return (
     <section className="home-trust-strip" aria-label="Indicadores de confianza">
       <div className="container">
-        <div className="trust-items" role="list">
+        <ul className="trust-items">
           <TrustItem icon="fas fa-users" title="Atención experta" text="acompañamiento personalizado" />
           <TrustItem icon="fas fa-tools" title="Taller propio" text="preparación técnica incluida" />
           <TrustItem icon="fas fa-star" title="4.9/5" text="satisfacción de servicio" />
-        </div>
+        </ul>
       </div>
     </section>
   );
@@ -103,13 +103,13 @@ function TrustStrip() {
 
 function TrustItem({ icon, text, title }: { icon: string; text: string; title: string }) {
   return (
-    <div className="trust-item" role="listitem">
+    <li className="trust-item">
       <i className={icon} aria-hidden="true" />
       <div>
         <strong>{title}</strong>
         <span>{text}</span>
       </div>
-    </div>
+    </li>
   );
 }
 
@@ -128,15 +128,15 @@ function BenefitsSection() {
       subtitle="Elige en el catálogo y te ayudamos a dejar tu compra lista para retirar en tienda."
       ariaLabel="Beneficios del servicio"
     >
-      <div className="benefits-grid" role="list" aria-label="Beneficios principales">
+      <ul className="benefits-grid" aria-label="Beneficios principales">
         {benefits.map(([icon, title, description]) => (
-          <div className="benefit-card" role="listitem" key={title}>
+          <li className="benefit-card" key={title}>
             <i className={icon} aria-hidden="true" />
             <h3 className="benefit-title">{title}</h3>
             <p className="benefit-desc">{description}</p>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </HomeSection>
   );
 }
@@ -155,7 +155,7 @@ function HowItWorksSection({
       subtitle="Tres pasos simples para dejar tu encargo listo para retirar en tienda."
       ariaLabel="Cómo funciona el encargo"
     >
-      <div className="steps-grid" role="list" aria-label="Pasos del encargo">
+      <ul className="steps-grid" aria-label="Pasos del encargo">
         <StepCard number="1" title="Explora el catálogo" text="Busca bicicletas, componentes y accesorios según tu estilo de ciclismo.">
           <Link href="/catalog" className="btn btn-primary btn-lg step-cta">
             Ver catálogo
@@ -182,7 +182,7 @@ function HowItWorksSection({
             <span>Retiro en tienda.</span>
           </div>
         </StepCard>
-      </div>
+      </ul>
     </HomeSection>
   );
 }
@@ -199,12 +199,12 @@ function StepCard({
   title: string;
 }) {
   return (
-    <div className="step-card" role="listitem">
+    <li className="step-card">
       <div className="step-number">{number}</div>
       <h3 className="step-title">{title}</h3>
       <p className="step-desc">{text}</p>
       {children}
-    </div>
+    </li>
   );
 }
 
@@ -222,9 +222,9 @@ function TestimonialsSection() {
       subtitle="Experiencias reales en atención y preparación de encargos."
       ariaLabel="Testimonios de clientes"
     >
-      <div className="testimonials-grid" role="list" aria-label="Lista de testimonios">
+      <ul className="testimonials-grid" aria-label="Lista de testimonios">
         {testimonials.map(([quote, author]) => (
-          <div className="testimonial-card" role="listitem" key={author}>
+          <li className="testimonial-card" key={author}>
             <div className="testimonial-stars" aria-hidden="true">
               {Array.from({ length: 5 }, (_, index) => (
                 <i className="fas fa-star" key={index} />
@@ -232,9 +232,9 @@ function TestimonialsSection() {
             </div>
             <p className="testimonial-quote">"{quote}"</p>
             <p className="testimonial-author">{author}</p>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </HomeSection>
   );
 }

@@ -72,6 +72,8 @@ Client/
 | Domain / integrations | `app/Services/Admin/*`, `app/Services/Client/*`, `app/Services/Security/*` |
 | DTOs | `app/Data/*` |
 | Inertia payloads | `app/Support/ClientInertia/*` |
-| Catalog import/export | `app/Support/ProductCatalog/*` |
+| Storefront cache / icons / pickup copy | `app/Services/Client/Storefront/*` (Support wrappers deprecated) |
+| Client catalog page | `app/Actions/Client/Catalog/BuildCatalogPage` + `app/Services/Client/Catalog/*` |
+| Catalog import/export | `app/Services/Admin/ProductCatalog/*`, `app/Data/Admin/ProductCatalog/CatalogImportOptions` |
 
 See `app/Support/README.md` and `docs/BACKEND_ARCHITECTURE_PENDING.md` for follow-up extractions (`BuildProductDetailPage`, further admin product splits).

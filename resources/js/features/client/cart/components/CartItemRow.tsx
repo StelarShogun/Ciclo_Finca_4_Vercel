@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 
 import { CartQuantitySelector } from '@/features/client/cart/components/CartQuantitySelector';
+import { DECORATIVE_IMAGE_SRC } from '@/shared/lib/decorativeImage';
 import type { CartItem } from '@/features/client/cart/types';
 
 type CartItemRowProps = {
@@ -14,16 +15,13 @@ export function CartItemRow({ isBusy = false, item, onQuantityChange, onRemove }
   const productUrl = item.productUrl ?? `/catalog?search=${encodeURIComponent(item.name)}`;
 
   return (
-    <article className="cart-item" role="listitem" data-product-id={item.productId}>
+    <li className="cart-item" data-product-id={item.productId}>
       <Link href={productUrl} className="cart-item-image" tabIndex={-1} aria-hidden="true">
         {item.image.usesPlaceholder ? (
-          <div
-            className="product-media-placeholder product-media-placeholder--cart"
-            role="img"
-            aria-label={`Sin imagen: ${item.name}`}
-          >
+          <span className="product-media-placeholder product-media-placeholder--cart">
+            <img alt={`Sin imagen: ${item.name}`} className="sr-only" src={DECORATIVE_IMAGE_SRC} />
             <i className={item.image.placeholderIconClass} aria-hidden="true" />
-          </div>
+          </span>
         ) : (
           <picture>
             {item.image.mobileWebp ? (
@@ -77,6 +75,6 @@ export function CartItemRow({ isBusy = false, item, onQuantityChange, onRemove }
           <i className="fas fa-trash-alt" aria-hidden="true" />
         </button>
       </div>
-    </article>
+    </li>
   );
 }

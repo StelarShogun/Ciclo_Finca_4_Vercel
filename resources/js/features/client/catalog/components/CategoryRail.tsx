@@ -80,10 +80,9 @@ export function CategoryRail({ activeCategoryId = null, categories }: CategoryRa
                 </div>
 
                 {category.children.length > 0 ? (
-                  <div
+                  <section
                     className="catalog-category-flyout"
                     id={flyoutId}
-                    role="region"
                     aria-label={`Subcategorías de ${category.name}`}
                     aria-hidden="true"
                   >
@@ -100,7 +99,7 @@ export function CategoryRail({ activeCategoryId = null, categories }: CategoryRa
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </section>
                 ) : null}
               </div>
             );

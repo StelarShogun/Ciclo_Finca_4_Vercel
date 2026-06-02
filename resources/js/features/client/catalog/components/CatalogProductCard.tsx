@@ -14,7 +14,8 @@ type CatalogProductCardProps = {
 };
 
 export function CatalogProductCard({ csrfToken, isAuthenticated, product }: CatalogProductCardProps) {
-  const [isFavorite, setIsFavorite] = useState(product.isFavorite);
+  const [favoriteOverride, setFavoriteOverride] = useState<boolean | null>(null);
+  const isFavorite = favoriteOverride ?? product.isFavorite;
   const [isBusy, setIsBusy] = useState(false);
   const { showToast } = useToast();
 
@@ -82,7 +83,7 @@ export function CatalogProductCard({ csrfToken, isAuthenticated, product }: Cata
         return;
       }
 
-      setIsFavorite(result.isFavorite);
+      setFavoriteOverride(result.isFavorite);
       showToast({
         variant: 'success',
         title: result.isFavorite ? 'Agregado a favoritos' : 'Quitado de favoritos',

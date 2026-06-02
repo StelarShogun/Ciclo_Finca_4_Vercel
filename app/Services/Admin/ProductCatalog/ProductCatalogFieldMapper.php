@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support\ProductCatalog;
+namespace App\Services\Admin\ProductCatalog;
 
 /**
  * Maps heterogeneous supplier rows (CSV/XML/JSON keys) to canonical product fields.

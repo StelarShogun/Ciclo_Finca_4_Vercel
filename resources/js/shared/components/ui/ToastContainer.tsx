@@ -22,9 +22,8 @@ export function ToastContainer({
   onRemove: (id: string) => void;
 }) {
   return (
-    <div
+    <section
       className="cf4-toast-region"
-      role="region"
       aria-label="Notificaciones"
       aria-live="polite"
       aria-relevant="additions"
@@ -55,7 +54,7 @@ export function ToastContainer({
           </button>
         </article>
       ))}
-    </div>
+    </section>
   );
 }
 

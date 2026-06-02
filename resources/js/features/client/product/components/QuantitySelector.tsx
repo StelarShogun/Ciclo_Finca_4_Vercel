@@ -1,8 +1,10 @@
+import type { Dispatch, SetStateAction } from 'react';
+
 import { formatColones } from '@/features/client/product/utils/formatColones';
 import type { ProductDetail } from '@/features/client/product/types';
 
 type QuantitySelectorProps = {
-  onQuantityChange: (quantity: number) => void;
+  onQuantityChange: Dispatch<SetStateAction<number>>;
   product: ProductDetail;
   quantity: number;
 };
@@ -23,10 +25,6 @@ export function QuantitySelector({ onQuantityChange, product, quantity }: Quanti
     return value;
   }
 
-  function setQuantity(next: number) {
-    onQuantityChange(clamp(next));
-  }
-
   const atMin = quantity <= minQty;
   const atMax = quantity >= maxQty;
   const subtotalFormatted = formatColones(product.price * quantity);
@@ -43,7 +41,7 @@ export function QuantitySelector({ onQuantityChange, product, quantity }: Quanti
           aria-label="Disminuir cantidad"
           disabled={atMin}
           aria-disabled={atMin}
-          onClick={() => setQuantity(quantity - 1)}
+          onClick={() => onQuantityChange((current) => clamp(current - 1))}
         >
           <i className="fas fa-minus" aria-hidden="true" />
         </button>
@@ -56,7 +54,7 @@ export function QuantitySelector({ onQuantityChange, product, quantity }: Quanti
           max={maxQty}
           inputMode="numeric"
           aria-describedby="product-qty-max-hint product-qty-subtotal"
-          onChange={(event) => setQuantity(parseInt(event.target.value, 10))}
+          onChange={(event) => onQuantityChange(clamp(parseInt(event.target.value, 10)))}
         />
         <button
           type="button"
@@ -64,7 +62,7 @@ export function QuantitySelector({ onQuantityChange, product, quantity }: Quanti
           aria-label="Aumentar cantidad"
           disabled={atMax}
           aria-disabled={atMax}
-          onClick={() => setQuantity(quantity + 1)}
+          onClick={() => onQuantityChange((current) => clamp(current + 1))}
         >
           <i className="fas fa-plus" aria-hidden="true" />
         </button>

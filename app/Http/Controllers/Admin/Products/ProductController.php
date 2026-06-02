@@ -23,22 +23,21 @@ use Illuminate\Validation\ValidationException;
 class ProductController extends Controller
 {
     public function __construct(
-        private ProductInventoryController $inventoryController,
         private ProductAuditLogger $productAudit,
     ) {}
 
     public function index(Request $request)
     {
-        if ($request->wantsJson() || $request->ajax()) {
-            $perPage = AdminPerPage::resolve($request->get('per_page', 10));
-            $products = Product::with(['category', 'supplier'])
-                ->orderBy('product_id', 'desc')
-                ->paginate($perPage);
-
-            return response()->json($products);
+        if (! $request->wantsJson() && ! $request->ajax()) {
+            return redirect()->route('inventory');
         }
 
-        return $this->inventoryController->index($request);
+        $perPage = AdminPerPage::resolve($request->get('per_page', 10));
+        $products = Product::with(['category', 'supplier'])
+            ->orderBy('product_id', 'desc')
+            ->paginate($perPage);
+
+        return response()->json($products);
     }
 
     public function store(StoreProductRequest $request, CreateProduct $createProduct)
@@ -136,7 +135,7 @@ class ProductController extends Controller
                 ]);
             }
 
-            return view('products.show', compact('product'));
+            return redirect()->route('inventory')->with('error', 'Usa el inventario para ver productos.');
         } catch (ModelNotFoundException $e) {
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
@@ -228,17 +227,5 @@ class ProductController extends Controller
 
             return redirect()->back()->with('error', 'No se pudo actualizar el producto. Inténtalo de nuevo.')->withInput();
         }
-    }
-
-    public function create()
-    {
-        return view('products.create');
-    }
-
-    public function edit($id)
-    {
-        $product = Product::findOrFail($id);
-
-        return view('products.edit', compact('product'));
     }
 }

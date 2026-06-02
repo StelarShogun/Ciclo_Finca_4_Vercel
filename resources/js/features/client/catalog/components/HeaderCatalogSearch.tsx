@@ -47,13 +47,12 @@ export function HeaderCatalogSearch() {
           <i className="fas fa-magnifying-glass" aria-hidden="true" />
           <span className="header-catalog-search-toggle-text">Buscar</span>
         </button>
-        <div className="header-catalog-search-inner" id="catalog-nav-search-inner">
+        <search className="header-catalog-search-inner" id="catalog-nav-search-inner">
           <form
             className="header-catalog-search-form"
             method="GET"
             action="/catalog"
             id="catalog-nav-search-form"
-            role="search"
             aria-label="Buscar en catálogo"
           >
             {isCatalogPage && filters
@@ -80,10 +79,6 @@ export function HeaderCatalogSearch() {
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck={false}
-              role="combobox"
-              aria-autocomplete="list"
-              aria-expanded="false"
-              aria-controls="catalog-search-suggestions"
               maxLength={200}
             />
             <button
@@ -94,12 +89,11 @@ export function HeaderCatalogSearch() {
               <i className="fas fa-arrow-right" aria-hidden="true" />
             </button>
           </form>
-        </div>
+        </search>
       </div>
-      <div
+      <ul
         id="catalog-search-suggestions"
         className="catalog-search-suggestions catalog-search-suggestions--header"
-        role="listbox"
         aria-label="Sugerencias de búsqueda"
         aria-hidden="true"
       />

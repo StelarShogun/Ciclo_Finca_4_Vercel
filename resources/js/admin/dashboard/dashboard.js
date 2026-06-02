@@ -550,7 +550,7 @@ class Dashboard {
             if (data.success && data.categories) {
                 // Ordenamos las categorías por total descendente pero mostramos todas,
                 // el scroll del contenedor se encarga de manejar cantidades grandes.
-                const sorted = [...data.categories].sort((a, b) => (b.total || 0) - (a.total || 0));
+                const sorted = data.categories.toSorted((a, b) => (b.total || 0) - (a.total || 0));
 
                 const labels = sorted.map(cat => {
                     const name = cat.categoria ?? cat.name ?? cat.category;

@@ -1,5 +1,5 @@
 import { Head, router, usePage, Link } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { ClientAuthLayout } from '@/shared/components/layout/ClientAuthLayout';
 import { useRecaptchaV2 } from '@/hooks/useRecaptchaV2';
@@ -31,8 +31,8 @@ export default function Login({
 
   const { widgetRef, token, isRendered } = useRecaptchaV2(recaptchaSiteKey);
 
-  const showSessionExpired = useMemo(() => Boolean(sessionExpired), [sessionExpired]);
-  const showRecoverySuccess = useMemo(() => Boolean(recoverySuccessModal), [recoverySuccessModal]);
+  const showSessionExpired = Boolean(sessionExpired);
+  const showRecoverySuccess = Boolean(recoverySuccessModal);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();

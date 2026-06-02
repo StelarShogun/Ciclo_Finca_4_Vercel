@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Support\ProductCatalog;
+namespace App\Services\Admin\ProductCatalog;
 
+use App\Data\Admin\ProductCatalog\CatalogImportOptions;
 use App\Jobs\GenerateCatalogImportMediaConversionsJob;
 use App\Models\Brand;
 use App\Models\Category;
@@ -11,8 +12,8 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Supplier;
 use App\Services\Admin\Images\ProductImageOptimizerService;
+use App\Services\Client\Storefront\ClientStorefrontCache;
 use App\Services\ProductClassificationAssignmentService;
-use App\Support\ClientStorefrontCache;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -53,6 +54,8 @@ final class ProductCatalogImporter
 
     private bool $autoCreateCategories = false;
 
+    private ?CatalogImportOptions $importOptions = null;
+
     public function __construct(
         private readonly ProductClassificationAssignmentService $classifications,
         private readonly ProductImageOptimizerService $imageOptimizer,
@@ -61,83 +64,99 @@ final class ProductCatalogImporter
     /**
      * @return array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int, rows_total: int, duration_ms: int, media_count: int}
      */
-    public function import(UploadedFile $file, ?string $extractedDir = null): array
+    public function import(UploadedFile $file, ?string $extractedDir = null, ?CatalogImportOptions $options = null): array
     {
-        return CatalogImportContext::runFastImportStats(function () use ($file, $extractedDir) {
-            $startedAt = hrtime(true);
-            $this->importedMediaIds = [];
-            $this->autoCreateCategories = false;
-            $this->productsById = [];
-            $this->productsBySku = [];
-            $this->productsByCategoryAndName = [];
-            /** @var array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int, rows_total: int, duration_ms: int, media_count: int} $stats */
-            $stats = [
-                'created' => 0,
-                'updated' => 0,
-                'skipped' => 0,
-                'errors' => [],
-                'media_conversions_queued' => 0,
-                'rows_total' => 0,
-                'duration_ms' => 0,
-                'media_count' => 0,
-            ];
-            $bundleDir = $extractedDir;
+        $options ??= CatalogImportOptions::default();
 
-            if ($bundleDir === null && strtolower($file->getClientOriginalExtension()) === 'zip') {
-                $bundleDir = $this->extractBundleZip($file);
+        return $options->runImportStats(function () use ($file, $extractedDir, $options) {
+            $this->importOptions = $options;
+
+            try {
+                return $this->runImport($file, $extractedDir);
+            } finally {
+                $this->importOptions = null;
             }
+        });
+    }
 
-            $this->autoCreateCategories = $bundleDir !== null;
+    /**
+     * @return array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int, rows_total: int, duration_ms: int, media_count: int}
+     */
+    private function runImport(UploadedFile $file, ?string $extractedDir): array
+    {
+        $startedAt = hrtime(true);
+        $this->importedMediaIds = [];
+        $this->autoCreateCategories = false;
+        $this->productsById = [];
+        $this->productsBySku = [];
+        $this->productsByCategoryAndName = [];
+        /** @var array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int, rows_total: int, duration_ms: int, media_count: int} $stats */
+        $stats = [
+            'created' => 0,
+            'updated' => 0,
+            'skipped' => 0,
+            'errors' => [],
+            'media_conversions_queued' => 0,
+            'rows_total' => 0,
+            'duration_ms' => 0,
+            'media_count' => 0,
+        ];
+        $bundleDir = $extractedDir;
 
-            $parser = new ProductCatalogFileParser;
-            $rows = $bundleDir !== null
-                ? $this->rowsFromBundle($bundleDir)
-                : $parser->parse($file);
+        if ($bundleDir === null && strtolower($file->getClientOriginalExtension()) === 'zip') {
+            $bundleDir = $this->extractBundleZip($file);
+        }
 
-            if ($rows === []) {
-                $stats['errors'][] = 'No se encontraron productos reconocibles en el archivo.';
-                $stats['duration_ms'] = (int) ((hrtime(true) - $startedAt) / 1_000_000);
+        $this->autoCreateCategories = $bundleDir !== null;
 
-                return $stats;
-            }
+        $parser = new ProductCatalogFileParser;
+        $rows = $bundleDir !== null
+            ? $this->rowsFromBundle($bundleDir)
+            : $parser->parse($file);
 
-            $stats['rows_total'] = count($rows);
-            $this->warmLookupCaches();
-
-            DB::transaction(function () use ($rows, $bundleDir, &$stats) {
-                foreach ($rows as $index => $row) {
-                    try {
-                        $result = $this->importRow($row, $bundleDir);
-                        $stats[$result]++;
-                    } catch (\Throwable $e) {
-                        $stats['skipped']++;
-                        $stats['errors'][] = 'Fila '.($index + 1).': '.$e->getMessage();
-                        Log::warning('product_catalog_import_row_failed', [
-                            'row' => $index + 1,
-                            'error' => $e->getMessage(),
-                        ]);
-                    }
-                }
-                $this->linkVariantsFromRows($rows);
-            });
-
-            ClientStorefrontCache::forgetAfterProductMutation();
-
-            if ($bundleDir !== null && str_starts_with($bundleDir, sys_get_temp_dir())) {
-                $this->deleteDirectory($bundleDir);
-            }
-
-            $mediaIds = array_values(array_unique($this->importedMediaIds));
-            $stats['media_count'] = count($mediaIds);
-            if ($mediaIds !== []) {
-                GenerateCatalogImportMediaConversionsJob::dispatch($mediaIds)->afterResponse();
-                $stats['media_conversions_queued'] = count($mediaIds);
-            }
-
+        if ($rows === []) {
+            $stats['errors'][] = 'No se encontraron productos reconocibles en el archivo.';
             $stats['duration_ms'] = (int) ((hrtime(true) - $startedAt) / 1_000_000);
 
             return $stats;
+        }
+
+        $stats['rows_total'] = count($rows);
+        $this->warmLookupCaches();
+
+        DB::transaction(function () use ($rows, $bundleDir, &$stats) {
+            foreach ($rows as $index => $row) {
+                try {
+                    $result = $this->importRow($row, $bundleDir);
+                    $stats[$result]++;
+                } catch (\Throwable $e) {
+                    $stats['skipped']++;
+                    $stats['errors'][] = 'Fila '.($index + 1).': '.$e->getMessage();
+                    Log::warning('product_catalog_import_row_failed', [
+                        'row' => $index + 1,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+            $this->linkVariantsFromRows($rows);
         });
+
+        ClientStorefrontCache::forgetAfterProductMutation();
+
+        if ($bundleDir !== null && str_starts_with($bundleDir, sys_get_temp_dir())) {
+            $this->deleteDirectory($bundleDir);
+        }
+
+        $mediaIds = array_values(array_unique($this->importedMediaIds));
+        $stats['media_count'] = count($mediaIds);
+        if ($mediaIds !== []) {
+            GenerateCatalogImportMediaConversionsJob::dispatch($mediaIds)->afterResponse();
+            $stats['media_conversions_queued'] = count($mediaIds);
+        }
+
+        $stats['duration_ms'] = (int) ((hrtime(true) - $startedAt) / 1_000_000);
+
+        return $stats;
     }
 
     private function warmLookupCaches(): void
@@ -580,7 +599,7 @@ final class ProductCatalogImporter
             return;
         }
 
-        if (CatalogImportContext::isFastImport()) {
+        if ($this->importOptions?->fastImport ?? CatalogImportState::isFastImport()) {
             if (@getimagesize($absolutePath) === false) {
                 return;
             }

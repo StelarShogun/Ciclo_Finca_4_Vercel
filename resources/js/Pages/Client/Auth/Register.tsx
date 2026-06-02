@@ -1,5 +1,5 @@
 import { Head, router, usePage, Link } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { ClientAuthLayout } from '@/shared/components/layout/ClientAuthLayout';
 import { InlineAlert } from '@/shared/components/ui/InlineAlert';
@@ -29,8 +29,6 @@ export default function Register({ recaptchaSiteKey }: RegisterPageProps) {
   const [isPassConfirmVisible, setIsPassConfirmVisible] = useState(false);
   const [processing, setProcessing] = useState(false);
 
-  const showOauthNote = useMemo(() => true, []);
-
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (processing) return;
@@ -58,8 +56,6 @@ export default function Register({ recaptchaSiteKey }: RegisterPageProps) {
         <div className="login-page-center">
           <div className="login-form-box" style={{ maxWidth: 480 }}>
             <h2 className="text-center mb-4">Crear Cuenta</h2>
-
-            {showOauthNote ? null : null}
 
             {recaptchaSiteKey ? (
               <InlineAlert variant="info">

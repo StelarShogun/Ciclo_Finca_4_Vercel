@@ -34,7 +34,7 @@ export default function CartIndexPage({
   }, [initialItems]);
 
   const subtotal = useMemo(() => items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0), [items]);
-  const subtotalFormatted = useMemo(() => formatCurrency(subtotal), [subtotal]);
+  const subtotalFormatted = formatCurrency(subtotal);
   const totalQuantity = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
   const hasItems = items.length > 0;
 
@@ -115,7 +115,7 @@ export default function CartIndexPage({
               {hasItems ? (
                 <div className="cart-layout">
                   <div className="cart-items-panel">
-                    <div className="cart-items" role="list" aria-label="Productos en el carrito">
+                    <ul className="cart-items" aria-label="Productos en el carrito">
                       {items.map((item) => (
                         <CartItemRow
                           key={item.productId}
@@ -125,7 +125,7 @@ export default function CartIndexPage({
                           onRemove={cartActions.removeItem}
                         />
                       ))}
-                    </div>
+                    </ul>
 
                     {pagination.lastPage > 1 ? (
                       <div className="cart-pagination-wrap">

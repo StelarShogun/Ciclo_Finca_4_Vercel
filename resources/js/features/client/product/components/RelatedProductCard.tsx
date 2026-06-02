@@ -5,6 +5,7 @@ import { ProductStarsInline } from '@/features/client/product/components/Product
 import { ResponsivePicture } from '@/features/client/product/components/ResponsivePicture';
 import type { ProductDetailPageProps } from '@/features/client/product/types';
 import { addToCart } from '@/features/client/cart/api';
+import { DECORATIVE_IMAGE_SRC } from '@/shared/lib/decorativeImage';
 import { toggleFavorite } from '@/features/client/favorites/api';
 import { useToast } from '@/shared/hooks/useToast';
 
@@ -16,7 +17,8 @@ type RelatedProductCardProps = {
 
 export function RelatedProductCard({ csrfToken, isAuthenticated, related }: RelatedProductCardProps) {
   const { showToast } = useToast();
-  const [isFavorite, setIsFavorite] = useState(related.isFavorite);
+  const [favoriteOverride, setFavoriteOverride] = useState<boolean | null>(null);
+  const isFavorite = favoriteOverride ?? related.isFavorite;
   const [isBusy, setIsBusy] = useState(false);
   const outOfStock = related.stockLabel === 'Agotado';
 
@@ -82,7 +84,7 @@ export function RelatedProductCard({ csrfToken, isAuthenticated, related }: Rela
         return;
       }
 
-      setIsFavorite(result.isFavorite);
+      setFavoriteOverride(result.isFavorite);
     } catch {
       showToast({
         variant: 'error',
@@ -111,9 +113,10 @@ export function RelatedProductCard({ csrfToken, isAuthenticated, related }: Rela
         ) : null}
         <Link className="product-image__link" href={related.url} aria-label={`Ver producto: ${related.name}`}>
           {related.image.usesPlaceholder ? (
-            <div className="product-media-placeholder" role="img" aria-label={related.name}>
+            <span className="product-media-placeholder">
+              <img alt={related.name} className="sr-only" src={DECORATIVE_IMAGE_SRC} />
               <i className={related.image.placeholderIconClass} aria-hidden="true" />
-            </div>
+            </span>
           ) : (
             <ResponsivePicture
               alt={related.name}

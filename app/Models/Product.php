@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\Admin\ProductCatalog\CatalogImportState;
 use App\Support\GdImage;
-use App\Support\ProductCatalog\CatalogImportContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -141,7 +141,7 @@ class Product extends Model implements HasMedia
 
     public function registerMediaConversions(?Media $media = null): void
     {
-        if (! GdImage::supportsWebp() || CatalogImportContext::isFastImport()) {
+        if (! GdImage::supportsWebp() || CatalogImportState::isFastImport()) {
             return;
         }
 

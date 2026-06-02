@@ -37,7 +37,8 @@ export function ProductPurchasePanel({
 }: ProductPurchasePanelProps) {
   const { showToast } = useToast();
   const [quantity, setQuantity] = useState(1);
-  const [isFavorite, setIsFavorite] = useState(product.isFavorite);
+  const [favoriteOverride, setFavoriteOverride] = useState<boolean | null>(null);
+  const isFavorite = favoriteOverride ?? product.isFavorite;
   const [isBusy, setIsBusy] = useState(false);
 
   const stockModifier =
@@ -116,7 +117,7 @@ export function ProductPurchasePanel({
         return;
       }
 
-      setIsFavorite(result.isFavorite);
+      setFavoriteOverride(result.isFavorite);
       showToast({
         variant: 'success',
         title: result.isFavorite ? 'Agregado a favoritos' : 'Quitado de favoritos',

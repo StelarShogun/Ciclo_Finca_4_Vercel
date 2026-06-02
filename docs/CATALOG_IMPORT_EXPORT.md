@@ -27,7 +27,7 @@ Bulk ZIP import runs in **fast mode**: copies images without re-encoding during 
 
 ### Import performance (2026-06)
 
-`ProductCatalogImporter` precarga en memoria (una consulta por tabla, no por fila):
+`App\Services\Admin\ProductCatalog\ProductCatalogImporter` precarga en memoria (una consulta por tabla, no por fila). Opciones: `App\Data\Admin\ProductCatalog\CatalogImportOptions` (`fastImport` por defecto `true`).
 
 - productos por `product_id`, SKU y par `category_id + name`
 - categorías, marcas, proveedores
@@ -42,7 +42,7 @@ Respuesta JSON/HTML incluye métricas adicionales:
 | `media_count` | Imágenes tocadas en el import |
 | `media_conversions_queued` | Jobs WebP encolados (sin conversión síncrona) |
 
-`ClientStorefrontCache::forgetAfterProductMutation()` se llama **una vez** al final del import, no por fila.
+`App\Services\Client\Storefront\ClientStorefrontCache::forgetAfterProductMutation()` se llama **una vez** al final del import, no por fila.
 
 Pendiente: test de importación sintética ≥500 filas en CI (coste de tiempo); hoy cubierto por tests de SKU/nombre+categoría y métricas.
 

@@ -80,8 +80,14 @@ export default function RecoveryReset({ gmail }: RecoveryResetPageProps) {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                   />
-                  <button type="button" id="toggle-reset-password" className="login-pass-toggle" onClick={() => setIsPassVisible((v) => !v)}>
-                    <i className={`fas ${isPassVisible ? 'fa-eye-slash' : 'fa-eye'}`} />
+                  <button
+                    type="button"
+                    id="toggle-reset-password"
+                    className="login-pass-toggle"
+                    aria-label="Mostrar u ocultar contraseña"
+                    onClick={() => setIsPassVisible((v) => !v)}
+                  >
+                    <i className={`fas ${isPassVisible ? 'fa-eye-slash' : 'fa-eye'}`} aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -103,8 +109,14 @@ export default function RecoveryReset({ gmail }: RecoveryResetPageProps) {
                     value={newPasswordConfirmation}
                     onChange={(e) => setNewPasswordConfirmation(e.target.value)}
                   />
-                  <button type="button" id="toggle-reset-confirm" className="login-pass-toggle" onClick={() => setIsConfirmVisible((v) => !v)}>
-                    <i className={`fas ${isConfirmVisible ? 'fa-eye-slash' : 'fa-eye'}`} />
+                  <button
+                    type="button"
+                    id="toggle-reset-confirm"
+                    className="login-pass-toggle"
+                    aria-label="Mostrar u ocultar confirmación de contraseña"
+                    onClick={() => setIsConfirmVisible((v) => !v)}
+                  >
+                    <i className={`fas ${isConfirmVisible ? 'fa-eye-slash' : 'fa-eye'}`} aria-hidden="true" />
                   </button>
                 </div>
               </div>

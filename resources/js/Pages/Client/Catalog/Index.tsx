@@ -87,6 +87,7 @@ export default function CatalogIndex({
           <div className="catalog-sidebar-stack">
             <CategoryRail categories={categories} activeCategoryId={filters.categoryId ?? null} />
             <CatalogFilters
+              key={`${filters.brandId ?? ''}-${filters.minPrice}-${filters.maxPrice}`}
               brands={brands}
               filters={filters}
               activeFilterCount={summary.activeFilterCount}

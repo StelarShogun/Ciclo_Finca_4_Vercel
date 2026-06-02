@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Support\ProductCatalog\ProductCatalogFieldMapper;
+use App\Services\Admin\ProductCatalog\ProductCatalogFieldMapper;
 use PHPUnit\Framework\TestCase;
 
 class ProductCatalogFieldMapperTest extends TestCase

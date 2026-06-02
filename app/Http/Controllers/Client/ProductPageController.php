@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 final class ProductPageController extends Controller
 {
-    public function product(Request $request, int $id, ?string $slug, BuildProductDetailPage $action)
+    public function product(Request $request, int $id, BuildProductDetailPage $action, ?string $slug = null)
     {
         return $action->handle($request, $id, $slug);
     }

@@ -29,7 +29,8 @@ export default function FavoritesIndex({ favorites, pagination }: FavoritesPageP
   const { csrfToken } = page.props;
   const { showToast } = useToast();
   const [busyId, setBusyId] = useState<number | null>(null);
-  const [items, setItems] = useState(favorites);
+  const [removedProductIds, setRemovedProductIds] = useState<number[]>([]);
+  const items = favorites.filter((item) => !removedProductIds.includes(item.product_id));
 
   async function removeFavorite(productId: number) {
     if (busyId) return;
@@ -41,7 +42,9 @@ export default function FavoritesIndex({ favorites, pagination }: FavoritesPageP
         return;
       }
       if (!result.isFavorite) {
-        setItems((current) => current.filter((it) => it.product_id !== productId));
+        setRemovedProductIds((current) =>
+          current.includes(productId) ? current : [...current, productId],
+        );
       }
       showToast({
         variant: 'success',

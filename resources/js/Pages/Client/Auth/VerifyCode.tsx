@@ -1,5 +1,5 @@
 import { Head, router, usePage, Link } from '@inertiajs/react';
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { ClientAuthLayout } from '@/shared/components/layout/ClientAuthLayout';
 import { InlineAlert } from '@/shared/components/ui/InlineAlert';
@@ -15,6 +15,8 @@ type VerifyCodePageProps = {
 
 type InertiaErrors = Record<string, string[]>;
 
+const OTP_SLOT_IDS = ['otp-slot-1', 'otp-slot-2', 'otp-slot-3', 'otp-slot-4', 'otp-slot-5', 'otp-slot-6'] as const;
+
 export default function VerifyCode({ isRecoveryFlow, destinationEmail, mailWarning }: VerifyCodePageProps) {
   const page = usePage<InertiaSharedProps & { errors?: InertiaErrors }>();
   const errors = page.props.errors ?? {};
@@ -28,7 +30,7 @@ export default function VerifyCode({ isRecoveryFlow, destinationEmail, mailWarni
   const actionUrl = isRecoveryFlow ? '/recovery/verify' : '/verify';
   const showResend = !isRecoveryFlow;
 
-  const verificationCode = useMemo(() => digits.join(''), [digits]);
+  const verificationCode = digits.join('');
   const isComplete = verificationCode.length === 6 && !verificationCode.includes('');
 
   function setDigitAt(index: number, value: string) {
@@ -114,16 +116,16 @@ export default function VerifyCode({ isRecoveryFlow, destinationEmail, mailWarni
                   Código de verificación
                 </label>
 
-                <div className="otp-inputs" role="group" aria-label="Código de verificación">
-                  {digits.map((d, idx) => (
+                <fieldset className="otp-inputs" aria-label="Código de verificación">
+                  {OTP_SLOT_IDS.map((slotId, idx) => (
                     <input
-                      key={idx}
+                      key={slotId}
                       type="text"
                       className="otp-box"
                       inputMode="numeric"
                       autoComplete={idx === 0 ? 'one-time-code' : 'off'}
                       maxLength={1}
-                      value={d}
+                      value={digits[idx]}
                       aria-label={`Dígito ${idx + 1}`}
                       onChange={(e) => onInputChange(idx, e)}
                       ref={(el) => {
@@ -132,7 +134,7 @@ export default function VerifyCode({ isRecoveryFlow, destinationEmail, mailWarni
                     />
                   ))}
                   <span className="otp-success" aria-hidden="true" />
-                </div>
+                </fieldset>
 
                 <input type="hidden" name="verification_code" id="verification_code" value={verificationCode} />
               </div>

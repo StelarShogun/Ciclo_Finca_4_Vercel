@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support\ProductCatalog;
+namespace App\Services\Admin\ProductCatalog;
 
 use Illuminate\Http\UploadedFile;
 use SimpleXMLElement;

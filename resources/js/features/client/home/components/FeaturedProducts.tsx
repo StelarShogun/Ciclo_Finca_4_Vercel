@@ -32,9 +32,8 @@ export function FeaturedProducts({ products, isAuthenticated, csrfToken }: Featu
     >
       {products.length > 0 ? (
         <>
-          <div
+          <section
             className="catalog-spotlight-carousel featured-products-carousel"
-            role="region"
             aria-roledescription="carrusel"
             aria-label="Productos destacados"
           >
@@ -62,7 +61,7 @@ export function FeaturedProducts({ products, isAuthenticated, csrfToken }: Featu
             >
               <i className="fas fa-chevron-right" aria-hidden="true" />
             </button>
-          </div>
+          </section>
 
           <div className="section-footer">
             <Link href="/catalog" className="btn btn-secondary">

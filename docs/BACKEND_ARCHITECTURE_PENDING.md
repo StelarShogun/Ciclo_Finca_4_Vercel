@@ -29,12 +29,30 @@ This document tracks structural work **after** the `migrate-to-ts-and-react` hyg
 
 - `GoogleOAuthState`, `GoogleProfileClientResolver`, `GoogleOAuthClient`
 
+## Client catalog listing
+
+**Done:**
+
+- `App\Actions\Client\Catalog\BuildCatalogPage`
+- `App\Services\Client\Catalog\CatalogFilterResolver`, `CatalogQueryBuilder`, `CatalogPayloadBuilder`, `CatalogCategoryNavigationBuilder`, `CatalogSpotlightBuilder`
+- `StorefrontController::catalog()` delegates to the action; `BuildsClientCatalogPages` is home-only
+
+**Pending (optional):** `App\Actions\Client\Home\BuildHomePage` if `home()` grows again.
+
+## Support layer
+
+**Done:** `ClientStorefrontCache`, `ClientCategoryIcons`, `ClientPickupPolicy` → `App\Services\Client\Storefront\*` with `@deprecated` Support wrappers.
+
+**Done:** `ProductCatalog/*` → `Services/Admin/ProductCatalog`; `CatalogImportOptions` in `Data/Admin/ProductCatalog`; `CatalogImportContext` deprecated wrapper in Support.
+
+**Pending:** `UnaImport/*` → `Services/Admin/ProductCatalog/Una`; `ProductImageUrls` → `Services/Media`; `ClientFavoriteFormatter` → Favorites or ClientInertia.
+
 ## Dev-only Artisan commands
 
 | Signature | Purpose |
 |-----------|---------|
 | `dev:setup-database` | `migrate:fresh` + `db:seed` (local/testing only) |
-| `dev:clean-demo-data` | Remove demo products by name patterns (local/testing only) |
+| `dev:clean-demo-data` | Remove demo products by explicit name/SKU patterns; requires `--force` or interactive confirm (local/testing only) |
 
 Removed: `app:check-tables`, `db:setup`, `db:clean`.
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { ResponsivePicture } from '@/features/client/product/components/ResponsivePicture';
 import type { ProductDetail } from '@/features/client/product/types';
+import { DECORATIVE_IMAGE_SRC } from '@/shared/lib/decorativeImage';
 
 type ProductGalleryProps = {
   product: ProductDetail;
@@ -53,9 +54,10 @@ export function ProductGallery({ product }: ProductGalleryProps) {
           className={`product-detail-media${product.showImagePlaceholder ? ' product-detail-media--placeholder' : ''}`}
         >
           {product.showImagePlaceholder ? (
-            <div className="product-detail-image-placeholder" role="img" aria-label={product.name}>
+            <span className="product-detail-image-placeholder">
+              <img alt={product.name} className="sr-only" src={DECORATIVE_IMAGE_SRC} />
               <i className={product.placeholderIconClass} aria-hidden="true" />
-            </div>
+            </span>
           ) : (
             <div className="product-carousel" id="product-carousel" data-slide-count={slideCount}>
               <div className="carousel-viewport">
@@ -106,22 +108,22 @@ export function ProductGallery({ product }: ProductGalleryProps) {
         </div>
 
         {!product.showImagePlaceholder && slideCount > 0 ? (
-          <div className="product-detail-thumbs" id="product-detail-thumbs" role="list" aria-label="Miniaturas del producto">
+          <ul className="product-detail-thumbs" id="product-detail-thumbs" aria-label="Miniaturas del producto">
             {product.carouselSlides.map((slide, index) => (
+              <li key={`thumb-${slide.fallback}`}>
               <button
-                key={`thumb-${slide.fallback}`}
                 type="button"
                 className={`product-detail-thumb${index === currentSlide ? ' is-active' : ''}`}
                 data-thumb-index={index}
-                role="listitem"
                 aria-label={`Ver imagen ${index + 1}`}
                 aria-current={index === currentSlide ? 'true' : 'false'}
                 onClick={() => goTo(index)}
               >
                 <ResponsivePicture alt="" fallback={slide.fallback} desktopWebp={slide.desktopWebp} mobileWebp={slide.mobileWebp} />
               </button>
+              </li>
             ))}
-          </div>
+          </ul>
         ) : null}
       </div>
     </div>

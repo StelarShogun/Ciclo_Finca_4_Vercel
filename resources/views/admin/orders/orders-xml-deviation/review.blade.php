@@ -420,7 +420,7 @@
                                 {{-- Name --}}
                                 <td>
                                     @if ($item['found'])
-                                        <a href="{{ route('products.show', $item['product_id']) }}" target="_blank"
+                                        <a href="{{ route('clients.product', ['id' => $item['product_id']]) }}" target="_blank"
                                             style="color:var(--color-primary,#2563eb);text-decoration:none;"
                                             title="Ver producto">{{ $item['name'] }}</a>
                                     @else

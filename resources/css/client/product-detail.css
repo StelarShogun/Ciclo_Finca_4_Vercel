@@ -81,6 +81,9 @@
 }
 
 .product-detail-thumbs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;

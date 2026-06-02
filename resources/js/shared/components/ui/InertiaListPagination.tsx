@@ -1,6 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
+import { paginationLinkKey } from '@/shared/lib/paginationLinkKey';
 import type { InertiaListPagination } from '@/types/pagination';
 
 type InertiaListPaginationProps = {
@@ -10,7 +11,7 @@ type InertiaListPaginationProps = {
 
 export function InertiaListPagination({ pagination, label = '' }: InertiaListPaginationProps) {
   const inertiaPage = usePage();
-  const uid = useMemo(() => `cpg-${Math.random().toString(16).slice(2)}`, []);
+  const [uid] = useState(() => `cpg-${Math.random().toString(16).slice(2)}`);
   const [target, setTarget] = useState(String(pagination.currentPage));
 
   if (pagination.lastPage <= 1) {
@@ -45,10 +46,9 @@ export function InertiaListPagination({ pagination, label = '' }: InertiaListPag
 
   return (
     <div className="pagination-wrapper">
-      <div
+      <nav
         className="cf4-pagination-toolbar pagination is-compact catalog-pagination"
         data-last-page={pagination.lastPage}
-        role="navigation"
         aria-label={ariaLabel}
       >
         <div className="results-info" aria-live="polite">
@@ -60,7 +60,8 @@ export function InertiaListPagination({ pagination, label = '' }: InertiaListPag
         <div className="cf4-pagination-controls-row">
           <div className="admin-pagination-nav">
             {pagination.links.map((link, index) => {
-              const isEllipsis = stripHtml(link.label) === '...';
+              const linkLabel = stripHtml(link.label);
+              const isEllipsis = linkLabel === '...';
               const isPrev = index === 0;
               const isNext = index === pagination.links.length - 1;
 
@@ -68,7 +69,7 @@ export function InertiaListPagination({ pagination, label = '' }: InertiaListPag
                 const navLabel = isPrev ? 'Anterior' : 'Siguiente';
                 return (
                   <PaginationLink
-                    key={`${navLabel}-${index}`}
+                    key={paginationLinkKey(link, isPrev ? 'prev' : 'next', linkLabel)}
                     href={link.url ?? null}
                     ariaLabel={navLabel}
                     page={link.page ?? null}
@@ -80,7 +81,11 @@ export function InertiaListPagination({ pagination, label = '' }: InertiaListPag
 
               if (isEllipsis) {
                 return (
-                  <span className="button admin-pagination-ellipsis" aria-hidden="true" key={`ellipsis-${index}`}>
+                  <span
+                    className="button admin-pagination-ellipsis"
+                    aria-hidden="true"
+                    key={paginationLinkKey(link, 'ellipsis', linkLabel)}
+                  >
                     …
                   </span>
                 );
@@ -88,18 +93,22 @@ export function InertiaListPagination({ pagination, label = '' }: InertiaListPag
 
               if (link.active) {
                 return (
-                  <span className="button button-primary" aria-current="page" key={`active-${index}`}>
-                    {stripHtml(link.label)}
+                  <span
+                    className="button button-primary"
+                    aria-current="page"
+                    key={paginationLinkKey(link, 'active', linkLabel)}
+                  >
+                    {linkLabel}
                   </span>
                 );
               }
 
               return (
                 <PaginationLink
-                  key={`page-${index}-${link.label}`}
+                  key={paginationLinkKey(link, 'page', linkLabel)}
                   href={link.url ?? null}
                   page={link.page ?? null}
-                  label={stripHtml(link.label)}
+                  label={linkLabel}
                 />
               );
             })}
@@ -117,6 +126,7 @@ export function InertiaListPagination({ pagination, label = '' }: InertiaListPag
               max={pagination.lastPage}
               step={1}
               inputMode="numeric"
+              aria-label="Ir a página"
               value={target}
               onChange={(e) => setTarget(e.target.value)}
               onKeyDown={(e) => {
@@ -131,7 +141,7 @@ export function InertiaListPagination({ pagination, label = '' }: InertiaListPag
             </button>
           </div>
         </div>
-      </div>
+      </nav>
     </div>
   );
 }

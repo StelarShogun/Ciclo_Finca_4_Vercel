@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 
 import type { CatalogBrand, CatalogFilters as CatalogFiltersType } from '@/types/catalog';
@@ -11,23 +11,27 @@ type CatalogFiltersProps = {
   currentPage?: number;
 };
 
+type FilterDraft = {
+  brandId?: string;
+  minPrice?: string | null;
+  maxPrice?: string | null;
+};
+
 export function CatalogFilters({
   activeFilterCount = 0,
   brands,
   currentPage = 1,
   filters,
 }: CatalogFiltersProps) {
-  const [brandId, setBrandId] = useState(filters.brandId?.toString() ?? '');
-  const [minPrice, setMinPrice] = useState(filters.minPrice);
-  const [maxPrice, setMaxPrice] = useState(filters.maxPrice);
+  const [draft, setDraft] = useState<FilterDraft>({});
 
-  const selectedBrandLabel = useMemo(() => {
-    if (!brandId) {
-      return 'Todas las marcas';
-    }
+  const brandId = draft.brandId ?? filters.brandId?.toString() ?? '';
+  const minPrice = draft.minPrice !== undefined ? draft.minPrice : filters.minPrice;
+  const maxPrice = draft.maxPrice !== undefined ? draft.maxPrice : filters.maxPrice;
 
-    return brands.find((brand) => String(brand.id) === brandId)?.name ?? 'Todas las marcas';
-  }, [brandId, brands]);
+  const selectedBrandLabel = !brandId
+    ? 'Todas las marcas'
+    : (brands.find((brand) => String(brand.id) === brandId)?.name ?? 'Todas las marcas');
 
   function submitFilters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -84,9 +88,14 @@ export function CatalogFilters({
                 step="1"
                 placeholder="Mínimo"
                 value={minPrice}
-                onChange={(event) => setMinPrice(event.target.value)}
+                onChange={(event) => setDraft((current) => ({ ...current, minPrice: event.target.value }))}
               />
-              <span className="price-separator">-</span>
+              <span className="price-separator" aria-hidden="true">
+                -
+              </span>
+              <label htmlFor="max_price" className="sr-only">
+                Precio máximo (₡)
+              </label>
               <input
                 type="number"
                 id="max_price"
@@ -96,7 +105,7 @@ export function CatalogFilters({
                 step="1"
                 placeholder="Máximo"
                 value={maxPrice}
-                onChange={(event) => setMaxPrice(event.target.value)}
+                onChange={(event) => setDraft((current) => ({ ...current, maxPrice: event.target.value }))}
               />
             </div>
           </div>
@@ -112,7 +121,7 @@ export function CatalogFilters({
                 name="brand_id"
                 className="form-control catalog-filter-select__native"
                 value={brandId}
-                onChange={(event) => setBrandId(event.target.value)}
+                onChange={(event) => setDraft((current) => ({ ...current, brandId: event.target.value }))}
               >
                 <option value="">Todas las marcas</option>
                 {brands.map((brand) => (
@@ -140,7 +149,7 @@ export function CatalogFilters({
                     role="option"
                     data-value=""
                     aria-selected={brandId === ''}
-                    onClick={() => setBrandId('')}
+                    onClick={() => setDraft((current) => ({ ...current, brandId: '' }))}
                   >
                     Todas las marcas
                   </button>
@@ -153,7 +162,7 @@ export function CatalogFilters({
                       role="option"
                       data-value={brand.id}
                       aria-selected={brandId === String(brand.id)}
-                      onClick={() => setBrandId(String(brand.id))}
+                      onClick={() => setDraft((current) => ({ ...current, brandId: String(brand.id) }))}
                     >
                       {brand.name}
                     </button>

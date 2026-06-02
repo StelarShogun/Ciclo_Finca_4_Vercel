@@ -85,9 +85,9 @@ export function ProductReviewsSection({ authClient, productId, productPath, revi
           </div>
 
           {reviews.showMyHighlighted && reviews.myHighlighted ? (
-            <div className="product-reviews-highlight" role="region" aria-label="Tu reseña">
+            <section className="product-reviews-highlight" aria-label="Tu reseña">
               <ReviewRow review={reviews.myHighlighted} />
-            </div>
+            </section>
           ) : null}
 
           <div className="product-reviews-list">
