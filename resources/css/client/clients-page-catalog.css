@@ -2101,8 +2101,8 @@ select.catalog-toolbar-select:focus,
   align-items: center;
   gap: 10px;
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--color-success-bg) 0%, var(--background-white) 65%);
-  border-bottom: 2px solid var(--color-primary);
+  background: var(--background-light);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .product-reviews-toolbar__head-icon {

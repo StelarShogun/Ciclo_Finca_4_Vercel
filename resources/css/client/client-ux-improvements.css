@@ -166,3 +166,196 @@
         font-size: 0.95rem;
     }
 }
+
+/* Checkout progress (cart) */
+.cf4-checkout-progress {
+    margin: 0 0 1.1rem;
+}
+
+.cf4-checkout-progress__list {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cf4-checkout-progress__item {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    text-align: center;
+    color: var(--text-secondary);
+    position: relative;
+}
+
+.cf4-checkout-progress__item:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 1.1rem;
+    left: calc(50% + 1.1rem);
+    width: calc(100% - 2.2rem);
+    height: 2px;
+    background: var(--border-color);
+    z-index: 0;
+}
+
+.cf4-checkout-progress__item.is-complete:not(:last-child)::after {
+    background: var(--color-primary);
+}
+
+.cf4-checkout-progress__marker {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 999px;
+    border: 2px solid var(--border-color);
+    background: var(--background-white);
+    font-size: 0.85rem;
+}
+
+.cf4-checkout-progress__item.is-current .cf4-checkout-progress__marker {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(35, 83, 71, 0.22);
+}
+
+.cf4-checkout-progress__item.is-complete .cf4-checkout-progress__marker {
+    border-color: var(--color-primary);
+    background: rgba(218, 241, 222, 0.65);
+    color: var(--color-primary);
+}
+
+.cf4-checkout-progress__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.cf4-checkout-progress__item.is-current .cf4-checkout-progress__label {
+    color: var(--text-primary);
+}
+
+html[data-theme="dark"] .cf4-checkout-progress__marker {
+    background: var(--cf4-catalog-card-bg);
+    border-color: var(--cf4-catalog-card-border);
+}
+
+html[data-theme="dark"] .cf4-checkout-progress__item.is-current .cf4-checkout-progress__marker {
+    background: var(--cf4-catalog-btn-agregar);
+    border-color: rgba(129, 199, 132, 0.45);
+    color: #fff;
+}
+
+html[data-theme="dark"] .cf4-checkout-progress__item.is-complete .cf4-checkout-progress__marker {
+    background: rgba(22, 56, 50, 0.65);
+    color: var(--brand-light);
+}
+
+/* Catalog mobile overflow containment */
+@media (max-width: 1024px) {
+    .catalog-toolbar-meta,
+    .catalog-toolbar-sort,
+    .catalog-breadcrumb,
+    .catalog-subcats-row {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .catalog-toolbar-sort {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .catalog-toolbar-sort::-webkit-scrollbar {
+        display: none;
+    }
+
+    .catalog-toolbar-sort-field {
+        flex: 0 0 auto;
+        min-width: min(100%, 11rem);
+    }
+
+    .catalog-subcats-row {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0.15rem;
+    }
+
+    .catalog-subcats-row::-webkit-scrollbar {
+        display: none;
+    }
+
+    .cat-pill {
+        flex: 0 0 auto;
+    }
+}
+
+/* Touch targets — quantity controls on mobile */
+@media (max-width: 767px) {
+    .cart-item .quantity-btn,
+    .product-detail-qty-stepper__btn {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .cart-item .quantity-input,
+    .product-detail-qty-stepper__input {
+        min-height: 44px;
+    }
+}
+
+/* Visual density — catalog hero stats on small screens */
+@media (max-width: 640px) {
+    .catalog-hero-stats span:last-child {
+        display: none;
+    }
+}
+
+/* Visual density — product badges: secondary group */
+.product-detail-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    align-items: center;
+}
+
+.product-detail-badges__secondary {
+    display: contents;
+}
+
+@media (max-width: 767px) {
+    .product-detail-badges__secondary .product-detail-badge:not(.product-detail-badge--featured):not(.product-detail-badge--novelty) {
+        font-size: 0.78rem;
+        padding: 0.28rem 0.55rem;
+    }
+}
+
+/* Visual density — cart toolbar: discrete clear action */
+.cart-toolbar-actions #btn-clear-cart {
+    font-size: 0.82rem;
+    opacity: 0.88;
+}
+
+.cart-toolbar-actions #btn-clear-cart:hover {
+    opacity: 1;
+}
+

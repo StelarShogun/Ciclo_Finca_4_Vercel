@@ -22,22 +22,6 @@
         </a>
     @endif
 
-    @if($subcategory && $catalogSubcategoryUrl)
-        <a href="{{ $catalogSubcategoryUrl }}"
-           class="product-badge product-badge--subcategory product-detail-badge product-detail-badge--subcategory">
-            <i class="fas fa-tag product-badge__icon" aria-hidden="true"></i>
-            {{ $subcategory->name }}
-        </a>
-    @endif
-
-    @if($brand)
-        <a href="{{ $catalogBrandUrl }}"
-           class="product-badge product-badge--brand product-detail-badge product-detail-badge--brand">
-            <i class="fas fa-tag product-badge__icon" aria-hidden="true"></i>
-            {{ $brand->name }}
-        </a>
-    @endif
-
     <span @class([
         'product-badge',
         'product-badge--' . $stockModifier,
@@ -58,6 +42,23 @@
         {{ $stockLabel }}
     </span>
 
+    <div class="product-detail-badges__secondary">
+    @if($subcategory && $catalogSubcategoryUrl)
+        <a href="{{ $catalogSubcategoryUrl }}"
+           class="product-badge product-badge--subcategory product-detail-badge product-detail-badge--subcategory">
+            <i class="fas fa-tag product-badge__icon" aria-hidden="true"></i>
+            {{ $subcategory->name }}
+        </a>
+    @endif
+
+    @if($brand)
+        <a href="{{ $catalogBrandUrl }}"
+           class="product-badge product-badge--brand product-detail-badge product-detail-badge--brand">
+            <i class="fas fa-tag product-badge__icon" aria-hidden="true"></i>
+            {{ $brand->name }}
+        </a>
+    @endif
+
     @if($product->is_featured)
         <span class="product-badge product-badge--featured product-detail-badge product-detail-badge--featured">
             <i class="fas fa-star product-badge__icon" aria-hidden="true"></i>
@@ -71,4 +72,5 @@
             Novedad
         </span>
     @endif
+    </div>
 </div>

@@ -201,11 +201,12 @@ export async function cf4OrderStatusToast({
     return Toast.fire({ icon: false, title, html: bodyHtml });
 }
 
-/** Persistent success dialog — user must tap Entendido (e.g. post-checkout). */
+/** Persistent success dialog — user must confirm (e.g. post-checkout). */
 export async function cf4CheckoutSuccessDialog({
     title = '¡Pedido confirmado!',
     text = '',
-    confirmButtonText = 'Entendido',
+    confirmButtonText = 'Ver mis pedidos',
+    cancelButtonText = 'Seguir comprando',
 } = {}) {
     const Swal = await getSwal();
     const bodyHtml = text
@@ -217,15 +218,18 @@ export async function cf4CheckoutSuccessDialog({
         icon: 'success',
         title,
         html: bodyHtml,
-        showCancelButton: false,
+        showCancelButton: true,
         showConfirmButton: true,
         confirmButtonText,
+        cancelButtonText,
+        reverseButtons: true,
         allowOutsideClick: false,
         allowEscapeKey: true,
         customClass: {
             ...cf4SwalClasses,
             popup: 'cf4-swal-popup cf4-swal-popup--checkout-success',
             confirmButton: 'cf4-swal-btn cf4-swal-btn-primary',
+            cancelButton: 'cf4-swal-btn cf4-swal-btn-secondary',
         },
         didOpen(popup) {
             const actions = popup.querySelector('.swal2-actions');
@@ -234,17 +238,17 @@ export async function cf4CheckoutSuccessDialog({
                 actions.style.setProperty('justify-content', 'center', 'important');
                 actions.style.setProperty('align-items', 'center', 'important');
                 actions.style.setProperty('width', '100%', 'important');
-                actions.style.setProperty('flex-wrap', 'nowrap', 'important');
+                actions.style.setProperty('flex-wrap', 'wrap', 'important');
+                actions.style.setProperty('gap', '0.5rem', 'important');
             }
 
-            const btn = popup.querySelector('.swal2-confirm');
-            if (btn) {
+            popup.querySelectorAll('.swal2-confirm, .swal2-cancel').forEach((btn) => {
                 btn.style.setProperty('width', 'auto', 'important');
                 btn.style.setProperty('min-width', '10rem', 'important');
-                btn.style.setProperty('margin-left', 'auto', 'important');
-                btn.style.setProperty('margin-right', 'auto', 'important');
+                btn.style.setProperty('margin-left', '0', 'important');
+                btn.style.setProperty('margin-right', '0', 'important');
                 btn.style.setProperty('flex', '0 0 auto', 'important');
-            }
+            });
 
             const htmlContainer = popup.querySelector('.swal2-html-container');
             if (htmlContainer) {

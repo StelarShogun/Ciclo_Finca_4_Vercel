@@ -203,6 +203,20 @@ export function initCartInteractions() {
 
     window.__cf4CartInteractionsBound = true;
 
+    let quantityInputDebounceId = null;
+    const quantityInputDebounceMs = 300;
+
+    function scheduleQuantityInputUpdate(input, productId, quantity) {
+        if (quantityInputDebounceId) {
+            clearTimeout(quantityInputDebounceId);
+        }
+
+        quantityInputDebounceId = setTimeout(() => {
+            quantityInputDebounceId = null;
+            updateCartQuantity(productId, quantity);
+        }, quantityInputDebounceMs);
+    }
+
     document.addEventListener('click', async (event) => {
         const removeBtn = event.target.closest('.cart-remove-item');
         if (removeBtn) {
@@ -362,14 +376,18 @@ export function initCartInteractions() {
 
         if (quantity < 1) {
             input.value = '1';
-            await updateCartQuantity(productId, 1);
-        } else if (quantity > max) {
+            scheduleQuantityInputUpdate(input, productId, 1);
+            return;
+        }
+
+        if (quantity > max) {
             input.value = String(max);
             await cf4Warning('La cantidad no puede exceder el stock disponible.', 'Stock disponible');
-            await updateCartQuantity(productId, max);
-        } else {
-            await updateCartQuantity(productId, quantity);
+            scheduleQuantityInputUpdate(input, productId, max);
+            return;
         }
+
+        scheduleQuantityInputUpdate(input, productId, quantity);
     });
 
     const proceedBtn = document.getElementById('proceed-checkout');
@@ -379,8 +397,8 @@ export function initCartInteractions() {
         proceedBtn.addEventListener('click', async () => {
             const chosenMethodPreview = getCheckoutPaymentMethod();
             const result = await cf4Confirm({
-                title: `¿Confirmar pedido con pago por ${getCf4PaymentMethodShortLabel(chosenMethodPreview)}?`,
-                text: 'Se enviará tu pedido para retiro en tienda.',
+                title: `¿Confirmar pedido (${getCf4PaymentMethodShortLabel(chosenMethodPreview)})?`,
+                text: 'Enviaremos tu solicitud para retiro en tienda.',
                 icon: 'question',
                 confirmButtonText: 'Sí, confirmar',
                 cancelButtonText: 'Cancelar',
@@ -424,11 +442,16 @@ export function initCartInteractions() {
                 incrementInvoiceBadge();
 
                 const paidWith = data.payment_method || getCheckoutPaymentMethod();
-                await cf4CheckoutSuccessDialog({
+                const checkoutResult = await cf4CheckoutSuccessDialog({
                     title: '¡Pedido confirmado!',
                     text: buildCf4CheckoutSuccessText(paidWith),
-                    confirmButtonText: 'Entendido',
                 });
+
+                if (checkoutResult.isConfirmed) {
+                    window.location.assign('/invoices');
+                } else if (checkoutResult.dismiss === 'cancel') {
+                    window.location.assign('/catalog');
+                }
             } catch (err) {
                 console.error('Checkout error:', err);
                 await cf4Error('Ocurrió un error al procesar el pedido.', 'Error');
