@@ -85,15 +85,15 @@ export function ClientHeader({
                     onToggle={onUserMenuToggle}
                   />
                 ) : (
-                  <>
-                    <Link href="/login" className="login-btn">
+                  <div className="header-guest-auth">
+                    <Link href="/login" className="btn btn-primary btn-sm">
                       <i className="fas fa-sign-in-alt" aria-hidden="true" />
-                      Iniciar sesión
+                      <span>Iniciar sesión</span>
                     </Link>
-                    <Link href="/register" className="login-btn">
-                      Crear cuenta
+                    <Link href="/register" className="btn btn-outline-secondary btn-sm">
+                      <span>Crear cuenta</span>
                     </Link>
-                  </>
+                  </div>
                 )}
               </div>
             </div>

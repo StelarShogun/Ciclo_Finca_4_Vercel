@@ -311,11 +311,15 @@
                                 </button>
                             </form>
                         @else
-                            {{-- Login button for unauthenticated guests --}}
-                            <a href="{{ route('login.show') }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-sign-in-alt"></i>
-                                <span>Iniciar Sesión</span>
-                            </a>
+                            <div class="header-guest-auth">
+                                <a href="{{ route('login.show') }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
+                                    <span>Iniciar sesión</span>
+                                </a>
+                                <a href="{{ route('clients.register.form') }}" class="btn btn-outline-secondary btn-sm">
+                                    <span>Crear cuenta</span>
+                                </a>
+                            </div>
                         @endif
                     @endif
 
