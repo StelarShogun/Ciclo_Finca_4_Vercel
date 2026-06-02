@@ -1,8 +1,4 @@
-export type PaginationLink = {
-  url: string | null;
-  label: string;
-  active: boolean;
-};
+import type { ClientListPagination } from '@/types/pagination';
 
 export type InvoicesTab = 'facturas' | 'canceladas' | 'historial';
 
@@ -19,7 +15,7 @@ export type InvoiceRow = {
 export type InvoiceListPageProps = {
   tab: InvoicesTab;
   orders: InvoiceRow[];
-  links: PaginationLink[];
+  pagination: ClientListPagination;
   cartCount: number;
   invoiceCount: number;
   unseenHistoryCount: number;

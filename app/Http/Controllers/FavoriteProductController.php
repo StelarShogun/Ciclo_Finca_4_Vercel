@@ -47,18 +47,9 @@ class FavoriteProductController extends Controller
             ]);
         }
 
-        $links = collect($paginator->toArray()['links'] ?? [])
-            ->map(fn ($link) => [
-                'url' => $link['url'] ?? null,
-                'label' => $link['label'] ?? '',
-                'active' => (bool) ($link['active'] ?? false),
-            ])
-            ->values()
-            ->all();
-
         return Inertia::render('Client/Favorites/Index', [
             'favorites' => $favorites,
-            'links' => $links,
+            'pagination' => \App\Support\ClientInertia\ListPaginationPayload::from($paginator),
         ]);
     }
 

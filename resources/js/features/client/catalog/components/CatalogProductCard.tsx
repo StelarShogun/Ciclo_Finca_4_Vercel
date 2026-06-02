@@ -102,10 +102,6 @@ export function CatalogProductCard({ csrfToken, isAuthenticated, product }: Cata
   return (
     <article className={`product-card product-card--catalog-cf128 ${product.stockLabel === 'Agotado' ? 'product-card--out-of-stock' : ''}`}>
       <div className="product-image product-image--catalog-cf128">
-        <Link className="product-image__link" href={product.url} aria-label={`Ver producto: ${product.name}`}>
-          <ImageFallback image={product.image} alt={product.name} />
-        </Link>
-
         <button
           type="button"
           className={`product-favorite-btn ${isFavorite ? 'is-active' : ''}`}
@@ -117,11 +113,20 @@ export function CatalogProductCard({ csrfToken, isAuthenticated, product }: Cata
           <i className={isFavorite ? 'fas fa-heart' : 'far fa-heart'} aria-hidden="true" />
         </button>
 
+        <div className="product-image__frame">
+          <Link className="product-image__link" href={product.url} aria-label={`Ver producto: ${product.name}`}>
+            <ImageFallback image={product.image} alt={product.name} />
+          </Link>
+          <div className="product-image__hover-overlay" aria-hidden="true">
+            <span className="product-image__hover-price">{product.priceFormatted}</span>
+          </div>
+        </div>
+
         {product.isFeatured ? <span className="catalog-spotlight-badge spotlight-badge">Destacado</span> : null}
         {!product.isFeatured && product.isNew ? <span className="catalog-spotlight-badge spotlight-badge">Nuevo</span> : null}
       </div>
 
-      <div className="product-info">
+      <div className="product-info product-info--catalog-cf128">
         <div className="product-category">{product.category?.name ?? 'Sin categoría'}</div>
         <h3 className="product-name">{product.name}</h3>
         {product.brands.length > 0 ? <p className="product-card-sku">Marca: {product.brands.map((brand) => brand.name).join(', ')}</p> : null}

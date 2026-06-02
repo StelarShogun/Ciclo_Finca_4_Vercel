@@ -149,9 +149,11 @@ export default function InvoicesIndex(props: InvoiceListPageProps) {
             </div>
           )}
 
-          <div className="cf4-invoices-pagination-wrap">
-            <Pagination links={props.links} />
-          </div>
+          {props.pagination.lastPage > 1 ? (
+            <div className="cf4-invoices-pagination-wrap">
+              <Pagination pagination={props.pagination} label="facturas" />
+            </div>
+          ) : null}
         </div>
       </div>
 

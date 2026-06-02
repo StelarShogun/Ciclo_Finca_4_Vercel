@@ -1315,15 +1315,6 @@ class ClientPageController extends Controller
             ->where('status', 'ready_to_pickup')
             ->count();
 
-        $links = collect($orders->toArray()['links'] ?? [])
-            ->map(fn ($link) => [
-                'url' => $link['url'] ?? null,
-                'label' => $link['label'] ?? '',
-                'active' => (bool) ($link['active'] ?? false),
-            ])
-            ->values()
-            ->all();
-
         $ordersRows = collect($orders->items())->map(function (Sale $sale) {
             $statusLabel = match ($sale->status) {
                 'pending' => 'Pendiente',
@@ -1355,7 +1346,7 @@ class ClientPageController extends Controller
         return Inertia::render('Client/Invoices/Index', [
             'tab' => $tab,
             'orders' => $ordersRows,
-            'links' => $links,
+            'pagination' => \App\Support\ClientInertia\ListPaginationPayload::from($orders),
             'cartCount' => $cartCount,
             'invoiceCount' => $invoiceCount,
             'unseenHistoryCount' => $unseenHistoryCount,
@@ -1442,15 +1433,6 @@ class ClientPageController extends Controller
             ->paginate(AdminPerPage::resolve($request->input('per_page', 10)))
             ->withQueryString();
 
-        $links = collect($notifications->toArray()['links'] ?? [])
-            ->map(fn ($link) => [
-                'url' => $link['url'] ?? null,
-                'label' => $link['label'] ?? '',
-                'active' => (bool) ($link['active'] ?? false),
-            ])
-            ->values()
-            ->all();
-
         $rows = collect($notifications->items())->map(function ($notification) {
             $data = is_array($notification->data) ? $notification->data : [];
 
@@ -1465,7 +1447,7 @@ class ClientPageController extends Controller
 
         return Inertia::render('Client/Notifications/Index', [
             'notifications' => $rows,
-            'links' => $links,
+            'pagination' => \App\Support\ClientInertia\ListPaginationPayload::from($notifications),
             'cartCount' => $cartCount,
         ]);
     }

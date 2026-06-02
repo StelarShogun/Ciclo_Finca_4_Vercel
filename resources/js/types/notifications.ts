@@ -1,4 +1,4 @@
-import type { PaginationLink } from '@/types/invoices';
+import type { ClientListPagination } from '@/types/pagination';
 
 export type NotificationRow = {
   id: string;
@@ -10,7 +10,7 @@ export type NotificationRow = {
 
 export type NotificationsPageProps = {
   notifications: NotificationRow[];
-  links: PaginationLink[];
+  pagination: ClientListPagination;
   cartCount: number;
 };
 

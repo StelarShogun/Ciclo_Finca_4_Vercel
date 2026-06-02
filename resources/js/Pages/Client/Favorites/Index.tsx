@@ -6,6 +6,7 @@ import { useToast } from '@/shared/hooks/useToast';
 import { toggleFavorite } from '@/lib/favorites';
 import { ClientLayout } from '@/shared/components/layout/ClientLayout';
 import type { InertiaSharedProps } from '@/types/models';
+import type { ClientListPagination } from '@/types/pagination';
 
 import '../../../../css/client/clients-users.css';
 
@@ -20,10 +21,10 @@ type FavoriteItem = {
 
 type FavoritesPageProps = {
   favorites: FavoriteItem[];
-  links: Array<{ url: string | null; label: string; active: boolean }>;
+  pagination: ClientListPagination;
 };
 
-export default function FavoritesIndex({ favorites, links }: FavoritesPageProps) {
+export default function FavoritesIndex({ favorites, pagination }: FavoritesPageProps) {
   const page = usePage<InertiaSharedProps>();
   const { csrfToken } = page.props;
   const { showToast } = useToast();
@@ -108,9 +109,11 @@ export default function FavoritesIndex({ favorites, links }: FavoritesPageProps)
             </div>
           )}
 
-          <div className="cf4-invoices-pagination-wrap">
-            <Pagination links={links} />
-          </div>
+          {pagination.lastPage > 1 ? (
+            <div className="cf4-invoices-pagination-wrap">
+              <Pagination pagination={pagination} label="favoritos" />
+            </div>
+          ) : null}
         </div>
       </div>
     </ClientLayout>

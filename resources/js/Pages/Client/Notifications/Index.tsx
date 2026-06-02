@@ -68,9 +68,11 @@ export default function NotificationsIndex(props: NotificationsPageProps) {
             </table>
           </div>
 
-          <div className="cf4-invoices-pagination-wrap">
-            <Pagination links={props.links} />
-          </div>
+          {props.pagination.lastPage > 1 ? (
+            <div className="cf4-invoices-pagination-wrap">
+              <Pagination pagination={props.pagination} label="notificaciones" />
+            </div>
+          ) : null}
         </div>
       </div>
     </ClientLayout>
