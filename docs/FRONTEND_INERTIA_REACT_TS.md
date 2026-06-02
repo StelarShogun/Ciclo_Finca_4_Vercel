@@ -165,16 +165,28 @@ Patrón de filtros: `CatalogFilters` usa `router.get('/catalog', params, { prese
 
 ### Detalle de producto
 
-- Página Inertia: `Client/Products/Show` (antes `Client/Product/Index`).
-- Lógica UI: `features/client/product/` (`ProductShowPage`, `ProductGallery`, `ProductPurchasePanel`, `QuantitySelector`, pestañas y reseñas).
-- Payload Laravel: `ProductDetailPayloadBuilder::build(ProductDetailPayloadContext $context)` — contexto readonly en `App\Support\ClientInertia\ProductDetailPayloadContext`.
+- Página Inertia: `Client/Products/Show` → `features/client/product/pages/ProductShowPage.tsx`.
+- Interacciones en React (sin `product.js` en Inertia): cantidad + subtotal (`QuantitySelector`), carrito (`lib/cart.ts`), favoritos (`lib/favorites.ts`), carrusel en `ProductGallery`.
+- Relacionados: `RelatedProductCard` usa los mismos helpers TS (sin delegación legacy).
+- Payload Laravel: `ProductDetailPayloadBuilder::build(ProductDetailPayloadContext $context)`.
+- `ImageFallback` canónico: `shared/components/ui/ImageFallback.tsx` (eliminado duplicado en `features/client/home`).
+
+### Carrito (página delgada)
+
+- `Pages/Client/Cart/Index.tsx` re-exporta `features/client/cart/pages/CartIndexPage.tsx`.
+- Acciones de línea siguen en `bundles/cart.js` vía `useCartPageInit` (**temporal**).
+
+### Re-exports eliminados (2026-06)
+
+Se quitaron shims `@deprecated` ya sin consumidores: `Components/{Home,Catalog,UI,Product,Client}`, `Layouts/ClientLayout`, `Layouts/ClientAuthLayout`, `hooks/useToast`, `hooks/useFlashToasts`, `hooks/useCatalogPageInit`, `hooks/useProductPageInit`. Las páginas importan desde `@/shared` y `@/features`.
 
 ## JS legacy en páginas Inertia (clasificación)
 
 | Asset / hook | Clasificación | Notas |
 |---|---|---|
 | `useCatalogPageInit` → `bundles/catalog.js`, `clients-catalog-heartbeat.js` | **temporal** | Rail, flyouts, filtros móviles, spotlight Swiper |
-| `useProductPageInit` → `bundles/product.js` | **temporal** | Carrusel, cantidad, subtotal, add-to-cart DOM |
+| `bundles/product.js` + `clients-product.js` | **A. Blade** (`product.blade.php`) | Cantidad, carrusel, add-to-cart DOM en detalle Blade |
+| Detalle Inertia (`Client/Products/Show`) | **React puro** | `QuantitySelector` controlado, subtotal en React, `addToCart`/`toggleFavorite` TS, carrusel en `ProductGallery` |
 | `useCartPageInit` → `bundles/cart.js` | **temporal** | Acciones de línea y checkout en carrito migrado |
 | `FavoritesDrawer` → `clients-header-auth.js` | **temporal** | Drawer y lista AJAX de favoritos |
 | `lib/cart.ts`, `lib/favorites.ts` | **mantener** | Puente TS hasta acciones 100% React |
@@ -272,9 +284,9 @@ docker exec laravel_app_ciclo php artisan test
 
 Documentación restaurada desde `main` (no eliminada sin motivo): `docs/CATALOG_IMPORT_EXPORT.md`, `docs/CRON_RENDER_LARAVEL.md`. `CF4-146-PR-BODY.md` era artefacto local de PR y no se restauró.
 
-Última validación (corrida arquitectónica):
+Última validación (producto React + importador):
 
-- `docker exec laravel_app_ciclo php artisan test`: **228 passed**, 192 skipped.
+- `docker exec laravel_app_ciclo php artisan test`: **228 passed**, 195 skipped.
 - `npm run build`: OK.
 - `npm run typecheck`: OK.
 - `npm run lint:react`: OK, React Doctor **82 / 100** (warnings opcionales).

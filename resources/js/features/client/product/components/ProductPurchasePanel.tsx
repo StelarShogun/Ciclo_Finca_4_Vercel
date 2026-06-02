@@ -1,13 +1,18 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 
 import { ProductStarsInline } from '@/features/client/product/components/ProductStarsInline';
 import { ProductStockCard } from '@/features/client/product/components/ProductStockCard';
 import { QuantitySelector } from '@/features/client/product/components/QuantitySelector';
 import type { ProductDetail, ProductDetailPageProps } from '@/features/client/product/types';
+import { addToCart } from '@/lib/cart';
+import { toggleFavorite } from '@/lib/favorites';
+import { useToast } from '@/shared/hooks/useToast';
 import type { InertiaSharedProps } from '@/shared/types/models';
 
 type ProductPurchasePanelProps = {
   authClient: InertiaSharedProps['auth']['client'];
+  csrfToken: string;
   isNovelty: boolean;
   orderReservationHours: number;
   primaryBrand: ProductDetailPageProps['primaryBrand'];
@@ -20,6 +25,7 @@ type ProductPurchasePanelProps = {
 
 export function ProductPurchasePanel({
   authClient,
+  csrfToken,
   isNovelty,
   orderReservationHours,
   primaryBrand,
@@ -29,6 +35,11 @@ export function ProductPurchasePanel({
   taxonomy,
   whatsappConsultUrl,
 }: ProductPurchasePanelProps) {
+  const { showToast } = useToast();
+  const [quantity, setQuantity] = useState(1);
+  const [isFavorite, setIsFavorite] = useState(product.isFavorite);
+  const [isBusy, setIsBusy] = useState(false);
+
   const stockModifier =
     product.stockLabel === 'En stock'
       ? 'stock'
@@ -37,6 +48,90 @@ export function ProductPurchasePanel({
         : product.stockLabel === 'Agotado'
           ? 'out-stock'
           : 'unavailable';
+
+  async function handleAddToCart() {
+    if (!product.canBuy || product.stockCurrent < 1) {
+      showToast({
+        variant: 'warning',
+        title: 'Producto agotado',
+        message: 'Este producto no tiene unidades disponibles.',
+      });
+      return;
+    }
+
+    if (!authClient) {
+      router.visit('/login');
+      return;
+    }
+
+    setIsBusy(true);
+
+    try {
+      const result = await addToCart(product.id, quantity, csrfToken);
+      if (!result.success) {
+        showToast({
+          variant: 'error',
+          title: 'No se pudo agregar',
+          message: result.message ?? 'No se pudo agregar el producto al carrito.',
+        });
+        return;
+      }
+
+      showToast({
+        variant: 'success',
+        title: 'Producto agregado',
+        message: result.message ?? `${product.name} se agregó al carrito.`,
+      });
+
+      if (typeof result.cartCount === 'number') {
+        window.dispatchEvent(new CustomEvent('cf4:cart-count', { detail: { count: result.cartCount } }));
+      }
+    } catch {
+      showToast({
+        variant: 'error',
+        title: 'Error',
+        message: 'No se pudo agregar el producto. Inténtalo de nuevo.',
+      });
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function handleFavoriteToggle() {
+    if (!authClient) {
+      router.visit('/login');
+      return;
+    }
+
+    setIsBusy(true);
+
+    try {
+      const result = await toggleFavorite(product.id, csrfToken);
+      if (!result.success) {
+        showToast({
+          variant: 'error',
+          title: 'No se pudo actualizar',
+          message: result.message ?? 'No se pudo actualizar el favorito.',
+        });
+        return;
+      }
+
+      setIsFavorite(result.isFavorite);
+      showToast({
+        variant: 'success',
+        title: result.isFavorite ? 'Agregado a favoritos' : 'Quitado de favoritos',
+        message: result.message,
+      });
+    } catch {
+      showToast({
+        variant: 'error',
+        title: 'Error',
+        message: 'No se pudo actualizar el favorito.',
+      });
+    } finally {
+      setIsBusy(false);
+    }
+  }
 
   return (
     <div className="product-detail-info product-detail-hero__buy">
@@ -94,39 +189,41 @@ export function ProductPurchasePanel({
 
         {product.canBuy ? (
           <div className="product-detail-actions">
-            <QuantitySelector product={product} />
+            <QuantitySelector product={product} quantity={quantity} onQuantityChange={setQuantity} />
 
             <div className="product-detail-actions__buttons">
               {authClient ? (
                 <>
                   <button
                     type="button"
-                    className="btn btn-primary btn-lg product-detail-actions__cart add-to-cart-btn"
-                    data-purchasable="1"
-                    data-product-id={product.id}
-                    data-product-name={product.name}
-                    data-product-price={product.price}
-                    data-product-stock={product.stockCurrent}
+                    className="btn btn-primary btn-lg product-detail-actions__cart"
+                    disabled={isBusy}
+                    onClick={() => void handleAddToCart()}
                   >
                     <i className="fas fa-cart-plus" aria-hidden="true" />
                     Agregar al carrito
                   </button>
                   <button
                     type="button"
-                    className={`product-detail-favorite product-favorite-btn${product.isFavorite ? ' is-active' : ''}`}
-                    data-product-favorite-btn
-                    data-product-id={product.id}
-                    aria-pressed={product.isFavorite}
-                    aria-label={product.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                    className={`product-detail-favorite product-favorite-btn${isFavorite ? ' is-active' : ''}`}
+                    disabled={isBusy}
+                    aria-pressed={isFavorite}
+                    aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                    onClick={() => void handleFavoriteToggle()}
                   >
                     <span className="product-detail-favorite__icon" aria-hidden="true">
-                      <i className={`${product.isFavorite ? 'fas' : 'far'} fa-heart`} />
+                      <i className={`${isFavorite ? 'fas' : 'far'} fa-heart`} />
                     </span>
-                    <span className="product-detail-favorite__label">{product.isFavorite ? 'En favoritos' : 'Agregar a favoritos'}</span>
+                    <span className="product-detail-favorite__label">{isFavorite ? 'En favoritos' : 'Agregar a favoritos'}</span>
                   </button>
                 </>
               ) : (
-                <button type="button" className="btn btn-primary btn-lg product-detail-actions__cart guest-add-btn" data-purchasable="1" data-product-stock={product.stockCurrent}>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-lg product-detail-actions__cart"
+                  disabled={isBusy}
+                  onClick={() => router.visit('/login')}
+                >
                   <i className="fas fa-cart-plus" aria-hidden="true" />
                   Agregar al carrito
                 </button>

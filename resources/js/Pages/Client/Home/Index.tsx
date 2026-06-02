@@ -3,11 +3,11 @@ import '../../../../css/client/clients-home.css';
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 
-import { CategoryPreview } from '@/Components/Home/CategoryPreview';
-import { FeaturedProducts } from '@/Components/Home/FeaturedProducts';
-import { HeroSection } from '@/Components/Home/HeroSection';
-import { HomeSection } from '@/Components/Home/HomeSection';
-import { ClientLayout } from '@/Layouts/ClientLayout';
+import { CategoryPreview } from '@/features/client/home/components/CategoryPreview';
+import { FeaturedProducts } from '@/features/client/home/components/FeaturedProducts';
+import { HeroSection } from '@/features/client/home/components/HeroSection';
+import { HomeSection } from '@/features/client/home/components/HomeSection';
+import { ClientLayout } from '@/shared/components/layout/ClientLayout';
 import type { HomeCategory, HomeHero, HomeProduct } from '@/types/home';
 import type { InertiaSharedProps } from '@/types/models';
 

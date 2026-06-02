@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 
 import { AdminLayout } from '@/Layouts/AdminLayout';
-import { Badge } from '@/Components/UI/Badge';
+import { Badge } from '@/shared/components/ui/Badge';
 
 type DashboardProps = {
   totalProducts: number;

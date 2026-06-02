@@ -6,6 +6,8 @@ import type { InertiaSharedProps } from '@/shared/types/models';
 type ProductTabsProps = {
   activeTab: string;
   authClient: InertiaSharedProps['auth']['client'];
+  csrfToken: string;
+  isAuthenticated: boolean;
   product: ProductDetail;
   productPath: string;
   relatedProducts: ProductDetailPageProps['relatedProducts'];
@@ -18,6 +20,8 @@ type ProductTabsProps = {
 export function ProductTabs({
   activeTab,
   authClient,
+  csrfToken,
+  isAuthenticated,
   product,
   productPath,
   relatedProducts,
@@ -117,7 +121,12 @@ export function ProductTabs({
             <div className="product-detail-related-scroll">
               <div className="products-grid products-grid--related">
                 {relatedProducts.map((related) => (
-                  <RelatedProductCard key={related.id} authClient={authClient} related={related} />
+                  <RelatedProductCard
+                    key={related.id}
+                    csrfToken={csrfToken}
+                    isAuthenticated={isAuthenticated}
+                    related={related}
+                  />
                 ))}
               </div>
             </div>

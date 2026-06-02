@@ -1,9 +1,9 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 
-import { useToast } from '@/hooks/useToast';
+import { useToast } from '@/shared/hooks/useToast';
 import { confirm } from '@/lib/confirm';
-import { ClientLayout } from '@/Layouts/ClientLayout';
+import { ClientLayout } from '@/shared/components/layout/ClientLayout';
 import type { InertiaSharedProps } from '@/types/models';
 import type { ProfileClient, ProfileFlash } from '@/types/profile';
 

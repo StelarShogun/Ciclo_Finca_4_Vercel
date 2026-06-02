@@ -1,8 +1,8 @@
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import { useState } from 'react';
 
-import { ClientAuthLayout } from '@/Layouts/ClientAuthLayout';
-import { InlineAlert } from '@/Components/UI/InlineAlert';
+import { ClientAuthLayout } from '@/shared/components/layout/ClientAuthLayout';
+import { InlineAlert } from '@/shared/components/ui/InlineAlert';
 import { firstError } from '@/lib/inertiaErrors';
 
 import type { InertiaSharedProps } from '@/types/models';

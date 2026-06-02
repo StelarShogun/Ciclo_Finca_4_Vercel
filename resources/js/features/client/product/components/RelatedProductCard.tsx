@@ -1,31 +1,112 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 
 import { ProductStarsInline } from '@/features/client/product/components/ProductStarsInline';
 import { ResponsivePicture } from '@/features/client/product/components/ResponsivePicture';
 import type { ProductDetailPageProps } from '@/features/client/product/types';
-import type { InertiaSharedProps } from '@/shared/types/models';
+import { addToCart } from '@/lib/cart';
+import { toggleFavorite } from '@/lib/favorites';
+import { useToast } from '@/shared/hooks/useToast';
 
 type RelatedProductCardProps = {
-  authClient: InertiaSharedProps['auth']['client'];
+  csrfToken: string;
+  isAuthenticated: boolean;
   related: ProductDetailPageProps['relatedProducts'][number];
 };
 
-export function RelatedProductCard({ authClient, related }: RelatedProductCardProps) {
+export function RelatedProductCard({ csrfToken, isAuthenticated, related }: RelatedProductCardProps) {
+  const { showToast } = useToast();
+  const [isFavorite, setIsFavorite] = useState(related.isFavorite);
+  const [isBusy, setIsBusy] = useState(false);
   const outOfStock = related.stockLabel === 'Agotado';
+
+  async function handleAddToCart() {
+    if (!related.canBuy) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      router.visit('/login');
+      return;
+    }
+
+    setIsBusy(true);
+
+    try {
+      const result = await addToCart(related.id, 1, csrfToken);
+      if (!result.success) {
+        showToast({
+          variant: 'error',
+          title: 'No se pudo agregar',
+          message: result.message ?? 'No se pudo agregar el producto.',
+        });
+        return;
+      }
+
+      showToast({
+        variant: 'success',
+        title: 'Producto agregado',
+        message: result.message ?? `${related.name} se agregó al carrito.`,
+      });
+
+      if (typeof result.cartCount === 'number') {
+        window.dispatchEvent(new CustomEvent('cf4:cart-count', { detail: { count: result.cartCount } }));
+      }
+    } catch {
+      showToast({
+        variant: 'error',
+        title: 'Error',
+        message: 'No se pudo agregar el producto.',
+      });
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function handleFavoriteToggle() {
+    if (!isAuthenticated) {
+      router.visit('/login');
+      return;
+    }
+
+    setIsBusy(true);
+
+    try {
+      const result = await toggleFavorite(related.id, csrfToken);
+      if (!result.success) {
+        showToast({
+          variant: 'error',
+          title: 'No se pudo actualizar',
+          message: result.message ?? 'No se pudo actualizar el favorito.',
+        });
+        return;
+      }
+
+      setIsFavorite(result.isFavorite);
+    } catch {
+      showToast({
+        variant: 'error',
+        title: 'Error',
+        message: 'No se pudo actualizar el favorito.',
+      });
+    } finally {
+      setIsBusy(false);
+    }
+  }
 
   return (
     <article className={`product-card product-card--related${outOfStock ? ' product-card--out-of-stock' : ''}`}>
       <div className="product-image product-image--related">
-        {authClient ? (
+        {isAuthenticated ? (
           <button
             type="button"
-            className={`product-favorite-btn${related.isFavorite ? ' is-active' : ''}`}
-            data-product-favorite-btn
-            data-product-id={related.id}
-            aria-pressed={related.isFavorite}
-            aria-label={related.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+            className={`product-favorite-btn${isFavorite ? ' is-active' : ''}`}
+            disabled={isBusy}
+            aria-pressed={isFavorite}
+            aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+            onClick={() => void handleFavoriteToggle()}
           >
-            <i className={`${related.isFavorite ? 'fas' : 'far'} fa-heart`} aria-hidden="true" />
+            <i className={`${isFavorite ? 'fas' : 'far'} fa-heart`} aria-hidden="true" />
           </button>
         ) : null}
         <Link className="product-image__link" href={related.url} aria-label={`Ver producto: ${related.name}`}>
@@ -65,25 +146,15 @@ export function RelatedProductCard({ authClient, related }: RelatedProductCardPr
               Ver detalles
             </Link>
             {related.canBuy ? (
-              authClient ? (
-                <button
-                  type="button"
-                  className="btn-product btn-agregar add-to-cart-btn"
-                  data-purchasable="1"
-                  data-product-id={related.id}
-                  data-product-name={related.name}
-                  data-product-price={related.price}
-                  data-product-stock={related.stockCurrent}
-                >
-                  <i className="fas fa-cart-plus" aria-hidden="true" />
-                  Agregar
-                </button>
-              ) : (
-                <button type="button" className="btn-product btn-agregar guest-add-btn" data-purchasable="1" data-product-stock={related.stockCurrent}>
-                  <i className="fas fa-cart-plus" aria-hidden="true" />
-                  Agregar
-                </button>
-              )
+              <button
+                type="button"
+                className="btn-product btn-agregar"
+                disabled={isBusy}
+                onClick={() => void handleAddToCart()}
+              >
+                <i className="fas fa-cart-plus" aria-hidden="true" />
+                Agregar
+              </button>
             ) : (
               <button type="button" className="btn-product btn-agotado" disabled>
                 <i className="fas fa-ban" aria-hidden="true" />

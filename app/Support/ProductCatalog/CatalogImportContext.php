@@ -33,12 +33,12 @@ final class CatalogImportContext
     }
 
     /**
-     * @param  callable(): array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int}  $callback
-     * @return array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int}
+     * @param  callable(): array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int, rows_total: int, duration_ms: int, media_count: int}  $callback
+     * @return array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int, rows_total: int, duration_ms: int, media_count: int}
      */
     public static function runFastImportStats(callable $callback): array
     {
-        /** @var array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int} */
+        /** @var array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int, rows_total: int, duration_ms: int, media_count: int} */
         return self::runFastImport($callback);
     }
 }

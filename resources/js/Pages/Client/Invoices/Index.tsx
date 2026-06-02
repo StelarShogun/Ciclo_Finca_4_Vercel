@@ -1,7 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 
-import { ClientLayout } from '@/Layouts/ClientLayout';
-import { Pagination } from '@/Components/UI/Pagination';
+import { ClientLayout } from '@/shared/components/layout/ClientLayout';
+import { Pagination } from '@/shared/components/ui/Pagination';
 import type { InertiaSharedProps } from '@/types/models';
 import type { InvoiceListPageProps, InvoicesTab } from '@/types/invoices';
 

@@ -1,10 +1,10 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
-import { Pagination } from '@/Components/UI/Pagination';
-import { useToast } from '@/hooks/useToast';
+import { Pagination } from '@/shared/components/ui/Pagination';
+import { useToast } from '@/shared/hooks/useToast';
 import { toggleFavorite } from '@/lib/favorites';
-import { ClientLayout } from '@/Layouts/ClientLayout';
+import { ClientLayout } from '@/shared/components/layout/ClientLayout';
 import type { InertiaSharedProps } from '@/types/models';
 
 import '../../../../css/client/clients-users.css';

@@ -1,15 +1,15 @@
 import { Head, usePage } from '@inertiajs/react';
 import '../../../../css/client/clients-page.css';
 
-import { CatalogFilters } from '@/Components/Catalog/CatalogFilters';
-import { CatalogMobileControls } from '@/Components/Catalog/CatalogMobileControls';
-import { CatalogPagination } from '@/Components/Catalog/CatalogPagination';
-import { CatalogProductCard } from '@/Components/Catalog/CatalogProductCard';
-import { CatalogSpotlightCarousel } from '@/Components/Catalog/CatalogSpotlightCarousel';
-import { CatalogToolbar } from '@/Components/Catalog/CatalogToolbar';
-import { CategoryRail } from '@/Components/Catalog/CategoryRail';
-import { ClientLayout } from '@/Layouts/ClientLayout';
-import { useCatalogPageInit } from '@/hooks/useCatalogPageInit';
+import { CatalogFilters } from '@/features/client/catalog/components/CatalogFilters';
+import { CatalogMobileControls } from '@/features/client/catalog/components/CatalogMobileControls';
+import { CatalogPagination } from '@/features/client/catalog/components/CatalogPagination';
+import { CatalogProductCard } from '@/features/client/catalog/components/CatalogProductCard';
+import { CatalogSpotlightCarousel } from '@/features/client/catalog/components/CatalogSpotlightCarousel';
+import { CatalogToolbar } from '@/features/client/catalog/components/CatalogToolbar';
+import { CategoryRail } from '@/features/client/catalog/components/CategoryRail';
+import { ClientLayout } from '@/shared/components/layout/ClientLayout';
+import { useCatalogPageInit } from '@/features/client/catalog/hooks/useCatalogPageInit';
 import type {
   CatalogBrand,
   CatalogCategory,

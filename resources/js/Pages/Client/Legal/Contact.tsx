@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 
-import { ClientLayout } from '@/Layouts/ClientLayout';
+import { ClientLayout } from '@/shared/components/layout/ClientLayout';
 
 type ContactProps = {
   legalTitle: string;

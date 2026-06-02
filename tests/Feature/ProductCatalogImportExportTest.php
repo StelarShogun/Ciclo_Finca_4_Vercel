@@ -179,7 +179,109 @@ class ProductCatalogImportExportTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('level', 'success');
         $response->assertJsonPath('stats.updated', 1);
-        $response->assertJsonStructure(['message', 'stats' => ['created', 'updated', 'skipped', 'errors']]);
+        $response->assertJsonStructure([
+            'message',
+            'stats' => ['created', 'updated', 'skipped', 'errors', 'rows_total', 'duration_ms', 'media_count'],
+        ]);
+    }
+
+    public function test_import_reports_rows_total_and_duration_metrics(): void
+    {
+        $this->createActiveSupplier();
+        $category = Category::create([
+            'name' => 'CF4 Metrics Cat',
+            'description' => null,
+            'parent_category_id' => null,
+        ]);
+
+        $csv = implode("\n", [
+            'nombre,precio_venta,stock_actual,categoria',
+            'CF4 Metrics Product,1200,2,CF4 Metrics Cat',
+        ]);
+
+        $stats = app(ProductCatalogImporter::class)->import(
+            UploadedFile::fake()->createWithContent('metrics.csv', $csv),
+        );
+
+        $this->assertSame(1, $stats['rows_total']);
+        $this->assertGreaterThanOrEqual(0, $stats['duration_ms']);
+        $this->assertSame(0, $stats['media_count']);
+        $this->assertSame(1, $stats['created']);
+    }
+
+    public function test_import_updates_existing_product_by_sku(): void
+    {
+        $this->createActiveSupplier();
+        $category = Category::create([
+            'name' => 'CF4 Sku Cat',
+            'description' => null,
+            'parent_category_id' => null,
+        ]);
+        $product = Product::create([
+            'category_id' => $category->category_id,
+            'supplier_id' => null,
+            'name' => 'CF4 Sku Product',
+            'sku' => 'CF4-SKU-001',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 1000,
+            'purchase_price' => 100,
+            'stock_current' => 2,
+            'stock_minimum' => 1,
+            'status' => 'active',
+            'is_featured' => false,
+        ]);
+
+        $csv = implode("\n", [
+            'nombre,sku,precio_venta,stock_actual,categoria',
+            'CF4 Sku Product Renamed,CF4-SKU-001,2200,8,CF4 Sku Cat',
+        ]);
+
+        $stats = app(ProductCatalogImporter::class)->import(
+            UploadedFile::fake()->createWithContent('sku-update.csv', $csv),
+        );
+
+        $this->assertSame(1, $stats['updated']);
+        $product->refresh();
+        $this->assertSame(2200.0, (float) $product->sale_price);
+        $this->assertSame(8, (int) $product->stock_current);
+    }
+
+    public function test_import_updates_existing_product_by_name_and_category(): void
+    {
+        $this->createActiveSupplier();
+        $category = Category::create([
+            'name' => 'CF4 Name Cat',
+            'description' => null,
+            'parent_category_id' => null,
+        ]);
+        $product = Product::create([
+            'category_id' => $category->category_id,
+            'supplier_id' => null,
+            'name' => 'CF4 Name Match Product',
+            'sku' => null,
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 900,
+            'purchase_price' => 100,
+            'stock_current' => 1,
+            'stock_minimum' => 1,
+            'status' => 'active',
+            'is_featured' => false,
+        ]);
+
+        $csv = implode("\n", [
+            'nombre,precio_venta,stock_actual,categoria',
+            'CF4 Name Match Product,1750,4,CF4 Name Cat',
+        ]);
+
+        $stats = app(ProductCatalogImporter::class)->import(
+            UploadedFile::fake()->createWithContent('name-update.csv', $csv),
+        );
+
+        $this->assertSame(1, $stats['updated']);
+        $product->refresh();
+        $this->assertSame(1750.0, (float) $product->sale_price);
     }
 
     public function test_exporter_manifest_includes_product_name(): void

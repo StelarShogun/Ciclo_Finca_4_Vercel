@@ -1,10 +1,9 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { ProductGallery } from '@/features/client/product/components/ProductGallery';
 import { ProductPurchasePanel } from '@/features/client/product/components/ProductPurchasePanel';
 import { ProductTabs } from '@/features/client/product/components/ProductTabs';
-import { useProductPageInit } from '@/features/client/product/hooks/useProductPageInit';
 import type { ProductDetailPageProps } from '@/features/client/product/types';
 import { ClientLayout } from '@/shared/components/layout/ClientLayout';
 import type { InertiaSharedProps } from '@/shared/types/models';
@@ -15,18 +14,9 @@ import '../../../../../css/client/product-detail.css';
 
 export default function ProductShowPage(props: ProductDetailPageProps) {
   const page = usePage<InertiaSharedProps>();
-  const { auth } = page.props;
+  const { auth, csrfToken } = page.props;
   const [activeTab, setActiveTab] = useState(props.tabs.defaultTab);
-
-  useProductPageInit();
-
-  useEffect(() => {
-    if (auth.client) {
-      window.catalogFavoriteConfig = { toggleUrl: props.favoriteConfig.toggleUrl };
-    } else {
-      window.catalogFavoriteConfig = { loginUrl: props.favoriteConfig.loginUrl };
-    }
-  }, [auth.client, props.favoriteConfig]);
+  const isAuthenticated = auth.client !== null;
 
   const productPath = `/product/${props.product.id}/${props.product.slug}`;
 
@@ -70,6 +60,7 @@ export default function ProductShowPage(props: ProductDetailPageProps) {
               <ProductGallery product={props.product} />
               <ProductPurchasePanel
                 authClient={auth.client}
+                csrfToken={csrfToken}
                 isNovelty={props.isNoveltyProduct}
                 orderReservationHours={props.orderReservationHours}
                 primaryBrand={props.primaryBrand}
@@ -84,6 +75,8 @@ export default function ProductShowPage(props: ProductDetailPageProps) {
             <ProductTabs
               activeTab={activeTab}
               authClient={auth.client}
+              csrfToken={csrfToken}
+              isAuthenticated={isAuthenticated}
               product={props.product}
               productPath={productPath}
               relatedProducts={props.relatedProducts}

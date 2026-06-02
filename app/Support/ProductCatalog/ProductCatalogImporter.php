@@ -30,6 +30,21 @@ final class ProductCatalogImporter
     /** @var array<string, int> */
     private array $categoryCache = [];
 
+    /** @var array<int, Category> */
+    private array $categoryModelsById = [];
+
+    /** @var array<int, Product> */
+    private array $productsById = [];
+
+    /** @var array<string, Product> */
+    private array $productsBySku = [];
+
+    /** @var array<string, Product> */
+    private array $productsByCategoryAndName = [];
+
+    /** @var array<int, Supplier> */
+    private array $supplierModelsById = [];
+
     /** @var array<string, Product> */
     private array $productsByExportKey = [];
 
@@ -44,15 +59,28 @@ final class ProductCatalogImporter
     ) {}
 
     /**
-     * @return array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int}
+     * @return array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int, rows_total: int, duration_ms: int, media_count: int}
      */
     public function import(UploadedFile $file, ?string $extractedDir = null): array
     {
         return CatalogImportContext::runFastImportStats(function () use ($file, $extractedDir) {
+            $startedAt = hrtime(true);
             $this->importedMediaIds = [];
             $this->autoCreateCategories = false;
-            /** @var array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int} $stats */
-            $stats = ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => [], 'media_conversions_queued' => 0];
+            $this->productsById = [];
+            $this->productsBySku = [];
+            $this->productsByCategoryAndName = [];
+            /** @var array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int, rows_total: int, duration_ms: int, media_count: int} $stats */
+            $stats = [
+                'created' => 0,
+                'updated' => 0,
+                'skipped' => 0,
+                'errors' => [],
+                'media_conversions_queued' => 0,
+                'rows_total' => 0,
+                'duration_ms' => 0,
+                'media_count' => 0,
+            ];
             $bundleDir = $extractedDir;
 
             if ($bundleDir === null && strtolower($file->getClientOriginalExtension()) === 'zip') {
@@ -68,10 +96,12 @@ final class ProductCatalogImporter
 
             if ($rows === []) {
                 $stats['errors'][] = 'No se encontraron productos reconocibles en el archivo.';
+                $stats['duration_ms'] = (int) ((hrtime(true) - $startedAt) / 1_000_000);
 
                 return $stats;
             }
 
+            $stats['rows_total'] = count($rows);
             $this->warmLookupCaches();
 
             DB::transaction(function () use ($rows, $bundleDir, &$stats) {
@@ -98,10 +128,13 @@ final class ProductCatalogImporter
             }
 
             $mediaIds = array_values(array_unique($this->importedMediaIds));
+            $stats['media_count'] = count($mediaIds);
             if ($mediaIds !== []) {
                 GenerateCatalogImportMediaConversionsJob::dispatch($mediaIds)->afterResponse();
                 $stats['media_conversions_queued'] = count($mediaIds);
             }
+
+            $stats['duration_ms'] = (int) ((hrtime(true) - $startedAt) / 1_000_000);
 
             return $stats;
         });
@@ -113,16 +146,22 @@ final class ProductCatalogImporter
             $this->brandCache[mb_strtolower((string) $name)] = (int) $id;
         }
 
-        foreach (Supplier::query()->pluck('supplier_id', 'name') as $name => $id) {
-            $this->supplierCache[mb_strtolower((string) $name)] = (int) $id;
+        foreach (Supplier::query()->get() as $supplier) {
+            $this->supplierCache[mb_strtolower($supplier->name)] = (int) $supplier->supplier_id;
+            $this->supplierModelsById[(int) $supplier->supplier_id] = $supplier;
         }
 
         foreach (Category::query()->get(['category_id', 'name', 'parent_category_id']) as $category) {
+            $this->categoryModelsById[(int) $category->category_id] = $category;
             if ($category->parent_category_id === null) {
                 $this->categoryCache['parent|'.mb_strtolower($category->name)] = (int) $category->category_id;
             } else {
                 $this->categoryCache['sub|'.mb_strtolower($category->name)] = (int) $category->category_id;
             }
+        }
+
+        foreach (Product::query()->get(['product_id', 'category_id', 'name', 'sku']) as $product) {
+            $this->rememberProduct($product);
         }
     }
 
@@ -176,6 +215,7 @@ final class ProductCatalogImporter
             $product = Product::query()->create($payload);
         }
 
+        $this->rememberProduct($product);
         $this->syncBrands($product, $row);
         $this->syncClassifications($product, $row, $category);
         $this->importImages($product, $row, $bundleDir);
@@ -222,24 +262,39 @@ final class ProductCatalogImporter
     private function findExistingProduct(array $row, int $categoryId, string $name): ?Product
     {
         if (! empty($row['product_id'])) {
-            $byId = Product::query()->find((int) $row['product_id']);
-            if ($byId) {
-                return $byId;
+            $productId = (int) $row['product_id'];
+            if (isset($this->productsById[$productId])) {
+                return $this->productsById[$productId];
             }
         }
 
         $sku = $this->nullableString($row['sku'] ?? null);
         if ($sku !== null) {
-            $bySku = Product::query()->where('sku', $sku)->first();
-            if ($bySku) {
-                return $bySku;
+            $skuKey = mb_strtolower($sku);
+            if (isset($this->productsBySku[$skuKey])) {
+                return $this->productsBySku[$skuKey];
             }
         }
 
-        return Product::query()
-            ->where('category_id', $categoryId)
-            ->where('name', $name)
-            ->first();
+        $nameKey = $categoryId.'|'.mb_strtolower($name);
+        if (isset($this->productsByCategoryAndName[$nameKey])) {
+            return $this->productsByCategoryAndName[$nameKey];
+        }
+
+        return null;
+    }
+
+    private function rememberProduct(Product $product): void
+    {
+        $productId = (int) $product->product_id;
+        $this->productsById[$productId] = $product;
+
+        $sku = $this->nullableString($product->sku);
+        if ($sku !== null) {
+            $this->productsBySku[mb_strtolower($sku)] = $product;
+        }
+
+        $this->productsByCategoryAndName[(int) $product->category_id.'|'.mb_strtolower((string) $product->name)] = $product;
     }
 
     /**
@@ -248,9 +303,9 @@ final class ProductCatalogImporter
     private function resolveCategory(array $row): ?Category
     {
         if (! empty($row['category_id'])) {
-            $cat = Category::query()->find((int) $row['category_id']);
-            if ($cat) {
-                return $cat;
+            $categoryId = (int) $row['category_id'];
+            if (isset($this->categoryModelsById[$categoryId])) {
+                return $this->categoryModelsById[$categoryId];
             }
         }
 
@@ -269,28 +324,28 @@ final class ProductCatalogImporter
         if ($subName !== '') {
             $cacheKey = 'sub|'.mb_strtolower($subName);
             if (isset($this->categoryCache[$cacheKey])) {
-                return Category::query()->find($this->categoryCache[$cacheKey]);
+                return $this->categoryModelsById[$this->categoryCache[$cacheKey]] ?? null;
             }
             $cat = Category::query()
                 ->whereRaw('LOWER(name) = ?', [mb_strtolower($subName)])
                 ->whereNotNull('parent_category_id')
                 ->first();
             if ($cat) {
-                $this->categoryCache[$cacheKey] = (int) $cat->category_id;
+                $this->rememberCategoryInCache($cat);
 
                 return $cat;
             }
 
             $parentCacheKey = 'parent|'.mb_strtolower($subName);
             if (isset($this->categoryCache[$parentCacheKey])) {
-                return Category::query()->find($this->categoryCache[$parentCacheKey]);
+                return $this->categoryModelsById[$this->categoryCache[$parentCacheKey]] ?? null;
             }
             $parentCat = Category::query()
                 ->whereRaw('LOWER(name) = ?', [mb_strtolower($subName)])
                 ->whereNull('parent_category_id')
                 ->first();
             if ($parentCat) {
-                $this->categoryCache[$parentCacheKey] = (int) $parentCat->category_id;
+                $this->rememberCategoryInCache($parentCat);
 
                 return $parentCat;
             }
@@ -312,7 +367,7 @@ final class ProductCatalogImporter
 
         $cacheKey = implode('>', array_map('mb_strtolower', $path));
         if (isset($this->categoryCache[$cacheKey])) {
-            return Category::query()->find($this->categoryCache[$cacheKey]);
+            return $this->categoryModelsById[$this->categoryCache[$cacheKey]] ?? null;
         }
 
         $parent = null;
@@ -336,6 +391,7 @@ final class ProductCatalogImporter
             if (! $current) {
                 return null;
             }
+            $this->rememberCategoryInCache($current);
             $parent = $current;
         }
 
@@ -377,6 +433,7 @@ final class ProductCatalogImporter
 
     private function rememberCategoryInCache(Category $category): void
     {
+        $this->categoryModelsById[(int) $category->category_id] = $category;
         if ($category->parent_category_id === null) {
             $this->categoryCache['parent|'.mb_strtolower($category->name)] = (int) $category->category_id;
         } else {
@@ -397,7 +454,10 @@ final class ProductCatalogImporter
 
         $key = mb_strtolower($name);
         if (isset($this->supplierCache[$key])) {
-            return Supplier::query()->findOrFail($this->supplierCache[$key]);
+            $supplierId = $this->supplierCache[$key];
+
+            return $this->supplierModelsById[$supplierId]
+                ?? Supplier::query()->findOrFail($supplierId);
         }
 
         $supplier = Supplier::query()->firstOrCreate(
@@ -405,6 +465,7 @@ final class ProductCatalogImporter
             ['status' => 'active', 'primary_contact' => $name, 'email' => '', 'phone' => ''],
         );
         $this->supplierCache[$key] = (int) $supplier->supplier_id;
+        $this->supplierModelsById[(int) $supplier->supplier_id] = $supplier;
 
         return $supplier;
     }

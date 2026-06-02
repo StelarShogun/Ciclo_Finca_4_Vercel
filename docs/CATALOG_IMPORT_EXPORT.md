@@ -25,6 +25,27 @@ Maximum upload size: **100 MB** (Laravel validation). PHP must allow at least th
 
 Bulk ZIP import runs in **fast mode**: copies images without re-encoding during the upload, then **automatically generates WebP conversions in the background** after the import response returns.
 
+### Import performance (2026-06)
+
+`ProductCatalogImporter` precarga en memoria (una consulta por tabla, no por fila):
+
+- productos por `product_id`, SKU y par `category_id + name`
+- categorías, marcas, proveedores
+- resolución de producto existente: `product_id` → SKU → nombre+categoría (sin cambiar reglas)
+
+Respuesta JSON/HTML incluye métricas adicionales:
+
+| Campo | Significado |
+|-------|-------------|
+| `rows_total` | Filas parseadas del archivo |
+| `duration_ms` | Tiempo total del import en ms |
+| `media_count` | Imágenes tocadas en el import |
+| `media_conversions_queued` | Jobs WebP encolados (sin conversión síncrona) |
+
+`ClientStorefrontCache::forgetAfterProductMutation()` se llama **una vez** al final del import, no por fila.
+
+Pendiente: test de importación sintética ≥500 filas en CI (coste de tiempo); hoy cubierto por tests de SKU/nombre+categoría y métricas.
+
 If that background pass is interrupted (container restart, timeout), the scheduler task `cf4:regenerate-missing-media-conversions` runs **every 15 minutes** and finishes any remaining images — no manual admin step.
 
 ## Typical workflow

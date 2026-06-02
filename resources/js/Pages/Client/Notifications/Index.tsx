@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 
-import { ClientLayout } from '@/Layouts/ClientLayout';
-import { Pagination } from '@/Components/UI/Pagination';
+import { ClientLayout } from '@/shared/components/layout/ClientLayout';
+import { Pagination } from '@/shared/components/ui/Pagination';
 import type { NotificationsPageProps } from '@/types/notifications';
 
 import '../../../../css/client/clients-users.css';
