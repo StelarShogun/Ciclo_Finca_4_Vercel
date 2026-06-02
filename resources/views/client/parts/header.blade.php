@@ -76,7 +76,7 @@
                             <span>Inicio</span>
                         </a>
                         <a href="{{ route('clients.catalog') }}"
-                            class="nav-link {{ request()->routeIs('clients.catalog') ? 'active' : '' }}">
+                            class="nav-link {{ request()->routeIs('clients.catalog', 'clients.product') ? 'active' : '' }}">
                             <i class="fas fa-bicycle" aria-hidden="true"></i>
                             <span>Catálogo</span>
                         </a>

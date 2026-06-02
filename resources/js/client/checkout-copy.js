@@ -49,23 +49,20 @@ export function getCf4PaymentMethodShortLabel(method) {
  */
 export function buildCf4CheckoutSuccessText(paymentMethod) {
     const phrase = formatCf4PickupWindowPhrase(getCf4ReadyToPickupExpirationHours());
-    const base = 'Su pedido fue enviado con éxito. Cuando esté listo para recoger, '
-        + `recibirá un aviso y tendrá hasta ${phrase} para retirarlo en tienda. `
-        + 'Si no lo retira a tiempo, el pedido puede cancelarse automáticamente.';
+    const base = `Tu pedido fue enviado. Te avisaremos cuando esté listo para retiro en tienda (hasta ${phrase}). `
+        + 'Si no lo retiras a tiempo, puede cancelarse automáticamente.';
 
     let paymentLine;
     switch (String(paymentMethod || '').toLowerCase()) {
         case 'sinpe':
-            paymentLine = ' El pago se realizará al momento del retiro mediante SINPE móvil; '
-                + 'recuerde llevar el comprobante.';
+            paymentLine = ' Pagás al retirar con SINPE móvil; llevá el comprobante.';
             break;
         case 'transfer':
-            paymentLine = ' El pago se realizará al momento del retiro mediante transferencia bancaria; '
-                + 'recuerde llevar el comprobante.';
+            paymentLine = ' Pagás al retirar por transferencia; llevá el comprobante.';
             break;
         case 'cash':
         default:
-            paymentLine = ' El pago se realizará al momento del retiro en efectivo.';
+            paymentLine = ' Pagás al retirar en efectivo.';
             break;
     }
 

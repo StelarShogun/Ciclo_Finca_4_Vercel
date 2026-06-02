@@ -78,6 +78,16 @@
 @endphp
 <div class="product-detail-container product-detail-page">
     <div class="container">
+        @php
+            $productBackUrl = ($taxonomy['catalogSubcategoryUrl'] ?? null)
+                ?: (($taxonomy['catalogParentUrl'] ?? null) ?: route('clients.catalog'));
+        @endphp
+
+        @include('client.parts.mobile-back-nav', [
+            'backUrl' => $productBackUrl,
+            'backLabel' => 'Volver al catálogo',
+        ])
+
         <nav class="breadcrumb product-detail-breadcrumb" aria-label="Ruta de navegación">
             <a href="{{ route('clients.home') }}">Inicio</a>
             <span aria-hidden="true">/</span>

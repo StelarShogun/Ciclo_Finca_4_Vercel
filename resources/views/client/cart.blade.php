@@ -24,6 +24,8 @@
                 'backLabel' => 'Volver al catálogo',
             ])
 
+            @include('client.parts.checkout-progress', ['currentStep' => 2])
+
             <nav class="breadcrumb" aria-label="Migas de pan">
                 <a href="{{ route('clients.home') }}">Inicio</a>
                 <span>/</span>
