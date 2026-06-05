@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
+import { Select } from '@/shared/components/ui/Select';
 import type { CatalogBrand, CatalogFilters as CatalogFiltersType } from '@/types/catalog';
 
 type CatalogFiltersProps = {
@@ -87,7 +88,7 @@ export function CatalogFilters({
                 min="0"
                 step="1"
                 placeholder="Mínimo"
-                value={minPrice}
+                value={minPrice ?? ''}
                 onChange={(event) => setDraft((current) => ({ ...current, minPrice: event.target.value }))}
               />
               <span className="price-separator" aria-hidden="true">
@@ -104,7 +105,7 @@ export function CatalogFilters({
                 min="0"
                 step="1"
                 placeholder="Máximo"
-                value={maxPrice}
+                value={maxPrice ?? ''}
                 onChange={(event) => setDraft((current) => ({ ...current, maxPrice: event.target.value }))}
               />
             </div>
@@ -116,10 +117,10 @@ export function CatalogFilters({
               Marca
             </label>
             <div className="catalog-filter-select" data-catalog-filter-select>
-              <select
+              <Select
                 id="brand_id"
                 name="brand_id"
-                className="form-control catalog-filter-select__native"
+                className="catalog-filter-select__native"
                 value={brandId}
                 onChange={(event) => setDraft((current) => ({ ...current, brandId: event.target.value }))}
               >
@@ -129,7 +130,7 @@ export function CatalogFilters({
                     {brand.name}
                   </option>
                 ))}
-              </select>
+              </Select>
               <button
                 type="button"
                 className="catalog-filter-select__trigger"
@@ -141,7 +142,7 @@ export function CatalogFilters({
                 <span className="catalog-filter-select__label">{selectedBrandLabel}</span>
                 <i className="fas fa-chevron-down catalog-filter-select__chevron" aria-hidden="true" />
               </button>
-              <ul className="catalog-filter-select__menu" id="brand_id-menu" role="listbox" aria-label="Filtrar por marca" hidden>
+              <div className="catalog-filter-select__menu" id="brand_id-menu" role="listbox" aria-label="Filtrar por marca" hidden>
                 <li role="presentation">
                   <button
                     type="button"
@@ -168,7 +169,7 @@ export function CatalogFilters({
                     </button>
                   </li>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
 

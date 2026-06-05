@@ -7,7 +7,7 @@
 @endpush
 
 @push('vite-body')
-    @vite(['resources/js/admin/dashboard/dashboard.js'])
+    @vite(['resources/js/admin/dashboard/dashboard.ts'])
 @endpush
 
 @section('aside')

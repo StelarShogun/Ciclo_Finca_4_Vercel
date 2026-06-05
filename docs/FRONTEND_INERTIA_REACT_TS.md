@@ -34,6 +34,7 @@ export { default } from '@/features/client/product/pages/ProductShowPage';
 resources/js/
   app.tsx
   bootstrap.ts
+  **/*.ts                   # legacy admin/shared/client (sin .js en resources/js)
   Pages/Client/...          # capa delgada Inertia
   features/client/
     home|catalog|product|cart|auth|profile|invoices|favorites|notifications|legal/
@@ -62,11 +63,11 @@ resources/js/
 - Entrypoint React: `resources/js/app.tsx`
 - Bootstrap TS/axios: `resources/js/bootstrap.ts`
 - Middleware compartido: `app/Http/Middleware/HandleInertiaRequests.php`
-- Tipos compartidos: `resources/js/shared/types/` (+ re-exports en `resources/js/types/`)
+- Tipos compartidos: `resources/js/shared/types/`; tipos de página en `resources/js/types/` (catalog, home, invoices, …)
 - Layouts canónicos: `resources/js/shared/components/layout/`
 - UI compartida: `resources/js/shared/components/ui/`
 - Módulos: `resources/js/features/client/*`
-- Helpers de dominio (cart/favorites API): `resources/js/lib/` (sin mover lógica de negocio a React)
+- API de dominio: `features/client/{cart,favorites}/api.ts`
 
 ## Props compartidas
 
@@ -131,7 +132,7 @@ Tipos específicos:
 
 - `resources/js/types/home.ts`
 
-La vista Blade antigua `resources/views/client/home.blade.php` se mantiene temporalmente como referencia hasta completar validaciones visuales y siguientes migraciones.
+La ruta `/` usa Inertia (`Client/Home/Index`); no quedan vistas Blade de storefront.
 
 La Home usa `Link` de Inertia para navegación interna y `usePage().url` desde `ClientLayout` para estado activo de menú. Esto evita depender de `window.location.pathname` y mantiene la base lista para una futura estrategia SSR si se habilita.
 
@@ -166,7 +167,7 @@ Patrón de filtros: `CatalogFilters` usa `router.get('/catalog', params, { prese
 ### Detalle de producto
 
 - Página Inertia: `Client/Products/Show` → `features/client/product/pages/ProductShowPage.tsx`.
-- Interacciones en React (sin `product.js` en Inertia): cantidad + subtotal (`QuantitySelector`), carrito (`lib/cart.ts`), favoritos (`lib/favorites.ts`), carrusel en `ProductGallery`.
+- Interacciones en React: cantidad + subtotal (`QuantitySelector`), carrito (`features/client/cart/api`), favoritos (`features/client/favorites/api`), carrusel en `ProductGallery`.
 - Relacionados: `RelatedProductCard` usa los mismos helpers TS (sin delegación legacy).
 - Payload Laravel: `ProductDetailPayloadBuilder::build(ProductDetailPayloadContext $context)`.
 - `ImageFallback` canónico: `shared/components/ui/ImageFallback.tsx` (eliminado duplicado en `features/client/home`).
@@ -182,7 +183,7 @@ Patrón de filtros: `CatalogFilters` usa `router.get('/catalog', params, { prese
   - `CartEmptyState`
   - `CartCheckoutActions`
 - Hook de acciones: `features/client/cart/hooks/useCartActions.ts`.
-- API TS: `features/client/cart/api.ts`; `resources/js/lib/cart.ts` queda como re-export `@deprecated`.
+- API TS: `features/client/cart/api.ts`.
 - Payload Inertia del carrito usa camelCase (`productId`, `unitPrice`, `stockCurrent`, `image.usesPlaceholder`, etc.) y normaliza snake_case sólo como compatibilidad al entrar a React.
 - Laravel sigue validando stock y checkout; React sólo previene cantidades obviamente inválidas.
 - Después de cada acción React actualiza estado local y ejecuta `router.reload({ only: [...] })` para resincronizar con Laravel.
@@ -208,22 +209,19 @@ Patrón de filtros: `CatalogFilters` usa `router.get('/catalog', params, { prese
 
 Se quitaron shims `@deprecated` ya sin consumidores: `Components/{Home,Catalog,UI,Product,Client}`, `Layouts/ClientLayout`, `Layouts/ClientAuthLayout`, `hooks/useToast`, `hooks/useFlashToasts`, `hooks/useCatalogPageInit`, `hooks/useProductPageInit`. Las páginas importan desde `@/shared` y `@/features`.
 
-## JS legacy en páginas Inertia (clasificación)
+## JS legacy en páginas Inertia (clasificación, post JS→TS)
 
 | Asset / hook | Clasificación | Notas |
 |---|---|---|
-| `useCatalogPageInit` → `bundles/catalog.js`, `clients-catalog-heartbeat.js` | **temporal** | Rail, flyouts, filtros móviles, spotlight Swiper |
-| `bundles/product.js` + `clients-product.js` | **A. Blade** (`product.blade.php`) | Cantidad, carrusel, add-to-cart DOM en detalle Blade |
-| Detalle Inertia (`Client/Products/Show`) | **React puro** | `QuantitySelector` controlado, subtotal en React, `addToCart`/`toggleFavorite` TS, carrusel en `ProductGallery` |
-| Carrito Inertia (`Client/Cart/Index`) | **React puro** | `useCartActions`, API TS, estado local + `router.reload` parcial |
-| `bundles/cart.js` + `clients-cart.js` | **A. Blade residual** | Sólo para `resources/views/client/cart.blade.php`; no se importa desde React |
-| `FavoritesDrawer` → `clients-header-auth.js` | **temporal** | Drawer y lista AJAX de favoritos |
-| `lib/cart.ts` | **shim @deprecated** | Re-exporta `@/features/client/cart/api` para imports existentes |
-| `lib/favorites.ts` | **mantener** | Puente TS de favoritos |
-| `catalog-product-favorites.js` (Vite) | **temporal** | Favoritos en cards cuando legacy catalog bundle corre |
-| `clients-home.js`, `clients-catalog.js`, `clients-product.js`, `clients-cart.js` | **B. bridge** en `vite.config.js` | Entradas Blade residual o bridge; no eliminar sin mapa de vistas Blade |
-| `checkout-copy.js`, `invoice-print.css`, `clients-users.css` | **A. Blade residual** | Checkout/copy y estilos no-Inertia |
-| `auth-welcome-toast.js`, `client-flash.js` | **A / temporal** | Blade auth; toasts Inertia usan `ToastProvider` |
+| `useCatalogPageInit` → `bundles/catalog.ts`, `clients-catalog-heartbeat.ts` | **temporal** | Rail, flyouts, filtros móviles, spotlight Swiper |
+| Detalle Inertia (`Client/Products/Show`) | **React puro** | `QuantitySelector`, `addToCart`/`toggleFavorite` TS |
+| Carrito Inertia (`Client/Cart/Index`) | **React puro** | `useCartActions`, API TS |
+| ~~`FavoritesDrawer` → `clients-header-auth.ts`~~ | **eliminado** | Drawer favoritos 100% React (`FavoritesDrawerContext`, `fetchFavoriteDrawerPage`) |
+| ~~`catalog-product-favorites.ts`~~ | **eliminado** | Cards usan `features/client/favorites/api.ts` |
+| Blade storefront pages | **eliminadas** | Solo `client/invoice-print.blade.php` para impresión |
+| `invoices-page.ts` | **A. Blade activa** | Solo `invoice-print.blade.php` |
+| `checkout-copy.ts`, `clients-users.css` | **shared TS/CSS** | Importado por bundles legacy + estilos |
+| Flash cliente | **Inertia** | `ToastProvider` + `useFlashToasts` |
 
 ## API TS de carrito
 
@@ -243,14 +241,10 @@ Funciones disponibles:
 
 Cada función usa `fetch`, envía CSRF, valida `content-type`, maneja 419 con mensaje claro, tolera respuestas no JSON y normaliza `cart_count` a `cartCount`.
 
-`resources/js/lib/cart.ts` queda como shim temporal para Home, catálogo y detalle de producto. Los componentes React siguen emitiendo `cf4:cart-count` para sincronizar el contador visual del header hasta reemplazar ese puente por estado compartido Inertia.
-
-## Favoritos Legacy Desde React
-
-Favoritos todavía mantiene backend legacy. Para acciones puntuales desde catálogo existe:
+## Favoritos desde React
 
 ```txt
-resources/js/lib/favorites.ts
+features/client/favorites/api.ts
 ```
 
 `toggleFavorite(productId, csrfToken)` encapsula `POST /favorites/toggle` y normaliza `is_favorite` a `isFavorite`.
@@ -309,11 +303,20 @@ El sistema visual sigue usando:
 
 No usar CSS-in-JS ni reescribir tokens globales en esta fase.
 
+## Legacy JS → TypeScript (2026-06)
+
+Corrida agresiva documentada en `docs/LEGACY_JS_TO_TS_MIGRATION.md`:
+
+- `resources/js/**/*.js` eliminado o convertido a `.ts`.
+- Entradas Vite cliente reducidas a `invoices-page.ts` (Blade print) + CSS; storefront vía `app.tsx`.
+- Bundles `clients-*.js` eliminados donde la ruta ya es Inertia; catálogo conserva `bundles/catalog.ts` vía `import()` dinámico.
+
 ## Comandos
 
 ```bash
 npm run build
 npm run typecheck
+python3 scripts/audit-vite-blade-assets.py
 npm run lint:react
 docker exec laravel_app_ciclo php artisan test --filter=InertiaMigrationPilotTest
 docker exec laravel_app_ciclo php artisan test --filter=CF4ClientLegalPagesTest

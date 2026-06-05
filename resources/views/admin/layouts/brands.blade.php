@@ -31,7 +31,7 @@
     </main>
 
     @include('admin.partials.cf4-flash-swal')
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/brand/brand.js'])
+    @vite(['resources/js/admin/shell.ts', 'resources/js/admin/brand/brand.ts'])
     @stack('scripts')
     @include('admin.partials.cf4-theme-scripts')
 

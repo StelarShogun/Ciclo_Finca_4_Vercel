@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 
+import { useFavoritesDrawer } from '@/features/client/favorites/context/FavoritesDrawerContext';
 import { profileInitials } from '@/features/client/profile/lib/profileFormUtils';
 
 type ProfileHeroProps = {
@@ -11,6 +12,8 @@ type ProfileHeroProps = {
 };
 
 export function ProfileHero({ firstSurname, gmail, heroName, isGoogleAccount, name }: ProfileHeroProps) {
+  const { open: openFavoritesDrawer } = useFavoritesDrawer();
+
   return (
     <div className="profile-hero">
       <div className="profile-avatar">
@@ -35,7 +38,8 @@ export function ProfileHero({ firstSurname, gmail, heroName, isGoogleAccount, na
           <nav className="profile-quick-actions" aria-label="Accesos rápidos">
             <button
               type="button"
-              className="profile-quick-action profile-quick-action--favorites cf4-favorites-open-trigger"
+              className="profile-quick-action profile-quick-action--favorites"
+              onClick={openFavoritesDrawer}
             >
               <i className="fas fa-heart" aria-hidden="true" />
               <span>Mis favoritos</span>

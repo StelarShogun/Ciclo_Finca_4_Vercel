@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\Category;
 use App\Models\Product;
-use App\Support\ClientCategoryIcons;
+use App\Services\Client\Storefront\ClientCategoryIcons;
 use PHPUnit\Framework\TestCase;
 
 class ClientCategoryIconsTest extends TestCase

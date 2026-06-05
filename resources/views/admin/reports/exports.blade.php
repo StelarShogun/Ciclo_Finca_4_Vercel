@@ -7,7 +7,7 @@
 @endpush
 
 @push('scripts')
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/reports/exports-modal.js'])
+    @vite(['resources/js/admin/shell.ts', 'resources/js/admin/reports/exports-modal.ts'])
 @endpush
 
 @section('aside')

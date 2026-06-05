@@ -74,6 +74,8 @@ class ClientInvoiceDetailImagePlaceholderTest extends TestCase
                 ->component('Client/Invoices/Show', false)
                 ->has('items', 1)
                 ->where('items.0.name', 'Bike Invoice Sin Foto')
+                ->where('items.0.image.usesPlaceholder', true)
+                ->where('items.0.image.placeholderIconClass', 'fas fa-bicycle')
             );
     }
 }

@@ -7,7 +7,7 @@
 @endpush
 
 @push('vite-body')
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/reports/sales-performance.js'])
+    @vite(['resources/js/admin/shell.ts', 'resources/js/admin/reports/sales-performance.ts'])
 @endpush
 
 @section('aside')

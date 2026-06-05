@@ -19,7 +19,7 @@ import type {
   CatalogSpotlightItem,
   CatalogTaxonomy,
 } from '@/types/catalog';
-import type { InertiaSharedProps } from '@/types/models';
+import type { InertiaSharedProps } from '@/shared/types/models';
 
 type CatalogIndexProps = {
   products: CatalogProduct[];

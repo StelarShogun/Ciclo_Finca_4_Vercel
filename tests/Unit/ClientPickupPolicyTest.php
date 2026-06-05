@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Support\ClientPickupPolicy;
+use App\Services\Client\Storefront\ClientPickupPolicy;
 use PHPUnit\Framework\TestCase;
 
 class ClientPickupPolicyTest extends TestCase

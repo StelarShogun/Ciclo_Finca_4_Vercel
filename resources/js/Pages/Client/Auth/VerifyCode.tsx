@@ -5,7 +5,7 @@ import { ClientAuthLayout } from '@/shared/components/layout/ClientAuthLayout';
 import { InlineAlert } from '@/shared/components/ui/InlineAlert';
 import { firstError } from '@/shared/lib/inertiaErrors';
 
-import type { InertiaSharedProps } from '@/types/models';
+import type { InertiaSharedProps } from '@/shared/types/models';
 
 type VerifyCodePageProps = {
   isRecoveryFlow: boolean;
@@ -21,7 +21,7 @@ export default function VerifyCode({ isRecoveryFlow, destinationEmail, mailWarni
   const page = usePage<InertiaSharedProps & { errors?: InertiaErrors }>();
   const errors = page.props.errors ?? {};
 
-  const [digits, setDigits] = useState<string[]>(Array.from({ length: 6 }, () => ''));
+  const [digits, setDigits] = useState<string[]>(() => Array.from({ length: 6 }, () => ''));
   const [processing, setProcessing] = useState(false);
   const [resending, setResending] = useState(false);
 

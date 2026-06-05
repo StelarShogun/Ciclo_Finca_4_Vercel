@@ -7,7 +7,7 @@
 @endpush
 
 @push('vite-body')
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/reports/product-sales.js'])
+    @vite(['resources/js/admin/shell.ts', 'resources/js/admin/reports/product-sales.ts'])
 @endpush
 
 @section('aside')
@@ -127,7 +127,6 @@
             </div>
             <p id="product-sales-empty" class="empty-msg" hidden>No hay ventas completadas en este periodo para los
                 criterios seleccionados.</p>
-
 
         </section>
     </div>

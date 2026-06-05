@@ -136,11 +136,9 @@ export function CatalogMobileControls({
         </div>
       </dialog>
 
-      <script
-        type="application/json"
-        id="catalog-category-tree-data"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(categories) }}
-      />
+      <script type="application/json" id="catalog-category-tree-data">
+        {JSON.stringify(categories)}
+      </script>
     </>
   );
 }

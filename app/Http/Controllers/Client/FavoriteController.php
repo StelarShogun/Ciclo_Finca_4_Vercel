@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\FavoriteProduct;
+use App\Services\Client\Favorites\ClientFavoriteFormatter;
+use App\Services\Client\Inertia\ListPaginationPayload;
 use App\Support\AdminPerPage;
-use App\Support\ClientFavoriteFormatter;
-use App\Support\ClientInertia\ListPaginationPayload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;

@@ -5,7 +5,7 @@ import { ClientAuthLayout } from '@/shared/components/layout/ClientAuthLayout';
 import { InlineAlert } from '@/shared/components/ui/InlineAlert';
 import { firstError } from '@/shared/lib/inertiaErrors';
 
-import type { InertiaSharedProps } from '@/types/models';
+import type { InertiaSharedProps } from '@/shared/types/models';
 
 type RecoveryResetPageProps = {
   gmail: string;

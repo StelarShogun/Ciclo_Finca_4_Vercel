@@ -11,7 +11,7 @@ React Doctor’s `deslop/unused-file` rule traces reachability from **static** e
 | **Vite `input`** | `vite.config.js` | Admin/client CSS+JS bundles built for production |
 | **Blade `@vite([...])`** | `resources/views/**/*.blade.php` | Legacy Blade pages still on JS bundles (not Inertia) |
 | **Inertia** | `resources/js/app.tsx` | `import.meta.glob('./Pages/**/*.tsx')` — resolves pages at runtime |
-| **Dynamic `import()`** | e.g. `useCatalogPageInit`, `HeaderCatalogSearch` | `client/bundles/catalog.js`, `header-catalog-search.js`, etc. |
+| **Dynamic `import()`** | e.g. `useCatalogPageInit`, `HeaderCatalogSearch` | `client/bundles/catalog.ts`, `header-catalog-search.ts`, etc. |
 
 ## Categories
 
@@ -25,7 +25,7 @@ Every path in `adminAssets`, `clientAssets`, `sharedAssets`, and `errorAssets` i
 
 ### 3. False positive — Blade-only legacy bundles
 
-Client/admin JS under `resources/js/client/*.js` and `resources/js/admin/**` referenced from Blade `@vite` (see generated list in CI or run the audit script below). Example: `clients-users.js` on login/register/profile Blade views; `clients-catalog.js` on `catalog.blade.php`.
+Admin JS under `resources/js/admin/**/*.ts` referenced from Blade `@vite`. Client storefront JS entrypoints were removed in favor of Inertia (`docs/LEGACY_JS_TO_TS_MIGRATION.md`); legacy Blade views may still exist but no longer load deleted bundles.
 
 ### 4. False positive — Feature modules (`resources/js/features/**`, `resources/js/shared/**`)
 
@@ -64,7 +64,7 @@ rg "import\(|require\(" resources/js/client resources/js/admin
 python3 scripts/audit-vite-blade-assets.py
 ```
 
-Exit code `1` means a Blade `@vite` JS path is missing from `vite.config.js` `input`. As of the last audit, `resources/js/admin/sales/reports-by-category.js` is referenced from a Blade view but was not in the Vite input list — add it there before relying on that bundle in production.
+Exit code `1` means a Blade `@vite` JS path is missing from `vite.config.js` `input`. `reports-by-category.ts` is now in the Vite input list.
 
 ## React Doctor recommendation
 
@@ -76,5 +76,6 @@ Until deslop supports Laravel Vite + Inertia + Blade:
 
 ## Related docs
 
+- `docs/LEGACY_JS_TO_TS_MIGRATION.md` — aggressive JS→TS pass, eliminations, known breaks
 - `docs/APP_STRUCTURE.md` — client Inertia vs Blade split
 - `AGENTS.md` — phased migration notes

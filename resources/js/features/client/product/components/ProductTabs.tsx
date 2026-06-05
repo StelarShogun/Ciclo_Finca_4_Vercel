@@ -1,6 +1,7 @@
 import { ProductReviewsSection } from '@/features/client/product/components/ProductReviewsSection';
 import { RelatedProductCard } from '@/features/client/product/components/RelatedProductCard';
 import type { ProductDetail, ProductDetailPageProps } from '@/features/client/product/types';
+import { Tabs, type TabItem } from '@/shared/components/ui/Tabs';
 import type { InertiaSharedProps } from '@/shared/types/models';
 
 type ProductTabsProps = {
@@ -30,39 +31,27 @@ export function ProductTabs({
   specs,
   tabs,
 }: ProductTabsProps) {
+  const tabItems: TabItem[] = [];
+
+  if (tabs.hasDescription) {
+    tabItems.push({ id: 'description', label: 'Descripción' });
+  }
+  if (tabs.hasSpecs) {
+    tabItems.push({ id: 'specs', label: 'Especificaciones' });
+  }
+  tabItems.push({ id: 'reviews', label: 'Reseñas', count: reviews.totalCount });
+  if (tabs.hasRelated) {
+    tabItems.push({ id: 'related', label: 'Relacionados' });
+  }
+
   return (
     <div className="product-detail-tabs" id="product-detail-tabs" data-default-tab={tabs.defaultTab}>
-      <div className="product-detail-tabs__nav" role="tablist" aria-label="Información del producto">
-        {(['description', 'specs', 'reviews', 'related'] as const).map((tab) => {
-          if (tab === 'description' && !tabs.hasDescription) return null;
-          if (tab === 'specs' && !tabs.hasSpecs) return null;
-          if (tab === 'related' && !tabs.hasRelated) return null;
-
-          const labels: Record<string, string> = {
-            description: 'Descripción',
-            specs: 'Especificaciones',
-            reviews: 'Reseñas',
-            related: 'Relacionados',
-          };
-
-          return (
-            <button
-              key={tab}
-              type="button"
-              role="tab"
-              className={`product-detail-tabs__btn${activeTab === tab ? ' is-active' : ''}`}
-              data-tab={tab}
-              aria-selected={activeTab === tab}
-              onClick={() => setActiveTab(tab)}
-            >
-              {labels[tab]}
-              {tab === 'reviews' && reviews.totalCount > 0 ? (
-                <span className="product-detail-tabs__count">{reviews.totalCount}</span>
-              ) : null}
-            </button>
-          );
-        })}
-      </div>
+      <Tabs
+        tabs={tabItems}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        ariaLabel="Información del producto"
+      />
 
       <div className="product-detail-tabs__panels">
         {tabs.hasDescription ? (

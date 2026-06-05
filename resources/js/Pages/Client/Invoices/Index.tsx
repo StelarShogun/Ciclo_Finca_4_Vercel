@@ -2,7 +2,8 @@ import { Head, Link, usePage } from '@inertiajs/react';
 
 import { ClientLayout } from '@/shared/components/layout/ClientLayout';
 import { Pagination } from '@/shared/components/ui/Pagination';
-import type { InertiaSharedProps } from '@/types/models';
+import { StatusBadge } from '@/shared/components/ui/StatusBadge';
+import type { InertiaSharedProps } from '@/shared/types/models';
 import type { InvoiceListPageProps, InvoicesTab } from '@/types/invoices';
 
 import '../../../../css/client/clients-users.css';
@@ -12,14 +13,6 @@ function headerDescription(tab: InvoicesTab) {
   if (tab === 'canceladas') return 'Pedidos cancelados.';
   return 'Pedidos pendientes o listos para recoger.';
 }
-
-const statusClass: Record<string, string> = {
-  pending: 'cf4-invoice-status-pending',
-  ready: 'cf4-invoice-status-ready',
-  cancelled: 'cf4-invoice-status-cancelled',
-  completed: 'cf4-invoice-status-completed',
-  default: 'cf4-invoice-status-default',
-};
 
 export default function InvoicesIndex(props: InvoiceListPageProps) {
   const page = usePage<InertiaSharedProps>();
@@ -130,9 +123,7 @@ export default function InvoicesIndex(props: InvoiceListPageProps) {
                       </td>
                       <td data-label="Fecha">{sale.saleDateLabel}</td>
                       <td data-label="Estado">
-                        <span className={`cf4-invoice-status-badge ${statusClass[sale.statusTone] ?? statusClass.default}`.trim()}>
-                          {sale.statusLabel}
-                        </span>
+                        <StatusBadge tone={sale.statusTone}>{sale.statusLabel}</StatusBadge>
                       </td>
                       <td data-label={props.tab === 'historial' ? 'Total pagado' : 'Total'}>
                         <strong>{sale.totalFormatted}</strong>

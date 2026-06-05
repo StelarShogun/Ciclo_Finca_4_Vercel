@@ -10,39 +10,39 @@ const vitePort = Number(process.env.VITE_PORT) || 5173;
 // =======================
 const sharedAssets = [
     "resources/js/app.tsx",
-    "resources/js/shared/theme-toggle.js",
+    "resources/js/shared/theme-toggle.ts",
 ];
 
 // =======================
 // ADMIN ASSETS
 // =======================
 const adminAssets = [
-    // JS
-    "resources/js/admin/shell.js",
-    "resources/js/admin/dashboard/dashboard.js",
-    "resources/js/admin/inventory/inventory-entry.js",
-    "resources/js/admin/sales/sales.js",
-    'resources/js/admin/sales/reports-by-category.js',
-    "resources/js/admin/orders/orders.js",
-    "resources/js/admin/orders/supplier-orders.js",
-    "resources/js/admin/orders/supplier-order-create.js",
-    "resources/js/admin/orders/xml-deviation-review.js",
-    "resources/js/admin/orders/detail-supplier-page.js",
-    "resources/js/admin/suppliers/suppliers.js",
-    "resources/js/admin/login/login.js",
-    "resources/js/admin/users/clients.js",
-    "resources/js/admin/brand/brand.js",
-    "resources/js/admin/product-classifications/index.js",
-    "resources/js/admin/product-classifications/edit.js",
-    "resources/js/admin/classifications/catalog.js",
-    "resources/js/admin/classifications/forms.js",
-    "resources/js/admin/categories/category-subcategory-form.js",
-    "resources/js/admin/reports/product-sales.js",
-    "resources/js/admin/reports/sales-performance.js",
-    "resources/js/admin/reports/exports-modal.js",
-    "resources/js/admin/reports/inventory-movements.js",
-    "resources/js/admin/reports/client-purchase-history.js",
-    "resources/js/admin/reports/client-purchase-client-show.js",
+    // JS (TypeScript entrypoints)
+    "resources/js/admin/shell.ts",
+    "resources/js/admin/dashboard/dashboard.ts",
+    "resources/js/admin/inventory/inventory-entry.ts",
+    "resources/js/admin/sales/sales.ts",
+    "resources/js/admin/sales/reports-by-category.ts",
+    "resources/js/admin/orders/orders.ts",
+    "resources/js/admin/orders/supplier-orders.ts",
+    "resources/js/admin/orders/supplier-order-create.ts",
+    "resources/js/admin/orders/xml-deviation-review.ts",
+    "resources/js/admin/orders/detail-supplier-page.ts",
+    "resources/js/admin/suppliers/suppliers.ts",
+    "resources/js/admin/login/login.ts",
+    "resources/js/admin/users/clients.ts",
+    "resources/js/admin/brand/brand.ts",
+    "resources/js/admin/product-classifications/index.ts",
+    "resources/js/admin/product-classifications/edit.ts",
+    "resources/js/admin/classifications/catalog.ts",
+    "resources/js/admin/classifications/forms.ts",
+    "resources/js/admin/categories/category-subcategory-form.ts",
+    "resources/js/admin/reports/product-sales.ts",
+    "resources/js/admin/reports/sales-performance.ts",
+    "resources/js/admin/reports/exports-modal.ts",
+    "resources/js/admin/reports/inventory-movements.ts",
+    "resources/js/admin/reports/client-purchase-history.ts",
+    "resources/js/admin/reports/client-purchase-client-show.ts",
 
     // CSS
     "resources/css/admin/products/inventory.css",
@@ -73,7 +73,7 @@ const adminAssets = [
 // ERROR PAGE ASSETS
 // =======================
 const errorAssets = [
-    "resources/js/errors/scenes.js",
+    "resources/js/errors/scenes.ts",
     "resources/css/errors/state-card.css",
     "resources/css/errors/404-page.css",
 ];
@@ -81,22 +81,9 @@ const errorAssets = [
 // =======================
 // CLIENT ASSETS
 // =======================
+// Inertia storefront loads via app.tsx + dynamic import(). Only Blade residual entries here.
 const clientAssets = [
-    // JS
-    "resources/js/client/checkout-copy.js",
-    "resources/js/client/clients-header.js",
-    "resources/js/client/clients-home.js",
-    "resources/js/client/clients-catalog.js",
-    "resources/js/client/clients-cart.js",
-    "resources/js/client/clients-product.js",
-    "resources/js/client/clients-users.js",
-    "resources/js/client/invoices-page.js",
-    "resources/js/client/auth-welcome-toast.js",
-    "resources/js/client/client-flash.js",
-    "resources/js/client/recovery-success-modal.js",
-    "resources/js/client/register-validation-errors.js",
-    "resources/js/client/invoices-review-modal.js",
-    "resources/js/shared/client-pagination.js",
+    "resources/js/client/invoices-page.ts",
 
     // CSS
     "resources/css/client/fonts.css",
@@ -139,10 +126,6 @@ export default defineConfig(({ command }) => {
             hmr: {
                 host: "localhost",
             },
-            // FA subset lives in public/fonts; @font-face uses /fonts/... which the browser
-            // resolves against the Vite origin when CSS is served from npm run dev. publicDir
-            // serves those files directly — a /fonts proxy breaks host-side dev (proxy targets
-            // 127.0.0.1:80 inside the container, not localhost:8080 on the host).
         },
     };
 });

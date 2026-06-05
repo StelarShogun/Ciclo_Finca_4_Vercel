@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 
-import { AdminLayout } from '@/Layouts/AdminLayout';
+import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { Badge } from '@/shared/components/ui/Badge';
 
 type DashboardProps = {

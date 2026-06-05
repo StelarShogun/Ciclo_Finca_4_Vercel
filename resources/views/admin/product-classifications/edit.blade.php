@@ -13,7 +13,7 @@
         'resources/css/admin/shell-base.css',
         'resources/css/admin/components/page-header.css',
         'resources/css/admin/suppliers/suppliers.css',
-        'resources/js/admin/product-classifications/edit.js',
+        'resources/js/admin/product-classifications/edit.ts',
     ])
 </head>
 

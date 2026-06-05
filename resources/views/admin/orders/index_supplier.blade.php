@@ -481,12 +481,12 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/orders/supplier-orders.js'])
+    @vite(['resources/js/admin/shell.ts', 'resources/js/admin/orders/supplier-orders.ts'])
     <script>
         window.__CF4_SUPPLIERS__ = @json($suppliers);
         @if ($errors->has('supplier_id') || $errors->has('items'))
             document.addEventListener('DOMContentLoaded', function () { openCreateOrderModal(); });
         @endif
     </script>
-    @vite(['resources/js/admin/orders/supplier-order-create.js'])
+    @vite(['resources/js/admin/orders/supplier-order-create.ts'])
 @endpush

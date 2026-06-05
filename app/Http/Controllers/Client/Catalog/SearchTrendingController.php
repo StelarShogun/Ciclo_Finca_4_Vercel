@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Services\Admin\CatalogMostSearchedProductsReportQuery;
 use App\Services\Catalog\CatalogSearchTrendingQuery;
-use App\Support\ProductImageUrls;
+use App\Services\Media\ProductImageUrls;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;

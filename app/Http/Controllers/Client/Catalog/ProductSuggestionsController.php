@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Client\Catalog;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
-use App\Support\ProductImageUrls;
+use App\Services\Media\ProductImageUrls;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;

@@ -1,1 +1,1 @@
-@vite(['resources/js/shared/theme-toggle.js'])
+@vite(['resources/js/shared/theme-toggle.ts'])

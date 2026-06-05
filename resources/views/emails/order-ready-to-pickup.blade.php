@@ -7,7 +7,7 @@
 @section('header-title', 'Pedido listo para recoger')
 
 @php
-    use App\Support\ClientPickupPolicy;
+    use App\Services\Client\Storefront\ClientPickupPolicy;
 
     $invoiceLabel = $sale->invoice_number ?? '#'.$sale->sale_id;
 @endphp

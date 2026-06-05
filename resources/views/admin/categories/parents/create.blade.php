@@ -78,5 +78,5 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/admin/classifications/forms.js'])
+    @vite(['resources/js/admin/classifications/forms.ts'])
 @endpush

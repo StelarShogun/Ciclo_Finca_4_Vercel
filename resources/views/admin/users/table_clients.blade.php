@@ -219,9 +219,8 @@
 
     {{-- SweetAlert2 for ban/unban confirmation dialogs --}}
 
-
     {{-- User management scripts --}}
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/users/clients.js'])
+    @vite(['resources/js/admin/shell.ts', 'resources/js/admin/users/clients.ts'])
     @include('admin.partials.cf4-theme-scripts')
 
 </body>

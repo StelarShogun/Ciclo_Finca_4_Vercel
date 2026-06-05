@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "allowJs": false,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "composite": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "ignoreDeprecations": "6.0",
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "noImplicitAny": false,
+    "paths": {
+      "@/*": ["resources/js/*"]
+    },
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "target": "ES2022",
+    "types": ["vite/client"]
+  },
+  "include": [
+    "resources/js/admin/**/*.ts",
+    "resources/js/client/**/*.ts",
+    "resources/js/errors/scenes.ts",
+    "resources/js/errors/scenes/*.ts",
+    "resources/js/shared/ajax-pagination.ts",
+    "resources/js/shared/client-pagination.ts",
+    "resources/js/shared/legacy-dom.ts",
+    "resources/js/shared/escape-html.ts",
+    "resources/js/shared/product-media-placeholder.ts",
+    "resources/js/types/legacy-globals.d.ts",
+    "resources/js/types/legacy-client-modules.d.ts"
+  ],
+  "exclude": [
+    "resources/js/admin/login/login.ts",
+    "resources/js/client/header-menu.ts",
+    "resources/js/client/header-menu-alert.ts",
+    "resources/js/client/checkout-copy.ts"
+  ]
+}

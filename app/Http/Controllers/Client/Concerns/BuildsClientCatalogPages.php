@@ -7,7 +7,7 @@ use App\Models\Product;
 use App\Services\Client\Catalog\CatalogPayloadBuilder;
 use App\Services\Client\Storefront\ClientCategoryIcons;
 use App\Services\Client\Storefront\ClientStorefrontCache;
-use App\Support\ProductImageUrls;
+use App\Services\Media\ProductImageUrls;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;

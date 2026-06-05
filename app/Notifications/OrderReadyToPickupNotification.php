@@ -3,7 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Sale;
-use App\Support\ClientPickupPolicy;
+use App\Services\Client\Storefront\ClientPickupPolicy;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;

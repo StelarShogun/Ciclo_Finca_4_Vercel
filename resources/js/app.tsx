@@ -5,6 +5,8 @@ import { createRoot } from 'react-dom/client';
 import type { ComponentType } from 'react';
 
 import '../css/client/toasts.css';
+import '../css/client/confirm-dialog.css';
+import { ConfirmDialogProvider } from '@/shared/components/ui/ConfirmDialogProvider';
 import { ToastProvider } from '@/shared/components/ui/ToastProvider';
 
 const pages = import.meta.glob<{ default: ComponentType }>(
@@ -24,7 +26,9 @@ createInertiaApp({
   setup({ el, App, props }) {
     createRoot(el).render(
       <ToastProvider>
-        <App {...props} />
+        <ConfirmDialogProvider>
+          <App {...props} />
+        </ConfirmDialogProvider>
       </ToastProvider>,
     );
   },

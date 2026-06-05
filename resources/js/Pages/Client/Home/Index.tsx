@@ -9,7 +9,7 @@ import { HeroSection } from '@/features/client/home/components/HeroSection';
 import { HomeSection } from '@/features/client/home/components/HomeSection';
 import { ClientLayout } from '@/shared/components/layout/ClientLayout';
 import type { HomeCategory, HomeHero, HomeProduct } from '@/types/home';
-import type { InertiaSharedProps } from '@/types/models';
+import type { InertiaSharedProps } from '@/shared/types/models';
 
 type ClientHomePageProps = {
   featuredProducts: HomeProduct[];
@@ -17,6 +17,19 @@ type ClientHomePageProps = {
   showGuestRegisterCta: boolean;
   hero: HomeHero;
 };
+
+const HOME_BENEFITS = [
+  ['fas fa-tools', 'Taller propio', 'Revisión, ajuste y preparación en tienda para que salgas rodando con confianza.'],
+  ['fas fa-user-tie', 'Asesoría personalizada', 'Te orientamos para elegir la opción correcta según tu ruta, MTB o gravel.'],
+  ['fas fa-warehouse', 'Inventario y disponibilidad', 'Confirmamos disponibilidad y te decimos cuándo está listo para retirar.'],
+  ['fas fa-shield-alt', 'Soporte post-retirada', 'Acompañamos después de tu retiro con recomendaciones de uso y cuidados.'],
+] as const;
+
+const HOME_TESTIMONIALS = [
+  ['Me orientaron con la talla y ajustes. Retiré listo y pude salir ese mismo día.', 'Mauricio R. · MTB recreativo'],
+  ['Excelente atención en tienda. Respondieron mis dudas y dejaron todo preparado.', 'Andrea M. · Ruta urbana'],
+  ['Encargo claro y puntual para retirar. Gran asesoría en componentes.', 'Carlos G. · Gravel fin de semana'],
+] as const;
 
 export default function ClientHomeIndex({
   categories,
@@ -114,13 +127,6 @@ function TrustItem({ icon, text, title }: { icon: string; text: string; title: s
 }
 
 function BenefitsSection() {
-  const benefits = [
-    ['fas fa-tools', 'Taller propio', 'Revisión, ajuste y preparación en tienda para que salgas rodando con confianza.'],
-    ['fas fa-user-tie', 'Asesoría personalizada', 'Te orientamos para elegir la opción correcta según tu ruta, MTB o gravel.'],
-    ['fas fa-warehouse', 'Inventario y disponibilidad', 'Confirmamos disponibilidad y te decimos cuándo está listo para retirar.'],
-    ['fas fa-shield-alt', 'Soporte post-retirada', 'Acompañamos después de tu retiro con recomendaciones de uso y cuidados.'],
-  ] as const;
-
   return (
     <HomeSection
       className="benefits-section"
@@ -129,7 +135,7 @@ function BenefitsSection() {
       ariaLabel="Beneficios del servicio"
     >
       <ul className="benefits-grid" aria-label="Beneficios principales">
-        {benefits.map(([icon, title, description]) => (
+        {HOME_BENEFITS.map(([icon, title, description]) => (
           <li className="benefit-card" key={title}>
             <i className={icon} aria-hidden="true" />
             <h3 className="benefit-title">{title}</h3>
@@ -209,12 +215,6 @@ function StepCard({
 }
 
 function TestimonialsSection() {
-  const testimonials = [
-    ['Me orientaron con la talla y ajustes. Retiré listo y pude salir ese mismo día.', 'Mauricio R. · MTB recreativo'],
-    ['Excelente atención en tienda. Respondieron mis dudas y dejaron todo preparado.', 'Andrea M. · Ruta urbana'],
-    ['Encargo claro y puntual para retirar. Gran asesoría en componentes.', 'Carlos G. · Gravel fin de semana'],
-  ] as const;
-
   return (
     <HomeSection
       className="testimonials-section"
@@ -223,7 +223,7 @@ function TestimonialsSection() {
       ariaLabel="Testimonios de clientes"
     >
       <ul className="testimonials-grid" aria-label="Lista de testimonios">
-        {testimonials.map(([quote, author]) => (
+        {HOME_TESTIMONIALS.map(([quote, author]) => (
           <li className="testimonial-card" key={author}>
             <div className="testimonial-stars" aria-hidden="true">
               {Array.from({ length: 5 }, (_, index) => (

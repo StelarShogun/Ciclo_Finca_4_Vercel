@@ -8,7 +8,7 @@ import { fullName, passwordStrengthLevel } from '@/features/client/profile/lib/p
 import { useToast } from '@/shared/hooks/useToast';
 import { confirm } from '@/shared/lib/confirm';
 import { ClientLayout } from '@/shared/components/layout/ClientLayout';
-import type { InertiaSharedProps } from '@/types/models';
+import type { InertiaSharedProps } from '@/shared/types/models';
 import type { ProfileClient, ProfileFlash } from '@/types/profile';
 
 import '../../../../css/client/clients-users.css';

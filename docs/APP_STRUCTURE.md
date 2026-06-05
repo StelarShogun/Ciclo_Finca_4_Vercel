@@ -71,7 +71,7 @@ Client/
 | Use cases | `app/Actions/Admin/*`, `app/Actions/Client/*` (e.g. `Client/Product/BuildProductDetailPage`, `Admin/Products/ActivateProduct`) |
 | Domain / integrations | `app/Services/Admin/*`, `app/Services/Client/*`, `app/Services/Security/*` |
 | DTOs | `app/Data/*` |
-| Inertia payloads | `app/Support/ClientInertia/*` |
+| Inertia payloads | `app/Services/Client/Inertia/*` |
 | Storefront cache / icons / pickup copy | `app/Services/Client/Storefront/*` (Support wrappers deprecated) |
 | Client catalog page | `app/Actions/Client/Catalog/BuildCatalogPage` + `app/Services/Client/Catalog/*` |
 | Catalog import/export | `app/Services/Admin/ProductCatalog/*`, `app/Data/Admin/ProductCatalog/CatalogImportOptions` |

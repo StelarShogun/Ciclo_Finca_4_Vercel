@@ -4,7 +4,7 @@ namespace App\Actions\Admin\Products;
 
 use App\Models\Product;
 use App\Services\Admin\Products\ProductAuditLogger;
-use App\Support\ClientStorefrontCache;
+use App\Services\Client\Storefront\ClientStorefrontCache;
 use Illuminate\Support\Facades\DB;
 
 final class ForceDeleteProduct

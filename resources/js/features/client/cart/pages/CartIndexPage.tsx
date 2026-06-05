@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { CartEmptyState } from '@/features/client/cart/components/CartEmptyState';
@@ -18,7 +18,11 @@ function formatCurrency(amount: number): string {
   return `₡${amount.toLocaleString('es-CR', { maximumFractionDigits: 0 })}`;
 }
 
-export default function CartIndexPage({
+function cartItemsSyncKey(items: CartPageProps['items']): string {
+  return items.map((item) => `${item.productId}:${item.quantity}`).join('|');
+}
+
+function CartIndexContent({
   items: initialItems,
   pagination,
   pickupPolicyLine,
@@ -28,10 +32,6 @@ export default function CartIndexPage({
   const { csrfToken } = usePage<InertiaSharedProps>().props;
   const [items, setItems] = useState(() => normalizeCartItems(initialItems));
   const [paymentMethod, setPaymentMethod] = useState<CartPaymentMethod>('cash');
-
-  useEffect(() => {
-    setItems(normalizeCartItems(initialItems));
-  }, [initialItems]);
 
   const subtotal = useMemo(() => items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0), [items]);
   const subtotalFormatted = formatCurrency(subtotal);
@@ -153,4 +153,8 @@ export default function CartIndexPage({
       </ClientLayout>
     </>
   );
+}
+
+export default function CartIndexPage(props: CartPageProps) {
+  return <CartIndexContent key={cartItemsSyncKey(props.items)} {...props} />;
 }

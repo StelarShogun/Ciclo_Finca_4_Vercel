@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin\Brands;
 
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
+use App\Services\Client\Storefront\ClientStorefrontCache;
 use App\Support\AdminPerPage;
-use App\Support\ClientStorefrontCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 

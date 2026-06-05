@@ -7,7 +7,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
-use App\Support\ClientStorefrontCache;
+use App\Services\Client\Storefront\ClientStorefrontCache;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\Support\InteractsWithMysqlTestDatabase;

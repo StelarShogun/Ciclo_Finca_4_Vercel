@@ -1,0 +1,63 @@
+.cf4-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(5, 31, 32, 0.45);
+}
+
+.cf4-modal,
+.cf4-confirm-dialog {
+  width: min(100%, 28rem);
+  border-radius: 12px;
+  background: var(--background-card, #fff);
+  color: var(--text-primary, #051f20);
+  box-shadow: 0 18px 48px rgba(5, 31, 32, 0.18);
+}
+
+.cf4-modal__header,
+.cf4-confirm-dialog .cf4-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem 0.5rem;
+}
+
+.cf4-modal__header h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.cf4-modal__close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.cf4-modal__body,
+.cf4-confirm-dialog .cf4-modal__body {
+  padding: 0.75rem 1.25rem 1rem;
+}
+
+.cf4-modal__footer,
+.cf4-confirm-dialog .cf4-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0 1.25rem 1.25rem;
+}
+
+.cf4-confirm-dialog__icon {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  color: var(--brand-primary, #235347);
+}
+
+.cf4-confirm-dialog__text {
+  margin: 0;
+}

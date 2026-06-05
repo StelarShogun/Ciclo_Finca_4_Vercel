@@ -15,9 +15,9 @@ const variantClass: Record<ButtonVariant, string> = {
   danger: 'btn btn-outline-danger',
 };
 
-export function Button({ children, className = '', variant = 'primary', ...props }: ButtonProps) {
+export function Button({ children, className = '', type = 'button', variant = 'primary', ...props }: ButtonProps) {
   return (
-    <button className={`${variantClass[variant]} ${className}`.trim()} {...props}>
+    <button type={type} className={`${variantClass[variant]} ${className}`.trim()} {...props}>
       {children}
     </button>
   );

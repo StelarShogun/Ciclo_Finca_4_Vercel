@@ -1,5 +1,5 @@
 @php
-    use App\Support\ProductImageUrls;
+    use App\Services\Media\ProductImageUrls;
 
     $variant = $variant ?? 'card';
     $alt = $alt ?? $product->name;
@@ -44,7 +44,7 @@
     @php $cardImg = ProductImageUrls::cardPicture($product); @endphp
     @if($href)
         <a href="{{ $href }}" class="{{ $linkClass }}" aria-label="{{ $alt }}">
-            @include('client.parts.responsive-picture', [
+            @include('shared.media.responsive-picture', [
                 'desktopWebp' => $cardImg['desktopWebp'],
                 'mobileWebp' => $cardImg['mobileWebp'],
                 'fallback' => $cardImg['fallback'],
@@ -54,7 +54,7 @@
             ])
         </a>
     @else
-        @include('client.parts.responsive-picture', [
+        @include('shared.media.responsive-picture', [
             'desktopWebp' => $cardImg['desktopWebp'],
             'mobileWebp' => $cardImg['mobileWebp'],
             'fallback' => $cardImg['fallback'],

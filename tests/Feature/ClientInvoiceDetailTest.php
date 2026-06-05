@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
@@ -122,10 +123,14 @@ class ClientInvoiceDetailTest extends TestCase
 
             $response = $this->get(route('clients.invoices.show', $sale));
             $response->assertOk();
-            $response->assertViewIs('client.invoice-detail');
-            $response->assertViewHas('sale', fn ($viewSale) => (int) $viewSale->sale_id === (int) $sale->sale_id);
-            $response->assertSee($sale->invoice_number, false);
-            $response->assertSee('Detalle Propio', false);
+            $response->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Invoices/Show', false)
+                ->where('invoiceNumber', $sale->invoice_number)
+                ->has('items', 1, fn (Assert $item) => $item
+                    ->where('name', 'Detalle Propio')
+                    ->etc()
+                )
+            );
         } finally {
             $this->cleanup($sale, $product, $client);
         }
@@ -192,11 +197,11 @@ class ClientInvoiceDetailTest extends TestCase
 
             $response = $this->get(route('clients.invoices.show', $sale));
             $response->assertOk();
-            $response->assertSee('Motivo de cancelación', false);
-            $response->assertSee($reason, false);
-            $response->assertSee('Comprobante', false);
-            $response->assertSee('Detalle de productos', false);
-            $response->assertSee('Cancelada', false);
+            $response->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Invoices/Show', false)
+                ->where('orderMeta.statusLabel', 'Cancelada')
+                ->where('orderMeta.cancellationReason', $reason)
+            );
         } finally {
             InventoryMovement::where('reference_id', $sale->sale_id)->delete();
             $this->cleanup($sale, $product, $client);

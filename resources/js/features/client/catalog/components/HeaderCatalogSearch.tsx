@@ -17,7 +17,7 @@ export function HeaderCatalogSearch() {
   useEffect(() => {
     let cancelled = false;
 
-    void import('@/client/header-catalog-search.js').then((module) => {
+    void import('@/client/header-catalog-search').then((module) => {
       if (!cancelled) {
         module.initHeaderCatalogSearch();
       }

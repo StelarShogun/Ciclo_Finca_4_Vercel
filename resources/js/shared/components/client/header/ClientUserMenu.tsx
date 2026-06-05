@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 
+import { useFavoritesDrawer } from '@/features/client/favorites/context/FavoritesDrawerContext';
 import type { InertiaSharedProps } from '@/shared/types/models';
 
 type ClientUserMenuProps = {
@@ -11,6 +12,8 @@ type ClientUserMenuProps = {
 };
 
 export function ClientUserMenu({ authClient, clientInitials, isOpen, onLogout, onToggle }: ClientUserMenuProps) {
+  const { open: openFavoritesDrawer } = useFavoritesDrawer();
+
   return (
     <div className={`user-menu-wrap ${isOpen ? 'open' : ''}`}>
       <button
@@ -52,7 +55,17 @@ export function ClientUserMenu({ authClient, clientInitials, isOpen, onLogout, o
             <i className="fas fa-user" aria-hidden="true" />
             <span>Mi perfil</span>
           </Link>
-          <button type="button" className="user-dropdown-item cf4-favorites-open-trigger" role="menuitem">
+          <button
+            type="button"
+            className="user-dropdown-item"
+            role="menuitem"
+            onClick={() => {
+              if (isOpen) {
+                onToggle();
+              }
+              openFavoritesDrawer();
+            }}
+          >
             <i className="fas fa-heart" aria-hidden="true" />
             <span>Mis favoritos</span>
           </button>

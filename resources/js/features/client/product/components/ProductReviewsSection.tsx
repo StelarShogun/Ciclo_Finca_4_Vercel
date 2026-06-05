@@ -2,6 +2,7 @@ import { Link, router, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 
 import { ProductStarsInline } from '@/features/client/product/components/ProductStarsInline';
+import { Select } from '@/shared/components/ui/Select';
 import { ReviewRow } from '@/features/client/product/components/ReviewRow';
 import type { ProductDetailPageProps } from '@/features/client/product/types';
 import type { InertiaSharedProps } from '@/shared/types/models';
@@ -42,10 +43,10 @@ export function ProductReviewsSection({ authClient, productId, productPath, revi
             <strong>Escribir reseña</strong> (1 a 5 estrellas)
           </label>
           <div className="product-detail-review-form__row">
-            <select
+            <Select
               id="stars"
               name="stars"
-              className="form-control product-detail-review-form__select"
+              className="product-detail-review-form__select"
               value={reviewForm.data.stars}
               onChange={(e) => reviewForm.setData('stars', e.target.value)}
             >
@@ -55,7 +56,7 @@ export function ProductReviewsSection({ authClient, productId, productPath, revi
                   {star} estrella{star > 1 ? 's' : ''}
                 </option>
               ))}
-            </select>
+            </Select>
             <button type="submit" className="btn btn-primary" disabled={reviewForm.processing}>
               {reviews.clientReviewStars ? 'Actualizar reseña' : 'Publicar reseña'}
             </button>

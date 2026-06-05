@@ -1,9 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
 
+import { InvoiceLineThumb } from '@/features/client/invoices/components/InvoiceLineThumb';
 import { ClientLayout } from '@/shared/components/layout/ClientLayout';
+import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import type { InvoiceDetailPageProps } from '@/types/invoices';
 
 import '../../../../css/client/clients-users.css';
+import '../../../../css/client/invoice-detail.css';
 import '../../../../css/admin/sales/invoice-document.css';
 
 export default function InvoiceShow(props: InvoiceDetailPageProps) {
@@ -45,9 +48,13 @@ export default function InvoiceShow(props: InvoiceDetailPageProps) {
           <div className="cf4-invoices-card">
             <div className="cf4-invoice-detail-toolbar">
               <div className="cf4-invoice-detail-status">
-                <span className={`cf4-invoice-pill ${props.orderMeta.statusPillClass}`.trim()}>
-                  <i className={`fas ${props.orderMeta.statusIconClass}`} aria-hidden="true" /> {props.orderMeta.statusLabel}
-                </span>
+                <StatusBadge
+                  variant="pill"
+                  pillClass={props.orderMeta.statusPillClass}
+                  icon={<i className={`fas ${props.orderMeta.statusIconClass}`} aria-hidden="true" />}
+                >
+                  {props.orderMeta.statusLabel}
+                </StatusBadge>
                 {props.orderMeta.cancellationReason ? (
                   <p className="cf4-invoice-cancellation-reason">{props.orderMeta.cancellationReason}</p>
                 ) : null}
@@ -94,7 +101,12 @@ export default function InvoiceShow(props: InvoiceDetailPageProps) {
                   <tbody>
                     {props.items.map((item) => (
                       <tr key={item.productId}>
-                        <td>{item.name}</td>
+                        <td>
+                          <div className="cf4-product-cell">
+                            <InvoiceLineThumb item={item} />
+                            <span>{item.name}</span>
+                          </div>
+                        </td>
                         <td>{item.quantity}</td>
                         <td>{item.unitPriceFormatted}</td>
                         <td>{item.totalFormatted}</td>

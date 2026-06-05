@@ -95,7 +95,7 @@
 - **Pages/**: solo entradas Inertia delgadas (`export { default } from '@/features/...'`).
 - **features/client/**: módulos por dominio (`home`, `catalog`, `product`, `cart`, …).
 - **shared/**: UI, layouts, hooks y libs transversales.
-- **Re-exports temporales** en `Components/`, `Layouts/`, `hooks/`, `lib/`, `types/` — retirar cuando no queden imports legacy.
+- **Re-exports temporales** eliminados en `Components/`, `Layouts/`, `hooks/`, `lib/`; `types/` sigue canónico para props Inertia.
 - **Pendiente naming**: `Invoices` vs `Orders` en rutas/copy (no renombrado en esta corrida).
 
 ## Organización Blade (2026-06-02)
@@ -144,23 +144,20 @@ MVP creado (canónicos en `shared/` o `features/`):
 - `CartEmptyState`
 - `CartCheckoutActions`
 
+Añadidos en `shared/components/ui/` (2026-06):
+
+- `Select`, `Checkbox`, `StatusBadge`, `Drawer`, `Modal`, `ConfirmDialog` (+ provider en `app.tsx`), `Tabs`
+
 Pendiente:
 
-- `Select`
 - `Textarea`
-- `Checkbox`
-- `StatusBadge`
 - `QuantitySelector` (product feature — hecho)
-- `Modal`
-- `ConfirmDialog`
 - `AdminTable`
 - `DataToolbar`
 - `PerPageSelect`
 - `SearchInput`
 - `FilterPanel`
 - `StatCard`
-- `Drawer`
-- `Tabs`
 
 ## Orden de siguientes PRs
 
@@ -168,8 +165,8 @@ Pendiente:
 2. ~~Carrito~~ (React puro; `bundles/cart.js` queda sólo para Blade residual)
 3. ~~Auth cliente.~~
 4. ~~Cuenta cliente.~~
-5. ~~Facturas/pedidos (listado/detalle).~~ — miniaturas en detalle Inertia pendientes
-6. ~~Favoritos y notificaciones.~~ — drawer aún legacy JS
+5. ~~Facturas/pedidos (listado/detalle + miniaturas).~~
+6. ~~Favoritos y notificaciones (drawer React).~~
 7. ~~Legal restante.~~
 8. Admin shell + dashboard completo.
 9. Inventario.
@@ -201,7 +198,7 @@ Pendiente:
 - Helper creado: `resources/js/lib/favorites.ts` para `POST /favorites/toggle`.
 - Reutiliza `resources/js/lib/cart.ts` para `POST /cart/add`.
 - Mantiene endpoints JSON legacy: `/api/catalog/heartbeat`, `/api/products/suggestions`, `/api/catalog/search-trending`.
-- Legacy JS temporal: `bundles/catalog.js`, `bundles/product.js`, `bundles/cart.js` (ver tabla en `FRONTEND_INERTIA_REACT_TS.md`).
+- Legacy TS vía dynamic import: `bundles/catalog.ts` (catálogo Inertia). Eliminados: `bundles/product`, `bundles/cart`, `clients-*.js` (ver `docs/LEGACY_JS_TO_TS_MIGRATION.md`).
 
 ## Criterio por ruta
 
@@ -216,7 +213,9 @@ Una ruta se marca como migrada solo si:
 
 ## Última validación
 
+Ver resultados al pie de `docs/LEGACY_JS_TO_TS_MIGRATION.md` (corrida JS→TS) y sección React Doctor en `docs/FRONTEND_INERTIA_REACT_TS.md`.
+
+Histórico (pre JS→TS agresivo):
+
 - `php artisan test`: **228 passed**, 192 skipped (incl. tests de display migrados a `assertInertia`).
-- `npm run build` / `npm run typecheck`: OK.
-- `npm run lint:react`: OK, React Doctor **82 / 100**.
 - Producto: `Client/Products/Show`, builder con `ProductDetailPayloadContext`.

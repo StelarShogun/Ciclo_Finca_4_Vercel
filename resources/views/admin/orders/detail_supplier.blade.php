@@ -468,7 +468,7 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/orders/supplier-orders.js', 'resources/js/admin/orders/detail-supplier-page.js'])
+    @vite(['resources/js/admin/shell.ts', 'resources/js/admin/orders/supplier-orders.ts', 'resources/js/admin/orders/detail-supplier-page.ts'])
 
     <script>
         // ── Modal: Recepción de mercancía ────────────────────────────────────────

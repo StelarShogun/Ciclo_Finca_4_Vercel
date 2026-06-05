@@ -356,5 +356,5 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/orders/orders.js'])
+    @vite(['resources/js/admin/shell.ts', 'resources/js/admin/orders/orders.ts'])
 @endpush

@@ -43,7 +43,7 @@ use App\Http\Controllers\Client\ProductPageController;
 use App\Http\Controllers\Client\ProductReviewController;
 use App\Http\Controllers\Client\ProfileController;
 use App\Http\Controllers\Client\StorefrontController;
-use App\Services\CartService;
+use App\Services\Client\Cart\CartDatabaseStore;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -405,7 +405,7 @@ Route::post('/logout', function () {
 
     $loggingOutClient = Auth::guard('clients')->user();
     if ($loggingOutClient) {
-        CartService::saveToDb($loggingOutClient->user_id, Session::get('cart', []));
+        app(CartDatabaseStore::class)->save($loggingOutClient->user_id, Session::get('cart', []));
     }
 
     Auth::guard('clients')->logout();

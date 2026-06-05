@@ -11,7 +11,7 @@
 
 @push('vite-body')
     @vite([
-        'resources/js/admin/product-classifications/index.js',
+        'resources/js/admin/product-classifications/index.ts',
     ])
 @endpush
 

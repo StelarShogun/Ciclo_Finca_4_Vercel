@@ -10,8 +10,8 @@ export function useCatalogPageInit() {
     let cancelled = false;
 
     void Promise.all([
-      import('@/client/bundles/catalog.js'),
-      import('@/client/clients-catalog-heartbeat.js'),
+      import('@/client/bundles/catalog'),
+      import('@/client/clients-catalog-heartbeat'),
     ]).then(([catalogModule, heartbeatModule]) => {
       if (cancelled) {
         return;

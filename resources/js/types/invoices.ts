@@ -31,6 +31,12 @@ export type InvoiceDetailItem = {
   quantity: number;
   unitPriceFormatted: string;
   totalFormatted: string;
+  image: {
+    usesPlaceholder: boolean;
+    fallback: string;
+    mobileWebp: string | null;
+    placeholderIconClass: string;
+  };
 };
 
 export type InvoiceDetailPageProps = {

@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Support\ProductImageUrls;
+use App\Services\Media\ProductImageUrls;
 use Illuminate\Support\Facades\Storage;
 use Mockery;
 use Mockery\MockInterface;

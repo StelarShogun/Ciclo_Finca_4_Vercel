@@ -136,7 +136,7 @@
             window.__CF4_SUPPLIERS__ = @json($suppliers);
         </script>
 
-        @vite(['resources/js/admin/shell.js', 'resources/js/admin/orders/supplier-order-create.js'])
+        @vite(['resources/js/admin/shell.ts', 'resources/js/admin/orders/supplier-order-create.ts'])
     @endpush
 @endsection
 

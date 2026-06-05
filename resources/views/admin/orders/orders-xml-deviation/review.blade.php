@@ -583,5 +583,5 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/admin/orders/xml-deviation-review.js'])
+    @vite(['resources/js/admin/orders/xml-deviation-review.ts'])
 @endpush

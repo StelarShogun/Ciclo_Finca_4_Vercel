@@ -2,10 +2,11 @@ import { Head, router, usePage, Link } from '@inertiajs/react';
 import { useState } from 'react';
 
 import { ClientAuthLayout } from '@/shared/components/layout/ClientAuthLayout';
+import { Checkbox } from '@/shared/components/ui/Checkbox';
 import { InlineAlert } from '@/shared/components/ui/InlineAlert';
 import { firstError } from '@/shared/lib/inertiaErrors';
 
-import type { InertiaSharedProps } from '@/types/models';
+import type { InertiaSharedProps } from '@/shared/types/models';
 
 type RegisterPageProps = {
   recaptchaSiteKey?: string | null;
@@ -189,25 +190,25 @@ export default function Register({ recaptchaSiteKey }: RegisterPageProps) {
               </div>
 
               <div className="cf4-legal-consent">
-                <label className="cf4-legal-consent-label" htmlFor="accept_terms">
-                  <input
-                    type="checkbox"
-                    name="accept_terms"
-                    id="accept_terms"
-                    checked={acceptTerms}
-                    onChange={(e) => setAcceptTerms(e.target.checked)}
-                    value="1"
-                  />
-                  <span>
-                    Al registrarme acepto los
-                    {' '}
-                    <a href="/legal/terminos" target="_blank" rel="noopener noreferrer">Términos y condiciones</a>
-                    {' '}
-                    y la
-                    {' '}
-                    <a href="/legal/privacidad" target="_blank" rel="noopener noreferrer">Política de privacidad</a>.
-                  </span>
-                </label>
+                <Checkbox
+                  name="accept_terms"
+                  id="accept_terms"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  value="1"
+                  labelClassName="cf4-legal-consent-label"
+                  label={(
+                    <>
+                      Al registrarme acepto los
+                      {' '}
+                      <a href="/legal/terminos" target="_blank" rel="noopener noreferrer">Términos y condiciones</a>
+                      {' '}
+                      y la
+                      {' '}
+                      <a href="/legal/privacidad" target="_blank" rel="noopener noreferrer">Política de privacidad</a>.
+                    </>
+                  )}
+                />
                 {firstError(errors, 'accept_terms') ? <div className="field-msg error">{firstError(errors, 'accept_terms')}</div> : null}
               </div>
 

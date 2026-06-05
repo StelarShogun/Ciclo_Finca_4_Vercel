@@ -34,18 +34,18 @@ export function ProductGallery({ product }: ProductGalleryProps) {
       }
 
       if (event.key === 'ArrowLeft') {
-        goTo(currentSlide - 1);
+        setCurrentSlide((slide) => Math.max(0, slide - 1));
       }
 
       if (event.key === 'ArrowRight') {
-        goTo(currentSlide + 1);
+        setCurrentSlide((slide) => Math.min(slideCount - 1, slide + 1));
       }
     }
 
     document.addEventListener('keydown', onKeyDown);
 
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [currentSlide, goTo, slideCount]);
+  }, [slideCount]);
 
   return (
     <div className="product-detail-image product-detail-hero__gallery">

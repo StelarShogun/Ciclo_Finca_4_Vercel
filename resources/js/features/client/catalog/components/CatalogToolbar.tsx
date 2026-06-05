@@ -1,5 +1,7 @@
 import { router } from '@inertiajs/react';
 
+import { Select } from '@/shared/components/ui/Select';
+
 const ADMIN_PER_PAGE_OPTIONS = [10, 25, 50] as const;
 import type { CatalogBrand, CatalogFilters as CatalogFiltersType, CatalogTaxonomy } from '@/types/catalog';
 
@@ -74,10 +76,10 @@ export function CatalogToolbar({
         <div className="catalog-toolbar-sort" aria-label="Ordenar resultados">
           <div className="catalog-toolbar-sort-field">
             <label htmlFor="sort">Ordenar por</label>
-            <select
+            <Select
               id="sort"
               name="sort"
-              className="form-control catalog-toolbar-select"
+              className="catalog-toolbar-select"
               form="filter-form"
               value={filters.sort}
               onChange={(event) => applySortField('sort', event.target.value)}
@@ -85,28 +87,28 @@ export function CatalogToolbar({
               <option value="created_at">Más recientes</option>
               <option value="price">Precio</option>
               <option value="name">Nombre</option>
-            </select>
+            </Select>
           </div>
           <div className="catalog-toolbar-sort-field">
             <label htmlFor="direction">Dirección</label>
-            <select
+            <Select
               id="direction"
               name="direction"
-              className="form-control catalog-toolbar-select"
+              className="catalog-toolbar-select"
               form="filter-form"
               value={filters.direction}
               onChange={(event) => applySortField('direction', event.target.value)}
             >
               <option value="desc">Descendente</option>
               <option value="asc">Ascendente</option>
-            </select>
+            </Select>
           </div>
           <div className="catalog-toolbar-sort-field">
             <label htmlFor="catalog-per-page">Por página</label>
-            <select
+            <Select
               id="catalog-per-page"
               name="per_page"
-              className="form-control catalog-toolbar-select"
+              className="catalog-toolbar-select"
               form="filter-form"
               value={String(filters.perPage)}
               onChange={(event) => applySortField('per_page', event.target.value)}
@@ -116,7 +118,7 @@ export function CatalogToolbar({
                   {size}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </div>
       </div>

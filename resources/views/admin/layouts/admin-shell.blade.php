@@ -32,7 +32,7 @@
     </main>
 
     @include('admin.partials.cf4-flash-swal')
-    @vite(['resources/js/admin/shell.js'])
+    @vite(['resources/js/admin/shell.ts'])
     @stack('vite-body')
     @stack('scripts')
 

@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Services\Admin\ProductCatalog\Una\UnaCatalogImporter;
 use App\Services\ProductClassificationAssignmentService;
-use App\Support\UnaImport\UnaCatalogImporter;
 use Illuminate\Database\Seeder;
 
 /**

@@ -43,9 +43,20 @@ This document tracks structural work **after** the `migrate-to-ts-and-react` hyg
 
 **Done:** `ClientStorefrontCache`, `ClientCategoryIcons`, `ClientPickupPolicy` → `App\Services\Client\Storefront\*` with `@deprecated` Support wrappers.
 
-**Done:** `ProductCatalog/*` → `Services/Admin/ProductCatalog`; `CatalogImportOptions` in `Data/Admin/ProductCatalog`; `CatalogImportContext` deprecated wrapper in Support.
+**Done:** `ProductCatalog/*` → `Services/Admin/ProductCatalog`; `CatalogImportOptions` in `Data/Admin/ProductCatalog`; `CatalogImportContext` removed.
 
-**Pending:** `UnaImport/*` → `Services/Admin/ProductCatalog/Una`; `ProductImageUrls` → `Services/Media`; `ClientFavoriteFormatter` → Favorites or ClientInertia.
+**Done (clean core):** Support wrappers for `ClientStorefrontCache`, `ClientCategoryIcons`, `ClientPickupPolicy` removed — import `Services\Client\Storefront\*` directly. `ClientInertia/*` → `Services\Client\Inertia\*`. `CartService` removed.
+
+**Done:** `UnaImport/*` → `App\Services\Admin\ProductCatalog\Una\*`; `ProductImageUrls` → `App\Services\Media\ProductImageUrls`; `ClientFavoriteFormatter` → `App\Services\Client\Favorites\ClientFavoriteFormatter`.
+
+## Client invoices (Inertia)
+
+**Done:**
+
+- `App\Actions\Client\Invoices\BuildInvoicesIndexPage`, `BuildInvoiceShowPage`
+- `App\Services\Client\Invoices\ClientInvoicePresentation`
+- DTOs in `App\Data\Client\Invoices\*` (`ClientInvoiceOrderRow`, `InvoiceShowOrderMeta`, `InvoiceShowTotals`, `InvoiceShowLineItem`, `ClientPendingReviewProduct`)
+- `InvoiceController` delegates index/show; heartbeat and print stay in controller
 
 ## Dev-only Artisan commands
 

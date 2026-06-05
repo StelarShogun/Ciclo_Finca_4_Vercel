@@ -293,7 +293,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 
     @vite([
-        'resources/js/admin/shell.js',
-        'resources/js/admin/sales/reports-by-category.js',
+        'resources/js/admin/shell.ts',
+        'resources/js/admin/sales/reports-by-category.ts',
     ])
 @endpush

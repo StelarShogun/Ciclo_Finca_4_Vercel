@@ -4,8 +4,8 @@ namespace App\Actions\Client\Cart;
 
 use App\Services\Client\Cart\CartManager;
 use App\Services\Client\Cart\CartProductLookup;
+use App\Services\Client\Inertia\CartPagePayloadBuilder;
 use App\Support\AdminPerPage;
-use App\Support\ClientInertia\CartPagePayloadBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 

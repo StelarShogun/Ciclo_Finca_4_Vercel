@@ -80,7 +80,7 @@
     </div>
 
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/login/login.js'])
+    @vite(['resources/js/admin/shell.ts', 'resources/js/admin/login/login.ts'])
     @include('admin.partials.cf4-theme-scripts')
 
 </body>

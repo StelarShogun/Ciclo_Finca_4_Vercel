@@ -2,11 +2,11 @@ import { Head, router, usePage, Link } from '@inertiajs/react';
 import { useState } from 'react';
 
 import { ClientAuthLayout } from '@/shared/components/layout/ClientAuthLayout';
-import { useRecaptchaV2 } from '@/hooks/useRecaptchaV2';
+import { useRecaptchaV2 } from '@/shared/hooks/useRecaptchaV2';
 import { InlineAlert } from '@/shared/components/ui/InlineAlert';
 import { firstError } from '@/shared/lib/inertiaErrors';
 
-import type { InertiaSharedProps } from '@/types/models';
+import type { InertiaSharedProps } from '@/shared/types/models';
 
 type LoginPageProps = {
   recaptchaSiteKey?: string | null;

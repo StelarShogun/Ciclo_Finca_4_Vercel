@@ -5,7 +5,7 @@ import { Pagination } from '@/shared/components/ui/Pagination';
 import { useToast } from '@/shared/hooks/useToast';
 import { toggleFavorite } from '@/features/client/favorites/api';
 import { ClientLayout } from '@/shared/components/layout/ClientLayout';
-import type { InertiaSharedProps } from '@/types/models';
+import type { InertiaSharedProps } from '@/shared/types/models';
 import type { ClientListPagination } from '@/types/pagination';
 
 import '../../../../css/client/clients-users.css';

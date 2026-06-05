@@ -7,7 +7,7 @@
 @endpush
 
 @push('scripts')
-    @vite(['resources/js/admin/sales/sales.js'])
+    @vite(['resources/js/admin/sales/sales.ts'])
 @endpush
 
 @push('extra-meta')

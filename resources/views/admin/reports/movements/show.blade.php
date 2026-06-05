@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Movimientos — ' . $product->name . ' - Reportes')
 
 @push('vite-body')
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/reports/inventory-movements.js'])
+    @vite(['resources/js/admin/shell.ts', 'resources/js/admin/reports/inventory-movements.ts'])
 @endpush
 
 @push('styles')

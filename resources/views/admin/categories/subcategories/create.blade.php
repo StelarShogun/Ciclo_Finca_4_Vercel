@@ -136,7 +136,7 @@
 
 @push('scripts')
     @vite([
-        'resources/js/admin/classifications/forms.js',
-        'resources/js/admin/categories/category-subcategory-form.js',
+        'resources/js/admin/classifications/forms.ts',
+        'resources/js/admin/categories/category-subcategory-form.ts',
     ])
 @endpush

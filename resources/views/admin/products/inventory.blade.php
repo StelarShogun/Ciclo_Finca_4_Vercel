@@ -1049,7 +1049,7 @@
 
     @include('admin.partials.cf4-flash-swal')
 
-    @vite(['resources/js/admin/shell.js', 'resources/js/admin/inventory/inventory-entry.js'])
+    @vite(['resources/js/admin/shell.ts', 'resources/js/admin/inventory/inventory-entry.ts'])
     @include('admin.partials.cf4-theme-scripts')
 </body>
 </html>
