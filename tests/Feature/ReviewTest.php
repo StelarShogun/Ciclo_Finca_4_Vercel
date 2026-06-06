@@ -12,6 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
@@ -213,9 +214,12 @@ class ReviewTest extends TestCase
             'reviews' => [['product_id' => $product->product_id, 'stars' => 4]],
         ])->assertStatus(200);
 
-        $response = $this->get(route('clients.invoices', ['tab' => 'historial']));
-        $response->assertStatus(200);
-        $response->assertDontSee('__cf4InvoiceReview', false);
+        $this->get(route('clients.invoices', ['tab' => 'historial']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Invoices/Index', false)
+                ->where('pendingReviewProducts', [])
+            );
     }
 
     public function test_history_view_injects_review_modal_config_when_products_pending(): void
@@ -231,11 +235,14 @@ class ReviewTest extends TestCase
 
         $this->actingAs($client, 'clients');
 
-        $response = $this->get(route('clients.invoices', ['tab' => 'historial']));
-        $response->assertStatus(200);
-        $response->assertSee('__cf4InvoiceReview', false);
-        $response->assertSee('Producto Pendiente Resena', false);
-        $response->assertSee('pendingProducts', false);
+        $this->get(route('clients.invoices', ['tab' => 'historial']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Invoices/Index', false)
+                ->has('pendingReviewProducts', 1)
+                ->where('pendingReviewProducts.0.product_id', (int) $product->product_id)
+                ->where('pendingReviewProducts.0.name', 'Producto Pendiente Resena')
+            );
     }
 
     private function seedAdminContext(): array

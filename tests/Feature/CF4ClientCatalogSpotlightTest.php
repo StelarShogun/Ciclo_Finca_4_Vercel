@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF4ClientCatalogSpotlightTest extends TestCase
@@ -45,15 +46,18 @@ class CF4ClientCatalogSpotlightTest extends TestCase
             'is_featured' => true,
         ]);
 
-        $response = $this->get(route('clients.catalog'));
-        $response->assertStatus(200);
-        $response->assertSee('Destacados y novedades', false);
-        $response->assertSee('Producto Destacado CF4-29', false);
-        $response->assertSee('Destacado', false);
-        $response->assertSee('₡1.500', false);
-
         $detailUrl = $product->clientProductUrl();
-        $response->assertSee($detailUrl, false);
+
+        $this->get(route('clients.catalog'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('catalogSpotlight.0.kind', 'featured')
+                ->where('catalogSpotlight.0.product.name', 'Producto Destacado CF4-29')
+                ->where('catalogSpotlight.0.product.isFeatured', true)
+                ->where('catalogSpotlight.0.product.priceFormatted', '₡1.500')
+                ->where('catalogSpotlight.0.product.url', $detailUrl)
+            );
     }
 
     public function test_catalog_spotlight_shows_novelty_badge_for_recent_non_featured(): void
@@ -72,10 +76,14 @@ class CF4ClientCatalogSpotlightTest extends TestCase
             'is_featured' => false,
         ]);
 
-        $response = $this->get(route('clients.catalog'));
-        $response->assertStatus(200);
-        $response->assertSee('Destacados y novedades', false);
-        $response->assertSee('Solo novedad CF4-29', false);
-        $response->assertSee('Novedad', false);
+        $this->get(route('clients.catalog'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('catalogSpotlight.0.kind', 'novelty')
+                ->where('catalogSpotlight.0.product.name', 'Solo novedad CF4-29')
+                ->where('catalogSpotlight.0.product.isFeatured', false)
+                ->where('catalogSpotlight.0.product.isNew', true)
+            );
     }
 }

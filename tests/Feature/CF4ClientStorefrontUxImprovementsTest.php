@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Client;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF4ClientStorefrontUxImprovementsTest extends TestCase
@@ -27,21 +29,35 @@ class CF4ClientStorefrontUxImprovementsTest extends TestCase
 
     public function test_cart_includes_checkout_progress_markup(): void
     {
-        $response = $this->get(route('clients.cart'));
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Carrito',
+            'second_surname' => null,
+            'gmail' => 'cart-ux-'.uniqid('', true).'@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
 
-        $response->assertOk();
-        $response->assertSee('cf4-checkout-progress', false);
-        $response->assertSee('Carrito', false);
-        $response->assertSee('Confirmación', false);
+        $this->actingAs($client, 'clients')
+            ->get(route('clients.cart'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Cart/Index', false)
+                ->has('pickupPolicyLine')
+                ->has('pickupPolicyNotice')
+                ->has('pagination')
+            );
     }
 
     public function test_catalog_includes_category_rail_markup(): void
     {
-        $response = $this->get(route('clients.catalog'));
-
-        $response->assertOk();
-        $response->assertSee('category-rail', false);
-        $response->assertSee('catalog-shell', false);
+        $this->get(route('clients.catalog'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->has('categories')
+                ->has('filters')
+            );
     }
 
     public function test_product_page_includes_mobile_back_nav(): void
@@ -55,14 +71,15 @@ class CF4ClientStorefrontUxImprovementsTest extends TestCase
             $this->markTestSkipped('No products seeded for product page UX test.');
         }
 
-        $response = $this->get(route('clients.product', [
+        $this->get(route('clients.product', [
             'id' => $product->product_id,
             'slug' => $product->clientPublicSlug(),
-        ]));
-
-        $response->assertOk();
-        $response->assertSee('cf4-mobile-back-nav', false);
-        $response->assertSee('product-detail-card', false);
+        ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->has('product')
+            );
     }
 
     public function test_header_marks_catalog_nav_active_on_product_route(): void
@@ -76,12 +93,14 @@ class CF4ClientStorefrontUxImprovementsTest extends TestCase
             $this->markTestSkipped('No products seeded for header nav test.');
         }
 
-        $response = $this->get(route('clients.product', [
+        $this->get(route('clients.product', [
             'id' => $product->product_id,
             'slug' => $product->clientPublicSlug(),
-        ]));
-
-        $response->assertOk();
-        $response->assertSee('nav-link active', false);
+        ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->has('product.url')
+            );
     }
 }

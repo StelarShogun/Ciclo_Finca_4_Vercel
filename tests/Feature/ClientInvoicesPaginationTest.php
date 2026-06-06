@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Client;
 use App\Models\Sale;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -80,24 +81,34 @@ class ClientInvoicesPaginationTest extends TestCase
             $this->seedPendingSales($client, 12);
             $this->actingAs($client, 'clients');
 
-            $page1 = $this->get(route('clients.invoices', [
+            $this->get(route('clients.invoices', [
                 'tab' => 'facturas',
                 'per_page' => 10,
-            ]));
+            ]))
+                ->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->component('Client/Invoices/Index', false)
+                    ->where('tab', 'facturas')
+                    ->where('pagination.total', 12)
+                    ->where('pagination.from', 1)
+                    ->where('pagination.to', 10)
+                    ->where('pagination.lastPage', 2)
+                    ->where('pagination.links', fn ($links) => collect($links)->contains(
+                        fn ($link) => str_contains((string) ($link['url'] ?? ''), 'page=2')
+                    ))
+                );
 
-            $page1->assertOk();
-            $page1->assertSee('cf4-pagination-toolbar', false);
-            $page1->assertSee('Mostrando 1–10 de 12 resultados', false);
-            $page1->assertSee('data-page="2"', false);
-
-            $page2 = $this->get(route('clients.invoices', [
+            $this->get(route('clients.invoices', [
                 'tab' => 'facturas',
                 'per_page' => 10,
                 'page' => 2,
-            ]));
-
-            $page2->assertOk();
-            $page2->assertSee('Mostrando 11–12 de 12 resultados', false);
+            ]))
+                ->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->component('Client/Invoices/Index', false)
+                    ->where('pagination.from', 11)
+                    ->where('pagination.to', 12)
+                );
         } finally {
             $this->cleanupClientSales($client);
         }
@@ -126,16 +137,21 @@ class ClientInvoicesPaginationTest extends TestCase
 
             $this->actingAs($client, 'clients');
 
-            $response = $this->get(route('clients.invoices', [
+            $this->get(route('clients.invoices', [
                 'tab' => 'canceladas',
                 'per_page' => 10,
-            ]));
-
-            $response->assertOk();
-            $response->assertSee('Canceladas', false);
-            $response->assertSee('cf4-pagination-toolbar', false);
-            $response->assertSee('Mostrando 1–10 de 12 resultados', false);
-            $response->assertSee('tab=canceladas', false);
+            ]))
+                ->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->component('Client/Invoices/Index', false)
+                    ->where('tab', 'canceladas')
+                    ->where('pagination.total', 12)
+                    ->where('pagination.from', 1)
+                    ->where('pagination.to', 10)
+                    ->where('pagination.links', fn ($links) => collect($links)->contains(
+                        fn ($link) => str_contains((string) ($link['url'] ?? ''), 'tab=canceladas')
+                    ))
+                );
         } finally {
             $this->cleanupClientSales($client);
         }
@@ -164,14 +180,19 @@ class ClientInvoicesPaginationTest extends TestCase
 
             $this->actingAs($client, 'clients');
 
-            $response = $this->get(route('clients.invoices', [
+            $this->get(route('clients.invoices', [
                 'tab' => 'historial',
                 'per_page' => 10,
-            ]));
-
-            $response->assertOk();
-            $response->assertSee('Historial de compras', false);
-            $response->assertSee('tab=historial', false);
+            ]))
+                ->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->component('Client/Invoices/Index', false)
+                    ->where('tab', 'historial')
+                    ->where('pagination.total', 12)
+                    ->where('pagination.links', fn ($links) => collect($links)->contains(
+                        fn ($link) => str_contains((string) ($link['url'] ?? ''), 'tab=historial')
+                    ))
+                );
         } finally {
             $this->cleanupClientSales($client);
         }

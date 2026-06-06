@@ -9,6 +9,7 @@ use App\Models\SaleItem;
 use App\Notifications\OrderReadyToPickupNotification;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -105,14 +106,23 @@ class ClientNotificationsPaginationTest extends TestCase
         try {
             $this->actingAs($client, 'clients');
 
-            $page1 = $this->get(route('clients.notifications', ['per_page' => 10]));
-            $page1->assertOk();
-            $page1->assertSee('cf4-pagination-toolbar', false);
-            $page1->assertSee('Mostrando 1–10 de 12 resultados', false);
+            $this->get(route('clients.notifications', ['per_page' => 10]))
+                ->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->component('Client/Notifications/Index', false)
+                    ->where('pagination.total', 12)
+                    ->where('pagination.from', 1)
+                    ->where('pagination.to', 10)
+                    ->where('pagination.lastPage', 2)
+                );
 
-            $page2 = $this->get(route('clients.notifications', ['per_page' => 10, 'page' => 2]));
-            $page2->assertOk();
-            $page2->assertSee('Mostrando 11–12 de 12 resultados', false);
+            $this->get(route('clients.notifications', ['per_page' => 10, 'page' => 2]))
+                ->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->component('Client/Notifications/Index', false)
+                    ->where('pagination.from', 11)
+                    ->where('pagination.to', 12)
+                );
         } finally {
             $this->cleanupClient($client);
         }

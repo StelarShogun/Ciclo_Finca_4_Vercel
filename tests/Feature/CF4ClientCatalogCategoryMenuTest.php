@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF4ClientCatalogCategoryMenuTest extends TestCase
@@ -32,22 +33,23 @@ class CF4ClientCatalogCategoryMenuTest extends TestCase
 
     public function test_catalog_includes_category_panel_markup(): void
     {
-        $response = $this->get(route('clients.catalog'));
-        $response->assertStatus(200);
-        $response->assertSee('id="catalog-category-panel"', false);
-        $response->assertSee('id="catalog-category-trigger"', false);
-        $response->assertSee('id="catalog-category-sidebar-toggle"', false);
-        $response->assertSee('catalog-sidebar-stack', false);
-        $response->assertSee('id="catalog-nav-search"', false);
-        $response->assertSee('Categorías', false);
+        $this->get(route('clients.catalog'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->has('categories')
+                ->has('filters')
+                ->has('summary')
+            );
     }
 
     public function test_home_does_not_include_catalog_header_search(): void
     {
-        $response = $this->get(route('clients.home'));
-        $response->assertStatus(200);
-        $response->assertDontSee('id="catalog-nav-search"', false);
-        $response->assertDontSee('header-catalog-search', false);
+        $this->get(route('clients.home'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Home/Index', false)
+            );
     }
 
     public function test_catalog_redirects_when_price_filter_is_negative(): void
@@ -60,9 +62,13 @@ class CF4ClientCatalogCategoryMenuTest extends TestCase
 
     public function test_home_does_not_include_catalog_category_panel(): void
     {
-        $response = $this->get(route('clients.home'));
-        $response->assertStatus(200);
-        $response->assertDontSee('id="catalog-category-panel"', false);
+        $this->get(route('clients.home'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Home/Index', false)
+                ->missing('catalogSpotlight')
+                ->missing('filters')
+            );
     }
 
     public function test_filter_by_parent_category_includes_child_products(): void
@@ -91,9 +97,12 @@ class CF4ClientCatalogCategoryMenuTest extends TestCase
             'is_featured' => false,
         ]);
 
-        $response = $this->get(route('clients.catalog', ['category_id' => $parent->category_id]));
-        $response->assertStatus(200);
-        $response->assertSee('Producto En Sub CF4', false);
+        $this->get(route('clients.catalog', ['category_id' => $parent->category_id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('products.0.name', 'Producto En Sub CF4')
+            );
     }
 
     public function test_filter_by_child_category_shows_only_that_child(): void
@@ -140,11 +149,14 @@ class CF4ClientCatalogCategoryMenuTest extends TestCase
             'is_featured' => false,
         ]);
 
-        $rA = $this->get(route('clients.catalog', ['category_id' => $childA->category_id]));
-        $rA->assertStatus(200);
-        $rA->assertSee('Solo en A', false);
-        // El listado paginado debe ser solo 1 producto (spotlight puede listar otros).
-        $rA->assertSee('1 productos', false);
+        $this->get(route('clients.catalog', ['category_id' => $childA->category_id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('summary.totalProducts', 1)
+                ->where('products.0.name', 'Solo en A')
+                ->where('products', fn ($products) => collect($products)->pluck('name')->doesntContain('Solo en B'))
+            );
     }
 
     public function test_empty_category_shows_specific_message(): void
@@ -155,8 +167,12 @@ class CF4ClientCatalogCategoryMenuTest extends TestCase
             'parent_category_id' => null,
         ]);
 
-        $response = $this->get(route('clients.catalog', ['category_id' => $emptyParent->category_id]));
-        $response->assertStatus(200);
-        $response->assertSee('No hay productos en esta categoría', false);
+        $this->get(route('clients.catalog', ['category_id' => $emptyParent->category_id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('emptyCategoryNoProducts', true)
+                ->where('summary.totalProducts', 0)
+            );
     }
 }

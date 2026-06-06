@@ -8,6 +8,7 @@ use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ProductReviewsDisplayTest extends TestCase
@@ -38,14 +39,13 @@ class ProductReviewsDisplayTest extends TestCase
     {
         $product = $this->seedProduct('Producto Sin Reseñas Públicas');
 
-        $url = route('clients.product', [
-            'id' => $product->product_id,
-            'slug' => $product->clientPublicSlug(),
-        ]);
-
-        $response = $this->get($url);
-        $response->assertOk();
-        $response->assertSee('Todavía no hay valoraciones públicas', false);
+        $this->get($this->productUrl($product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->where('reviews.totalCount', 0)
+                ->where('reviews.items', [])
+            );
     }
 
     public function test_guest_sees_average_distribution_and_reviews_without_login(): void
@@ -65,17 +65,15 @@ class ProductReviewsDisplayTest extends TestCase
             ['stars' => 2]
         );
 
-        $url = route('clients.product', [
-            'id' => $product->product_id,
-            'slug' => $product->clientPublicSlug(),
-        ]);
-
-        $response = $this->get($url);
-        $response->assertOk();
-        $response->assertSee('Todas las reseñas (2)', false);
-        $response->assertSee('product-reviews-filter', false);
-        $response->assertSee('Filtrar por calificación', false);
-        $response->assertSee('Compra verificada', false);
+        $this->get($this->productUrl($product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->where('reviews.totalCount', 2)
+                ->where('reviews.averageStars', fn ($avg) => (float) $avg === 3.0)
+                ->has('reviews.items', 2)
+                ->where('reviews.items.0.verified', true)
+            );
     }
 
     public function test_reviews_sort_stars_high_lists_higher_rating_first(): void
@@ -95,18 +93,16 @@ class ProductReviewsDisplayTest extends TestCase
             ['stars' => 5]
         );
 
-        $url = route('clients.product', [
-            'id' => $product->product_id,
-            'slug' => $product->clientPublicSlug(),
-            'reviews_sort' => 'stars_high',
-        ]);
-
-        $html = $this->get($url)->assertOk()->getContent();
-        $posHighName = strpos($html, 'AAAHighStars');
-        $posLowName = strpos($html, 'ZZZLowStars');
-        $this->assertNotFalse($posHighName);
-        $this->assertNotFalse($posLowName);
-        $this->assertTrue($posHighName < $posLowName, 'AAAHighStars (5★) debe aparecer antes en el documento que ZZZLowStars (2★).');
+        $this->get($this->productUrl($product, ['reviews_sort' => 'stars_high']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->where('reviews.sort', 'stars_high')
+                ->where('reviews.items.0.stars', 5)
+                ->where('reviews.items.0.author', fn (string $author) => str_contains($author, 'AAAHighStars'))
+                ->where('reviews.items.1.stars', 2)
+                ->where('reviews.items.1.author', fn (string $author) => str_contains($author, 'ZZZLowStars'))
+            );
     }
 
     public function test_pagination_appears_when_more_than_ten_other_reviews(): void
@@ -122,16 +118,14 @@ class ProductReviewsDisplayTest extends TestCase
             );
         }
 
-        $url = route('clients.product', [
-            'id' => $product->product_id,
-            'slug' => $product->clientPublicSlug(),
-        ]);
-
-        $response = $this->get($url);
-        $response->assertOk();
-        $response->assertSee('Siguiente', false);
-        $response->assertSee('de 11', false);
-        $this->assertMatchesRegularExpression('/1\D10\D+de\s+11/u', $response->getContent());
+        $this->get($this->productUrl($product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->where('reviews.totalCount', 11)
+                ->where('reviews.pagination.lastPage', fn (int $lastPage) => $lastPage >= 2)
+                ->where('reviews.pagination.total', 11)
+            );
     }
 
     public function test_authenticated_client_sees_highlighted_own_review(): void
@@ -151,15 +145,26 @@ class ProductReviewsDisplayTest extends TestCase
             ['stars' => 4]
         );
 
-        $url = route('clients.product', [
+        $this->actingAs($owner, 'clients')
+            ->get($this->productUrl($product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Products/Show', false)
+                ->where('reviews.showMyHighlighted', true)
+                ->where('reviews.myHighlighted.mine', true)
+                ->where('reviews.myHighlighted.stars', 5)
+            );
+    }
+
+    /**
+     * @param  array<string, mixed>  $query
+     */
+    private function productUrl(Product $product, array $query = []): string
+    {
+        return route('clients.product', array_merge([
             'id' => $product->product_id,
             'slug' => $product->clientPublicSlug(),
-        ]);
-
-        $response = $this->actingAs($owner, 'clients')->get($url);
-        $response->assertOk();
-        $response->assertSee('Tu reseña', false);
-        $response->assertSee('product-review-item--mine', false);
+        ], $query));
     }
 
     private function seedClient(string $email, ?string $displayName = null): Client

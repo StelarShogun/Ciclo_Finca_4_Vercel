@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF497CatalogBrandFilterTest extends TestCase
@@ -48,15 +50,17 @@ class CF497CatalogBrandFilterTest extends TestCase
             $this->markTestSkipped('Se necesita al menos un producto activo por cada una de las dos marcas.');
         }
 
-        $resp = $this->get(route('clients.catalog', ['brand_id' => $brandA->id]));
+        $this->get(route('clients.catalog', ['brand_id' => $brandA->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('products', function ($products) use ($productOfA, $productOfB) {
+                    $ids = collect($products)->pluck('id')->all();
 
-        $resp->assertOk();
-        $resp->assertViewHas('products', function ($paginator) use ($productOfA, $productOfB) {
-            $ids = $paginator->pluck('product_id')->all();
-
-            return in_array($productOfA->product_id, $ids, true)
-                && ! in_array($productOfB->product_id, $ids, true);
-        });
+                    return in_array((int) $productOfA->product_id, $ids, true)
+                        && ! in_array((int) $productOfB->product_id, $ids, true);
+                })
+            );
     }
 
     /** Combining brand, category and price filters produces no errors. */
@@ -70,15 +74,18 @@ class CF497CatalogBrandFilterTest extends TestCase
 
         $category = Category::whereNull('parent_category_id')->first();
 
-        $resp = $this->get(route('clients.catalog', [
+        $this->get(route('clients.catalog', [
             'brand_id' => $brand->id,
             'category_id' => $category?->category_id,
             'min_price' => '0',
             'max_price' => '9999999',
-        ]));
-
-        $resp->assertOk();
-        $resp->assertViewHas('products');
+        ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->has('products')
+                ->has('pagination')
+            );
     }
 
     /** Filtering by brand and category simultaneously returns only products matching both. */
@@ -98,23 +105,25 @@ class CF497CatalogBrandFilterTest extends TestCase
             $this->markTestSkipped('No hay un producto activo con categoría para la marca seleccionada.');
         }
 
-        $resp = $this->get(route('clients.catalog', [
+        $this->get(route('clients.catalog', [
             'brand_id' => $brand->id,
             'category_id' => $product->category_id,
-        ]));
+        ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('products', function ($products) use ($brand, $product) {
+                    foreach ($products as $row) {
+                        $belongsToBrand = collect($row['brands'] ?? [])->contains('id', $brand->id);
+                        $inCategory = (int) ($row['category']['id'] ?? 0) === (int) $product->category_id;
+                        if (! $belongsToBrand || ! $inCategory) {
+                            return false;
+                        }
+                    }
 
-        $resp->assertOk();
-        $resp->assertViewHas('products', function ($paginator) use ($brand, $product) {
-            foreach ($paginator->items() as $p) {
-                $belongsToBrand = $p->brands->contains('id', $brand->id);
-                $inCategory = (int) $p->category_id === (int) $product->category_id;
-                if (! $belongsToBrand || ! $inCategory) {
-                    return false;
-                }
-            }
-
-            return true;
-        });
+                    return true;
+                })
+            );
     }
 
     /** A non-existent brand returns an empty list without error. */
@@ -122,12 +131,13 @@ class CF497CatalogBrandFilterTest extends TestCase
     {
         $nonExistentId = PHP_INT_MAX;
 
-        $resp = $this->get(route('clients.catalog', ['brand_id' => $nonExistentId]));
-
-        $resp->assertOk();
-        $resp->assertViewHas('products', function ($paginator) {
-            return $paginator->total() === 0;
-        });
+        $this->get(route('clients.catalog', ['brand_id' => $nonExistentId]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('pagination.total', 0)
+                ->where('products', [])
+            );
     }
 
     /** A brand with no active products returns an empty list without error. */
@@ -142,12 +152,12 @@ class CF497CatalogBrandFilterTest extends TestCase
             $this->markTestSkipped('No hay ninguna marca sin productos activos en la base de datos.');
         }
 
-        $resp = $this->get(route('clients.catalog', ['brand_id' => $brand->id]));
-
-        $resp->assertOk();
-        $resp->assertViewHas('products', function ($paginator) {
-            return $paginator->total() === 0;
-        });
+        $this->get(route('clients.catalog', ['brand_id' => $brand->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('pagination.total', 0)
+            );
     }
 
     /** The paginator preserves brand_id in the URL when filtering. */
@@ -159,14 +169,16 @@ class CF497CatalogBrandFilterTest extends TestCase
             $this->markTestSkipped('Se necesita al menos una marca con productos en la base de datos.');
         }
 
-        $resp = $this->get(route('clients.catalog', ['brand_id' => $brand->id]));
+        $this->get(route('clients.catalog', ['brand_id' => $brand->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('pagination.links', function ($links) use ($brand) {
+                    $url = collect($links)->firstWhere('active', true)['url'] ?? '';
 
-        $resp->assertOk();
-        $resp->assertViewHas('products', function ($paginator) use ($brand) {
-            $url = $paginator->url(1);
-
-            return str_contains($url, 'brand_id='.$brand->id);
-        });
+                    return str_contains((string) $url, 'brand_id='.$brand->id);
+                })
+            );
     }
 
     /** Filtering by brand still respects the price range without breaking its behavior. */
@@ -178,21 +190,24 @@ class CF497CatalogBrandFilterTest extends TestCase
             $this->markTestSkipped('Se necesita al menos una marca con productos.');
         }
 
-        $resp = $this->get(route('clients.catalog', [
+        $this->get(route('clients.catalog', [
             'brand_id' => $brand->id,
             'min_price' => '999999',
             'max_price' => '999999',
-        ]));
+        ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Client/Catalog/Index', false)
+                ->where('products', function ($products) {
+                    foreach ($products as $row) {
+                        $price = (float) ($row['price'] ?? 0);
+                        if ($price < 999999.0 || $price > 999999.0) {
+                            return false;
+                        }
+                    }
 
-        $resp->assertOk();
-        $resp->assertViewHas('products', function ($paginator) {
-            foreach ($paginator->items() as $p) {
-                if ((float) $p->sale_price < 999999.0 || (float) $p->sale_price > 999999.0) {
-                    return false;
-                }
-            }
-
-            return true;
-        });
+                    return true;
+                })
+            );
     }
 }
