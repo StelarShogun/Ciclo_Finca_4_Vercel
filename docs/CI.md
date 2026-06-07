@@ -245,7 +245,7 @@ Newman ejecuta la misma colección que Postman, con aserciones en cada request.
 
 ### Laravel Dusk (4 pruebas de interfaz)
 
-Archivos en `tests/Browser/` (login, registro, catálogo, términos legales).
+Archivos en `tests/Browser/`: `AdminLoginTest`, `ClientLoginTest`, `ClientCatalogTest`, `ClientLegalTermsTest`.
 
 **Requisitos:** Google Chrome en el host, app accesible en `APP_URL`, assets compilados (`npm run build`).
 

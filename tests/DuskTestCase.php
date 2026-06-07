@@ -5,23 +5,13 @@ namespace Tests;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
-use Illuminate\Foundation\Application;
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Collection;
 use Laravel\Dusk\TestCase as BaseTestCase;
 use PHPUnit\Framework\Attributes\BeforeClass;
 
 abstract class DuskTestCase extends BaseTestCase
 {
-    public function createApplication(): Application
-    {
-        return require __DIR__.'/../bootstrap/app.php';
-    }
-
-    protected function baseUrl(): string
-    {
-        return rtrim((string) (env('APP_URL') ?: 'http://localhost:8080'), '/');
-    }
-
     /**
      * Prepare for Dusk test execution.
      */
@@ -34,11 +24,11 @@ abstract class DuskTestCase extends BaseTestCase
     }
 
     /**
-     * Create the RemoteWebDriver instance.
+     * Create the Remote WebDriver instance.
      */
     protected function driver(): RemoteWebDriver
     {
-        $options = (new ChromeOptions)->addArguments(collect([
+        $arguments = collect([
             $this->shouldStartMaximized() ? '--start-maximized' : '--window-size=1920,1080',
             '--disable-search-engine-choice-screen',
             '--disable-smooth-scrolling',
@@ -47,13 +37,42 @@ abstract class DuskTestCase extends BaseTestCase
                 '--disable-gpu',
                 '--headless=new',
             ]);
-        })->all());
+        });
+
+        if (file_exists('/.dockerenv')) {
+            $arguments = $arguments->merge([
+                '--no-sandbox',
+                '--disable-dev-shm-usage',
+            ]);
+        }
+
+        $options = (new ChromeOptions)->addArguments($arguments->all());
+
+        foreach (['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome'] as $chromeBinary) {
+            if (is_executable($chromeBinary)) {
+                $options->setBinary($chromeBinary);
+                break;
+            }
+        }
 
         return RemoteWebDriver::create(
-            $_ENV['DUSK_DRIVER_URL'] ?? env('DUSK_DRIVER_URL') ?? 'http://localhost:9515',
+            $_ENV['DUSK_DRIVER_URL'] ?? $_SERVER['DUSK_DRIVER_URL'] ?? 'http://localhost:9515',
             DesiredCapabilities::chrome()->setCapability(
-                ChromeOptions::CAPABILITY, $options
+                ChromeOptions::CAPABILITY,
+                $options
             )
         );
+    }
+
+    /**
+     * Bootstrap the Laravel application for browser tests.
+     */
+    public function createApplication()
+    {
+        $app = require __DIR__.'/../bootstrap/app.php';
+
+        $app->make(Kernel::class)->bootstrap();
+
+        return $app;
     }
 }

@@ -20,7 +20,7 @@ final class AttemptClientLogin
 
     public function handle(LoginClientRequest $request): JsonResponse|RedirectResponse
     {
-        $wantsJson = $request->ajax() || $request->wantsJson();
+        $wantsJson = ($request->ajax() || $request->wantsJson()) && ! $request->header('X-Inertia');
         $credentials = [
             'gmail' => $request->string('gmail')->toString(),
             'password' => $request->string('password')->toString(),

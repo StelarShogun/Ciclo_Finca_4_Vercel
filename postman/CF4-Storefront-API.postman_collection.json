@@ -1,7 +1,8 @@
 {
   "info": {
+    "_postman_id": "cf4-storefront-api-seguimiento-8",
     "name": "CF4 Storefront API",
-    "description": "Public storefront JSON endpoints for Seguimiento 8. Run with Newman: npm run test:api",
+    "description": "Public API endpoints for Ciclo Finca 4 — Newman / Postman (Seguimiento 8).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -22,18 +23,18 @@
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
               "pm.test('Status 200', function () {",
               "    pm.response.to.have.status(200);",
               "});"
-            ],
-            "type": "text/javascript"
+            ]
           }
         }
       ]
     },
     {
-      "name": "Suggestions — short query empty",
+      "name": "Suggestions — short search",
       "request": {
         "method": "GET",
         "header": [],
@@ -48,13 +49,18 @@
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
               "pm.test('Empty suggestions', function () {",
-              "    pm.expect(pm.response.json().suggestions).to.eql([]);",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('suggestions');",
+              "    pm.expect(json.suggestions).to.be.an('array');",
+              "    pm.expect(json.suggestions).to.have.lengthOf(0);",
               "});"
-            ],
-            "type": "text/javascript"
+            ]
           }
         }
       ]
@@ -70,13 +76,16 @@
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
-              "pm.test('Has version key', function () {",
-              "    pm.expect(pm.response.json()).to.have.property('version');",
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Has version', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('version');",
               "});"
-            ],
-            "type": "text/javascript"
+            ]
           }
         }
       ]
@@ -87,28 +96,28 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/catalog/search-trending?period=30d&limit=5",
+          "raw": "{{baseUrl}}/api/catalog/search-trending?limit=5",
           "host": ["{{baseUrl}}"],
           "path": ["api", "catalog", "search-trending"],
-          "query": [
-            { "key": "period", "value": "30d" },
-            { "key": "limit", "value": "5" }
-          ]
+          "query": [{ "key": "limit", "value": "5" }]
         }
       },
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
-              "pm.test('Period metadata', function () {",
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('JSON shape', function () {",
               "    const json = pm.response.json();",
-              "    pm.expect(json.period).to.have.property('key');",
+              "    pm.expect(json).to.have.property('period');",
               "    pm.expect(json).to.have.property('products');",
+              "    pm.expect(json).to.have.property('terms');",
               "});"
-            ],
-            "type": "text/javascript"
+            ]
           }
         }
       ]

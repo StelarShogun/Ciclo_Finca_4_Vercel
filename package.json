@@ -18,7 +18,8 @@
         "unlighthouse:client": "bash scripts/unlighthouse/run.sh client",
         "unlighthouse:admin": "bash scripts/unlighthouse/run.sh admin",
         "unlighthouse:auth": "bash scripts/unlighthouse/run-auth.sh",
-        "test:api": "newman run postman/CF4-Storefront-API.postman_collection.json --env-var baseUrl=http://localhost:8080"
+        "test:api": "newman run postman/CF4-Storefront-API.postman_collection.json --env-var baseUrl=${API_BASE_URL:-http://localhost:8080}",
+        "test:api:docker": "newman run postman/CF4-Storefront-API.postman_collection.json --env-var baseUrl=http://127.0.0.1"
     },
     "devDependencies": {
         "@inertiajs/vite": "^3.3.0",

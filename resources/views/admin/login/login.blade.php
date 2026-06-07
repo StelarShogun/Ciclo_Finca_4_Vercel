@@ -58,9 +58,11 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
-                    </div>
+                    @if (config('services.recaptcha.key'))
+                        <div class="form-group">
+                            <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
+                        </div>
+                    @endif
 
                     <div class="form-actions">
                         <button type="submit" id="btnLoginSubmit" class="btn btn-primary full-width">
@@ -79,7 +81,9 @@
         </div>
     </div>
 
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @if (config('services.recaptcha.key'))
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @endif
     @vite(['resources/js/admin/shell.ts', 'resources/js/admin/login/login.ts'])
     @include('admin.partials.cf4-theme-scripts')
 
