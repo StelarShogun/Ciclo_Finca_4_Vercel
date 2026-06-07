@@ -10,7 +10,6 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ProductAuditLoggingTest extends TestCase
@@ -19,16 +18,7 @@ class ProductAuditLoggingTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('ProductAuditLoggingTest requiere MySQL.');
-        }
-
+        parent::setUp();
         $this->withoutMiddleware(LogSensitiveAdminModuleAccess::class);
     }
 

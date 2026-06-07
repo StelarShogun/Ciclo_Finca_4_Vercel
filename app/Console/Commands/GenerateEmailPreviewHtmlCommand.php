@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace App\Console\Commands;
 
 use App\Mail\OrderExpiryReminderMail;
 use App\Mail\WeeklyDashboardReportMail;
@@ -14,61 +14,24 @@ use App\Notifications\OrderCompletedNotification;
 use App\Notifications\OrderReadyToPickupNotification;
 use App\Notifications\ProductReviewReminderNotification;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Config;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Schema;
-use Tests\TestCase;
 
-/**
- * Genera HTML estático de todas las plantillas transaccionales (sin SMTP).
- *
- * Uso:
- *   GENERATE_EMAIL_PREVIEWS=1 php artisan test tests/Feature/GenerateEmailPreviewHtmlTest.php
- *
- * Abrir en el navegador:
- *   storage/app/email-previews/index.html
- *
- * Docker:
- *   docker exec laravel_app_ciclo env GENERATE_EMAIL_PREVIEWS=1 php artisan test tests/Feature/GenerateEmailPreviewHtmlTest.php
- */
-class GenerateEmailPreviewHtmlTest extends TestCase
+class GenerateEmailPreviewHtmlCommand extends Command
 {
-    use RefreshDatabase;
+    protected $signature = 'mail:generate-previews
+                            {--url= : Base URL for links in previews (defaults to config app.url)}';
 
-    private string $outputDir;
+    protected $description = 'Write static HTML previews of transactional email templates to storage/app/email-previews/';
 
-    protected function setUp(): void
+    public function handle(): int
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
+        $previewBaseUrl = rtrim((string) ($this->option('url') ?: config('app.url')), '/');
+        config(['app.url' => $previewBaseUrl]);
+        config(['app.frontend_url' => $previewBaseUrl]);
 
-        if (! filter_var(getenv('GENERATE_EMAIL_PREVIEWS') ?: false, FILTER_VALIDATE_BOOL)) {
-            $this->markTestSkipped(
-                'Omitido: define GENERATE_EMAIL_PREVIEWS=1 para escribir HTML en storage/app/email-previews/.'
-            );
-        }
-
-        foreach (['sales', 'sale_items', 'client_table', 'admins', 'products'] as $table) {
-            if (! Schema::hasTable($table)) {
-                $this->markTestSkipped('Falta la tabla requerida: '.$table);
-            }
-        }
-
-        $previewBaseUrl = rtrim((string) (getenv('EMAIL_PREVIEW_APP_URL') ?: 'http://127.0.0.1:8080'), '/');
-        Config::set('app.url', $previewBaseUrl);
-        Config::set('app.frontend_url', $previewBaseUrl);
-        Config::set('mail.default', 'array');
-
-        $this->outputDir = storage_path('app/email-previews');
-    }
-
-    public function test_generates_html_previews_for_all_transactional_emails(): void
-    {
-        File::ensureDirectoryExists($this->outputDir);
+        $outputDir = storage_path('app/email-previews');
+        File::ensureDirectoryExists($outputDir);
 
         [$sale, $client] = $this->createPreviewFixtures();
 
@@ -157,26 +120,22 @@ class GenerateEmailPreviewHtmlTest extends TestCase
         $indexEntries = [];
 
         foreach ($previews as $filename => $preview) {
-            $path = $this->outputDir.DIRECTORY_SEPARATOR.$filename;
-            $html = $preview['html'];
-            File::put($path, $html);
-            $this->assertFileExists($path);
-            $this->assertNotEmpty($html);
-            $this->assertStringContainsString('CICLO', $html);
-            $this->assertStringNotContainsString('<img', $html);
-
+            $path = $outputDir.DIRECTORY_SEPARATOR.$filename;
+            File::put($path, $preview['html']);
             $indexEntries[] = [
                 'file' => $filename,
                 'label' => $preview['label'],
             ];
+            $this->line("  wrote {$filename}");
         }
 
-        $indexPath = $this->outputDir.DIRECTORY_SEPARATOR.'index.html';
+        $indexPath = $outputDir.DIRECTORY_SEPARATOR.'index.html';
         File::put($indexPath, $this->buildIndexHtml($indexEntries));
-        $this->assertFileExists($indexPath);
 
-        fwrite(STDERR, "\n  Email previews written to: {$this->outputDir}\n");
-        fwrite(STDERR, "  Open: {$indexPath}\n\n");
+        $this->info("Email previews written to: {$outputDir}");
+        $this->info("Open: {$indexPath}");
+
+        return self::SUCCESS;
     }
 
     /**

@@ -21,9 +21,9 @@
         <env name="APP_ENV" value="testing"/>
         <env name="APP_TIMEZONE" value="UTC"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
-        <!-- force=true: Docker (u otro entorno) puede exportar DB_*; sin esto queda mysql + :memory: y fallan las migraciones. -->
-        <env name="DB_CONNECTION" value="sqlite" force="true"/>
-        <env name="DB_DATABASE" value=":memory:" force="true"/>
+        <!-- Full schema: migrations use MySQL ENUM, JSON_TABLE, FULLTEXT, etc. -->
+        <env name="DB_CONNECTION" value="mysql" force="true"/>
+        <!-- Host/credentials from .env (Docker: db_ciclo; CI: 127.0.0.1). -->
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>
         <env name="MAIL_MAILER" value="array"/>

@@ -8,7 +8,6 @@ use App\Models\Supplier;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /** CF4-107 — Catálogo: tendencias de búsqueda agregadas en dropdown público. */
@@ -18,18 +17,7 @@ class CF107CatalogSearchTrendingTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-        foreach (['products', 'catalog_product_search_events', 'categories', 'suppliers'] as $table) {
-            if (! Schema::hasTable($table)) {
-                $this->markTestSkipped('Tabla requerida no existe: '.$table);
-            }
-        }
-
+        parent::setUp();
         Carbon::setTestNow(Carbon::parse('2026-06-20 12:00:00', 'UTC'));
     }
 

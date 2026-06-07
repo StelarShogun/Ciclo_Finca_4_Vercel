@@ -8,7 +8,6 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Notifications\OrderReadyToPickupNotification;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -20,21 +19,6 @@ class ClientNotificationsPaginationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('Este test requiere MySQL.');
-        }
-
-        try {
-            foreach (['sales', 'sale_items', 'client_table', 'notifications', 'products'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Tabla requerida no existe: '.$table);
-                }
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
-
         Config::set('mail.default', 'array');
     }
 

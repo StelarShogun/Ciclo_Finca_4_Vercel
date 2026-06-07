@@ -7,7 +7,6 @@ use App\Models\AdminUser;
 use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -21,20 +20,8 @@ class SalesPerformanceMetricsTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('SalesPerformanceMetricsTest requiere MySQL.');
-        }
-        if (! Schema::hasTable('sales')) {
-            $this->markTestSkipped('Falta tabla sales.');
-        }
-
+        parent::setUp();
         Carbon::setTestNow(Carbon::parse('2026-06-15 14:00:00', 'UTC'));
-
         $this->adminUser = AdminUser::create([
             'name' => 'Admin',
             'first_surname' => 'Metrics',

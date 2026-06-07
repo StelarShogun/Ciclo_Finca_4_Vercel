@@ -6,7 +6,6 @@ use App\Http\Middleware\LogSensitiveAdminModuleAccess;
 use App\Models\AdminUser;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ProductActivateDeactivateTest extends TestCase
@@ -15,16 +14,7 @@ class ProductActivateDeactivateTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Database not available: '.$e->getMessage());
-        }
-
-        if (! Schema::hasTable('products')) {
-            $this->markTestSkipped('Missing table: products');
-        }
-
+        parent::setUp();
         $this->withoutMiddleware(LogSensitiveAdminModuleAccess::class);
     }
 

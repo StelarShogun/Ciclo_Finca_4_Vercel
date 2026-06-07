@@ -6,6 +6,7 @@
 !.env.example
 !.env.testing.example
 !.env.unlighthouse.example
+!.env.dusk.example
 
 # Unlighthouse — reports, browser profiles, local env (https://unlighthouse.dev/)
 .env.unlighthouse.local

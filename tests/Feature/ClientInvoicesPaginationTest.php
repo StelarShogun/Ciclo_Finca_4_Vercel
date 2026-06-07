@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Client;
 use App\Models\Sale;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -13,21 +12,6 @@ use Tests\TestCase;
  */
 class ClientInvoicesPaginationTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        try {
-            foreach (['client_table', 'sales'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Tabla requerida no existe: '.$table);
-                }
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
-    }
-
     private function createIsolatedClient(): Client
     {
         return Client::create([

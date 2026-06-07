@@ -5,26 +5,10 @@ namespace Tests\Feature;
 use App\Models\AdminUser;
 use App\Models\Client;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class AdminClientsPaginationTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        try {
-            foreach (['client_table', 'admins'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Missing table: '.$table);
-                }
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Database not available: '.$e->getMessage());
-        }
-    }
-
     private function makeAdmin(): AdminUser
     {
         return AdminUser::create([

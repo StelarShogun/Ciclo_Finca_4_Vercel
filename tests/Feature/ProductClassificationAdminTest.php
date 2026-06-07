@@ -9,7 +9,6 @@ use App\Models\ClassificationValue;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -18,25 +17,6 @@ use Tests\TestCase;
 class ProductClassificationAdminTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-
-            if (Schema::getConnection()->getDriverName() !== 'mysql') {
-                $this->markTestSkipped('Product classification admin tests require MySQL.');
-            }
-
-            foreach (['categories', 'classification_dimensions', 'classification_values', 'classification_product', 'products', 'admins'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Missing table: '.$table);
-                }
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Database not available: '.$e->getMessage());
-        }
-    }
 
     private function makeAdmin(): AdminUser
     {

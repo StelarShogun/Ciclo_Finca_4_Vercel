@@ -6,7 +6,6 @@ use App\Models\AdminUser;
 use App\Models\Client;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -15,19 +14,6 @@ use Tests\TestCase;
 class CF4AdminModalsSmokeTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Database not available: '.$e->getMessage());
-        }
-
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('CF4AdminModalsSmokeTest requires MySQL.');
-        }
-    }
 
     private function authenticateAdmin(): void
     {

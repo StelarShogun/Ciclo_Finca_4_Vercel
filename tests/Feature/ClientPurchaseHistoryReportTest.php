@@ -7,7 +7,6 @@ use App\Models\Client;
 use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -23,20 +22,8 @@ class ClientPurchaseHistoryReportTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('ClientPurchaseHistoryReportTest requiere MySQL.');
-        }
-        if (! Schema::hasTable('sales') || ! Schema::hasTable('client_table')) {
-            $this->markTestSkipped('Faltan tablas necesarias.');
-        }
-
+        parent::setUp();
         Carbon::setTestNow(Carbon::parse('2026-08-20 14:00:00', config('app.timezone')));
-
         $this->adminUser = AdminUser::create([
             'name' => 'Admin',
             'first_surname' => 'CF33',

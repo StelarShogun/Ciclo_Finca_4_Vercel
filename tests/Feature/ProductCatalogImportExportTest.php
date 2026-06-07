@@ -11,7 +11,6 @@ use App\Services\Admin\ProductCatalog\ProductCatalogExporter;
 use App\Services\Admin\ProductCatalog\ProductCatalogImporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -21,22 +20,7 @@ class ProductCatalogImportExportTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-
-            if (Schema::getConnection()->getDriverName() !== 'mysql') {
-                $this->markTestSkipped('Requires MySQL.');
-            }
-
-            foreach (['products', 'categories', 'admins'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Missing table: '.$table);
-                }
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped($e->getMessage());
-        }
-
+        parent::setUp();
         $this->withoutMiddleware(LogSensitiveAdminModuleAccess::class);
     }
 

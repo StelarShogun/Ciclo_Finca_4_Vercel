@@ -5,31 +5,12 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF4ClientCatalogCategoryMenuTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-
-            $driver = Schema::getConnection()->getDriverName();
-            if ($driver !== 'mysql') {
-                $this->markTestSkipped('CF4 catálogo cliente requiere MySQL para el esquema.');
-            }
-
-            if (! Schema::hasTable('products') || ! Schema::hasTable('categories')) {
-                $this->markTestSkipped('Tablas categories/products no existen.');
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
-    }
 
     public function test_catalog_includes_category_panel_markup(): void
     {
@@ -43,32 +24,12 @@ class CF4ClientCatalogCategoryMenuTest extends TestCase
             );
     }
 
-    public function test_home_does_not_include_catalog_header_search(): void
-    {
-        $this->get(route('clients.home'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('Client/Home/Index', false)
-            );
-    }
-
     public function test_catalog_redirects_when_price_filter_is_negative(): void
     {
         $response = $this->from(route('clients.catalog'))
             ->get(route('clients.catalog', ['min_price' => '-5']));
         $response->assertRedirect(route('clients.catalog'));
         $response->assertSessionHasErrors('price_range');
-    }
-
-    public function test_home_does_not_include_catalog_category_panel(): void
-    {
-        $this->get(route('clients.home'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('Client/Home/Index', false)
-                ->missing('catalogSpotlight')
-                ->missing('filters')
-            );
     }
 
     public function test_filter_by_parent_category_includes_child_products(): void

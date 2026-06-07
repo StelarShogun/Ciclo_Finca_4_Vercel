@@ -9,7 +9,6 @@ use App\Models\Product;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -19,25 +18,6 @@ use Tests\TestCase;
 class ClassificationEloquentTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-
-            if (Schema::getConnection()->getDriverName() !== 'mysql') {
-                $this->markTestSkipped('Classification tests require MySQL (schema alignment).');
-            }
-
-            foreach (['categories', 'classification_dimensions', 'classification_values', 'classification_product', 'products'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Missing table: '.$table);
-                }
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Database not available: '.$e->getMessage());
-        }
-    }
 
     /** @return array{0: Category, 1: Category, 2: ClassificationDimension, 3: ClassificationValue} */
     private function seedCategoryDimensionAndColorValue(): array

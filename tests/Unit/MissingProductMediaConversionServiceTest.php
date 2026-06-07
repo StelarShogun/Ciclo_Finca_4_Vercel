@@ -7,7 +7,6 @@ use App\Models\Product;
 use App\Services\Admin\Images\MissingProductMediaConversionService;
 use App\Support\GdImage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Tests\TestCase;
@@ -15,15 +14,6 @@ use Tests\TestCase;
 class MissingProductMediaConversionServiceTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('Requires MySQL.');
-        }
-    }
 
     public function test_service_finds_and_generates_missing_webp_conversions(): void
     {

@@ -7,7 +7,6 @@ use App\Models\Client;
 use App\Models\Sale;
 use App\Support\AdminDateRange;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class CF4AdminSalesClientInvoiceVisibilityTest extends TestCase
@@ -16,23 +15,7 @@ class CF4AdminSalesClientInvoiceVisibilityTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-
-            $driver = Schema::getConnection()->getDriverName();
-            if ($driver !== 'mysql') {
-                $this->markTestSkipped('CF4-7 requiere MySQL para validar el listado de ventas.');
-            }
-
-            foreach (['admins', 'client_table', 'sales'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Tabla requerida no existe: '.$table);
-                }
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
-
+        parent::setUp();
         config(['app.timezone' => 'America/Costa_Rica']);
     }
 

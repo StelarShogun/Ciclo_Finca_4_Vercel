@@ -5,32 +5,11 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class CF4106CatalogSuggestionsTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-
-            $driver = Schema::getConnection()->getDriverName();
-            if ($driver !== 'mysql') {
-                $this->markTestSkipped('CF4-106 requiere MySQL para el esquema.');
-            }
-
-            foreach (['products', 'categories'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped("Falta la tabla requerida ({$table}).");
-                }
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
-    }
 
     public function test_search_shorter_than_2_chars_returns_empty_suggestions(): void
     {

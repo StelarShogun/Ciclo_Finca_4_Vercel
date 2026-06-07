@@ -7,29 +7,11 @@ use App\Models\Category;
 use App\Models\ClassificationDimension;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ClassificationCatalogCrudTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-            if (Schema::getConnection()->getDriverName() !== 'mysql') {
-                $this->markTestSkipped('Requires MySQL.');
-            }
-            foreach (['categories', 'classification_dimensions', 'classification_values', 'admins'] as $t) {
-                if (! Schema::hasTable($t)) {
-                    $this->markTestSkipped('Missing table: '.$t);
-                }
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped($e->getMessage());
-        }
-    }
 
     private function loginAdmin(): AdminUser
     {

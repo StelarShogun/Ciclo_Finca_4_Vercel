@@ -1,0 +1,117 @@
+{
+  "info": {
+    "name": "CF4 Storefront API",
+    "description": "Public storefront JSON endpoints for Seguimiento 8. Run with Newman: npm run test:api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health — GET /up",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/up"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suggestions — short query empty",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/products/suggestions?search=a",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "suggestions"],
+          "query": [{ "key": "search", "value": "a" }]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Empty suggestions', function () {",
+              "    pm.expect(pm.response.json().suggestions).to.eql([]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog heartbeat",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/catalog/heartbeat"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Has version key', function () {",
+              "    pm.expect(pm.response.json()).to.have.property('version');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search trending",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/catalog/search-trending?period=30d&limit=5",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "catalog", "search-trending"],
+          "query": [
+            { "key": "period", "value": "30d" },
+            { "key": "limit", "value": "5" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Period metadata', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.period).to.have.property('key');",
+              "    pm.expect(json).to.have.property('products');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}

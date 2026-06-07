@@ -6,7 +6,6 @@ use App\Http\Middleware\LogSensitiveAdminModuleAccess;
 use App\Models\AdminUser;
 use App\Models\AuditLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -20,23 +19,9 @@ class AuditLogReportTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('AuditLogReportTest requiere MySQL.');
-        }
-
-        if (! Schema::hasTable('audit_logs') || ! Schema::hasTable('admins')) {
-            $this->markTestSkipped('Faltan tablas necesarias para auditoría.');
-        }
-
+        parent::setUp();
         // Evita registros automáticos module_access durante el GET de la propia vista.
         $this->withoutMiddleware(LogSensitiveAdminModuleAccess::class);
-
         $this->adminUser = AdminUser::create([
             'name' => 'Admin',
             'first_surname' => 'CF41',

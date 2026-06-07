@@ -10,24 +10,15 @@ use App\Models\SaleItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Notification;
-use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
 class CF4160OrderStatusResponseTimeTest extends TestCase
 {
-    use InteractsWithMysqlTestDatabase;
     use RefreshDatabase;
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-        $this->skipUnlessMysqlTestDatabase(['sales', 'sale_items', 'client_table', 'admins', 'products']);
-
+        parent::setUp();
         Config::set('mail.default', 'smtp');
         Config::set('mail.mailers.smtp.host', '127.0.0.1');
         Config::set('mail.mailers.smtp.port', 65535);

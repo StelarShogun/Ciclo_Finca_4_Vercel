@@ -13,35 +13,19 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
-use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
 class ReviewTest extends TestCase
 {
-    use InteractsWithMysqlTestDatabase;
     use RefreshDatabase;
 
     private string $runSuffix;
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-            $this->runSuffix = (string) now()->format('YmdHisv').'-'.bin2hex(random_bytes(3));
-
-            $this->skipUnlessMysqlTestDatabase([
-                'admins',
-                'client_table',
-                'products',
-                'sales',
-                'sale_items',
-                'product_reviews',
-            ]);
-
-            Config::set('sales.order_expiration_days', 30);
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
+        parent::setUp();
+        $this->runSuffix = (string) now()->format('YmdHisv').'-'.bin2hex(random_bytes(3));
+        Config::set('sales.order_expiration_days', 30);
     }
 
     public function test_admin_confirm_order_creates_review_placeholder_for_each_product(): void

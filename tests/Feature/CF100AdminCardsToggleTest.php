@@ -10,31 +10,11 @@ use App\Models\Sale;
 use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class CF100AdminCardsToggleTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('CF100AdminCardsToggleTest requiere MySQL.');
-        }
-
-        foreach (['admins', 'client_table', 'sales', 'orders', 'products', 'suppliers', 'categories'] as $table) {
-            if (! Schema::hasTable($table)) {
-                $this->markTestSkipped('Tabla requerida no existe: '.$table);
-            }
-        }
-    }
 
     private function authenticateAdmin(): void
     {

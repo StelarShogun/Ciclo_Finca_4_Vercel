@@ -8,7 +8,6 @@ use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -29,25 +28,12 @@ class SalesOrderExpiryTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests (ej. driver SQLite faltante). Use MySQL: '.$e->getMessage());
-        }
-        $driver = Schema::getConnection()->getDriverName();
-        if ($driver !== 'mysql') {
-            $this->markTestSkipped('Estos tests requieren MySQL (tabla sales existe tras migraciones de refactor).');
-        }
-        if (! Schema::hasTable('sales')) {
-            $this->markTestSkipped('La tabla sales no existe. Ejecuta migraciones con MySQL.');
-        }
+        parent::setUp();
         Config::set('sales.order_expiration_days', 30);
         Config::set('sales.expiry_alert_days', 2);
         config(['app.timezone' => 'UTC']);
         date_default_timezone_set('UTC');
-
         Carbon::setTestNow(Carbon::parse('2026-06-15 00:00:00', 'UTC'));
-
         $this->adminUser = AdminUser::create([
             'name' => 'Admin',
             'first_surname' => 'Test',
@@ -56,7 +42,6 @@ class SalesOrderExpiryTest extends TestCase
             'password' => bcrypt('password'),
             'last_access' => now(),
         ]);
-
         $this->customer = Client::create([
             'name' => 'Cliente',
             'first_surname' => 'Test',

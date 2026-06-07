@@ -9,7 +9,6 @@ use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -18,25 +17,6 @@ use Tests\TestCase;
 class CF4AdminInventoryFormUiTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Database not available: '.$e->getMessage());
-        }
-
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('CF4AdminInventoryFormUiTest requires MySQL.');
-        }
-
-        foreach (['admins', 'client_table', 'products', 'categories'] as $table) {
-            if (! Schema::hasTable($table)) {
-                $this->markTestSkipped('Missing table: '.$table);
-            }
-        }
-    }
 
     private function authenticateAdmin(): void
     {

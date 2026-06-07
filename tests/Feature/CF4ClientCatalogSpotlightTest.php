@@ -4,31 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF4ClientCatalogSpotlightTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-
-            $driver = Schema::getConnection()->getDriverName();
-            if ($driver !== 'mysql') {
-                $this->markTestSkipped('CF4 catálogo cliente requiere MySQL para el esquema.');
-            }
-
-            if (! Schema::hasTable('products')) {
-                $this->markTestSkipped('Tabla products no existe.');
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
-    }
 
     public function test_catalog_shows_spotlight_section_with_featured_product(): void
     {
