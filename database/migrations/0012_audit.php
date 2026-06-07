@@ -18,11 +18,7 @@ return new class extends Migration
             $table->json('meta')->nullable();
             $table->timestamp('created_at')->useCurrent();
 
-            $table->foreign('admin_user_id')
-                ->references('user_id')
-                ->on('admins')
-                ->nullOnDelete();
-
+            $table->foreign('admin_user_id')->references('user_id')->on('admins')->nullOnDelete();
             $table->index('created_at');
             $table->index(['admin_user_id', 'created_at'], 'audit_logs_admin_created_at_idx');
             $table->index(['action_type', 'module', 'created_at'], 'audit_logs_action_module_created_at_idx');

@@ -21,7 +21,7 @@ Los **pull requests** ejecutan CI pero **no despliegan**.
 
 ## Qué ejecuta CI/CD
 
-Archivo: [`.github/workflows/ci-dev.yml`](../.github/workflows/ci-dev.yml)
+Archivo: [`.github/workflows/ci-cd-dev.yml`](../.github/workflows/ci-cd-dev.yml)
 
 | Job | Cuándo | Qué hace |
 |-----|--------|----------|
@@ -121,7 +121,7 @@ El script `scripts/test-mysql-docker.sh` crea la BD si no existe.
 | Solo probaste en el navegador | **No basta** — hay que correr los mismos checks que CI |
 | Quieres ir rápido local | Mínimo: `./scripts/ci-check-docker.sh` |
 
-GitHub ejecuta [`.github/workflows/ci-dev.yml`](../.github/workflows/ci-dev.yml): **Pint + PHPUnit (MySQL) + PHPStan + `npm run build`**. Tras merge/push a `Dev`, si todo pasa, **CD despliega en Render** (Deploy Hook).
+GitHub ejecuta [`.github/workflows/ci-cd-dev.yml`](../.github/workflows/ci-cd-dev.yml): **Pint + PHPUnit (MySQL) + PHPStan + `npm run build`**. Tras merge/push a `Dev`, si todo pasa, **CD despliega en Render** (Deploy Hook).
 
 ### Checklist antes de abrir PR o pedir merge
 
@@ -274,3 +274,29 @@ Local:
 docker compose exec app_ciclo php artisan migrate
 # Generar tráfico y abrir /pulse tras login admin
 ```
+
+## Render — Pre-Deploy (migraciones unificadas)
+
+Tras el squash de migraciones (`0001`–`0017`), producción que ya corrió migraciones fechadas (`2024_*`, `2026_*`) necesita reconciliar la tabla `migrations` antes de `migrate`.
+
+**Dashboard → Web Service → Settings → Pre-Deploy Command:**
+
+```bash
+bash scripts/render-pre-deploy.sh
+```
+
+El script (idempotente):
+
+1. `php artisan cf4:reconcile-squashed-migrations --force` — registra `0010`–`0015` y `0017` como ejecutadas si el esquema legacy ya existe; elimina filas `2024_*` / `2026_*`.
+2. `php artisan migrate --force` — crea lo pendiente real (p. ej. `0016_pulse` si aún no hay tablas Pulse).
+
+Manual (Render Shell):
+
+```bash
+cd /var/www/html
+php artisan cf4:reconcile-squashed-migrations --force
+php artisan migrate --force
+php artisan migrate:status
+```
+
+Hacer **snapshot de la BD** antes del primer deploy con squash + pre-deploy.

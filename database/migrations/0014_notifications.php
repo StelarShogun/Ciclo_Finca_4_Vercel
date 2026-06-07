@@ -8,6 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('type');
+            $table->morphs('notifiable');
+            $table->text('data');
+            $table->timestamp('read_at')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('order_notification_logs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('sale_id');
@@ -29,5 +38,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('order_notification_logs');
+        Schema::dropIfExists('notifications');
     }
 };

@@ -23,6 +23,8 @@ return new class extends Migration
             // while remaining a valid MySQL enum definition.
             $table->enum('status', ['pending', 'ready_to_pickup', 'completed', 'cancelled', 'refunded', 'returned'])
                 ->default('pending');
+            $table->timestamp('ready_at')->nullable();
+            $table->timestamp('client_history_seen_at')->nullable();
             $table->string('order_source', 20)->nullable();
             $table->text('notes')->nullable();
             $table->string('buyer_name', 120)->nullable();
@@ -36,6 +38,7 @@ return new class extends Migration
             $table->index('invoice_number', 'ventas_numero_factura_index');
             $table->index('status', 'ventas_estado_index');
             $table->index('sale_date', 'ventas_fecha_venta_index');
+            $table->index(['client_id', 'status', 'client_history_seen_at'], 'sales_client_status_history_seen_idx');
         });
 
         Schema::create('sale_items', function (Blueprint $table) {
