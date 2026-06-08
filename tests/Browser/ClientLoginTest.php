@@ -5,6 +5,7 @@ namespace Tests\Browser;
 use App\Models\Client;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Laravel\Dusk\Browser;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\DuskTestCase;
 
 /**
@@ -14,6 +15,9 @@ class ClientLoginTest extends DuskTestCase
 {
     use DatabaseMigrations;
 
+    #[Group('seguimiento8')]
+    #[Group('seguimiento8-arturo')]
+    #[Group('seguimiento8-dusk')]
     public function test_client_can_log_in_from_storefront(): void
     {
         Client::create([

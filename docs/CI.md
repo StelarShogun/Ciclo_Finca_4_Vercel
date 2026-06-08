@@ -238,7 +238,7 @@ Así nadie mergea si los checks no pasan.
 | Herramienta | Comando | Cuándo usar |
 |-------------|---------|-------------|
 | **PHPUnit** (corre en CI) | `./scripts/test-mysql-docker.sh tests/Feature/Api/StorefrontApiTest.php` | Misma puerta de calidad que el resto de la suite |
-| **Newman** (CLI de Postman) | `npm ci && npm run test:api` | Demo/evidencia con la colección exportada |
+| **Newman** (CLI de Postman) | `npm ci && npm run test:api` | Job CI `newman-api`; evidencia local en `run-seguimiento-8-evidence.sh` |
 | **Postman GUI** | Importar `postman/CF4-Storefront-API.postman_collection.json` | Exploración manual |
 
 Newman ejecuta la misma colección que Postman, con aserciones en cada request.
@@ -257,7 +257,7 @@ composer run dusk                        # desde el host, con Chrome
 # o: php artisan dusk
 ```
 
-Dusk **no** corre en GitHub Actions por defecto (Chrome + app levantada); ejecutarlo localmente para el video del seguimiento 8.
+Dusk corre en GitHub Actions (job `UI — Laravel Dusk`, Selenium + `--group=seguimiento8`). Localmente: `./scripts/run-dusk-docker.sh` o `./scripts/run-seguimiento-8-evidence.sh`.
 
 Plantilla de entorno: [`.env.dusk.example`](../.env.dusk.example) · config PHPUnit: [`phpunit.dusk.xml`](../phpunit.dusk.xml).
 

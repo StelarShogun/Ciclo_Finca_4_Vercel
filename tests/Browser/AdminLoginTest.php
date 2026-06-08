@@ -5,6 +5,7 @@ namespace Tests\Browser;
 use App\Models\AdminUser;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Laravel\Dusk\Browser;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\DuskTestCase;
 
 /**
@@ -14,6 +15,9 @@ class AdminLoginTest extends DuskTestCase
 {
     use DatabaseMigrations;
 
+    #[Group('seguimiento8')]
+    #[Group('seguimiento8-aaron')]
+    #[Group('seguimiento8-dusk')]
     public function test_admin_can_log_in_and_reach_dashboard(): void
     {
         AdminUser::create([

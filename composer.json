@@ -93,6 +93,10 @@
         ],
         "dusk": [
             "@php artisan dusk"
+        ],
+        "test:seguimiento8": [
+            "@putenv PHP_INI_SCAN_DIR=:scripts/php-ini.d",
+            "@php ./vendor/bin/phpunit -c phpunit.seguimiento8.xml"
         ]
     },
     "extra": {

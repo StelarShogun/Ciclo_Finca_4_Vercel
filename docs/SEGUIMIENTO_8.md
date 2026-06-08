@@ -1,4 +1,4 @@
-# Seguimiento 8 — CI/CD, pruebas API/UI y Pulse
+--# Seguimiento 8 — CI/CD, pruebas API/UI y Pulse
 
 Documento de referencia del equipo **Ciclo Finca 4** para el entregable de DevOps (Seguimiento 8). Resume qué se implementó, qué ya se probó en local, qué falta para cerrar la entrega y los comandos paso a paso.
 
@@ -14,7 +14,7 @@ Documento de referencia del equipo **Ciclo Finca 4** para el entregable de DevOp
 
 | Área | Herramienta | Estado implementación | Estado prueba local |
 |------|-------------|----------------------|---------------------|
-| CI/CD | GitHub Actions + Render | Workflow `ci-cd-dev.yml` en repo | Pendiente push/merge a `Dev` |
+| CI/CD | GitHub Actions + Render | Workflow `c---i-cd-dev.yml` en repo | Pendiente push/merge a `Dev` |
 | API automatizada | PHPUnit | `StorefrontApiTest.php` (4 tests) | OK |
 | API colección | Newman / Postman | `postman/CF4-Storefront-API.postman_collection.json` | OK |
 | UI navegador | Laravel Dusk + Selenium | 5 tests en `tests/Browser/` | OK (`run-dusk-docker.sh`) |
