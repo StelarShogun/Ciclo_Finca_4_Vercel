@@ -21,9 +21,9 @@ class ClientLegalTermsTest extends DuskTestCase
     {
         $this->browse(function (Browser $browser): void {
             $browser->visit('/legal/terminos')
-                ->waitFor('#legal-page-title', 15)
-                ->assertSee('Términos y condiciones')
-                ->assertSee('Uso del sitio');
+                ->waitForText('Términos y condiciones', 30)
+                ->assertSee('Uso del sitio')
+                ->assertPresent('#legal-page-title');
         });
     }
 }

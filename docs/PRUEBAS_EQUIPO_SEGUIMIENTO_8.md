@@ -304,9 +304,35 @@ npm run test:api   # Newman — colección Postman en CLI
 ./scripts/run-dusk-docker.sh --filter=ClientLegalTermsTest
 ```
 
+**Ver el navegador en vivo (video):** abre http://localhost:7900 (noVNC) y corre:
+
+```bash
+DUSK_VISIBLE=1 ./scripts/run-dusk-docker.sh --filter=ClientLegalTermsTest
+```
+
+**Antes de Dusk:** detén `npm run dev` y borra `public/hot` (`rm -f public/hot`), si no la página queda en blanco.
+
+**Complemento visual Pulse (evidencias):**
+
+```bash
+docker compose exec app_ciclo php artisan pulse:check --once
+# Luego en navegador (admin): http://localhost:8080/pulse
+```
+
 **Cómo explicarla:**
 
 > «Selenium abre `/legal/terminos` y valida título y contenido visible. Cierra el requisito de UI automatizada con funcionalidad legal del proyecto.»
+
+---
+
+## Notas Dusk (todos los integrantes con prueba UI)
+
+| Situación | Solución |
+|-----------|----------|
+| `The "--filter" option does not exist` | Usar `./scripts/run-dusk-docker.sh` (no `composer run dusk --filter`) |
+| `TTY mode requires /dev/tty` | El script ya usa `--without-tty`; es solo un aviso si aparece |
+| Pantalla en blanco / timeout | Detener `npm run dev` + `rm -f public/hot` |
+| Ver Chrome al grabar | `DUSK_VISIBLE=1` + http://localhost:7900 |
 
 ---
 

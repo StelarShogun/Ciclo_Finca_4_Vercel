@@ -340,15 +340,22 @@ git commit -m "feat(CF4-8): descripción corta" -m "Cuerpo del commit en una lí
 
 ---
 
-## 9. Matriz de pruebas sugerida (tabla del equipo)
+## 9. Matriz de pruebas del equipo (3 por integrante)
 
-Completar una fila por integrante (ejemplo de herramientas):
+Documento completo con comandos y guiones: **[PRUEBAS_EQUIPO_SEGUIMIENTO_8.md](./PRUEBAS_EQUIPO_SEGUIMIENTO_8.md)**
 
 | Integrante | Prueba 1 | Prueba 2 | Prueba 3 |
 |------------|----------|----------|----------|
-| Nombre A | PHPUnit API (`StorefrontApiTest`) | Newman (`npm run test:api`) | Dusk (`run-dusk-docker.sh`) |
-| Nombre B | `ci-check-docker.sh` | Pulse manual `/pulse` | Postman GUI colección |
-| Nombre C | … | … | … |
+| **Aaron** | Health API `/up` (PHPUnit) | Suggestions API (PHPUnit) + Newman | Admin login (Dusk) |
+| **Arturo** | Catalog heartbeat (PHPUnit) | Home guest CTA (PHPUnit) | Client login (Dusk) |
+| **Darwin** | Search trending (PHPUnit) | Catálogo hero (Dusk) | Registro → login (Dusk) |
+| **Dilan** | Páginas legales (PHPUnit) | Pulse monitoreo (PHPUnit) | Términos legales (Dusk) |
+
+**Ejecución automática (logs en `docs/evidencia/YYYY-MM-DD/`):**
+
+```bash
+./scripts/run-seguimiento-8-evidence.sh
+```
 
 ---
 
@@ -358,6 +365,9 @@ Completar una fila por integrante (ejemplo de herramientas):
 |---------|------|
 | Workflow CI/CD | `.github/workflows/ci-cd-dev.yml` |
 | Doc CI técnica | `docs/CI.md` |
+| **Matriz equipo (Aaron, Arturo, Darwin, Dilan)** | `docs/PRUEBAS_EQUIPO_SEGUIMIENTO_8.md` |
+| Evidencias / logs | `docs/evidencia/` |
+| Script automático 12 pruebas | `scripts/run-seguimiento-8-evidence.sh` |
 | Chequeo local = CI | `scripts/ci-check-docker.sh` |
 | PHPUnit MySQL | `scripts/test-mysql-docker.sh` |
 | Dusk Docker | `scripts/run-dusk-docker.sh` |

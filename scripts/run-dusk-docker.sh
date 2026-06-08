@@ -28,6 +28,11 @@ APP_KEY="${APP_KEY:-}"
 DB_USERNAME="${DB_USERNAME:-laravel}"
 DB_PASSWORD="${DB_PASSWORD:-password}"
 DUSK_DATABASE="${DUSK_DATABASE:-laravel_dusk}"
+# DUSK_VISIBLE=1 → Chrome con ventana (vía noVNC en http://localhost:7900), ideal para grabar el video.
+DUSK_HEADLESS_DISABLED="${DUSK_HEADLESS_DISABLED:-false}"
+if [ "${DUSK_VISIBLE:-0}" = "1" ]; then
+  DUSK_HEADLESS_DISABLED=true
+fi
 
 if [ -z "$APP_KEY" ]; then
   echo "APP_KEY is empty in .env — run: docker compose exec app_ciclo php artisan key:generate" >&2
@@ -45,7 +50,7 @@ APP_URL=http://app_ciclo
 
 LARAVEL_SAIL=1
 DUSK_DRIVER_URL=http://selenium_ciclo:4444/wd/hub
-DUSK_HEADLESS_DISABLED=false
+DUSK_HEADLESS_DISABLED=${DUSK_HEADLESS_DISABLED}
 
 DB_CONNECTION=mysql
 DB_HOST=db_ciclo
@@ -81,6 +86,16 @@ done
 
 echo ">>> Building frontend assets..."
 docker compose exec -T app_ciclo npm run build
-
 echo ">>> Running Dusk..."
-docker compose exec -T app_ciclo composer run dusk "$@"
+if [ "${DUSK_HEADLESS_DISABLED}" = "true" ]; then
+  echo ">>> Modo visible: abre http://localhost:7900 (noVNC) para ver el navegador dentro de Selenium."
+fi
+# Vite dev writes public/hot → Laravel serves localhost:5174, which Selenium inside Docker cannot reach.
+rm -f public/hot
+docker compose exec -T app_ciclo rm -f public/hot
+if pgrep -f "vite.*5174" >/dev/null 2>&1; then
+  echo ">>> WARN: Detén 'npm run dev' (puerto 5174) antes de Dusk; si no, la pantalla queda en blanco."
+fi
+# Call artisan directly — `composer run dusk --filter=…` treats --filter as a Composer flag.
+# --without-tty avoids "TTY mode requires /dev/tty" inside `docker compose exec -T`.
+docker compose exec -T app_ciclo php artisan dusk --without-tty "$@"
