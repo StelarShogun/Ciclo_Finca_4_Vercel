@@ -57,17 +57,21 @@ abstract class DuskTestCase extends BaseTestCase
             ]);
         }
 
+        $driverUrl = $_ENV['DUSK_DRIVER_URL'] ?? $_SERVER['DUSK_DRIVER_URL'] ?? 'http://localhost:9515';
+
         $options = (new ChromeOptions)->addArguments($arguments->all());
 
-        foreach (['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome'] as $chromeBinary) {
-            if (is_executable($chromeBinary)) {
-                $options->setBinary($chromeBinary);
-                break;
+        if (! str_contains($driverUrl, '/wd/hub')) {
+            foreach (['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome'] as $chromeBinary) {
+                if (is_executable($chromeBinary)) {
+                    $options->setBinary($chromeBinary);
+                    break;
+                }
             }
         }
 
         return RemoteWebDriver::create(
-            $_ENV['DUSK_DRIVER_URL'] ?? $_SERVER['DUSK_DRIVER_URL'] ?? 'http://localhost:9515',
+            $driverUrl,
             DesiredCapabilities::chrome()->setCapability(
                 ChromeOptions::CAPABILITY,
                 $options
