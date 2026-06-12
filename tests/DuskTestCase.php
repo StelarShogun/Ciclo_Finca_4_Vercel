@@ -138,11 +138,13 @@ abstract class DuskTestCase extends BaseTestCase
      */
     protected function fillControlledInput(Browser $browser, string $selector, string $value): Browser
     {
-        $browser->script(
-            <<<'JS'
-            const el = document.querySelector(arguments[0]);
+        $selectorJson = json_encode($selector, JSON_THROW_ON_ERROR);
+        $valueJson = json_encode($value, JSON_THROW_ON_ERROR);
+
+        $browser->script(<<<JS
+            const el = document.querySelector({$selectorJson});
             if (!el) {
-                throw new Error('Missing element: ' + arguments[0]);
+                throw new Error('Missing element: ' + {$selectorJson});
             }
 
             const proto = el instanceof HTMLTextAreaElement
@@ -151,16 +153,14 @@ abstract class DuskTestCase extends BaseTestCase
             const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
 
             if (setter) {
-                setter.call(el, arguments[1]);
+                setter.call(el, {$valueJson});
             } else {
-                el.value = arguments[1];
+                el.value = {$valueJson};
             }
 
             el.dispatchEvent(new Event('input', { bubbles: true }));
             el.dispatchEvent(new Event('change', { bubbles: true }));
-            JS,
-            [$selector, $value]
-        );
+            JS);
 
         return $browser;
     }
