@@ -3,6 +3,7 @@
 namespace Tests\Feature\Monitoring;
 
 use App\Models\AdminUser;
+use App\Models\Client;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
@@ -41,5 +42,22 @@ class PulseDashboardTest extends TestCase
         $this->actingAs($admin, 'admin')
             ->get('/pulse')
             ->assertOk();
+    }
+
+    public function test_pulse_monitoring_is_forbidden_for_storefront_client(): void
+    {
+        $client = Client::create([
+            'name' => 'Pulse',
+            'first_surname' => 'Client',
+            'second_surname' => null,
+            'gmail' => 'pulse-client@example.com',
+            'password' => bcrypt('password'),
+            'email_verified' => true,
+            'active' => true,
+        ]);
+
+        $this->actingAs($client, 'web')
+            ->get('/pulse')
+            ->assertForbidden();
     }
 }

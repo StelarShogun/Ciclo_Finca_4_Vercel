@@ -21,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::define('viewPulse', function (?AdminUser $user = null): bool {
+        Gate::define('viewPulse', function ($user = null): bool {
             return auth('admin')->user() instanceof AdminUser;
         });
     }
