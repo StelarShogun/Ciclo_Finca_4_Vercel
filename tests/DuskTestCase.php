@@ -18,9 +18,18 @@ abstract class DuskTestCase extends BaseTestCase
     #[BeforeClass]
     public static function prepare(): void
     {
-        if (! static::runningInSail()) {
+        if (! static::runningInSail() && ! static::usingRemoteDriver()) {
             static::startChromeDriver(['--port=9515']);
         }
+    }
+
+    protected static function usingRemoteDriver(): bool
+    {
+        $driverUrl = $_ENV['DUSK_DRIVER_URL'] ?? $_SERVER['DUSK_DRIVER_URL'] ?? getenv('DUSK_DRIVER_URL');
+
+        return is_string($driverUrl)
+            && $driverUrl !== ''
+            && $driverUrl !== 'http://localhost:9515';
     }
 
     /**
