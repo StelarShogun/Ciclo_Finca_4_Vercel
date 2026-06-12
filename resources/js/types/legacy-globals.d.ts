@@ -18,12 +18,8 @@ declare global {
       durationMs?: number;
     }) => void;
     cf4AuthWelcomeToast?: (payload: unknown) => void;
-    cf4SetHeaderMenuOpen?: (open: boolean) => void;
-    cf4CloseUserDropdown?: () => void;
-    cf4SyncMobileUserDropdownPosition?: () => void;
     cf4SyncHeaderSearchSuggestionsPosition?: () => void;
     __cf4ClientPageJsLoaded?: boolean;
-    __cf4HeaderMenuBound?: boolean;
     axios?: unknown;
   }
 }

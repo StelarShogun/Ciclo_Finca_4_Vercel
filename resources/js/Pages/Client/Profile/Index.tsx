@@ -65,7 +65,10 @@ export default function ProfileIndex({ profile, profileFlash }: ProfilePageProps
         message: 'Contraseña definida. Ya puedes iniciar sesión con tu correo y contraseña.',
       });
     }
-  }, [profileFlash.profileUpdated, profileFlash.passwordUpdated, profileFlash.passwordDefined, showToast]);
+    if (profileFlash.avatarUpdated) {
+      showToast({ variant: 'success', title: 'Listo', message: 'Foto de perfil actualizada.' });
+    }
+  }, [profileFlash.profileUpdated, profileFlash.passwordUpdated, profileFlash.passwordDefined, profileFlash.avatarUpdated, showToast]);
 
   function cancelEdit() {
     profileForm.reset();
@@ -141,6 +144,7 @@ export default function ProfileIndex({ profile, profileFlash }: ProfilePageProps
               </nav>
 
               <ProfileHero
+                avatarUrl={profile.avatar_url}
                 heroName={heroName}
                 gmail={profileForm.data.gmail}
                 name={profileForm.data.name}

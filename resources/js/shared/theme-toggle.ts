@@ -76,7 +76,7 @@ function applyTheme(theme: Cf4Theme, { animate = false }: { animate?: boolean } 
     syncToggleButtons(normalizedTheme, animate);
 }
 
-function toggleTheme(): void {
+export function toggleTheme(): void {
     const current = document.documentElement.dataset.theme || getCurrentTheme();
     const next: Cf4Theme = current === 'dark' ? 'light' : 'dark';
 

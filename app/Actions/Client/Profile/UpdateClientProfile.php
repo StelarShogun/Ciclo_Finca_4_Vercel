@@ -31,7 +31,7 @@ final class UpdateClientProfile
             $request->input('second_surname'),
         );
 
-        if ($request->ajax() || $request->wantsJson()) {
+        if (! $request->header('X-Inertia') && ($request->ajax() || $request->wantsJson())) {
             return response()->json([
                 'success' => true,
                 'message' => 'Cambios guardados correctamente.',

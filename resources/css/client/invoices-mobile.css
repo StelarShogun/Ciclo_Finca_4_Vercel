@@ -30,6 +30,32 @@
     color: #991b1b;
 }
 
+/* Dark mode: fondos translúcidos oscuros + texto claro por estado (los pasteles de arriba dejan texto ilegible) */
+html[data-theme="dark"] .cf4-invoice-status-badge {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+html[data-theme="dark"] .cf4-invoice-status-completed {
+    background: rgba(96, 165, 250, 0.16);
+    color: #93c5fd;
+    box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.3);
+}
+
+html[data-theme="dark"] .cf4-invoice-status-pending {
+    background: rgba(251, 191, 36, 0.14);
+    color: #fcd34d;
+}
+
+html[data-theme="dark"] .cf4-invoice-status-ready {
+    background: rgba(129, 199, 132, 0.16);
+    color: #a5d6a7;
+}
+
+html[data-theme="dark"] .cf4-invoice-status-cancelled {
+    background: rgba(248, 113, 113, 0.14);
+    color: #fca5a5;
+}
+
 /* ── Detail button ── */
 .cf4-invoice-detail-btn {
     display: inline-flex;

@@ -41,7 +41,7 @@ export function HeroSection({ hero }: HeroSectionProps) {
             <div className="hero-badge">Atención ciclista especializada en tienda</div>
 
             <h1 className="hero-title">
-              {hero.title}
+              {hero.title}{' '}
               <strong>{hero.emphasis}</strong>
             </h1>
 

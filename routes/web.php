@@ -487,6 +487,7 @@ Route::middleware(['auth:clients'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('clients.profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('clients.profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('clients.profile.password');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('clients.profile.avatar');
 
     // Favorite products routes.
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('clients.favorites.index');

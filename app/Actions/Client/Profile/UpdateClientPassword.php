@@ -21,7 +21,7 @@ final class UpdateClientPassword
             if (! Hash::check($request->string('current_password')->toString(), $client->password)) {
                 $error = ['current_password' => ['La contraseña actual no es correcta.']];
 
-                if ($request->ajax() || $request->wantsJson()) {
+                if (! $request->header('X-Inertia') && ($request->ajax() || $request->wantsJson())) {
                     return response()->json(['success' => false, 'errors' => $error], 422);
                 }
 
@@ -31,7 +31,7 @@ final class UpdateClientPassword
             if (Hash::check($request->string('new_password')->toString(), $client->password)) {
                 $error = ['new_password' => ['La nueva contraseña no puede ser igual a la actual.']];
 
-                if ($request->ajax() || $request->wantsJson()) {
+                if (! $request->header('X-Inertia') && ($request->ajax() || $request->wantsJson())) {
                     return response()->json(['success' => false, 'errors' => $error], 422);
                 }
 
@@ -49,7 +49,7 @@ final class UpdateClientPassword
             ? 'Contraseña definida. Ya puedes iniciar sesión con tu correo y contraseña.'
             : 'Contraseña actualizada correctamente.';
 
-        if ($request->ajax() || $request->wantsJson()) {
+        if (! $request->header('X-Inertia') && ($request->ajax() || $request->wantsJson())) {
             return response()->json([
                 'success' => true,
                 'message' => $message,

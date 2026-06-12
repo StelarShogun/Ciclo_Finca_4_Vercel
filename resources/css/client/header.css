@@ -1439,6 +1439,12 @@ button.user-dropdown-item {
     display: flex;
   }
 
+  /* Con el dropdown de usuario abierto, el overflow-y:auto del panel lo recortaría;
+     el dropdown trae su propio max-height + scroll */
+  .cliente-header.menu-open .header-menu-panel:has(.user-menu-wrap.open) {
+    overflow-y: visible;
+  }
+
   .header-nav-slot {
     flex: 0 0 auto;
     width: 100%;
@@ -1567,27 +1573,22 @@ button.user-dropdown-item {
 
   .user-trigger-name { display: none; }
 
-  /* Dropdown en panel hamburguesa: absoluto respecto al wrap (no empuja carrito / facturas) */
+  /* Dropdown en panel hamburguesa: anclado a .header-actions (position:relative),
+     no al wrap estrecho del trigger — así ocupa el ancho del panel sin JS de posicionamiento */
   .header-menu-panel .user-menu-wrap {
-    position: relative;
-    z-index: 2;
+    position: static;
     flex-shrink: 0;
   }
 
-  .header-menu-panel .user-menu-wrap.open {
-    z-index: 60;
-  }
-
-  /* Fixed + márgenes: evita que el panel (ancho ~viewport) quede cortado a la izquierda con right:0 en un wrap estrecho */
   .header-menu-panel .user-dropdown-panel {
-    position: fixed;
-    left: max(12px, env(safe-area-inset-left, 0px));
-    right: max(12px, env(safe-area-inset-right, 0px));
-    top: var(--cf4-user-dropdown-top, 112px);
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
     width: auto;
     min-width: 0;
     max-width: none;
-    max-height: min(70vh, calc(100dvh - var(--cf4-user-dropdown-top, 112px) - 16px));
+    max-height: min(60vh, 420px);
     overflow-y: auto;
     margin-top: 0;
     display: block;

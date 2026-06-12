@@ -1,9 +1,12 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
+import { useRef, useState } from 'react';
 
 import { useFavoritesDrawer } from '@/features/client/favorites/context/FavoritesDrawerContext';
 import { profileInitials } from '@/features/client/profile/lib/profileFormUtils';
+import { useToast } from '@/shared/hooks/useToast';
 
 type ProfileHeroProps = {
+  avatarUrl: string | null;
   heroName: string;
   gmail: string;
   name: string;
@@ -11,13 +14,75 @@ type ProfileHeroProps = {
   isGoogleAccount: boolean;
 };
 
-export function ProfileHero({ firstSurname, gmail, heroName, isGoogleAccount, name }: ProfileHeroProps) {
+export function ProfileHero({ avatarUrl, firstSurname, gmail, heroName, isGoogleAccount, name }: ProfileHeroProps) {
   const { open: openFavoritesDrawer } = useFavoritesDrawer();
+  const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const showAvatarImage = Boolean(avatarUrl) && !avatarFailed;
+
+  function handleAvatarFile(file: File | undefined) {
+    if (!file) {
+      return;
+    }
+
+    setIsUploading(true);
+    router.post(
+      '/profile/avatar',
+      { avatar: file },
+      {
+        forceFormData: true,
+        preserveScroll: true,
+        onError: (errors) => {
+          const message = errors.avatar ?? 'No se pudo actualizar la foto.';
+          showToast({ variant: 'error', title: 'No se pudo subir', message: String(message) });
+        },
+        onFinish: () => {
+          setIsUploading(false);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        },
+      },
+    );
+  }
 
   return (
     <div className="profile-hero">
-      <div className="profile-avatar">
-        <span id="avatarInitials">{profileInitials(name, firstSurname)}</span>
+      <div className="profile-avatar-wrap">
+        <div className="profile-avatar">
+          {showAvatarImage ? (
+            <img
+              src={avatarUrl ?? undefined}
+              alt={`Foto de perfil de ${heroName}`}
+              className="profile-avatar__img"
+              referrerPolicy="no-referrer"
+              onError={() => setAvatarFailed(true)}
+            />
+          ) : (
+            <span id="avatarInitials">{profileInitials(name, firstSurname)}</span>
+          )}
+        </div>
+        <button
+          type="button"
+          className="profile-avatar-upload"
+          disabled={isUploading}
+          aria-label="Cambiar foto de perfil"
+          title="Cambiar foto de perfil"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <i className={isUploading ? 'fas fa-spinner fa-spin' : 'fas fa-camera'} aria-hidden="true" />
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="sr-only"
+          aria-hidden="true"
+          tabIndex={-1}
+          onChange={(event) => handleAvatarFile(event.target.files?.[0])}
+        />
       </div>
 
       <div className="profile-hero-info">

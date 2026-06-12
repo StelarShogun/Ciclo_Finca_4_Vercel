@@ -468,6 +468,47 @@
     }
 }
 
+/* ---- dark mode ---- */
+html[data-theme="dark"] .cf4-state-layout {
+    background: rgba(7, 31, 31, 0.78);
+    border-color: rgba(142, 182, 155, 0.22);
+    box-shadow:
+        0 2px 0 rgba(255, 255, 255, 0.04) inset,
+        0 32px 80px rgba(0, 0, 0, 0.5),
+        0 8px 24px rgba(0, 0, 0, 0.34);
+}
+
+html[data-theme="dark"] .cf4-state-code {
+    background: linear-gradient(150deg, var(--brand-lightest) 0%, var(--brand-light) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+html[data-theme="dark"] .cf4-state-title {
+    color: var(--brand-lightest);
+}
+
+html[data-theme="dark"] .cf4-state-message {
+    color: var(--text-secondary, #B6CABB);
+}
+
+html[data-theme="dark"] .cf4-state-eyebrow {
+    color: var(--brand-light);
+    background: rgba(129, 199, 132, 0.12);
+    border-color: rgba(129, 199, 132, 0.35);
+}
+
+html[data-theme="dark"] .cf4-state-btn-secondary {
+    color: var(--brand-light);
+    border-color: rgba(129, 199, 132, 0.45);
+    background: rgba(129, 199, 132, 0.08);
+}
+
+html[data-theme="dark"] .cf4-state-btn-secondary:hover {
+    background: rgba(129, 199, 132, 0.18);
+    border-color: var(--brand-light);
+}
+
 /* ---- responsive ---- */
 @media (max-width: 860px) {
     .cf4-state-layout:not(.cf4-state-layout--embed) {

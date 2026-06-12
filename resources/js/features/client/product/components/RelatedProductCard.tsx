@@ -144,10 +144,6 @@ export function RelatedProductCard({ csrfToken, isAuthenticated, related }: Rela
         <div className="product-footer">
           <div className="product-price">{related.priceFormatted}</div>
           <div className="product-actions">
-            <Link href={related.url} className="btn-product btn-ver-detalles">
-              <i className="fas fa-arrow-right" aria-hidden="true" />
-              Ver detalles
-            </Link>
             {related.canBuy ? (
               <button
                 type="button"

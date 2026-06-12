@@ -1194,6 +1194,13 @@ button.profile-quick-action {
     }
 }
 
+.profile-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+    width: 78px;
+    height: 78px;
+}
+
 .profile-avatar {
     flex-shrink: 0;
     width: 78px;
@@ -1207,6 +1214,53 @@ button.profile-quick-action {
     font-weight: 700;
     color: #fff;
     box-shadow: 0 4px 14px rgba(35, 83, 71, 0.25);
+    overflow: hidden;
+}
+
+.profile-avatar__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.profile-avatar-upload {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--background-white, #fff);
+    background: var(--brand-medium-dark, #163832);
+    color: #fff;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(5, 31, 32, 0.3);
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.profile-avatar-upload:hover:not(:disabled) {
+    background: var(--brand-medium, #235347);
+    transform: scale(1.08);
+}
+
+.profile-avatar-upload:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+html[data-theme="dark"] .profile-avatar-upload {
+    background: var(--brand-medium, #235347);
+    border-color: var(--cf4-surface-1, #071F1F);
+}
+
+html[data-theme="dark"] .profile-avatar-upload:hover:not(:disabled) {
+    background: var(--brand-light, #81c784);
+    color: var(--brand-darkest, #020F10);
 }
 
 .profile-hero-info { flex: 1; min-width: 0; }

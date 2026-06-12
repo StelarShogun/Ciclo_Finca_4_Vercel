@@ -35,7 +35,8 @@
     display: block;
 }
 
-/* Fondo diurno uniforme — mismo fill que el contenedor (incluso en dark mode del sitio) */
+/* Fondo diurno uniforme — mismo fill que el contenedor. La escena queda clara incluso con
+   data-theme="dark": es una ilustración enmarcada dentro de la card (que sí se oscurece). */
 .cf4-bike404-sky,
 .cf4-bike404-svg rect.cf4-bike404-sky {
     fill: #e8f7ee;

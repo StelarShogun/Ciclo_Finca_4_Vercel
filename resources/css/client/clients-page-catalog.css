@@ -3890,3 +3890,24 @@ body.catalog-category-panel-open {
   font-size: 0.7rem;
   opacity: 0.85;
 }
+/* ===================================================================
+   Dark mode — textos rgba(5,31,32,…) (verde-negro) invisibles sobre
+   --cf4-catalog-page-bg oscuro
+   =================================================================== */
+html[data-theme="dark"] .catalog-label {
+  color: rgba(238, 248, 240, 0.6);
+}
+
+html[data-theme="dark"] .catalog-toolbar-sort-field label {
+  color: rgba(238, 248, 240, 0.7);
+}
+
+html[data-theme="dark"] .catalog-count.results-count,
+html[data-theme="dark"] .catalog-count,
+html[data-theme="dark"] .results-count {
+  color: rgba(238, 248, 240, 0.72);
+}
+
+html[data-theme="dark"] .product-review-item__stars .far.fa-star {
+  color: rgba(182, 202, 187, 0.55);
+}

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Actions\Client\Profile\UpdateClientAvatar;
 use App\Actions\Client\Profile\UpdateClientPassword;
 use App\Actions\Client\Profile\UpdateClientProfile;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Client\Profile\UpdateClientAvatarRequest;
 use App\Http\Requests\Client\Profile\UpdateClientPasswordRequest;
 use App\Http\Requests\Client\Profile\UpdateClientProfileRequest;
 use Illuminate\Support\Facades\Auth;
@@ -24,12 +26,14 @@ final class ProfileController extends Controller
                 'second_surname' => $client->second_surname ?? '',
                 'gmail' => $client->gmail,
                 'provider' => $client->provider ?? 'local',
+                'avatar_url' => $client->avatar_url,
             ],
             'isGoogleOnly' => $client->provider === 'google',
             'profileFlash' => [
                 'profileUpdated' => (bool) session('profile_updated'),
                 'passwordUpdated' => (bool) session('password_updated'),
                 'passwordDefined' => (bool) session('password_defined'),
+                'avatarUpdated' => (bool) session('avatar_updated'),
             ],
         ]);
     }
@@ -40,6 +44,11 @@ final class ProfileController extends Controller
     }
 
     public function updatePassword(UpdateClientPasswordRequest $request, UpdateClientPassword $action)
+    {
+        return $action->handle($request);
+    }
+
+    public function updateAvatar(UpdateClientAvatarRequest $request, UpdateClientAvatar $action)
     {
         return $action->handle($request);
     }

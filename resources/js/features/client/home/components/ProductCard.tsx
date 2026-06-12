@@ -64,7 +64,9 @@ export function ProductCard({ product, isAuthenticated, csrfToken }: ProductCard
 
       <div className="product-info">
         <div className="product-category">{product.category}</div>
-        <h3 className="product-name">{product.name}</h3>
+        <h3 className="product-name">
+          <Link href={product.url}>{product.name}</Link>
+        </h3>
         <ProductStars avg={product.reviews.avg} count={product.reviews.count} />
 
         {product.sku ? <p className="product-card-sku">SKU: {product.sku}</p> : null}
@@ -93,9 +95,6 @@ export function ProductCard({ product, isAuthenticated, csrfToken }: ProductCard
         <div className="product-footer">
           <div className="product-price">{product.priceFormatted}</div>
           <div className="product-actions">
-            <Link href={product.url} className="btn-product btn-ver-detalles" title="Ver ficha del producto">
-              Ver producto
-            </Link>
             {product.canBuy ? (
               <button type="button" className="btn-product btn-agregar" onClick={handleAddToCart} disabled={isAdding}>
                 <i className="fas fa-cart-plus" aria-hidden="true" />

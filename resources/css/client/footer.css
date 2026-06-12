@@ -229,4 +229,9 @@
     align-items: flex-start;
     gap: 8px;
   }
+
+  /* En columna el flex-basis de 280px (pensado como ancho) pasaría a ser alto */
+  .footer-bottom-start {
+    flex-basis: auto;
+  }
 }

@@ -18,7 +18,7 @@ final class ResendClientVerificationCode
 
     public function handle(Request $request): JsonResponse|RedirectResponse
     {
-        $wantsJson = $request->ajax() || $request->wantsJson();
+        $wantsJson = ! $request->header('X-Inertia') && ($request->ajax() || $request->wantsJson());
         $clientId = $this->sessionState->pendingRegistrationClientId();
 
         if (! $clientId) {

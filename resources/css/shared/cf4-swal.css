@@ -76,6 +76,49 @@
     color: #0f172a !important;
 }
 
+/* ── Dark mode: popup/toast oscuros con texto claro (SweetAlert2 trae fondo blanco por defecto) ── */
+html[data-theme="dark"] .cf4-swal-popup {
+    background: var(--background-white, #071F1F) !important;
+    border-color: rgba(142, 182, 155, 0.26) !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5) !important;
+}
+
+html[data-theme="dark"] .cf4-swal-title {
+    color: var(--text-primary, #EEF8F0) !important;
+}
+
+html[data-theme="dark"] .cf4-swal-html,
+html[data-theme="dark"] .cf4-swal-text {
+    color: var(--text-secondary, #B6CABB) !important;
+}
+
+html[data-theme="dark"] .cf4-swal-btn-muted {
+    background: rgba(218, 241, 222, 0.12) !important;
+    color: var(--text-primary, #EEF8F0) !important;
+}
+
+html[data-theme="dark"] .cf4-swal-toast,
+html[data-theme="dark"] .cf4-order-status-toast-popup.swal2-toast {
+    background: var(--background-white, #071F1F) !important;
+}
+
+html[data-theme="dark"] .cf4-swal-toast .swal2-title,
+html[data-theme="dark"] .cf4-order-status-toast-popup .cf4-order-status-toast-title {
+    color: var(--text-primary, #EEF8F0) !important;
+}
+
+html[data-theme="dark"] .cf4-order-status-toast-body {
+    color: var(--text-secondary, #B6CABB) !important;
+}
+
+html[data-theme="dark"] .cf4-order-status-toast-action {
+    color: var(--brand-light, #81c784);
+}
+
+html[data-theme="dark"] .cf4-order-status-toast-popup .swal2-close {
+    color: var(--text-secondary, #B6CABB) !important;
+}
+
 /*
  * Container que SweetAlert2 crea para position='top'.
  * Solo nuestros toasts de estado usan esta posición; los diálogos usan 'center'.

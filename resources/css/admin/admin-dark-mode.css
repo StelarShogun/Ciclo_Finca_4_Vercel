@@ -1604,3 +1604,93 @@ html[data-theme="dark"] .csr-ranking-panel-meta {
 html[data-theme="dark"] .csr-ranking-row:hover {
   background: var(--table-row-hover-bg);
 }
+
+/* ===================================================================
+   Reports hub (inventario) — valores/badges de estado: los tonos de
+   light (#235347, #ca8a04, #dc2626 y pasteles) quedan ilegibles en dark
+   =================================================================== */
+
+html[data-theme="dark"] .inv-product-stock-dot--success { background: var(--brand-light); }
+html[data-theme="dark"] .inv-product-stock-dot--warning { background: var(--color-warning); }
+html[data-theme="dark"] .inv-product-stock-dot--danger { background: var(--color-danger); }
+
+html[data-theme="dark"] .inv-product-stock-value--success,
+html[data-theme="dark"] .stock-badge--success,
+html[data-theme="dark"] .inv-metric-card--entrada .inv-metric-value,
+html[data-theme="dark"] .inv-qty-positive {
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .inv-product-stock-value--warning,
+html[data-theme="dark"] .stock-badge--warning {
+  color: var(--color-warning);
+}
+
+html[data-theme="dark"] .inv-product-stock-value--danger,
+html[data-theme="dark"] .stock-badge--danger,
+html[data-theme="dark"] .inv-metric-card--salida .inv-metric-value,
+html[data-theme="dark"] .inv-qty-negative {
+  color: var(--color-danger);
+}
+
+html[data-theme="dark"] .inv-type-badge--entrada {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+html[data-theme="dark"] .inv-type-badge--salida {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+html[data-theme="dark"] .inv-type-badge--devolucion {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+html[data-theme="dark"] .inv-type-badge--ajuste {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+/* ===================================================================
+   Inventario — export modal y combobox de marca (grises de light)
+   =================================================================== */
+
+html[data-theme="dark"] .export-info h4 {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .export-info p {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .brand-combobox-chevron {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .brand-combobox-dropdown {
+  background: var(--cf4-admin-card-bg);
+  border-color: var(--cf4-admin-card-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme="dark"] .brand-combobox-option {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .brand-combobox-option:hover,
+html[data-theme="dark"] .brand-combobox-option.selected {
+  background: rgba(129, 199, 132, 0.14);
+  color: var(--brand-light);
+}
+
+html[data-theme="dark"] .brand-combobox-no-result {
+  color: var(--cf4-text-muted);
+}
+
+/* Pedidos — pill "borrador" con gris de light */
+html[data-theme="dark"] .cf4-orders-module .order-status-pill.draft {
+  background: rgba(176, 190, 197, 0.16);
+  color: #B0BEC5;
+}

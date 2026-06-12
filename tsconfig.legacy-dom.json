@@ -38,7 +38,6 @@
   ],
   "exclude": [
     "resources/js/admin/login/login.ts",
-    "resources/js/client/header-menu.ts",
     "resources/js/client/header-menu-alert.ts",
     "resources/js/client/checkout-copy.ts"
   ]

@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import type { RefObject } from 'react';
 
 import { HeaderCatalogSearch } from '@/features/client/catalog/components/HeaderCatalogSearch';
 import { ClientCartButton } from '@/shared/components/client/header/ClientCartButton';
@@ -11,6 +12,7 @@ type ClientHeaderProps = {
   auth: InertiaSharedProps['auth'];
   cartCount: number;
   clientInitials: string;
+  headerRef: RefObject<HTMLElement | null>;
   isCatalog: boolean;
   isMenuOpen: boolean;
   isUserMenuOpen: boolean;
@@ -25,6 +27,7 @@ export function ClientHeader({
   auth,
   cartCount,
   clientInitials,
+  headerRef,
   isCatalog,
   isMenuOpen,
   isUserMenuOpen,
@@ -35,7 +38,7 @@ export function ClientHeader({
   pathname,
 }: ClientHeaderProps) {
   return (
-    <header className={`cliente-header ${isMenuOpen ? 'menu-open' : ''}`}>
+    <header ref={headerRef} className={`cliente-header ${isMenuOpen ? 'menu-open' : ''}`}>
       <div className="header-container">
         <div className="header-content">
           <div className="logo-section">
@@ -56,16 +59,16 @@ export function ClientHeader({
           <button
             className={`header-menu-toggle ${cartCount > 0 ? 'has-alert' : ''}`}
             type="button"
-            aria-label="Abrir menú de navegación"
+            aria-label={isMenuOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}
             aria-controls="header-menu-panel"
             aria-expanded={isMenuOpen}
             onClick={onMenuToggle}
           >
-            <i className="fas fa-bars" aria-hidden="true" />
+            <i className={`fas ${isMenuOpen ? 'fa-times' : 'fa-bars'}`} aria-hidden="true" />
             <span className="header-menu-toggle-badge" hidden={cartCount < 1} aria-hidden="true" />
           </button>
 
-          <div className="header-menu-panel" id="header-menu-panel" aria-hidden={!isMenuOpen}>
+          <div className="header-menu-panel" id="header-menu-panel">
             <div className="header-nav-slot">
               <ClientNavigation isCatalog={isCatalog} pathname={pathname} />
             </div>

@@ -5,7 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Error — Ciclo Finca 4')</title>
+    <meta name="color-scheme" content="light dark">
     @stack('meta')
+    <script>
+        (() => {
+            try {
+                const savedTheme = localStorage.getItem('cf4-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.style.colorScheme = theme;
+            } catch (error) {
+                document.documentElement.dataset.theme = 'light';
+                document.documentElement.style.colorScheme = 'light';
+            }
+        })();
+    </script>
 
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
@@ -99,6 +115,35 @@
 
         .cf4-error-nav-back:active {
             transform: translateY(0);
+        }
+
+        /* ---- dark mode (data-theme lo fija el script del head) ---- */
+        html[data-theme="dark"] .cf4-error-layout {
+            background:
+                radial-gradient(ellipse 70% 55% at 8% 0%, rgba(142, 182, 155, 0.1) 0%, transparent 48%),
+                radial-gradient(ellipse 55% 45% at 95% 100%, rgba(35, 83, 71, 0.2) 0%, transparent 42%),
+                #020F10;
+        }
+
+        html[data-theme="dark"] .cf4-error-nav {
+            background: rgba(7, 31, 31, 0.72);
+            border-bottom: 1px solid rgba(142, 182, 155, 0.22);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.28);
+        }
+
+        html[data-theme="dark"] .cf4-error-nav-wordmark {
+            color: var(--brand-lightest);
+        }
+
+        html[data-theme="dark"] .cf4-error-nav-back {
+            color: var(--brand-light);
+            background: rgba(129, 199, 132, 0.08);
+            border-color: rgba(129, 199, 132, 0.4);
+        }
+
+        html[data-theme="dark"] .cf4-error-nav-back:hover {
+            background: rgba(129, 199, 132, 0.16);
+            color: var(--brand-lightest);
         }
 
         /* ---- main area ---- */

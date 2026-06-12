@@ -15,7 +15,7 @@ final class VerifyClientRecoveryCode
 
     public function handle(VerifyClientCodeRequest $request): JsonResponse|RedirectResponse
     {
-        $wantsJson = $request->ajax() || $request->wantsJson();
+        $wantsJson = ! $request->header('X-Inertia') && ($request->ajax() || $request->wantsJson());
         $client = $this->sessionState->resolvePendingRecoveryClient();
 
         if (! $client) {

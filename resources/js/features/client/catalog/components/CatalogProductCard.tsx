@@ -129,7 +129,9 @@ export function CatalogProductCard({ csrfToken, isAuthenticated, product }: Cata
 
       <div className="product-info product-info--catalog-cf128">
         <div className="product-category">{product.category?.name ?? 'Sin categoría'}</div>
-        <h3 className="product-name">{product.name}</h3>
+        <h3 className="product-name">
+          <Link href={product.url}>{product.name}</Link>
+        </h3>
         {product.brands.length > 0 ? <p className="product-card-sku">Marca: {product.brands.map((brand) => brand.name).join(', ')}</p> : null}
         {product.sku ? <p className="product-card-sku">SKU: {product.sku}</p> : null}
 
@@ -153,9 +155,6 @@ export function CatalogProductCard({ csrfToken, isAuthenticated, product }: Cata
         <div className="product-footer">
           <div className="product-price">{product.priceFormatted}</div>
           <div className="product-actions">
-            <Link href={product.url} className="btn-product btn-ver-detalles">
-              Ver producto
-            </Link>
             <button
               type="button"
               className={`btn-product ${product.canBuy ? 'btn-agregar' : 'btn-agotado'}`}

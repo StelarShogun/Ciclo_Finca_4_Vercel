@@ -18,7 +18,7 @@ final class SendClientRecoveryCode
 
     public function handle(SendRecoveryCodeRequest $request): JsonResponse|RedirectResponse
     {
-        $wantsJson = $request->ajax() || $request->wantsJson();
+        $wantsJson = ! $request->header('X-Inertia') && ($request->ajax() || $request->wantsJson());
         $client = Client::where('gmail', strtolower($request->string('gmail')->toString()))->first();
 
         if (! $client) {
