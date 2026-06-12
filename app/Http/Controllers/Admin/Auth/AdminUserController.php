@@ -29,9 +29,12 @@ class AdminUserController extends Controller
             abort(403, 'No tenés permiso para acceder al panel de administración.');
         }
 
-        $request->validate([
-            'g-recaptcha-response' => ['required', new Recaptcha],
-        ], [
+        $rules = [];
+        if (config('services.recaptcha.key')) {
+            $rules['g-recaptcha-response'] = ['required', new Recaptcha];
+        }
+
+        $request->validate($rules, [
             'g-recaptcha-response.required' => 'Por favor completa el reCAPTCHA.',
         ]);
 

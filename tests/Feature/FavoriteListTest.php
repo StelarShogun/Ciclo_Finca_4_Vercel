@@ -7,7 +7,6 @@ use App\Models\FavoriteProduct;
 use App\Models\Product;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
 /**
@@ -33,19 +32,7 @@ use Tests\TestCase;
  */
 class FavoriteListTest extends TestCase
 {
-    use InteractsWithMysqlTestDatabase;
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
-
-        $this->skipUnlessMysqlTestDatabase(['client_table', 'products', 'favorite_products']);
-    }
 
     private function createIsolatedClient(): Client
     {

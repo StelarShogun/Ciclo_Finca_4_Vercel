@@ -5,24 +5,11 @@ namespace Tests\Feature;
 use App\Models\AdminUser;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
 class CF4116SalesDateRangeFilterTest extends TestCase
 {
-    use InteractsWithMysqlTestDatabase;
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-        $this->skipUnlessMysqlTestDatabase(['sales', 'admins']);
-    }
 
     private function getAdmin(): AdminUser
     {

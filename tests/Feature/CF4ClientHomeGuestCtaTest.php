@@ -5,12 +5,15 @@ namespace Tests\Feature;
 use App\Models\Client;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 class CF4ClientHomeGuestCtaTest extends TestCase
 {
     use RefreshDatabase;
 
+    #[Group('seguimiento8')]
+    #[Group('seguimiento8-arturo')]
     public function test_guest_sees_create_account_in_final_cta(): void
     {
         $response = $this->get(route('clients.home'));

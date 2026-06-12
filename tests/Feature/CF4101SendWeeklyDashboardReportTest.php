@@ -22,15 +22,6 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Database not available: '.$e->getMessage());
-        }
-    }
-
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------

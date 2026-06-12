@@ -7,7 +7,6 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -17,22 +16,8 @@ class ProductReviewsDisplayTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-            $this->runSuffix = (string) now()->format('YmdHisv').'-'.bin2hex(random_bytes(3));
-
-            if (Schema::getConnection()->getDriverName() !== 'mysql') {
-                $this->markTestSkipped('ProductReviewsDisplayTest requires MySQL for the current schema.');
-            }
-
-            foreach (['client_table', 'products', 'sales', 'sale_items', 'product_reviews'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Required table missing: '.$table);
-                }
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Database not available: '.$e->getMessage());
-        }
+        parent::setUp();
+        $this->runSuffix = (string) now()->format('YmdHisv').'-'.bin2hex(random_bytes(3));
     }
 
     public function test_guest_sees_no_valoraciones_message_when_product_has_no_public_reviews(): void

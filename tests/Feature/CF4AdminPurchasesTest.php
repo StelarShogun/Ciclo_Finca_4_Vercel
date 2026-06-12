@@ -10,7 +10,6 @@ use App\Models\SaleItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class CF4AdminPurchasesTest extends TestCase
@@ -19,24 +18,8 @@ class CF4AdminPurchasesTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-
-            $driver = Schema::getConnection()->getDriverName();
-            if ($driver !== 'mysql') {
-                $this->markTestSkipped('CF4 admin compras requiere MySQL para el esquema en inglés.');
-            }
-
-            foreach (['admins', 'client_table', 'products', 'sales', 'sale_items'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Tabla requerida no existe: '.$table);
-                }
-            }
-
-            Config::set('sales.order_expiration_days', 30);
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
+        parent::setUp();
+        Config::set('sales.order_expiration_days', 30);
     }
 
     private function authenticateAdmin(Client $webClient, AdminUser $adminUser): void

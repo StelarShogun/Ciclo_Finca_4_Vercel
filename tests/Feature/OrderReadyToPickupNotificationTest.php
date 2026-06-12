@@ -10,7 +10,6 @@ use App\Models\SaleItem;
 use App\Notifications\OrderReadyToPickupNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class OrderReadyToPickupNotificationTest extends TestCase
@@ -20,17 +19,6 @@ class OrderReadyToPickupNotificationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('Este test requiere MySQL.');
-        }
-
-        foreach (['sales', 'sale_items', 'client_table', 'admins', 'notifications', 'products'] as $table) {
-            if (! Schema::hasTable($table)) {
-                $this->markTestSkipped('Tabla requerida no existe: '.$table);
-            }
-        }
-
         Config::set('mail.default', 'array');
         Config::set('sales.ready_to_pickup_expiration_hours', 72);
     }

@@ -10,7 +10,6 @@ use App\Models\SaleItem;
 use App\Models\Supplier;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -26,20 +25,8 @@ class ProductSalesReportTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('ProductSalesReportTest requiere MySQL.');
-        }
-        if (! Schema::hasTable('sales') || ! Schema::hasTable('sale_items') || ! Schema::hasTable('products')) {
-            $this->markTestSkipped('Faltan tablas de ventas o productos.');
-        }
-
+        parent::setUp();
         Carbon::setTestNow(Carbon::parse('2026-06-10 12:00:00', 'UTC'));
-
         $this->adminUser = AdminUser::create([
             'name' => 'Admin',
             'first_surname' => 'Report',

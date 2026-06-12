@@ -48,5 +48,13 @@ services:
     depends_on:
       - db_ciclo
 
+  selenium_ciclo:
+    image: selenium/standalone-chromium:latest
+    container_name: selenium_ciclo
+    shm_size: "2gb"
+    ports:
+      - "4444:4444"
+      - "7900:7900"
+
 volumes:
   dbdata_ciclo:

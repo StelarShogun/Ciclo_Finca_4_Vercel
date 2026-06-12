@@ -4,12 +4,15 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 class CF4ClientLegalPagesTest extends TestCase
 {
     use RefreshDatabase;
 
+    #[Group('seguimiento8')]
+    #[Group('seguimiento8-dilan')]
     public function test_legal_pages_are_accessible(): void
     {
         $this->get(route('clients.legal.terms'))

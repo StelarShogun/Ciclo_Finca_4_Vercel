@@ -41,7 +41,7 @@ docker compose exec -T db_ciclo mysql -uroot -proot -e \
 docker compose exec -T db_ciclo mysql -uroot -proot -e \
   "CREATE DATABASE IF NOT EXISTS \`${DB_TEST_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-echo ">>> Running PHPUnit (MySQL) on ${DB_TEST_DATABASE}..."
+echo ">>> Running PHPUnit on ${DB_TEST_DATABASE}..."
 docker compose exec \
   -e APP_ENV=testing \
   -e DB_CONNECTION=mysql \
@@ -50,4 +50,4 @@ docker compose exec \
   -e DB_DATABASE="${DB_TEST_DATABASE}" \
   -e DB_USERNAME="${DB_USERNAME}" \
   -e DB_PASSWORD="${DB_PASSWORD}" \
-  app_ciclo ./vendor/bin/phpunit -c phpunit.mysql.xml "$@"
+  app_ciclo ./vendor/bin/phpunit "$@"

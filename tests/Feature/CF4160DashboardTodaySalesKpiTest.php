@@ -11,30 +11,20 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon as SupportCarbon;
 use Illuminate\Support\Facades\Cache;
-use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
 class CF4160DashboardTodaySalesKpiTest extends TestCase
 {
-    use InteractsWithMysqlTestDatabase;
     use RefreshDatabase;
 
     private AdminUser $admin;
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-        $this->skipUnlessMysqlTestDatabase(['sales', 'admins', 'client_table']);
-
+        parent::setUp();
         config(['app.timezone' => 'America/Costa_Rica']);
         Carbon::setTestNow(Carbon::parse('2026-05-22 15:00:00', 'America/Costa_Rica'));
         SupportCarbon::setTestNow(Carbon::parse('2026-05-22 15:00:00', 'America/Costa_Rica'));
-
         $this->admin = AdminUser::firstOrCreate(
             ['gmail' => 'admin-cf4160@example.com'],
             [

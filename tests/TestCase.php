@@ -54,7 +54,7 @@ abstract class TestCase extends BaseTestCase
         // Laravel 11+ uses PreventRequestForgery; JSON feature tests do not send CSRF tokens.
         $this->withoutMiddleware(PreventRequestForgery::class);
 
-        // phpunit.mysql.xml forces APP_TIMEZONE=UTC; keep config in sync for date assertions.
+        // phpunit.xml forces APP_TIMEZONE=UTC; keep config in sync for date assertions.
         $timezone = Env::get('APP_TIMEZONE');
         if (is_string($timezone) && $timezone !== '') {
             config(['app.timezone' => $timezone]);

@@ -10,7 +10,6 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
-use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
 /**
@@ -24,19 +23,7 @@ use Tests\TestCase;
  */
 class ClientInvoiceDetailTest extends TestCase
 {
-    use InteractsWithMysqlTestDatabase;
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
-
-        $this->skipUnlessMysqlTestDatabase(['client_table', 'products', 'sales', 'sale_items']);
-    }
 
     private function createIsolatedClient(string $emailHint = 'invoice-detail'): Client
     {

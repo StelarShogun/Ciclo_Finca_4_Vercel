@@ -11,27 +11,11 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\InventoryMovementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class CF490SupplierOrderInventoryMovementTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
-
-        foreach (['suppliers', 'products', 'orders', 'order_items', 'inventory_movements'] as $table) {
-            if (! Schema::hasTable($table)) {
-                $this->markTestSkipped("Falta la tabla requerida ({$table}).");
-            }
-        }
-    }
 
     // -------------------------------------------------------------------------
     // Helpers
@@ -128,14 +112,10 @@ class CF490SupplierOrderInventoryMovementTest extends TestCase
         $admin = $this->createAdmin();
         $order = $this->createConfirmedOrderWithProduct(stockBefore: 10, quantity: 5);
         $firstItem = $order->orderItems->first();
-        if (! $firstItem) {
-            $this->markTestSkipped('El pedido de prueba no tiene líneas.');
-        }
+        $this->assertNotNull($firstItem, 'El pedido de prueba no tiene líneas.');
 
         $product = $firstItem->product;
-        if (! $product) {
-            $this->markTestSkipped('La línea de pedido no tiene producto asociado.');
-        }
+        $this->assertNotNull($product, 'La línea de pedido no tiene producto asociado.');
 
         $this->actingAs($admin, 'admin')
             ->postJson(
@@ -314,14 +294,10 @@ class CF490SupplierOrderInventoryMovementTest extends TestCase
         $admin = $this->createAdmin();
         $order = $this->createConfirmedOrderWithProduct(stockBefore: 10, quantity: 5);
         $firstItem = $order->orderItems->first();
-        if (! $firstItem) {
-            $this->markTestSkipped('El pedido de prueba no tiene líneas.');
-        }
+        $this->assertNotNull($firstItem, 'El pedido de prueba no tiene líneas.');
 
         $product = $firstItem->product;
-        if (! $product) {
-            $this->markTestSkipped('La línea de pedido no tiene producto asociado.');
-        }
+        $this->assertNotNull($product, 'La línea de pedido no tiene producto asociado.');
 
         $this->actingAs($admin, 'admin')
             ->postJson(

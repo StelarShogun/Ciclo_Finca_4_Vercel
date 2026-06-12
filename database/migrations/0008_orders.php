@@ -16,6 +16,8 @@ return new class extends Migration
             $table->timestamp('date')->nullable();
             $table->date('estimated_delivery_date')->nullable();
             $table->timestamp('delivered_at')->nullable();
+            $table->timestamp('received_at')->nullable();
+            $table->boolean('closed_with_shorts')->default(false)->nullable();
             $table->enum('state', [
                 'draft',
                 'pending',
@@ -24,7 +26,7 @@ return new class extends Migration
                 'delivered',
                 'cancelled',
             ])->default('pending');
-            $table->decimal('total', 12, 2)->default(0);
+            $table->decimal('total', 15, 2)->default(0);
             $table->timestamps();
 
             $table->foreign('supplier_id')->references('supplier_id')->on('suppliers')->cascadeOnDelete();
@@ -40,14 +42,28 @@ return new class extends Migration
             $table->unsignedBigInteger('product_id');
             $table->string('name', 255);
             $table->unsignedInteger('quantity')->default(1);
-            $table->decimal('unit_price', 12, 2)->default(0);
-            $table->decimal('total', 12, 2)->default(0);
+            $table->unsignedInteger('received_quantity')->nullable();
+            $table->decimal('unit_price', 15, 2)->default(0);
+            $table->decimal('total', 15, 2)->default(0);
             $table->timestamps();
 
             $table->foreign('order_num_order')->references('num_order')->on('orders')->cascadeOnDelete();
             $table->foreign('product_id')->references('product_id')->on('products')->restrictOnDelete();
             $table->index('order_num_order', 'idx_order_items_order');
             $table->index('product_id', 'idx_order_items_product');
+        });
+
+        Schema::create('timeline_order_state', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('num_order');
+            $table->unsignedBigInteger('user_id');
+            $table->string('state', 32);
+            $table->string('reason', 500)->nullable();
+            $table->timestamp('changed_at')->useCurrent();
+
+            $table->foreign('num_order')->references('num_order')->on('orders')->cascadeOnDelete();
+            $table->foreign('user_id')->references('user_id')->on('admins')->restrictOnDelete();
+            $table->index('num_order', 'idx_timeline_order');
         });
 
         if (Schema::getConnection()->getDriverName() === 'mysql') {
@@ -61,6 +77,7 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::dropIfExists('timeline_order_state');
         Schema::dropIfExists('order_items');
         Schema::dropIfExists('orders');
     }

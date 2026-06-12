@@ -14,7 +14,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -37,18 +36,7 @@ class CF494WebOrderMilestoneMailTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-        foreach (['sales', 'sale_items', 'client_table', 'admins', 'products', 'order_notification_logs'] as $table) {
-            if (! Schema::hasTable($table)) {
-                $this->markTestSkipped('Falta la tabla requerida: '.$table);
-            }
-        }
-
+        parent::setUp();
         Config::set('mail.default', 'array');
         Config::set('sales.order_expiration_days', 30);
         Cache::forget(AppSetting::cacheKeyOrderExpirationDays());

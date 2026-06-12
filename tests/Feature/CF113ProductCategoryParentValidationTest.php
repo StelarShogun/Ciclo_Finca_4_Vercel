@@ -14,16 +14,6 @@ class CF113ProductCategoryParentValidationTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-    }
-
     private function makeAdmin(): AdminUser
     {
         return AdminUser::create([

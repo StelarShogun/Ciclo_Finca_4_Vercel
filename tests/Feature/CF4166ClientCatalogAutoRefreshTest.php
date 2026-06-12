@@ -10,28 +10,18 @@ use App\Models\Supplier;
 use App\Services\Client\Storefront\ClientStorefrontCache;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
-use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
 class CF4166ClientCatalogAutoRefreshTest extends TestCase
 {
-    use InteractsWithMysqlTestDatabase;
     use RefreshDatabase;
 
     private AdminUser $admin;
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-        $this->skipUnlessMysqlTestDatabase(['products', 'brands', 'products_brand', 'categories', 'suppliers', 'admins']);
-
+        parent::setUp();
         Cache::flush();
-
         $this->admin = AdminUser::create([
             'name' => 'Admin',
             'first_surname' => 'CF4166',

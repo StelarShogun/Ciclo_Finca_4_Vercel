@@ -12,27 +12,11 @@ use App\Models\Supplier;
 use App\Services\SupplierDeliveryEstimator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class CF4143SupplierOrderEstimatedDeliveryTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
-
-        foreach (['suppliers', 'products', 'orders', 'order_items', 'timeline_order_state', 'app_settings'] as $table) {
-            if (! Schema::hasTable($table)) {
-                $this->markTestSkipped("Falta la tabla requerida ({$table}).");
-            }
-        }
-    }
 
     // -------------------------------------------------------------------------
     // Helpers

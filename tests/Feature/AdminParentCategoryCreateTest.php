@@ -7,7 +7,6 @@ use App\Models\AdminUser;
 use App\Models\Category;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -27,22 +26,7 @@ class AdminParentCategoryCreateTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-
-            if (Schema::getConnection()->getDriverName() !== 'mysql') {
-                $this->markTestSkipped('Requires MySQL.');
-            }
-
-            foreach (['categories', 'admins'] as $table) {
-                if (! Schema::hasTable($table)) {
-                    $this->markTestSkipped('Missing table: '.$table);
-                }
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped($e->getMessage());
-        }
-
+        parent::setUp();
         // Skip the sensitive-access audit middleware; other admin tests do the same.
         $this->withoutMiddleware(LogSensitiveAdminModuleAccess::class);
     }

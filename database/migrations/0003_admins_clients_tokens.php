@@ -32,7 +32,7 @@ return new class extends Migration
             $table->boolean('active')->default(true);
             $table->string('provider')->default('local');
             $table->string('provider_id')->nullable();
-            $table->string('google_id')->nullable();
+            $table->string('avatar_url')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

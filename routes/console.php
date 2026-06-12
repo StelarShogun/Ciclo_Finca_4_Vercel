@@ -68,3 +68,5 @@ SchedulerMonitor::track(
     'cf4:regenerate-missing-media-conversions',
     'cf4_regenerate_missing_media_conversions'
 )->withoutOverlapping();
+
+Schedule::command('pulse:check')->everyFiveMinutes();

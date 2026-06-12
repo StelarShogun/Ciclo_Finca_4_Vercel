@@ -9,7 +9,6 @@ use App\Models\Supplier;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -23,24 +22,8 @@ class CF108CatalogSearchPopularityTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('CF108CatalogSearchPopularityTest requiere MySQL.');
-        }
-
-        foreach (['products', 'catalog_product_search_events', 'categories', 'suppliers'] as $table) {
-            if (! Schema::hasTable($table)) {
-                $this->markTestSkipped('Tabla requerida no existe: '.$table);
-            }
-        }
-
+        parent::setUp();
         Carbon::setTestNow(Carbon::parse('2026-06-15 12:00:00', 'UTC'));
-
         $this->adminUser = AdminUser::create([
             'name' => 'Admin',
             'first_surname' => 'CF108',

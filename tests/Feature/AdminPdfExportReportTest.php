@@ -6,7 +6,6 @@ use App\Models\AdminUser;
 use App\Models\Client;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -15,25 +14,6 @@ use Tests\TestCase;
 class AdminPdfExportReportTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('AdminPdfExportReportTest requiere MySQL.');
-        }
-
-        foreach (['admins', 'products', 'categories', 'suppliers', 'sales'] as $table) {
-            if (! Schema::hasTable($table)) {
-                $this->markTestSkipped('Tabla requerida no existe: '.$table);
-            }
-        }
-    }
 
     private function loginAdmin(): AdminUser
     {

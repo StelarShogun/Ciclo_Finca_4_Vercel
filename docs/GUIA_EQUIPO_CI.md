@@ -20,7 +20,7 @@ Documentación técnica adicional: [CI.md](CI.md)
 
 ## Qué ejecuta GitHub en cada PR hacia `Dev`
 
-Archivo: `.github/workflows/ci-dev.yml`
+Archivo: `.github/workflows/ci-cd-dev.yml`
 
 | Job en GitHub | Qué hace |
 |---------------|----------|
@@ -222,7 +222,7 @@ Más detalle: docs/GUIA_EQUIPO_CI.md y docs/CI.md
 | `scripts/pint-docker.sh` | Solo Pint (con/sin `--test`) |
 | `phpunit.mysql.xml` | Config PHPUnit para MySQL |
 | `phpunit.xml` | Config PHPUnit para SQLite (smoke) |
-| `.github/workflows/ci-dev.yml` | Pipeline en GitHub |
+| `.github/workflows/ci-cd-dev.yml` | Pipeline en GitHub |
 | `docs/CI.md` | Documentación técnica CI/CD |
 
 ---

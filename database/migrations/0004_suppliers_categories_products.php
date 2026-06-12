@@ -29,6 +29,11 @@ return new class extends Migration
         if (Schema::getConnection()->getDriverName() === 'mysql') {
             DB::statement('ALTER TABLE suppliers ADD CONSTRAINT chk_rating CHECK (rating >= 0.00 AND rating <= 5.00)');
             DB::statement('ALTER TABLE suppliers ADD CONSTRAINT chk_delivery_time CHECK (delivery_time >= 0)');
+            try {
+                DB::statement('ALTER TABLE suppliers ADD FULLTEXT KEY ft_suppliers_name (`name`)');
+            } catch (Throwable) {
+                // optional
+            }
         }
 
         Schema::create('categories', function (Blueprint $table) {
@@ -52,11 +57,12 @@ return new class extends Migration
             $table->unsignedBigInteger('category_id')->nullable();
             $table->unsignedBigInteger('supplier_id')->nullable();
             $table->string('name', 200);
+            $table->string('sku', 64)->nullable()->unique('products_sku_unique');
             $table->text('description')->nullable();
             $table->string('image', 255)->nullable();
             $table->json('images')->nullable();
             $table->decimal('sale_price', 10, 2)->default(0);
-            $table->decimal('purchase_price', 10, 2)->default(0);
+            $table->decimal('purchase_price', 12, 2)->default(0);
             $table->integer('stock_current')->default(0);
             $table->integer('stock_minimum')->default(0);
             $table->enum('status', ['active', 'inactive', 'out_of_stock', 'discontinued'])->default('active');

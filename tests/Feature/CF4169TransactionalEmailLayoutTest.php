@@ -16,7 +16,6 @@ use App\Notifications\ProductReviewReminderNotification;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -28,18 +27,7 @@ class CF4169TransactionalEmailLayoutTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-        foreach (['sales', 'sale_items', 'client_table', 'admins', 'products'] as $table) {
-            if (! Schema::hasTable($table)) {
-                $this->markTestSkipped('Falta la tabla requerida: '.$table);
-            }
-        }
-
+        parent::setUp();
         Config::set('mail.default', 'array');
         Config::set('app.url', 'https://cf4.example.test');
         Config::set('app.frontend_url', 'https://cf4.example.test');

@@ -5,25 +5,11 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class CatalogSuggestionsImagePlaceholderTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        try {
-            parent::setUp();
-
-            if (Schema::getConnection()->getDriverName() !== 'mysql') {
-                $this->markTestSkipped('Catalog suggestions placeholder test requires MySQL.');
-            }
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Database unavailable: '.$e->getMessage());
-        }
-    }
 
     public function test_product_suggestion_includes_placeholder_metadata_without_default_png_url(): void
     {

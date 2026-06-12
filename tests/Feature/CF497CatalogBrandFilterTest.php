@@ -5,78 +5,82 @@ namespace Tests\Feature;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF497CatalogBrandFilterTest extends TestCase
 {
-    protected function setUp(): void
+    use RefreshDatabase;
+
+    /**
+     * @return array{0: Brand, 1: Brand, 2: Product, 3: Product, 4: Category}
+     */
+    private function seedTwoBrandsWithActiveProducts(): array
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('CatalogBrandFilterTest requiere MySQL.');
-        }
-        foreach (['products', 'brands', 'products_brand', 'categories'] as $table) {
-            if (! Schema::hasTable($table)) {
-                $this->markTestSkipped("Falta la tabla requerida ({$table}).");
-            }
-        }
+        $category = Category::create([
+            'name' => 'CF497 Categoría',
+            'description' => null,
+            'parent_category_id' => null,
+        ]);
+        $brandA = Brand::create(['name' => 'Marca A CF497']);
+        $brandB = Brand::create(['name' => 'Marca B CF497']);
+
+        $productA = Product::create([
+            'category_id' => $category->category_id,
+            'supplier_id' => null,
+            'name' => 'Producto Marca A',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 1000,
+            'purchase_price' => 500,
+            'stock_current' => 5,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+        $productA->brands()->attach($brandA->id);
+
+        $productB = Product::create([
+            'category_id' => $category->category_id,
+            'supplier_id' => null,
+            'name' => 'Producto Marca B',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 2000,
+            'purchase_price' => 800,
+            'stock_current' => 3,
+            'stock_minimum' => 1,
+            'status' => 'active',
+        ]);
+        $productB->brands()->attach($brandB->id);
+
+        return [$brandA, $brandB, $productA, $productB, $category];
     }
 
-    /** Filters by brand: includes selected brand's products and excludes others. */
     public function test_brand_filter_returns_only_products_of_selected_brand(): void
     {
-        $brandA = Brand::where('name', 'like', '%')->orderBy('id')->first();
-        $brandB = Brand::where('id', '!=', $brandA?->id)->orderBy('id')->first();
-
-        if (! $brandA || ! $brandB) {
-            $this->markTestSkipped('Se necesitan al menos dos marcas en la base de datos.');
-        }
-
-        $productOfA = $brandA->products()->whereRaw(
-            'LOWER(TRIM(COALESCE(status, \'\'))) IN (\'active\', \'activo\')'
-        )->where('stock_current', '>', 0)->first();
-
-        $productOfB = $brandB->products()->whereRaw(
-            'LOWER(TRIM(COALESCE(status, \'\'))) IN (\'active\', \'activo\')'
-        )->where('stock_current', '>', 0)->first();
-
-        if (! $productOfA instanceof Product || ! $productOfB instanceof Product) {
-            $this->markTestSkipped('Se necesita al menos un producto activo por cada una de las dos marcas.');
-        }
+        [$brandA, $brandB, $productA, $productB] = $this->seedTwoBrandsWithActiveProducts();
 
         $this->get(route('clients.catalog', ['brand_id' => $brandA->id]))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Client/Catalog/Index', false)
-                ->where('products', function ($products) use ($productOfA, $productOfB) {
+                ->where('products', function ($products) use ($productA, $productB) {
                     $ids = collect($products)->pluck('id')->all();
 
-                    return in_array((int) $productOfA->product_id, $ids, true)
-                        && ! in_array((int) $productOfB->product_id, $ids, true);
+                    return in_array((int) $productA->product_id, $ids, true)
+                        && ! in_array((int) $productB->product_id, $ids, true);
                 })
             );
     }
 
-    /** Combining brand, category and price filters produces no errors. */
     public function test_brand_filter_combined_with_category_and_price_filters_applies_without_errors(): void
     {
-        $brand = Brand::has('products')->orderBy('id')->first();
-
-        if (! $brand) {
-            $this->markTestSkipped('Se necesita al menos una marca con productos en la base de datos.');
-        }
-
-        $category = Category::whereNull('parent_category_id')->first();
+        [$brandA, , , , $category] = $this->seedTwoBrandsWithActiveProducts();
 
         $this->get(route('clients.catalog', [
-            'brand_id' => $brand->id,
-            'category_id' => $category?->category_id,
+            'brand_id' => $brandA->id,
+            'category_id' => $category->category_id,
             'min_price' => '0',
             'max_price' => '9999999',
         ]))
@@ -88,34 +92,21 @@ class CF497CatalogBrandFilterTest extends TestCase
             );
     }
 
-    /** Filtering by brand and category simultaneously returns only products matching both. */
     public function test_brand_and_category_filter_returns_only_products_matching_both(): void
     {
-        $brand = Brand::has('products')->orderBy('id')->first();
-
-        if (! $brand) {
-            $this->markTestSkipped('Se necesita al menos una marca con productos.');
-        }
-
-        $product = $brand->products()->whereRaw(
-            'LOWER(TRIM(COALESCE(status, \'\'))) IN (\'active\', \'activo\')'
-        )->where('stock_current', '>', 0)->first();
-
-        if (! $product instanceof Product || ! $product->category_id) {
-            $this->markTestSkipped('No hay un producto activo con categoría para la marca seleccionada.');
-        }
+        [$brandA, , $productA] = $this->seedTwoBrandsWithActiveProducts();
 
         $this->get(route('clients.catalog', [
-            'brand_id' => $brand->id,
-            'category_id' => $product->category_id,
+            'brand_id' => $brandA->id,
+            'category_id' => $productA->category_id,
         ]))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Client/Catalog/Index', false)
-                ->where('products', function ($products) use ($brand, $product) {
+                ->where('products', function ($products) use ($brandA, $productA) {
                     foreach ($products as $row) {
-                        $belongsToBrand = collect($row['brands'] ?? [])->contains('id', $brand->id);
-                        $inCategory = (int) ($row['category']['id'] ?? 0) === (int) $product->category_id;
+                        $belongsToBrand = collect($row['brands'] ?? [])->contains('id', $brandA->id);
+                        $inCategory = (int) ($row['category']['id'] ?? 0) === (int) $productA->category_id;
                         if (! $belongsToBrand || ! $inCategory) {
                             return false;
                         }
@@ -126,12 +117,9 @@ class CF497CatalogBrandFilterTest extends TestCase
             );
     }
 
-    /** A non-existent brand returns an empty list without error. */
     public function test_nonexistent_brand_returns_empty_list_without_error(): void
     {
-        $nonExistentId = PHP_INT_MAX;
-
-        $this->get(route('clients.catalog', ['brand_id' => $nonExistentId]))
+        $this->get(route('clients.catalog', ['brand_id' => PHP_INT_MAX]))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Client/Catalog/Index', false)
@@ -140,17 +128,27 @@ class CF497CatalogBrandFilterTest extends TestCase
             );
     }
 
-    /** A brand with no active products returns an empty list without error. */
     public function test_brand_with_no_active_products_returns_empty_list(): void
     {
-        $brand = Brand::whereDoesntHave('products', function ($q) {
-            $q->whereRaw('LOWER(TRIM(COALESCE(status, \'\'))) IN (\'active\', \'activo\')')
-                ->where('stock_current', '>', 0);
-        })->first();
-
-        if (! $brand) {
-            $this->markTestSkipped('No hay ninguna marca sin productos activos en la base de datos.');
-        }
+        $brand = Brand::create(['name' => 'Marca Sin Activos CF497']);
+        $category = Category::create([
+            'name' => 'CF497 Inactiva',
+            'description' => null,
+            'parent_category_id' => null,
+        ]);
+        $inactive = Product::create([
+            'category_id' => $category->category_id,
+            'supplier_id' => null,
+            'name' => 'Producto Inactivo CF497',
+            'description' => null,
+            'image' => 'default.png',
+            'sale_price' => 500,
+            'purchase_price' => 100,
+            'stock_current' => 0,
+            'stock_minimum' => 1,
+            'status' => 'inactive',
+        ]);
+        $inactive->brands()->attach($brand->id);
 
         $this->get(route('clients.catalog', ['brand_id' => $brand->id]))
             ->assertOk()
@@ -160,38 +158,28 @@ class CF497CatalogBrandFilterTest extends TestCase
             );
     }
 
-    /** The paginator preserves brand_id in the URL when filtering. */
     public function test_brand_filter_is_reflected_in_url_and_preserved_in_paginator(): void
     {
-        $brand = Brand::has('products')->orderBy('id')->first();
+        [$brandA] = $this->seedTwoBrandsWithActiveProducts();
 
-        if (! $brand) {
-            $this->markTestSkipped('Se necesita al menos una marca con productos en la base de datos.');
-        }
-
-        $this->get(route('clients.catalog', ['brand_id' => $brand->id]))
+        $this->get(route('clients.catalog', ['brand_id' => $brandA->id]))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Client/Catalog/Index', false)
-                ->where('pagination.links', function ($links) use ($brand) {
+                ->where('pagination.links', function ($links) use ($brandA) {
                     $url = collect($links)->firstWhere('active', true)['url'] ?? '';
 
-                    return str_contains((string) $url, 'brand_id='.$brand->id);
+                    return str_contains((string) $url, 'brand_id='.$brandA->id);
                 })
             );
     }
 
-    /** Filtering by brand still respects the price range without breaking its behavior. */
     public function test_brand_filter_does_not_break_price_filter_behavior(): void
     {
-        $brand = Brand::has('products')->orderBy('id')->first();
-
-        if (! $brand) {
-            $this->markTestSkipped('Se necesita al menos una marca con productos.');
-        }
+        [$brandA] = $this->seedTwoBrandsWithActiveProducts();
 
         $this->get(route('clients.catalog', [
-            'brand_id' => $brand->id,
+            'brand_id' => $brandA->id,
             'min_price' => '999999',
             'max_price' => '999999',
         ]))

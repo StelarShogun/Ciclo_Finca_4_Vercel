@@ -14,30 +14,20 @@ use App\Support\AdminDateRange;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon as SupportCarbon;
-use Tests\Support\InteractsWithMysqlTestDatabase;
 use Tests\TestCase;
 
 class CF4157AdminTodayDateFilterTest extends TestCase
 {
-    use InteractsWithMysqlTestDatabase;
     use RefreshDatabase;
 
     private AdminUser $admin;
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible: '.$e->getMessage());
-        }
-
-        $this->skipUnlessMysqlTestDatabase(['sales', 'admins', 'orders', 'products', 'inventory_movements', 'audit_logs']);
-
+        parent::setUp();
         config(['app.timezone' => 'America/Costa_Rica']);
         Carbon::setTestNow(Carbon::parse('2026-05-22 23:58:00', 'America/Costa_Rica'));
         SupportCarbon::setTestNow(Carbon::parse('2026-05-22 23:58:00', 'America/Costa_Rica'));
-
         $this->admin = AdminUser::firstOrCreate(
             ['gmail' => 'admin-cf4157@example.com'],
             [

@@ -11,7 +11,6 @@ use App\Notifications\OrderCancelledNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class OrderCancellationNotificationTest extends TestCase
@@ -20,22 +19,7 @@ class OrderCancellationNotificationTest extends TestCase
 
     protected function setUp(): void
     {
-        try {
-            parent::setUp();
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Base de datos no disponible para tests: '.$e->getMessage());
-        }
-
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('Estos tests requieren MySQL.');
-        }
-
-        foreach (['sales', 'sale_items', 'client_table', 'admins', 'notifications', 'order_notification_logs'] as $table) {
-            if (! Schema::hasTable($table)) {
-                $this->markTestSkipped('Tabla requerida no existe: '.$table);
-            }
-        }
-
+        parent::setUp();
         Config::set('mail.default', 'array');
         Config::set('sales.order_expiration_days', 30);
     }
