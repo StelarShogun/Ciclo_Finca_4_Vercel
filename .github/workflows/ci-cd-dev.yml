@@ -21,6 +21,7 @@ permissions:
 
 env:
   PRODUCTION_URL: https://ciclo-finca-4-app-g0j4.onrender.com
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   php-checks:
@@ -132,7 +133,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
 
       - name: Install npm dependencies
@@ -204,7 +205,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
 
       - name: Install Composer dependencies
@@ -279,6 +280,7 @@ jobs:
           - 4444:4444
         options: >-
           --shm-size=2gb
+          --add-host=host.docker.internal:host-gateway
 
     env:
       APP_ENV: local
@@ -304,7 +306,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
 
       - name: Install Composer dependencies
@@ -344,7 +346,7 @@ jobs:
           APP_ENV=local
           APP_KEY=${APP_KEY}
           APP_DEBUG=true
-          APP_URL=http://127.0.0.1:8000
+          APP_URL=http://host.docker.internal:8000
           LARAVEL_SAIL=1
           DUSK_DRIVER_URL=http://localhost:4444/wd/hub
           DB_CONNECTION=mysql
@@ -376,7 +378,7 @@ jobs:
 
       - name: Start application server
         run: |
-          php artisan serve --host=127.0.0.1 --port=8000 --no-reload &
+          php artisan serve --host=0.0.0.0 --port=8000 --no-reload &
           for i in {1..30}; do
             if curl -fsS http://127.0.0.1:8000/up >/dev/null; then
               echo "Application server is up"
@@ -388,7 +390,7 @@ jobs:
           exit 1
 
       - name: Dusk — Seguimiento 8 UI tests
-        run: php artisan dusk --group=seguimiento8
+        run: php artisan dusk --group=seguimiento8 --without-tty
 
   deploy:
     name: CD — Deploy to Render (production)
