@@ -12,6 +12,8 @@ use PHPUnit\Framework\Attributes\BeforeClass;
 
 abstract class DuskTestCase extends BaseTestCase
 {
+    protected const LOCAL_CHROMEDRIVER_URL = 'http://localhost:9515';
+
     /**
      * Prepare for Dusk test execution.
      */
@@ -25,11 +27,11 @@ abstract class DuskTestCase extends BaseTestCase
 
     protected static function usingRemoteDriver(): bool
     {
-        $driverUrl = $_ENV['DUSK_DRIVER_URL'] ?? $_SERVER['DUSK_DRIVER_URL'] ?? getenv('DUSK_DRIVER_URL');
+        $driverUrl = env('DUSK_DRIVER_URL');
 
         return is_string($driverUrl)
             && $driverUrl !== ''
-            && $driverUrl !== 'http://localhost:9515';
+            && $driverUrl !== self::LOCAL_CHROMEDRIVER_URL;
     }
 
     /**
