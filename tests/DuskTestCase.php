@@ -18,9 +18,61 @@ abstract class DuskTestCase extends BaseTestCase
     #[BeforeClass]
     public static function prepare(): void
     {
-        if (! static::runningInSail()) {
-            static::startChromeDriver(['--port=9515']);
+        if (static::runningInSail() || static::usesRemoteWebDriver()) {
+            return;
         }
+
+        static::startChromeDriver(['--port=9515']);
+    }
+
+    /**
+     * Resolve the WebDriver endpoint for Dusk.
+     */
+    protected static function duskDriverUrl(): string
+    {
+        foreach (['DUSK_DRIVER_URL'] as $key) {
+            if (! empty($_ENV[$key])) {
+                return $_ENV[$key];
+            }
+
+            if (! empty($_SERVER[$key])) {
+                return $_SERVER[$key];
+            }
+
+            $fromEnv = getenv($key);
+
+            if ($fromEnv !== false && $fromEnv !== '') {
+                return $fromEnv;
+            }
+        }
+
+        $envPath = dirname(__DIR__).'/.env';
+
+        if (is_readable($envPath)) {
+            foreach (file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
+                $line = trim($line);
+
+                if ($line === '' || str_starts_with($line, '#') || ! str_contains($line, '=')) {
+                    continue;
+                }
+
+                [$name, $value] = array_pad(explode('=', $line, 2), 2, '');
+
+                if ($name === 'DUSK_DRIVER_URL') {
+                    return trim($value, " \t\n\r\0\x0B\"'");
+                }
+            }
+        }
+
+        return 'http://localhost:9515';
+    }
+
+    /**
+     * Determine if tests should talk to a remote Selenium server.
+     */
+    protected static function usesRemoteWebDriver(): bool
+    {
+        return str_ends_with(static::duskDriverUrl(), '/wd/hub');
     }
 
     /**
@@ -48,9 +100,9 @@ abstract class DuskTestCase extends BaseTestCase
 
         $options = (new ChromeOptions)->addArguments($arguments->all());
 
-        $driverUrl = $_ENV['DUSK_DRIVER_URL'] ?? $_SERVER['DUSK_DRIVER_URL'] ?? 'http://localhost:9515';
+        $driverUrl = static::duskDriverUrl();
 
-        if (! str_ends_with($driverUrl, '/wd/hub')) {
+        if (! static::usesRemoteWebDriver()) {
             foreach (['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome'] as $chromeBinary) {
                 if (is_executable($chromeBinary)) {
                     $options->setBinary($chromeBinary);
