@@ -7,6 +7,7 @@ use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Collection;
+use Laravel\Dusk\Browser;
 use Laravel\Dusk\TestCase as BaseTestCase;
 use PHPUnit\Framework\Attributes\BeforeClass;
 
@@ -130,5 +131,37 @@ abstract class DuskTestCase extends BaseTestCase
         $app->make(Kernel::class)->bootstrap();
 
         return $app;
+    }
+
+    /**
+     * Fill a React/Inertia controlled input so state updates before submit.
+     */
+    protected function fillControlledInput(Browser $browser, string $selector, string $value): Browser
+    {
+        $browser->script(
+            <<<'JS'
+            const el = document.querySelector(arguments[0]);
+            if (!el) {
+                throw new Error('Missing element: ' + arguments[0]);
+            }
+
+            const proto = el instanceof HTMLTextAreaElement
+                ? window.HTMLTextAreaElement.prototype
+                : window.HTMLInputElement.prototype;
+            const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+
+            if (setter) {
+                setter.call(el, arguments[1]);
+            } else {
+                el.value = arguments[1];
+            }
+
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            JS,
+            [$selector, $value]
+        );
+
+        return $browser;
     }
 }

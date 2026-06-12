@@ -356,6 +356,7 @@ jobs:
           DB_USERNAME=laravel
           DB_PASSWORD=password
           SESSION_DRIVER=database
+          SESSION_SECURE_COOKIE=false
           CACHE_STORE=file
           QUEUE_CONNECTION=sync
           MAIL_MAILER=log
@@ -363,6 +364,7 @@ jobs:
           RECAPTCHA_SITE_KEY=
           RECAPTCHA_SECRET_KEY=
           EOF
+          cp .env.dusk.local .env
 
       - name: Wait for Selenium
         run: |

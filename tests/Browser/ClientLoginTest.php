@@ -33,10 +33,10 @@ class ClientLoginTest extends DuskTestCase
 
         $this->browse(function (Browser $browser): void {
             $browser->visit('/login')
-                ->waitFor('#public-login-form', 10)
-                ->type('#login-email', 'cliente-dusk@example.com')
-                ->type('#login-password', 'password')
-                ->press('#login-submit-btn')
+                ->waitFor('#public-login-form', 10);
+            $this->fillControlledInput($browser, '#login-email', 'cliente-dusk@example.com');
+            $this->fillControlledInput($browser, '#login-password', 'password');
+            $browser->press('#login-submit-btn')
                 ->waitForLocation('/catalog', 15)
                 ->assertPathIs('/catalog');
         });
