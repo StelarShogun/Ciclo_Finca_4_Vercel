@@ -1,6 +1,13 @@
 import { Link } from '@inertiajs/react';
 
-export function CartEmptyState() {
+import { ImageFallback } from '@/shared/components/ui/ImageFallback';
+import type { CartFeaturedProduct } from '@/features/client/cart/types';
+
+type CartEmptyStateProps = {
+  featuredProducts?: CartFeaturedProduct[];
+};
+
+export function CartEmptyState({ featuredProducts = [] }: CartEmptyStateProps) {
   return (
     <div className="cart-empty">
       <div className="cart-empty-inner">
@@ -25,6 +32,28 @@ export function CartEmptyState() {
           </Link>
         </p>
       </div>
+
+      {featuredProducts.length > 0 ? (
+        <div className="cart-empty-featured" aria-labelledby="cart-empty-featured-title">
+          <h3 id="cart-empty-featured-title" className="cart-empty-featured__title">
+            <i className="fas fa-star" aria-hidden="true" />
+            Productos destacados
+          </h3>
+          <ul className="cart-empty-featured__grid">
+            {featuredProducts.map((product) => (
+              <li key={product.id} className="cart-empty-featured__item">
+                <Link href={product.url} className="cart-empty-featured__card">
+                  <span className="cart-empty-featured__media">
+                    <ImageFallback image={product.image} alt={product.name} />
+                  </span>
+                  <span className="cart-empty-featured__name">{product.name}</span>
+                  <span className="cart-empty-featured__price">{product.priceFormatted}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#051F20" id="cf4-theme-color">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">

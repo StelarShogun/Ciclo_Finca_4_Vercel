@@ -170,6 +170,7 @@
 
 /* ---- main layout grid (glass card) ---- */
 .cf4-state-layout {
+    --cf4-state-message-color: #3a5244;
     width: min(1100px, 100%);
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -232,15 +233,15 @@
     align-items: center;
     gap: 7px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.13em;
     text-transform: uppercase;
-    color: var(--brand-medium);
-    background: rgba(142, 182, 155, 0.18);
-    border: 1px solid rgba(142, 182, 155, 0.45);
+    color: var(--brand-medium-dark);
+    background: rgba(142, 182, 155, 0.24);
+    border: 1px solid rgba(35, 83, 71, 0.35);
     border-radius: 999px;
     padding: 5px 14px 5px 10px;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
 }
 
 .cf4-state-eyebrow-dot {
@@ -255,7 +256,7 @@
     font-weight: 800;
     line-height: 0.88;
     margin: 0 0 16px;
-    background: linear-gradient(150deg, var(--brand-darkest) 0%, var(--brand-medium) 100%);
+    background: linear-gradient(150deg, var(--brand-darkest) 0%, var(--brand-medium-dark) 42%, var(--brand-medium) 72%, #4d8169 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -273,7 +274,7 @@
 .cf4-state-message {
     font-size: 1rem;
     line-height: 1.7;
-    color: #3a5244;
+    color: var(--cf4-state-message-color, #3a5244);
     margin: 0 0 36px;
     max-width: 420px;
 }
@@ -402,18 +403,36 @@
     margin: 0 auto;
     border-radius: 28px;
     overflow: hidden;
-    background: linear-gradient(180deg, #f3dfd0 0%, #e8b88e 45%, #c49a6c 100%);
-    box-shadow: 0 26px 52px rgba(14, 45, 80, 0.22);
+    background: linear-gradient(170deg, #f1faf4 0%, #e3f1e9 55%, #d2e7da 100%);
+    box-shadow: 0 26px 52px rgba(11, 43, 38, 0.2);
     transition: opacity 220ms ease, transform 220ms ease;
 }
 
+/* anillo interior + viñeta inferior sutil sobre la ilustración */
+.cf4-bike-scene::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow:
+        0 0 0 1px rgba(142, 182, 155, 0.35) inset,
+        0 -36px 64px rgba(5, 31, 32, 0.06) inset;
+    pointer-events: none;
+}
+
 .cf4-bike-scene--plain {
-    background: transparent;
+    background: linear-gradient(170deg, #f1faf4 0%, #e3f1e9 55%, #d2e7da 100%);
 }
 
 /* Carrito vacío (embed + plain): sin recorte al flotar la canasta unos px */
 .cf4-state-layout--embed .cf4-bike-scene--plain {
     overflow: visible;
+    background: transparent;
+    box-shadow: none;
+}
+
+.cf4-state-layout--embed .cf4-bike-scene--plain::after {
+    display: none;
 }
 
 .cf4-bike-scene svg {
@@ -470,6 +489,7 @@
 
 /* ---- dark mode ---- */
 html[data-theme="dark"] .cf4-state-layout {
+    --cf4-state-message-color: var(--text-secondary, #b6cabb);
     background: rgba(7, 31, 31, 0.78);
     border-color: rgba(142, 182, 155, 0.22);
     box-shadow:
@@ -507,6 +527,18 @@ html[data-theme="dark"] .cf4-state-btn-secondary {
 html[data-theme="dark"] .cf4-state-btn-secondary:hover {
     background: rgba(129, 199, 132, 0.18);
     border-color: var(--brand-light);
+}
+
+/* Las ilustraciones quedan claras a propósito (ilustración enmarcada dentro de la
+   card oscura, igual que la escena 404); solo se ajusta el marco del panel. */
+html[data-theme="dark"] .cf4-bike-scene {
+    box-shadow: 0 26px 52px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme="dark"] .cf4-bike-scene::after {
+    box-shadow:
+        0 0 0 1px rgba(129, 199, 132, 0.26) inset,
+        0 -36px 64px rgba(0, 0, 0, 0.14) inset;
 }
 
 /* ---- responsive ---- */

@@ -6,7 +6,6 @@ import { ProfilePasswordCard } from '@/features/client/profile/components/Profil
 import { ProfilePersonalDataCard } from '@/features/client/profile/components/ProfilePersonalDataCard';
 import { fullName, passwordStrengthLevel } from '@/features/client/profile/lib/profileFormUtils';
 import { useToast } from '@/shared/hooks/useToast';
-import { confirm } from '@/shared/lib/confirm';
 import { ClientLayout } from '@/shared/components/layout/ClientLayout';
 import type { InertiaSharedProps } from '@/shared/types/models';
 import type { ProfileClient, ProfileFlash } from '@/types/profile';
@@ -76,19 +75,7 @@ export default function ProfileIndex({ profile, profileFlash }: ProfilePageProps
     setIsEditing(false);
   }
 
-  async function saveProfile() {
-    const confirmed = await confirm({
-      title: '¿Guardar cambios?',
-      text: 'Se actualizarán tus datos personales.',
-      icon: 'question',
-      confirmButtonText: 'Sí, guardar',
-      cancelButtonText: 'Cancelar',
-    });
-
-    if (!confirmed.isConfirmed) {
-      return;
-    }
-
+  function saveProfile() {
     profileForm.put('/profile', {
       preserveScroll: true,
       onSuccess: () => setIsEditing(false),

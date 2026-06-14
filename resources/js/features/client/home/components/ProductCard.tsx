@@ -2,6 +2,7 @@ import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import { ImageFallback } from '@/shared/components/ui/ImageFallback';
+import { useToast } from '@/shared/hooks/useToast';
 import { addToCart } from '@/features/client/cart/api';
 import type { HomeProduct } from '@/types/home';
 
@@ -13,12 +14,16 @@ type ProductCardProps = {
 
 export function ProductCard({ product, isAuthenticated, csrfToken }: ProductCardProps) {
   const [isAdding, setIsAdding] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const { showToast } = useToast();
   const isOutOfStock = product.stockLabel === 'Agotado';
 
   async function handleAddToCart() {
     if (!product.canBuy) {
-      setStatusMessage('Este producto no tiene unidades disponibles.');
+      showToast({
+        variant: 'warning',
+        title: 'No disponible',
+        message: 'Este producto no tiene unidades disponibles.',
+      });
       return;
     }
 
@@ -28,24 +33,35 @@ export function ProductCard({ product, isAuthenticated, csrfToken }: ProductCard
     }
 
     setIsAdding(true);
-    setStatusMessage(null);
 
     try {
       const payload = await addToCart(product.id, 1, csrfToken);
 
       if (!payload.success) {
-        setStatusMessage(payload.message ?? 'No se pudo agregar el producto.');
+        showToast({
+          variant: 'error',
+          title: 'No se pudo agregar',
+          message: payload.message ?? 'No se pudo agregar el producto.',
+        });
         return;
       }
 
-      setStatusMessage(payload.message ?? 'Producto agregado al carrito.');
+      showToast({
+        variant: 'success',
+        title: 'Producto agregado',
+        message: payload.message ?? `${product.name} se agregó al carrito.`,
+      });
       window.dispatchEvent(
         new CustomEvent('cf4:cart-count', {
           detail: { count: payload.cartCount },
         }),
       );
     } catch {
-      setStatusMessage('No se pudo agregar el producto. Inténtalo de nuevo.');
+      showToast({
+        variant: 'error',
+        title: 'Error',
+        message: 'No se pudo agregar el producto. Inténtalo de nuevo.',
+      });
     } finally {
       setIsAdding(false);
     }
@@ -109,11 +125,6 @@ export function ProductCard({ product, isAuthenticated, csrfToken }: ProductCard
           </div>
         </div>
 
-        {statusMessage ? (
-          <p className="product-card-status" role="status">
-            {statusMessage}
-          </p>
-        ) : null}
       </div>
     </article>
   );

@@ -33,7 +33,10 @@
     </button>
 </div>
 
-<div class="edit-modal" id="import-modal">
+<div class="edit-modal" id="import-modal"
+    data-active-url="{{ route('products.import.active') }}"
+    data-progress-url="{{ route('products.import.progress', ['importId' => '__ID__']) }}"
+    data-dismiss-url="{{ route('products.import.dismiss') }}">
     <div class="modal-backdrop"></div>
     <div class="modal-content modal-auto-size">
         <div class="modal-header">
@@ -77,5 +80,43 @@
                 <button type="button" class="btn btn-primary" id="confirm-import" disabled>Importar</button>
             </div>
         </form>
+
+        <div id="import-progress" class="import-progress" hidden aria-live="polite">
+            <div class="modal-body">
+                <div class="import-progress__head">
+                    <span class="import-progress__icon" id="import-progress-icon" data-state="running">
+                        <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                    </span>
+                    <div class="import-progress__headings">
+                        <h4 class="import-progress__title" id="import-progress-title">Importando productos…</h4>
+                        <p class="import-progress__file" id="import-progress-file"></p>
+                    </div>
+                </div>
+
+                <div class="import-progress__bar" id="import-progress-bar" role="progressbar"
+                     aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="import-progress__fill" id="import-progress-fill" style="width: 0%"></div>
+                </div>
+
+                <p class="import-progress__message" id="import-progress-message">En cola, iniciando…</p>
+
+                <div class="import-progress__stats">
+                    <span class="import-progress__stat"><strong id="import-stat-created">0</strong> creados</span>
+                    <span class="import-progress__stat"><strong id="import-stat-updated">0</strong> actualizados</span>
+                    <span class="import-progress__stat"><strong id="import-stat-skipped">0</strong> omitidos</span>
+                    <span class="import-progress__stat import-progress__stat--errors"><strong id="import-stat-errors">0</strong> errores</span>
+                </div>
+
+                <p class="import-progress__hint" id="import-progress-hint">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    Podés cerrar esta ventana y seguir trabajando; la importación continúa.
+                    Volvé a <strong>Importar</strong> para ver el avance.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="import-progress-close">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="import-progress-done" hidden>Listo</button>
+            </div>
+        </div>
     </div>
 </div>

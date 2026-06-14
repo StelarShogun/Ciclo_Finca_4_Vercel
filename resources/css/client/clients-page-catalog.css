@@ -3074,6 +3074,161 @@ select.catalog-toolbar-select:focus,
   border-bottom-color: rgba(46, 125, 50, 0.35);
 }
 
+/* Destacados en el carrito vacío */
+.cart-empty-featured {
+  max-width: 60rem;
+  margin: clamp(2rem, 5vw, 3rem) auto 0;
+  padding-top: clamp(1.5rem, 4vw, 2.25rem);
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.cart-empty-featured__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 auto 1.4rem;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  background: var(--color-success-bg);
+  border: 1px solid rgba(46, 125, 50, 0.22);
+}
+
+.cart-empty-featured__title i {
+  color: var(--color-primary);
+}
+
+.cart-empty-featured__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+  gap: 1.1rem;
+}
+
+.cart-empty-featured__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  background: var(--background-white);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 1px 2px rgba(5, 31, 32, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.cart-empty-featured__card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(5, 31, 32, 0.14);
+  border-color: var(--color-primary-light);
+}
+
+.cart-empty-featured__media {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(142, 182, 155, 0.18), transparent 60%),
+    linear-gradient(160deg, #f3faf5 0%, #e6f2ea 100%);
+}
+
+.cart-empty-featured__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 -1px 0 var(--border-color);
+  pointer-events: none;
+}
+
+.cart-empty-featured__media :is(img, picture) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.cart-empty-featured__card:hover .cart-empty-featured__media :is(img, picture) {
+  transform: scale(1.05);
+}
+
+.cart-empty-featured__media .product-media-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+  color: var(--color-primary-light);
+  opacity: 0.55;
+}
+
+.cart-empty-featured__name {
+  padding: 0.8rem 0.85rem 0.3rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cart-empty-featured__price {
+  padding: 0 0.85rem 0.9rem;
+  margin-top: auto;
+  font-weight: 800;
+  font-size: 1.02rem;
+  color: var(--color-primary);
+}
+
+/* ---- dark mode ---- */
+html[data-theme="dark"] .cart-empty-featured__title {
+  color: var(--brand-light, #81c784);
+  background: rgba(129, 199, 132, 0.1);
+  border-color: rgba(129, 199, 132, 0.28);
+}
+
+html[data-theme="dark"] .cart-empty-featured__title i,
+html[data-theme="dark"] .cart-empty-featured__price {
+  color: var(--brand-light, #81c784);
+}
+
+html[data-theme="dark"] .cart-empty-featured__card {
+  background: var(--background-white);
+  border-color: var(--border-color);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="dark"] .cart-empty-featured__card:hover {
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+  border-color: rgba(129, 199, 132, 0.5);
+}
+
+/* placeholder/imagen con tinte oscuro de marca en vez de fondo claro lavado */
+html[data-theme="dark"] .cart-empty-featured__media {
+  background:
+    radial-gradient(circle at 30% 25%, rgba(129, 199, 132, 0.14), transparent 60%),
+    linear-gradient(160deg, #0d2b27 0%, #071f1f 100%);
+}
+
+html[data-theme="dark"] .cart-empty-featured__media .product-media-placeholder {
+  color: var(--brand-light, #81c784);
+  opacity: 0.45;
+}
+
 /* Product preview inside the add-to-cart modal */
 .product-preview {
   display: flex;

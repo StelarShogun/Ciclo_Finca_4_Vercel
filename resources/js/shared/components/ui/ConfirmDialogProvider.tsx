@@ -7,10 +7,12 @@ import { Modal } from '@/shared/components/ui/Modal';
 export type ConfirmDialogOptions = {
   title?: string;
   text?: ReactNode;
+  content?: ReactNode;
   confirmText?: string;
   cancelText?: string;
   icon?: 'warning' | 'error' | 'info' | 'question';
   confirmButtonColor?: string;
+  wide?: boolean;
 };
 
 type ConfirmDialogContextValue = {
@@ -74,7 +76,7 @@ export function ConfirmDialogProvider({ children }: PropsWithChildren) {
         isOpen={pending !== null}
         onClose={() => close(false)}
         title={pending?.options.title ?? '¿Continuar?'}
-        className="cf4-confirm-dialog"
+        className={`cf4-confirm-dialog${pending?.options.wide ? ' cf4-confirm-dialog--wide' : ''}`}
         footer={(
           <>
             <Button variant="secondary" onClick={() => close(false)}>
@@ -92,6 +94,7 @@ export function ConfirmDialogProvider({ children }: PropsWithChildren) {
       >
         {pending?.options.icon ? <p className="cf4-confirm-dialog__icon"><i className={iconClass} aria-hidden="true" /></p> : null}
         {pending?.options.text ? <p className="cf4-confirm-dialog__text">{pending.options.text}</p> : null}
+        {pending?.options.content ?? null}
       </Modal>
     </ConfirmDialogContext.Provider>
   );

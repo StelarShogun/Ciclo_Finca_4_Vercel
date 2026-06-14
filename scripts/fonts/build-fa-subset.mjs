@@ -14,6 +14,7 @@
  * Re-run this whenever new `fa-*` classes appear in templates/JS, then
  * `npm run build` so Vite picks up the updated CSS.
  */
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -143,3 +144,24 @@ const manifest = {
 };
 fs.writeFileSync(path.join(OUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2));
 console.log('[fa-subset] Wrote manifest.json.');
+
+// Version the @font-face URLs so browsers re-download the subset after a rebuild
+// (the woff2 path is otherwise stable and gets cached indefinitely).
+const SUBSET_CSS = path.join(ROOT, 'resources', 'css', 'shared', 'fontawesome-subset.css');
+let subsetCss = fs.readFileSync(SUBSET_CSS, 'utf8');
+for (const file of ['fa-solid-900.subset.woff2', 'fa-regular-400.subset.woff2']) {
+    const hash = crypto
+        .createHash('md5')
+        .update(fs.readFileSync(path.join(OUT_DIR, file)))
+        .digest('hex')
+        .slice(0, 8);
+    const urlRx = new RegExp(`url\\("/fonts/fa-subset/${file.replace(/\./g, '\\.')}(?:\\?v=[0-9a-f]+)?"\\)`);
+    if (!urlRx.test(subsetCss)) {
+        console.error(`[fa-subset] Could not find @font-face src for ${file} in ${path.relative(ROOT, SUBSET_CSS)}.`);
+        process.exit(1);
+    }
+    subsetCss = subsetCss.replace(urlRx, `url("/fonts/fa-subset/${file}?v=${hash}")`);
+    console.log(`[fa-subset] ${file} -> ?v=${hash}`);
+}
+fs.writeFileSync(SUBSET_CSS, subsetCss);
+console.log('[fa-subset] Updated versioned URLs in fontawesome-subset.css.');

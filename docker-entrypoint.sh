@@ -110,5 +110,23 @@ chown www-data:www-data storage/logs/scheduler.log
 ) &
 
 echo ">>> Scheduler loop iniciado (schedule:run cada 60s)"
+
+# Worker de cola: procesa importaciones de catálogo y conversiones de imágenes en
+# segundo plano para no bloquear las requests del panel. El --timeout debe superar
+# el timeout del job de importación (1800s). --max-time recicla el proceso cada hora
+# para evitar fugas de memoria; el while lo reinicia.
+touch storage/logs/worker.log
+chown www-data:www-data storage/logs/worker.log
+(
+  su -s /bin/bash www-data -c '
+    cd /var/www/html
+    while true; do
+      php artisan queue:work --sleep=2 --tries=1 --timeout=1860 --max-time=3600 --no-interaction >> storage/logs/worker.log 2>&1
+      sleep 2
+    done
+  '
+) &
+
+echo ">>> Worker de cola iniciado (queue:work, timeout 1860s)"
 echo ">>> Iniciando Apache..."
 exec apache2-foreground

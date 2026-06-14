@@ -1,16 +1,19 @@
 import { router } from '@inertiajs/react';
-import { useCallback, useState } from 'react';
+import { createElement, useCallback, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 
 import { checkoutCart, clearCart, removeCartItem, updateCartItem } from '@/features/client/cart/api';
+import { CartCheckoutConfirm } from '@/features/client/cart/components/CartCheckoutConfirm';
 import type { CartItem, CartPaymentMethod } from '@/features/client/cart/types';
 import { confirm } from '@/shared/lib/confirm';
+import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
 import { useToast } from '@/shared/hooks/useToast';
 
 type UseCartActionsOptions = {
   csrfToken: string;
   items: CartItem[];
   setItems: Dispatch<SetStateAction<CartItem[]>>;
+  totalFormatted: string;
 };
 
 const paymentLabels: Record<CartPaymentMethod, string> = {
@@ -35,8 +38,9 @@ function dispatchCartCount(cartCount?: number) {
   }
 }
 
-export function useCartActions({ csrfToken, items, setItems }: UseCartActionsOptions) {
+export function useCartActions({ csrfToken, items, setItems, totalFormatted }: UseCartActionsOptions) {
   const { showToast } = useToast();
+  const { confirm: confirmDialog } = useConfirmDialog();
   const [busyItemId, setBusyItemId] = useState<number | null>(null);
   const [isClearing, setIsClearing] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -240,15 +244,16 @@ export function useCartActions({ csrfToken, items, setItems }: UseCartActionsOpt
         return;
       }
 
-      const result = await confirm({
-        title: `¿Confirmar pedido con pago por ${paymentLabels[paymentMethod]}?`,
-        text: 'Se enviará tu pedido para retiro en tienda.',
-        icon: 'question',
-        confirmButtonText: 'Sí, confirmar',
-        cancelButtonText: 'Cancelar',
+      const isConfirmed = await confirmDialog({
+        title: 'Confirmar pedido',
+        text: `Revisá tu pedido antes de enviarlo con pago por ${paymentLabels[paymentMethod]}.`,
+        content: createElement(CartCheckoutConfirm, { items, paymentMethod, totalFormatted }),
+        confirmText: 'Sí, confirmar pedido',
+        cancelText: 'Cancelar',
+        wide: true,
       });
 
-      if (!result.isConfirmed) {
+      if (!isConfirmed) {
         return;
       }
 
@@ -284,7 +289,7 @@ export function useCartActions({ csrfToken, items, setItems }: UseCartActionsOpt
         setIsCheckingOut(false);
       }
     },
-    [csrfToken, items.length, setItems, showToast],
+    [confirmDialog, csrfToken, items, setItems, showToast, totalFormatted],
   );
 
   return {

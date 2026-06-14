@@ -15,6 +15,7 @@ import { ClientFooter } from '@/shared/components/client/footer/ClientFooter';
 import { ClientHeader } from '@/shared/components/client/header/ClientHeader';
 import { useFlashToasts } from '@/shared/hooks/useFlashToasts';
 import { useLiveCartCount } from '@/shared/hooks/useLiveCartCount';
+import { useNotificationCount } from '@/shared/hooks/useNotificationCount';
 import { toggleTheme } from '@/shared/theme-toggle';
 import type { InertiaSharedProps } from '@/shared/types/models';
 
@@ -25,6 +26,7 @@ export function ClientLayout({ children }: PropsWithChildren) {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const liveCartCount = useLiveCartCount(cartCount);
+  const notificationCount = useNotificationCount(auth.client !== null);
   const pathname = page.url.split('?')[0] || '/';
   const isCatalog = pathname.startsWith('/catalog') || pathname.startsWith('/product');
   const clientInitials = useMemo(() => {
@@ -99,11 +101,15 @@ export function ClientLayout({ children }: PropsWithChildren) {
 
   return (
     <FavoritesDrawerProvider>
+      <a href="#cf4-main-content" className="cf4-skip-link">
+        Saltar al contenido
+      </a>
       <ClientHeader
         auth={auth}
         cartCount={liveCartCount}
         clientInitials={clientInitials}
         headerRef={headerRef}
+        notificationCount={notificationCount}
         isCatalog={isCatalog}
         isMenuOpen={isMenuOpen}
         isUserMenuOpen={isUserMenuOpen}
@@ -116,7 +122,7 @@ export function ClientLayout({ children }: PropsWithChildren) {
 
       <FavoritesDrawer />
 
-      <main className="cliente-main">{children}</main>
+      <main id="cf4-main-content" className="cliente-main" tabIndex={-1}>{children}</main>
 
       <ClientFooter auth={auth} />
     </FavoritesDrawerProvider>

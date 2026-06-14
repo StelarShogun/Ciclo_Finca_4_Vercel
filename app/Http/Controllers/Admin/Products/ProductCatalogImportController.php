@@ -3,16 +3,82 @@
 namespace App\Http\Controllers\Admin\Products;
 
 use App\Actions\Admin\Products\ExportProductCatalog;
-use App\Actions\Admin\Products\ImportProductCatalog;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Products\ImportCatalogRequest;
+use App\Jobs\RunCatalogImportJob;
+use App\Services\Admin\ProductCatalog\CatalogImportProgress;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class ProductCatalogImportController extends Controller
 {
-    public function import(ImportCatalogRequest $request, ImportProductCatalog $action)
+    /**
+     * Encola la importación y devuelve el importId para seguir el progreso.
+     * El procesamiento corre en un job de cola para no bloquear al administrador.
+     */
+    public function import(ImportCatalogRequest $request): JsonResponse
     {
-        return $action->handle($request);
+        /** @var UploadedFile $file */
+        $file = $request->file('import_file');
+        $adminId = (int) Auth::guard('admin')->id();
+
+        $importId = (string) Str::uuid();
+        $extension = strtolower($file->getClientOriginalExtension()) ?: 'dat';
+        $storedPath = $file->storeAs('catalog-imports', $importId.'.'.$extension, 'local');
+
+        $progress = CatalogImportProgress::queued($importId, $adminId, $file->getClientOriginalName());
+
+        RunCatalogImportJob::dispatch($importId, $adminId, $storedPath, $file->getClientOriginalName());
+
+        return response()->json([
+            'importId' => $importId,
+            'progress' => $progress,
+        ], 202);
+    }
+
+    /**
+     * Devuelve el estado de progreso de una importación concreta (polling).
+     */
+    public function importProgress(string $importId): JsonResponse
+    {
+        $progress = CatalogImportProgress::get($importId);
+
+        if ($progress === null) {
+            return response()->json(['status' => 'unknown'], 404);
+        }
+
+        return response()->json($progress);
+    }
+
+    /**
+     * Importación activa del administrador actual, para reanudar la vista al reabrir.
+     */
+    public function importActive(): JsonResponse
+    {
+        $adminId = (int) Auth::guard('admin')->id();
+        $importId = CatalogImportProgress::activeFor($adminId);
+
+        if ($importId === null) {
+            return response()->json(['importId' => null, 'progress' => null]);
+        }
+
+        return response()->json([
+            'importId' => $importId,
+            'progress' => CatalogImportProgress::get($importId),
+        ]);
+    }
+
+    /**
+     * Olvida la importación activa (al cerrar el resumen o empezar otra).
+     */
+    public function importDismiss(): JsonResponse
+    {
+        CatalogImportProgress::clearActive((int) Auth::guard('admin')->id());
+
+        return response()->json(['ok' => true]);
     }
 
     public function export(Request $request, ExportProductCatalog $action, ?string $format = null)

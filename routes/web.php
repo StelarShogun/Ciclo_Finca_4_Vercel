@@ -234,6 +234,9 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::delete('/products/{id}/force-delete', [ProductStatusController::class, 'forceDelete'])->name('products.force-delete')->whereNumber('id');
     Route::get('/inventory/export/{format?}', [ProductCatalogImportController::class, 'export'])->name('products.export');
     Route::post('/inventory/import', [ProductCatalogImportController::class, 'import'])->name('products.import');
+    Route::get('/inventory/import/active', [ProductCatalogImportController::class, 'importActive'])->name('products.import.active');
+    Route::get('/inventory/import/{importId}/progress', [ProductCatalogImportController::class, 'importProgress'])->name('products.import.progress');
+    Route::post('/inventory/import/dismiss', [ProductCatalogImportController::class, 'importDismiss'])->name('products.import.dismiss');
     Route::post('/inventory/add-manual/{id}', [ProductManualStockController::class, 'add'])
         ->name('products.stock.add')
         ->whereNumber('id');

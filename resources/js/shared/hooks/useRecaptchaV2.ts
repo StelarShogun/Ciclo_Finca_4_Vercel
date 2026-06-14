@@ -11,6 +11,7 @@ declare global {
   interface Window {
     grecaptcha?: {
       render: (el: HTMLElement, options: Record<string, unknown>) => number | string;
+      ready?: (cb: () => void) => void;
     };
   }
 }
@@ -30,13 +31,38 @@ function loadRecaptchaScript(): Promise<void> {
 
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = 'https://www.google.com/recaptcha/api';
+    // Debe ser api.js (con extensión) y render=explicit para usar grecaptcha.render manualmente.
+    script.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
     script.async = true;
     script.defer = true;
     script.dataset.cf4RecaptchaApi = '1';
     script.addEventListener('load', () => resolve());
     script.addEventListener('error', () => reject(new Error('Failed to load reCAPTCHA api')));
     document.head.appendChild(script);
+  });
+}
+
+/** Espera a que grecaptcha esté listo (la API se inicializa de forma asíncrona tras cargar el script). */
+function whenRecaptchaReady(): Promise<void> {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    const check = () => {
+      const g = window.grecaptcha;
+      if (g && typeof g.render === 'function') {
+        if (typeof g.ready === 'function') {
+          g.ready(() => resolve());
+        } else {
+          resolve();
+        }
+        return;
+      }
+      if (Date.now() - start > 10_000) {
+        resolve();
+        return;
+      }
+      window.setTimeout(check, 100);
+    };
+    check();
   });
 }
 
@@ -55,6 +81,7 @@ export function useRecaptchaV2(siteKey: string | null | undefined): UseRecaptcha
     (async () => {
       try {
         await loadRecaptchaScript();
+        await whenRecaptchaReady();
         if (cancelled) return;
         if (!widgetRef.current) return;
         if (!window.grecaptcha) return;

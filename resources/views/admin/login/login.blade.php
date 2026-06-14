@@ -62,6 +62,16 @@
                         <div class="form-group">
                             <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
                         </div>
+                        {{-- Sincroniza el tema del widget con el modo claro/oscuro antes del auto-render.
+                             El script de <head> ya fijó document.documentElement.dataset.theme. --}}
+                        <script>
+                            (() => {
+                                const widget = document.querySelector('.g-recaptcha');
+                                if (!widget) return;
+                                const isDark = document.documentElement.dataset.theme === 'dark';
+                                widget.setAttribute('data-theme', isDark ? 'dark' : 'light');
+                            })();
+                        </script>
                     @endif
 
                     <div class="form-actions">

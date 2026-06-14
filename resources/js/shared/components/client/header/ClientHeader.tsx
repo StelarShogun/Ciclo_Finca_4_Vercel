@@ -16,6 +16,7 @@ type ClientHeaderProps = {
   isCatalog: boolean;
   isMenuOpen: boolean;
   isUserMenuOpen: boolean;
+  notificationCount: number;
   onLogout: () => void;
   onMenuToggle: () => void;
   onThemeToggle: () => void;
@@ -31,12 +32,17 @@ export function ClientHeader({
   isCatalog,
   isMenuOpen,
   isUserMenuOpen,
+  notificationCount,
   onLogout,
   onMenuToggle,
   onThemeToggle,
   onUserMenuToggle,
   pathname,
 }: ClientHeaderProps) {
+  // Admin previewing the store has no client session, so the cart (auth:clients)
+  // isn't usable for them — hide it instead of linking to the client login.
+  const isStorePreview = auth.client === null && auth.admin !== null;
+
   return (
     <header ref={headerRef} className={`cliente-header ${isMenuOpen ? 'menu-open' : ''}`}>
       <div className="header-container">
@@ -54,7 +60,9 @@ export function ClientHeader({
             </Link>
           </div>
 
-          <ClientCartButton cartCount={cartCount} className="cart-btn cart-btn-link header-mobile-cart-btn" />
+          {isStorePreview ? null : (
+            <ClientCartButton cartCount={cartCount} className="cart-btn cart-btn-link header-mobile-cart-btn" />
+          )}
 
           <button
             className={`header-menu-toggle ${cartCount > 0 ? 'has-alert' : ''}`}
@@ -76,7 +84,7 @@ export function ClientHeader({
             <div className="header-right-cluster">
               {isCatalog ? <HeaderCatalogSearch /> : null}
               <div className="header-actions">
-                <ClientCartButton cartCount={cartCount} />
+                {isStorePreview ? null : <ClientCartButton cartCount={cartCount} />}
                 <ClientThemeToggle onToggle={onThemeToggle} />
 
                 {auth.client ? (
@@ -84,9 +92,21 @@ export function ClientHeader({
                     authClient={auth.client}
                     clientInitials={clientInitials}
                     isOpen={isUserMenuOpen}
+                    notificationCount={notificationCount}
                     onLogout={onLogout}
                     onToggle={onUserMenuToggle}
                   />
+                ) : auth.admin ? (
+                  <div className="header-admin-return">
+                    <span className="header-admin-return__badge" title={`Sesión de administrador: ${auth.admin.gmail}`}>
+                      <i className="fas fa-user-shield" aria-hidden="true" />
+                      <span>{auth.admin.name}</span>
+                    </span>
+                    <a href="/admin/catalog-exit" className="btn btn-primary btn-sm">
+                      <i className="fas fa-arrow-left" aria-hidden="true" />
+                      <span>Volver al panel</span>
+                    </a>
+                  </div>
                 ) : (
                   <div className="header-guest-auth">
                     <Link href="/login" className="btn btn-primary btn-sm">

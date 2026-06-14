@@ -115,15 +115,17 @@ class ProductCatalogImportExportTest extends TestCase
             ->from(route('inventory'))
             ->post(route('products.import'), ['import_file' => $file]);
 
-        $response->assertRedirect(route('inventory'));
-        $response->assertSessionHas('status');
+        // La importación se encola en un job en segundo plano (202 + importId para seguir el progreso).
+        $response->assertStatus(202);
+        $response->assertJsonStructure(['importId', 'progress' => ['status', 'filename']]);
 
+        // Con QUEUE_CONNECTION=sync el job corre en la misma request, así que los cambios ya están aplicados.
         $product->refresh();
         $this->assertSame(2500.0, (float) $product->sale_price);
         $this->assertSame(9, (int) $product->stock_current);
     }
 
-    public function test_admin_import_returns_json_summary_for_ajax_request(): void
+    public function test_admin_import_queues_job_and_processes_for_ajax_request(): void
     {
         $admin = $this->createAdmin();
         $this->createActiveSupplier();
@@ -160,13 +162,26 @@ class ProductCatalogImportExportTest extends TestCase
             ])
             ->post(route('products.import'), ['import_file' => $file]);
 
-        $response->assertOk();
-        $response->assertJsonPath('level', 'success');
-        $response->assertJsonPath('stats.updated', 1);
-        $response->assertJsonStructure([
-            'message',
-            'stats' => ['created', 'updated', 'skipped', 'errors', 'rows_total', 'duration_ms', 'media_count'],
+        // Respuesta 202: la importación se encola y devuelve el importId para hacer polling del progreso.
+        $response->assertStatus(202);
+        $response->assertJsonStructure(['importId', 'progress' => ['status', 'filename']]);
+        $response->assertJsonPath('progress.status', 'queued');
+
+        $importId = $response->json('importId');
+        $this->assertIsString($importId);
+
+        // Con QUEUE_CONNECTION=sync el job se ejecuta en línea: el producto debe quedar actualizado…
+        $this->assertDatabaseHas('products', [
+            'name' => 'CF4 Ajax Import Product',
+            'sale_price' => 1800,
+            'stock_current' => 5,
         ]);
+
+        // …y el progreso debe haber alcanzado el estado final "done".
+        $progress = \App\Services\Admin\ProductCatalog\CatalogImportProgress::get($importId);
+        $this->assertNotNull($progress);
+        $this->assertSame('done', $progress['status']);
+        $this->assertSame(1, $progress['updated']);
     }
 
     public function test_import_reports_rows_total_and_duration_metrics(): void

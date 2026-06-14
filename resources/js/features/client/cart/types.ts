@@ -23,6 +23,14 @@ export type CartItem = {
   image: CartItemImage;
 };
 
+export type CartFeaturedProduct = {
+  id: number;
+  name: string;
+  priceFormatted: string;
+  url: string;
+  image: CartItemImage;
+};
+
 export type CartPagePayload = {
   items: CartItem[];
   pagination: CatalogPagination;
@@ -31,6 +39,7 @@ export type CartPagePayload = {
   pickupPolicyLine: string;
   pickupPolicyNotice: string;
   stockAdjustedMessage: string | null;
+  featuredProducts?: CartFeaturedProduct[];
 };
 
 export type CartPageProps = CartPagePayload;

@@ -1,0 +1,32 @@
+{
+    "name": "Ciclo Finca 4",
+    "short_name": "CicloFinca4",
+    "description": "Tienda de bicicletas, repuestos y accesorios — Ciclo Finca 4.",
+    "lang": "es-CR",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#DAF1DE",
+    "theme_color": "#051F20",
+    "icons": [
+        {
+            "src": "/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

@@ -7,12 +7,15 @@ type ClientUserMenuProps = {
   authClient: NonNullable<InertiaSharedProps['auth']['client']>;
   clientInitials: string;
   isOpen: boolean;
+  notificationCount: number;
   onLogout: () => void;
   onToggle: () => void;
 };
 
-export function ClientUserMenu({ authClient, clientInitials, isOpen, onLogout, onToggle }: ClientUserMenuProps) {
+export function ClientUserMenu({ authClient, clientInitials, isOpen, notificationCount, onLogout, onToggle }: ClientUserMenuProps) {
   const { open: openFavoritesDrawer } = useFavoritesDrawer();
+  const hasNotifications = notificationCount > 0;
+  const notificationLabel = notificationCount > 99 ? '99+' : String(notificationCount);
 
   return (
     <div className={`user-menu-wrap ${isOpen ? 'open' : ''}`}>
@@ -42,6 +45,9 @@ export function ClientUserMenu({ authClient, clientInitials, isOpen, onLogout, o
         </span>
         <span className="user-trigger-name">{authClient.name}</span>
         <i className="fas fa-chevron-down user-trigger-caret" aria-hidden="true" />
+        {hasNotifications ? (
+          <span className="user-trigger-notif-dot" aria-hidden="true" />
+        ) : null}
       </button>
       <div className="user-dropdown-panel" aria-hidden={!isOpen} role="menu">
         <div className="user-dropdown-head">
@@ -76,6 +82,11 @@ export function ClientUserMenu({ authClient, clientInitials, isOpen, onLogout, o
           <Link className="user-dropdown-item" href="/notifications" role="menuitem">
             <i className="fas fa-bell" aria-hidden="true" />
             <span>Notificaciones</span>
+            {hasNotifications ? (
+              <span className="user-dropdown-badge" aria-label={`${notificationCount} sin leer`}>
+                {notificationLabel}
+              </span>
+            ) : null}
           </Link>
         </div>
         <div className="user-dropdown-foot">

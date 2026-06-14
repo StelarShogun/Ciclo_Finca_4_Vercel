@@ -2,9 +2,12 @@
 
 namespace App\Actions\Client\Cart;
 
+use App\Models\Product;
 use App\Services\Client\Cart\CartManager;
 use App\Services\Client\Cart\CartProductLookup;
+use App\Services\Client\Catalog\CatalogSpotlightBuilder;
 use App\Services\Client\Inertia\CartPagePayloadBuilder;
+use App\Services\Media\ProductImageUrls;
 use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -15,6 +18,7 @@ final class BuildCartPagePayload
         private CartManager $cart,
         private CartProductLookup $products,
         private CartPagePayloadBuilder $payloadBuilder,
+        private CatalogSpotlightBuilder $spotlightBuilder,
     ) {}
 
     /**
@@ -54,6 +58,41 @@ final class BuildCartPagePayload
         );
         $cartItemsPaginator->withQueryString();
 
-        return $this->payloadBuilder->build($cartItemsPaginator, $total);
+        $payload = $this->payloadBuilder->build($cartItemsPaginator, $total);
+        $payload['featuredProducts'] = count($cartItems) === 0 ? $this->featuredProducts() : [];
+
+        return $payload;
+    }
+
+    /**
+     * Productos destacados para mostrar cuando el carrito está vacío.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function featuredProducts(): array
+    {
+        return $this->spotlightBuilder->rows()
+            ->take(4)
+            ->map(function (array $row): array {
+                /** @var Product $product */
+                $product = $row['product'];
+                $picture = ProductImageUrls::cardPicture($product);
+
+                return [
+                    'id' => (int) $product->product_id,
+                    'name' => (string) $product->name,
+                    'priceFormatted' => '₡'.number_format((float) $product->sale_price, 0, ',', '.'),
+                    'url' => $product->clientProductUrl(),
+                    'image' => [
+                        'fallback' => $picture['fallback'],
+                        'desktopWebp' => $picture['desktopWebp'],
+                        'mobileWebp' => $picture['mobileWebp'],
+                        'usesPlaceholder' => ProductImageUrls::usesPlaceholder($product),
+                        'placeholderIconClass' => ProductImageUrls::placeholderIconClass($product),
+                    ],
+                ];
+            })
+            ->values()
+            ->all();
     }
 }

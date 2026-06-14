@@ -38,7 +38,7 @@
     font-style: normal;
     font-weight: 900;
     font-display: block;
-    src: url("/fonts/fa-subset/fa-solid-900.subset.woff2") format("woff2");
+    src: url("/fonts/fa-subset/fa-solid-900.subset.woff2?v=12f9d4e5") format("woff2");
 }
 
 @font-face {
@@ -46,5 +46,5 @@
     font-style: normal;
     font-weight: 400;
     font-display: block;
-    src: url("/fonts/fa-subset/fa-regular-400.subset.woff2") format("woff2");
+    src: url("/fonts/fa-subset/fa-regular-400.subset.woff2?v=94b0557a") format("woff2");
 }

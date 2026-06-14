@@ -58,14 +58,19 @@ function MoonGlyph() {
           <stop offset="72%" stopColor="#1e293b" />
           <stop offset="100%" stopColor="#0f172a" />
         </linearGradient>
-        <radialGradient id="cf4MoonBody" cx="26" cy="14" r="9" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#fffbeb" />
-          <stop offset="55%" stopColor="#e7e5e4" />
-          <stop offset="100%" stopColor="#d6d3d1" />
+        <radialGradient id="cf4MoonBody" cx="23.6" cy="11.4" r="11" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#fdfcfb" />
+          <stop offset="48%" stopColor="#e7e5e4" />
+          <stop offset="100%" stopColor="#c8c4c0" />
         </radialGradient>
-        <radialGradient id="cf4MoonShade" cx="27" cy="14.5" r="7" gradientUnits="userSpaceOnUse">
+        <radialGradient id="cf4MoonShade" cx="26" cy="14" r="7.5" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#78716c" stopOpacity="0.55" />
           <stop offset="100%" stopColor="#57534e" stopOpacity="0.15" />
+        </radialGradient>
+        <radialGradient id="cf4MoonHalo" cx="26" cy="14" r="10.5" gradientUnits="userSpaceOnUse">
+          <stop offset="62%" stopColor="#f8fafc" stopOpacity="0.3" />
+          <stop offset="80%" stopColor="#f8fafc" stopOpacity="0.12" />
+          <stop offset="100%" stopColor="#f8fafc" stopOpacity="0" />
         </radialGradient>
       </defs>
       <rect className="cf4-theme-moon__bg" width="52" height="28" rx="14" fill="url(#cf4MoonBg)" />
@@ -84,22 +89,27 @@ function MoonGlyph() {
           <circle className="cf4-theme-moon__star cf4-theme-moon__star--c" cx="9.5" cy="18.8" r="0.45" opacity="0.65" />
           <circle className="cf4-theme-moon__star cf4-theme-moon__star--d" cx="42.5" cy="19.2" r="0.42" opacity="0.6" />
         </g>
+        <circle className="cf4-theme-moon__halo" cx="26" cy="14" r="10.5" fill="url(#cf4MoonHalo)" />
+        <circle className="cf4-theme-moon__body" cx="26" cy="14" r="7.25" fill="url(#cf4MoonBody)" />
+        <ellipse className="cf4-theme-moon__crater cf4-theme-moon__crater--lg" cx="28.3" cy="12.1" rx="1.6" ry="1.2" fill="url(#cf4MoonShade)" />
+        <ellipse className="cf4-theme-moon__crater cf4-theme-moon__crater--md" cx="23.5" cy="15.3" rx="1.15" ry="0.85" fill="url(#cf4MoonShade)" />
+        <ellipse className="cf4-theme-moon__crater cf4-theme-moon__crater--sm" cx="26.8" cy="17.1" rx="0.7" ry="0.52" fill="url(#cf4MoonShade)" />
+        <ellipse className="cf4-theme-moon__crater cf4-theme-moon__crater--xs" cx="24.6" cy="11" rx="0.46" ry="0.36" fill="#78716c" opacity="0.35" />
         <path
-          className="cf4-theme-moon__body"
-          fill="url(#cf4MoonBody)"
-          d="M32.8 14a8.5 8.5 0 1 1-13.6 0 7 7 0 1 0 13.6 0z"
+          className="cf4-theme-moon__terminator"
+          fill="#1e293b"
+          opacity="0.16"
+          d="M26 6.75 A7.25 7.25 0 0 1 26 21.25 A10 10 0 0 0 26 6.75 Z"
         />
-        <ellipse className="cf4-theme-moon__crater cf4-theme-moon__crater--lg" cx="27.2" cy="11.2" rx="1.75" ry="1.25" fill="url(#cf4MoonShade)" />
-        <ellipse className="cf4-theme-moon__crater cf4-theme-moon__crater--md" cx="24.4" cy="14.6" rx="1.2" ry="0.9" fill="url(#cf4MoonShade)" />
-        <ellipse className="cf4-theme-moon__crater cf4-theme-moon__crater--sm" cx="27.6" cy="16.1" rx="0.75" ry="0.55" fill="url(#cf4MoonShade)" />
-        <ellipse className="cf4-theme-moon__crater cf4-theme-moon__crater--xs" cx="25.8" cy="12.8" rx="0.48" ry="0.36" fill="#78716c" opacity="0.35" />
-        <path
+        <circle
           className="cf4-theme-moon__rim"
+          cx="26"
+          cy="14"
+          r="7.25"
           fill="none"
           stroke="#fff"
           strokeOpacity="0.22"
           strokeWidth="0.6"
-          d="M32.8 14a8.5 8.5 0 1 1-13.6 0 7 7 0 1 0 13.6 0z"
         />
       </g>
     </svg>

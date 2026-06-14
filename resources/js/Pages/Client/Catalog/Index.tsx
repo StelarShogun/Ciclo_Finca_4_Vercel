@@ -1,8 +1,11 @@
 import { Head, usePage } from '@inertiajs/react';
 import '../../../../css/client/clients-page.css';
 
+import { CatalogActiveFilters } from '@/features/client/catalog/components/CatalogActiveFilters';
+import { CatalogEmptyState } from '@/features/client/catalog/components/CatalogEmptyState';
 import { CatalogFilters } from '@/features/client/catalog/components/CatalogFilters';
 import { CatalogMobileControls } from '@/features/client/catalog/components/CatalogMobileControls';
+import { CatalogSkeletonGrid, useCatalogNavigationPending } from '@/features/client/catalog/components/CatalogSkeletonGrid';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { CatalogProductCard } from '@/features/client/catalog/components/CatalogProductCard';
 import { CatalogSpotlightCarousel } from '@/features/client/catalog/components/CatalogSpotlightCarousel';
@@ -60,6 +63,7 @@ export default function CatalogIndex({
 
   useCatalogPageInit();
 
+  const isNavigationPending = useCatalogNavigationPending();
   const hasActiveCatalogFilters = summary.activeFilterCount > 0 || Boolean(filters.categoryId);
   const showCatalogSpotlight = catalogSpotlight.length > 0 && pagination.currentPage === 1 && !hasActiveCatalogFilters;
 
@@ -122,18 +126,21 @@ export default function CatalogIndex({
                   activeFilterCount={summary.activeFilterCount}
                 />
 
-                {emptyCategoryNoProducts ? (
-                  <div className="empty-state">
-                    <i className="fas fa-box-open" aria-hidden="true" />
-                    <h2>No hay productos en esta categoría</h2>
-                    <p>Probá con otra categoría o quitá los filtros aplicados.</p>
-                  </div>
-                ) : products.length === 0 ? (
-                  <div className="empty-state">
-                    <i className="fas fa-search" aria-hidden="true" />
-                    <h2>No encontramos productos</h2>
-                    <p>Ajustá la búsqueda, marca o rango de precios para ver más resultados.</p>
-                  </div>
+                <CatalogActiveFilters
+                  filters={filters}
+                  selectedCategory={selectedCategory}
+                  selectedBrand={selectedBrand}
+                />
+
+                {isNavigationPending ? (
+                  <CatalogSkeletonGrid count={Math.min(Math.max(products.length, 4), 12)} />
+                ) : emptyCategoryNoProducts || products.length === 0 ? (
+                  <CatalogEmptyState
+                    filters={filters}
+                    categories={categories}
+                    hasActiveFilters={hasActiveCatalogFilters}
+                    isEmptyCategory={emptyCategoryNoProducts}
+                  />
                 ) : (
                   <div className="products-grid">
                     {products.map((product) => (

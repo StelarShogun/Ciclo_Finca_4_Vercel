@@ -23,6 +23,7 @@ function cartItemsSyncKey(items: CartPageProps['items']): string {
 }
 
 function CartIndexContent({
+  featuredProducts,
   items: initialItems,
   pagination,
   pickupPolicyLine,
@@ -42,6 +43,7 @@ function CartIndexContent({
     csrfToken,
     items,
     setItems,
+    totalFormatted: subtotalFormatted,
   });
 
   return (
@@ -145,7 +147,7 @@ function CartIndexContent({
                   />
                 </div>
               ) : (
-                <CartEmptyState />
+                <CartEmptyState featuredProducts={featuredProducts} />
               )}
             </div>
           </div>

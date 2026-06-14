@@ -42,7 +42,7 @@ import {
 } from './inventory-classification';
 import { initStaticSearchCombobox, setComboboxFieldError } from '../shared/static-search-combobox';
 import { initFileUploadZone } from '../shared/file-upload-zone';
-import { cf4Confirm, cf4Warning, cf4Toast, cf4Error, cf4Loading, cf4Close, cf4Success } from '../shared/swal';
+import { cf4Confirm, cf4Warning, cf4Toast, cf4Error } from '../shared/swal';
 import { compressImageFile, compressFileList } from './product-image-compression';
 
 export async function initModals() {
@@ -1220,25 +1220,239 @@ export async function initModals() {
     const confirmImportBtn = qs('#confirm-import');
     const importForm = qs('#import-form');
 
+    // --- Background import: progress pane + polling state ---
+    const importProgress = qs('#import-progress');
+    const progressIcon = qs('#import-progress-icon');
+    const progressTitle = qs('#import-progress-title');
+    const progressFile = qs('#import-progress-file');
+    const progressBar = qs('#import-progress-bar');
+    const progressFill = qs('#import-progress-fill');
+    const progressMessage = qs('#import-progress-message');
+    const progressHint = qs('#import-progress-hint');
+    const progressCloseBtn = qs('#import-progress-close');
+    const progressDoneBtn = qs('#import-progress-done');
+    const statCreated = qs('#import-stat-created');
+    const statUpdated = qs('#import-stat-updated');
+    const statSkipped = qs('#import-stat-skipped');
+    const statErrors = qs('#import-stat-errors');
+
+    const activeUrl = importModal?.dataset.activeUrl || '';
+    const progressUrlTpl = importModal?.dataset.progressUrl || '';
+    const dismissUrl = importModal?.dataset.dismissUrl || '';
+    const csrfToken =
+        importForm?.querySelector('input[name="_token"]')?.value ||
+        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+        '';
+
+    let pollTimer = null;
+    let activeImportId = null;
+
+    function stopPolling() {
+        if (pollTimer) {
+            clearTimeout(pollTimer);
+            pollTimer = null;
+        }
+    }
+
+    function showImportForm() {
+        if (importForm) importForm.hidden = false;
+        if (importProgress) importProgress.hidden = true;
+    }
+
+    function showImportProgressPane() {
+        if (importForm) importForm.hidden = true;
+        if (importProgress) importProgress.hidden = false;
+    }
+
+    function setStat(el, value) {
+        if (el) el.textContent = String(value ?? 0);
+    }
+
+    function renderProgress(p) {
+        if (!p) return;
+        const status = p.status || 'running';
+        const total = Number(p.total || 0);
+        const processed = Number(p.processed || 0);
+        const terminal = status === 'done' || status === 'failed';
+        const level = p.level || (status === 'failed' ? 'error' : 'running');
+
+        // Title + icon by state.
+        if (status === 'done') {
+            progressTitle && (progressTitle.textContent = 'Importación finalizada');
+        } else if (status === 'failed') {
+            progressTitle && (progressTitle.textContent = 'Importación fallida');
+        } else if (status === 'queued') {
+            progressTitle && (progressTitle.textContent = 'En cola…');
+        } else {
+            progressTitle && (progressTitle.textContent = 'Importando productos…');
+        }
+
+        if (progressFile) progressFile.textContent = p.filename || '';
+        if (progressMessage) progressMessage.textContent = p.message || '';
+
+        setStat(statCreated, p.created);
+        setStat(statUpdated, p.updated);
+        setStat(statSkipped, p.skipped);
+        setStat(statErrors, p.errors);
+
+        // Progress bar.
+        const indeterminate = !terminal && total <= 0;
+        if (progressBar) {
+            progressBar.classList.toggle('is-indeterminate', indeterminate);
+        }
+        if (progressFill) {
+            if (indeterminate) {
+                progressFill.style.width = '';
+            } else {
+                const pct = terminal ? 100 : (total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : 0);
+                progressFill.style.width = pct + '%';
+                progressBar?.setAttribute('aria-valuenow', String(pct));
+            }
+            const fillLevel = level === 'error' ? 'error' : level === 'warning' ? 'warning' : 'success';
+            progressFill.setAttribute('data-level', fillLevel);
+        }
+
+        // Icon state.
+        if (progressIcon) {
+            const iconState = status === 'done'
+                ? (level === 'warning' ? 'warning' : level === 'error' ? 'error' : 'success')
+                : status === 'failed' ? 'error' : 'running';
+            progressIcon.setAttribute('data-state', iconState);
+            const glyph = iconState === 'success'
+                ? 'fa-circle-check'
+                : iconState === 'warning'
+                    ? 'fa-triangle-exclamation'
+                    : iconState === 'error'
+                        ? 'fa-circle-exclamation'
+                        : 'fa-spinner fa-spin';
+            progressIcon.innerHTML = `<i class="fas ${glyph}" aria-hidden="true"></i>`;
+        }
+
+        // Footer + hint depend on terminal state.
+        if (terminal) {
+            progressHint && (progressHint.hidden = true);
+            progressCloseBtn && (progressCloseBtn.hidden = true);
+            progressDoneBtn && (progressDoneBtn.hidden = false);
+        } else {
+            progressHint && (progressHint.hidden = false);
+            progressCloseBtn && (progressCloseBtn.hidden = false);
+            progressDoneBtn && (progressDoneBtn.hidden = true);
+        }
+    }
+
+    async function pollProgress(id) {
+        if (!progressUrlTpl) return;
+        try {
+            const res = await fetch(progressUrlTpl.replace('__ID__', encodeURIComponent(id)), {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            if (res.status === 404) {
+                // El progreso expiró del cache: volvemos al formulario.
+                stopPolling();
+                activeImportId = null;
+                showImportForm();
+                return;
+            }
+            const p = await res.json();
+            renderProgress(p);
+            if (p.status === 'done' || p.status === 'failed') {
+                stopPolling();
+                return;
+            }
+        } catch {
+            // Error transitorio de red: reintentamos en el próximo ciclo.
+        }
+        pollTimer = window.setTimeout(() => pollProgress(id), 1000);
+    }
+
+    function startPolling(id) {
+        stopPolling();
+        activeImportId = id;
+        pollTimer = window.setTimeout(() => pollProgress(id), 1000);
+    }
+
+    async function reattachActiveImport() {
+        if (!activeUrl) {
+            showImportForm();
+            return;
+        }
+        try {
+            const res = await fetch(activeUrl, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const data = await res.json();
+            if (data && data.importId && data.progress) {
+                activeImportId = data.importId;
+                showImportProgressPane();
+                renderProgress(data.progress);
+                if (data.progress.status !== 'done' && data.progress.status !== 'failed') {
+                    startPolling(data.importId);
+                }
+                return;
+            }
+        } catch {
+            // Sin importación activa o error: mostramos el formulario.
+        }
+        activeImportId = null;
+        importUpload?.reset();
+        resetImportUi();
+        showImportForm();
+    }
+
+    async function dismissActiveImport() {
+        if (!dismissUrl) return;
+        try {
+            await fetch(dismissUrl, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+            });
+        } catch {
+            // Best-effort.
+        }
+    }
+
     if (openImportModalBtn) {
         openImportModalBtn.addEventListener('click', () => {
             closeOtherInventoryModals('import-modal');
-            importUpload?.reset();
-            resetImportUi();
             importModal.classList.add('active');
             importModal.setAttribute('aria-hidden', 'false');
+            void reattachActiveImport();
         });
     }
 
     if (closeImportModalBtn) {
         closeImportModalBtn.addEventListener('click', () => {
+            stopPolling();
             importModal.classList.remove('active');
         });
     }
 
     if (cancelImportBtn) {
         cancelImportBtn.addEventListener('click', () => {
+            stopPolling();
             importModal.classList.remove('active');
+        });
+    }
+
+    if (progressCloseBtn) {
+        // Cierra la ventana pero deja la importación corriendo en segundo plano.
+        progressCloseBtn.addEventListener('click', () => {
+            stopPolling();
+            importModal.classList.remove('active');
+        });
+    }
+
+    if (progressDoneBtn) {
+        // Estado terminal: olvida la importación activa y refresca el inventario.
+        progressDoneBtn.addEventListener('click', async () => {
+            stopPolling();
+            await dismissActiveImport();
+            activeImportId = null;
+            window.location.reload();
         });
     }
 
@@ -1323,14 +1537,9 @@ export async function initModals() {
             }).then(async (result) => {
                 if (!result.isConfirmed) return;
 
-                setButtonLoading(confirmImportBtn, true, 'Importando...');
+                setButtonLoading(confirmImportBtn, true, 'Enviando…');
 
                 try {
-                    void cf4Loading(
-                        'Importando productos…',
-                        'Esto puede tardar varios minutos si el ZIP incluye muchas imágenes.',
-                    );
-
                     const formData = new FormData(importForm);
                     const response = await fetch(importForm.action, {
                         method: 'POST',
@@ -1348,35 +1557,24 @@ export async function initModals() {
                         data = {};
                     }
 
-                    await cf4Close();
-
                     if (!response.ok) {
                         const message = jsonValidationMessage(data)
                             || data.message
-                            || 'No se pudo importar el catálogo.';
+                            || 'No se pudo iniciar la importación.';
                         void cf4Error(message, response.status === 422 ? 'Archivo no válido' : 'Importación fallida');
                         return;
                     }
 
-                    importModal.classList.remove('active');
-                    importUpload?.reset();
-                    resetImportUi();
-
-                    const level = data.level || 'success';
-                    if (level === 'warning') {
-                        await cf4Warning(data.message || 'Importación completada con observaciones.', 'Importación con observaciones');
-                    } else if (level === 'error') {
-                        await cf4Error(data.message || 'No se importó ningún producto.', 'Importación fallida');
-                        return;
-                    } else {
-                        await cf4Success(data.message || 'Importación completada.', 'Importación completada');
+                    // El job corre en segundo plano: mostramos la barra de progreso reanudable.
+                    activeImportId = data.importId;
+                    showImportProgressPane();
+                    if (data.progress) {
+                        renderProgress(data.progress);
                     }
-
-                    window.location.reload();
+                    startPolling(data.importId);
                 } catch {
-                    await cf4Close();
                     void cf4Error(
-                        'Error de conexión al importar. Verificá tu red e intentá de nuevo.',
+                        'Error de conexión al iniciar la importación. Verificá tu red e intentá de nuevo.',
                         'Error',
                     );
                 } finally {

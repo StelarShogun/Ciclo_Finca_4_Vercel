@@ -56,10 +56,35 @@ final class ProductCatalogImporter
 
     private ?CatalogImportOptions $importOptions = null;
 
+    /** @var (callable(int, int, array<string, mixed>): void)|null */
+    private $progressCallback = null;
+
     public function __construct(
         private readonly ProductClassificationAssignmentService $classifications,
         private readonly ProductImageOptimizerService $imageOptimizer,
     ) {}
+
+    /**
+     * Callback opcional invocado durante el bucle de filas para reportar avance.
+     *
+     * @param  (callable(int $processed, int $total, array<string, mixed> $stats): void)|null  $callback
+     */
+    public function setProgressCallback(?callable $callback): void
+    {
+        $this->progressCallback = $callback;
+    }
+
+    /**
+     * @param  array<string, mixed>  $stats
+     */
+    private function reportProgress(int $processed, int $total, array $stats): void
+    {
+        if ($this->progressCallback === null) {
+            return;
+        }
+
+        ($this->progressCallback)($processed, $total, $stats);
+    }
 
     /**
      * @return array{created: int, updated: int, skipped: int, errors: list<string>, media_conversions_queued: int, rows_total: int, duration_ms: int, media_count: int}
@@ -124,7 +149,10 @@ final class ProductCatalogImporter
         $stats['rows_total'] = count($rows);
         $this->warmLookupCaches();
 
-        DB::transaction(function () use ($rows, $bundleDir, &$stats) {
+        $total = count($rows);
+        $this->reportProgress(0, $total, $stats);
+
+        DB::transaction(function () use ($rows, $bundleDir, $total, &$stats) {
             foreach ($rows as $index => $row) {
                 try {
                     $result = $this->importRow($row, $bundleDir);
@@ -137,6 +165,8 @@ final class ProductCatalogImporter
                         'error' => $e->getMessage(),
                     ]);
                 }
+
+                $this->reportProgress($index + 1, $total, $stats);
             }
             $this->linkVariantsFromRows($rows);
         });

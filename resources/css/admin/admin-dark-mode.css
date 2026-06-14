@@ -454,6 +454,33 @@ html[data-theme="dark"] .import-modal-requirements {
   border-color: var(--cf4-admin-card-border);
 }
 
+html[data-theme="dark"] .import-progress__title {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .import-progress__message {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .import-progress__file,
+html[data-theme="dark"] .import-progress__stats {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .import-progress__stat strong {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .import-progress__bar {
+  background: var(--cf4-admin-panel-bg);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme="dark"] .import-progress__hint {
+  color: var(--cf4-text-muted);
+  background: rgba(22, 56, 50, 0.35);
+}
+
 html[data-theme="dark"] .classification-placeholder,
 html[data-theme="dark"] .classification-card {
   background: var(--cf4-admin-panel-bg);

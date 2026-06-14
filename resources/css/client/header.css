@@ -582,6 +582,44 @@
   gap: 15px;
 }
 
+/* Admin en modo vista de tienda: chip + volver al panel */
+.header-actions .header-admin-return {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.header-admin-return__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--brand-lightest, #daf1de);
+  background: rgba(142, 182, 155, 0.16);
+  border: 1px solid rgba(142, 182, 155, 0.4);
+  white-space: nowrap;
+}
+
+.header-admin-return .btn {
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--brand-medium);
+  border-color: var(--brand-medium);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(5, 31, 32, 0.28);
+}
+
+@media (max-width: 640px) {
+  .header-admin-return__badge span {
+    display: none;
+  }
+}
+
 /* Guest auth — legible sobre barra --brand-darkest (tema claro y oscuro) */
 .header-actions .header-guest-auth {
   display: inline-flex;
@@ -1027,6 +1065,19 @@
 
 .user-menu-wrap.open .user-trigger-caret { transform: rotate(180deg); }
 
+/* Punto de notificaciones sin leer sobre el trigger */
+.user-trigger-notif-dot {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid var(--brand-darkest, #051f20);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.4);
+}
+
 /* Dropdown panel */
 .user-dropdown-panel {
   position: absolute;
@@ -1129,6 +1180,23 @@ button.user-dropdown-item {
 }
 
 .user-dropdown-item:hover { background: var(--background-light); }
+
+/* Badge de conteo de notificaciones en el item del dropdown */
+.user-dropdown-badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
 
 .user-dropdown-item.active {
   background: var(--color-success-bg);

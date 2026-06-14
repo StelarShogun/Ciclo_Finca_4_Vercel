@@ -105,6 +105,7 @@ jobs:
 
       - name: Notify CI failure by email
         if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/Dev'
+        continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
@@ -144,6 +145,7 @@ jobs:
 
       - name: Notify frontend build failure by email
         if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/Dev'
+        continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
@@ -436,6 +438,7 @@ jobs:
 
       - name: Notify deploy success by email
         if: success()
+        continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
@@ -455,6 +458,7 @@ jobs:
 
       - name: Notify deploy failure by email
         if: failure()
+        continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
