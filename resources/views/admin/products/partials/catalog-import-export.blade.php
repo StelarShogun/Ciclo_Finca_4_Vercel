@@ -81,6 +81,31 @@
             </div>
         </form>
 
+        <div id="import-queue" class="import-progress import-queue" hidden aria-live="polite">
+            <div class="modal-body">
+                <div class="import-progress__head">
+                    <span class="import-progress__icon" data-state="running">
+                        <i class="fas fa-list-check" aria-hidden="true"></i>
+                    </span>
+                    <div class="import-progress__headings">
+                        <h4 class="import-progress__title">Cola de importaciones</h4>
+                        <p class="import-progress__file">Procesos recientes de importación de productos.</p>
+                    </div>
+                </div>
+
+                <div class="import-queue__list" id="import-queue-list"></div>
+
+                <p class="import-progress__hint">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    Seleccioná <strong>Ver</strong> para consultar el avance de una importación sin iniciar otra carga.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="import-queue-close">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="import-queue-new">Nueva importación</button>
+            </div>
+        </div>
+
         <div id="import-progress" class="import-progress" hidden aria-live="polite">
             <div class="modal-body">
                 <div class="import-progress__head">

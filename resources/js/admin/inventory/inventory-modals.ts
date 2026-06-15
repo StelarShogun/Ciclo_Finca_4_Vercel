@@ -1221,6 +1221,10 @@ export async function initModals() {
     const importForm = qs('#import-form');
 
     // --- Background import: progress pane + polling state ---
+    const importQueue = qs('#import-queue');
+    const importQueueList = qs('#import-queue-list');
+    const importQueueCloseBtn = qs('#import-queue-close');
+    const importQueueNewBtn = qs('#import-queue-new');
     const importProgress = qs('#import-progress');
     const progressIcon = qs('#import-progress-icon');
     const progressTitle = qs('#import-progress-title');
@@ -1256,11 +1260,19 @@ export async function initModals() {
 
     function showImportForm() {
         if (importForm) importForm.hidden = false;
+        if (importQueue) importQueue.hidden = true;
+        if (importProgress) importProgress.hidden = true;
+    }
+
+    function showImportQueuePane() {
+        if (importForm) importForm.hidden = true;
+        if (importQueue) importQueue.hidden = false;
         if (importProgress) importProgress.hidden = true;
     }
 
     function showImportProgressPane() {
         if (importForm) importForm.hidden = true;
+        if (importQueue) importQueue.hidden = true;
         if (importProgress) importProgress.hidden = false;
     }
 
@@ -1340,6 +1352,97 @@ export async function initModals() {
         }
     }
 
+    function progressStatusLabel(progress) {
+        const status = progress?.status || 'queued';
+        if (status === 'done') return 'Finalizada';
+        if (status === 'failed') return 'Fallida';
+        if (status === 'running') return 'En proceso';
+        return 'En cola';
+    }
+
+    function progressStatusLevel(progress) {
+        const status = progress?.status || 'queued';
+        if (status === 'done') return progress?.level === 'warning' ? 'warning' : 'success';
+        if (status === 'failed' || progress?.level === 'error') return 'error';
+        return 'running';
+    }
+
+    function progressPercent(progress) {
+        const status = progress?.status || 'queued';
+        if (status === 'done' || status === 'failed') return 100;
+
+        const total = Number(progress?.total || 0);
+        const processed = Number(progress?.processed || 0);
+
+        return total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : null;
+    }
+
+    function renderImportQueue(imports) {
+        const visibleImports = Array.isArray(imports)
+            ? imports.filter((item) => item && item.importId && item.progress)
+            : [];
+
+        if (!importQueueList) return false;
+
+        if (visibleImports.length === 0) {
+            importQueueList.innerHTML = '';
+            return false;
+        }
+
+        importQueueList.innerHTML = visibleImports.map((item) => {
+            const progress = item.progress || {};
+            const percent = progressPercent(progress);
+            const level = progressStatusLevel(progress);
+            const statusLabel = progressStatusLabel(progress);
+            const filename = progress.filename || 'Importación de catálogo';
+            const updatedAt = progress.updatedAt
+                ? new Date(progress.updatedAt).toLocaleString('es-CR', { dateStyle: 'short', timeStyle: 'short' })
+                : '';
+            const metrics = [
+                `${Number(progress.created || 0)} creados`,
+                `${Number(progress.updated || 0)} actualizados`,
+                `${Number(progress.skipped || 0)} omitidos`,
+            ].join(' · ');
+            const progressWidth = percent === null ? 38 : percent;
+
+            return `
+                <article class="import-queue__item" data-state="${escapeHtmlAttr(level)}">
+                    <div class="import-queue__main">
+                        <div class="import-queue__title-row">
+                            <strong class="import-queue__filename">${escapeHtml(filename)}</strong>
+                            <span class="import-queue__badge" data-state="${escapeHtmlAttr(level)}">${escapeHtml(statusLabel)}</span>
+                        </div>
+                        <div class="import-queue__meta">
+                            <span>${escapeHtml(metrics)}</span>
+                            ${updatedAt ? `<span>Actualizado ${escapeHtml(updatedAt)}</span>` : ''}
+                        </div>
+                        <div class="import-queue__bar ${percent === null ? 'is-indeterminate' : ''}" aria-hidden="true">
+                            <span style="width: ${progressWidth}%"></span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary import-queue__view" data-import-id="${escapeHtmlAttr(item.importId)}">
+                        <i class="fas fa-eye" aria-hidden="true"></i> Ver
+                    </button>
+                </article>
+            `;
+        }).join('');
+
+        return true;
+    }
+
+    function openImportProgress(importId, progress = null) {
+        activeImportId = importId;
+        showImportProgressPane();
+        if (progress) {
+            renderProgress(progress);
+        }
+        if (!progress || (progress.status !== 'done' && progress.status !== 'failed')) {
+            startPolling(importId);
+        } else {
+            stopPolling();
+        }
+    }
+
     async function pollProgress(id) {
         if (!progressUrlTpl) return;
         try {
@@ -1381,13 +1484,12 @@ export async function initModals() {
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             });
             const data = await res.json();
+            if (data && renderImportQueue(data.imports)) {
+                showImportQueuePane();
+                return;
+            }
             if (data && data.importId && data.progress) {
-                activeImportId = data.importId;
-                showImportProgressPane();
-                renderProgress(data.progress);
-                if (data.progress.status !== 'done' && data.progress.status !== 'failed') {
-                    startPolling(data.importId);
-                }
+                openImportProgress(data.importId, data.progress);
                 return;
             }
         } catch {
@@ -1406,9 +1508,11 @@ export async function initModals() {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
+                    'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': csrfToken,
                 },
+                body: JSON.stringify({ importId: activeImportId }),
             });
         } catch {
             // Best-effort.
@@ -1443,6 +1547,43 @@ export async function initModals() {
         progressCloseBtn.addEventListener('click', () => {
             stopPolling();
             importModal.classList.remove('active');
+        });
+    }
+
+    if (importQueueCloseBtn) {
+        importQueueCloseBtn.addEventListener('click', () => {
+            stopPolling();
+            importModal.classList.remove('active');
+        });
+    }
+
+    if (importQueueNewBtn) {
+        importQueueNewBtn.addEventListener('click', () => {
+            stopPolling();
+            activeImportId = null;
+            importUpload?.reset();
+            resetImportUi();
+            showImportForm();
+        });
+    }
+
+    if (importQueueList) {
+        importQueueList.addEventListener('click', (event) => {
+            const viewButton = event.target?.closest?.('.import-queue__view');
+            if (!viewButton) return;
+
+            const importId = viewButton.dataset.importId;
+            if (!importId) return;
+
+            const queueItem = viewButton.closest('.import-queue__item');
+            setButtonLoading(viewButton, true, 'Abriendo…');
+            stopPolling();
+            activeImportId = importId;
+            showImportProgressPane();
+            progressTitle && (progressTitle.textContent = 'Cargando importación…');
+            progressFile && (progressFile.textContent = queueItem?.querySelector('.import-queue__filename')?.textContent || '');
+            progressMessage && (progressMessage.textContent = 'Consultando el estado del proceso…');
+            void pollProgress(importId).finally(() => setButtonLoading(viewButton, false));
         });
     }
 
@@ -1566,12 +1707,7 @@ export async function initModals() {
                     }
 
                     // El job corre en segundo plano: mostramos la barra de progreso reanudable.
-                    activeImportId = data.importId;
-                    showImportProgressPane();
-                    if (data.progress) {
-                        renderProgress(data.progress);
-                    }
-                    startPolling(data.importId);
+                    openImportProgress(data.importId, data.progress || null);
                 } catch {
                     void cf4Error(
                         'Error de conexión al iniciar la importación. Verificá tu red e intentá de nuevo.',

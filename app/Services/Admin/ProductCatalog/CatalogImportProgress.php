@@ -17,6 +17,8 @@ final class CatalogImportProgress
 
     private const ACTIVE_PREFIX = 'catalog_import:active:';
 
+    private const ADMIN_IMPORTS_PREFIX = 'catalog_import:admin_imports:';
+
     public static function key(string $importId): string
     {
         return self::PREFIX.$importId;
@@ -25,6 +27,11 @@ final class CatalogImportProgress
     public static function activeKey(int $adminId): string
     {
         return self::ACTIVE_PREFIX.$adminId;
+    }
+
+    public static function adminImportsKey(int $adminId): string
+    {
+        return self::ADMIN_IMPORTS_PREFIX.$adminId;
     }
 
     /**
@@ -52,6 +59,7 @@ final class CatalogImportProgress
 
         Cache::put(self::key($importId), $payload, self::TTL);
         Cache::put(self::activeKey($adminId), $importId, self::TTL);
+        Cache::put(self::adminImportsKey($adminId), self::prependImportId($adminId, $importId), self::TTL);
 
         return $payload;
     }
@@ -89,8 +97,93 @@ final class CatalogImportProgress
         return is_string($value) && $value !== '' ? $value : null;
     }
 
+    /**
+     * @return list<array{importId: string, progress: array<string, mixed>}>
+     */
+    public static function importsFor(int $adminId): array
+    {
+        $ids = self::importIdsFor($adminId);
+        $imports = [];
+
+        foreach ($ids as $importId) {
+            $progress = self::get($importId);
+
+            if ($progress === null) {
+                continue;
+            }
+
+            $imports[] = [
+                'importId' => $importId,
+                'progress' => $progress,
+            ];
+        }
+
+        return $imports;
+    }
+
+    public static function dismissFor(int $adminId, ?string $importId = null): void
+    {
+        if ($importId === null || $importId === '') {
+            self::clearActive($adminId);
+
+            return;
+        }
+
+        $remaining = array_values(array_filter(
+            self::importIdsFor($adminId),
+            static fn (string $id): bool => $id !== $importId,
+        ));
+
+        if ($remaining === []) {
+            self::clearActive($adminId);
+
+            return;
+        }
+
+        Cache::put(self::adminImportsKey($adminId), $remaining, self::TTL);
+
+        if (self::activeFor($adminId) === $importId) {
+            Cache::put(self::activeKey($adminId), $remaining[0], self::TTL);
+        }
+    }
+
     public static function clearActive(int $adminId): void
     {
         Cache::forget(self::activeKey($adminId));
+        Cache::forget(self::adminImportsKey($adminId));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function importIdsFor(int $adminId): array
+    {
+        $value = Cache::get(self::adminImportsKey($adminId));
+        $ids = is_array($value)
+            ? array_values(array_filter($value, static fn (mixed $id): bool => is_string($id) && $id !== ''))
+            : [];
+
+        $active = self::activeFor($adminId);
+
+        if ($active !== null && ! in_array($active, $ids, true)) {
+            array_unshift($ids, $active);
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function prependImportId(int $adminId, string $importId): array
+    {
+        $ids = array_values(array_filter(
+            self::importIdsFor($adminId),
+            static fn (string $id): bool => $id !== $importId,
+        ));
+
+        array_unshift($ids, $importId);
+
+        return array_slice($ids, 0, 10);
     }
 }

@@ -1980,6 +1980,120 @@ html:has(#stock-adjust-modal.is-open) {
   color: var(--color-primary, #2f855a);
 }
 
+.import-queue__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.import-queue__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: var(--border-radius-large, 12px);
+  background: var(--background-white, #fff);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.import-queue__main {
+  min-width: 0;
+}
+
+.import-queue__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.import-queue__filename {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-dark, #1f2937);
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.import-queue__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: 1.55rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary, #2f855a) 12%, transparent);
+  color: var(--color-primary, #2f855a);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.import-queue__badge[data-state="success"] {
+  background: color-mix(in srgb, #16a34a 14%, transparent);
+  color: #15803d;
+}
+
+.import-queue__badge[data-state="warning"] {
+  background: color-mix(in srgb, #d97706 16%, transparent);
+  color: #b45309;
+}
+
+.import-queue__badge[data-state="error"] {
+  background: color-mix(in srgb, #dc2626 14%, transparent);
+  color: #b91c1c;
+}
+
+.import-queue__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin-top: 0.35rem;
+  color: var(--color-muted, #6b7280);
+  font-size: 0.8rem;
+}
+
+.import-queue__bar {
+  position: relative;
+  height: 0.38rem;
+  margin-top: 0.55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-light, #eef1f0);
+}
+
+.import-queue__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2f855a, #38a169);
+}
+
+.import-queue__bar.is-indeterminate span {
+  background: linear-gradient(90deg, transparent, #38a169, transparent);
+  animation: import-progress-sweep 1.15s ease-in-out infinite;
+}
+
+.import-queue__view {
+  min-width: 5.25rem;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .import-queue__item {
+    grid-template-columns: 1fr;
+  }
+
+  .import-queue__view {
+    width: 100%;
+  }
+}
+
 /* ============================================================
    14. RESPONSIVE
    ============================================================ */

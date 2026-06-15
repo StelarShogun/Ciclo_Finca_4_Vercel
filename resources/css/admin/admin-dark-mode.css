@@ -481,6 +481,24 @@ html[data-theme="dark"] .import-progress__hint {
   background: rgba(22, 56, 50, 0.35);
 }
 
+html[data-theme="dark"] .import-queue__item {
+  background: var(--cf4-admin-card-bg);
+  border-color: var(--cf4-admin-card-border);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="dark"] .import-queue__filename {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .import-queue__meta {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .import-queue__bar {
+  background: var(--cf4-admin-panel-bg);
+}
+
 html[data-theme="dark"] .classification-placeholder,
 html[data-theme="dark"] .classification-card {
   background: var(--cf4-admin-panel-bg);

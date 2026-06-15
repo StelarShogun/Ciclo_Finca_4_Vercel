@@ -32,7 +32,7 @@ export default function NotificationsIndex(props: NotificationsPageProps) {
 
         <div className="cf4-invoices-card">
           <div className="sales-table-container">
-            <table className="sales-table cf4-purchases-table admin-table">
+            <table className="sales-table cf4-purchases-table cf4-notifications-table admin-table">
               <thead>
                 <tr>
                   <th>Fecha</th>
@@ -78,4 +78,3 @@ export default function NotificationsIndex(props: NotificationsPageProps) {
     </ClientLayout>
   );
 }
-

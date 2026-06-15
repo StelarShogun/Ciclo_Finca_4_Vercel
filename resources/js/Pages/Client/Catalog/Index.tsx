@@ -1,4 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
+import { useEffect, useRef } from 'react';
 import '../../../../css/client/clients-page.css';
 
 import { CatalogActiveFilters } from '@/features/client/catalog/components/CatalogActiveFilters';
@@ -60,8 +61,23 @@ export default function CatalogIndex({
 }: CatalogIndexProps) {
   const { auth, csrfToken } = usePage<InertiaSharedProps>().props;
   const isAuthenticated = auth.client !== null;
+  const previousPageRef = useRef(pagination.currentPage);
 
   useCatalogPageInit();
+
+  useEffect(() => {
+    if (previousPageRef.current === pagination.currentPage) {
+      return;
+    }
+
+    previousPageRef.current = pagination.currentPage;
+    window.requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>('[data-cf4-ajax-scroll]')?.scrollIntoView({
+        block: 'start',
+        behavior: 'smooth',
+      });
+    });
+  }, [pagination.currentPage]);
 
   const isNavigationPending = useCatalogNavigationPending();
   const hasActiveCatalogFilters = summary.activeFilterCount > 0 || Boolean(filters.categoryId);

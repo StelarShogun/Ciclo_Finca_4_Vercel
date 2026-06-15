@@ -60,23 +60,30 @@ class ProductCatalogImportController extends Controller
     {
         $adminId = (int) Auth::guard('admin')->id();
         $importId = CatalogImportProgress::activeFor($adminId);
+        $imports = CatalogImportProgress::importsFor($adminId);
 
         if ($importId === null) {
-            return response()->json(['importId' => null, 'progress' => null]);
+            return response()->json(['importId' => null, 'progress' => null, 'imports' => $imports]);
         }
 
         return response()->json([
             'importId' => $importId,
             'progress' => CatalogImportProgress::get($importId),
+            'imports' => $imports,
         ]);
     }
 
     /**
      * Olvida la importación activa (al cerrar el resumen o empezar otra).
      */
-    public function importDismiss(): JsonResponse
+    public function importDismiss(Request $request): JsonResponse
     {
-        CatalogImportProgress::clearActive((int) Auth::guard('admin')->id());
+        $importId = $request->input('importId');
+
+        CatalogImportProgress::dismissFor(
+            (int) Auth::guard('admin')->id(),
+            is_string($importId) ? $importId : null,
+        );
 
         return response()->json(['ok' => true]);
     }

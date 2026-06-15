@@ -1151,6 +1151,10 @@
   min-width: 0;
 }
 
+.catalog-results {
+  scroll-margin-top: calc(var(--client-header-height, 72px) + 1rem);
+}
+
 .catalog-filter-toggle {
   display: none;
   align-items: center;

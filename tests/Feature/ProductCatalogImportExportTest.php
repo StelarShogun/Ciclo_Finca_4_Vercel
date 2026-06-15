@@ -7,6 +7,7 @@ use App\Models\AdminUser;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Services\Admin\ProductCatalog\CatalogImportProgress;
 use App\Services\Admin\ProductCatalog\ProductCatalogExporter;
 use App\Services\Admin\ProductCatalog\ProductCatalogImporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -178,10 +179,18 @@ class ProductCatalogImportExportTest extends TestCase
         ]);
 
         // …y el progreso debe haber alcanzado el estado final "done".
-        $progress = \App\Services\Admin\ProductCatalog\CatalogImportProgress::get($importId);
+        $progress = CatalogImportProgress::get($importId);
         $this->assertNotNull($progress);
         $this->assertSame('done', $progress['status']);
         $this->assertSame(1, $progress['updated']);
+
+        $this->actingAs($admin, 'admin')
+            ->withHeaders(['Accept' => 'application/json'])
+            ->get(route('products.import.active'))
+            ->assertOk()
+            ->assertJsonPath('importId', $importId)
+            ->assertJsonPath('imports.0.importId', $importId)
+            ->assertJsonPath('imports.0.progress.status', 'done');
     }
 
     public function test_import_reports_rows_total_and_duration_metrics(): void

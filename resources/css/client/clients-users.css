@@ -2076,3 +2076,37 @@ html[data-theme="dark"] .profile-avatar-upload:hover:not(:disabled) {
     border-top: 1px solid rgba(0, 0, 0, 0.06);
     background: rgba(0, 0, 0, 0.015);
 }
+
+html[data-theme="dark"] .cf4-invoices-card:has(.cf4-notifications-table) {
+    background: var(--cf4-catalog-card-bg);
+    border-color: var(--cf4-catalog-card-border);
+    color: var(--cf4-text-main);
+}
+
+html[data-theme="dark"] .cf4-invoices-card:has(.cf4-notifications-table) .cf4-invoices-pagination-wrap {
+    background: rgba(5, 31, 32, 0.26);
+    border-top-color: var(--cf4-catalog-card-border);
+}
+
+@media (max-width: 768px) {
+    html[data-theme="dark"] .cf4-notifications-table.admin-table:has(tbody td[data-label]) tbody tr {
+        background: var(--cf4-catalog-card-bg);
+        border-color: var(--cf4-catalog-card-border);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    html[data-theme="dark"] .cf4-notifications-table.admin-table:has(tbody td[data-label]) tbody tr:hover {
+        background: rgba(22, 56, 50, 0.34);
+        color: var(--cf4-text-main);
+    }
+
+    html[data-theme="dark"] .cf4-notifications-table.admin-table:has(tbody td[data-label]) tbody td {
+        background: transparent;
+        border-bottom-color: var(--cf4-catalog-card-border);
+        color: var(--cf4-text-main);
+    }
+
+    html[data-theme="dark"] .cf4-notifications-table.admin-table:has(tbody td[data-label]) tbody td::before {
+        color: var(--cf4-text-muted);
+    }
+}
