@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Exceptions\CatalogImportCancelled;
 use App\Models\AdminUser;
 use App\Services\Admin\ProductCatalog\CatalogImportProgress;
 use App\Services\Admin\ProductCatalog\ProductCatalogImporter;
@@ -52,10 +53,30 @@ class RunCatalogImportJob implements ShouldQueue
             return;
         }
 
+        // El admin pudo cancelar mientras el job seguía en cola: abortamos antes
+        // de tocar la base de datos.
+        if (CatalogImportProgress::isCancelRequested($this->importId)) {
+            CatalogImportProgress::put($this->importId, [
+                'status' => 'cancelled',
+                'level' => null,
+                'message' => 'Importación cancelada antes de iniciar. No se aplicaron cambios.',
+            ]);
+            CatalogImportProgress::clearCancel($this->importId);
+            Storage::disk('local')->delete($this->storedPath);
+
+            return;
+        }
+
         $file = new UploadedFile($absolutePath, $this->originalName, null, null, true);
 
         $lastWrite = 0.0;
         $importer->setProgressCallback(function (int $processed, int $total, array $stats) use (&$lastWrite): void {
+            // Cancelación en vivo: lanzamos para romper la transacción del
+            // importador y revertir lo procesado hasta ahora.
+            if (CatalogImportProgress::isCancelRequested($this->importId)) {
+                throw new CatalogImportCancelled();
+            }
+
             $now = microtime(true);
             $isBoundary = $processed === 0 || $processed === $total;
 
@@ -140,6 +161,19 @@ class RunCatalogImportJob implements ShouldQueue
                 'errors' => count($stats['errors']),
                 'message' => $message,
             ]);
+        } catch (CatalogImportCancelled) {
+            // La transacción ya revirtió todo lo procesado.
+            CatalogImportProgress::put($this->importId, [
+                'status' => 'cancelled',
+                'level' => null,
+                'total' => 0,
+                'processed' => 0,
+                'created' => 0,
+                'updated' => 0,
+                'skipped' => 0,
+                'errors' => 0,
+                'message' => 'Importación cancelada. No se aplicaron cambios.',
+            ]);
         } catch (\Throwable $e) {
             Log::error('product_catalog_import_failed', ['error' => $e->getMessage()]);
             CatalogImportProgress::put($this->importId, [
@@ -148,6 +182,7 @@ class RunCatalogImportJob implements ShouldQueue
                 'message' => 'No se pudo importar: '.$e->getMessage(),
             ]);
         } finally {
+            CatalogImportProgress::clearCancel($this->importId);
             Storage::disk('local')->delete($this->storedPath);
         }
     }

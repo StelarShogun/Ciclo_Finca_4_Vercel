@@ -36,6 +36,7 @@
 <div class="edit-modal" id="import-modal"
     data-active-url="{{ route('products.import.active') }}"
     data-progress-url="{{ route('products.import.progress', ['importId' => '__ID__']) }}"
+    data-cancel-url="{{ route('products.import.cancel', ['importId' => '__ID__']) }}"
     data-dismiss-url="{{ route('products.import.dismiss') }}">
     <div class="modal-backdrop"></div>
     <div class="modal-content modal-auto-size">
@@ -139,9 +140,30 @@
                 </p>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-danger-soft" id="import-progress-cancel">
+                    <i class="fas fa-ban" aria-hidden="true"></i> Cancelar importación
+                </button>
                 <button type="button" class="btn btn-secondary" id="import-progress-close">Cerrar</button>
                 <button type="button" class="btn btn-primary" id="import-progress-done" hidden>Listo</button>
             </div>
         </div>
     </div>
+</div>
+
+{{-- Indicador flotante persistente (estilo Google Drive): muestra el avance
+     de las importaciones aunque el modal esté cerrado. --}}
+<div id="import-dock" class="import-dock" hidden aria-live="polite" aria-label="Importaciones en curso">
+    <div class="import-dock__header">
+        <span class="import-dock__heading" id="import-dock-heading">Importando productos…</span>
+        <div class="import-dock__header-actions">
+            <button type="button" class="import-dock__icon-btn" id="import-dock-toggle"
+                    aria-expanded="true" aria-label="Contraer">
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="import-dock__icon-btn" id="import-dock-close" hidden aria-label="Descartar">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+    </div>
+    <div class="import-dock__body" id="import-dock-body"></div>
 </div>

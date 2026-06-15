@@ -19,9 +19,40 @@ final class CatalogImportProgress
 
     private const ADMIN_IMPORTS_PREFIX = 'catalog_import:admin_imports:';
 
+    private const CANCEL_PREFIX = 'catalog_import:cancel:';
+
+    /**
+     * Estados terminales: ya no admiten cancelación ni siguen procesando.
+     */
+    public const TERMINAL_STATUSES = ['done', 'failed', 'cancelled'];
+
     public static function key(string $importId): string
     {
         return self::PREFIX.$importId;
+    }
+
+    public static function cancelKey(string $importId): string
+    {
+        return self::CANCEL_PREFIX.$importId;
+    }
+
+    /**
+     * Marca una importación para cancelar. El job lo detecta en su próximo
+     * reporte de avance y aborta (la transacción revierte lo procesado).
+     */
+    public static function requestCancel(string $importId): void
+    {
+        Cache::put(self::cancelKey($importId), true, self::TTL);
+    }
+
+    public static function isCancelRequested(string $importId): bool
+    {
+        return (bool) Cache::get(self::cancelKey($importId));
+    }
+
+    public static function clearCancel(string $importId): void
+    {
+        Cache::forget(self::cancelKey($importId));
     }
 
     public static function activeKey(int $adminId): string
@@ -88,6 +119,11 @@ final class CatalogImportProgress
         $value = Cache::get(self::key($importId));
 
         return is_array($value) ? $value : null;
+    }
+
+    public static function ownsImport(int $adminId, string $importId): bool
+    {
+        return in_array($importId, self::importIdsFor($adminId), true);
     }
 
     public static function activeFor(int $adminId): ?string

@@ -499,6 +499,48 @@ html[data-theme="dark"] .import-queue__bar {
   background: var(--cf4-admin-panel-bg);
 }
 
+html[data-theme="dark"] .import-dock {
+  background: var(--cf4-admin-card-bg);
+  border-color: var(--cf4-admin-card-border);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme="dark"] .import-dock__item {
+  border-top-color: var(--cf4-admin-card-border);
+}
+
+html[data-theme="dark"] .import-dock__item-name {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .import-dock__item-status {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .import-dock__item-bar {
+  background: var(--cf4-admin-panel-bg);
+}
+
+html[data-theme="dark"] .import-dock__item .import-dock__icon-btn {
+  color: var(--cf4-text-muted);
+}
+
+html[data-theme="dark"] .import-dock__item .import-dock__icon-btn:hover {
+  background: var(--cf4-admin-panel-bg);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .btn-danger-soft {
+  background: color-mix(in srgb, #dc2626 18%, transparent);
+  border-color: color-mix(in srgb, #dc2626 45%, transparent);
+  color: #fca5a5;
+}
+
+html[data-theme="dark"] .btn-danger-soft:hover:not(:disabled) {
+  background: color-mix(in srgb, #dc2626 28%, transparent);
+  color: #fecaca;
+}
+
 html[data-theme="dark"] .classification-placeholder,
 html[data-theme="dark"] .classification-card {
   background: var(--cf4-admin-panel-bg);

@@ -2,7 +2,7 @@ FROM php:8.5-apache
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        unzip git zip curl \
+        unzip git zip curl supervisor \
         libzip-dev libpng-dev libjpeg-dev libfreetype6-dev libwebp-dev libavif-dev libexif-dev && \
     docker-php-ext-install -j"$(nproc)" pdo pdo_mysql zip exif && \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-avif && \
@@ -47,6 +47,9 @@ RUN npm run build
 # Permisos
 RUN chown -R www-data:www-data storage bootstrap/cache && \
     chmod -R 775 storage bootstrap/cache
+
+# Supervisor: gestiona Apache + worker de cola + scheduler con autorestart.
+COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # EntryPoint
 COPY docker-entrypoint.sh /usr/local/bin/

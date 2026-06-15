@@ -236,6 +236,7 @@ Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->g
     Route::post('/inventory/import', [ProductCatalogImportController::class, 'import'])->name('products.import');
     Route::get('/inventory/import/active', [ProductCatalogImportController::class, 'importActive'])->name('products.import.active');
     Route::get('/inventory/import/{importId}/progress', [ProductCatalogImportController::class, 'importProgress'])->name('products.import.progress');
+    Route::post('/inventory/import/{importId}/cancel', [ProductCatalogImportController::class, 'importCancel'])->name('products.import.cancel');
     Route::post('/inventory/import/dismiss', [ProductCatalogImportController::class, 'importDismiss'])->name('products.import.dismiss');
     Route::post('/inventory/add-manual/{id}', [ProductManualStockController::class, 'add'])
         ->name('products.stock.add')

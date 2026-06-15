@@ -74,6 +74,45 @@ class ProductCatalogImportController extends Controller
     }
 
     /**
+     * Solicita la cancelación de una importación en curso o en cola.
+     * El job la detecta y aborta; la transacción revierte lo procesado.
+     */
+    public function importCancel(string $importId): JsonResponse
+    {
+        $adminId = (int) Auth::guard('admin')->id();
+        $progress = CatalogImportProgress::get($importId);
+
+        if ($progress === null || ! CatalogImportProgress::ownsImport($adminId, $importId)) {
+            return response()->json(['status' => 'unknown'], 404);
+        }
+
+        $status = $progress['status'] ?? null;
+
+        if (in_array($status, CatalogImportProgress::TERMINAL_STATUSES, true)) {
+            return response()->json($progress);
+        }
+
+        CatalogImportProgress::requestCancel($importId);
+
+        if ($status === 'queued') {
+            // El job aún no arrancó: lo damos por cancelado de inmediato.
+            $progress = CatalogImportProgress::put($importId, [
+                'status' => 'cancelled',
+                'level' => null,
+                'message' => 'Importación cancelada antes de iniciar. No se aplicaron cambios.',
+            ]);
+        } else {
+            $progress = CatalogImportProgress::put($importId, [
+                'status' => 'cancelling',
+                'level' => null,
+                'message' => 'Cancelando importación…',
+            ]);
+        }
+
+        return response()->json($progress);
+    }
+
+    /**
      * Olvida la importación activa (al cerrar el resumen o empezar otra).
      */
     public function importDismiss(Request $request): JsonResponse

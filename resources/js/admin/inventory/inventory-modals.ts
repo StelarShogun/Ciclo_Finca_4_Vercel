@@ -1234,14 +1234,23 @@ export async function initModals() {
     const progressMessage = qs('#import-progress-message');
     const progressHint = qs('#import-progress-hint');
     const progressCloseBtn = qs('#import-progress-close');
+    const progressCancelBtn = qs('#import-progress-cancel');
     const progressDoneBtn = qs('#import-progress-done');
     const statCreated = qs('#import-stat-created');
     const statUpdated = qs('#import-stat-updated');
     const statSkipped = qs('#import-stat-skipped');
     const statErrors = qs('#import-stat-errors');
 
+    // Dock flotante persistente (estilo Google Drive).
+    const importDock = qs('#import-dock');
+    const importDockBody = qs('#import-dock-body');
+    const importDockHeading = qs('#import-dock-heading');
+    const importDockToggle = qs('#import-dock-toggle');
+    const importDockClose = qs('#import-dock-close');
+
     const activeUrl = importModal?.dataset.activeUrl || '';
     const progressUrlTpl = importModal?.dataset.progressUrl || '';
+    const cancelUrlTpl = importModal?.dataset.cancelUrl || '';
     const dismissUrl = importModal?.dataset.dismissUrl || '';
     const csrfToken =
         importForm?.querySelector('input[name="_token"]')?.value ||
@@ -1250,6 +1259,7 @@ export async function initModals() {
 
     let pollTimer = null;
     let activeImportId = null;
+    let dockPollTimer = null;
 
     function stopPolling() {
         if (pollTimer) {
@@ -1285,7 +1295,8 @@ export async function initModals() {
         const status = p.status || 'running';
         const total = Number(p.total || 0);
         const processed = Number(p.processed || 0);
-        const terminal = status === 'done' || status === 'failed';
+        const terminal = isTerminalStatus(status);
+        const cancelling = status === 'cancelling';
         const level = p.level || (status === 'failed' ? 'error' : 'running');
 
         // Title + icon by state.
@@ -1293,6 +1304,10 @@ export async function initModals() {
             progressTitle && (progressTitle.textContent = 'Importación finalizada');
         } else if (status === 'failed') {
             progressTitle && (progressTitle.textContent = 'Importación fallida');
+        } else if (status === 'cancelled') {
+            progressTitle && (progressTitle.textContent = 'Importación cancelada');
+        } else if (status === 'cancelling') {
+            progressTitle && (progressTitle.textContent = 'Cancelando…');
         } else if (status === 'queued') {
             progressTitle && (progressTitle.textContent = 'En cola…');
         } else {
@@ -1328,7 +1343,9 @@ export async function initModals() {
         if (progressIcon) {
             const iconState = status === 'done'
                 ? (level === 'warning' ? 'warning' : level === 'error' ? 'error' : 'success')
-                : status === 'failed' ? 'error' : 'running';
+                : status === 'failed' ? 'error'
+                : status === 'cancelled' ? 'cancelled'
+                : 'running';
             progressIcon.setAttribute('data-state', iconState);
             const glyph = iconState === 'success'
                 ? 'fa-circle-check'
@@ -1336,7 +1353,9 @@ export async function initModals() {
                     ? 'fa-triangle-exclamation'
                     : iconState === 'error'
                         ? 'fa-circle-exclamation'
-                        : 'fa-spinner fa-spin';
+                        : iconState === 'cancelled'
+                            ? 'fa-ban'
+                            : 'fa-spinner fa-spin';
             progressIcon.innerHTML = `<i class="fas ${glyph}" aria-hidden="true"></i>`;
         }
 
@@ -1344,18 +1363,30 @@ export async function initModals() {
         if (terminal) {
             progressHint && (progressHint.hidden = true);
             progressCloseBtn && (progressCloseBtn.hidden = true);
+            progressCancelBtn && (progressCancelBtn.hidden = true);
             progressDoneBtn && (progressDoneBtn.hidden = false);
         } else {
             progressHint && (progressHint.hidden = false);
             progressCloseBtn && (progressCloseBtn.hidden = false);
             progressDoneBtn && (progressDoneBtn.hidden = true);
+            // El botón de cancelar se oculta mientras ya se está cancelando.
+            if (progressCancelBtn) {
+                progressCancelBtn.hidden = cancelling;
+                progressCancelBtn.disabled = cancelling;
+            }
         }
+    }
+
+    function isTerminalStatus(status) {
+        return status === 'done' || status === 'failed' || status === 'cancelled';
     }
 
     function progressStatusLabel(progress) {
         const status = progress?.status || 'queued';
         if (status === 'done') return 'Finalizada';
         if (status === 'failed') return 'Fallida';
+        if (status === 'cancelled') return 'Cancelada';
+        if (status === 'cancelling') return 'Cancelando';
         if (status === 'running') return 'En proceso';
         return 'En cola';
     }
@@ -1364,17 +1395,62 @@ export async function initModals() {
         const status = progress?.status || 'queued';
         if (status === 'done') return progress?.level === 'warning' ? 'warning' : 'success';
         if (status === 'failed' || progress?.level === 'error') return 'error';
+        if (status === 'cancelled') return 'cancelled';
         return 'running';
     }
 
     function progressPercent(progress) {
         const status = progress?.status || 'queued';
         if (status === 'done' || status === 'failed') return 100;
+        if (status === 'cancelled') return 0;
 
         const total = Number(progress?.total || 0);
         const processed = Number(progress?.processed || 0);
 
         return total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : null;
+    }
+
+    /**
+     * Cancela una importación (en cola o en proceso) tras confirmar.
+     * Compartido por la cola del modal, la barra de progreso y el dock flotante.
+     */
+    async function cancelImport(importId, { confirm = true } = {}) {
+        if (!cancelUrlTpl || !importId) return false;
+
+        if (confirm) {
+            const result = await cf4Confirm({
+                title: '¿Cancelar la importación?',
+                html: 'Se detendrá el proceso y <strong>no se aplicará ningún cambio</strong> al catálogo.',
+                icon: 'warning',
+                confirmButtonText: 'Sí, cancelar',
+                cancelButtonText: 'Seguir importando',
+            });
+            if (!result.isConfirmed) return false;
+        }
+
+        try {
+            const res = await fetch(cancelUrlTpl.replace('__ID__', encodeURIComponent(importId)), {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+            });
+            if (!res.ok) {
+                void cf4Error('No se pudo cancelar la importación. Intentá de nuevo.', 'Error');
+                return false;
+            }
+            const p = await res.json();
+            if (activeImportId === importId) renderProgress(p);
+            void cf4Toast({ icon: 'info', title: 'Cancelando', text: 'La importación se está cancelando.' });
+            void refreshDock();
+            return true;
+        } catch {
+            void cf4Error('Error de conexión al cancelar la importación.', 'Error');
+            return false;
+        }
     }
 
     function renderImportQueue(imports) {
@@ -1404,6 +1480,8 @@ export async function initModals() {
                 `${Number(progress.skipped || 0)} omitidos`,
             ].join(' · ');
             const progressWidth = percent === null ? 38 : percent;
+            const status = progress.status || 'queued';
+            const cancellable = !isTerminalStatus(status) && status !== 'cancelling';
 
             return `
                 <article class="import-queue__item" data-state="${escapeHtmlAttr(level)}">
@@ -1420,9 +1498,15 @@ export async function initModals() {
                             <span style="width: ${progressWidth}%"></span>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-secondary import-queue__view" data-import-id="${escapeHtmlAttr(item.importId)}">
-                        <i class="fas fa-eye" aria-hidden="true"></i> Ver
-                    </button>
+                    <div class="import-queue__actions">
+                        <button type="button" class="btn btn-secondary import-queue__view" data-import-id="${escapeHtmlAttr(item.importId)}">
+                            <i class="fas fa-eye" aria-hidden="true"></i> Ver
+                        </button>
+                        ${cancellable ? `
+                        <button type="button" class="btn btn-danger-soft import-queue__cancel" data-import-id="${escapeHtmlAttr(item.importId)}">
+                            <i class="fas fa-ban" aria-hidden="true"></i> Cancelar
+                        </button>` : ''}
+                    </div>
                 </article>
             `;
         }).join('');
@@ -1436,7 +1520,7 @@ export async function initModals() {
         if (progress) {
             renderProgress(progress);
         }
-        if (!progress || (progress.status !== 'done' && progress.status !== 'failed')) {
+        if (!progress || !isTerminalStatus(progress.status)) {
             startPolling(importId);
         } else {
             stopPolling();
@@ -1458,7 +1542,7 @@ export async function initModals() {
             }
             const p = await res.json();
             renderProgress(p);
-            if (p.status === 'done' || p.status === 'failed') {
+            if (isTerminalStatus(p.status)) {
                 stopPolling();
                 return;
             }
@@ -1519,6 +1603,166 @@ export async function initModals() {
         }
     }
 
+    // --- Dock flotante persistente (estilo Google Drive) ---
+
+    function stopDockPolling() {
+        if (dockPollTimer) {
+            clearTimeout(dockPollTimer);
+            dockPollTimer = null;
+        }
+    }
+
+    function hideDock() {
+        stopDockPolling();
+        if (importDock) importDock.hidden = true;
+    }
+
+    function openImportModalTo(importId) {
+        if (!importModal) return;
+        closeOtherInventoryModals('import-modal');
+        importModal.classList.add('active');
+        importModal.setAttribute('aria-hidden', 'false');
+        openImportProgress(importId, null);
+    }
+
+    function renderDock(imports) {
+        if (!importDock || !importDockBody) return;
+
+        const visible = Array.isArray(imports)
+            ? imports.filter((item) => item && item.importId && item.progress)
+            : [];
+
+        if (visible.length === 0) {
+            hideDock();
+            return;
+        }
+
+        const active = visible.filter((item) => !isTerminalStatus(item.progress?.status));
+
+        importDockBody.innerHTML = visible.map((item) => {
+            const progress = item.progress || {};
+            const status = progress.status || 'queued';
+            const percent = progressPercent(progress);
+            const level = progressStatusLevel(progress);
+            const cancellable = !isTerminalStatus(status) && status !== 'cancelling';
+            const filename = progress.filename || 'Importación de catálogo';
+            const width = percent === null ? 38 : percent;
+            const terminal = isTerminalStatus(status);
+            const glyph = level === 'success' ? 'fa-circle-check'
+                : level === 'warning' ? 'fa-triangle-exclamation'
+                : level === 'error' ? 'fa-circle-exclamation'
+                : level === 'cancelled' ? 'fa-ban'
+                : 'fa-spinner fa-spin';
+
+            return `
+                <div class="import-dock__item" data-state="${escapeHtmlAttr(level)}">
+                    <span class="import-dock__item-icon" data-state="${escapeHtmlAttr(level)}">
+                        <i class="fas ${glyph}" aria-hidden="true"></i>
+                    </span>
+                    <div class="import-dock__item-main">
+                        <span class="import-dock__item-name" title="${escapeHtmlAttr(filename)}">${escapeHtml(filename)}</span>
+                        ${terminal
+                            ? `<span class="import-dock__item-status">${escapeHtml(progressStatusLabel(progress))}</span>`
+                            : `<div class="import-dock__item-bar ${percent === null ? 'is-indeterminate' : ''}" aria-hidden="true"><span style="width: ${width}%"></span></div>`}
+                    </div>
+                    <div class="import-dock__item-actions">
+                        <button type="button" class="import-dock__icon-btn import-dock__view" data-import-id="${escapeHtmlAttr(item.importId)}" aria-label="Ver detalle">
+                            <i class="fas fa-up-right-and-down-left-from-center" aria-hidden="true"></i>
+                        </button>
+                        ${cancellable ? `
+                        <button type="button" class="import-dock__icon-btn import-dock__cancel" data-import-id="${escapeHtmlAttr(item.importId)}" aria-label="Cancelar importación">
+                            <i class="fas fa-ban" aria-hidden="true"></i>
+                        </button>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        if (importDockHeading) {
+            importDockHeading.textContent = active.length === 0
+                ? 'Importaciones finalizadas'
+                : active.length === 1
+                    ? 'Importando productos…'
+                    : `Importando ${active.length} archivos…`;
+        }
+
+        // El botón de descartar solo aparece cuando ya no hay nada en curso.
+        if (importDockClose) importDockClose.hidden = active.length !== 0;
+
+        importDock.hidden = false;
+    }
+
+    async function refreshDock({ poll = true } = {}) {
+        if (!activeUrl || !importDock) return;
+        try {
+            const res = await fetch(activeUrl, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const data = await res.json();
+            const imports = data && Array.isArray(data.imports) ? data.imports : [];
+            renderDock(imports);
+
+            const hasActive = imports.some((item) => item && !isTerminalStatus(item.progress?.status));
+            stopDockPolling();
+            if (poll && hasActive) {
+                dockPollTimer = window.setTimeout(() => void refreshDock(), 2000);
+            }
+        } catch {
+            // Error transitorio: reintentamos en el próximo ciclo si seguimos puleando.
+            if (poll) {
+                stopDockPolling();
+                dockPollTimer = window.setTimeout(() => void refreshDock(), 4000);
+            }
+        }
+    }
+
+    if (importDockToggle && importDock) {
+        importDockToggle.addEventListener('click', () => {
+            const collapsed = importDock.classList.toggle('is-collapsed');
+            importDockToggle.setAttribute('aria-expanded', String(!collapsed));
+            importDockToggle.setAttribute('aria-label', collapsed ? 'Expandir' : 'Contraer');
+        });
+    }
+
+    if (importDockClose) {
+        importDockClose.addEventListener('click', async () => {
+            hideDock();
+            // Olvida las importaciones ya terminadas para no reaparecer.
+            if (dismissUrl) {
+                try {
+                    await fetch(dismissUrl, {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify({ importId: null }),
+                    });
+                } catch {
+                    // Best-effort.
+                }
+            }
+        });
+    }
+
+    if (importDockBody) {
+        importDockBody.addEventListener('click', async (event) => {
+            const viewBtn = event.target?.closest?.('.import-dock__view');
+            if (viewBtn?.dataset.importId) {
+                openImportModalTo(viewBtn.dataset.importId);
+                return;
+            }
+            const cancelBtn = event.target?.closest?.('.import-dock__cancel');
+            if (cancelBtn?.dataset.importId) {
+                setButtonLoading(cancelBtn, true, '');
+                await cancelImport(cancelBtn.dataset.importId);
+                setButtonLoading(cancelBtn, false);
+            }
+        });
+    }
+
     if (openImportModalBtn) {
         openImportModalBtn.addEventListener('click', () => {
             closeOtherInventoryModals('import-modal');
@@ -1568,7 +1812,18 @@ export async function initModals() {
     }
 
     if (importQueueList) {
-        importQueueList.addEventListener('click', (event) => {
+        importQueueList.addEventListener('click', async (event) => {
+            const cancelButton = event.target?.closest?.('.import-queue__cancel');
+            if (cancelButton) {
+                const cancelId = cancelButton.dataset.importId;
+                if (!cancelId) return;
+                setButtonLoading(cancelButton, true, 'Cancelando…');
+                const cancelled = await cancelImport(cancelId);
+                setButtonLoading(cancelButton, false);
+                if (cancelled) void reattachActiveImport();
+                return;
+            }
+
             const viewButton = event.target?.closest?.('.import-queue__view');
             if (!viewButton) return;
 
@@ -1584,6 +1839,15 @@ export async function initModals() {
             progressFile && (progressFile.textContent = queueItem?.querySelector('.import-queue__filename')?.textContent || '');
             progressMessage && (progressMessage.textContent = 'Consultando el estado del proceso…');
             void pollProgress(importId).finally(() => setButtonLoading(viewButton, false));
+        });
+    }
+
+    if (progressCancelBtn) {
+        progressCancelBtn.addEventListener('click', async () => {
+            if (!activeImportId) return;
+            setButtonLoading(progressCancelBtn, true, 'Cancelando…');
+            await cancelImport(activeImportId);
+            setButtonLoading(progressCancelBtn, false);
         });
     }
 
@@ -1708,6 +1972,8 @@ export async function initModals() {
 
                     // El job corre en segundo plano: mostramos la barra de progreso reanudable.
                     openImportProgress(data.importId, data.progress || null);
+                    // Y el dock flotante para seguir el avance al cerrar el modal.
+                    void refreshDock();
                 } catch {
                     void cf4Error(
                         'Error de conexión al iniciar la importación. Verificá tu red e intentá de nuevo.',
@@ -1726,4 +1992,7 @@ export async function initModals() {
             backdrop.closest('.edit-modal').classList.remove('active');
         });
     });
+
+    // Al cargar la página, muestra el dock si hay una importación en curso.
+    void refreshDock();
 }

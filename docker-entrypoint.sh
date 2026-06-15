@@ -97,36 +97,14 @@ chown -R www-data:www-data storage bootstrap/cache
 mkdir -p public/images
 chown -R www-data:www-data public/images
 
-touch storage/logs/scheduler.log
-chown www-data:www-data storage/logs/scheduler.log
-(
-  su -s /bin/bash www-data -c '
-    cd /var/www/html
-    while true; do
-      php artisan schedule:run --no-interaction >> storage/logs/scheduler.log 2>&1
-      sleep 60
-    done
-  '
-) &
+# Prepara los logs de los procesos supervisados (supervisord los escribe como root,
+# pero los dejamos creados y con dueño correcto para que Laravel también pueda usarlos).
+touch storage/logs/scheduler.log storage/logs/worker.log storage/logs/supervisord.log
+chown www-data:www-data storage/logs/scheduler.log storage/logs/worker.log
 
-echo ">>> Scheduler loop iniciado (schedule:run cada 60s)"
-
-# Worker de cola: procesa importaciones de catálogo y conversiones de imágenes en
-# segundo plano para no bloquear las requests del panel. El --timeout debe superar
-# el timeout del job de importación (1800s). --max-time recicla el proceso cada hora
-# para evitar fugas de memoria; el while lo reinicia.
-touch storage/logs/worker.log
-chown www-data:www-data storage/logs/worker.log
-(
-  su -s /bin/bash www-data -c '
-    cd /var/www/html
-    while true; do
-      php artisan queue:work --sleep=2 --tries=1 --timeout=1860 --max-time=3600 --no-interaction >> storage/logs/worker.log 2>&1
-      sleep 2
-    done
-  '
-) &
-
-echo ">>> Worker de cola iniciado (queue:work, timeout 1860s)"
-echo ">>> Iniciando Apache..."
-exec apache2-foreground
+# Apache, worker de cola y scheduler quedan bajo supervisord (PID 1), que reinicia
+# automáticamente cualquier proceso que muera. Antes corrían como loops `while true`
+# sueltos: si el worker se caía, nada lo reiniciaba y las importaciones se quedaban
+# "en cola" indefinidamente mientras Apache seguía sano.
+echo ">>> Iniciando supervisord (apache + queue:work + scheduler)…"
+exec supervisord -c /etc/supervisor/conf.d/supervisord.conf -n

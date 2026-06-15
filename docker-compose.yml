@@ -4,6 +4,7 @@ services:
   app_ciclo:
     build: .
     container_name: laravel_app_ciclo
+    restart: unless-stopped
     ports:
       - "8080:80"
       - "5173:5173"
