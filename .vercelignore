@@ -1,0 +1,12 @@
+.git
+.vercel
+node_modules
+vendor
+storage
+bootstrap/cache/*.php
+.phpunit.cache
+.phpstan-cache
+.vite-cache
+tests/Browser/screenshots
+tests/Browser/console
+tests/Browser/source

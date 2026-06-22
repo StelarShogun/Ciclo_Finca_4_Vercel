@@ -121,3 +121,4 @@ vendor/composer/autoload_classmap.php
 # Agent skills from `npx skills add` (e.g. heygen-com/hyperframes bundle); third-party, per-machine
 .agents/
 /skills-lock.json
+.vercel
