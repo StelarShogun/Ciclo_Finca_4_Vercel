@@ -1,7 +1,7 @@
 {
     "version": 2,
     "framework": null,
-    "buildCommand": "composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader && npm ci && npm run build && php artisan config:cache",
+    "buildCommand": "npm ci && npm run build",
     "functions": {
         "api/index.php": {
             "runtime": "vercel-php@0.9.0",
