@@ -34,7 +34,7 @@
     "crons": [
         {
             "path": "/internal/vercel/cron/scheduler",
-            "schedule": "*/15 * * * *"
+            "schedule": "0 3 * * *"
         }
     ]
 }
