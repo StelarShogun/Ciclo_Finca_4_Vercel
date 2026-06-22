@@ -9,6 +9,4 @@ use RuntimeException;
  * importación en curso. Al propagarse rompe la transacción del importador, de
  * modo que no quedan filas a medio aplicar.
  */
-final class CatalogImportCancelled extends RuntimeException
-{
-}
+final class CatalogImportCancelled extends RuntimeException {}

@@ -74,7 +74,7 @@ class RunCatalogImportJob implements ShouldQueue
             // Cancelación en vivo: lanzamos para romper la transacción del
             // importador y revertir lo procesado hasta ahora.
             if (CatalogImportProgress::isCancelRequested($this->importId)) {
-                throw new CatalogImportCancelled();
+                throw new CatalogImportCancelled;
             }
 
             $now = microtime(true);
