@@ -37,11 +37,12 @@ class RunCatalogImportJob implements ShouldQueue
         public int $adminId,
         public string $storedPath,
         public string $originalName,
+        public string $disk = 'local',
     ) {}
 
     public function handle(ProductCatalogImporter $importer, AuditLogger $audit): void
     {
-        $absolutePath = Storage::disk('local')->path($this->storedPath);
+        $absolutePath = $this->materializeStoredFile();
 
         if (! is_file($absolutePath)) {
             CatalogImportProgress::put($this->importId, [
@@ -62,7 +63,7 @@ class RunCatalogImportJob implements ShouldQueue
                 'message' => 'Importación cancelada antes de iniciar. No se aplicaron cambios.',
             ]);
             CatalogImportProgress::clearCancel($this->importId);
-            Storage::disk('local')->delete($this->storedPath);
+            $this->deleteStoredFile();
 
             return;
         }
@@ -183,7 +184,10 @@ class RunCatalogImportJob implements ShouldQueue
             ]);
         } finally {
             CatalogImportProgress::clearCancel($this->importId);
-            Storage::disk('local')->delete($this->storedPath);
+            $this->deleteStoredFile();
+            if ($this->disk !== 'local') {
+                @unlink($absolutePath);
+            }
         }
     }
 
@@ -195,6 +199,28 @@ class RunCatalogImportJob implements ShouldQueue
             'message' => 'La importación falló: '.$exception->getMessage(),
         ]);
 
-        Storage::disk('local')->delete($this->storedPath);
+        $this->deleteStoredFile();
+    }
+
+    private function materializeStoredFile(): string
+    {
+        if ($this->disk === 'local') {
+            return Storage::disk('local')->path($this->storedPath);
+        }
+
+        if (! Storage::disk($this->disk)->exists($this->storedPath)) {
+            return '';
+        }
+
+        $target = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR)
+            .DIRECTORY_SEPARATOR.'cf4-import-'.$this->importId.'-'.basename($this->storedPath);
+        file_put_contents($target, Storage::disk($this->disk)->get($this->storedPath));
+
+        return $target;
+    }
+
+    private function deleteStoredFile(): void
+    {
+        Storage::disk($this->disk)->delete($this->storedPath);
     }
 }

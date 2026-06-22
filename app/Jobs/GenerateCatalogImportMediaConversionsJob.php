@@ -19,12 +19,15 @@ final class GenerateCatalogImportMediaConversionsJob
      */
     public function __construct(private readonly array $mediaIds) {}
 
-    public function handle(MissingProductMediaConversionService $service): void
+    /**
+     * @return array{processed: int, failed: int}
+     */
+    public function handle(MissingProductMediaConversionService $service): array
     {
         if ($this->mediaIds === []) {
-            return;
+            return ['processed' => 0, 'failed' => 0];
         }
 
-        $service->generateForMediaIds($this->mediaIds);
+        return $service->generateForMediaIds($this->mediaIds);
     }
 }

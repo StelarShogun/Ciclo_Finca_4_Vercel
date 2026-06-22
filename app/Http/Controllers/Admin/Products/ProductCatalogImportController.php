@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Products\ImportCatalogRequest;
 use App\Jobs\RunCatalogImportJob;
 use App\Services\Admin\ProductCatalog\CatalogImportProgress;
+use App\Services\Vercel\QstashPublisher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -27,11 +28,25 @@ class ProductCatalogImportController extends Controller
 
         $importId = (string) Str::uuid();
         $extension = strtolower($file->getClientOriginalExtension()) ?: 'dat';
-        $storedPath = $file->storeAs('catalog-imports', $importId.'.'.$extension, 'local');
+        $disk = config('vercel.enabled') ? (string) config('vercel.import_disk') : 'local';
+        $storedPath = $file->storeAs((string) config('vercel.import_prefix', 'catalog-imports'), $importId.'.'.$extension, $disk);
 
         $progress = CatalogImportProgress::queued($importId, $adminId, $file->getClientOriginalName());
 
-        RunCatalogImportJob::dispatch($importId, $adminId, $storedPath, $file->getClientOriginalName());
+        if (config('vercel.enabled')) {
+            app(QstashPublisher::class)->publish(
+                'internal/vercel/jobs/catalog-import?key='.(string) config('app.deploy_secret'),
+                [
+                    'importId' => $importId,
+                    'adminId' => $adminId,
+                    'storedPath' => $storedPath,
+                    'originalName' => $file->getClientOriginalName(),
+                    'disk' => $disk,
+                ],
+            );
+        } else {
+            RunCatalogImportJob::dispatch($importId, $adminId, $storedPath, $file->getClientOriginalName(), $disk);
+        }
 
         return response()->json([
             'importId' => $importId,

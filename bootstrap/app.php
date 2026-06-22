@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->preventRequestForgery(except: [
             'api/*',
+            'internal/vercel/*',
         ]);
 
         $middleware->alias([

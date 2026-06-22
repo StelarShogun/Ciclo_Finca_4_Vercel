@@ -16,15 +16,18 @@ final class UpdateClientAvatar
 
         $previous = (string) ($client->avatar_url ?? '');
 
-        $path = $request->file('avatar')->store('avatars', 'public');
+        $disk = config('vercel.enabled') ? (string) config('filesystems.default') : 'public';
+        $path = $request->file('avatar')->store('avatars', $disk);
 
         $client->update([
-            'avatar_url' => Storage::url($path),
+            'avatar_url' => Storage::disk($disk)->url($path),
         ]);
 
         // Solo se eliminan archivos subidos localmente; los avatares externos (Google) no tienen archivo.
         if (Str::startsWith($previous, '/storage/avatars/')) {
             Storage::disk('public')->delete(Str::after($previous, '/storage/'));
+        } elseif (config('vercel.enabled') && Str::contains($previous, '/avatars/')) {
+            Storage::disk($disk)->delete('avatars/'.Str::after($previous, '/avatars/'));
         }
 
         return redirect()->route('clients.profile')->with('avatar_updated', true);

@@ -14,6 +14,7 @@ use App\Models\Supplier;
 use App\Services\Admin\Images\ProductImageOptimizerService;
 use App\Services\Client\Storefront\ClientStorefrontCache;
 use App\Services\ProductClassificationAssignmentService;
+use App\Services\Vercel\QstashPublisher;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -180,7 +181,14 @@ final class ProductCatalogImporter
         $mediaIds = array_values(array_unique($this->importedMediaIds));
         $stats['media_count'] = count($mediaIds);
         if ($mediaIds !== []) {
-            GenerateCatalogImportMediaConversionsJob::dispatch($mediaIds)->afterResponse();
+            if (config('vercel.enabled')) {
+                app(QstashPublisher::class)->publish(
+                    'internal/vercel/jobs/media-conversions?key='.(string) config('app.deploy_secret'),
+                    ['mediaIds' => $mediaIds],
+                );
+            } else {
+                GenerateCatalogImportMediaConversionsJob::dispatch($mediaIds)->afterResponse();
+            }
             $stats['media_conversions_queued'] = count($mediaIds);
         }
 

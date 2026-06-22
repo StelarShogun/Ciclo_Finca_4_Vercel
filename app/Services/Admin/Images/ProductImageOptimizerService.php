@@ -76,7 +76,10 @@ class ProductImageOptimizerService
 
     public function sanitizeUploadedFile(UploadedFile $file): string
     {
-        $tempDir = storage_path('app/temp/'.now()->format('Y-m-d'));
+        $tempRoot = config('vercel.enabled')
+            ? sys_get_temp_dir().DIRECTORY_SEPARATOR.'cf4-temp'
+            : storage_path('app/temp');
+        $tempDir = $tempRoot.DIRECTORY_SEPARATOR.now()->format('Y-m-d');
         File::ensureDirectoryExists($tempDir);
 
         $tempName = Str::uuid()->toString().'.'.$file->getClientOriginalExtension();

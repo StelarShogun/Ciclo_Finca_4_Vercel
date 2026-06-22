@@ -124,6 +124,14 @@ final class ProductMediaService
     public function productImageFolderPath(Product $product): string
     {
         $slug = $this->productImageSlug($product);
+
+        if (config('vercel.enabled')) {
+            $folderPath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'cf4-product-images'.DIRECTORY_SEPARATOR.$slug;
+            File::ensureDirectoryExists($folderPath, 0755);
+
+            return $folderPath;
+        }
+
         $folderPath = public_path('images/'.$slug);
 
         if (is_dir($folderPath) || is_writable(dirname($folderPath))) {

@@ -43,12 +43,20 @@ use App\Http\Controllers\Client\ProductPageController;
 use App\Http\Controllers\Client\ProductReviewController;
 use App\Http\Controllers\Client\ProfileController;
 use App\Http\Controllers\Client\StorefrontController;
+use App\Http\Controllers\Internal\VercelController;
 use App\Services\Client\Cart\CartDatabaseStore;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
+
+Route::prefix('internal/vercel')->group(function () {
+    Route::get('/cron/scheduler', [VercelController::class, 'scheduler']);
+    Route::post('/jobs/catalog-import', [VercelController::class, 'catalogImport']);
+    Route::post('/jobs/media-conversions', [VercelController::class, 'mediaConversions']);
+    Route::post('/jobs/order-maintenance', [VercelController::class, 'orderMaintenance']);
+});
 
 // Restricts deploy helper routes outside local and testing environments.
 $assertDeployHelperAllowed = function (Request $request): void {
