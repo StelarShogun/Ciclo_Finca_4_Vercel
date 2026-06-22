@@ -46,7 +46,7 @@ Respuesta JSON/HTML incluye métricas adicionales:
 
 Pendiente: test de importación sintética ≥500 filas en CI (coste de tiempo); hoy cubierto por tests de SKU/nombre+categoría y métricas.
 
-If that background pass is interrupted (container restart, timeout), the scheduler task `cf4:regenerate-missing-media-conversions` runs **every 15 minutes** and finishes any remaining images — no manual admin step.
+If that background pass is interrupted (container restart, timeout), the scheduler task `cf4:regenerate-missing-media-conversions` runs **once per day at 03:00** and finishes any remaining images — no manual admin step.
 
 ## Typical workflow
 
