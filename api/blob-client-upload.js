@@ -1,4 +1,5 @@
-import { handleUpload } from '@vercel/blob/client';
+import { issueSignedToken } from '@vercel/blob';
+import { handleUploadPresigned } from '@vercel/blob/client';
 
 const MAX_IMPORT_SIZE = 100 * 1024 * 1024;
 const IMPORT_PREFIX = 'catalog-imports/';
@@ -93,10 +94,11 @@ export default async function handler(req, res) {
 
     try {
         const body = await readBody(req);
-        const response = await handleUpload({
+        const response = await handleUploadPresigned({
             request: req,
             body,
-            onBeforeGenerateToken: async (pathname, clientPayload) => {
+            webhookPublicKey: process.env.BLOB_WEBHOOK_PUBLIC_KEY || 'cf4-presigned-upload',
+            getSignedToken: async (pathname, clientPayload) => {
                 if (!await isAdminRequest(req)) {
                     throw new Error('No autorizado.');
                 }
@@ -108,22 +110,29 @@ export default async function handler(req, res) {
                     throw new Error('Archivo de importación no permitido.');
                 }
 
+                const validUntil = Date.now() + 15 * 60 * 1000;
+
                 return {
-                    allowedContentTypes: ALLOWED_CONTENT_TYPES,
-                    maximumSizeInBytes: MAX_IMPORT_SIZE,
-                    addRandomSuffix: false,
-                    allowOverwrite: true,
-                    tokenPayload: JSON.stringify({
-                        originalName: String(payload.originalName || pathname).slice(0, 255),
+                    token: await issueSignedToken({
                         pathname,
+                        operations: ['put'],
+                        allowedContentTypes: ALLOWED_CONTENT_TYPES,
+                        maximumSizeInBytes: MAX_IMPORT_SIZE,
+                        validUntil,
                     }),
+                    urlOptions: {
+                        access: 'public',
+                        allowedContentTypes: ALLOWED_CONTENT_TYPES,
+                        maximumSizeInBytes: MAX_IMPORT_SIZE,
+                        validUntil,
+                        addRandomSuffix: false,
+                        allowOverwrite: true,
+                        tokenPayload: JSON.stringify({
+                            originalName: String(payload.originalName || pathname).slice(0, 255),
+                            pathname,
+                        }),
+                    },
                 };
-            },
-            onUploadCompleted: async ({ blob, tokenPayload }) => {
-                console.log('Catalog import uploaded to Blob', {
-                    pathname: blob.pathname,
-                    tokenPayload,
-                });
             },
         });
 

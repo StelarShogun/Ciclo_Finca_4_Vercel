@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { upload } from '@vercel/blob/client';
+import { uploadPresigned } from '@vercel/blob/client';
 import {
     qs,
     qsa,
@@ -1933,7 +1933,7 @@ export async function initModals() {
     async function uploadImportFileToBlob(file) {
         setButtonLoading(confirmImportBtn, true, 'Preparando subida…');
 
-        return upload(importBlobPath(file), file, {
+        return uploadPresigned(importBlobPath(file), file, {
             access: 'public',
             handleUploadUrl: directUploadUrl,
             contentType: file.type || 'application/octet-stream',
