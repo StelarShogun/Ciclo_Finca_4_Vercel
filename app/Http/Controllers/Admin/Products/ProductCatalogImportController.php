@@ -48,16 +48,33 @@ class ProductCatalogImportController extends Controller
         $progress = CatalogImportProgress::queued($importId, $adminId, $originalName);
 
         if (config('vercel.enabled')) {
-            app(QstashPublisher::class)->publish(
-                'internal/vercel/jobs/catalog-import?key='.(string) config('app.deploy_secret'),
-                [
-                    'importId' => $importId,
-                    'adminId' => $adminId,
-                    'storedPath' => $storedPath,
-                    'originalName' => $originalName,
-                    'disk' => $disk,
-                ],
-            );
+            $payload = [
+                'importId' => $importId,
+                'adminId' => $adminId,
+                'storedPath' => $storedPath,
+                'originalName' => $originalName,
+                'disk' => $disk,
+            ];
+
+            if ((string) config('vercel.qstash_token', '') !== '') {
+                app(QstashPublisher::class)->publish(
+                    'internal/vercel/jobs/catalog-import?key='.(string) config('app.deploy_secret'),
+                    $payload,
+                );
+            } else {
+                app()->call([
+                    new RunCatalogImportJob(
+                        importId: $importId,
+                        adminId: $adminId,
+                        storedPath: $storedPath,
+                        originalName: $originalName,
+                        disk: $disk,
+                    ),
+                    'handle',
+                ]);
+
+                $progress = CatalogImportProgress::get($importId) ?? $progress;
+            }
         } else {
             RunCatalogImportJob::dispatch($importId, $adminId, $storedPath, $originalName, $disk);
         }
