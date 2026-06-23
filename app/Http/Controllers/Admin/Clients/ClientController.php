@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin\Clients;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Services\AuditLogger;
+use App\Services\Client\Inertia\ListPaginationPayload;
 use App\Support\AdminPerPage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 class ClientController extends Controller
 {
@@ -61,7 +63,27 @@ class ClientController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        return view('admin.users.table_clients', compact('clients', 'sort', 'dir'));
+        return Inertia::render('Admin/Clients/Index', [
+            'clients' => $clients->getCollection()->map(fn (Client $client): array => [
+                'user_id' => (int) $client->user_id,
+                'name' => $client->name,
+                'first_surname' => $client->first_surname,
+                'second_surname' => $client->second_surname,
+                'gmail' => $client->gmail,
+                'created_at' => optional($client->created_at)->format('d/m/Y'),
+                'updated_at' => optional($client->updated_at)->format('d/m/Y'),
+                'active' => (bool) $client->active,
+            ])->values()->all(),
+            'pagination' => ListPaginationPayload::from($clients),
+            'filters' => [
+                'search' => (string) $request->input('search', ''),
+                'status' => (string) $request->input('status', ''),
+                'created_date' => (string) $request->input('created_date', ''),
+                'updated_date' => (string) $request->input('updated_date', ''),
+            ],
+            'sort' => $sort,
+            'dir' => $dir,
+        ]);
     }
 
     public function ban(int $id)
