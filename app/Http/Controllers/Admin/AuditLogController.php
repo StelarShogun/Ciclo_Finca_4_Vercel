@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Services\Client\Inertia\ListPaginationPayload;
 use App\Support\AdminDateRange;
 use App\Support\AdminPerPage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class AuditLogController extends Controller
 {
@@ -128,12 +130,28 @@ class AuditLogController extends Controller
             ->orderBy('module')
             ->pluck('module');
 
-        return view('admin.reports.audit-log', [
-            'logs' => $logs,
-            'actionTypes' => $actionTypes,
-            'modules' => $modules,
-            'actionTypeLabels' => self::ACTION_TYPE_LABELS,
-            'moduleLabels' => self::MODULE_LABELS,
+        $rows = collect($logs->items())->map(function (AuditLog $log): array {
+            $userLabel = $log->adminUser
+                ? trim($log->adminUser->name.' '.($log->adminUser->first_surname ?? '')).' ('.$log->adminUser->gmail.')'
+                : ($log->admin_email_snapshot ?? 'Sistema');
+
+            return [
+                'id' => (int) $log->id,
+                'created_at' => optional($log->created_at)->format('d/m/Y H:i:s') ?? '—',
+                'user' => $userLabel,
+                'action_type' => $log->action_type,
+                'action_label' => self::actionTypeLabel((string) $log->action_type),
+                'module' => $log->module,
+                'module_label' => self::moduleLabel((string) $log->module),
+                'description' => self::descriptionLabel($log->description),
+            ];
+        })->values()->all();
+
+        return Inertia::render('Admin/Reports/AuditLog', [
+            'logs' => $rows,
+            'pagination' => ListPaginationPayload::from($logs),
+            'actionTypeOptions' => $actionTypes->map(fn ($t): array => ['value' => $t, 'label' => self::actionTypeLabel((string) $t)])->values()->all(),
+            'moduleOptions' => $modules->map(fn ($m): array => ['value' => $m, 'label' => self::moduleLabel((string) $m)])->values()->all(),
             'filters' => [
                 'user' => $user,
                 'action_type' => $actionType,

@@ -22,6 +22,7 @@ use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportsController extends Controller
@@ -35,7 +36,7 @@ class ReportsController extends Controller
     // Renders the main reports dashboard.
     public function index()
     {
-        return view('admin.reports.index');
+        return Inertia::render('Admin/Reports/Index');
     }
 
     // Renders the centralised export hub.
