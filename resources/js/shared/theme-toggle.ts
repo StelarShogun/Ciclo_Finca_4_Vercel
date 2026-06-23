@@ -4,7 +4,7 @@ const STORAGE_KEY = 'cf4-theme';
 const TRANSITION_MS = 650;
 const TOGGLE_ANIM_MS = 560;
 
-let themeTransitionTimer: ReturnType<typeof window.setTimeout> | undefined;
+let themeTransitionTimer: number | undefined;
 
 function getSystemTheme(): Cf4Theme {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -29,7 +29,7 @@ function beginThemeTransition(): void {
     window.clearTimeout(themeTransitionTimer);
     themeTransitionTimer = window.setTimeout(() => {
         root.classList.remove('cf4-theme-transition');
-    }, TRANSITION_MS);
+    }, TRANSITION_MS) as unknown as number;
 }
 
 function syncToggleButtons(theme: Cf4Theme, animate = false): void {

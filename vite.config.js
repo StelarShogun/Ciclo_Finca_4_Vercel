@@ -20,7 +20,6 @@ const adminAssets = [
     // JS (TypeScript entrypoints)
     "resources/js/admin/shell.ts",
     "resources/js/admin/dashboard/dashboard.ts",
-    "resources/js/admin/inventory/inventory-entry.ts",
     "resources/js/admin/sales/sales.ts",
     "resources/js/admin/sales/reports-by-category.ts",
     "resources/js/admin/orders/orders.ts",

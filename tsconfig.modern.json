@@ -33,6 +33,7 @@
     "resources/js/shared/**/*.ts",
     "resources/js/features/**/*.ts",
     "resources/js/Pages/**/*.tsx",
+    "resources/js/Pages/**/*.ts",
     "resources/js/types/**/*.d.ts",
     "resources/js/types/**/*.ts",
     "resources/js/admin/login/login.ts",
