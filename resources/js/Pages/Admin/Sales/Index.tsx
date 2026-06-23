@@ -15,6 +15,7 @@ import { ViewSaleModal } from './components/ViewSaleModal';
 import { ReturnSaleModal } from './components/ReturnSaleModal';
 
 import '../../../../css/admin/sales/sales.css';
+import '../../../../css/admin/components/product-combobox.css';
 
 type PageProps = {
   sales: SaleRow[];

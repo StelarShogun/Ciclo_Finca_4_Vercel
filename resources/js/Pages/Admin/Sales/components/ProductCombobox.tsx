@@ -104,7 +104,7 @@ export function ProductCombobox({ selectedLabel, invalid, onSelect, onClear }: P
       />
       <i className="fas fa-chevron-down product-combobox-chevron" aria-hidden="true" />
       {open ? (
-        <div className="product-combobox-dropdown sale-product-dropdown" role="listbox">
+        <div className="product-combobox-dropdown sale-product-dropdown open" role="listbox">
           {loading ? (
             <div className="product-combobox-empty">Buscando…</div>
           ) : results.length === 0 ? (
