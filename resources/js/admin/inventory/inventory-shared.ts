@@ -546,15 +546,21 @@ function showSubtleNotification(message, type = 'info') {
 }
 
 // Show loading state on a button
-function setButtonLoading(button, isLoading, originalText = null) {
+function setButtonLoading(button, isLoading, loadingText = null) {
     if (isLoading) {
+        if (!button.classList.contains('loading')) {
+            button.dataset.originalText = button.innerHTML;
+        }
+
         button.disabled = true;
-        button.dataset.originalText = button.innerHTML;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        button.innerHTML = loadingText
+            ? `<i class="fas fa-spinner fa-spin"></i> ${escapeHtml(String(loadingText))}`
+            : '<i class="fas fa-spinner fa-spin"></i>';
         button.classList.add('loading');
     } else {
         button.disabled = false;
-        button.innerHTML = originalText || button.dataset.originalText || button.innerHTML;
+        button.innerHTML = button.dataset.originalText || button.innerHTML;
+        delete button.dataset.originalText;
         button.classList.remove('loading');
     }
 }
