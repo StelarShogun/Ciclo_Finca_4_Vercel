@@ -1931,31 +1931,25 @@ export async function initModals() {
     }
 
     async function uploadImportFileToBlob(file) {
-        const abortController = new AbortController();
-        const timeout = window.setTimeout(() => abortController.abort(), 4 * 60 * 1000);
-
         setButtonLoading(confirmImportBtn, true, 'Preparando subida…');
 
-        try {
-            return await upload(importBlobPath(file), file, {
-                access: 'public',
-                handleUploadUrl: directUploadUrl,
-                contentType: file.type || 'application/octet-stream',
-                abortSignal: abortController.signal,
-                clientPayload: JSON.stringify({
-                    originalName: file.name,
-                    size: file.size,
-                }),
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                onUploadProgress: ({ percentage }) => {
-                    setButtonLoading(confirmImportBtn, true, `Subiendo ${Math.round(percentage)}%…`);
-                },
-            });
-        } finally {
-            window.clearTimeout(timeout);
-        }
+        return upload(importBlobPath(file), file, {
+            access: 'public',
+            handleUploadUrl: directUploadUrl,
+            contentType: file.type || 'application/octet-stream',
+            clientPayload: JSON.stringify({
+                originalName: file.name,
+                size: file.size,
+            }),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            onUploadProgress: ({ percentage }) => {
+                const rounded = Math.round(percentage);
+                const label = rounded >= 100 ? 'Finalizando subida…' : `Subiendo ${rounded}%…`;
+                setButtonLoading(confirmImportBtn, true, label);
+            },
+        });
     }
 
     async function startImportRequest(file) {
@@ -2042,8 +2036,8 @@ export async function initModals() {
                     // Y el dock flotante para seguir el avance al cerrar el modal.
                     void refreshDock();
                 } catch (error) {
-                    const message = error?.name === 'AbortError'
-                        ? 'La subida a Blob tardó demasiado y fue cancelada. Intentá de nuevo.'
+                    const message = String(error?.message || '').includes('request was aborted')
+                        ? 'La subida a Blob fue interrumpida antes de finalizar. Intentá de nuevo.'
                         : error?.message || 'Error de conexión al iniciar la importación. Verificá tu red e intentá de nuevo.';
 
                     void cf4Error(

@@ -548,20 +548,20 @@ function showSubtleNotification(message, type = 'info') {
 // Show loading state on a button
 function setButtonLoading(button, isLoading, loadingText = null) {
     if (isLoading) {
-        if (!button.classList.contains('loading')) {
+        if (button.dataset.cf4Loading !== '1') {
             button.dataset.originalText = button.innerHTML;
         }
 
+        button.dataset.cf4Loading = '1';
         button.disabled = true;
         button.innerHTML = loadingText
             ? `<i class="fas fa-spinner fa-spin"></i> ${escapeHtml(String(loadingText))}`
             : '<i class="fas fa-spinner fa-spin"></i>';
-        button.classList.add('loading');
     } else {
         button.disabled = false;
         button.innerHTML = button.dataset.originalText || button.innerHTML;
+        delete button.dataset.cf4Loading;
         delete button.dataset.originalText;
-        button.classList.remove('loading');
     }
 }
 
