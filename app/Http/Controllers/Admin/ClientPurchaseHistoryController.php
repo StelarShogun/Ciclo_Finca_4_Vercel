@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 /**
  * CF4-33 — historial de compras por cliente (ventas completadas con cliente).
@@ -32,11 +33,11 @@ class ClientPurchaseHistoryController extends Controller
             is_string($request->query('q')) ? $request->query('q') : null
         );
 
-        return view('admin.reports.client-purchases', [
+        return Inertia::render('Admin/Reports/ClientPurchases', [
             'period' => $period,
             'sort' => $sort,
             'dir' => $dir,
-            'q' => $q,
+            'q' => $q ?? '',
         ]);
     }
 
@@ -69,12 +70,26 @@ class ClientPurchaseHistoryController extends Controller
             'back_per_page' => $request->query('back_per_page'),
         ], fn ($v) => $v !== null && $v !== '');
 
-        return view('admin.reports.client-purchases-show', [
+        $listQuery = array_filter([
+            'period' => $backParams['back_period'] ?? '30d',
+            'sort' => $backParams['back_sort'] ?? null,
+            'dir' => $backParams['back_dir'] ?? null,
+            'page' => $backParams['back_page'] ?? null,
+            'per_page' => $backParams['back_per_page'] ?? null,
+            'q' => $backParams['back_q'] ?? null,
+        ], fn ($v) => $v !== null && $v !== '');
+
+        return Inertia::render('Admin/Reports/ClientPurchasesShow', [
             'clientId' => $client,
             'displayName' => $displayName !== '' ? $displayName : (string) $clientRow->gmail,
             'gmail' => (string) $clientRow->gmail,
-            'orders' => $orders,
-            'backParams' => $backParams,
+            'orders' => collect($orders)->map(fn ($o): array => [
+                'sale_id' => (int) $o->sale_id,
+                'invoice_number' => $o->invoice_number ?? ('#'.$o->sale_id),
+                'sale_date' => Carbon::parse($o->sale_date, config('app.timezone'))->format('d/m/Y H:i'),
+                'total' => (float) $o->total,
+            ])->values()->all(),
+            'listUrl' => route('admin.reports.client-purchases', $listQuery),
         ]);
     }
 

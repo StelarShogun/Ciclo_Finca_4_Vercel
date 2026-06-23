@@ -6,11 +6,13 @@ use App\Enums\MovementType;
 use App\Http\Controllers\Controller;
 use App\Models\InventoryMovement;
 use App\Models\Product;
+use App\Services\Client\Inertia\ListPaginationPayload;
 use App\Services\InventoryMovementService;
 use App\Support\AdminDateRange;
 use App\Support\AdminPerPage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 // Read-only controller for inventory movement history.
 class InventoryMovementController extends Controller
@@ -35,7 +37,28 @@ class InventoryMovementController extends Controller
         $perPage = AdminPerPage::resolve($request->input('per_page', 10));
         $products = $query->paginate($perPage)->withQueryString();
 
-        return view('admin.reports.movements.index', compact('products'));
+        $stockLabels = ['success' => 'Normal', 'warning' => 'Bajo', 'danger' => 'Sin stock'];
+
+        $rows = collect($products->items())->map(function (Product $product) use ($stockLabels): array {
+            $badge = $product->adminInventoryStockBadgeClass();
+
+            return [
+                'product_id' => (int) $product->product_id,
+                'sku' => Product::skuFromId($product->product_id),
+                'name' => $product->name,
+                'category_name' => $product->category?->name ?? '—',
+                'supplier_name' => $product->supplier?->name,
+                'stock_badge_class' => $badge,
+                'stock_label' => $stockLabels[$badge] ?? 'Revisar',
+                'stock_current' => (int) $product->stock_current,
+            ];
+        })->values()->all();
+
+        return Inertia::render('Admin/Reports/MovementsIndex', [
+            'products' => $rows,
+            'pagination' => ListPaginationPayload::from($products),
+            'filters' => ['search' => (string) $request->input('search', '')],
+        ]);
     }
 
     // Renders the movement history view for a specific product.
@@ -56,11 +79,34 @@ class InventoryMovementController extends Controller
             ->sort()
             ->values();
 
-        return view('admin.reports.movements.show', compact(
-            'product',
-            'availableTypes',
-            'availableOrigins',
-        ));
+        $originLabels = [
+            'sale_admin' => 'Venta (admin)',
+            'sale_web' => 'Venta web',
+            'return' => 'Devolución de venta',
+            'cancellation' => 'Cancelación de encargo',
+            'provider' => 'Entrada de proveedor',
+            'manual_adjustment' => 'Ajuste manual',
+        ];
+
+        return Inertia::render('Admin/Reports/MovementsShow', [
+            'product' => [
+                'product_id' => (int) $product->product_id,
+                'name' => $product->name,
+                'sku' => $product->displaySku(),
+                'category_name' => $product->category?->name ?? '—',
+                'supplier_name' => $product->supplier?->name,
+                'stock_current' => (int) $product->stock_current,
+            ],
+            'availableTypes' => collect($availableTypes)->map(fn (MovementType $t): array => [
+                'value' => $t->value,
+                'label' => $t->label(),
+            ])->values()->all(),
+            'availableOrigins' => $availableOrigins->map(fn ($o): array => [
+                'value' => $o,
+                'label' => $originLabels[$o] ?? ucwords(str_replace('_', ' ', $o)),
+            ])->values()->all(),
+            'jsonUrl' => route('admin.inventory.movements.json', $product->product_id),
+        ]);
     }
 
     // Returns paginated movement data and summary metrics as JSON.
