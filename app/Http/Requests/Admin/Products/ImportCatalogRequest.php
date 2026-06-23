@@ -5,6 +5,7 @@ namespace App\Http\Requests\Admin\Products;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Validator;
 
 class ImportCatalogRequest extends FormRequest
 {
@@ -43,9 +44,11 @@ class ImportCatalogRequest extends FormRequest
      */
     public function rules(): array
     {
+        $usingBlobPath = $this->filled('blob_path');
+
         return [
             'import_file' => [
-                'required',
+                $usingBlobPath ? 'nullable' : 'required',
                 'file',
                 'max:102400',
                 function (string $attribute, mixed $value, \Closure $fail): void {
@@ -59,7 +62,62 @@ class ImportCatalogRequest extends FormRequest
                     }
                 },
             ],
+            'blob_path' => [
+                'nullable',
+                'string',
+                'max:500',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+
+                    if (! config('vercel.enabled')) {
+                        $fail('La importación directa por Blob solo está disponible en Vercel.');
+
+                        return;
+                    }
+
+                    $path = (string) $value;
+                    $prefix = trim((string) config('vercel.import_prefix', 'catalog-imports'), '/').'/';
+                    if (! str_starts_with($path, $prefix)) {
+                        $fail('La ruta del archivo importado no es válida.');
+
+                        return;
+                    }
+
+                    if (! $this->hasAllowedExtension($path, (string) $this->input('original_name', ''))) {
+                        $fail('El archivo debe ser ZIP, JSON, XML o CSV.');
+                    }
+                },
+            ],
+            'blob_url' => [
+                'nullable',
+                'url',
+                'max:1000',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+
+                    $host = parse_url((string) $value, PHP_URL_HOST);
+                    if (! is_string($host) || ! str_ends_with($host, '.blob.vercel-storage.com')) {
+                        $fail('La URL del archivo importado no pertenece a Vercel Blob.');
+                    }
+                },
+            ],
+            'original_name' => ['nullable', 'string', 'max:255'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            if ($this->hasFile('import_file') || $this->filled('blob_path')) {
+                return;
+            }
+
+            $validator->errors()->add('import_file', 'Seleccioná un archivo ZIP, JSON, XML o CSV para importar.');
+        });
     }
 
     /**
@@ -74,6 +132,18 @@ class ImportCatalogRequest extends FormRequest
         ];
     }
 
+    private function hasAllowedExtension(string ...$filenames): bool
+    {
+        foreach ($filenames as $filename) {
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            if (in_array($extension, ['zip', 'json', 'xml', 'csv', 'txt'], true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function postTooLarge(): bool
     {
         if ($this->hasFile('import_file')) {
@@ -85,8 +155,11 @@ class ImportCatalogRequest extends FormRequest
             return false;
         }
 
-        return ! str_contains((string) $this->header('Content-Type'), 'multipart/form-data')
-            || $contentLength > $this->parseIniSize((string) ini_get('post_max_size'));
+        if (! str_contains((string) $this->header('Content-Type'), 'multipart/form-data')) {
+            return false;
+        }
+
+        return $contentLength > $this->parseIniSize((string) ini_get('post_max_size'));
     }
 
     private function uploadErrorMessage(UploadedFile $file): string

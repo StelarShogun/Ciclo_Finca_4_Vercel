@@ -37,7 +37,8 @@
     data-active-url="{{ route('products.import.active') }}"
     data-progress-url="{{ route('products.import.progress', ['importId' => '__ID__']) }}"
     data-cancel-url="{{ route('products.import.cancel', ['importId' => '__ID__']) }}"
-    data-dismiss-url="{{ route('products.import.dismiss') }}">
+    data-dismiss-url="{{ route('products.import.dismiss') }}"
+    data-direct-upload-url="{{ config('vercel.enabled') ? '/internal/blob-client-upload' : '' }}">
     <div class="modal-backdrop"></div>
     <div class="modal-content modal-auto-size">
         <div class="modal-header">

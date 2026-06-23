@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { upload } from '@vercel/blob/client';
 import {
     qs,
     qsa,
@@ -1889,6 +1890,7 @@ export async function initModals() {
 
     const fileInput = qs('#import_file');
     const importSummary = qs('#import-file-summary');
+    const directUploadUrl = importModal?.dataset.directUploadUrl || '';
 
     function resetImportUi() {
         importSummary?.classList.add('hidden');
@@ -1913,6 +1915,72 @@ export async function initModals() {
             importSummary.classList.remove('hidden');
         }
         if (confirmImportBtn) confirmImportBtn.disabled = false;
+    }
+
+    function safeImportFilename(filename) {
+        const safeName = String(filename || 'catalog-import.dat')
+            .replace(/[^a-zA-Z0-9._-]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+
+        return safeName || 'catalog-import.dat';
+    }
+
+    function importBlobPath(file) {
+        const random = Math.random().toString(36).slice(2, 10);
+        return `catalog-imports/browser-${Date.now()}-${random}-${safeImportFilename(file.name)}`;
+    }
+
+    async function uploadImportFileToBlob(file) {
+        const blob = await upload(importBlobPath(file), file, {
+            access: 'public',
+            handleUploadUrl: directUploadUrl,
+            multipart: true,
+            contentType: file.type || 'application/octet-stream',
+            clientPayload: JSON.stringify({
+                originalName: file.name,
+                size: file.size,
+            }),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            onUploadProgress: ({ percentage }) => {
+                setButtonLoading(confirmImportBtn, true, `Subiendo ${Math.round(percentage)}%…`);
+            },
+        });
+
+        return blob;
+    }
+
+    async function startImportRequest(file) {
+        if (directUploadUrl) {
+            const blob = await uploadImportFileToBlob(file);
+
+            return fetch(importForm.action, {
+                method: 'POST',
+                body: JSON.stringify({
+                    blob_path: blob.pathname,
+                    blob_url: blob.url,
+                    original_name: file.name,
+                }),
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCSRFToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+        }
+
+        const formData = new FormData(importForm);
+
+        return fetch(importForm.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
     }
 
     const importUpload = initFileUploadZone({
@@ -1945,15 +2013,7 @@ export async function initModals() {
                 setButtonLoading(confirmImportBtn, true, 'Enviando…');
 
                 try {
-                    const formData = new FormData(importForm);
-                    const response = await fetch(importForm.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            Accept: 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                        },
-                    });
+                    const response = await startImportRequest(file);
 
                     let data = {};
                     try {

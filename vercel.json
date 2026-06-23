@@ -71,6 +71,10 @@
             "dest": "/public/robots.txt"
         },
         {
+            "src": "/internal/blob-client-upload",
+            "dest": "/api/blob-client-upload.js"
+        },
+        {
             "src": "/(.*)",
             "dest": "/api/index.php"
         }

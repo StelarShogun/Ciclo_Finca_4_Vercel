@@ -272,6 +272,10 @@ final class VercelBlobAdapter implements FilesystemAdapter
 
     private function url(string $path): string
     {
+        if (str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
         return rtrim($this->publicUrl, '/').'/'.$this->applyPrefix($path);
     }
 

@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductCatalogImportController extends Controller
@@ -22,16 +23,29 @@ class ProductCatalogImportController extends Controller
      */
     public function import(ImportCatalogRequest $request): JsonResponse
     {
-        /** @var UploadedFile $file */
-        $file = $request->file('import_file');
         $adminId = (int) Auth::guard('admin')->id();
-
         $importId = (string) Str::uuid();
-        $extension = strtolower($file->getClientOriginalExtension()) ?: 'dat';
         $disk = config('vercel.enabled') ? (string) config('vercel.import_disk') : 'local';
-        $storedPath = $file->storeAs((string) config('vercel.import_prefix', 'catalog-imports'), $importId.'.'.$extension, $disk);
 
-        $progress = CatalogImportProgress::queued($importId, $adminId, $file->getClientOriginalName());
+        if ($request->filled('blob_path') && config('vercel.enabled')) {
+            $blobPath = (string) $request->input('blob_path');
+            $storedPath = (string) ($request->input('blob_url') ?: $blobPath);
+            $originalName = (string) ($request->input('original_name') ?: basename($blobPath));
+
+            if (! Storage::disk($disk)->exists($storedPath)) {
+                return response()->json([
+                    'message' => 'El archivo subido a Blob no está disponible para importar.',
+                ], 422);
+            }
+        } else {
+            /** @var UploadedFile $file */
+            $file = $request->file('import_file');
+            $extension = strtolower($file->getClientOriginalExtension()) ?: 'dat';
+            $storedPath = $file->storeAs((string) config('vercel.import_prefix', 'catalog-imports'), $importId.'.'.$extension, $disk);
+            $originalName = $file->getClientOriginalName();
+        }
+
+        $progress = CatalogImportProgress::queued($importId, $adminId, $originalName);
 
         if (config('vercel.enabled')) {
             app(QstashPublisher::class)->publish(
@@ -40,12 +54,12 @@ class ProductCatalogImportController extends Controller
                     'importId' => $importId,
                     'adminId' => $adminId,
                     'storedPath' => $storedPath,
-                    'originalName' => $file->getClientOriginalName(),
+                    'originalName' => $originalName,
                     'disk' => $disk,
                 ],
             );
         } else {
-            RunCatalogImportJob::dispatch($importId, $adminId, $storedPath, $file->getClientOriginalName(), $disk);
+            RunCatalogImportJob::dispatch($importId, $adminId, $storedPath, $originalName, $disk);
         }
 
         return response()->json([
