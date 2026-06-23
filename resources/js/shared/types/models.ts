@@ -1,5 +1,6 @@
 export type FlashMessage = {
   success?: string | null;
+  status?: string | null;
   error?: string | null;
   clientSuccessModal?: {
     kind?: string;

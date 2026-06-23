@@ -26,6 +26,8 @@ class HandleInertiaRequests extends Middleware
             'csrfToken' => fn () => csrf_token(),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
+                // El admin usa 'status' para mensajes de éxito (redirect()->with('status', …)).
+                'status' => fn () => $request->session()->get('status'),
                 'error' => fn () => $request->session()->get('error'),
                 'clientSuccessModal' => fn () => $request->session()->get('client_success_modal'),
             ],

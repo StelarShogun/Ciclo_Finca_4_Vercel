@@ -6,6 +6,7 @@ import type { InertiaSharedProps } from '@/shared/types/models';
 
 import '../../../../css/admin/shell-base.css';
 import '../../../../css/admin/components/page-header.css';
+import '../../../../css/admin/components/admin-table.css';
 import '../../../../css/admin/dashboard/dashboard.css';
 
 type AdminLayoutProps = PropsWithChildren<{

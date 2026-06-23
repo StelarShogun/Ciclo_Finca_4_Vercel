@@ -20,8 +20,9 @@ export function useFlashToasts() {
 
   useEffect(() => {
     const modal = flash?.clientSuccessModal;
+    const successText = flash?.success ?? flash?.status ?? null;
     const key = JSON.stringify({
-      success: flash?.success ?? null,
+      success: successText,
       error: flash?.error ?? null,
       modal: modal ?? null,
     });
@@ -37,8 +38,8 @@ export function useFlashToasts() {
       return;
     }
 
-    if (flash?.success) {
-      showToast({ variant: 'success', title: 'Listo', message: flash.success });
+    if (successText) {
+      showToast({ variant: 'success', title: 'Listo', message: successText });
       return;
     }
 
@@ -65,6 +66,6 @@ export function useFlashToasts() {
           (icon === 'google' ? 'Conectado con Google' : 'Inicio de sesión exitoso'),
       });
     }
-  }, [flash?.clientSuccessModal, flash?.error, flash?.success, showToast]);
+  }, [flash?.clientSuccessModal, flash?.error, flash?.success, flash?.status, showToast]);
 }
 
