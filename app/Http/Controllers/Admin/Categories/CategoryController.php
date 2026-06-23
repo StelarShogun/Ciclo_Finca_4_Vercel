@@ -4,15 +4,17 @@ namespace App\Http\Controllers\Admin\Categories;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Services\Client\Inertia\ListPaginationPayload;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
     public function createParentCategory()
     {
-        return view('admin.categories.parents.create');
+        return Inertia::render('Admin/Categories/CreateParent');
     }
 
     public function storeParentCategory(Request $request)
@@ -58,7 +60,7 @@ class CategoryController extends Controller
             ->get();
 
         $perPage = max(5, min(50, $request->integer('per_page', 15)));
-        $currentPage = LengthAwarePaginator::resolveCurrentPage('hierarchy_page');
+        $currentPage = LengthAwarePaginator::resolveCurrentPage('page');
         $hierarchyRows = Category::hierarchyRowsForAdminDisplay();
 
         $categoriesHierarchy = new LengthAwarePaginator(
@@ -68,14 +70,27 @@ class CategoryController extends Controller
             $currentPage,
             [
                 'path' => $request->url(),
-                'pageName' => 'hierarchy_page',
+                'pageName' => 'page',
             ]
         );
         $categoriesHierarchy->withQueryString();
 
         $subcategoriesByParent = Category::subcategoriesGroupedByCanonicalParent();
 
-        return view('admin.categories.subcategories.create', compact('categories', 'categoriesHierarchy', 'subcategoriesByParent'));
+        return Inertia::render('Admin/Categories/CreateSubcategory', [
+            'categories' => $categories->map(fn (Category $c): array => [
+                'category_id' => (int) $c->category_id,
+                'name' => $c->name,
+            ])->values()->all(),
+            'subcategoriesByParent' => $subcategoriesByParent,
+            'hierarchy' => $categoriesHierarchy->getCollection()->map(fn ($row): array => [
+                'category_id' => (int) $row->category_id,
+                'name' => $row->name,
+                'parent_name' => optional($row->parent)->name,
+                'is_parent' => $row->parent_category_id === null,
+            ])->values()->all(),
+            'pagination' => ListPaginationPayload::from($categoriesHierarchy),
+        ]);
     }
 
     public function store(Request $request)

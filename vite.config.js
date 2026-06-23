@@ -32,7 +32,6 @@ const adminAssets = [
     "resources/js/admin/users/clients.ts",
     "resources/js/admin/classifications/catalog.ts",
     "resources/js/admin/classifications/forms.ts",
-    "resources/js/admin/categories/category-subcategory-form.ts",
     "resources/js/admin/reports/product-sales.ts",
     "resources/js/admin/reports/sales-performance.ts",
     "resources/js/admin/reports/exports-modal.ts",
