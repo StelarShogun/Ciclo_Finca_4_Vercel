@@ -1,5 +1,7 @@
 import type { FormEvent, PropsWithChildren, ReactNode } from 'react';
 
+import '../../../../css/admin/components/filters.css';
+
 type FiltersSectionProps = PropsWithChildren<{
   title?: string;
   onSubmit: (event: FormEvent) => void;
