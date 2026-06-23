@@ -22,10 +22,11 @@ function crc(n: number): string {
 type Props = {
   saleId: number | null;
   onClose: () => void;
-  onPrint: (saleId: number, invoiceLabel: string) => void;
+  onPrint?: (saleId: number, invoiceLabel: string) => void;
+  title?: string;
 };
 
-export function ViewSaleModal({ saleId, onClose, onPrint }: Props) {
+export function ViewSaleModal({ saleId, onClose, onPrint, title }: Props) {
   const [sale, setSale] = useState<SaleDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -77,10 +78,10 @@ export function ViewSaleModal({ saleId, onClose, onPrint }: Props) {
       isOpen={saleId != null}
       onClose={onClose}
       className="cf4-modal cf4-modal--wide"
-      title={<><i className="fas fa-eye" aria-hidden="true" /> Detalles de la Venta</>}
+      title={<><i className="fas fa-eye" aria-hidden="true" /> {title ?? 'Detalles de la Venta'}</>}
       footer={
         <>
-          {sale ? (
+          {sale && onPrint ? (
             <button type="button" className="btn btn-primary" onClick={() => onPrint(sale.sale_id, invoiceLabel)}>
               <i className="fas fa-print" aria-hidden="true" /> Imprimir factura
             </button>

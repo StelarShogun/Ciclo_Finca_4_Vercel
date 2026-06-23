@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin\Orders;
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
 use App\Models\Sale;
+use App\Services\Client\Inertia\ListPaginationPayload;
 use App\Support\AdminDateRange;
 use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class OrderController extends Controller
 {
@@ -87,20 +89,56 @@ class OrderController extends Controller
 
         $usesEnvDefaultForExpiry = $storedHours === null && $storedDaysLegacy === null;
 
-        $weeklyReportDay = AppSetting::getWeeklyReportDay();
-        $weeklyReportHour = AppSetting::getWeeklyReportHour();
-        $weeklyReportRecipients = AppSetting::getWeeklyReportRecipients();
+        $orderLabels = [
+            'pending' => 'Pendiente',
+            'ready_to_pickup' => 'Listo para recoger',
+            'completed' => 'Confirmado',
+            'cancelled' => 'Rechazado',
+            'refunded' => 'Reembolsado',
+        ];
 
-        return view('admin.orders.index', compact(
-            'orders',
-            'latestPurchaseSaleId',
-            'pendingWebOrdersCount',
-            'readyToPickupExpirationHours',
-            'usesEnvDefaultForExpiry',
-            'weeklyReportDay',
-            'weeklyReportHour',
-            'weeklyReportRecipients'
-        ));
+        $rows = collect($orders->items())->map(function (Sale $sale) use ($orderLabels): array {
+            if ($sale->client_id && $sale->client) {
+                $customer = trim($sale->client->name.' '.$sale->client->first_surname.' '.($sale->client->second_surname ?: ''));
+                $customerEmail = $sale->client->gmail;
+            } elseif ($sale->buyer_name) {
+                $customer = $sale->buyer_name;
+                $customerEmail = $sale->buyer_email;
+            } else {
+                $customer = 'Sin datos de cliente';
+                $customerEmail = null;
+            }
+
+            return [
+                'sale_id' => (int) $sale->sale_id,
+                'invoice_number' => $sale->invoice_number,
+                'reference' => $sale->invoice_number ?? '#'.$sale->sale_id,
+                'customer' => $customer,
+                'customer_email' => $customerEmail,
+                'order_placed_label' => $sale->adminOrderPlacedAtLabel(),
+                'ready_label' => $sale->adminReadyAtLabel(),
+                'confirmed_label' => $sale->adminConfirmedAtLabel(),
+                'status' => $sale->status,
+                'status_label' => $orderLabels[$sale->status] ?? ucfirst($sale->status),
+                'total' => (float) $sale->total,
+            ];
+        })->values()->all();
+
+        return Inertia::render('Admin/Orders/Index', [
+            'orders' => $rows,
+            'pagination' => ListPaginationPayload::from($orders),
+            'pendingWebOrdersCount' => (int) $pendingWebOrdersCount,
+            'latestPurchaseSaleId' => (int) $latestPurchaseSaleId,
+            'readyToPickupExpirationHours' => (int) $readyToPickupExpirationHours,
+            'usesEnvDefaultForExpiry' => (bool) $usesEnvDefaultForExpiry,
+            'filters' => [
+                'status' => (string) ($status ?? ''),
+                'date_range' => (string) $request->input('date_range', ''),
+                'date_from' => (string) $request->input('date_from', ''),
+                'date_to' => (string) $request->input('date_to', ''),
+                'search' => (string) ($search ?? ''),
+            ],
+        ]);
     }
 
     private function baseWebOrdersQuery()
