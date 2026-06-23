@@ -130,3 +130,4 @@ tests/e2e/.auth/
 test-results/
 playwright-report/
 playwright/.cache/
+.env*
