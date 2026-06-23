@@ -16,6 +16,7 @@ use App\Services\Admin\AdminPdfExportService;
 use App\Services\Admin\RegistryExcelExport;
 use App\Services\Admin\ReportExcelFilename;
 use App\Services\AuditLogger;
+use App\Services\Client\Inertia\ListPaginationPayload;
 use App\Services\InventoryMovementService;
 use App\Services\OrderCancellationNotifier;
 use App\Support\AdminDateRange;
@@ -29,6 +30,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SalesController extends Controller
@@ -46,25 +48,61 @@ class SalesController extends Controller
         $perPage = AdminPerPage::resolve($request->input('per_page', 10));
         $sales = $query->orderBy('sale_date', 'desc')->paginate($perPage)->withQueryString();
 
-        $dailySales = $this->calculateDailySales();
-        $dailySalesTrend = $this->calculateDailySalesTrend();
-        $dailyTransactions = $this->calculateDailyTransactions();
-        $dailyTransactionsTrend = $this->calculateDailyTransactionsTrend();
-        $refunds = $this->calculateRefunds();
-        $refundsTrend = $this->calculateRefundsTrend();
-        $latestHistorySaleId = (clone $this->historyHeartbeatBaseQuery())->max('sale_id') ?? 0;
+        $statusLabels = [
+            'pending' => 'Pendiente',
+            'ready_to_pickup' => 'Por recoger',
+            'completed' => 'Confirmada',
+            'cancelled' => 'Rechazado',
+            'refunded' => 'Reembolsada',
+            'returned' => 'Devuelta',
+        ];
+        $paymentLabels = ['cash' => 'Efectivo', 'sinpe' => 'SINPE Móvil', 'transfer' => 'Transferencia'];
 
-        return view('admin.sales.index', compact(
-            'sales',
-            'dailySales',
-            'dailySalesTrend',
-            'dailyTransactions',
-            'dailyTransactionsTrend',
-            'refunds',
-            'refundsTrend',
-            'salesStatusUi',
-            'latestHistorySaleId',
-        ));
+        $rows = collect($sales->items())->map(function (Sale $sale) use ($statusLabels, $paymentLabels): array {
+            if ($sale->client_id && $sale->client) {
+                $customer = trim($sale->client->name.' '.$sale->client->first_surname.' '.($sale->client->second_surname ?: ''));
+                $customerEmail = $sale->client->gmail;
+            } else {
+                $customer = $sale->buyer_name ?: 'Mostrador / Sin datos';
+                $customerEmail = $sale->buyer_email;
+            }
+
+            return [
+                'sale_id' => (int) $sale->sale_id,
+                'invoice_number' => $sale->invoice_number ?? '#'.$sale->sale_id,
+                'customer' => $customer,
+                'customer_email' => $customerEmail,
+                'sale_date_label' => $sale->adminSaleDateLabel(),
+                'status' => $sale->status,
+                'status_label' => $statusLabels[$sale->status] ?? $sale->status,
+                'payment_method' => $sale->payment_method,
+                'payment_label' => $paymentLabels[$sale->payment_method] ?? $sale->payment_method,
+                'total' => (float) $sale->total,
+            ];
+        })->values()->all();
+
+        return Inertia::render('Admin/Sales/Index', [
+            'sales' => $rows,
+            'pagination' => ListPaginationPayload::from($sales),
+            'kpis' => [
+                'dailySales' => (float) $this->calculateDailySales(),
+                'dailySalesTrend' => (float) $this->calculateDailySalesTrend(),
+                'dailyTransactions' => (int) $this->calculateDailyTransactions(),
+                'dailyTransactionsTrend' => (float) $this->calculateDailyTransactionsTrend(),
+                'refunds' => (int) $this->calculateRefunds(),
+                'refundsTrend' => (float) $this->calculateRefundsTrend(),
+            ],
+            'salesStatusUi' => $salesStatusUi,
+            'latestHistorySaleId' => (int) ((clone $this->historyHeartbeatBaseQuery())->max('sale_id') ?? 0),
+            'filters' => [
+                'status' => $salesStatusUi,
+                'date_range' => (string) $request->query('date_range', 'today'),
+                'payment_method' => (string) $request->query('payment_method', ''),
+                'search' => (string) $request->query('search', ''),
+                'date_from' => (string) $request->query('date_from', ''),
+                'date_to' => (string) $request->query('date_to', ''),
+            ],
+        ]);
     }
 
     public function historyHeartbeat(Request $request)

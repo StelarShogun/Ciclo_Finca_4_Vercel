@@ -345,7 +345,7 @@ export default function Index(props: PageProps) {
               <i className="fas fa-info-circle" aria-hidden="true" /> No hay productos que coincidan con los filtros.
             </div>
           ) : view === 'table' ? (
-            <div className="products-table table-view">
+            <div className="products-table table-view active">
               <table className="admin-table">
                 <thead>
                   <tr>
