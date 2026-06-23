@@ -33,8 +33,8 @@ export function HeaderCatalogSearch() {
     <div
       className="header-catalog-search"
       data-catalog-suggestions
-      data-suggestions-url="/api/products/suggestions"
-      data-trending-url="/api/catalog/search-trending"
+      data-suggestions-url="/products/suggestions"
+      data-trending-url="/catalog/search-trending"
     >
       <div className="header-catalog-search-track">
         <button

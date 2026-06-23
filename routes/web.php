@@ -137,6 +137,19 @@ Route::get('/admin/login', [AdminUserController::class, 'showLoginForm'])->name(
 Route::post('/admin/login', [AdminUserController::class, 'login'])->name('admin.login.submit');
 Route::post('/admin/logout', [AdminUserController::class, 'logout'])->name('admin.logout');
 
+// Public JSON aliases kept before admin resource routes. Vercel PHP strips the
+// /api prefix from requests routed through api/index.php.
+Route::get('/products/suggestions', ProductSuggestionsController::class)
+    ->middleware('throttle:60,1')
+    ->name('public.products.suggestions');
+
+Route::get('/catalog/search-trending', SearchTrendingController::class)
+    ->middleware('throttle:60,1')
+    ->name('public.catalog.search-trending');
+
+Route::get('/catalog/heartbeat', [StorefrontController::class, 'catalogHeartbeat'])
+    ->name('public.catalog.heartbeat');
+
 // Admin-only routes.
 Route::middleware(['admin.only', 'prevent.direct', 'audit.sensitive.module'])->group(function () {
 

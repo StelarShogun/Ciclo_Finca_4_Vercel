@@ -86,7 +86,7 @@ export default function CatalogIndex({
   return (
     <ClientLayout>
       <Head title="Catálogo - Ciclo Finca 4">
-        <meta name="cf4-catalog-heartbeat-url" content="/api/catalog/heartbeat" />
+        <meta name="cf4-catalog-heartbeat-url" content="/catalog/heartbeat" />
         <meta name="cf4-catalog-initial-version" content={catalogVersion} />
       </Head>
 
