@@ -67,11 +67,12 @@ class ProductCatalogImportController extends Controller
                 if ((string) config('vercel.qstash_token', '') !== '') {
                     // Token presente: el procesamiento debe ir por QStash. Si falla,
                     // reportamos el error real en vez de degradar silenciosamente.
-                    $deploySecret = (string) config('app.deploy_secret');
+                    // El secreto viaja solo por header reenviado por QStash
+                    // (Upstash-Forward-*), nunca en la URL, para no filtrarlo en logs.
                     app(QstashPublisher::class)->publish(
-                        'internal/vercel/jobs/catalog-import?key='.$deploySecret,
+                        'internal/vercel/jobs/catalog-import',
                         $payload,
-                        forwardHeaders: ['X-Internal-Key' => $deploySecret],
+                        forwardHeaders: ['X-Internal-Key' => (string) config('app.deploy_secret')],
                     );
                 } else {
                     // Sin token: corremos la importación de forma directa como respaldo.

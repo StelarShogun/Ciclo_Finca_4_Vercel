@@ -183,8 +183,9 @@ final class ProductCatalogImporter
         if ($mediaIds !== []) {
             if (config('vercel.enabled')) {
                 app(QstashPublisher::class)->publish(
-                    'internal/vercel/jobs/media-conversions?key='.(string) config('app.deploy_secret'),
+                    'internal/vercel/jobs/media-conversions',
                     ['mediaIds' => $mediaIds],
+                    forwardHeaders: ['X-Internal-Key' => (string) config('app.deploy_secret')],
                 );
             } else {
                 GenerateCatalogImportMediaConversionsJob::dispatch($mediaIds)->afterResponse();
