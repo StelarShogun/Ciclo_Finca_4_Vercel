@@ -78,7 +78,7 @@ class ReportsController extends Controller
         $from = $request->query('from');
         $to = $request->query('to');
 
-        return view('admin.reports.sales-performance', [
+        return Inertia::render('Admin/Reports/SalesPerformance', [
             'initialPreset' => $preset,
             'initialFrom' => is_string($from) ? $from : '',
             'initialTo' => is_string($to) ? $to : '',
@@ -142,7 +142,7 @@ class ReportsController extends Controller
     // Renders the product-sales report view with normalised filter state.
     public function productSales(Request $request)
     {
-        return view('admin.reports.product-sales', [
+        return Inertia::render('Admin/Reports/ProductSales', [
             'period' => $this->normalizePeriod($request->query('period')),
             'sort' => $this->normalizeSort($request->query('sort')),
             'dir' => $this->normalizeDir($request->query('dir')),
@@ -161,14 +161,19 @@ class ReportsController extends Controller
         $topRow = $rows->first();
         $maxHits = max(1, (int) ($rows->max('hit_count') ?? 0));
 
-        return view('admin.reports.catalog-most-searched-products', [
+        return Inertia::render('Admin/Reports/CatalogSearch', [
             'period' => $period,
-            'rows' => $rows,
-            'totalEvents' => $totalEvents,
-            'uniqueProducts' => $uniqueProducts,
+            'rows' => $rows->map(fn ($row): array => [
+                'product_id' => (int) $row->product_id,
+                'name' => (string) $row->name,
+                'sku' => \App\Models\Product::skuFromId((int) $row->product_id),
+                'hit_count' => (int) $row->hit_count,
+            ])->values()->all(),
+            'totalEvents' => (int) $totalEvents,
+            'uniqueProducts' => (int) $uniqueProducts,
             'topProductName' => $topRow->name ?? null,
             'topProductHits' => isset($topRow->hit_count) ? (int) $topRow->hit_count : null,
-            'maxHits' => $maxHits,
+            'maxHits' => (int) $maxHits,
         ]);
     }
 
@@ -502,9 +507,23 @@ class ReportsController extends Controller
             ];
         })->values()->toArray();
 
-        return view('admin.reports.reports-by-category', compact(
-            'rows', 'grandTotal', 'from', 'to', 'dateRange', 'chartData'
-        ));
+        return Inertia::render('Admin/Reports/ByCategory', [
+            'rows' => $rows->map(fn ($r): array => [
+                'category_id' => (int) $r->category_id,
+                'category_name' => (string) $r->category_name,
+                'total_units' => (int) $r->total_units,
+                'total_revenue' => (float) $r->total_revenue,
+                'percentage' => (float) $r->percentage,
+            ])->values()->all(),
+            'grandTotal' => (float) $grandTotal,
+            'totalUnits' => (int) $rows->sum('total_units'),
+            'chartData' => $chartData,
+            'filters' => [
+                'date_range' => (string) $dateRange,
+                'date_from' => (string) ($request->input('date_from') ?? ''),
+                'date_to' => (string) ($request->input('date_to') ?? ''),
+            ],
+        ]);
     }
 
     private function resolveDateRange(string $range, ?string $dateFrom, ?string $dateTo): array

@@ -21,7 +21,6 @@ const adminAssets = [
     "resources/js/admin/shell.ts",
     "resources/js/admin/dashboard/dashboard.ts",
     "resources/js/admin/sales/sales.ts",
-    "resources/js/admin/sales/reports-by-category.ts",
     "resources/js/admin/orders/supplier-orders.ts",
     "resources/js/admin/orders/supplier-order-create.ts",
     "resources/js/admin/orders/detail-supplier-page.ts",
