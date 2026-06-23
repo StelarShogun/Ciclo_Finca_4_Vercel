@@ -28,7 +28,6 @@ const adminAssets = [
     "resources/js/admin/orders/supplier-order-create.ts",
     "resources/js/admin/orders/xml-deviation-review.ts",
     "resources/js/admin/orders/detail-supplier-page.ts",
-    "resources/js/admin/suppliers/suppliers.ts",
     "resources/js/admin/login/login.ts",
     "resources/js/admin/users/clients.ts",
     "resources/js/admin/product-classifications/index.ts",

@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Admin\Suppliers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Supplier;
+use App\Services\Client\Inertia\ListPaginationPayload;
 use App\Support\AdminPerPage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Inertia\Inertia;
 
 class SupplierController extends Controller
 {
@@ -30,7 +32,25 @@ class SupplierController extends Controller
         $perPage = AdminPerPage::resolve($request->input('per_page', 10));
         $suppliers = $query->paginate($perPage)->withQueryString();
 
-        return view('admin.suppliers.index', compact('suppliers', 'averageRating'));
+        return Inertia::render('Admin/Suppliers/Index', [
+            'suppliers' => $suppliers->getCollection()->map(fn (Supplier $s): array => [
+                'supplier_id' => $s->supplier_id,
+                'name' => $s->name,
+                'primary_contact' => $s->primary_contact,
+                'phone' => $s->phone,
+                'email' => $s->email,
+                'address' => $s->address,
+                'delivery_time' => $s->delivery_time,
+                'rating' => $s->rating !== null ? (float) $s->rating : null,
+                'created_at' => optional($s->created_at)->toIso8601String(),
+            ])->values()->all(),
+            'averageRating' => (float) ($averageRating ?? 0),
+            'pagination' => ListPaginationPayload::from($suppliers),
+            'filters' => [
+                'name' => (string) $request->input('name', ''),
+                'contact' => (string) $request->input('contact', ''),
+            ],
+        ]);
     }
 
     public function create(): RedirectResponse
@@ -138,14 +158,10 @@ class SupplierController extends Controller
         return redirect()->route('suppliers.index');
     }
 
-    public function edit(string $supplier)
+    public function edit(string $supplier): RedirectResponse
     {
-        $supplier = Supplier::find($supplier);
-        if (! $supplier) {
-            return redirect()->back()->with('error', 'Proveedor no encontrado.');
-        }
-
-        return view('admin.suppliers.edit', compact('supplier'));
+        // La edición se hace en un modal de la página Inertia; redirigimos al listado.
+        return redirect()->route('suppliers.index', ['edit' => $supplier]);
     }
 
     public function update(Request $request, string $supplier)
