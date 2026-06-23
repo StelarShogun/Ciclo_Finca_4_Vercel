@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin\Brands;
 
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
+use App\Services\Client\Inertia\ListPaginationPayload;
 use App\Services\Client\Storefront\ClientStorefrontCache;
 use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Inertia\Inertia;
 
 class BrandController extends Controller
 {
@@ -22,7 +24,14 @@ class BrandController extends Controller
         $perPage = AdminPerPage::resolve($request->input('per_page', 10));
         $brands = $query->orderBy('name')->paginate($perPage)->withQueryString();
 
-        return view('admin.brands.index', compact('brands'));
+        return Inertia::render('Admin/Brands/Index', [
+            'brands' => $brands->getCollection()
+                ->map(fn (Brand $brand): array => ['id' => $brand->id, 'name' => $brand->name])
+                ->values()
+                ->all(),
+            'pagination' => ListPaginationPayload::from($brands),
+            'filters' => ['name' => (string) $request->input('name', '')],
+        ]);
     }
 
     public function store(Request $request)

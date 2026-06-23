@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { Badge } from '@/shared/components/ui/Badge';
+import { PageHeader } from '@/shared/components/ui/PageHeader';
 
 type DashboardProps = {
   totalProducts: number;
@@ -44,6 +45,8 @@ export default function Index({
   return (
     <AdminLayout title="Panel de control">
       <Head title="Dashboard - Ciclo Finca 4 Admin" />
+
+      <PageHeader title="Panel de control" kicker="Administración" />
 
       <div className="dashboard-page">
         {error ? (
