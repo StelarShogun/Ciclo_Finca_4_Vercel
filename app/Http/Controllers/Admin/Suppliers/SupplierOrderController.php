@@ -12,12 +12,14 @@ use App\Models\Supplier;
 use App\Services\AuditLogger;
 use App\Services\InventoryMovementService;
 use App\Services\SupplierDeliveryEstimator;
+use App\Services\Client\Inertia\ListPaginationPayload;
 use App\Support\AdminDateRange;
 use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class SupplierOrderController extends Controller
 {
@@ -174,7 +176,88 @@ class SupplierOrderController extends Controller
             ->orderBy('name')
             ->get(['supplier_id', 'name', 'primary_contact', 'email', 'phone']);
 
-        return view('admin.orders.index_supplier', compact('orders', 'openSupplierOrdersCount', 'suppliers'));
+        $stateLabels = [
+            'draft' => 'Borrador',
+            'pending' => 'Pendiente',
+            'confirmed' => 'Confirmado',
+            'partial_received' => 'Recepción parcial',
+            'delivered' => 'Entregado',
+            'cancelled' => 'Cancelado',
+        ];
+
+        $rows = collect($orders->items())->map(function (Order $order) use ($stateLabels): array {
+            $poFull = $order->po_number ?? ('#'.$order->num_order);
+            $poShort = $poFull;
+            if (is_string($order->po_number) && preg_match('/^PO-(\d{4})-(\d{4})$/', $order->po_number, $m)) {
+                $poShort = 'PO-'.$m[2];
+            }
+
+            $edd = $order->estimated_delivery_date;
+            $eddClass = '';
+            if ($edd && ! in_array($order->state, ['delivered', 'cancelled'], true)) {
+                if ($edd->isPast()) {
+                    $eddClass = 'edd-pill edd-late';
+                } elseif ($edd->isToday()) {
+                    $eddClass = 'edd-pill edd-today';
+                }
+            }
+
+            $realDeliveredAt = $order->delivered_at ?? $order->received_at;
+
+            $initialTotal = (float) ($order->total ?? 0);
+            $hasReceivedData = $order->orderItems->contains(fn ($it) => $it->received_quantity !== null);
+            $hasShorts = false;
+            $receivedTotal = 0.0;
+            $shortsTotal = 0.0;
+            if ($hasReceivedData) {
+                $initialFromLines = $order->orderItems->reduce(fn ($c, $it) => $c + (float) ($it->total ?? 0), 0.0);
+                if ($initialFromLines > 0) {
+                    $initialTotal = $initialFromLines;
+                }
+                $receivedTotal = $order->orderItems->reduce(fn ($c, $it) => $c + round(((float) ($it->unit_price ?? 0)) * ((int) ($it->received_quantity ?? 0)), 2), 0.0);
+                $hasShorts = $order->orderItems->contains(fn ($it) => (int) ($it->received_quantity ?? 0) < (int) ($it->quantity ?? 0));
+                $shortsTotal = max($initialTotal - $receivedTotal, 0.0);
+            }
+
+            return [
+                'num_order' => (int) $order->num_order,
+                'po_short' => $poShort,
+                'po_full' => $poFull,
+                'supplier_id' => $order->supplier?->supplier_id ? (int) $order->supplier->supplier_id : null,
+                'supplier_name' => $order->supplier?->name,
+                'date_label' => $order->date?->format('d/m/Y H:i') ?? '—',
+                'edd_label' => $edd?->format('d/m/Y') ?? '—',
+                'edd_class' => $eddClass,
+                'delivered_label' => $realDeliveredAt?->format('d/m/Y H:i'),
+                'state' => $order->state,
+                'state_label' => $stateLabels[$order->state] ?? ucfirst($order->state),
+                'initial_total' => (float) $initialTotal,
+                'received_total' => (float) $receivedTotal,
+                'shorts_total' => (float) $shortsTotal,
+                'has_received_data' => (bool) $hasReceivedData,
+                'has_shorts' => (bool) $hasShorts,
+            ];
+        })->values()->all();
+
+        return Inertia::render('Admin/SupplierOrders/Index', [
+            'orders' => $rows,
+            'pagination' => ListPaginationPayload::from($orders),
+            'openSupplierOrdersCount' => (int) $openSupplierOrdersCount,
+            'suppliers' => $suppliers->map(fn (Supplier $s): array => [
+                'supplier_id' => (int) $s->supplier_id,
+                'name' => $s->name,
+                'primary_contact' => $s->primary_contact,
+                'email' => $s->email,
+                'phone' => $s->phone,
+            ])->values()->all(),
+            'filters' => [
+                'state' => (string) ($state ?? ''),
+                'date_range' => (string) $request->input('date_range', ''),
+                'date_from' => (string) ($request->input('date_from') ?? ''),
+                'date_to' => (string) ($request->input('date_to') ?? ''),
+                'search' => (string) ($search ?? ''),
+            ],
+        ]);
     }
 
     public function create()
