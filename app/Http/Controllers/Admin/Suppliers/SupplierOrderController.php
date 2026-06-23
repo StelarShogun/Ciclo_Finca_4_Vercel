@@ -274,7 +274,75 @@ class SupplierOrderController extends Controller
         $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin'])
             ->findOrFail($id);
 
-        return view('admin.orders.detail_supplier', compact('order'));
+        $stateLabels = [
+            'draft' => 'Borrador',
+            'pending' => 'Pendiente',
+            'confirmed' => 'Confirmado',
+            'partial_received' => 'Recepción parcial',
+            'delivered' => 'Entregado',
+            'cancelled' => 'Cancelado',
+        ];
+
+        $hasReceivedData = $order->orderItems->contains(fn ($it) => $it->received_quantity !== null);
+        $initialTotal = (float) ($order->orderItems->reduce(fn ($c, $it) => $c + (float) ($it->total ?? 0), 0.0) ?: (float) ($order->total ?? 0));
+        $receivedTotal = $hasReceivedData
+            ? (float) $order->orderItems->reduce(fn ($c, $it) => $c + round(((float) ($it->unit_price ?? 0)) * ((int) ($it->received_quantity ?? 0)), 2), 0.0)
+            : null;
+        $hasShorts = $hasReceivedData && $order->orderItems->contains(fn ($it) => (int) ($it->received_quantity ?? 0) < (int) ($it->quantity ?? 0));
+        $shortsTotal = ($hasReceivedData && $receivedTotal !== null) ? max($initialTotal - $receivedTotal, 0.0) : 0.0;
+
+        $confirmEntry = $order->stateTimeline->firstWhere('state', 'confirmed');
+        $confirmUserLabel = null;
+        if ($confirmEntry?->admin) {
+            $a = $confirmEntry->admin;
+            $confirmUserLabel = trim(implode(' ', array_filter([$a->name, $a->first_surname, $a->second_surname]))) ?: ($a->gmail ?: null);
+        }
+
+        return Inertia::render('Admin/SupplierOrders/Detail', [
+            'order' => [
+                'num_order' => (int) $order->num_order,
+                'po_number' => $order->po_number ?: ('#'.$order->num_order),
+                'supplier_name' => $order->supplier?->name ?? '—',
+                'date_label' => $order->date?->format('d/m/Y H:i') ?? '—',
+                'estimated_delivery_date' => $order->estimated_delivery_date?->format('d/m/Y'),
+                'delivered_at' => $order->delivered_at?->format('d/m/Y H:i'),
+                'received_at' => $order->received_at?->format('d/m/Y H:i'),
+                'state' => $order->state,
+                'state_label' => $stateLabels[$order->state] ?? ucfirst((string) $order->state),
+                'closed_with_shorts' => (bool) $order->closed_with_shorts,
+                'total' => (float) $order->total,
+                'has_received_data' => (bool) $hasReceivedData,
+                'has_shorts' => (bool) $hasShorts,
+                'initial_total' => (float) $initialTotal,
+                'received_total' => $receivedTotal !== null ? (float) $receivedTotal : null,
+                'shorts_total' => (float) $shortsTotal,
+                'items' => $order->orderItems->map(fn (OrderItem $it): array => [
+                    'id' => (int) $it->id,
+                    'name' => $it->name,
+                    'quantity' => (int) $it->quantity,
+                    'received_quantity' => $it->received_quantity !== null ? (int) $it->received_quantity : null,
+                    'unit_price' => (float) $it->unit_price,
+                    'total' => (float) $it->total,
+                ])->values()->all(),
+                'timeline' => $order->stateTimeline->map(function (OrderStateTimeline $e) use ($stateLabels): array {
+                    $adminName = $e->admin instanceof AdminUser
+                        ? trim($e->admin->name.' '.($e->admin->first_surname ?? ''))
+                        : 'Sistema';
+
+                    return [
+                        'state' => $e->state,
+                        'state_label' => $stateLabels[$e->state] ?? ucfirst($e->state),
+                        'changed_at' => $e->changed_at->format('d/m/Y H:i'),
+                        'user_name' => $adminName,
+                        'reason' => $e->reason,
+                    ];
+                })->values()->all(),
+                'confirm_audit' => $confirmEntry ? [
+                    'changed_at' => $confirmEntry->changed_at?->format('d/m/Y H:i') ?? '—',
+                    'user_name' => $confirmUserLabel ?? '—',
+                ] : null,
+            ],
+        ]);
     }
 
     public function store(Request $request)

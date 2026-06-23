@@ -9,11 +9,13 @@ type Props = {
   warning?: string;
   confirmLabel: string;
   submitting: boolean;
+  minLength?: number;
+  danger?: boolean;
   onClose: () => void;
   onConfirm: (reason: string) => void;
 };
 
-export function ReasonModal({ isOpen, title, intro, warning, confirmLabel, submitting, onClose, onConfirm }: Props) {
+export function ReasonModal({ isOpen, title, intro, warning, confirmLabel, submitting, minLength = 3, danger = true, onClose, onConfirm }: Props) {
   const [reason, setReason] = useState('');
   const [showError, setShowError] = useState(false);
 
@@ -24,7 +26,7 @@ export function ReasonModal({ isOpen, title, intro, warning, confirmLabel, submi
   }
 
   function confirm() {
-    if (reason.trim().length < 3) {
+    if (reason.trim().length < minLength) {
       setShowError(true);
       return;
     }
@@ -41,7 +43,7 @@ export function ReasonModal({ isOpen, title, intro, warning, confirmLabel, submi
       footer={
         <>
           <button type="button" className="btn btn-secondary" onClick={close}>Cancelar</button>
-          <button type="button" className="btn btn-danger" onClick={confirm} disabled={submitting}>
+          <button type="button" className={danger ? 'btn btn-danger' : 'btn btn-warning'} onClick={confirm} disabled={submitting}>
             {submitting ? 'Procesando…' : confirmLabel}
           </button>
         </>
@@ -57,14 +59,14 @@ export function ReasonModal({ isOpen, title, intro, warning, confirmLabel, submi
           value={reason}
           onChange={(e) => {
             setReason(e.target.value);
-            if (e.target.value.trim().length >= 3) setShowError(false);
+            if (e.target.value.trim().length >= minLength) setShowError(false);
           }}
           placeholder="Describa el motivo (obligatorio)…"
           style={{ width: '100%', resize: 'vertical' }}
         />
         {showError ? (
           <small className="text-danger">
-            <i className="fas fa-exclamation-circle" aria-hidden="true" /> El motivo es obligatorio y debe tener al menos 3 caracteres.
+            <i className="fas fa-exclamation-circle" aria-hidden="true" /> El motivo es obligatorio y debe tener al menos {minLength} caracteres.
           </small>
         ) : null}
       </div>
