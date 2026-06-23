@@ -8,6 +8,7 @@ use App\Services\XmlPriceDeviationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Inertia\Inertia;
 
 /**
  * XmlPriceDeviationController
@@ -43,7 +44,7 @@ class XmlPriceDeviationController extends Controller
 
     public function showUploadForm()
     {
-        return view('admin.orders.orders-xml-deviation.upload');
+        return Inertia::render('Admin/SupplierOrders/XmlUpload');
     }
 
     // ─── 2. Parse & redirect to review ───────────────────────────────────────
@@ -103,7 +104,9 @@ class XmlPriceDeviationController extends Controller
                 ->withErrors(['xml_file' => 'La sesión de análisis expiró. Por favor, cargue el XML nuevamente.']);
         }
 
-        return view('admin.orders.orders-xml-deviation.review', compact('analysis'));
+        return Inertia::render('Admin/SupplierOrders/XmlReview', [
+            'analysis' => $analysis,
+        ]);
     }
 
     // ─── 4. Apply confirmed updates ───────────────────────────────────────────
