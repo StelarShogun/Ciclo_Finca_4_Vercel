@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\Classifications\UpdateClassificationValueRequest;
 use App\Models\Category;
 use App\Models\ClassificationDimension;
 use App\Models\ClassificationValue;
+use App\Services\Client\Inertia\ListPaginationPayload;
 use App\Support\AdminPerPage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -18,7 +19,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 /**
  * CF4-84 — Admin: atributos (Color, Talla…) y valores por subcategoría.
@@ -111,7 +113,7 @@ class ClassificationCatalogController extends Controller
         ]);
     }
 
-    public function index(Request $request): View
+    public function index(Request $request): InertiaResponse
     {
         $subcategoriesAll = Category::hierarchyRowsForAdminDisplay()
             ->filter(fn (Category $c) => $c->parent_category_id !== null)
@@ -147,10 +149,18 @@ class ClassificationCatalogController extends Controller
             }
         }
 
-        return view('admin.classifications.catalog.index', compact('subcategories'));
+        return Inertia::render('Admin/Classifications/Index', [
+            'subcategories' => $subcategories->getCollection()->map(fn (Category $c): array => [
+                'category_id' => (int) $c->category_id,
+                'name' => $c->name,
+                'parent_name' => optional($c->parent)->name,
+                'dimensions_count' => (int) ($c->getAttribute('classification_dimensions_count') ?? 0),
+            ])->values()->all(),
+            'pagination' => ListPaginationPayload::from($subcategories),
+        ]);
     }
 
-    public function showCategory(Category $category): View
+    public function showCategory(Category $category): InertiaResponse
     {
         $this->assertSubcategory($category);
         $category->load('parent:category_id,name');
@@ -161,7 +171,20 @@ class ClassificationCatalogController extends Controller
             ->withCount(['values' => fn ($q) => $q->whereNull('deleted_at')])
             ->get();
 
-        return view('admin.classifications.catalog.show', compact('category', 'attributes'));
+        return Inertia::render('Admin/Classifications/Show', [
+            'category' => [
+                'category_id' => (int) $category->category_id,
+                'name' => $category->name,
+                'parent_name' => optional($category->parent)->name,
+            ],
+            'attributes' => $attributes->map(fn (ClassificationDimension $d): array => [
+                'id' => (int) $d->id,
+                'label' => $d->label,
+                'slug' => $d->slug,
+                'values_count' => (int) $d->values_count,
+                'trashed' => $d->trashed(),
+            ])->values()->all(),
+        ]);
     }
 
     public function storeDimension(StoreClassificationDimensionRequest $request, Category $category): JsonResponse|RedirectResponse
@@ -196,12 +219,13 @@ class ClassificationCatalogController extends Controller
             ->with('status', 'Atributo creado.');
     }
 
-    public function editDimension(ClassificationDimension $dimension): View
+    public function editDimension(ClassificationDimension $dimension): RedirectResponse
     {
-        $dimension->load('category.parent');
+        // La edición se hace en un modal de la vista Inertia; redirigimos al detalle.
+        $dimension->load('category');
         $this->assertSubcategory($dimension->category);
 
-        return view('admin.classifications.catalog.dimension-edit', compact('dimension'));
+        return redirect()->route('admin.classifications.catalog.show', $dimension->category);
     }
 
     public function updateDimension(UpdateClassificationDimensionRequest $request, ClassificationDimension $dimension): RedirectResponse
@@ -250,12 +274,25 @@ class ClassificationCatalogController extends Controller
             ->with('status', 'Atributo activado de nuevo.');
     }
 
-    public function indexValues(ClassificationDimension $dimension): View
+    public function indexValues(ClassificationDimension $dimension): InertiaResponse
     {
         $dimension->load(['category.parent', 'values' => fn ($q) => $q->withTrashed()->orderBy('sort_order')->orderBy('id')]);
         $this->assertSubcategory($dimension->category);
 
-        return view('admin.classifications.catalog.values', compact('dimension'));
+        return Inertia::render('Admin/Classifications/Values', [
+            'dimension' => [
+                'id' => (int) $dimension->id,
+                'label' => $dimension->label,
+                'category_id' => (int) $dimension->category_id,
+                'category_name' => optional($dimension->category)->name,
+                'parent_name' => optional(optional($dimension->category)->parent)->name,
+            ],
+            'values' => $dimension->values->map(fn (ClassificationValue $v): array => [
+                'id' => (int) $v->id,
+                'value' => $v->value,
+                'trashed' => $v->trashed(),
+            ])->values()->all(),
+        ]);
     }
 
     public function storeValue(StoreClassificationValueRequest $request, ClassificationDimension $dimension): JsonResponse|RedirectResponse
@@ -290,13 +327,14 @@ class ClassificationCatalogController extends Controller
             ->with('status', 'Valor añadido.');
     }
 
-    public function editValue(ClassificationValue $value): View
+    public function editValue(ClassificationValue $value): RedirectResponse
     {
-        $value->load('dimension.category.parent');
+        // La edición se hace en un modal de la vista Inertia; redirigimos al listado de valores.
+        $value->load('dimension.category');
         $dimension = $value->dimension;
         $this->assertSubcategory($dimension->category);
 
-        return view('admin.classifications.catalog.value-edit', compact('value', 'dimension'));
+        return redirect()->route('admin.classifications.values.index', $dimension);
     }
 
     public function updateValue(UpdateClassificationValueRequest $request, ClassificationValue $value): RedirectResponse
