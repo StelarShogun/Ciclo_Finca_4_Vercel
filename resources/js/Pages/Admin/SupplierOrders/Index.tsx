@@ -128,7 +128,7 @@ export default function Index({ orders, pagination, openSupplierOrdersCount, sup
           kicker="Proveedores"
           actions={
             <div className="sales-header-actions">
-              <a href="/supplier-orders/xml-deviation/upload" className="btn btn-secondary btn-sm">
+              <a href="/supplier-orders/xml-deviation" className="btn btn-secondary btn-sm">
                 <i className="fas fa-file-import" aria-hidden="true" /> Analizar XML de proveedor
               </a>
               <button type="button" className="btn btn-primary btn-sm" onClick={() => setCreateOpen(true)}>

@@ -110,7 +110,7 @@ export default function XmlReview({ analysis }: { analysis: Analysis }) {
           kicker="Proveedores"
           actions={
             <div className="sales-header-actions">
-              <a href="/supplier-orders/xml-deviation/upload" className="btn btn-secondary btn-sm"><i className="fas fa-redo" aria-hidden="true" /> Cargar otro XML</a>
+              <a href="/supplier-orders/xml-deviation" className="btn btn-secondary btn-sm"><i className="fas fa-redo" aria-hidden="true" /> Cargar otro XML</a>
               <a href="/supplier-orders" className="btn btn-ghost btn-sm"><i className="fas fa-arrow-left" aria-hidden="true" /> Volver a pedidos</a>
             </div>
           }
@@ -237,7 +237,7 @@ export default function XmlReview({ analysis }: { analysis: Analysis }) {
           <button type="button" className="btn btn-primary" onClick={submit} disabled={submitting}>
             <i className="fas fa-check" aria-hidden="true" /> Aplicar cambios seleccionados <span className="xml-count-badge">{checked.size}</span>
           </button>
-          <a href="/supplier-orders/xml-deviation/upload" className="btn btn-secondary"><i className="fas fa-times" aria-hidden="true" /> Cancelar</a>
+          <a href="/supplier-orders/xml-deviation" className="btn btn-secondary"><i className="fas fa-times" aria-hidden="true" /> Cancelar</a>
           <span className="xml-selected-count">{checked.size} producto(s) seleccionado(s)</span>
         </div>
       </div>
