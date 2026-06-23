@@ -18,12 +18,16 @@
         "unlighthouse:client": "bash scripts/unlighthouse/run.sh client",
         "unlighthouse:admin": "bash scripts/unlighthouse/run.sh admin",
         "unlighthouse:auth": "bash scripts/unlighthouse/run-auth.sh",
+        "test:e2e:setup": "playwright test --project=setup",
+        "test:e2e": "playwright test --project=chromium",
+        "test:e2e:report": "playwright show-report",
         "test:api": "newman run postman/CF4-Storefront-API.postman_collection.json --env-var baseUrl=${API_BASE_URL:-http://localhost:8080}",
         "test:api:docker": "newman run postman/CF4-Storefront-API.postman_collection.json --env-var baseUrl=http://127.0.0.1",
         "test:seguimiento8:evidence": "bash scripts/run-seguimiento-8-evidence.sh"
     },
     "devDependencies": {
         "@inertiajs/vite": "^3.3.0",
+        "@playwright/test": "^1.61.0",
         "@tailwindcss/vite": "^4.0.0",
         "axios": "^1.11.0",
         "concurrently": "^9.0.1",

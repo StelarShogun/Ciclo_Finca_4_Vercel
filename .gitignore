@@ -122,3 +122,11 @@ vendor/composer/autoload_classmap.php
 .agents/
 /skills-lock.json
 .vercel
+
+# =========================
+# PLAYWRIGHT E2E
+# =========================
+tests/e2e/.auth/
+test-results/
+playwright-report/
+playwright/.cache/
