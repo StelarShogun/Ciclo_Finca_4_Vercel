@@ -7,6 +7,7 @@ use App\Rules\Recaptcha;
 use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class AdminUserController extends Controller
 {
@@ -20,7 +21,9 @@ class AdminUserController extends Controller
             return redirect()->route('dashboard');
         }
 
-        return view('admin.login.login');
+        return Inertia::render('Admin/Auth/Login', [
+            'recaptchaSiteKey' => config('services.recaptcha.key'),
+        ]);
     }
 
     public function login(Request $request, AuditLogger $auditLogger)

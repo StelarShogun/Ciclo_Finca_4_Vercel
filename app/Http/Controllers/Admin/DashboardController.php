@@ -45,7 +45,7 @@ class DashboardController extends Controller
             $data['weeklyReportMinute'] = AppSetting::getWeeklyReportMinute();
             $data['weeklyReportRecipients'] = AppSetting::getWeeklyReportRecipients();
 
-            return view('admin.dashboard', $data);
+            return Inertia::render('Admin/Dashboard/Index', $this->dashboardInertiaPayload($data));
 
         } catch (\Exception $e) {
             Log::error('Error en DashboardController: '.$e->getMessage(), [
@@ -54,21 +54,15 @@ class DashboardController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return view('admin.dashboard', [
+            return Inertia::render('Admin/Dashboard/Index', [
                 'totalProducts' => 0,
                 'totalSuppliers' => 0,
                 'totalCategories' => 0,
                 'todaySales' => 0,
                 'lowStockProducts' => 0,
-                'lowStockProductsList' => collect(),
-                'recentSales' => collect(),
-                'salesByDay' => collect(),
-                'productsByCategory' => collect(),
                 'salesTrend' => 0,
                 'monthlySales' => 0,
                 'monthlyTrend' => 0,
-                'topProducts' => collect(),
-                'topSuppliers' => collect(),
                 'error' => 'Error al cargar datos del dashboard',
             ]);
         }

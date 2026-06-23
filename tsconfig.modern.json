@@ -36,7 +36,6 @@
     "resources/js/Pages/**/*.ts",
     "resources/js/types/**/*.d.ts",
     "resources/js/types/**/*.ts",
-    "resources/js/admin/login/login.ts",
     "resources/js/client/header-menu-alert.ts",
     "resources/js/types/shims/**/*.d.ts",
     "resources/js/shared/legacy-dom.ts"
