@@ -121,9 +121,12 @@ final class VercelController extends Controller
     private function authorizeInternal(Request $request, bool $allowVercelCron = false): void
     {
         $secret = (string) config('app.deploy_secret', '');
+        // Aceptamos el secreto por query (?key=) o por header reenviado por QStash
+        // (X-Internal-Key), ya que QStash puede no preservar el query del destino.
         $provided = (string) $request->query('key', '');
+        $providedHeader = (string) $request->header('X-Internal-Key', '');
 
-        if ($secret !== '' && hash_equals($secret, $provided)) {
+        if ($secret !== '' && (hash_equals($secret, $provided) || hash_equals($secret, $providedHeader))) {
             return;
         }
 

@@ -96,8 +96,15 @@ class ProductController extends Controller
                 $firstBrand = $product->brands->first();
                 $productData['brand_id'] = $firstBrand instanceof Brand ? $firstBrand->id : null;
                 $productData['classification_value_ids'] = $product->classificationValues->pluck('id')->values()->all();
-                $productData['media_main'] = $product->getFirstMediaUrl('main_image');
-                $productData['media_gallery'] = $product->getMedia('gallery')->map(fn ($m) => $m->getUrl())->values()->toArray();
+                // La generación de URLs puede fallar si el media vive en un disco
+                // no disponible (p. ej. el disco local 'public' es de solo lectura en
+                // Vercel). Degradamos a vacío para que el producto siga cargando.
+                $productData['media_main'] = self::safeMediaUrl(fn () => $product->getFirstMediaUrl('main_image'));
+                $productData['media_gallery'] = $product->getMedia('gallery')
+                    ->map(fn ($m) => self::safeMediaUrl(fn () => $m->getUrl()))
+                    ->filter()
+                    ->values()
+                    ->toArray();
                 $productData['uses_placeholder_image'] = ProductImageUrls::usesPlaceholder($product);
                 $productData['placeholder_icon_class'] = ProductImageUrls::placeholderIconClass($product);
                 $variantIds = $product->variants->pluck('product_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
@@ -149,6 +156,8 @@ class ProductController extends Controller
             Log::error('Product show failed.', [
                 'product_id' => $id,
                 'error' => $e->getMessage(),
+                'exception' => get_class($e),
+                'at' => $e->getFile().':'.$e->getLine(),
             ]);
 
             if (request()->wantsJson() || request()->ajax()) {
@@ -165,6 +174,18 @@ class ProductController extends Controller
             }
 
             return redirect()->route('inventory')->with('error', 'No se pudo cargar el producto. Inténtalo de nuevo.');
+        }
+    }
+
+    /**
+     * Resuelve una URL de media tolerando fallos de disco (devuelve '' si falla).
+     */
+    private static function safeMediaUrl(callable $resolver): string
+    {
+        try {
+            return (string) $resolver();
+        } catch (\Throwable) {
+            return '';
         }
     }
 
