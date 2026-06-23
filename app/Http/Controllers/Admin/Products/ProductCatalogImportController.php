@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -47,36 +48,64 @@ class ProductCatalogImportController extends Controller
 
         $progress = CatalogImportProgress::queued($importId, $adminId, $originalName);
 
-        if (config('vercel.enabled')) {
-            $payload = [
-                'importId' => $importId,
-                'adminId' => $adminId,
-                'storedPath' => $storedPath,
-                'originalName' => $originalName,
-                'disk' => $disk,
-            ];
+        $context = [
+            'importId' => $importId,
+            'storedPath' => $storedPath,
+            'disk' => $disk,
+        ];
 
-            if ((string) config('vercel.qstash_token', '') !== '') {
-                app(QstashPublisher::class)->publish(
-                    'internal/vercel/jobs/catalog-import?key='.(string) config('app.deploy_secret'),
-                    $payload,
-                );
+        try {
+            if (config('vercel.enabled')) {
+                $payload = [
+                    'importId' => $importId,
+                    'adminId' => $adminId,
+                    'storedPath' => $storedPath,
+                    'originalName' => $originalName,
+                    'disk' => $disk,
+                ];
+
+                if ((string) config('vercel.qstash_token', '') !== '') {
+                    // Token presente: el procesamiento debe ir por QStash. Si falla,
+                    // reportamos el error real en vez de degradar silenciosamente.
+                    app(QstashPublisher::class)->publish(
+                        'internal/vercel/jobs/catalog-import?key='.(string) config('app.deploy_secret'),
+                        $payload,
+                    );
+                } else {
+                    // Sin token: corremos la importación de forma directa como respaldo.
+                    app()->call([
+                        new RunCatalogImportJob(
+                            importId: $importId,
+                            adminId: $adminId,
+                            storedPath: $storedPath,
+                            originalName: $originalName,
+                            disk: $disk,
+                        ),
+                        'handle',
+                    ]);
+
+                    $progress = CatalogImportProgress::get($importId) ?? $progress;
+                }
             } else {
-                app()->call([
-                    new RunCatalogImportJob(
-                        importId: $importId,
-                        adminId: $adminId,
-                        storedPath: $storedPath,
-                        originalName: $originalName,
-                        disk: $disk,
-                    ),
-                    'handle',
-                ]);
-
-                $progress = CatalogImportProgress::get($importId) ?? $progress;
+                RunCatalogImportJob::dispatch($importId, $adminId, $storedPath, $originalName, $disk);
             }
-        } else {
-            RunCatalogImportJob::dispatch($importId, $adminId, $storedPath, $originalName, $disk);
+        } catch (\Throwable $e) {
+            Log::error('Catalog import orchestration failed: '.$e->getMessage(), $context + [
+                'exception' => $e,
+            ]);
+
+            $message = 'No se pudo iniciar la importación: '.$e->getMessage();
+
+            CatalogImportProgress::put($importId, [
+                'status' => 'failed',
+                'level' => 'error',
+                'message' => $message,
+            ]);
+
+            return response()->json([
+                'importId' => $importId,
+                'message' => $message,
+            ], 502);
         }
 
         return response()->json([
