@@ -5,6 +5,7 @@ import type { FormEvent } from 'react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { Modal } from '@/shared/components/ui/Modal';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
 import { useToast } from '@/shared/hooks/useToast';
@@ -228,7 +229,7 @@ export default function Index({ averageRating, filters, pagination, suppliers }:
           </div>
         </section>
 
-        <form className="cf4-filters" onSubmit={submitFilters}>
+        <FiltersSection onSubmit={submitFilters} onClear={clearFilters}>
           <div className="filter-group">
             <label htmlFor="buscarNombre">Nombre</label>
             <input
@@ -249,17 +250,7 @@ export default function Index({ averageRating, filters, pagination, suppliers }:
               onChange={(event) => setContact(event.target.value)}
             />
           </div>
-          <div className="filter-actions">
-            <button type="submit" className="btn btn-primary">
-              <i className="fas fa-search" aria-hidden="true" /> Filtrar
-            </button>
-            {filters.name || filters.contact ? (
-              <button type="button" className="btn btn-secondary" onClick={clearFilters}>
-                Limpiar
-              </button>
-            ) : null}
-          </div>
-        </form>
+        </FiltersSection>
 
         <div className="table-section">
           <div className="sales-table-container">

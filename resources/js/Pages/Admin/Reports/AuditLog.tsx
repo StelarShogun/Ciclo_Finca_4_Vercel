@@ -5,6 +5,7 @@ import type { FormEvent } from 'react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
+import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import type { InertiaListPagination as Pagination } from '@/types/pagination';
 
 import '../../../../css/admin/reports/reports-hub.css';
@@ -65,7 +66,7 @@ export default function AuditLog({ logs, pagination, actionTypeOptions, moduleOp
           <p>Consulta acciones administrativas por usuario, tipo de evento, módulo afectado y fecha.</p>
         </PageHeader>
 
-        <form className="cf4-filters filter-form" onSubmit={submitFilters}>
+        <FiltersSection onSubmit={submitFilters} onClear={clearFilters}>
           <div className="filter-group">
             <label htmlFor="audit-user">Usuario</label>
             <input id="audit-user" type="text" placeholder="Nombre o correo…" value={form.user} onChange={(e) => setForm({ ...form, user: e.target.value })} />
@@ -92,11 +93,7 @@ export default function AuditLog({ logs, pagination, actionTypeOptions, moduleOp
             <label htmlFor="audit-to">Hasta</label>
             <input id="audit-to" type="date" value={form.to} onChange={(e) => setForm({ ...form, to: e.target.value })} />
           </div>
-          <div className="filter-actions">
-            <button type="submit" className="btn btn-primary"><i className="fas fa-search" aria-hidden="true" /> Filtrar</button>
-            <button type="button" className="btn btn-secondary" onClick={clearFilters}>Limpiar</button>
-          </div>
-        </form>
+        </FiltersSection>
 
         <div className="table-section">
           <div className="sales-table-container">

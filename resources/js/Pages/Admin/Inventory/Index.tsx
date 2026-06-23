@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
 import { useToast } from '@/shared/hooks/useToast';
@@ -245,7 +246,7 @@ export default function Index(props: PageProps) {
           </div>
         </section>
 
-        <form className="cf4-filters filter-form" onSubmit={applyFilters}>
+        <FiltersSection onSubmit={applyFilters} onClear={clearFilters}>
           <div className="filter-group">
             <label htmlFor="parent-category-filter">Categoría</label>
             <select
@@ -302,15 +303,7 @@ export default function Index(props: PageProps) {
               onChange={(e) => setF({ ...f, search: e.target.value })}
             />
           </div>
-          <div className="filter-actions">
-            <button type="submit" className="btn btn-primary">
-              <i className="fas fa-search" aria-hidden="true" /> Filtrar
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={clearFilters}>
-              Limpiar
-            </button>
-          </div>
-        </form>
+        </FiltersSection>
 
         <section className="products-section">
           <div className="products-header">

@@ -5,6 +5,7 @@ import type { FormEvent } from 'react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
+import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
 import { useToast } from '@/shared/hooks/useToast';
 import type { InertiaSharedProps } from '@/shared/types/models';
@@ -196,7 +197,7 @@ export default function Index({
           </button>
         </section>
 
-        <form className="cf4-filters filter-form" onSubmit={submitFilters}>
+        <FiltersSection onSubmit={submitFilters} onClear={clearFilters}>
           <div className="filter-group">
             <label htmlFor="orders-status">Estado</label>
             <select id="orders-status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
@@ -241,11 +242,7 @@ export default function Index({
             <label htmlFor="orders-search">Buscar</label>
             <input id="orders-search" type="text" placeholder="Nº encargo, factura o cliente" value={form.search} onChange={(e) => setForm({ ...form, search: e.target.value })} autoComplete="off" />
           </div>
-          <div className="filter-actions">
-            <button type="submit" className="btn btn-primary"><i className="fas fa-search" aria-hidden="true" /> Filtrar</button>
-            <button type="button" className="btn btn-secondary" onClick={clearFilters}>Limpiar</button>
-          </div>
-        </form>
+        </FiltersSection>
 
         <div className="orders-table-card table-section">
           <div className="sales-table-container">

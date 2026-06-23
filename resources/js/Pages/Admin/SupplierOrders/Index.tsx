@@ -5,6 +5,7 @@ import type { FormEvent } from 'react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
+import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
 import { useToast } from '@/shared/hooks/useToast';
 import type { InertiaSharedProps } from '@/shared/types/models';
@@ -154,7 +155,27 @@ export default function Index({ orders, pagination, openSupplierOrdersCount, sup
           </button>
         </section>
 
-        <form className="cf4-filters filter-form" onSubmit={submitFilters}>
+        <FiltersSection
+          onSubmit={submitFilters}
+          onClear={clearFilters}
+          after={
+            <div className="filters-quick">
+              <span className="filters-quick-label">Filtros rápidos</span>
+              <div className="filters-quick-pills">
+                {QUICK_PILLS.map((pill) => (
+                  <button
+                    type="button"
+                    key={pill.value || 'all'}
+                    className={`btn btn-sm ${form.state === pill.value ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => { setForm({ ...form, state: pill.value }); visit({ ...form, state: pill.value }); }}
+                  >
+                    {pill.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          }
+        >
           <div className="filter-group">
             <label htmlFor="supplier-orders-state">Estado</label>
             <select id="supplier-orders-state" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })}>
@@ -180,27 +201,7 @@ export default function Index({ orders, pagination, openSupplierOrdersCount, sup
             <label htmlFor="supplier-orders-search">Buscar</label>
             <input id="supplier-orders-search" type="text" placeholder="PO, proveedor o producto…" value={form.search} onChange={(e) => setForm({ ...form, search: e.target.value })} autoComplete="off" />
           </div>
-          <div className="filter-actions">
-            <button type="submit" className="btn btn-primary"><i className="fas fa-search" aria-hidden="true" /> Filtrar</button>
-            <button type="button" className="btn btn-secondary" onClick={clearFilters}>Limpiar</button>
-          </div>
-        </form>
-
-        <div className="filters-quick">
-          <span className="filters-quick-label">Filtros rápidos</span>
-          <div className="filters-quick-pills">
-            {QUICK_PILLS.map((pill) => (
-              <button
-                type="button"
-                key={pill.value || 'all'}
-                className={`btn btn-sm ${form.state === pill.value ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => { setForm({ ...form, state: pill.value }); visit({ ...form, state: pill.value }); }}
-              >
-                {pill.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        </FiltersSection>
 
         <div className="orders-table-card table-section">
           <div className="sales-table-container">

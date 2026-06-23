@@ -5,6 +5,7 @@ import type { FormEvent } from 'react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
+import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
 import { useToast } from '@/shared/hooks/useToast';
 import type { InertiaSharedProps } from '@/shared/types/models';
@@ -112,7 +113,7 @@ export default function Index({ clients, dir, filters, pagination, sort }: PageP
           <p>Gestioná las cuentas de clientes registradas en la tienda.</p>
         </PageHeader>
 
-        <form className="cf4-filters" onSubmit={submitFilters}>
+        <FiltersSection onSubmit={submitFilters} onClear={clearFilters}>
           <div className="filter-group">
             <label htmlFor="client-search">Buscar</label>
             <input
@@ -149,15 +150,7 @@ export default function Index({ clients, dir, filters, pagination, sort }: PageP
               onChange={(e) => setForm({ ...form, updated_date: e.target.value })}
             />
           </div>
-          <div className="filter-actions">
-            <button type="submit" className="btn btn-primary">
-              <i className="fas fa-search" aria-hidden="true" /> Filtrar
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={clearFilters}>
-              Limpiar
-            </button>
-          </div>
-        </form>
+        </FiltersSection>
 
         <div className="table-section">
           <div className="sales-table-container">

@@ -5,6 +5,7 @@ import type { FormEvent } from 'react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
+import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
 import type { InertiaSharedProps } from '@/shared/types/models';
 import type { InertiaListPagination as Pagination } from '@/types/pagination';
@@ -202,7 +203,31 @@ export default function Index({ sales, pagination, kpis, latestHistorySaleId, fi
           </div>
         </div>
 
-        <form className="cf4-filters filter-form" onSubmit={submitFilters}>
+        <FiltersSection
+          onSubmit={submitFilters}
+          onClear={clearFilters}
+          footer={
+            <>
+              {form.date_range === 'custom' ? (
+                <div className="date-range-custom-row">
+                  <div className="filter-group">
+                    <label htmlFor="date-from">Fecha inicial</label>
+                    <input id="date-from" type="date" value={form.date_from} onChange={(e) => setForm({ ...form, date_from: e.target.value })} />
+                  </div>
+                  <div className="filter-group">
+                    <label htmlFor="date-to">Fecha final</label>
+                    <input id="date-to" type="date" value={form.date_to} onChange={(e) => setForm({ ...form, date_to: e.target.value })} />
+                  </div>
+                </div>
+              ) : null}
+              {dateError ? (
+                <div className="alert alert-danger">
+                  <i className="fas fa-exclamation-circle" aria-hidden="true" /> <span>{dateError}</span>
+                </div>
+              ) : null}
+            </>
+          }
+        >
           <div className="filter-group">
             <label htmlFor="status">Estado</label>
             <select id="status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
@@ -242,33 +267,7 @@ export default function Index({ sales, pagination, kpis, latestHistorySaleId, fi
             <label htmlFor="search-sale">Buscar</label>
             <input id="search-sale" type="text" placeholder="Buscar por cliente o factura..." value={form.search} onChange={(e) => setForm({ ...form, search: e.target.value })} />
           </div>
-
-          {form.date_range === 'custom' ? (
-            <div className="date-range-custom-row">
-              <div className="filter-group">
-                <label htmlFor="date-from">Fecha inicial</label>
-                <input id="date-from" type="date" value={form.date_from} onChange={(e) => setForm({ ...form, date_from: e.target.value })} />
-              </div>
-              <div className="filter-group">
-                <label htmlFor="date-to">Fecha final</label>
-                <input id="date-to" type="date" value={form.date_to} onChange={(e) => setForm({ ...form, date_to: e.target.value })} />
-              </div>
-            </div>
-          ) : null}
-
-          {dateError ? (
-            <div className="alert alert-danger">
-              <i className="fas fa-exclamation-circle" aria-hidden="true" /> <span>{dateError}</span>
-            </div>
-          ) : null}
-
-          <div className="filter-actions">
-            <button type="submit" className="btn btn-primary">
-              <i className="fas fa-search" aria-hidden="true" /> Filtrar
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={clearFilters}>Limpiar</button>
-          </div>
-        </form>
+        </FiltersSection>
 
         <div className="table-section">
           <div className={`sales-table-container${sales.length === 0 ? ' sales-table-container--empty' : ''}`}>

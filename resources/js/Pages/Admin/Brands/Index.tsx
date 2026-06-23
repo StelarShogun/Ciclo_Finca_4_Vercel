@@ -6,6 +6,7 @@ import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { Modal } from '@/shared/components/ui/Modal';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
+import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
 import { useToast } from '@/shared/hooks/useToast';
 import type { InertiaSharedProps } from '@/shared/types/models';
@@ -175,7 +176,7 @@ export default function Index({ brands, filters, pagination }: BrandsPageProps) 
           <p>Administra las marcas asociadas a los productos del inventario.</p>
         </PageHeader>
 
-        <form className="cf4-filters" onSubmit={submitSearch}>
+        <FiltersSection onSubmit={submitSearch} onClear={clearSearch}>
           <div className="filter-group">
             <label htmlFor="buscarNombre">Nombre de la Marca</label>
             <input
@@ -187,17 +188,7 @@ export default function Index({ brands, filters, pagination }: BrandsPageProps) 
               onChange={(event) => setSearch(event.target.value)}
             />
           </div>
-          <div className="filter-actions">
-            <button type="submit" className="btn btn-primary">
-              <i className="fas fa-search" aria-hidden="true" /> Filtrar
-            </button>
-            {filters.name ? (
-              <button type="button" className="btn btn-secondary" onClick={clearSearch}>
-                Limpiar
-              </button>
-            ) : null}
-          </div>
-        </form>
+        </FiltersSection>
 
         <div className="table-section">
           <div className="sales-table-container">
