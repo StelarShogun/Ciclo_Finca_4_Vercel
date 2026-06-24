@@ -260,15 +260,6 @@ class SupplierOrderController extends Controller
         ]);
     }
 
-    public function create()
-    {
-        $suppliers = Supplier::query()
-            ->orderBy('name')
-            ->get(['supplier_id', 'name', 'primary_contact', 'email', 'phone']);
-
-        return view('admin.orders.create_supplier', compact('suppliers'));
-    }
-
     public function detail(int $id)
     {
         $order = Order::with(['supplier', 'orderItems', 'stateTimeline.admin'])
