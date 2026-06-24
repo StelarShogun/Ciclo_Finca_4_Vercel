@@ -407,27 +407,28 @@ export default function Index(props: PageProps) {
             <div className="products-grid">
               {products.map((product) => (
                 <div className="product-card" key={product.product_id}>
+                  <button
+                    type="button"
+                    className={`featured-star-btn ${product.is_featured ? 'is-featured' : ''}`}
+                    aria-pressed={product.is_featured}
+                    data-tooltip="Destacado en tienda"
+                    aria-label="Destacado en tienda"
+                    onClick={() => toggleFeatured(product)}
+                  >
+                    <i className={`${product.is_featured ? 'fas' : 'far'} fa-star`} aria-hidden="true" />
+                  </button>
                   <div className="product-card-header">
-                    <div className="product-thumb-wrap product-thumb-wrap--card">{thumb(product, 88)}</div>
-                    <button
-                      type="button"
-                      className={`featured-star-btn ${product.is_featured ? 'is-featured' : ''}`}
-                      aria-pressed={product.is_featured}
-                      title="Destacado en tienda"
-                      onClick={() => toggleFeatured(product)}
-                    >
-                      <i className={`${product.is_featured ? 'fas' : 'far'} fa-star`} aria-hidden="true" />
-                    </button>
-                  </div>
-                  <div className="product-card-info">
-                    <h4>{product.name}</h4>
-                    <span className="sku">SKU: {product.sku}</span>
-                    <div className="product-card-meta">
-                      <span className={`status-badge ${product.status_class}`}>{product.status_label}</span>
-                      <span>{currency.format(Number(product.price))}</span>
+                    <div className="product-thumb-wrap product-thumb-wrap--card">{thumb(product, 72)}</div>
+                    <div className="product-card-titles">
+                      <h4>{product.name}</h4>
+                      <span className="sku">SKU: {product.sku}</span>
                     </div>
-                    <div className="product-card-actions">{renderActions(product)}</div>
                   </div>
+                  <div className="product-card-meta">
+                    <span className={`status-badge ${product.status_class}`}>{product.status_label}</span>
+                    <span className="product-card-price">{currency.format(Number(product.price))}</span>
+                  </div>
+                  <div className="product-card-actions">{renderActions(product)}</div>
                 </div>
               ))}
             </div>

@@ -170,6 +170,49 @@ export default function Index({
           ))}
         </section>
 
+        <section className="quick-actions" aria-label="Accesos rápidos">
+          <Link href="/sales" className="quick-action quick-action--primary">
+            <span className="quick-action__icon"><i className="fas fa-cash-register" aria-hidden="true" /></span>
+            <span className="quick-action__text">
+              <span className="quick-action__title">Nueva venta</span>
+              <span className="quick-action__desc">Registrar una venta de mostrador</span>
+            </span>
+            <i className="fas fa-arrow-right quick-action__arrow" aria-hidden="true" />
+          </Link>
+          <Link href="/inventory" className="quick-action">
+            <span className="quick-action__icon"><i className="fas fa-box" aria-hidden="true" /></span>
+            <span className="quick-action__text">
+              <span className="quick-action__title">Nuevo producto</span>
+              <span className="quick-action__desc">Agregar al inventario</span>
+            </span>
+            <i className="fas fa-arrow-right quick-action__arrow" aria-hidden="true" />
+          </Link>
+          <Link href="/orders" className="quick-action">
+            <span className="quick-action__icon"><i className="fas fa-shopping-cart" aria-hidden="true" /></span>
+            <span className="quick-action__text">
+              <span className="quick-action__title">Encargos</span>
+              <span className="quick-action__desc">Pedidos pendientes del carrito web</span>
+            </span>
+            <i className="fas fa-arrow-right quick-action__arrow" aria-hidden="true" />
+          </Link>
+          <Link href="/supplier-orders" className="quick-action">
+            <span className="quick-action__icon"><i className="fas fa-clipboard-list" aria-hidden="true" /></span>
+            <span className="quick-action__text">
+              <span className="quick-action__title">Pedidos a proveedores</span>
+              <span className="quick-action__desc">Reabastecer stock</span>
+            </span>
+            <i className="fas fa-arrow-right quick-action__arrow" aria-hidden="true" />
+          </Link>
+          <Link href="/reports" className="quick-action">
+            <span className="quick-action__icon"><i className="fas fa-file-alt" aria-hidden="true" /></span>
+            <span className="quick-action__text">
+              <span className="quick-action__title">Reportes</span>
+              <span className="quick-action__desc">Análisis y exportaciones</span>
+            </span>
+            <i className="fas fa-arrow-right quick-action__arrow" aria-hidden="true" />
+          </Link>
+        </section>
+
         <section className="charts-section" aria-label="Gráficos">
           <div className="chart-container chart-container--sales">
             <div className="chart-header">

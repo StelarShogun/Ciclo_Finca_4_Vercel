@@ -212,7 +212,11 @@
   border-top: 1px dashed var(--brand-accent, #3fae6e);
   font-size: 1.15rem;
   font-weight: 800;
-  color: var(--color-primary, #235347);
+  color: var(--brand-accent-strong, #2e9a5c);
+}
+
+html[data-theme="dark"] .admin-main .cf4-modal__body .sale-totals .total-final {
+  color: var(--brand-accent, #5ecb8b);
 }
 
 @media (max-width: 640px) {
