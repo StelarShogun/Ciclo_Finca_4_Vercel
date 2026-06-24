@@ -60,9 +60,179 @@ class ReportsController extends Controller
         // Marcas para el filtro de proveedores de marcas (si aplica en el futuro).
         $brands = Brand::orderBy('name')->get(['id', 'name']);
 
-        return view('admin.reports.exports', compact(
-            'parentCategories', 'subcatsByParent', 'suppliers', 'brands'
-        ));
+        $parentCatOptions = array_merge(
+            [['value' => '', 'label' => 'Todas']],
+            $parentCategories->map(fn ($c) => ['value' => (string) $c->category_id, 'label' => $c->name])->all(),
+        );
+
+        $subcatOptionsMap = [];
+        foreach ($subcatsByParent as $parentId => $subcats) {
+            $subcatOptionsMap[(string) $parentId] = array_merge(
+                [['value' => '', 'label' => 'Todas']],
+                collect($subcats)->map(fn ($s) => ['value' => (string) $s['category_id'], 'label' => $s['name']])->all(),
+            );
+        }
+
+        $supplierOptions = array_merge(
+            [['value' => '', 'label' => 'Todos']],
+            $suppliers->map(fn ($s) => ['value' => $s->name, 'label' => $s->name])->all(),
+        );
+
+        $supplierAutofillData = [];
+        foreach ($suppliers as $s) {
+            $supplierAutofillData[$s->name] = ['contact' => $s->primary_contact ?? ''];
+        }
+
+        $orderStateOptions = array_merge(
+            [['value' => '', 'label' => 'Todos']],
+            collect(\App\Models\Order::STATE_LABELS)->map(fn ($label, $key) => ['value' => $key, 'label' => $label])->values()->all(),
+        );
+
+        $brandOptions = array_merge(
+            [['value' => '', 'label' => 'Todas']],
+            $brands->map(fn ($b) => ['value' => $b->name, 'label' => $b->name])->all(),
+        );
+
+        $exportsConfig = [
+            'exports' => [
+                'dashboard' => [
+                    'id' => 'dashboard', 'title' => 'Dashboard',
+                    'subtitle' => 'Exporta el PDF del dashboard para un periodo.',
+                    'formatMode' => 'query',
+                    'baseUrls' => ['pdf' => route('dashboard.export')],
+                    'filters' => [
+                        ['name' => 'period', 'label' => 'Periodo', 'type' => 'select', 'default' => '30d', 'options' => [
+                            ['value' => '7d', 'label' => '7 días'], ['value' => '30d', 'label' => '30 días'], ['value' => '90d', 'label' => '90 días'],
+                        ]],
+                    ],
+                    'staticParams' => [],
+                ],
+                'inventory' => [
+                    'id' => 'inventory', 'title' => 'Inventario',
+                    'subtitle' => 'Exporta inventario en paquete ZIP (con imágenes), JSON, PDF, Excel o XML.',
+                    'formatMode' => 'path',
+                    'baseUrls' => [
+                        'bundle' => route('products.export', ['format' => 'bundle']),
+                        'json' => route('products.export', ['format' => 'json']),
+                        'pdf' => route('products.export', ['format' => 'pdf']),
+                        'excel' => route('products.export', ['format' => 'excel']),
+                        'xml' => route('products.export', ['format' => 'xml']),
+                    ],
+                    'initialValues' => request()->only(\App\Services\Admin\AdminInventoryExportQuery::QUERY_KEYS),
+                    'filters' => [
+                        ['name' => 'search', 'label' => 'Búsqueda', 'type' => 'text', 'placeholder' => 'Nombre o descripción'],
+                        ['name' => 'parent_category_id', 'label' => 'Categoría', 'type' => 'select', 'options' => $parentCatOptions, 'cascades' => 'subcategory_id', 'cascadeOptions' => $subcatOptionsMap],
+                        ['name' => 'subcategory_id', 'label' => 'Subcategoría', 'type' => 'select', 'options' => [['value' => '', 'label' => 'Todas']]],
+                        ['name' => 'stock_status', 'label' => 'Stock', 'type' => 'select', 'options' => [
+                            ['value' => '', 'label' => 'Todos'], ['value' => 'in-stock', 'label' => 'En stock'], ['value' => 'low', 'label' => 'Stock bajo'], ['value' => 'out', 'label' => 'Agotado'],
+                        ]],
+                        ['name' => 'status', 'label' => 'Estado', 'type' => 'select', 'options' => [
+                            ['value' => '', 'label' => 'Todos'], ['value' => 'active', 'label' => 'Activo'], ['value' => 'inactive', 'label' => 'Inactivo'],
+                        ]],
+                    ],
+                ],
+                'sales' => [
+                    'id' => 'sales', 'title' => 'Ventas', 'subtitle' => 'Exporta ventas en PDF o Excel.',
+                    'formatMode' => 'query',
+                    'baseUrls' => ['pdf' => route('sales.export'), 'excel' => route('sales.export')],
+                    'staticParams' => [],
+                    'initialValues' => array_merge(
+                        ['status' => 'completed', 'date_range' => 'month'],
+                        request()->only(['status', 'date_range', 'date_from', 'date_to', 'payment_method', 'search']),
+                    ),
+                    'filters' => [
+                        ['name' => 'status', 'label' => 'Estado', 'type' => 'select', 'options' => [
+                            ['value' => 'completed', 'label' => 'Confirmadas'], ['value' => 'cancelled', 'label' => 'Canceladas'], ['value' => 'refunded', 'label' => 'Reembolsadas'], ['value' => 'all', 'label' => 'Todas'],
+                        ]],
+                        ['name' => 'date_range', 'label' => 'Rango de fecha', 'type' => 'select', 'options' => [
+                            ['value' => 'today', 'label' => 'Hoy'], ['value' => 'week', 'label' => 'Esta semana'], ['value' => 'month', 'label' => 'Este mes'], ['value' => 'custom', 'label' => 'Por fechas'],
+                        ]],
+                        ['name' => 'date_from', 'label' => 'Desde', 'type' => 'date'],
+                        ['name' => 'date_to', 'label' => 'Hasta', 'type' => 'date'],
+                        ['name' => 'payment_method', 'label' => 'Método de pago', 'type' => 'text', 'placeholder' => 'efectivo, tarjeta, ...'],
+                        ['name' => 'search', 'label' => 'Buscar', 'type' => 'text', 'placeholder' => 'Factura, cliente, ...'],
+                    ],
+                ],
+                'productSales' => [
+                    'id' => 'productSales', 'title' => 'Productos más vendidos',
+                    'subtitle' => 'Exporta el reporte de productos más vendidos.',
+                    'formatMode' => 'query',
+                    'baseUrls' => ['pdf' => route('admin.reports.product-sales.pdf'), 'excel' => route('admin.reports.product-sales.excel')],
+                    'initialValues' => array_merge(
+                        ['period' => '30d', 'sort' => 'revenue', 'dir' => 'desc', 'top10' => 'revenue'],
+                        request()->only(['period', 'sort', 'dir', 'q', 'top10']),
+                    ),
+                    'filters' => [
+                        ['name' => 'period', 'label' => 'Periodo', 'type' => 'select', 'options' => [
+                            ['value' => '7d', 'label' => '7 días'], ['value' => '30d', 'label' => '30 días'], ['value' => '90d', 'label' => '90 días'],
+                        ]],
+                        ['name' => 'sort', 'label' => 'Ordenar por', 'type' => 'select', 'options' => [
+                            ['value' => 'revenue', 'label' => 'Ingresos'], ['value' => 'units', 'label' => 'Unidades'],
+                        ]],
+                        ['name' => 'dir', 'label' => 'Dirección', 'type' => 'select', 'options' => [
+                            ['value' => 'desc', 'label' => 'Descendente'], ['value' => 'asc', 'label' => 'Ascendente'],
+                        ]],
+                        ['name' => 'q', 'label' => 'Buscar', 'type' => 'text', 'placeholder' => 'Nombre o código'],
+                        ['name' => 'top10', 'label' => 'Top 10 por', 'type' => 'select', 'options' => [
+                            ['value' => 'revenue', 'label' => 'Ingresos'], ['value' => 'units', 'label' => 'Unidades'],
+                        ]],
+                    ],
+                ],
+                'registry.suppliers' => [
+                    'id' => 'registry.suppliers', 'title' => 'Proveedores', 'subtitle' => 'Listado administrativo de proveedores.',
+                    'formatMode' => 'query',
+                    'baseUrls' => ['pdf' => route('admin.reports.exports.registry', ['slug' => 'proveedores']), 'excel' => route('admin.reports.exports.registry', ['slug' => 'proveedores'])],
+                    'initialValues' => request()->only(\App\Services\Admin\AdminSuppliersCatalogExportQuery::QUERY_KEYS),
+                    'filters' => [
+                        ['name' => 'name', 'label' => 'Proveedor', 'type' => 'select', 'options' => $supplierOptions, 'autofills' => ['contact'], 'autofillData' => $supplierAutofillData],
+                        ['name' => 'contact', 'label' => 'Contacto', 'type' => 'text', 'placeholder' => 'Se completa al elegir proveedor', 'readonly' => true],
+                    ],
+                ],
+                'registry.brands' => [
+                    'id' => 'registry.brands', 'title' => 'Marcas', 'subtitle' => 'Listado administrativo de marcas.',
+                    'formatMode' => 'query',
+                    'baseUrls' => ['pdf' => route('admin.reports.exports.registry', ['slug' => 'marcas']), 'excel' => route('admin.reports.exports.registry', ['slug' => 'marcas'])],
+                    'initialValues' => request()->only(\App\Services\Admin\AdminBrandsCatalogExportQuery::QUERY_KEYS),
+                    'filters' => [
+                        ['name' => 'name', 'label' => 'Marca', 'type' => 'select', 'options' => $brandOptions],
+                    ],
+                ],
+                'registry.supplierOrders' => [
+                    'id' => 'registry.supplierOrders', 'title' => 'Pedidos a proveedores', 'subtitle' => 'Listado de pedidos a proveedores.',
+                    'formatMode' => 'query',
+                    'baseUrls' => ['pdf' => route('admin.reports.exports.registry', ['slug' => 'pedidos-proveedores']), 'excel' => route('admin.reports.exports.registry', ['slug' => 'pedidos-proveedores'])],
+                    'initialValues' => request()->only(\App\Services\Admin\AdminSupplierOrdersExportQuery::QUERY_KEYS),
+                    'filters' => [
+                        ['name' => 'state', 'label' => 'Estado', 'type' => 'select', 'options' => $orderStateOptions],
+                        ['name' => 'search', 'label' => 'Buscar', 'type' => 'text', 'placeholder' => 'Proveedor, número de pedido, ...'],
+                        ['name' => 'date_from', 'label' => 'Desde', 'type' => 'date'],
+                        ['name' => 'date_to', 'label' => 'Hasta', 'type' => 'date'],
+                    ],
+                ],
+                'registry.users' => [
+                    'id' => 'registry.users', 'title' => 'Usuarios', 'subtitle' => 'Listado de usuarios/clientes.',
+                    'formatMode' => 'query',
+                    'baseUrls' => ['pdf' => route('admin.reports.exports.registry', ['slug' => 'usuarios']), 'excel' => route('admin.reports.exports.registry', ['slug' => 'usuarios'])],
+                    'initialValues' => [], 'filters' => [],
+                ],
+                'registry.clientOrders' => [
+                    'id' => 'registry.clientOrders', 'title' => 'Encargos', 'subtitle' => 'Listado de pedidos de clientes (encargos).',
+                    'formatMode' => 'query',
+                    'baseUrls' => ['pdf' => route('admin.reports.exports.registry', ['slug' => 'pedidos-clientes']), 'excel' => route('admin.reports.exports.registry', ['slug' => 'pedidos-clientes'])],
+                    'initialValues' => request()->only(\App\Services\Admin\AdminClientOrdersExportQuery::QUERY_KEYS),
+                    'filters' => [
+                        ['name' => 'status', 'label' => 'Estado', 'type' => 'select', 'options' => [
+                            ['value' => '', 'label' => 'Todos'], ['value' => 'pending', 'label' => 'Pendiente'], ['value' => 'confirmed', 'label' => 'Confirmado'], ['value' => 'completed', 'label' => 'Completado'], ['value' => 'cancelled', 'label' => 'Cancelado'],
+                        ]],
+                        ['name' => 'search', 'label' => 'Buscar', 'type' => 'text', 'placeholder' => 'Nombre, correo, ...'],
+                    ],
+                ],
+            ],
+        ];
+
+        return Inertia::render('Admin/Reports/Exports', [
+            'exportsConfig' => $exportsConfig,
+        ]);
     }
 
     // Renders the sales-performance view (CF4-24).
