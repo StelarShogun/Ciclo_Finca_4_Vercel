@@ -437,10 +437,19 @@
   color: var(--text-primary);
 }
 
+.product-cell {
+  text-align: left;
+}
+
 .product-cell-content {
   display: flex;
   align-items: center;
   gap: 1rem;
+  text-align: left;
+}
+
+.product-cell-content .product-name {
+  font-weight: 600;
 }
 
 .product-thumb-wrap {
@@ -449,38 +458,45 @@
 }
 
 .product-thumb-wrap--table {
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
 }
 
 .product-thumb-wrap--table img {
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
   object-fit: cover;
   border-radius: var(--border-radius);
   background: #f0f0f0;
   display: block;
 }
 
-.product-thumb-wrap--table .product-media-placeholder--thumb-table {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  min-height: 48px;
+/* El placeholder se renderiza solo con la clase base .product-media-placeholder
+   (sin modificador), así que dimensionamos vía el wrapper. */
+.product-thumb-wrap--table .product-media-placeholder {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--border-radius);
+}
+
+.product-thumb-wrap--table .product-media-placeholder i {
+  font-size: 1.9rem;
+  opacity: 0.6;
 }
 
 .product-thumb-wrap--card {
-  width: 60px;
-  height: 60px;
+  width: 88px;
+  height: 88px;
 }
 
 .product-thumb-wrap--card .product-card-image {
-  width: 60px;
-  height: 60px;
+  width: 88px;
+  height: 88px;
   margin: 0;
   display: block;
   object-fit: cover;
@@ -488,16 +504,21 @@
   background: #f0f0f0;
 }
 
-.product-thumb-wrap--card .product-media-placeholder--thumb-card {
-  width: 60px;
-  height: 60px;
-  min-width: 60px;
-  min-height: 60px;
+.product-thumb-wrap--card .product-media-placeholder {
+  width: 88px;
+  height: 88px;
+  min-width: 88px;
+  min-height: 88px;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--border-radius);
+}
+
+.product-thumb-wrap--card .product-media-placeholder i {
+  font-size: 2.6rem;
+  opacity: 0.6;
 }
 
 .featured-star-btn {

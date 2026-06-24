@@ -66,7 +66,7 @@ export default function ClientPurchasesShow({ displayName, gmail, orders, listUr
                       <td className="num">{crc(o.total)}</td>
                       <td className="admin-table__col--actions">
                         <div className="actions-container">
-                          <button type="button" className="action-btn secondary" title="Ver detalle de la venta" onClick={() => setViewId(o.sale_id)}>
+                          <button type="button" className="action-btn secondary" data-tooltip="Ver detalle de la venta" aria-label="Ver detalle de la venta" onClick={() => setViewId(o.sale_id)}>
                             <i className="fas fa-eye" aria-hidden="true" />
                           </button>
                         </div>

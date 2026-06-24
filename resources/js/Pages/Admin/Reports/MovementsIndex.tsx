@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import type { InertiaListPagination as Pagination } from '@/types/pagination';
 
@@ -52,16 +53,12 @@ export default function MovementsIndex({ products, pagination, filters }: PagePr
           <p>Selecciona un producto para consultar su historial de entradas, salidas y devoluciones.</p>
         </PageHeader>
 
-        <form className="orders-search-form" onSubmit={submit} role="search" style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', marginBottom: '1rem', flexWrap: 'wrap' }}>
-          <div className="filter-group orders-search-wrap">
+        <FiltersSection onSubmit={submit} onClear={clear} submitLabel="Filtrar">
+          <div className="filter-group filters-grow">
             <label htmlFor="inv-search-input">Buscar producto</label>
-            <div className="orders-search-field">
-              <input type="search" name="search" id="inv-search-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nombre o SKU…" autoComplete="off" />
-            </div>
+            <input type="search" name="search" id="inv-search-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nombre o SKU…" autoComplete="off" />
           </div>
-          <button type="submit" className="btn btn-primary btn-sm"><i className="fas fa-filter" aria-hidden="true" /> Filtrar</button>
-          {filters.search ? <button type="button" className="btn btn-secondary btn-sm" onClick={clear}>Limpiar</button> : null}
-        </form>
+        </FiltersSection>
 
         <div className="table-section">
           <div className="sales-table-container">
@@ -91,7 +88,7 @@ export default function MovementsIndex({ products, pagination, filters }: PagePr
                       <td className="text-end"><strong>{nf.format(p.stock_current)}</strong> <span style={{ fontSize: '0.78rem', color: '#6b7280' }}>unid.</span></td>
                       <td className="admin-table__col--actions">
                         <div className="actions-container">
-                          <a href={`/inventory/movements/${p.product_id}`} className="action-btn secondary" title="Ver movimientos">
+                          <a href={`/inventory/movements/${p.product_id}`} className="action-btn secondary" data-tooltip="Ver movimientos" aria-label="Ver movimientos">
                             <i className="fas fa-clock-rotate-left" aria-hidden="true" />
                           </a>
                         </div>

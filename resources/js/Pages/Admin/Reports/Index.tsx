@@ -24,7 +24,7 @@ export default function Index() {
       <Head title="Reportes - Ciclo Finca 4 Admin" />
 
       <div className="reports-hub">
-        <PageHeader title="Centro de reportes" kicker="Reportes">
+        <PageHeader title="Centro de reportes" kicker="Reportes" icon="fa-file-alt">
           <p>Consulta reportes analíticos de ventas, inventario, clientes, búsquedas y actividad administrativa.</p>
         </PageHeader>
 

@@ -3,6 +3,49 @@
  * Loaded via shell-base.css and clients-users.css.
  */
 
+/* Tooltip flotante global (data-tooltip="...").
+   Se renderiza en <body> vía JS con position:fixed, por lo que NO lo recortan
+   los contenedores con overflow (tablas) y siempre queda por encima de todo. */
+.cf4-tooltip {
+    position: fixed;
+    z-index: 2147483000;
+    padding: 0.32rem 0.55rem;
+    border-radius: 0.4rem;
+    background: var(--brand-dark, #1a3a2a);
+    color: #fff;
+    font-size: 0.74rem;
+    font-weight: 600;
+    line-height: 1.15;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32);
+}
+
+.cf4-tooltip.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.cf4-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 0.3rem solid transparent;
+    border-top-color: var(--brand-dark, #1a3a2a);
+}
+
+.cf4-tooltip.is-below::after {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: var(--brand-dark, #1a3a2a);
+}
+
 /* Tables that participate in the unified skin (add class="… admin-table" in markup). */
 :is(
     .admin-table,

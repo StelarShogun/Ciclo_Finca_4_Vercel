@@ -1,0 +1,225 @@
+/* ============================================================
+   Modales admin (componente <Modal/> → .cf4-modal).
+   Las reglas base de .cf4-modal viven en client/confirm-dialog.css
+   (pensadas para el confirm dialog: 28rem, sin variante --wide).
+   Aquí se refinan/expanden para los modales de formulario del admin.
+   Anclado bajo .admin-main (los modales se renderizan dentro del
+   contenido del layout) para ganar por especificidad sin romper el
+   confirm dialog del cliente.
+   ============================================================ */
+
+.admin-main .cf4-modal-overlay {
+  z-index: 2000;
+  padding: 1.25rem;
+  background: rgba(5, 23, 20, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.admin-main .cf4-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 38rem);
+  max-height: min(90vh, 100dvh - 2.5rem);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--surface, #fff);
+  border: 1px solid var(--border-subtle, rgba(15, 43, 38, 0.08));
+  box-shadow: var(--shadow-xl, 0 28px 60px rgba(15, 43, 38, 0.18));
+  overflow: hidden;
+  animation: cf4ModalIn 0.22s ease;
+}
+
+.admin-main .cf4-modal--wide { width: min(100%, 56rem); }
+.admin-main .cf4-modal--narrow { width: min(100%, 30rem); }
+
+@keyframes cf4ModalIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-main .cf4-modal { animation: none; }
+}
+
+/* Header: limpio, con barra de acento y título con icono. */
+.admin-main .cf4-modal__header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.15rem 1.4rem;
+  border-bottom: 1px solid var(--border-subtle, rgba(15, 43, 38, 0.08));
+  flex-shrink: 0;
+}
+
+.admin-main .cf4-modal__header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.9rem;
+  bottom: 0.9rem;
+  width: 4px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, var(--brand-accent, #3fae6e), var(--color-primary, #235347));
+}
+
+.admin-main .cf4-modal__header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary, #0b211a);
+}
+
+.admin-main .cf4-modal__header h2 i {
+  color: var(--brand-accent-strong, #2e9a5c);
+}
+
+.admin-main .cf4-modal__close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.admin-main .cf4-modal__close:hover {
+  background: var(--surface-sunken, rgba(15, 43, 38, 0.06));
+  color: var(--text-primary, #0b211a);
+}
+
+/* Body: scroll suave, espaciado de formulario uniforme. */
+.admin-main .cf4-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Footer: borde superior, botones a la derecha. */
+.admin-main .cf4-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  padding: 1rem 1.4rem;
+  border-top: 1px solid var(--border-subtle, rgba(15, 43, 38, 0.08));
+  background: var(--surface-sunken, #f5f8f6);
+  flex-shrink: 0;
+}
+
+/* ---- Primitivas de formulario dentro de modales ---- */
+.admin-main .cf4-modal__body .form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.admin-main .cf4-modal__body .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.admin-main .cf4-modal__body .form-group > label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+}
+
+.admin-main .cf4-modal__body .form-group input,
+.admin-main .cf4-modal__body .form-group select,
+.admin-main .cf4-modal__body .form-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 42px;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--background-white, #fff);
+  color: var(--text-primary, inherit);
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-main .cf4-modal__body .form-group input:focus,
+.admin-main .cf4-modal__body .form-group select:focus,
+.admin-main .cf4-modal__body .form-group textarea:focus {
+  outline: none;
+  border-color: var(--brand-accent, #3fae6e);
+  box-shadow: 0 0 0 3px rgba(63, 174, 110, 0.18);
+}
+
+/* Sección de productos (Nueva venta / pedidos) como panel agrupado. */
+.admin-main .cf4-modal__body .product-row {
+  padding: 0.85rem;
+  border: 1px solid var(--border-subtle, rgba(15, 43, 38, 0.08));
+  border-radius: var(--radius, 12px);
+  background: var(--surface-sunken, #f5f8f6);
+}
+
+/* Caja de totales destacada. */
+.admin-main .cf4-modal__body .sale-totals,
+.admin-main .cf4-modal__body .totals-box,
+.admin-main .cf4-modal__body .cf4-totals {
+  border: 1px solid var(--brand-accent, #3fae6e);
+  border-radius: var(--radius, 12px);
+  background: color-mix(in srgb, var(--brand-accent, #3fae6e) 8%, var(--surface, #fff));
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.admin-main .cf4-modal__body .sale-totals .total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-main .cf4-modal__body .sale-totals .total-row input {
+  width: 9rem;
+  min-height: 38px;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: var(--radius-sm, 8px);
+  text-align: right;
+}
+
+.admin-main .cf4-modal__body .sale-totals .total-final {
+  margin-top: 0.2rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--brand-accent, #3fae6e);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-primary, #235347);
+}
+
+@media (max-width: 640px) {
+  .admin-main .cf4-modal__footer {
+    flex-direction: column-reverse;
+  }
+  .admin-main .cf4-modal__footer .btn {
+    width: 100%;
+  }
+}

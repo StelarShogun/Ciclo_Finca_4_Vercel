@@ -161,7 +161,8 @@ export default function Index({ brands, filters, pagination }: BrandsPageProps) 
       <div className="brands-container">
         <PageHeader
           title="Gestión de Marcas"
-          kicker="Inventario"
+          kicker="Marcas"
+          icon="fa-tags"
           actions={
             <div className="brands-actions">
               <span className="brands-count-badge">

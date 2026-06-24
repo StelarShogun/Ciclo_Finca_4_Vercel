@@ -202,7 +202,8 @@ export default function Index({ averageRating, filters, pagination, suppliers }:
       <div className="suppliers-container">
         <PageHeader
           title="Gestión de Proveedores"
-          kicker="Inventario"
+          kicker="Proveedores"
+          icon="fa-truck"
           actions={
             <button type="button" className="btn btn-primary" onClick={openCreate}>
               <i className="fas fa-plus" aria-hidden="true" /> Nuevo proveedor
@@ -282,13 +283,13 @@ export default function Index({ averageRating, filters, pagination, suppliers }:
                       <td>{supplier.address}</td>
                       <td className="admin-table__col--actions">
                         <div className="actions-container">
-                          <button type="button" className="btn-icon" title="Ver" onClick={() => setViewing(supplier)}>
+                          <button type="button" className="btn-icon" data-tooltip="Ver" aria-label="Ver" onClick={() => setViewing(supplier)}>
                             <i className="fas fa-eye" aria-hidden="true" />
                           </button>
-                          <button type="button" className="btn-icon btn-edit" title="Editar" onClick={() => openEdit(supplier)}>
+                          <button type="button" className="btn-icon btn-edit" data-tooltip="Editar" aria-label="Editar" onClick={() => openEdit(supplier)}>
                             <i className="fas fa-edit" aria-hidden="true" />
                           </button>
-                          <button type="button" className="btn-icon btn-delete" title="Eliminar" onClick={() => remove(supplier)}>
+                          <button type="button" className="btn-icon btn-delete" data-tooltip="Eliminar" aria-label="Eliminar" onClick={() => remove(supplier)}>
                             <i className="fas fa-trash" aria-hidden="true" />
                           </button>
                         </div>

@@ -37,6 +37,7 @@ type PageProps = {
   brands: BrandOption[];
   suppliers: SupplierOption[];
   lowStockProductsCount: number;
+  inventorySummary: { total: number; active: number; lowStock: number; outOfStock: number };
   exportQuery: string;
   blobUploadUrl: string;
 };
@@ -50,7 +51,7 @@ export default function Index(props: PageProps) {
     categories,
     exportQuery,
     filters,
-    lowStockProductsCount,
+    inventorySummary,
     pagination,
     products,
     subcategoriesByParent,
@@ -85,7 +86,7 @@ export default function Index(props: PageProps) {
   }
 
   function reload() {
-    router.reload({ only: ['products', 'pagination', 'lowStockProductsCount'] });
+    router.reload({ only: ['products', 'pagination', 'lowStockProductsCount', 'inventorySummary'] });
   }
 
   function openNew() {
@@ -156,16 +157,17 @@ export default function Index(props: PageProps) {
   function renderActions(product: InventoryProduct) {
     return (
       <div className="actions-container">
-        <button type="button" className="action-btn view" title="Ver" onClick={() => setViewId(product.product_id)}>
+        <button type="button" className="action-btn view" data-tooltip="Ver" aria-label="Ver" onClick={() => setViewId(product.product_id)}>
           <i className="fas fa-eye" aria-hidden="true" />
         </button>
-        <button type="button" className="action-btn edit" title="Editar" onClick={() => openEdit(product.product_id)}>
+        <button type="button" className="action-btn edit" data-tooltip="Editar" aria-label="Editar" onClick={() => openEdit(product.product_id)}>
           <i className="fas fa-edit" aria-hidden="true" />
         </button>
         <button
           type="button"
           className="action-btn stock-adjust"
-          title="Agregar stock"
+          data-tooltip="Agregar stock"
+          aria-label="Agregar stock"
           onClick={() => setStockTarget({ product_id: product.product_id, name: product.name, stock: product.stock, action: 'add' })}
         >
           <i className="fas fa-plus-circle" aria-hidden="true" />
@@ -173,17 +175,18 @@ export default function Index(props: PageProps) {
         <button
           type="button"
           className="action-btn stock-adjust"
-          title="Retirar stock"
+          data-tooltip="Retirar stock"
+          aria-label="Retirar stock"
           onClick={() => setStockTarget({ product_id: product.product_id, name: product.name, stock: product.stock, action: 'remove' })}
         >
           <i className="fas fa-minus-circle" aria-hidden="true" />
         </button>
         {product.status === 'inactive' ? (
-          <button type="button" className="action-btn activate" title="Reactivar" onClick={() => setActive(product, true)}>
+          <button type="button" className="action-btn activate" data-tooltip="Reactivar" aria-label="Reactivar" onClick={() => setActive(product, true)}>
             <i className="fas fa-check-circle" aria-hidden="true" />
           </button>
         ) : (
-          <button type="button" className="action-btn delete" title="Desactivar" onClick={() => setActive(product, false)}>
+          <button type="button" className="action-btn delete" data-tooltip="Desactivar" aria-label="Desactivar" onClick={() => setActive(product, false)}>
             <i className="fas fa-ban" aria-hidden="true" />
           </button>
         )}
@@ -210,6 +213,7 @@ export default function Index(props: PageProps) {
         <PageHeader
           title="Inventario"
           kicker="Productos"
+          icon="fa-box"
           actions={
             <div className="inventory-header-actions">
               <button type="button" className="btn btn-primary" onClick={openNew}>
@@ -236,13 +240,34 @@ export default function Index(props: PageProps) {
           }
         />
 
-        <section className="inventory-kpi-grid" aria-label="Resumen de inventario">
-          <div className="inventory-kpi-card">
-            <div className="inventory-kpi-card-head">
-              <h3>Stock bajo</h3>
-              <i className="fas fa-box-open" aria-hidden="true" />
+        <section className="kpis-section" aria-label="Resumen de inventario">
+          <div className="kpi-card">
+            <div className="kpi-icon"><i className="fas fa-box" aria-hidden="true" /></div>
+            <div className="kpi-content">
+              <h3>Total productos</h3>
+              <p className="kpi-value">{inventorySummary.total.toLocaleString('es-CR')}</p>
             </div>
-            <p className="inventory-kpi-card-value">{lowStockProductsCount.toLocaleString('es-CR')}</p>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-icon success"><i className="fas fa-circle-check" aria-hidden="true" /></div>
+            <div className="kpi-content">
+              <h3>Activos</h3>
+              <p className="kpi-value">{inventorySummary.active.toLocaleString('es-CR')}</p>
+            </div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-icon warning"><i className="fas fa-triangle-exclamation" aria-hidden="true" /></div>
+            <div className="kpi-content">
+              <h3>Stock bajo</h3>
+              <p className="kpi-value">{inventorySummary.lowStock.toLocaleString('es-CR')}</p>
+            </div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-icon danger"><i className="fas fa-ban" aria-hidden="true" /></div>
+            <div className="kpi-content">
+              <h3>Agotados</h3>
+              <p className="kpi-value">{inventorySummary.outOfStock.toLocaleString('es-CR')}</p>
+            </div>
           </div>
         </section>
 
@@ -356,7 +381,7 @@ export default function Index(props: PageProps) {
                     <tr key={product.product_id}>
                       <td className="product-cell">
                         <div className="product-cell-content">
-                          <div className="product-thumb-wrap product-thumb-wrap--table">{thumb(product, 48)}</div>
+                          <div className="product-thumb-wrap product-thumb-wrap--table">{thumb(product, 64)}</div>
                           <div>
                             <div className="product-name">{product.name}</div>
                             <div className="product-sku text-muted">{product.sku}</div>
@@ -383,7 +408,7 @@ export default function Index(props: PageProps) {
               {products.map((product) => (
                 <div className="product-card" key={product.product_id}>
                   <div className="product-card-header">
-                    <div className="product-thumb-wrap product-thumb-wrap--card">{thumb(product, 60)}</div>
+                    <div className="product-thumb-wrap product-thumb-wrap--card">{thumb(product, 88)}</div>
                     <button
                       type="button"
                       className={`featured-star-btn ${product.is_featured ? 'is-featured' : ''}`}

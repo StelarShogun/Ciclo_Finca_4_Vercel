@@ -1,0 +1,36 @@
+.cf4-anim-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.18));
+  border-radius: 0.6rem;
+  background: var(--background-white, rgba(255, 255, 255, 0.06));
+  color: var(--brand-medium, #2f6f4e);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.cf4-anim-theme-toggle:hover {
+  background: var(--brand-lightest, rgba(255, 255, 255, 0.12));
+  border-color: var(--brand-light, #81c784);
+  transform: translateY(-1px);
+}
+
+.cf4-anim-theme-toggle:focus-visible {
+  outline: 2px solid var(--brand-light, #81c784);
+  outline-offset: 2px;
+}
+
+.cf4-anim-theme-toggle__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+html[data-theme='dark'] .cf4-anim-theme-toggle {
+  color: var(--brand-lightest, #daf1de);
+}

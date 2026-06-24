@@ -420,6 +420,44 @@ class DashboardController extends Controller
      */
     private function dashboardInertiaPayload(array $data): array
     {
+        $recentSales = collect($data['recentSales'] ?? [])->map(fn (Sale $sale) => [
+            'id' => $sale->sale_id,
+            'invoice' => $sale->adminDashboardInvoiceLabel(),
+            'client' => $sale->adminDashboardClientLabel(),
+            'total' => (float) $sale->total,
+            'dateShort' => $sale->adminSaleDateShortLabel(),
+            'dateFull' => $sale->adminSaleDateLabel(),
+            'statusClass' => $sale->adminDashboardStatusBadgeClass(),
+            'statusShort' => $sale->adminDashboardStatusShortLabel(),
+            'statusTitle' => $sale->adminDashboardStatusTitle(),
+        ])->values()->all();
+
+        $lowStockList = collect($data['lowStockProductsList'] ?? [])->map(fn (Product $product) => [
+            'id' => $product->product_id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'category' => $product->category->name ?? '—',
+            'stock' => (int) $product->stock_current,
+        ])->values()->all();
+
+        $salesByDay = collect($data['salesByDay'] ?? [])->map(fn ($row) => [
+            'date' => Carbon::parse($row->date)->isoFormat('ddd D'),
+            'total' => (float) $row->total,
+        ])->values()->all();
+
+        $productsByCategory = collect($data['productsByCategory'] ?? [])
+            ->filter(fn ($row) => (int) ($row['total'] ?? 0) > 0)
+            ->map(fn ($row) => [
+                'label' => $row['categoria'],
+                'total' => (int) $row['total'],
+            ])->values()->all();
+
+        $topProducts = collect($data['topProducts'] ?? [])->map(fn ($row) => [
+            'name' => $row->name,
+            'units' => (int) $row->total_vendido,
+            'revenue' => (float) $row->ingresos,
+        ])->values()->all();
+
         return [
             'totalProducts' => (int) ($data['totalProducts'] ?? 0),
             'totalSuppliers' => (int) ($data['totalSuppliers'] ?? 0),
@@ -429,6 +467,11 @@ class DashboardController extends Controller
             'salesTrend' => (float) ($data['salesTrend'] ?? 0),
             'monthlySales' => (float) ($data['monthlySales'] ?? 0),
             'monthlyTrend' => (float) ($data['monthlyTrend'] ?? 0),
+            'recentSales' => $recentSales,
+            'lowStockList' => $lowStockList,
+            'salesByDay' => $salesByDay,
+            'productsByCategory' => $productsByCategory,
+            'topProducts' => $topProducts,
             'error' => $data['error'] ?? null,
         ];
     }

@@ -172,6 +172,7 @@ export default function Index({
         <PageHeader
           title="Encargos en línea"
           kicker="Encargos"
+          icon="fa-shopping-cart"
           actions={
             <button type="button" className="btn btn-secondary btn-sm" onClick={() => setSettingsOpen(true)}>
               <i className="fas fa-clock" aria-hidden="true" /> Plazo de cancelación
@@ -287,31 +288,31 @@ export default function Index({
                       <td><strong>{formatColones(order.total)}</strong></td>
                       <td className="admin-table__col--actions">
                         <div className="actions-container">
-                          <button className="action-btn secondary" type="button" onClick={() => setViewId(order.sale_id)} title="Ver detalles">
+                          <button className="action-btn secondary" type="button" onClick={() => setViewId(order.sale_id)} data-tooltip="Ver detalles" aria-label="Ver detalles">
                             <i className="fas fa-eye" aria-hidden="true" />
                           </button>
                           {order.status === 'pending' ? (
                             <>
-                              <button className="action-btn warning" type="button" onClick={() => markReady(order)} title="Marcar como listo para recoger">
+                              <button className="action-btn warning" type="button" onClick={() => markReady(order)} data-tooltip="Marcar como listo para recoger" aria-label="Marcar como listo para recoger">
                                 <i className="fas fa-box" aria-hidden="true" />
                               </button>
-                              <button className="action-btn danger" type="button" onClick={() => setCancelTarget(order)} title="Rechazar encargo">
+                              <button className="action-btn danger" type="button" onClick={() => setCancelTarget(order)} data-tooltip="Rechazar encargo" aria-label="Rechazar encargo">
                                 <i className="fas fa-times" aria-hidden="true" />
                               </button>
                             </>
                           ) : null}
                           {order.status === 'ready_to_pickup' ? (
                             <>
-                              <button className="action-btn success" type="button" onClick={() => completeOrder(order)} title="Confirmar encargo">
+                              <button className="action-btn success" type="button" onClick={() => completeOrder(order)} data-tooltip="Confirmar encargo" aria-label="Confirmar encargo">
                                 <i className="fas fa-check" aria-hidden="true" />
                               </button>
-                              <button className="action-btn danger" type="button" onClick={() => setCancelTarget(order)} title="Rechazar encargo">
+                              <button className="action-btn danger" type="button" onClick={() => setCancelTarget(order)} data-tooltip="Rechazar encargo" aria-label="Rechazar encargo">
                                 <i className="fas fa-times" aria-hidden="true" />
                               </button>
                             </>
                           ) : null}
                           {order.status === 'completed' ? (
-                            <button className="action-link-invoice" type="button" onClick={() => openInvoice(order)} title="Ver factura en formato estructurado">
+                            <button className="action-link-invoice" type="button" onClick={() => openInvoice(order)} data-tooltip="Ver factura en formato estructurado" aria-label="Ver factura en formato estructurado">
                               <i className="fas fa-file-invoice" aria-hidden="true" /> Ver factura
                             </button>
                           ) : null}

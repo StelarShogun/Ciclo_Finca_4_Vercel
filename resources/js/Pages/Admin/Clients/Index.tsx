@@ -109,7 +109,7 @@ export default function Index({ clients, dir, filters, pagination, sort }: PageP
       <Head title="Usuarios - Ciclo Finca 4 Admin" />
 
       <div className="clients-page">
-        <PageHeader title="Usuarios" kicker="Clientes">
+        <PageHeader title="Usuarios" kicker="Clientes" icon="fa-users">
           <p>Gestioná las cuentas de clientes registradas en la tienda.</p>
         </PageHeader>
 

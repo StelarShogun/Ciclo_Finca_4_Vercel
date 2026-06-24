@@ -158,6 +158,7 @@ export default function Index({ sales, pagination, kpis, latestHistorySaleId, fi
         <PageHeader
           title="Gestión de ventas"
           kicker="Ventas"
+          icon="fa-cash-register"
           actions={
             <button className="btn btn-primary" onClick={() => setNewOpen(true)}>
               <i className="fas fa-plus" aria-hidden="true" /> Nueva venta
@@ -298,21 +299,21 @@ export default function Index({ sales, pagination, kpis, latestHistorySaleId, fi
                       <td><strong>{formatColones(sale.total)}</strong></td>
                       <td className="admin-table__col--actions">
                         <div className="actions-container">
-                          <button className="action-btn view" onClick={() => setViewId(sale.sale_id)} title="Ver detalles">
+                          <button className="action-btn view" onClick={() => setViewId(sale.sale_id)} data-tooltip="Ver detalles" aria-label="Ver detalles">
                             <i className="fas fa-eye" aria-hidden="true" />
                           </button>
                           {sale.status === 'completed' ? (
                             <>
-                              <button className="action-link-invoice" onClick={() => openInvoice(sale)} title="Ver factura en formato estructurado">
+                              <button className="action-link-invoice" onClick={() => openInvoice(sale)} data-tooltip="Ver factura en formato estructurado" aria-label="Ver factura en formato estructurado">
                                 <i className="fas fa-file-invoice" aria-hidden="true" /> Ver factura
                               </button>
-                              <button className="action-btn info" onClick={() => setReturnTarget({ saleId: sale.sale_id, invoiceLabel: sale.invoice_number })} title="Registrar devolución">
+                              <button className="action-btn info" onClick={() => setReturnTarget({ saleId: sale.sale_id, invoiceLabel: sale.invoice_number })} data-tooltip="Registrar devolución" aria-label="Registrar devolución">
                                 <i className="fas fa-rotate-left" aria-hidden="true" />
                               </button>
                             </>
                           ) : null}
                           {sale.status !== 'cancelled' ? (
-                            <button className="action-btn secondary" onClick={() => printSale(sale.sale_id, sale.invoice_number)} title="Imprimir">
+                            <button className="action-btn secondary" onClick={() => printSale(sale.sale_id, sale.invoice_number)} data-tooltip="Imprimir" aria-label="Imprimir">
                               <i className="fas fa-print" aria-hidden="true" />
                             </button>
                           ) : null}

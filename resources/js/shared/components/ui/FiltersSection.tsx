@@ -4,13 +4,16 @@ import '../../../../css/admin/components/filters.css';
 
 type FiltersSectionProps = PropsWithChildren<{
   title?: string;
-  onSubmit: (event: FormEvent) => void;
-  onClear: () => void;
+  /** Opcional: en reportes con filtrado en vivo no hay submit. */
+  onSubmit?: (event: FormEvent) => void;
+  onClear?: () => void;
   footer?: ReactNode;
   after?: ReactNode;
   formId?: string;
   submitLabel?: string;
   clearLabel?: string;
+  /** Oculta los botones Aplicar/Limpiar (para filtros que se aplican en vivo). */
+  hideActions?: boolean;
 }>;
 
 /**
@@ -27,26 +30,39 @@ export function FiltersSection({
   formId,
   submitLabel = 'Aplicar Filtros',
   clearLabel = 'Limpiar',
+  hideActions = false,
   children,
 }: FiltersSectionProps) {
+  function handleSubmit(event: FormEvent) {
+    if (onSubmit) {
+      onSubmit(event);
+    } else {
+      event.preventDefault();
+    }
+  }
+
   return (
     <div className="filters-section">
       <div className="filters-header">
         <h2 className="filters-title">{title}</h2>
       </div>
 
-      <form method="GET" onSubmit={onSubmit} id={formId} className="admin-filters-form filter-form">
+      <form method="GET" onSubmit={handleSubmit} id={formId} className="admin-filters-form filter-form">
         <div className="filters-grid">
           <div className="filters-grid__fields">{children}</div>
 
-          <div className="filter-group filter-buttons">
-            <button type="submit" className="btn btn-primary filter-btn">
-              <i className="fas fa-search" aria-hidden="true" /> {submitLabel}
-            </button>
-            <button type="button" className="btn btn-primary filter-btn" onClick={onClear}>
-              <i className="fas fa-times" aria-hidden="true" /> {clearLabel}
-            </button>
-          </div>
+          {hideActions ? null : (
+            <div className="filter-group filter-buttons">
+              <button type="submit" className="btn btn-primary filter-btn">
+                <i className="fas fa-search" aria-hidden="true" /> {submitLabel}
+              </button>
+              {onClear ? (
+                <button type="button" className="btn btn-primary filter-btn" onClick={onClear}>
+                  <i className="fas fa-times" aria-hidden="true" /> {clearLabel}
+                </button>
+              ) : null}
+            </div>
+          )}
         </div>
 
         {footer ? <div className="filters-footer">{footer}</div> : null}

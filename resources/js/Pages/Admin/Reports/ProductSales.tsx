@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 
 import '../../../../css/admin/reports/product-sales.css';
 
@@ -98,18 +99,22 @@ export default function ProductSales({ period: period0, sort: sort0, dir: dir0, 
           <p>Analiza los productos con mayor rendimiento por ingresos o unidades vendidas en el periodo seleccionado.</p>
         </PageHeader>
 
-        <div className="product-sales-toolbar">
-          <div className="period-toggle" role="group" aria-label="Periodo">
-            {['7d', '30d', '90d'].map((p) => (
-              <button type="button" key={p} className={`period-btn${period === p ? ' active' : ''}`} onClick={() => { setPeriod(p); setPage(1); }}>
-                {p === '7d' ? '7 días' : p === '30d' ? '30 días' : '90 días'}
-              </button>
-            ))}
+        <FiltersSection hideActions>
+          <div className="filter-group">
+            <label>Periodo</label>
+            <div className="period-toggle" role="group" aria-label="Periodo">
+              {['7d', '30d', '90d'].map((p) => (
+                <button type="button" key={p} className={`period-btn${period === p ? ' active' : ''}`} onClick={() => { setPeriod(p); setPage(1); }}>
+                  {p === '7d' ? '7 días' : p === '30d' ? '30 días' : '90 días'}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="search-wrap">
-            <input type="search" className="product-sales-search" placeholder="Filtrar por nombre o SKU…" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" />
+          <div className="filter-group filters-grow">
+            <label htmlFor="ps-search">Buscar</label>
+            <input type="search" id="ps-search" placeholder="Filtrar por nombre o SKU…" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" />
           </div>
-        </div>
+        </FiltersSection>
 
         <section className="top10-section">
           <div className="top10-header">

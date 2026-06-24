@@ -127,6 +127,7 @@ export default function Index({ orders, pagination, openSupplierOrdersCount, sup
         <PageHeader
           title="Pedidos a Proveedores"
           kicker="Proveedores"
+          icon="fa-clipboard-list"
           actions={
             <div className="sales-header-actions">
               <a href="/supplier-orders/xml-deviation" className="btn btn-secondary btn-sm">
@@ -234,7 +235,7 @@ export default function Index({ orders, pagination, openSupplierOrdersCount, sup
                       <td><strong className="po-number" title={order.po_full}>{order.po_short}</strong></td>
                       <td>
                         {order.supplier_id ? (
-                          <button className="supplier-name-btn" type="button" onClick={() => setViewSupplierId(order.supplier_id)} title="Ver datos del proveedor">
+                          <button className="supplier-name-btn" type="button" onClick={() => setViewSupplierId(order.supplier_id)} data-tooltip="Ver datos del proveedor" aria-label="Ver datos del proveedor">
                             {order.supplier_name} <i className="fas fa-external-link-alt" style={{ fontSize: '.75rem', opacity: 0.6 }} aria-hidden="true" />
                           </button>
                         ) : (
@@ -258,25 +259,25 @@ export default function Index({ orders, pagination, openSupplierOrdersCount, sup
                       </td>
                       <td className="admin-table__col--actions">
                         <div className="actions-container">
-                          <button className="action-btn secondary" type="button" onClick={() => setViewOrderId(order.num_order)} title="Ver detalles">
+                          <button className="action-btn secondary" type="button" onClick={() => setViewOrderId(order.num_order)} data-tooltip="Ver detalles" aria-label="Ver detalles">
                             <i className="fas fa-eye" aria-hidden="true" />
                           </button>
                           {order.state === 'draft' || order.state === 'pending' ? (
                             <>
-                              <button className="action-btn success" type="button" onClick={() => confirmOrder(order)} title="Confirmar pedido"><i className="fas fa-check" aria-hidden="true" /></button>
-                              <button className="action-btn danger" type="button" onClick={() => setCancelTarget({ id: order.num_order, ref: order.po_short })} title="Cancelar pedido"><i className="fas fa-times" aria-hidden="true" /></button>
+                              <button className="action-btn success" type="button" onClick={() => confirmOrder(order)} data-tooltip="Confirmar pedido" aria-label="Confirmar pedido"><i className="fas fa-check" aria-hidden="true" /></button>
+                              <button className="action-btn danger" type="button" onClick={() => setCancelTarget({ id: order.num_order, ref: order.po_short })} data-tooltip="Cancelar pedido" aria-label="Cancelar pedido"><i className="fas fa-times" aria-hidden="true" /></button>
                             </>
                           ) : null}
                           {order.state === 'confirmed' ? (
                             <>
-                              <a className="action-btn view" href={`/supplier-orders/${order.num_order}/detail`} title="Registrar recepción de mercancía"><i className="fas fa-truck" aria-hidden="true" /></a>
-                              <button className="action-btn danger" type="button" onClick={() => setCancelTarget({ id: order.num_order, ref: order.po_short })} title="Cancelar pedido"><i className="fas fa-times" aria-hidden="true" /></button>
+                              <a className="action-btn view" href={`/supplier-orders/${order.num_order}/detail`} data-tooltip="Registrar recepción de mercancía" aria-label="Registrar recepción de mercancía"><i className="fas fa-truck" aria-hidden="true" /></a>
+                              <button className="action-btn danger" type="button" onClick={() => setCancelTarget({ id: order.num_order, ref: order.po_short })} data-tooltip="Cancelar pedido" aria-label="Cancelar pedido"><i className="fas fa-times" aria-hidden="true" /></button>
                             </>
                           ) : null}
                           {order.state === 'partial_received' ? (
                             <>
-                              <a className="action-btn view" href={`/supplier-orders/${order.num_order}/detail`} title="Completar recepción de mercancía"><i className="fas fa-clipboard-check" aria-hidden="true" /></a>
-                              <button className="action-btn danger" type="button" onClick={() => setCancelTarget({ id: order.num_order, ref: order.po_short })} title="Cancelar pedido"><i className="fas fa-times" aria-hidden="true" /></button>
+                              <a className="action-btn view" href={`/supplier-orders/${order.num_order}/detail`} data-tooltip="Completar recepción de mercancía" aria-label="Completar recepción de mercancía"><i className="fas fa-clipboard-check" aria-hidden="true" /></a>
+                              <button className="action-btn danger" type="button" onClick={() => setCancelTarget({ id: order.num_order, ref: order.po_short })} data-tooltip="Cancelar pedido" aria-label="Cancelar pedido"><i className="fas fa-times" aria-hidden="true" /></button>
                             </>
                           ) : null}
                         </div>

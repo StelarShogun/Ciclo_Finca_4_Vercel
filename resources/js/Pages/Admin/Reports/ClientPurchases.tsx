@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 
 import '../../../../css/admin/reports/client-purchase-history.css';
 
@@ -95,18 +96,22 @@ export default function ClientPurchases({ period: period0, sort: sort0, dir: dir
           <p>Consulta el total comprado, la cantidad de órdenes y el ticket promedio. También puedes buscar por nombre, apellido o correo.</p>
         </PageHeader>
 
-        <div className="product-sales-toolbar">
-          <div className="period-toggle" role="group" aria-label="Periodo">
-            {['7d', '30d', '90d'].map((p) => (
-              <button type="button" key={p} className={`period-btn${period === p ? ' active' : ''}`} onClick={() => { setPeriod(p); setPage(1); }}>
-                {p === '7d' ? '7 días' : p === '30d' ? '30 días' : '90 días'}
-              </button>
-            ))}
+        <FiltersSection hideActions>
+          <div className="filter-group">
+            <label>Periodo</label>
+            <div className="period-toggle" role="group" aria-label="Periodo">
+              {['7d', '30d', '90d'].map((p) => (
+                <button type="button" key={p} className={`period-btn${period === p ? ' active' : ''}`} onClick={() => { setPeriod(p); setPage(1); }}>
+                  {p === '7d' ? '7 días' : p === '30d' ? '30 días' : '90 días'}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="search-wrap">
-            <input type="search" className="client-purchases-search" placeholder="Buscar por nombre, apellido o correo…" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" />
+          <div className="filter-group filters-grow">
+            <label htmlFor="cp-search">Buscar</label>
+            <input type="search" id="cp-search" placeholder="Buscar por nombre, apellido o correo…" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" />
           </div>
-        </div>
+        </FiltersSection>
 
         <div className="table-section">
           <div className="sales-table-container">
@@ -136,7 +141,7 @@ export default function ClientPurchases({ period: period0, sort: sort0, dir: dir
                       <td className="num">{crc(r.avg_ticket)}</td>
                       <td className="admin-table__col--actions">
                         <div className="actions-container">
-                          <a href={detailUrl(r.client_id)} className="action-btn secondary" title="Ver detalle"><i className="fas fa-eye" aria-hidden="true" /></a>
+                          <a href={detailUrl(r.client_id)} className="action-btn secondary" data-tooltip="Ver detalle" aria-label="Ver detalle"><i className="fas fa-eye" aria-hidden="true" /></a>
                         </div>
                       </td>
                     </tr>

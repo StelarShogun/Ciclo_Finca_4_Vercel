@@ -27,6 +27,12 @@ final class ProductInventoryController extends Controller
     {
         $query = $this->inventoryProductQuery->filteredQuery($request)->with(['category.parent', 'supplier']);
         $lowStockProductsCount = Product::query()->lowStockAlert()->count();
+        $inventorySummary = [
+            'total' => (int) Product::query()->count(),
+            'active' => (int) Product::query()->where('status', 'active')->count(),
+            'lowStock' => (int) $lowStockProductsCount,
+            'outOfStock' => (int) Product::query()->where('stock_current', '<=', 0)->count(),
+        ];
         $hasClassificationSelections = collect((array) $request->input('classifications', []))
             ->contains(fn ($value) => is_string($value) && trim($value) !== '');
         $activeClassificationFilters = $hasClassificationSelections
@@ -76,6 +82,7 @@ final class ProductInventoryController extends Controller
             'products' => $products,
             'pagination' => ListPaginationPayload::from($paginator),
             'lowStockProductsCount' => (int) $lowStockProductsCount,
+            'inventorySummary' => $inventorySummary,
             'categories' => $categories->map(fn (Category $c): array => [
                 'category_id' => (int) $c->category_id,
                 'name' => $c->name,

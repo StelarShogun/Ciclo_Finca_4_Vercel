@@ -1,0 +1,156 @@
+/* ============================================================
+   Tarjetas KPI / indicadores compartidas (admin).
+   Fuente única de estilo para todos los módulos. Cada módulo
+   redefinía .kpi-card con resultados inconsistentes y, al cargarse
+   dashboard.css de forma global, forzaba un layout horizontal que
+   rompía las tarjetas apiladas (Encargos, Ventas).
+
+   Para imponerse sobre las definiciones por módulo SIN borrarlas,
+   todos los selectores se anclan bajo `.admin-main` (el contenedor
+   del layout), ganando por especificidad.
+
+   Estructura A — icono + contenido en fila:
+     .kpi-card > .kpi-icon + .kpi-content (h3 + .kpi-value)
+   Estructura B — encabezado + valor + tendencia apilados:
+     .kpi-card > .kpi-header(.kpi-title + .kpi-icon) + .kpi-value + .kpi-trend
+   ============================================================ */
+
+.admin-main .kpis-section,
+.admin-main .kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+/* Encargos: una sola tarjeta de estado — no debe ocupar todo el ancho. */
+.admin-main .cf4-orders-kpi-grid {
+  grid-template-columns: minmax(260px, 360px);
+  justify-content: start;
+}
+
+.admin-main .kpi-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.7rem;
+  min-height: 7.5rem;
+  padding: 1.4rem 1.5rem;
+  text-align: left;
+  font-family: inherit;
+  background: var(--background-white, #fff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.08));
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-main .kpi-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--color-primary, #235347);
+}
+
+.admin-main .kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md, 0 8px 22px rgba(17, 24, 39, 0.12));
+}
+
+/* Estructura A: icono y contenido en una fila, centrados verticalmente. */
+.admin-main .kpi-card:has(> .kpi-content) {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+}
+
+.admin-main .kpi-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.admin-main .kpi-content h3 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted, #6b7280);
+}
+
+/* Estructura B: encabezado con título e icono alineados. */
+.admin-main .kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.admin-main .kpi-title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-muted, #6b7280);
+}
+
+/* Icono — caja cuadrada consistente, nunca se encoge. */
+.admin-main .kpi-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 12px;
+  font-size: 1.3rem;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--color-primary, #235347) 0%, var(--color-primary-light, #4a9d6f) 100%);
+  color: #fff;
+}
+
+.admin-main .kpi-icon i {
+  line-height: 1;
+}
+
+.admin-main .kpi-icon.success { background: var(--color-success-bg, #dcfce7); color: var(--color-success, #16a34a); }
+.admin-main .kpi-icon.info    { background: var(--color-info-bg, #dbeafe);    color: var(--color-info, #2563eb); }
+.admin-main .kpi-icon.warning { background: var(--color-warning-bg, #fef3c7); color: var(--color-warning, #d97706); }
+.admin-main .kpi-icon.danger  { background: var(--color-danger-bg, #fee2e2);  color: var(--color-danger, #dc2626); }
+
+.admin-main .kpi-value {
+  margin: 0;
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 1.9rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--color-dark, #1f2937);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  word-break: break-word;
+}
+
+.admin-main .kpi-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.admin-main .trend-up { color: var(--color-success, #16a34a); }
+.admin-main .trend-down { color: var(--color-danger, #dc2626); }
+
+@media (max-width: 640px) {
+  .admin-main .kpis-section,
+  .admin-main .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}

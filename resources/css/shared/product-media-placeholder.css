@@ -62,7 +62,8 @@
 }
 
 .product-media-placeholder--thumb-table i {
-  font-size: 1.15rem;
+  font-size: 1.85rem;
+  opacity: 0.62;
 }
 
 /* Admin inventory grid card thumb */
@@ -73,7 +74,8 @@
 }
 
 .product-media-placeholder--thumb-card i {
-  font-size: 1.35rem;
+  font-size: 2.4rem;
+  opacity: 0.62;
 }
 
 .product-thumb-wrap .product-media-placeholder {
