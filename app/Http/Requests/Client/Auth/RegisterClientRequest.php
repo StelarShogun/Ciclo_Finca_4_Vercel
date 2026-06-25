@@ -21,7 +21,7 @@ class RegisterClientRequest extends FormRequest
             'first_surname' => ['required', 'string', 'max:50', 'min:2', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
             'second_surname' => ['nullable', 'string', 'max:50', 'regex:/^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
             'gmail' => ['required', 'email', 'unique:client_table,gmail', 'regex:/^[^@]+@gmail\.com$/i'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'max:128', 'confirmed'],
             'accept_terms' => ['accepted'],
         ];
     }
@@ -48,6 +48,7 @@ class RegisterClientRequest extends FormRequest
             'gmail.regex' => 'Solo se aceptan correos de Gmail (@gmail.com).',
             'password.required' => 'La contraseña es obligatoria.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.max' => 'La contraseña no puede superar 128 caracteres.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
             'accept_terms.accepted' => 'Debes aceptar los Términos y condiciones y la Política de privacidad.',
         ];

@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
@@ -159,6 +160,7 @@ export default function Index({ sales, pagination, kpis, latestHistorySaleId, fi
           title="Gestión de ventas"
           kicker="Ventas"
           icon="fa-cash-register"
+          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Ventas' }]} />}
           actions={
             <button className="btn btn-primary" onClick={() => setNewOpen(true)}>
               <i className="fas fa-plus" aria-hidden="true" /> Nueva venta
@@ -173,32 +175,32 @@ export default function Index({ sales, pagination, kpis, latestHistorySaleId, fi
 
         <div className="kpi-grid">
           <div className="kpi-card">
-            <div className="kpi-header">
-              <h3 className="kpi-title">Ventas del Día</h3>
-              <div className="kpi-icon success"><i className="fas fa-chart-line" aria-hidden="true" /></div>
+            <div className="kpi-icon success"><i className="fas fa-chart-line" aria-hidden="true" /></div>
+            <div className="kpi-content">
+              <h3>Ventas del Día</h3>
+              <p className="kpi-value">{formatColones(liveKpis.dailySales)}</p>
             </div>
-            <p className="kpi-value">{formatColones(liveKpis.dailySales)}</p>
-            <div className={`kpi-trend ${liveKpis.dailySalesTrend >= 0 ? 'trend-up' : 'trend-down'}`}>
+            <div className={`kpi-trend kpi-trend--badge ${liveKpis.dailySalesTrend >= 0 ? 'trend-up' : 'trend-down'}`}>
               <i className={`fas fa-arrow-${liveKpis.dailySalesTrend >= 0 ? 'up' : 'down'}`} aria-hidden="true" /> {Math.abs(liveKpis.dailySalesTrend)}%
             </div>
           </div>
           <div className="kpi-card">
-            <div className="kpi-header">
-              <h3 className="kpi-title">Transacciones</h3>
-              <div className="kpi-icon info"><i className="fas fa-receipt" aria-hidden="true" /></div>
+            <div className="kpi-icon info"><i className="fas fa-receipt" aria-hidden="true" /></div>
+            <div className="kpi-content">
+              <h3>Transacciones</h3>
+              <p className="kpi-value">{liveKpis.dailyTransactions}</p>
             </div>
-            <p className="kpi-value">{liveKpis.dailyTransactions}</p>
-            <div className={`kpi-trend ${liveKpis.dailyTransactionsTrend >= 0 ? 'trend-up' : 'trend-down'}`}>
+            <div className={`kpi-trend kpi-trend--badge ${liveKpis.dailyTransactionsTrend >= 0 ? 'trend-up' : 'trend-down'}`}>
               <i className={`fas fa-arrow-${liveKpis.dailyTransactionsTrend >= 0 ? 'up' : 'down'}`} aria-hidden="true" /> {Math.abs(liveKpis.dailyTransactionsTrend)}%
             </div>
           </div>
           <div className="kpi-card">
-            <div className="kpi-header">
-              <h3 className="kpi-title">Devoluciones</h3>
-              <div className="kpi-icon danger"><i className="fas fa-rotate-left" aria-hidden="true" /></div>
+            <div className="kpi-icon danger"><i className="fas fa-rotate-left" aria-hidden="true" /></div>
+            <div className="kpi-content">
+              <h3>Devoluciones</h3>
+              <p className="kpi-value">{liveKpis.refunds}</p>
             </div>
-            <p className="kpi-value">{liveKpis.refunds}</p>
-            <div className={`kpi-trend ${liveKpis.refundsTrend >= 0 ? 'trend-up' : 'trend-down'}`}>
+            <div className={`kpi-trend kpi-trend--badge ${liveKpis.refundsTrend >= 0 ? 'trend-up' : 'trend-down'}`}>
               <i className={`fas fa-arrow-${liveKpis.refundsTrend >= 0 ? 'up' : 'down'}`} aria-hidden="true" /> {Math.abs(liveKpis.refundsTrend)}
             </div>
           </div>

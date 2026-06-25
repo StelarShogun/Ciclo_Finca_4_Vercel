@@ -152,6 +152,11 @@
   color: #fff;
 }
 
+.cf4-pagination-toolbar .button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring, rgba(18, 179, 106, 0.4));
+}
+
 .cf4-pagination-toolbar .button:disabled,
 .cf4-pagination-toolbar .button[aria-disabled="true"] {
   opacity: 0.45;

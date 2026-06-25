@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 final class ProductSalesReportQuery
 {
-    public static function base(Carbon $start, string $q): Builder
+    public static function base(Carbon $start, string $q, ?Carbon $end = null): Builder
     {
         $skuExpr = "CONCAT('BK-', LPAD(products.product_id, 3, '0'))";
 
@@ -18,6 +18,7 @@ final class ProductSalesReportQuery
             ->join('sales', 'sale_items.sale_id', '=', 'sales.sale_id')
             ->where('sales.status', 'completed')
             ->where('sales.sale_date', '>=', $start)
+            ->when($end !== null, fn ($builder) => $builder->where('sales.sale_date', '<=', $end))
             ->select(
                 'products.product_id',
                 'products.name',

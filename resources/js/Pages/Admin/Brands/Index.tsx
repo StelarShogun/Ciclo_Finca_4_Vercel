@@ -5,6 +5,7 @@ import type { FormEvent } from 'react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { Modal } from '@/shared/components/ui/Modal';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
@@ -163,6 +164,7 @@ export default function Index({ brands, filters, pagination }: BrandsPageProps) 
           title="Gestión de Marcas"
           kicker="Marcas"
           icon="fa-tags"
+          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Marcas' }]} />}
           actions={
             <div className="brands-actions">
               <span className="brands-count-badge">

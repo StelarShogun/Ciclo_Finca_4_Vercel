@@ -558,7 +558,7 @@
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-  color: #9ca3af;
+  color: var(--text-secondary, #9ca3af);
   opacity: 1;
 }
 

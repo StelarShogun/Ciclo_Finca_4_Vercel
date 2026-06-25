@@ -21,11 +21,42 @@
   background:
     radial-gradient(circle at 100% 0%, rgba(129, 199, 132, 0.22), transparent 60%),
     linear-gradient(135deg, var(--brand-dark, #163a2b) 0%, var(--brand-darkest, #0b211a) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
   color: #fff;
-  box-shadow: var(--shadow-md, 0 10px 28px rgba(0, 0, 0, 0.18));
+  box-shadow: var(--shadow-lg, 0 16px 36px rgba(0, 0, 0, 0.22));
   overflow: visible;
+}
+
+/* Capa decorativa: brillo de acento + retícula de puntos que llena el lado
+   derecho (antes lucía vacío) sin estorbar a los dropdowns (z-index inferior). */
+.page-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background-image:
+    radial-gradient(circle at 90% -20%, color-mix(in srgb, var(--brand-accent, #3fae6e) 38%, transparent), transparent 46%),
+    radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1.4px);
+  background-size: auto, 18px 18px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 38%, #000 100%);
+  mask-image: linear-gradient(90deg, transparent 38%, #000 100%);
+  pointer-events: none;
+}
+
+/* Línea de acento inferior sutil. */
+.page-header::after {
+  content: "";
+  position: absolute;
+  left: 1.75rem;
+  right: 1.75rem;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--brand-accent, #3fae6e), transparent 70%);
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .page-header > div {
@@ -72,18 +103,81 @@
 }
 
 .page-header__media {
+  position: relative;
   flex-shrink: 0;
-  width: 3.4rem;
-  height: 3.4rem;
+  width: 3.6rem;
+  height: 3.6rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
-  font-size: 1.5rem;
+  border-radius: 16px;
+  font-size: 1.6rem;
   color: #fff;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0.05));
-  border: 1px solid rgba(255, 255, 255, 0.20);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--brand-accent, #3fae6e) 42%, transparent), rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 8px 20px rgba(0, 0, 0, 0.28);
+}
+
+/* Halo de acento detrás del medallón. */
+.page-header__media::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  background: radial-gradient(circle, color-mix(in srgb, var(--brand-accent, #3fae6e) 45%, transparent), transparent 70%);
+  filter: blur(8px);
+  opacity: 0.55;
+  z-index: -1;
+}
+
+/* ===== Botones del header (sobre el degradado oscuro) ===== */
+.header-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.05rem;
+  border-radius: 10px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.10);
+  color: #fff;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.header-actions .btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.42);
+  transform: translateY(-1px);
+  color: #fff;
+}
+
+.header-actions .btn i {
+  font-size: 0.95em;
+}
+
+/* Acción primaria: acento brillante que destaca. */
+.header-actions .btn-primary {
+  background: var(--brand-accent, #3fae6e);
+  border-color: transparent;
+  color: #052a1f;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(63, 174, 110, 0.34);
+}
+
+.header-actions .btn-primary:hover {
+  background: var(--brand-accent-strong, #2e9a5c);
+  color: #042018;
+  box-shadow: 0 9px 24px rgba(63, 174, 110, 0.42);
+}
+
+.header-actions .btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
 .page-header__text {
@@ -113,6 +207,64 @@
 
 .page-header__breadcrumb .sep {
   opacity: 0.45;
+}
+
+/* Breadcrumb unificado (componente Breadcrumbs) — vive dentro del header
+   (gradiente de marca), por eso usa tonos claros. */
+.page-header__breadcrumb .cf4-breadcrumb,
+.cf4-breadcrumb {
+  font-size: 0.78rem;
+}
+
+.cf4-breadcrumb__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cf4-breadcrumb__item {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.cf4-breadcrumb__link {
+  color: var(--brand-lightest, #daf1de);
+  opacity: 0.82;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 6px;
+  padding: 0.1rem 0.35rem;
+  transition: opacity var(--dur, 0.2s) ease, background var(--dur, 0.2s) ease;
+}
+
+.cf4-breadcrumb__link:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cf4-breadcrumb__link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6);
+}
+
+.cf4-breadcrumb__current {
+  color: #fff;
+  font-weight: 600;
+  opacity: 0.95;
+  padding: 0.1rem 0.35rem;
+}
+
+.cf4-breadcrumb__sep {
+  display: inline-flex;
+  align-items: center;
+  color: var(--brand-lightest, #daf1de);
+  opacity: 0.5;
+  font-size: 0.62rem;
 }
 
 .header-actions {

@@ -124,7 +124,7 @@
     font-size: 0.8125rem;
     font-weight: 500;
     cursor: pointer;
-    color: #333;
+    color: var(--text-primary, #333);
     white-space: nowrap;
     flex: 1 1 auto;
     min-width: calc(33.33% - 0.3rem);

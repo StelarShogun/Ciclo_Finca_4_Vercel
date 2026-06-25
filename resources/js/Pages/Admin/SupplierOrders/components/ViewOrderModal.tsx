@@ -15,11 +15,11 @@ const STATE_LABELS: Record<string, string> = {
 
 const TL_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
   draft: { label: 'Borrador', icon: 'fa-pencil-alt', color: '#64748b' },
-  pending: { label: 'Pendiente', icon: 'fa-clock', color: '#f59e0b' },
+  pending: { label: 'Pendiente', icon: 'fa-clock', color: 'var(--color-warning)' },
   confirmed: { label: 'Confirmado', icon: 'fa-check', color: '#3b82f6' },
   partial_received: { label: 'Recepción parcial', icon: 'fa-clipboard-check', color: '#f97316' },
   delivered: { label: 'Entregado', icon: 'fa-truck', color: '#235347' },
-  cancelled: { label: 'Cancelado', icon: 'fa-times', color: '#ef4444' },
+  cancelled: { label: 'Cancelado', icon: 'fa-times', color: 'var(--color-danger)' },
 };
 
 const money = new Intl.NumberFormat('es-CR', { minimumFractionDigits: 2 });
@@ -98,7 +98,7 @@ export function ViewOrderModal({ orderId, onClose, onConfirm, onCancel, reloadKe
               {order.received_at ? <div className="detail-item"><label>Fecha recepción:</label><span>{order.received_at}</span></div> : null}
               <div className="detail-item"><label>Estado:</label><span className={`status-badge ${order.state}`}>{STATE_LABELS[order.state] || order.state}</span></div>
               {order.closed_with_shorts ? (
-                <div className="detail-item" style={{ color: '#b45309' }}>
+                <div className="detail-item" style={{ color: 'var(--color-warning)' }}>
                   <label>Observación:</label>
                   <span><i className="fas fa-exclamation-triangle" aria-hidden="true" /> Cerrado con faltantes del proveedor</span>
                 </div>
@@ -158,7 +158,7 @@ export function ViewOrderModal({ orderId, onClose, onConfirm, onCancel, reloadKe
                 {order.timeline.map((t, i) => {
                   const isClosePartial = t.state === 'delivered' && (t.reason || '').startsWith('[Cierre con faltantes]');
                   const cfg = isClosePartial
-                    ? { label: 'Cerrado con faltantes', icon: 'fa-exclamation-triangle', color: '#f59e0b' }
+                    ? { label: 'Cerrado con faltantes', icon: 'fa-exclamation-triangle', color: 'var(--color-warning)' }
                     : TL_CONFIG[t.state] || { label: t.state, icon: 'fa-circle', color: '#94a3b8' };
                   const displayReason = isClosePartial ? (t.reason || '').replace(/^\[Cierre con faltantes\]\s*/, '') : t.reason;
                   return (

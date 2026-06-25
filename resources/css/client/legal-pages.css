@@ -37,7 +37,7 @@
 }
 
 .legal-page-body {
-  background: #fff;
+  background: var(--surface, #fff);
   border: 1px solid var(--border-color);
   border-radius: 14px;
   padding: clamp(1.25rem, 3vw, 2rem);

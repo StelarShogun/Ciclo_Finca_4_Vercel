@@ -98,6 +98,8 @@ export default function Login({
                   name="gmail"
                   className="form-control"
                   required
+                  maxLength={120}
+                  autoComplete="email"
                   placeholder="ejemplo@correo.com"
                   value={gmail}
                   onChange={(e) => setGmail(e.target.value)}
@@ -117,6 +119,8 @@ export default function Login({
                     name="password"
                     className="form-control"
                     required
+                    maxLength={128}
+                    autoComplete="current-password"
                     placeholder="Ingresa tu contraseña"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
@@ -128,6 +129,7 @@ export default function Index({ orders, pagination, openSupplierOrdersCount, sup
           title="Pedidos a Proveedores"
           kicker="Proveedores"
           icon="fa-clipboard-list"
+          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Pedidos a proveedores' }]} />}
           actions={
             <div className="sales-header-actions">
               <a href="/supplier-orders/xml-deviation" className="btn btn-secondary btn-sm">
@@ -146,13 +148,13 @@ export default function Index({ orders, pagination, openSupplierOrdersCount, sup
         </PageHeader>
 
         <section className="kpi-grid cf4-orders-kpi-grid" aria-label="Resumen de pedidos a proveedores">
-          <button type="button" className="kpi-card cf4-orders-kpi-card-link" onClick={() => { setForm({ ...form, state: 'open' }); visit({ ...form, state: 'open' }); }}>
-            <div className="kpi-header">
-              <h3 className="kpi-title">Pedidos abiertos</h3>
-              <div className="kpi-icon info"><i className="fas fa-truck-loading" aria-hidden="true" /></div>
+          <button type="button" className="kpi-card kpi-card--button cf4-orders-kpi-card-link" onClick={() => { setForm({ ...form, state: 'open' }); visit({ ...form, state: 'open' }); }}>
+            <div className="kpi-icon info"><i className="fas fa-truck-loading" aria-hidden="true" /></div>
+            <div className="kpi-content">
+              <h3>Pedidos abiertos</h3>
+              <p className="kpi-value">{openSupplierOrdersCount}</p>
+              <div className="kpi-trend trend-up"><i className="fas fa-arrow-right" aria-hidden="true" /> Ver pedidos no finales</div>
             </div>
-            <p className="kpi-value">{openSupplierOrdersCount}</p>
-            <div className="kpi-trend trend-up"><i className="fas fa-arrow-right" aria-hidden="true" /> Ver pedidos no finales</div>
           </button>
         </section>
 

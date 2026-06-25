@@ -85,7 +85,7 @@ export default function MovementsIndex({ products, pagination, filters }: PagePr
                       <td>{p.category_name}</td>
                       <td>{p.supplier_name ? <span><i className="fas fa-truck-fast" style={{ fontSize: '0.75rem', marginRight: '0.3rem', opacity: 0.6 }} aria-hidden="true" /> {p.supplier_name}</span> : <span className="text-muted">—</span>}</td>
                       <td><span className={`order-status-pill ${p.stock_badge_class}`}>{p.stock_label}</span></td>
-                      <td className="text-end"><strong>{nf.format(p.stock_current)}</strong> <span style={{ fontSize: '0.78rem', color: '#6b7280' }}>unid.</span></td>
+                      <td className="text-end"><strong>{nf.format(p.stock_current)}</strong> <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>unid.</span></td>
                       <td className="admin-table__col--actions">
                         <div className="actions-container">
                           <a href={`/inventory/movements/${p.product_id}`} className="action-btn secondary" data-tooltip="Ver movimientos" aria-label="Ver movimientos">

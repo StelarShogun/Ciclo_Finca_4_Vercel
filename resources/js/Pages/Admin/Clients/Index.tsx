@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
@@ -109,7 +110,7 @@ export default function Index({ clients, dir, filters, pagination, sort }: PageP
       <Head title="Usuarios - Ciclo Finca 4 Admin" />
 
       <div className="clients-page">
-        <PageHeader title="Usuarios" kicker="Clientes" icon="fa-users">
+        <PageHeader title="Usuarios" kicker="Clientes" icon="fa-users" breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Clientes' }]} />}>
           <p>Gestioná las cuentas de clientes registradas en la tienda.</p>
         </PageHeader>
 

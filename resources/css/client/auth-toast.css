@@ -62,7 +62,7 @@
   width: 1.65rem;
   height: 1.65rem;
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface, #fff);
   font-size: 0.95rem;
   font-weight: 700;
   color: #4285f4;

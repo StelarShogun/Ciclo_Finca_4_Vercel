@@ -116,23 +116,25 @@
     font-size: 1.1rem;
 }
 
-/* Breadcrumb */
+/* Breadcrumb (estilo antiguo de reportes — ahora alias del unificado) */
 
 .reports-breadcrumb {
     display: flex;
     align-items: center;
     gap: 0.4rem;
     font-size: 0.8125rem;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--text-secondary, #6b7280);
     margin-bottom: 1.25rem;
 }
 
 .reports-breadcrumb a {
-    color: var(--color-primary, #235347);
+    color: var(--text-secondary, #6b7280);
     text-decoration: none;
+    transition: color var(--dur, 0.2s) ease;
 }
 
 .reports-breadcrumb a:hover {
+    color: var(--accent, var(--color-primary, #235347));
     text-decoration: underline;
 }
 

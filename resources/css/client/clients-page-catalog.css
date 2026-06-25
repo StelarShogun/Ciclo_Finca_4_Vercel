@@ -920,7 +920,7 @@
   margin: 0;
   padding: 0.35rem;
   list-style: none;
-  background: #fff;
+  background: var(--surface, #fff);
   border: 1px solid rgba(35, 83, 71, 0.14);
   border-radius: 14px;
   box-shadow: 0 12px 32px rgba(5, 31, 32, 0.16);
@@ -1969,7 +1969,7 @@ select.catalog-toolbar-select:focus,
   z-index: 2;
 }
 
-.carousel-btn:hover { background: #fff; box-shadow: var(--shadow-md); color: var(--color-primary); }
+.carousel-btn:hover { background: var(--surface, #fff); box-shadow: var(--shadow-md); color: var(--color-primary); }
 .carousel-btn:disabled { opacity: 0.25; cursor: default; pointer-events: none; }
 .carousel-btn--prev { left: 8px; }
 .carousel-btn--next { right: 8px; }

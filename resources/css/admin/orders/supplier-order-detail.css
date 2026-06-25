@@ -151,7 +151,7 @@
 
 .tl-reason {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: var(--text-secondary, #6b7280);
   font-style: italic;
   display: flex;
   align-items: flex-start;

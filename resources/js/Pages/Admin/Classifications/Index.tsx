@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { useFlashToasts } from '@/shared/hooks/useFlashToasts';
 import type { InertiaListPagination as Pagination } from '@/types/pagination';
@@ -26,7 +27,7 @@ export default function Index({ pagination, subcategories }: PageProps) {
       <Head title="Opciones por tipo - Ciclo Finca 4 Admin" />
 
       <div className="classifications-catalog">
-        <PageHeader title="Opciones por tipo" kicker="Clasificación">
+        <PageHeader title="Opciones por tipo" kicker="Clasificación" breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Opciones por tipo' }]} />}>
           <p>Definí los atributos (Color, Talla…) y sus valores para cada tipo de producto.</p>
         </PageHeader>
 

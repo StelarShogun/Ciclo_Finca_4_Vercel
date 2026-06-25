@@ -80,7 +80,7 @@ export function ReceiveModal({ isOpen, orderId, isPartial, items, csrfToken, onC
         </>
       }
     >
-      <p style={{ margin: '0 0 16px', color: 'var(--color-text-secondary, #5f6368)', fontSize: '.9rem' }}>
+      <p style={{ margin: '0 0 16px', color: 'var(--text-secondary)', fontSize: '.9rem' }}>
         {isPartial
           ? 'Este pedido tiene una recepción parcial registrada. Actualiza las cantidades recibidas. Al confirmar, si todos los productos llegan completos el pedido pasará a Entregado; de lo contrario se mantendrá en Recepción parcial.'
           : 'Ingresa la cantidad recibida por cada producto. Si todos los productos se reciben completos el pedido pasará a Entregado; si alguno es menor quedará en Recepción parcial.'}

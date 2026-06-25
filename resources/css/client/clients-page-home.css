@@ -425,7 +425,7 @@ body.guest-layout {
   font-size: 0.95rem;
   transition: all 0.2s ease;
   border: 1px solid #dadce0;
-  background: #fff;
+  background: var(--surface, #fff);
   color: #3c4043;
 }
 
@@ -1320,7 +1320,7 @@ body.guest-layout {
 
 .product-favorite-btn:hover {
   transform: scale(1.08);
-  background: #ffffff;
+  background: var(--surface, #fff);
 }
 
 .product-favorite-btn.is-active {
@@ -1580,7 +1580,7 @@ body.guest-layout {
 
 /* Botón secundario “Ver producto” — solo texto centrado (escritorio; oculto en móvil vía media query) */
 .btn-ver-detalles {
-  background: #ffffff;
+  background: var(--surface, #fff);
   color: var(--brand-medium-dark, var(--color-primary-dark, #163832));
   border: 1.5px solid var(--brand-medium, var(--color-primary, #235347));
   box-shadow:

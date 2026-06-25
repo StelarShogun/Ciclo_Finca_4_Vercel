@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
@@ -173,6 +174,7 @@ export default function Index({
           title="Encargos en línea"
           kicker="Encargos"
           icon="fa-shopping-cart"
+          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Encargos' }]} />}
           actions={
             <button type="button" className="btn btn-secondary btn-sm" onClick={() => setSettingsOpen(true)}>
               <i className="fas fa-clock" aria-hidden="true" /> Plazo de cancelación
@@ -186,14 +188,14 @@ export default function Index({
         </PageHeader>
 
         <section className="kpi-grid cf4-orders-kpi-grid" aria-label="Resumen de encargos">
-          <button type="button" className="kpi-card cf4-orders-kpi-card-link" onClick={() => { setForm({ ...form, status: 'pending' }); visit({ ...form, status: 'pending' }); }}>
-            <div className="kpi-header">
-              <h3 className="kpi-title">Pendientes web</h3>
-              <div className="kpi-icon info"><i className="fas fa-clock" aria-hidden="true" /></div>
-            </div>
-            <p className="kpi-value">{pending}</p>
-            <div className="kpi-trend trend-up">
-              <i className="fas fa-arrow-right" aria-hidden="true" /> Ver pendientes
+          <button type="button" className="kpi-card kpi-card--button cf4-orders-kpi-card-link" onClick={() => { setForm({ ...form, status: 'pending' }); visit({ ...form, status: 'pending' }); }}>
+            <div className="kpi-icon info"><i className="fas fa-clock" aria-hidden="true" /></div>
+            <div className="kpi-content">
+              <h3>Pendientes web</h3>
+              <p className="kpi-value">{pending}</p>
+              <div className="kpi-trend trend-up">
+                <i className="fas fa-arrow-right" aria-hidden="true" /> Ver pendientes
+              </div>
             </div>
           </button>
         </section>

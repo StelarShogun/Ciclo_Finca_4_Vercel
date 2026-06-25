@@ -74,6 +74,8 @@ export default function Register({ recaptchaSiteKey }: RegisterPageProps) {
                   className="form-control"
                   value={name}
                   placeholder="Ej: Juan"
+                  maxLength={50}
+                  autoComplete="given-name"
                   onChange={(e) => setName(e.target.value)}
                 />
                 {firstError(errors, 'name') ? <div className="field-msg error">{firstError(errors, 'name')}</div> : null}
@@ -89,6 +91,8 @@ export default function Register({ recaptchaSiteKey }: RegisterPageProps) {
                     className="form-control"
                     value={firstSurname}
                     placeholder="Ej: Pérez"
+                    maxLength={50}
+                    autoComplete="family-name"
                     onChange={(e) => setFirstSurname(e.target.value)}
                   />
                   {firstError(errors, 'first_surname') ? <div className="field-msg error">{firstError(errors, 'first_surname')}</div> : null}
@@ -103,6 +107,8 @@ export default function Register({ recaptchaSiteKey }: RegisterPageProps) {
                     className="form-control"
                     value={secondSurname}
                     placeholder="Ej: García (opcional)"
+                    maxLength={50}
+                    autoComplete="additional-name"
                     onChange={(e) => setSecondSurname(e.target.value)}
                   />
                   {firstError(errors, 'second_surname') ? <div className="field-msg error">{firstError(errors, 'second_surname')}</div> : null}
@@ -118,6 +124,8 @@ export default function Register({ recaptchaSiteKey }: RegisterPageProps) {
                   className="form-control"
                   value={gmail}
                   placeholder="ejemplo@gmail.com"
+                  maxLength={120}
+                  autoComplete="email"
                   onChange={(e) => setGmail(e.target.value)}
                 />
                 {firstError(errors, 'gmail') ? <div className="field-msg error">{firstError(errors, 'gmail')}</div> : null}
@@ -132,6 +140,8 @@ export default function Register({ recaptchaSiteKey }: RegisterPageProps) {
                     name="password"
                     className="form-control"
                     minLength={8}
+                    maxLength={128}
+                    autoComplete="new-password"
                     value={password}
                     placeholder="Mínimo 8 caracteres"
                     onChange={(e) => setPassword(e.target.value)}
@@ -165,6 +175,8 @@ export default function Register({ recaptchaSiteKey }: RegisterPageProps) {
                     name="password_confirmation"
                     className="form-control"
                     minLength={8}
+                    maxLength={128}
+                    autoComplete="new-password"
                     value={passwordConfirmation}
                     placeholder="Repite la contraseña"
                     onChange={(e) => setPasswordConfirmation(e.target.value)}

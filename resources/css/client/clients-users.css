@@ -289,7 +289,7 @@ body.guest-layout {
 
 /* ── Caja principal del formulario ── */
 .login-form-box {
-    background: #fff;
+    background: var(--surface, #fff);
     border-radius: 16px;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
     padding: 36px 40px 32px;
@@ -336,7 +336,7 @@ body.guest-layout {
     object-fit: cover;
     border: 2px solid var(--brand-medium);
     padding: 3px;
-    background: #fff;
+    background: var(--surface, #fff);
     display: block;
 }
 
@@ -398,7 +398,7 @@ body.guest-layout {
     border-radius: 8px;
     font-size: 0.95rem;
     color: #212529;
-    background: #fff;
+    background: var(--surface, #fff);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     box-sizing: border-box;
 }
@@ -598,7 +598,7 @@ body.guest-layout {
     padding: 11px 16px;
     border: 1.5px solid #dadce0;
     border-radius: 10px;
-    background: #fff;
+    background: var(--surface, #fff);
     color: #3c4043;
     font-size: 0.95rem;
     font-weight: 600;
@@ -624,7 +624,7 @@ body.guest-layout {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--surface, #fff);
     font-size: 1rem;
     font-weight: 700;
     color: #4285f4;
@@ -669,7 +669,7 @@ body.guest-layout {
     padding: 11px 14px;
     border: 1.5px solid #dadce0;
     border-radius: 10px;
-    background: #fff;
+    background: var(--surface, #fff);
     color: var(--brand-medium);
     font-weight: 600;
     font-size: 0.95rem;
@@ -1728,7 +1728,7 @@ html[data-theme="dark"] .profile-avatar-upload:hover:not(:disabled) {
 }
 
 .cf4-invoices-escape-link--primary {
-    background: #fff;
+    background: var(--surface, #fff);
     color: var(--brand-medium);
     border-color: #fff;
 }
@@ -1790,7 +1790,7 @@ html[data-theme="dark"] .profile-avatar-upload:hover:not(:disabled) {
 
 /* ── Card container ── */
 .cf4-invoices-card {
-    background: #fff;
+    background: var(--surface, #fff);
     border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 16px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
@@ -1904,7 +1904,7 @@ html[data-theme="dark"] .profile-avatar-upload:hover:not(:disabled) {
     padding: 0.75rem 1rem;
     border-radius: 14px;
     border: 1px solid rgba(5, 31, 32, 0.1);
-    background: #fff;
+    background: var(--surface, #fff);
     color: var(--color-primary, #235347);
     font-size: 0.9rem;
     font-weight: 600;
@@ -2011,7 +2011,7 @@ html[data-theme="dark"] .profile-avatar-upload:hover:not(:disabled) {
 
 .cf4-select {
     appearance: none;
-    background: #fff;
+    background: var(--surface, #fff);
     border: none;
     color: var(--color-primary, #2d6a4f);
     padding: 9px 44px 9px 38px;
@@ -2026,7 +2026,7 @@ html[data-theme="dark"] .profile-avatar-upload:hover:not(:disabled) {
 }
 
 .cf4-select option {
-    background: #fff;
+    background: var(--surface, #fff);
     color: var(--color-primary, #2d6a4f);
 }
 

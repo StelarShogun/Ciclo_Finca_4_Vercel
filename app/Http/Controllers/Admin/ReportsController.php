@@ -28,7 +28,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ReportsController extends Controller
 {
     // Allowed relative period slugs for product-sales reports.
-    private const PERIODS = ['7d', '30d', '90d'];
+    private const PERIODS = ['7d', '30d', '90d', 'custom'];
 
     // Allowed sort dimensions for the Top 10 chart.
     private const TOP10_METRICS = ['revenue', 'units'];
@@ -366,17 +366,17 @@ class ReportsController extends Controller
         $page = max(1, (int) $request->query('page', 1));
         $perPage = AdminPerPage::resolve($request->query('per_page', 10));
 
-        $start = $this->periodStart($period);
+        [$start, $end] = $this->productSalesRange($request, $period);
 
         // Resolve the sort column for the Top 10 chart independently of the table sort.
         $top10SortColumn = $top10Metric === 'units' ? 'units_sold' : 'revenue';
-        $top10 = ProductSalesReportQuery::base($start, $q)
+        $top10 = ProductSalesReportQuery::base($start, $q, $end)
             ->orderByDesc($top10SortColumn)
             ->limit(10)
             ->get();
 
         $sortColumn = $sort === 'units' ? 'units_sold' : 'revenue';
-        $paginator = ProductSalesReportQuery::base($start, $q)
+        $paginator = ProductSalesReportQuery::base($start, $q, $end)
             ->orderBy($sortColumn, $dir)
             ->paginate($perPage, ['*'], 'page', $page);
 
@@ -428,24 +428,24 @@ class ReportsController extends Controller
         $q = $this->normalizeQuery($request->query('q'));
         $top10Metric = $this->normalizeTop10Metric($request->query('top10'));
 
-        $start = $this->periodStart($period);
+        [$start, $end] = $this->productSalesRange($request, $period);
         $top10SortColumn = $top10Metric === 'units' ? 'units_sold' : 'revenue';
         $sortColumn = $sort === 'units' ? 'units_sold' : 'revenue';
 
-        $top10 = ProductSalesReportQuery::base($start, $q)
+        $top10 = ProductSalesReportQuery::base($start, $q, $end)
             ->orderByDesc($top10SortColumn)
             ->limit(10)
             ->get();
 
         $maxRows = AdminPdfExportLimits::PRODUCT_SALES_TABLE_MAX_ROWS;
-        $tableRows = ProductSalesReportQuery::base($start, $q)
+        $tableRows = ProductSalesReportQuery::base($start, $q, $end)
             ->orderBy($sortColumn, $dir)
             ->limit($maxRows)
             ->get();
 
         // Count the full result set to determine whether the row cap was reached.
         $totalMatching = (int) DB::query()
-            ->fromSub(ProductSalesReportQuery::base($start, $q), 'product_sales_agg')
+            ->fromSub(ProductSalesReportQuery::base($start, $q, $end), 'product_sales_agg')
             ->count();
 
         $filterLines = $this->buildProductSalesFilterLines(
@@ -487,18 +487,18 @@ class ReportsController extends Controller
         $q = $this->normalizeQuery($request->query('q'));
         $top10Metric = $this->normalizeTop10Metric($request->query('top10'));
 
-        $start = $this->periodStart($period);
+        [$start, $end] = $this->productSalesRange($request, $period);
         $top10SortColumn = $top10Metric === 'units' ? 'units_sold' : 'revenue';
         $sortColumn = $sort === 'units' ? 'units_sold' : 'revenue';
 
-        $top10 = ProductSalesReportQuery::base($start, $q)
+        $top10 = ProductSalesReportQuery::base($start, $q, $end)
             ->orderByDesc($top10SortColumn)
             ->limit(10)
             ->get()
             ->map(fn ($row) => ProductSalesReportQuery::formatRow($row));
 
         $maxRows = AdminPdfExportLimits::PRODUCT_SALES_TABLE_MAX_ROWS;
-        $tableRows = ProductSalesReportQuery::base($start, $q)
+        $tableRows = ProductSalesReportQuery::base($start, $q, $end)
             ->orderBy($sortColumn, $dir)
             ->limit($maxRows)
             ->get()
@@ -506,7 +506,7 @@ class ReportsController extends Controller
 
         // Count the full result set to determine whether the row cap was reached.
         $totalMatching = (int) DB::query()
-            ->fromSub(ProductSalesReportQuery::base($start, $q), 'product_sales_agg')
+            ->fromSub(ProductSalesReportQuery::base($start, $q, $end), 'product_sales_agg')
             ->count();
 
         $filterLines = $this->buildProductSalesFilterLines(
@@ -571,6 +571,47 @@ class ReportsController extends Controller
             '90d' => Carbon::now()->subDays(89)->startOfDay(),
             default => Carbon::now()->subDays(29)->startOfDay(),
         };
+    }
+
+    /**
+     * Resuelve el rango [inicio, fin] para los reportes de productos vendidos.
+     * Para 'custom' usa date_from/date_to del request (con tope sano); para los
+     * periodos relativos devuelve [periodStart, null] (hasta ahora).
+     *
+     * @return array{0: Carbon, 1: ?Carbon}
+     */
+    private function productSalesRange(Request $request, string $period): array
+    {
+        if ($period !== 'custom') {
+            return [$this->periodStart($period), null];
+        }
+
+        $from = $this->parseDate($request->query('date_from'));
+        $to = $this->parseDate($request->query('date_to'));
+
+        $start = $from ? $from->startOfDay() : Carbon::now()->subDays(29)->startOfDay();
+        $end = $to ? $to->endOfDay() : Carbon::now()->endOfDay();
+
+        // Si el usuario invierte el rango, lo normalizamos.
+        if ($end->lt($start)) {
+            [$start, $end] = [$end->copy()->startOfDay(), $start->copy()->endOfDay()];
+        }
+
+        return [$start, $end];
+    }
+
+    // Parseo seguro de una fecha 'Y-m-d'; null si es inválida o vacía.
+    private function parseDate(mixed $value): ?Carbon
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::createFromFormat('Y-m-d', trim($value)) ?: null;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     // Returns the period slug if it is in the allowed list; defaults to '30d'.

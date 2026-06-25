@@ -75,49 +75,72 @@
 }
 
 .product-combobox-option {
+  /* Reset del chrome nativo del <button> (en oscuro se veía como caja gris). */
+  appearance: none;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
   padding: 0.5rem 0.6rem;
   border-radius: 10px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
   cursor: pointer;
-  transition: background 0.12s;
+  transition: background var(--dur, 0.12s) ease;
 }
 
 .product-combobox-option:hover,
-.product-combobox-option.selected {
-  background: var(--color-success-bg, #f0fdf4);
+.product-combobox-option.selected,
+.product-combobox-option:focus-visible {
+  background: var(--accent-soft, var(--color-success-bg, #f0fdf4));
+  outline: none;
 }
 
 .product-combobox-option-info {
   flex: 1;
   min-width: 0;
+  width: 100%;
 }
 
 .product-combobox-option-name {
   font-weight: 700;
   font-size: 0.9rem;
-  color: var(--color-dark, #111827);
+  color: var(--text-primary, #111827);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .product-combobox-option-meta {
   font-size: 0.82rem;
-  color: var(--color-muted, #6b7280);
-  margin-top: 2px;
+  color: var(--text-secondary, #6b7280);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
 }
 
+.product-combobox-option-meta code {
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.05rem 0.4rem;
+  border-radius: 6px;
+  background: var(--cf4-filter-btn-muted-bg, rgba(15, 43, 38, 0.06));
+  color: var(--text-secondary, #6b7280);
+}
+
+.product-combobox-empty,
 .product-combobox-no-result,
 .product-combobox-hint {
   padding: 0.75rem 0.85rem;
   font-size: 0.85rem;
-  color: var(--color-muted, #9ca3af);
+  color: var(--text-secondary, #9ca3af);
   text-align: center;
 }
 

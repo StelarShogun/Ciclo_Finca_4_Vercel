@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
 import { useToast } from '@/shared/hooks/useToast';
 import type { InertiaSharedProps } from '@/shared/types/models';
@@ -19,12 +20,12 @@ function crc(n: number): string {
 }
 
 const TL_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
-  draft: { label: 'Borrador', icon: 'fa-pencil-alt', color: '#64748b' },
-  pending: { label: 'Pendiente', icon: 'fa-clock', color: '#f59e0b' },
-  confirmed: { label: 'Confirmado', icon: 'fa-check', color: '#3b82f6' },
-  partial_received: { label: 'Recepción parcial', icon: 'fa-clipboard-check', color: '#f97316' },
-  delivered: { label: 'Entregado', icon: 'fa-truck', color: '#235347' },
-  cancelled: { label: 'Cancelado', icon: 'fa-times', color: '#ef4444' },
+  draft: { label: 'Borrador', icon: 'fa-pencil-alt', color: 'var(--text-secondary)' },
+  pending: { label: 'Pendiente', icon: 'fa-clock', color: 'var(--color-warning)' },
+  confirmed: { label: 'Confirmado', icon: 'fa-check', color: 'var(--color-info)' },
+  partial_received: { label: 'Recepción parcial', icon: 'fa-clipboard-check', color: 'var(--color-warning)' },
+  delivered: { label: 'Entregado', icon: 'fa-truck', color: 'var(--color-success)' },
+  cancelled: { label: 'Cancelado', icon: 'fa-times', color: 'var(--color-danger)' },
 };
 
 type OrderItem = { id: number; name: string; quantity: number; received_quantity: number | null; unit_price: number; total: number };
@@ -131,6 +132,7 @@ export default function Detail({ order }: { order: OrderDetail }) {
         <PageHeader
           title={`Pedido ${order.po_number}`}
           kicker="Proveedores"
+          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Pedidos a proveedores', href: '/supplier-orders' }, { label: order.po_number }]} />}
           actions={
             <div className="sales-actions">
               <a href="/supplier-orders" className="btn btn-secondary"><i className="fas fa-arrow-left" aria-hidden="true" /> Volver</a>
@@ -168,17 +170,17 @@ export default function Detail({ order }: { order: OrderDetail }) {
               <div className="kv-row"><span>Fecha en que se realizó el pedido</span><strong>{order.date_label}</strong></div>
               <div className="kv-row">
                 <span>Entrega estimada</span>
-                <strong>{order.estimated_delivery_date ?? '—'}{order.estimated_delivery_date ? <small style={{ display: 'block', fontWeight: 400, color: '#6b7280' }}>Calculada automáticamente</small> : null}</strong>
+                <strong>{order.estimated_delivery_date ?? '—'}{order.estimated_delivery_date ? <small style={{ display: 'block', fontWeight: 400, color: 'var(--text-secondary)' }}>Calculada automáticamente</small> : null}</strong>
               </div>
               <div className="kv-row">
                 <span>Entregado</span>
                 <strong>
-                  {order.state === 'cancelled' ? <span style={{ color: '#9ca3af' }}>Nunca</span> : order.delivered_at ? order.delivered_at : order.received_at ? order.received_at : <span style={{ color: '#f59e0b' }}>En proceso</span>}
+                  {order.state === 'cancelled' ? <span style={{ color: 'var(--text-secondary)' }}>Nunca</span> : order.delivered_at ? order.delivered_at : order.received_at ? order.received_at : <span style={{ color: 'var(--color-warning)' }}>En proceso</span>}
                 </strong>
               </div>
               <div className="kv-row"><span>Estado</span><strong><span className={`order-status-pill ${order.state}`}>{order.state_label}</span></strong></div>
               {order.closed_with_shorts ? (
-                <div className="kv-row"><span>Observación</span><strong style={{ color: '#f59e0b' }}><i className="fas fa-exclamation-triangle" aria-hidden="true" /> Cerrado con faltantes del proveedor</strong></div>
+                <div className="kv-row"><span>Observación</span><strong style={{ color: 'var(--color-warning)' }}><i className="fas fa-exclamation-triangle" aria-hidden="true" /> Cerrado con faltantes del proveedor</strong></div>
               ) : null}
             </div>
           </section>
@@ -217,7 +219,7 @@ export default function Detail({ order }: { order: OrderDetail }) {
                         {showReceivedCol ? (
                           <td className="num">
                             {item.received_quantity ?? 0}
-                            {(item.received_quantity ?? 0) < item.quantity ? <span title="Recepción incompleta" style={{ color: '#f59e0b', marginLeft: 4 }}>⚠</span> : null}
+                            {(item.received_quantity ?? 0) < item.quantity ? <span title="Recepción incompleta" style={{ color: 'var(--color-warning)', marginLeft: 4 }}>⚠</span> : null}
                           </td>
                         ) : null}
                         <td className="num">{crc(item.unit_price)}</td>
@@ -233,7 +235,7 @@ export default function Detail({ order }: { order: OrderDetail }) {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
                   <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'baseline' }}><span>Total pedido</span><strong>{crc(order.initial_total)}</strong></div>
                   <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'baseline' }}><span>Total recibido</span><strong>{crc(order.received_total)}</strong></div>
-                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'baseline' }}><span>Faltante</span><strong style={{ color: '#f59e0b' }}>{crc(order.shorts_total)}</strong></div>
+                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'baseline' }}><span>Faltante</span><strong style={{ color: 'var(--color-warning)' }}>{crc(order.shorts_total)}</strong></div>
                 </div>
               ) : (
                 <>
@@ -252,7 +254,7 @@ export default function Detail({ order }: { order: OrderDetail }) {
               <ol className="order-timeline">
                 {order.timeline.map((entry, i) => {
                   const isClosePartial = entry.state === 'delivered' && (entry.reason || '').startsWith('[Cierre con faltantes]');
-                  const cfg = isClosePartial ? { label: 'Cerrado con faltantes', icon: 'fa-exclamation-triangle', color: '#f59e0b' } : TL_CONFIG[entry.state] || { label: entry.state_label, icon: 'fa-circle', color: '#94a3b8' };
+                  const cfg = isClosePartial ? { label: 'Cerrado con faltantes', icon: 'fa-exclamation-triangle', color: 'var(--color-warning)' } : TL_CONFIG[entry.state] || { label: entry.state_label, icon: 'fa-circle', color: '#94a3b8' };
                   const displayReason = isClosePartial ? (entry.reason || '').replace(/^\[Cierre con faltantes\]\s*/, '') : entry.reason;
                   return (
                     <li className="tl-item" key={i}>

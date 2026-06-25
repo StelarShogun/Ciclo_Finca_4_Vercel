@@ -24,121 +24,9 @@
   overflow-x: auto;
 }
 
-.btn-outline-primary {
-  background: transparent;
-  color: var(--color-primary, #235347);
-  border: 2px solid var(--color-primary, #235347);
-}
-
-.btn-outline-primary:hover:not(:disabled) {
-  background: rgba(35, 83, 71, 0.08);
-  color: var(--color-primary-dark, #163832);
-  border-color: var(--color-primary-dark, #163832);
-  transform: translateY(-1px);
-}
-
-.btn-sm {
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  gap: 6px;
-}
-
-.btn-lg {
-  padding: 16px 28px;
-  font-size: 1.1rem;
-  gap: 10px;
-}
-
-.btn-danger {
-  background: var(--color-danger);
-  color: white;
-  border: 2px solid var(--color-danger);
-}
-
-.btn-danger:hover:not(:disabled) {
-  background: #b71c1c;
-  border-color: #b71c1c;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
-}
-
-.btn-success {
-  background: var(--color-success);
-  color: white;
-  border: 2px solid var(--color-success);
-}
-
-.btn-success:hover:not(:disabled) {
-  background: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(35, 83, 71, 0.3);
-}
-
-.btn-info {
-  background: var(--color-info);
-  color: white;
-  border: 2px solid var(--color-info);
-}
-
-.btn-info:hover:not(:disabled) {
-  background: #1565c0;
-  border-color: #1565c0;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
-}
-
-.btn-warning {
-  background: var(--color-warning);
-  color: white;
-  border: 2px solid var(--color-warning);
-}
-
-.btn-warning:hover:not(:disabled) {
-  background: #e65100;
-  border-color: #e65100;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(245, 124, 0, 0.3);
-}
-
-.btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.btn:hover::before {
-  left: 100%;
-}
-
-.btn.loading {
-  position: relative;
-  color: transparent;
-}
-
-.btn.loading::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 16px;
-  height: 16px;
-  margin: -8px 0 0 -8px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+/* Botones: definidos en shared/components/buttons.css (importado arriba).
+   No redefinir .btn-* aquí — evita conflictos de cascada por orden de carga
+   (era la causa de que algunos botones "perdieran" su estilo). */
 
 /* ============================================================
   2. DASHBOARD
@@ -187,8 +75,11 @@
   justify-content: center;
   border-radius: 12px;
   font-size: 1.2rem;
-  color: var(--color-primary, #235347);
-  background: color-mix(in srgb, var(--brand-accent, #3fae6e) 14%, transparent);
+  /* Tokens de icon-badge: en claro verde oscuro sobre fondo menta; en oscuro
+     verde claro sobre fondo verde profundo. Antes usaba --color-primary, que
+     en modo oscuro quedaba casi invisible (icono ~invisible). */
+  color: var(--cf4-icon-badge-fg, var(--color-primary, #235347));
+  background: var(--cf4-icon-badge-bg, color-mix(in srgb, var(--brand-accent, #3fae6e) 14%, transparent));
 }
 
 .quick-action__text {
@@ -272,7 +163,7 @@
 }
 
 .kpi-card {
-  background: white;
+  background: var(--surface, #fff);
   border-radius: 12px;
   padding: 22px;
   box-shadow: var(--shadow-sm);
@@ -394,7 +285,7 @@
 }
 
 .chart-container {
-  background: white;
+  background: var(--surface, #fff);
   border-radius: 12px;
   padding: 25px;
   box-shadow: var(--shadow-sm);
@@ -515,7 +406,7 @@
 .chart-btn {
   padding: 8px 16px;
   border: 1px solid var(--border-color);
-  background: white;
+  background: var(--surface, #fff);
   color: var(--color-muted);
   border-radius: 6px;
   font-size: 0.85rem;
@@ -551,7 +442,7 @@
 }
 
 .table-container {
-  background: white;
+  background: var(--surface, #fff);
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
@@ -851,7 +742,7 @@
 }
 
 .action-card {
-  background: white;
+  background: var(--surface, #fff);
   border-radius: 12px;
   padding: 25px;
   box-shadow: var(--shadow-sm);
@@ -1092,7 +983,7 @@
   gap: 14px;
   width: 340px;
   padding: 16px 18px;
-  background: #fff;
+  background: var(--surface, #fff);
   border-left: 4px solid #f59e0b;
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
@@ -1139,7 +1030,7 @@
 .ls-toast__msg {
   margin: 0 0 6px;
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-secondary, #64748b);
   line-height: 1.45;
 }
 
@@ -1222,7 +1113,7 @@
 }
 
 .wr-modal-panel {
-  background: #fff;
+  background: var(--surface, #fff);
   border-radius: 20px;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2), 0 4px 16px rgba(15, 23, 42, 0.1);
   width: 100%;
@@ -1273,7 +1164,7 @@
 
 .wr-modal-header__sub {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--text-secondary, #64748b);
   margin: 0;
 }
 
@@ -1285,7 +1176,7 @@
   border: none;
   border-radius: 8px;
   background: rgba(15, 23, 42, 0.06);
-  color: #64748b;
+  color: var(--text-secondary, #64748b);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1347,7 +1238,7 @@
 .wr-label {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-secondary, #374151);
 }
 
 .wr-input,
@@ -1359,7 +1250,7 @@
   font-family: inherit;
   font-size: 0.92rem;
   color: #1e293b;
-  background: #fff;
+  background: var(--surface, #fff);
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   box-sizing: border-box;
@@ -1401,7 +1292,7 @@
   gap: 7px;
   margin: 14px 0 0;
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--text-secondary, #64748b);
   line-height: 1.45;
 }
 
@@ -1462,7 +1353,7 @@
   height: 36px;
   border: 1.5px solid #fecaca;
   border-radius: 9px;
-  background: #fff;
+  background: var(--surface, #fff);
   color: #f87171;
   cursor: pointer;
   display: flex;
@@ -1572,7 +1463,7 @@
   width: 340px;
   max-width: calc(100vw - 40px);
   padding: 16px 18px;
-  background: #fff;
+  background: var(--surface, #fff);
   border-radius: 14px;
   box-shadow: 0 8px 32px rgba(15, 23, 42, 0.16), 0 2px 8px rgba(15, 23, 42, 0.08);
   border-left: 4px solid transparent;
@@ -1619,7 +1510,7 @@
 .cf4-toast__msg {
   margin: 0;
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-secondary, #64748b);
   line-height: 1.45;
 }
 

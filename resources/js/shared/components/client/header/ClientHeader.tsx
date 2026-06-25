@@ -114,6 +114,7 @@ export function ClientHeader({
                       <span>Iniciar sesión</span>
                     </Link>
                     <Link href="/register" className="btn btn-outline-secondary btn-sm">
+                      <i className="fas fa-user-plus" aria-hidden="true" />
                       <span>Crear cuenta</span>
                     </Link>
                   </div>

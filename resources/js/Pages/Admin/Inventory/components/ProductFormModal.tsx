@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 
 import { Modal } from '@/shared/components/ui/Modal';
+import { CollapsibleSection } from '@/shared/components/ui/CollapsibleSection';
+import { FileUpload } from '@/shared/components/ui/FileUpload';
 import { useToast } from '@/shared/hooks/useToast';
 import { compressImageFile, compressFileList } from '@/shared/lib/imageCompression';
 
@@ -240,7 +242,12 @@ export function ProductFormModal({
     <Modal
       isOpen={open}
       onClose={onClose}
-      title={isEdit ? 'Editar producto' : 'Nuevo producto'}
+      title={
+        <>
+          <i className={`fas ${isEdit ? 'fa-pen-to-square' : 'fa-box'}`} aria-hidden="true" />
+          {isEdit ? 'Editar producto' : 'Nuevo producto'}
+        </>
+      }
       className="cf4-modal cf4-modal--wide"
       footer={
         <>
@@ -254,151 +261,184 @@ export function ProductFormModal({
       }
     >
       <form id="form-product" onSubmit={submit} className="product-form">
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="p-name">Nombre *</label>
-            <input id="p-name" type="text" value={form.name} onChange={(e) => set('name', e.target.value)} required />
-            {errors.name ? <div className="field-error">{errors.name}</div> : null}
+        <CollapsibleSection title="Datos básicos" icon="fa-circle-info">
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="p-name">Nombre *</label>
+              <input id="p-name" type="text" maxLength={150} value={form.name} onChange={(e) => set('name', e.target.value)} required />
+              {errors.name ? <div className="field-error">{errors.name}</div> : null}
+            </div>
+            <div className="form-group">
+              <label htmlFor="p-desc">Descripción</label>
+              <textarea id="p-desc" rows={2} maxLength={1000} value={form.description} onChange={(e) => set('description', e.target.value)} />
+            </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="p-desc">Descripción</label>
-            <textarea id="p-desc" rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} />
-          </div>
-        </div>
 
-        <div className="form-row">
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="p-parent">Categoría *</label>
+              <select
+                id="p-parent"
+                value={form.parent_category_id}
+                onChange={(e) => {
+                  set('parent_category_id', e.target.value);
+                  set('category_id', '');
+                }}
+                required
+              >
+                <option value="">Seleccioná…</option>
+                {categories.map((c) => (
+                  <option key={c.category_id} value={String(c.category_id)}>{c.name}</option>
+                ))}
+              </select>
+              {errors.parent_category_id ? <div className="field-error">{errors.parent_category_id}</div> : null}
+            </div>
+            <div className="form-group">
+              <label htmlFor="p-sub">Subcategoría (recomendado)</label>
+              <select
+                id="p-sub"
+                value={form.category_id}
+                onChange={(e) => set('category_id', e.target.value)}
+                disabled={!form.parent_category_id}
+              >
+                <option value="">Sin subcategoría</option>
+                {subcategories.map((s) => (
+                  <option key={s.category_id} value={String(s.category_id)}>{s.name}</option>
+                ))}
+              </select>
+              {errors.category_id ? <div className="field-error">{errors.category_id}</div> : null}
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="p-supplier">Proveedor *</label>
+              <select id="p-supplier" value={form.supplier_id} onChange={(e) => set('supplier_id', e.target.value)} required>
+                <option value="">Seleccioná…</option>
+                {suppliers.map((s) => (
+                  <option key={s.supplier_id} value={String(s.supplier_id)}>{s.name}</option>
+                ))}
+              </select>
+              {errors.supplier_id ? <div className="field-error">{errors.supplier_id}</div> : null}
+            </div>
+            <div className="form-group">
+              <label htmlFor="p-brand">Marca *</label>
+              <select id="p-brand" value={form.brand_id} onChange={(e) => set('brand_id', e.target.value)} required>
+                <option value="">Seleccioná…</option>
+                {brands.map((b) => (
+                  <option key={b.id} value={String(b.id)}>{b.name}</option>
+                ))}
+              </select>
+              {errors.brand_id ? <div className="field-error">{errors.brand_id}</div> : null}
+            </div>
+          </div>
+
           <div className="form-group">
-            <label htmlFor="p-parent">Categoría *</label>
-            <select
-              id="p-parent"
-              value={form.parent_category_id}
-              onChange={(e) => {
-                set('parent_category_id', e.target.value);
-                set('category_id', '');
-              }}
-              required
-            >
-              <option value="">Seleccioná…</option>
-              {categories.map((c) => (
-                <option key={c.category_id} value={String(c.category_id)}>{c.name}</option>
+            <label htmlFor="p-status">Estado *</label>
+            <select id="p-status" value={form.status} onChange={(e) => set('status', e.target.value)} required>
+              {STATUSES.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>
-            {errors.parent_category_id ? <div className="field-error">{errors.parent_category_id}</div> : null}
           </div>
-          <div className="form-group">
-            <label htmlFor="p-sub">Subcategoría (recomendado)</label>
-            <select
-              id="p-sub"
-              value={form.category_id}
-              onChange={(e) => set('category_id', e.target.value)}
-              disabled={!form.parent_category_id}
-            >
-              <option value="">Sin subcategoría</option>
-              {subcategories.map((s) => (
-                <option key={s.category_id} value={String(s.category_id)}>{s.name}</option>
-              ))}
-            </select>
-            {errors.category_id ? <div className="field-error">{errors.category_id}</div> : null}
-          </div>
-        </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="p-supplier">Proveedor *</label>
-            <select id="p-supplier" value={form.supplier_id} onChange={(e) => set('supplier_id', e.target.value)} required>
-              <option value="">Seleccioná…</option>
-              {suppliers.map((s) => (
-                <option key={s.supplier_id} value={String(s.supplier_id)}>{s.name}</option>
-              ))}
-            </select>
-            {errors.supplier_id ? <div className="field-error">{errors.supplier_id}</div> : null}
-          </div>
-          <div className="form-group">
-            <label htmlFor="p-brand">Marca *</label>
-            <select id="p-brand" value={form.brand_id} onChange={(e) => set('brand_id', e.target.value)} required>
-              <option value="">Seleccioná…</option>
-              {brands.map((b) => (
-                <option key={b.id} value={String(b.id)}>{b.name}</option>
-              ))}
-            </select>
-            {errors.brand_id ? <div className="field-error">{errors.brand_id}</div> : null}
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="p-buy">Precio compra (₡) *</label>
-            <input id="p-buy" type="number" min={0} step="0.01" value={form.purchase_price} onChange={(e) => set('purchase_price', e.target.value)} required />
-            {errors.purchase_price ? <div className="field-error">{errors.purchase_price}</div> : null}
-          </div>
-          <div className="form-group">
-            <label htmlFor="p-sell">Precio venta (₡) *</label>
-            <input id="p-sell" type="number" min={0} step="0.01" value={form.sale_price} onChange={(e) => set('sale_price', e.target.value)} required />
-            {errors.sale_price ? <div className="field-error">{errors.sale_price}</div> : null}
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="p-stock">Stock actual *</label>
-            <input id="p-stock" type="number" min={0} value={form.stock_current} onChange={(e) => set('stock_current', e.target.value)} required />
-            {errors.stock_current ? <div className="field-error">{errors.stock_current}</div> : null}
-          </div>
-          <div className="form-group">
-            <label htmlFor="p-stockmin">Stock mínimo *</label>
-            <input id="p-stockmin" type="number" min={0} value={form.stock_minimum} onChange={(e) => set('stock_minimum', e.target.value)} required />
-            {errors.stock_minimum ? <div className="field-error">{errors.stock_minimum}</div> : null}
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="p-status">Estado *</label>
-          <select id="p-status" value={form.status} onChange={(e) => set('status', e.target.value)} required>
-            {STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="p-image">Imagen principal</label>
-          {currentImage ? <img src={currentImage} alt="" width={72} height={72} className="current-image-preview" /> : null}
-          <input id="p-image" type="file" accept="image/*" onChange={(e) => setMainImage(e.target.files?.[0] ?? null)} />
-        </div>
-        <div className="form-group">
-          <label htmlFor="p-gallery">Imágenes adicionales (carrusel)</label>
-          <input id="p-gallery" type="file" accept="image/*" multiple onChange={(e) => setGallery(e.target.files)} />
-        </div>
-
-        {attributes.length > 0 ? (
-          <fieldset className="classification-fields">
-            <legend>Atributos (color, talla…)</legend>
-            {attributes.map((attribute) => (
-              <div className="form-group" key={attribute.id}>
-                <label htmlFor={`attr-${attribute.id}`}>{attribute.label}</label>
-                <select
-                  id={`attr-${attribute.id}`}
-                  value={selectedValues[attribute.id] ?? ''}
-                  onChange={(e) => setSelectedValues((current) => ({ ...current, [attribute.id]: e.target.value }))}
-                >
-                  <option value="">— Ninguno —</option>
-                  {attribute.values.map((value) => (
-                    <option key={value.id} value={String(value.id)}>{value.value}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </fieldset>
-        ) : null}
-
-        <div className="form-group form-group-featured">
-          <label>
-            <input type="checkbox" checked={form.is_featured} onChange={(e) => set('is_featured', e.target.checked)} /> Destacado en tienda
+          <label className="cf4-switch">
+            <input type="checkbox" checked={form.is_featured} onChange={(e) => set('is_featured', e.target.checked)} />
+            <span className="cf4-switch__track" aria-hidden="true"><span className="cf4-switch__thumb" /></span>
+            <span className="cf4-switch__text">
+              <span className="cf4-switch__title">Destacado en tienda</span>
+              <span className="cf4-switch__hint">Aparecerá resaltado en el catálogo público.</span>
+            </span>
           </label>
-        </div>
-      </form>
+        </CollapsibleSection>
 
-      {editingId !== null ? <VariantsManager baseProductId={editingId} csrfToken={csrfToken} /> : null}
+        <CollapsibleSection title="Precios y stock" icon="fa-coins">
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="p-buy">Precio compra (₡) *</label>
+              <input id="p-buy" type="number" min={0} step="0.01" value={form.purchase_price} onChange={(e) => set('purchase_price', e.target.value)} required />
+              {errors.purchase_price ? <div className="field-error">{errors.purchase_price}</div> : null}
+            </div>
+            <div className="form-group">
+              <label htmlFor="p-sell">Precio venta (₡) *</label>
+              <input id="p-sell" type="number" min={0} step="0.01" value={form.sale_price} onChange={(e) => set('sale_price', e.target.value)} required />
+              {errors.sale_price ? <div className="field-error">{errors.sale_price}</div> : null}
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="p-stock">Stock actual *</label>
+              <input id="p-stock" type="number" min={0} value={form.stock_current} onChange={(e) => set('stock_current', e.target.value)} required />
+              {errors.stock_current ? <div className="field-error">{errors.stock_current}</div> : null}
+            </div>
+            <div className="form-group">
+              <label htmlFor="p-stockmin">Stock mínimo *</label>
+              <input id="p-stockmin" type="number" min={0} value={form.stock_minimum} onChange={(e) => set('stock_minimum', e.target.value)} required />
+              {errors.stock_minimum ? <div className="field-error">{errors.stock_minimum}</div> : null}
+            </div>
+          </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Imágenes" icon="fa-images" defaultOpen={false}>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="p-image">Imagen principal</label>
+              <FileUpload
+                id="p-image"
+                label="Arrastra una imagen o haz clic para seleccionar"
+                hint="JPG, PNG o WEBP"
+                accept="image/*"
+                icon="fa-image"
+                previewUrl={currentImage}
+                onChange={(files) => setMainImage(files?.[0] ?? null)}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="p-gallery">Imágenes adicionales (carrusel)</label>
+              <FileUpload
+                id="p-gallery"
+                label="Arrastra varias imágenes o haz clic"
+                hint="Puedes seleccionar varias"
+                accept="image/*"
+                icon="fa-images"
+                multiple
+                onChange={(files) => setGallery(files)}
+              />
+            </div>
+          </div>
+        </CollapsibleSection>
+
+        {attributes.length > 0 || editingId !== null ? (
+          <CollapsibleSection title="Clasificación" icon="fa-tags" description="Atributos y variantes del producto." defaultOpen={false}>
+            {attributes.length > 0 ? (
+              <div className="form-row">
+                {attributes.map((attribute) => (
+                  <div className="form-group" key={attribute.id}>
+                    <label htmlFor={`attr-${attribute.id}`}>{attribute.label}</label>
+                    <select
+                      id={`attr-${attribute.id}`}
+                      value={selectedValues[attribute.id] ?? ''}
+                      onChange={(e) => setSelectedValues((current) => ({ ...current, [attribute.id]: e.target.value }))}
+                    >
+                      <option value="">— Ninguno —</option>
+                      {attribute.values.map((value) => (
+                        <option key={value.id} value={String(value.id)}>{value.value}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            {editingId !== null ? (
+              <div className="cf4-variants-block">
+                <h4 className="cf4-variants-block__title">Variantes</h4>
+                <VariantsManager baseProductId={editingId} csrfToken={csrfToken} />
+              </div>
+            ) : null}
+          </CollapsibleSection>
+        ) : null}
+      </form>
     </Modal>
   );
 }

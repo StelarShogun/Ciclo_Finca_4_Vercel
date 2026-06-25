@@ -134,7 +134,10 @@ Route::get('/run-seeders/{class?}', function (Request $request, ?string $class =
 
 // Admin authentication routes.
 Route::get('/admin/login', [AdminUserController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login', [AdminUserController::class, 'login'])->name('admin.login.submit');
+// Throttle admin login attempts to reduce brute-force abuse (igual que el login de cliente).
+Route::post('/admin/login', [AdminUserController::class, 'login'])
+    ->middleware('throttle:5,1')
+    ->name('admin.login.submit');
 Route::post('/admin/logout', [AdminUserController::class, 'logout'])->name('admin.logout');
 
 // Public JSON aliases kept before admin resource routes. Vercel PHP strips the

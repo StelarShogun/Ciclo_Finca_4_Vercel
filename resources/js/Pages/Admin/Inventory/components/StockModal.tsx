@@ -75,7 +75,12 @@ export function StockModal({ csrfToken, onClose, onDone, target }: StockModalPro
     <Modal
       isOpen={target !== null}
       onClose={onClose}
-      title={isAdd ? 'Agregar stock' : 'Retirar stock'}
+      title={
+        <>
+          <i className={`fas ${isAdd ? 'fa-plus' : 'fa-minus'}`} aria-hidden="true" />
+          {isAdd ? 'Agregar stock' : 'Retirar stock'}
+        </>
+      }
       footer={
         <>
           <button type="button" className="btn btn-secondary" onClick={onClose}>

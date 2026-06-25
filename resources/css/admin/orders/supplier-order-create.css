@@ -241,7 +241,7 @@
 .product-combobox-no-result {
   padding: 0.75rem 0.85rem;
   font-size: 0.85rem;
-  color: #9ca3af;
+  color: var(--text-secondary, #9ca3af);
   text-align: center;
 }
 

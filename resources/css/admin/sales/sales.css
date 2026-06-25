@@ -684,7 +684,7 @@
 .invoice-box table td                       { padding: 5px; vertical-align: top; }
 .invoice-box table tr td:nth-child(2)       { text-align: right; }
 .invoice-box table tr.top table td          { padding-bottom: 20px; }
-.invoice-box table tr.top table td.title    { font-size: 45px; line-height: 45px; color: #333; }
+.invoice-box table tr.top table td.title    { font-size: 45px; line-height: 45px; color: var(--text-primary, #333); }
 .invoice-box table tr.information table td  { padding-bottom: 40px; }
 .invoice-box table tr.heading td            { background: #eee; border-bottom: 1px solid #ddd; font-weight: bold; }
 .invoice-box table tr.details td            { padding-bottom: 20px; }
@@ -709,7 +709,7 @@
   margin-bottom: 30px;
 }
 .print-header h1 { color: #235347; margin: 0; }
-.print-header p  { color: #666; margin: 5px 0; }
+.print-header p  { color: var(--text-secondary, #666); margin: 5px 0; }
 
 .print-sale-info {
   display: grid;
@@ -750,7 +750,7 @@
   margin-top: 10px;
 }
 
-.print-footer { margin-top: 50px; text-align: center; color: #666; font-size: 0.9em; }
+.print-footer { margin-top: 50px; text-align: center; color: var(--text-secondary, #666); font-size: 0.9em; }
 
 @media print {
   .print-body { margin: 0; }

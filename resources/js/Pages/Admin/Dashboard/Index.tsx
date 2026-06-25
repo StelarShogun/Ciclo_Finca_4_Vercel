@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
@@ -50,6 +50,24 @@ const CATEGORY_COLORS = [
   '#00BCD4', '#795548', '#607D8B', '#E91E63', '#009688',
 ];
 
+const PERIOD_LABELS: Record<string, string> = {
+  '7d': 'últimos 7 días',
+  '30d': 'últimos 30 días',
+  '90d': 'últimos 90 días',
+};
+
+// Etiqueta corta de día; si la fecha viene en ISO (endpoint) la formatea,
+// si ya viene formateada (carga inicial) la deja igual.
+function formatDayLabel(value: string): string {
+  if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
+    const d = new Date(`${value}T00:00:00`);
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleDateString('es-CR', { weekday: 'short', day: 'numeric' });
+    }
+  }
+  return value;
+}
+
 export default function Index({
   error = null,
   lowStockProducts,
@@ -68,11 +86,43 @@ export default function Index({
 }: DashboardProps) {
   const salesCanvas = useRef<HTMLCanvasElement>(null);
   const categoryCanvas = useRef<HTMLCanvasElement>(null);
+  const [period, setPeriod] = useState('7d');
+  const [sales, setSales] = useState<SalesByDay[]>(salesByDay);
+  const [chartLoading, setChartLoading] = useState(false);
+  const didMountChart = useRef(false);
+
+  // Al cambiar el periodo, pide los datos al endpoint del dashboard.
+  useEffect(() => {
+    if (!didMountChart.current) {
+      didMountChart.current = true;
+      return; // En el montaje ya tenemos los datos de 7 días vía props.
+    }
+    let active = true;
+    setChartLoading(true);
+    fetch(`/dashboard/chart-data?period=${period}`, {
+      headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin',
+    })
+      .then((r) => r.json())
+      .then((json) => {
+        if (active && json?.success && Array.isArray(json.sales)) {
+          setSales(json.sales as SalesByDay[]);
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => active && setChartLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [period]);
 
   useEffect(() => {
-    if (!salesCanvas.current || salesByDay.length === 0) {
+    if (!salesCanvas.current || sales.length === 0) {
       return;
     }
+    const rootStyles = getComputedStyle(document.documentElement);
+    const tickColor = rootStyles.getPropertyValue('--text-secondary').trim() || '#64748b';
+    const gridColor = rootStyles.getPropertyValue('--border-subtle').trim() || 'rgba(15,43,38,0.08)';
     const chart = new Chart(salesCanvas.current, {
       type: 'bar',
       data: {
@@ -96,7 +146,15 @@ export default function Index({
           tooltip: { callbacks: { label: (ctx) => currency.format(Number(ctx.parsed.y)) } },
         },
         scales: {
-          y: { beginAtZero: true, ticks: { callback: (v) => currency.format(Number(v)) } },
+          x: {
+            ticks: { color: tickColor },
+            grid: { color: gridColor },
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: tickColor, callback: (v) => currency.format(Number(v)) },
+            grid: { color: gridColor },
+          },
         },
       },
     });

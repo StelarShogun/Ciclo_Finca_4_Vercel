@@ -323,7 +323,7 @@
 
 .csr-rank-badge--n {
   background: #e5e7eb;
-  color: #4b5563;
+  color: var(--text-secondary, #4b5563);
   font-weight: 700;
 }
 

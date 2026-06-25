@@ -26,7 +26,22 @@
   --color-primary:       var(--brand-medium);
   --color-primary-dark:  var(--brand-medium-dark);
   --color-primary-light: var(--brand-light);
-  --color-accent:        #ff6f00;
+  --color-accent:        #F59E0B;
+
+  /* Repalette (refresh atrevido) — acento esmeralda vivo para CTAs/realces */
+  --brand-accent:        #12B36A;
+  --brand-accent-strong: #0E9558;
+  --accent:              #12B36A;
+  --accent-strong:       #0E9558;
+  --accent-soft:         rgba(18, 179, 106, 0.12);
+  --accent-ring:         rgba(18, 179, 106, 0.40);
+
+  /* Tokens de transición unificados */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 0.14s;
+  --dur:      0.22s;
+  --dur-slow: 0.34s;
 
   /* State colors */
   --color-success:       var(--brand-medium);
@@ -167,6 +182,14 @@ html[data-theme="dark"] {
   --color-primary-dark: #235347;
   --color-primary-light: rgba(22, 56, 50, 0.42);
   --color-accent: #FFB86B;
+
+  /* Acento vivo (dark) — más luminoso sobre fondos oscuros */
+  --brand-accent: #2ED27E;
+  --brand-accent-strong: #25B86E;
+  --accent: #2ED27E;
+  --accent-strong: #25B86E;
+  --accent-soft: rgba(46, 210, 126, 0.18);
+  --accent-ring: rgba(46, 210, 126, 0.45);
 
   --color-success: #81c784;
   --color-success-bg: rgba(129, 199, 132, 0.14);

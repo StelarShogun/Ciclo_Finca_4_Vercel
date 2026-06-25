@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 
 import '../../../../css/admin/orders/orders.css';
 import './xml-review.css';
@@ -108,6 +109,7 @@ export default function XmlReview({ analysis }: { analysis: Analysis }) {
         <PageHeader
           title="Revisión de precios XML"
           kicker="Proveedores"
+          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Pedidos a proveedores', href: '/supplier-orders' }, { label: 'Revisión XML' }]} />}
           actions={
             <div className="sales-header-actions">
               <a href="/supplier-orders/xml-deviation" className="btn btn-secondary btn-sm"><i className="fas fa-redo" aria-hidden="true" /> Cargar otro XML</a>
@@ -122,9 +124,9 @@ export default function XmlReview({ analysis }: { analysis: Analysis }) {
           <span><strong><i className="fas fa-file-alt" aria-hidden="true" /></strong> {analysis.file_name}</span>
           <span>Umbral: <strong>{analysis.threshold_percentage.toFixed(1)}%</strong></span>
           <span>Total productos: <strong>{stats.total}</strong></span>
-          <span>Con desvío: <strong style={{ color: '#b45309' }}>{stats.deviation}</strong></span>
-          {stats.priceUp ? <span>Con alza en compra: <strong style={{ color: '#d97706' }}>{stats.priceUp}</strong></span> : null}
-          {stats.notFound ? <span>No encontrados: <strong style={{ color: '#b91c1c' }}>{stats.notFound}</strong></span> : null}
+          <span>Con desvío: <strong style={{ color: 'var(--color-warning)' }}>{stats.deviation}</strong></span>
+          {stats.priceUp ? <span>Con alza en compra: <strong style={{ color: 'var(--color-warning)' }}>{stats.priceUp}</strong></span> : null}
+          {stats.notFound ? <span>No encontrados: <strong style={{ color: 'var(--color-danger)' }}>{stats.notFound}</strong></span> : null}
         </div>
 
         <div className="xml-select-helpers">
@@ -151,7 +153,7 @@ export default function XmlReview({ analysis }: { analysis: Analysis }) {
             </thead>
             <tbody>
               {items.length === 0 ? (
-                <tr><td colSpan={10} style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>No se encontraron productos en el XML.</td></tr>
+                <tr><td colSpan={10} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>No se encontraron productos en el XML.</td></tr>
               ) : (
                 items.map((item, idx) => {
                   const diff = item.difference_amount;
@@ -169,10 +171,10 @@ export default function XmlReview({ analysis }: { analysis: Analysis }) {
                           <span title="Producto no encontrado en el sistema">—</span>
                         )}
                       </td>
-                      <td>{item.found ? item.name : <span style={{ color: '#9ca3af' }}>{item.name || '(sin nombre)'}</span>}</td>
+                      <td>{item.found ? item.name : <span style={{ color: 'var(--text-secondary)' }}>{item.name || '(sin nombre)'}</span>}</td>
                       <td><code style={{ fontSize: '.85em' }}>{item.sku || '—'}</code></td>
                       <td>{item.quantity}</td>
-                      <td>{item.found ? crc(item.current_price) : <span style={{ color: '#9ca3af' }}>—</span>}</td>
+                      <td>{item.found ? crc(item.current_price) : <span style={{ color: 'var(--text-secondary)' }}>—</span>}</td>
                       <td>{crc(item.xml_price)}</td>
                       <td className={diffClass}>{item.found ? `${diffSign}${crc(Math.abs(diff)).replace('₡', '₡')}` : '—'}</td>
                       <td className={diffClass}>{item.found ? `${diffSign}${Math.abs(item.difference_percentage).toFixed(2)}%` : '—'}</td>
@@ -182,9 +184,9 @@ export default function XmlReview({ analysis }: { analysis: Analysis }) {
                             <div className="suggestion-hint">
                               <span>{crc(item.current_sale_price)}</span>
                               <span className="hint-arrow">→</span>
-                              <span style={{ color: '#b45309', fontWeight: 600 }}>{crc(item.suggested_sale_price ?? 0)}</span>
+                              <span style={{ color: 'var(--color-warning)', fontWeight: 600 }}>{crc(item.suggested_sale_price ?? 0)}</span>
                               <span className="hint-margin">{item.current_margin_pct.toFixed(1)}% margen</span>
-                              {item.sale_price_increase > 0 ? <span style={{ color: '#b91c1c', fontSize: '.75rem' }}>(+{crc(item.sale_price_increase)})</span> : null}
+                              {item.sale_price_increase > 0 ? <span style={{ color: 'var(--color-danger)', fontSize: '.75rem' }}>(+{crc(item.sale_price_increase)})</span> : null}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '.3rem' }}>
                               <div className="sale-price-input-wrap" style={{ flex: 1 }}>
@@ -203,12 +205,12 @@ export default function XmlReview({ analysis }: { analysis: Analysis }) {
                                 <i className="fas fa-times-circle" aria-hidden="true" />
                               </button>
                             </div>
-                            <div style={{ fontSize: '.75rem', color: '#9ca3af' }}><i className="fas fa-info-circle" aria-hidden="true" /> Vacío = precio de venta sin cambios</div>
+                            <div style={{ fontSize: '.75rem', color: 'var(--text-secondary)' }}><i className="fas fa-info-circle" aria-hidden="true" /> Vacío = precio de venta sin cambios</div>
                           </div>
                         ) : item.found ? (
                           <span className="sale-price-no-change">Sin cambio sugerido</span>
                         ) : (
-                          <span style={{ color: '#9ca3af' }}>—</span>
+                          <span style={{ color: 'var(--text-secondary)' }}>—</span>
                         )}
                       </td>
                       <td>
@@ -229,7 +231,7 @@ export default function XmlReview({ analysis }: { analysis: Analysis }) {
         </div>
 
         <div className="xml-reason-group">
-          <label htmlFor="reason">Motivo / nota del ajuste <span style={{ color: '#9ca3af', fontWeight: 400 }}>(opcional)</span></label>
+          <label htmlFor="reason">Motivo / nota del ajuste <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>(opcional)</span></label>
           <textarea id="reason" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ej: Ajuste por alza generalizada de precios del proveedor XYZ." />
         </div>
 

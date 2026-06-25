@@ -31,6 +31,44 @@
   line-height: 0;
 }
 
+/* Crossfade + escala sol ↔ luna (sustituye a framer-motion). */
+.cf4-anim-theme-toggle__sun,
+.cf4-anim-theme-toggle__moon {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+
+/* Claro: sol visible, luna oculta. */
+.cf4-anim-theme-toggle__sun {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.cf4-anim-theme-toggle__moon {
+  opacity: 0;
+  transform: scale(0) rotate(-45deg);
+}
+
+/* Oscuro. */
+.cf4-anim-theme-toggle.is-dark .cf4-anim-theme-toggle__sun {
+  opacity: 0;
+  transform: scale(0) rotate(45deg);
+}
+
+.cf4-anim-theme-toggle.is-dark .cf4-anim-theme-toggle__moon {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cf4-anim-theme-toggle__sun,
+  .cf4-anim-theme-toggle__moon {
+    transition: opacity 0.2s ease;
+    transform: none;
+  }
+}
+
 html[data-theme='dark'] .cf4-anim-theme-toggle {
   color: var(--brand-lightest, #daf1de);
 }

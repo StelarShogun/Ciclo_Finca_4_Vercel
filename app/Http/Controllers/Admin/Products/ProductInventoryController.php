@@ -62,9 +62,18 @@ final class ProductInventoryController extends Controller
                 'availability_label' => $product->adminAvailabilityLabel(),
                 'price' => $product->sale_price,
                 'status' => $product->status,
-                'status_label' => ucfirst(str_replace('_', ' ', $product->status)),
-                'status_class' => $product->status === 'active' ? 'success' :
-                                ($product->status === 'inactive' ? 'warning' : 'secondary'),
+                'status_label' => [
+                    'active' => 'Activo',
+                    'inactive' => 'Inactivo',
+                    'out_of_stock' => 'Agotado',
+                    'discontinued' => 'Descontinuado',
+                ][$product->status] ?? ucfirst(str_replace('_', ' ', $product->status)),
+                'status_class' => [
+                    'active' => 'success',
+                    'inactive' => 'warning',
+                    'out_of_stock' => 'danger',
+                    'discontinued' => 'secondary',
+                ][$product->status] ?? 'secondary',
                 'is_featured' => (bool) $product->is_featured,
             ];
         })->filter()->values()->all();

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { uploadPresigned } from '@vercel/blob/client';
 
 import { Modal } from '@/shared/components/ui/Modal';
+import { FileUpload } from '@/shared/components/ui/FileUpload';
 import { useToast } from '@/shared/hooks/useToast';
 
 type ImportModalProps = {
@@ -160,7 +161,7 @@ export function ImportModal({ blobUploadUrl, csrfToken, onClose, onFinished, ope
         reset();
         onClose();
       }}
-      title="Importar productos"
+      title={<><i className="fas fa-file-import" aria-hidden="true" />Importar productos</>}
       footer={
         progress && !TERMINAL.includes(progress.status) ? (
           <button type="button" className="btn btn-danger-soft" onClick={cancelImport}>
@@ -190,10 +191,13 @@ export function ImportModal({ blobUploadUrl, csrfToken, onClose, onFinished, ope
       </p>
       {!progress ? (
         <div className="form-group">
-          <input
-            type="file"
+          <FileUpload
+            id="import-file"
+            label="Arrastra el archivo o haz clic para seleccionar"
+            hint="CSV, XML, JSON o ZIP — máx. 100 MB"
+            icon="fa-file-import"
             accept=".zip,.xml,.csv,.txt,.json"
-            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+            onChange={(files) => setFile(files?.[0] ?? null)}
           />
         </div>
       ) : null}

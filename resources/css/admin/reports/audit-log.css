@@ -204,7 +204,7 @@
 
 .audit-empty-state i {
     font-size: 1.5rem;
-    color: #64748b;
+    color: var(--text-secondary, #64748b);
 }
 
 .audit-empty-state h2 {

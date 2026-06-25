@@ -1,4 +1,8 @@
-/* Shared button styles (admin + client forms). Uses --color-primary, --border-radius, --transition. */
+/* ============================================================
+   Botones compartidos (admin + cliente) — FUENTE ÚNICA.
+   No redefinir .btn-* en CSS por módulo: extender aquí.
+   Usa tokens de variables-reset.css (claro y oscuro).
+   ============================================================ */
 
 .btn {
   display: inline-flex;
@@ -6,14 +10,19 @@
   justify-content: center;
   gap: 8px;
   padding: 10px 20px;
-  border: none;
+  border: 2px solid transparent;
   border-radius: var(--border-radius, 8px);
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   font-family: inherit;
+  line-height: 1.1;
   text-decoration: none;
   cursor: pointer;
-  transition: var(--transition, 0.2s ease);
+  transition: background var(--dur, 0.2s) var(--ease-out, ease),
+    border-color var(--dur, 0.2s) var(--ease-out, ease),
+    color var(--dur, 0.2s) var(--ease-out, ease),
+    transform var(--dur-fast, 0.14s) var(--ease-out, ease),
+    box-shadow var(--dur, 0.2s) var(--ease-out, ease);
   white-space: nowrap;
   user-select: none;
   position: relative;
@@ -23,122 +32,172 @@
 
 .btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(35, 83, 71, 0.3);
+  box-shadow: 0 0 0 3px var(--accent-ring, rgba(18, 179, 106, 0.4));
 }
 
-.btn:disabled {
-  opacity: 0.6;
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.55;
   cursor: not-allowed;
   pointer-events: none;
 }
 
+/* Brillo sutil al pasar el cursor */
 .btn::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: -100%;
+  inset: 0 auto 0 -100%;
   width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  transition: left 0.5s ease;
+  pointer-events: none;
 }
 
 .btn:hover::before {
   left: 100%;
 }
 
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+}
+
+/* ---- Variantes sólidas ---- */
 .btn-primary {
   background: var(--color-primary);
   color: #fff;
-  border: 2px solid var(--color-primary);
-}
-
-.btn-secondary {
-  background: var(--color-secondary);
-  color: #fff;
-  border: 2px solid var(--color-secondary);
-}
-
-.btn-success {
-  background: var(--color-success);
-  color: #fff;
-  border: 2px solid var(--color-success);
-}
-
-.btn-danger {
-  background: var(--color-danger);
-  color: #fff;
-  border: 2px solid var(--color-danger);
-}
-
-.btn-warning {
-  background: var(--color-warning);
-  color: #fff;
-  border: 2px solid var(--color-warning);
-}
-
-.btn-info {
-  background: var(--color-info);
-  color: #fff;
-  border: 2px solid var(--color-info);
+  border-color: var(--color-primary);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(35, 83, 71, 0.3);
+  box-shadow: 0 6px 16px var(--cf4-glow-green, rgba(35, 83, 71, 0.3));
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-accent:hover:not(:disabled) {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--accent-ring, rgba(18, 179, 106, 0.4));
+}
+
+.btn-secondary {
+  background: var(--color-secondary);
+  color: #fff;
+  border-color: var(--color-secondary);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #37474f;
-  border-color: #37474f;
+  background: color-mix(in srgb, var(--color-secondary) 82%, #000);
+  border-color: color-mix(in srgb, var(--color-secondary) 82%, #000);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(69, 90, 100, 0.3);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-success {
+  background: var(--color-success);
+  color: #fff;
+  border-color: var(--color-success);
 }
 
 .btn-success:hover:not(:disabled) {
-  background: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
+  background: color-mix(in srgb, var(--color-success) 84%, #000);
+  border-color: color-mix(in srgb, var(--color-success) 84%, #000);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(35, 83, 71, 0.3);
+  box-shadow: 0 6px 16px var(--cf4-glow-green, rgba(35, 83, 71, 0.3));
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+  border-color: var(--color-danger);
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: #b71c1c;
-  border-color: #b71c1c;
+  background: color-mix(in srgb, var(--color-danger) 82%, #000);
+  border-color: color-mix(in srgb, var(--color-danger) 82%, #000);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
+  box-shadow: 0 6px 16px rgba(211, 47, 47, 0.3);
+}
+
+.btn-warning {
+  background: var(--color-warning);
+  color: #fff;
+  border-color: var(--color-warning);
 }
 
 .btn-warning:hover:not(:disabled) {
-  background: #e65100;
-  border-color: #e65100;
+  background: color-mix(in srgb, var(--color-warning) 82%, #000);
+  border-color: color-mix(in srgb, var(--color-warning) 82%, #000);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(245, 124, 0, 0.3);
+  box-shadow: 0 6px 16px rgba(245, 124, 0, 0.3);
+}
+
+.btn-info {
+  background: var(--color-info);
+  color: #fff;
+  border-color: var(--color-info);
 }
 
 .btn-info:hover:not(:disabled) {
-  background: #1565c0;
-  border-color: #1565c0;
+  background: color-mix(in srgb, var(--color-info) 82%, #000);
+  border-color: color-mix(in srgb, var(--color-info) 82%, #000);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+  box-shadow: 0 6px 16px rgba(25, 118, 210, 0.3);
 }
 
+/* ---- Variantes outline ---- */
+.btn-outline-primary {
+  background: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+  background: var(--accent-soft, rgba(35, 83, 71, 0.08));
+  color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.btn-outline-secondary {
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  border-color: var(--border-color-strong, #94a3b8);
+}
+
+.btn-outline-secondary:hover:not(:disabled) {
+  background: var(--cf4-filter-btn-muted-bg, rgba(15, 43, 38, 0.06));
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+  transform: translateY(-1px);
+}
+
+/* ---- Tamaños y modificadores ---- */
 .btn-sm {
-  padding: 6px 12px;
+  padding: 7px 13px;
   font-size: 0.85rem;
+  gap: 6px;
 }
 
 .btn-lg {
-  padding: 15px 30px;
+  padding: 15px 28px;
   font-size: 1.1rem;
+  gap: 10px;
 }
 
 .btn-block {
   width: 100%;
 }
 
+/* ---- Estado cargando ---- */
 .btn.loading {
   color: transparent;
   pointer-events: none;
@@ -153,13 +212,24 @@
   height: 16px;
   margin: -8px 0 0 -8px;
   border: 2px solid transparent;
-  border-top-color: #fff;
+  border-top-color: currentColor;
   border-radius: 50%;
   animation: cf-btn-spin 1s linear infinite;
+  color: #fff;
 }
 
 @keyframes cf-btn-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btn::before {
+    transition: none;
+  }
+  .btn:hover:not(:disabled) {
+    transform: none;
   }
 }

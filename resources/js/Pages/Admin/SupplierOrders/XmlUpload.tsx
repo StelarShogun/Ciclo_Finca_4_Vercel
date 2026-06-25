@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { FileUpload } from '@/shared/components/ui/FileUpload';
 
 import '../../../../css/admin/orders/orders.css';
 
@@ -13,7 +14,6 @@ export default function XmlUpload() {
     threshold: 10,
   });
   const [clientError, setClientError] = useState('');
-  const [fileName, setFileName] = useState('');
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -57,22 +57,19 @@ export default function XmlUpload() {
               <div className="xml-field-group">
                 <div>
                   <label htmlFor="xml_file">Archivo XML del proveedor</label>
-                  <input
+                  <FileUpload
                     id="xml_file"
-                    type="file"
+                    label="Arrastra el XML o haz clic para seleccionar"
+                    hint="Tamaño máximo: 5 MB. Solo archivos .xml."
+                    icon="fa-file-code"
                     accept=".xml,text/xml,application/xml"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] ?? null;
-                      setData('xml_file', file);
-                      setFileName(file?.name ?? '');
-                    }}
+                    onChange={(files) => setData('xml_file', files?.[0] ?? null)}
                   />
-                  {fileName ? <p className="field-hint">Seleccionado: {fileName}</p> : <p className="field-hint">Tamaño máximo: 5 MB. Solo archivos .xml.</p>}
                   {errors.xml_file ? <p className="xml-field-error" role="alert">{errors.xml_file}</p> : null}
                 </div>
 
                 <div>
-                  <label htmlFor="threshold">Umbral de desvío (%) <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label htmlFor="threshold">Umbral de desvío (%) <span style={{ color: 'var(--color-danger)' }}>*</span></label>
                   <input
                     id="threshold"
                     type="number"

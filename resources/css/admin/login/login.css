@@ -98,7 +98,7 @@
 }
 
 .form-group input::placeholder {
-  color: #9ca3af;
+  color: var(--text-secondary, #9ca3af);
   opacity: 1;
   font-size: 0.8rem;
 }

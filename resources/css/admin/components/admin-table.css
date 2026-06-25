@@ -502,7 +502,7 @@
 
     .admin-table:has(tbody td[data-label]):not(.cf4-items-table):not(.cf4-invoices-list-table) tbody tr {
         display: block;
-        background: #fff;
+        background: var(--surface, #fff);
         border: 1px solid var(--border-color, #e5e7eb);
         border-radius: 12px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);

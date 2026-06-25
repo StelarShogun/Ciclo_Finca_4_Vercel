@@ -102,6 +102,63 @@
     --table-row-hover-bg: var(--brand-lightest);
 
     --cf4-modal-loading-scrim: rgba(255, 255, 255, 0.55);
+
+    /* ========================================================
+       REPALETTE (refresh atrevido) — acento vivo + escala de
+       superficies y contrapartes CLARAS de tokens que antes
+       solo existían en modo oscuro. Mantiene el verde de marca
+       para el chrome (sidebar/headers) y reserva el acento vivo
+       para CTAs, estados activos y realces.
+       ======================================================== */
+    --accent:        #12B36A;   /* esmeralda vivo (CTAs, activo) */
+    --accent-strong: #0E9558;   /* hover/pressed del acento */
+    --accent-soft:   rgba(18, 179, 106, 0.12);
+    --accent-ring:   rgba(18, 179, 106, 0.40);
+    /* Acento secundario cálido para realces puntuales (badges, destacados) */
+    --color-accent:  #F59E0B;
+
+    /* Escala de superficies (claro) — antes solo en dark */
+    --cf4-surface-0: #e9f1ec;   /* fondo de página tenue */
+    --cf4-surface-1: #ffffff;   /* cards */
+    --cf4-surface-2: #f3f8f5;   /* paneles hundidos */
+    --cf4-surface-elevated: #ffffff;
+
+    --cf4-admin-card-bg:     #ffffff;
+    --cf4-admin-card-border: #e3ece6;
+    --cf4-admin-panel-bg:    #f3f8f5;
+
+    --cf4-text-strong: #0b211a;
+    --cf4-text-main:   #1f2937;
+    --cf4-text-muted:  #5b6b62;
+
+    --cf4-border-soft: rgba(15, 43, 38, 0.10);
+    --cf4-glow-green:  rgba(35, 83, 71, 0.14);
+
+    --cf4-filter-btn-muted-bg:    #eef4f0;
+    --cf4-filter-btn-muted-hover: #e2ece6;
+
+    /* Badges de iconos (claro) — contrapartes de los de dark */
+    --cf4-icon-badge-bg:         var(--brand-lightest);
+    --cf4-icon-badge-bg-info:    var(--color-info-bg);
+    --cf4-icon-badge-bg-success: var(--color-success-bg);
+    --cf4-icon-badge-bg-warning: var(--color-warning-bg);
+    --cf4-icon-badge-bg-danger:  var(--color-danger-bg);
+    --cf4-icon-badge-bg-muted:   #eceff1;
+    --cf4-icon-badge-bg-accent:  var(--accent-soft);
+    --cf4-icon-badge-fg:         var(--brand-medium);
+    --cf4-icon-badge-fg-info:    var(--color-info);
+    --cf4-icon-badge-fg-success: var(--color-success);
+    --cf4-icon-badge-fg-warning: var(--color-warning);
+    --cf4-icon-badge-fg-danger:  var(--color-danger);
+    --cf4-icon-badge-fg-muted:   var(--color-muted);
+    --cf4-icon-badge-fg-accent:  var(--accent-strong);
+
+    /* Tokens de transición unificados (consumidos en F20) */
+    --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --dur-fast: 0.14s;
+    --dur:      0.22s;
+    --dur-slow: 0.34s;
 }
  
 /* ============================================================
@@ -195,6 +252,12 @@ html[data-theme="dark"] {
     /* Acento de interacción (dark): un verde algo más luminoso para contraste. */
     --brand-accent: #5ECB8B;
     --brand-accent-strong: #46B776;
+
+    /* Acento vivo (dark) — más luminoso para destacar sobre fondos oscuros. */
+    --accent: #2ED27E;
+    --accent-strong: #25B86E;
+    --accent-soft: rgba(46, 210, 126, 0.18);
+    --accent-ring: rgba(46, 210, 126, 0.45);
 
     /* Superficies (dark) */
     --surface: #0A2723;

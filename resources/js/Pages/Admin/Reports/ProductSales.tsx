@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { FiltersSection } from '@/shared/components/ui/FiltersSection';
+import { DateRangeFilter } from '@/shared/components/admin/DateRangeFilter';
 
 import '../../../../css/admin/reports/product-sales.css';
 
@@ -25,6 +26,8 @@ type PageProps = { period: string; sort: string; dir: string; q: string; top10: 
 
 export default function ProductSales({ period: period0, sort: sort0, dir: dir0, q: q0, top10: top100 }: PageProps) {
   const [period, setPeriod] = useState(period0 || '30d');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [sort, setSort] = useState(sort0 || 'revenue');
   const [dir, setDir] = useState(dir0 || 'desc');
   const [q, setQ] = useState(q0 || '');
@@ -51,20 +54,29 @@ export default function ProductSales({ period: period0, sort: sort0, dir: dir0, 
     }
   }, []);
 
+  const buildParams = useCallback(
+    (pageValue: string): Record<string, string> => {
+      const params: Record<string, string> = { period, sort, dir, top10: top10Metric, page: pageValue };
+      if (q.trim()) params.q = q.trim();
+      if (period === 'custom') {
+        if (dateFrom) params.date_from = dateFrom;
+        if (dateTo) params.date_to = dateTo;
+      }
+      return params;
+    },
+    [period, sort, dir, top10Metric, q, dateFrom, dateTo],
+  );
+
   useEffect(() => {
-    const params: Record<string, string> = { period, sort, dir, top10: top10Metric, page: String(page) };
-    if (q.trim()) params.q = q.trim();
-    void load(params);
+    void load(buildParams(String(page)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [period, sort, dir, top10Metric, page]);
+  }, [period, sort, dir, top10Metric, page, dateFrom, dateTo]);
 
   // Debounced search
   useEffect(() => {
     const t = window.setTimeout(() => {
       setPage(1);
-      const params: Record<string, string> = { period, sort, dir, top10: top10Metric, page: '1' };
-      if (q.trim()) params.q = q.trim();
-      void load(params);
+      void load(buildParams('1'));
     }, 400);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -100,16 +112,15 @@ export default function ProductSales({ period: period0, sort: sort0, dir: dir0, 
         </PageHeader>
 
         <FiltersSection hideActions>
-          <div className="filter-group">
-            <label>Periodo</label>
-            <div className="period-toggle" role="group" aria-label="Periodo">
-              {['7d', '30d', '90d'].map((p) => (
-                <button type="button" key={p} className={`period-btn${period === p ? ' active' : ''}`} onClick={() => { setPeriod(p); setPage(1); }}>
-                  {p === '7d' ? '7 días' : p === '30d' ? '30 días' : '90 días'}
-                </button>
-              ))}
-            </div>
-          </div>
+          <DateRangeFilter
+            period={period}
+            onPeriodChange={(p) => { setPeriod(p); setPage(1); }}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={(v) => { setDateFrom(v); setPage(1); }}
+            onDateToChange={(v) => { setDateTo(v); setPage(1); }}
+            idPrefix="ps"
+          />
           <div className="filter-group filters-grow">
             <label htmlFor="ps-search">Buscar</label>
             <input type="search" id="ps-search" placeholder="Filtrar por nombre o SKU…" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" />

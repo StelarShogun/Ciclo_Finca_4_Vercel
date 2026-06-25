@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
@@ -83,6 +84,12 @@ export default function Index(props: PageProps) {
   function clearFilters() {
     setF({ search: '', parent_category_id: '', subcategory_id: '', stock_status: '', status: '' });
     router.get('/inventory', {}, { preserveScroll: true, preserveState: true, replace: true });
+  }
+
+  function applyQuickFilter(patch: Partial<InventoryFilters>) {
+    const next: InventoryFilters = { search: '', parent_category_id: '', subcategory_id: '', stock_status: '', status: '', ...patch };
+    setF(next);
+    router.get('/inventory', next, { preserveScroll: true, preserveState: true, replace: true });
   }
 
   function reload() {
@@ -166,6 +173,7 @@ export default function Index(props: PageProps) {
         <button
           type="button"
           className="action-btn stock-adjust"
+          data-stock-action="add"
           data-tooltip="Agregar stock"
           aria-label="Agregar stock"
           onClick={() => setStockTarget({ product_id: product.product_id, name: product.name, stock: product.stock, action: 'add' })}
@@ -175,6 +183,7 @@ export default function Index(props: PageProps) {
         <button
           type="button"
           className="action-btn stock-adjust"
+          data-stock-action="remove"
           data-tooltip="Retirar stock"
           aria-label="Retirar stock"
           onClick={() => setStockTarget({ product_id: product.product_id, name: product.name, stock: product.stock, action: 'remove' })}
@@ -214,6 +223,7 @@ export default function Index(props: PageProps) {
           title="Inventario"
           kicker="Productos"
           icon="fa-box"
+          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Inventario' }]} />}
           actions={
             <div className="inventory-header-actions">
               <button type="button" className="btn btn-primary" onClick={openNew}>
@@ -241,34 +251,54 @@ export default function Index(props: PageProps) {
         />
 
         <section className="kpis-section" aria-label="Resumen de inventario">
-          <div className="kpi-card">
+          <button
+            type="button"
+            className={`kpi-card kpi-card--button${!f.status && !f.stock_status ? ' is-active' : ''}`}
+            onClick={() => applyQuickFilter({})}
+            aria-pressed={!f.status && !f.stock_status}
+          >
             <div className="kpi-icon"><i className="fas fa-box" aria-hidden="true" /></div>
             <div className="kpi-content">
               <h3>Total productos</h3>
               <p className="kpi-value">{inventorySummary.total.toLocaleString('es-CR')}</p>
             </div>
-          </div>
-          <div className="kpi-card">
+          </button>
+          <button
+            type="button"
+            className={`kpi-card kpi-card--button${f.status === 'active' ? ' is-active' : ''}`}
+            onClick={() => applyQuickFilter({ status: 'active' })}
+            aria-pressed={f.status === 'active'}
+          >
             <div className="kpi-icon success"><i className="fas fa-circle-check" aria-hidden="true" /></div>
             <div className="kpi-content">
               <h3>Activos</h3>
               <p className="kpi-value">{inventorySummary.active.toLocaleString('es-CR')}</p>
             </div>
-          </div>
-          <div className="kpi-card">
+          </button>
+          <button
+            type="button"
+            className={`kpi-card kpi-card--button${f.stock_status === 'low' ? ' is-active' : ''}`}
+            onClick={() => applyQuickFilter({ stock_status: 'low' })}
+            aria-pressed={f.stock_status === 'low'}
+          >
             <div className="kpi-icon warning"><i className="fas fa-triangle-exclamation" aria-hidden="true" /></div>
             <div className="kpi-content">
               <h3>Stock bajo</h3>
               <p className="kpi-value">{inventorySummary.lowStock.toLocaleString('es-CR')}</p>
             </div>
-          </div>
-          <div className="kpi-card">
+          </button>
+          <button
+            type="button"
+            className={`kpi-card kpi-card--button${f.stock_status === 'out' ? ' is-active' : ''}`}
+            onClick={() => applyQuickFilter({ stock_status: 'out' })}
+            aria-pressed={f.stock_status === 'out'}
+          >
             <div className="kpi-icon danger"><i className="fas fa-ban" aria-hidden="true" /></div>
             <div className="kpi-content">
               <h3>Agotados</h3>
               <p className="kpi-value">{inventorySummary.outOfStock.toLocaleString('es-CR')}</p>
             </div>
-          </div>
+          </button>
         </section>
 
         <FiltersSection onSubmit={applyFilters} onClear={clearFilters}>

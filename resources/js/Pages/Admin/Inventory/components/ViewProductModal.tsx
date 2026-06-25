@@ -25,6 +25,13 @@ type ProductData = {
 
 const currency = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC', maximumFractionDigits: 0 });
 
+const STATUS_ES: Record<string, string> = {
+  active: 'Activo',
+  inactive: 'Inactivo',
+  out_of_stock: 'Agotado',
+  discontinued: 'Descontinuado',
+};
+
 export function ViewProductModal({ onClose, productId }: ViewProductModalProps) {
   const [data, setData] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,13 +67,15 @@ export function ViewProductModal({ onClose, productId }: ViewProductModalProps) 
   }, [productId]);
 
   return (
-    <Modal isOpen={productId !== null} onClose={onClose} title="Detalle del producto" className="cf4-modal cf4-modal--wide">
+    <Modal isOpen={productId !== null} onClose={onClose} title={<><i className="fas fa-box-open" aria-hidden="true" />Detalle del producto</>} className="cf4-modal cf4-modal--wide">
       {loading ? <p className="text-muted">Cargando…</p> : null}
       {error ? <p className="field-error">{error}</p> : null}
       {data ? (
         <div className="view-product-body">
           {!data.uses_placeholder_image && data.media_main ? (
-            <img src={data.media_main} alt={data.name} className="view-product-image" width={160} height={160} />
+            <figure className="cf4-media-hero">
+              <img src={data.media_main} alt={data.name} loading="lazy" />
+            </figure>
           ) : null}
           <h3>{data.name}</h3>
           {data.sku ? <p className="text-muted">SKU: {data.sku}</p> : null}
@@ -76,13 +85,15 @@ export function ViewProductModal({ onClose, productId }: ViewProductModalProps) 
             <div><dt>Precio venta</dt><dd>{currency.format(Number(data.sale_price ?? 0))}</dd></div>
             <div><dt>Precio compra</dt><dd>{currency.format(Number(data.purchase_price ?? 0))}</dd></div>
             <div><dt>Stock</dt><dd>{data.stock_current ?? 0} (mín. {data.stock_minimum ?? 0})</dd></div>
-            <div><dt>Estado</dt><dd>{data.status ?? '—'}</dd></div>
+            <div><dt>Estado</dt><dd>{STATUS_ES[data.status ?? ''] ?? data.status ?? '—'}</dd></div>
           </dl>
 
           {data.media_gallery && data.media_gallery.length > 0 ? (
-            <div className="view-product-gallery">
+            <div className="cf4-media-grid">
               {data.media_gallery.map((url) => (
-                <img key={url} src={url} alt="" width={72} height={72} />
+                <div className="cf4-media-thumb" key={url}>
+                  <img src={url} alt="" loading="lazy" />
+                </div>
               ))}
             </div>
           ) : null}

@@ -841,7 +841,7 @@
   margin-left: 0.15rem;
   border: none;
   background: transparent;
-  color: #6b7280;
+  color: var(--text-secondary, #6b7280);
   font-size: 1.1rem;
   line-height: 1;
   padding: 0.2rem 0.45rem;
@@ -1123,14 +1123,18 @@
   white-space: nowrap;
 }
 
+/* Acciones de fila — chips tonales con fondo SIEMPRE visible (no solo en
+   hover) y legibles en claro y oscuro. Cada variante usa su token *-bg. */
 .action-btn {
-  background: none;
-  border: none;
+  background: var(--cf4-icon-badge-bg-muted, #eceff1);
+  border: 1px solid transparent;
   padding: 8px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   color: var(--color-muted);
-  transition: var(--transition);
+  transition: transform var(--dur-fast, 0.14s) var(--ease-out, ease),
+    background var(--dur, 0.2s) ease, color var(--dur, 0.2s) ease,
+    box-shadow var(--dur, 0.2s) ease;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -1141,53 +1145,47 @@
 }
 
 .action-btn:hover {
-  background: var(--color-light);
-  transform: scale(1.1);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
-.action-btn.view { 
-  color: var(--color-info);
+.action-btn:active {
+  transform: translateY(0);
 }
 
-.action-btn.view:hover {
-  background: var(--color-info-bg);
-  color: var(--color-info);
+.action-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring, rgba(18, 179, 106, 0.4));
 }
 
-.action-btn.edit { 
-  color: var(--color-warning);
+.action-btn.view {
+  background: var(--cf4-icon-badge-bg-info, var(--color-info-bg));
+  color: var(--cf4-icon-badge-fg-info, var(--color-info));
 }
 
-.action-btn.edit:hover {
-  background: var(--color-warning-bg);
-  color: var(--color-warning);
+.action-btn.edit {
+  background: var(--cf4-icon-badge-bg-warning, var(--color-warning-bg));
+  color: var(--cf4-icon-badge-fg-warning, var(--color-warning));
 }
 
-.action-btn.delete { 
-  color: var(--color-danger);
+.action-btn.activate {
+  background: var(--cf4-icon-badge-bg-success, var(--color-success-bg));
+  color: var(--cf4-icon-badge-fg-success, var(--color-success));
 }
 
-.action-btn.delete:hover {
-  background: var(--color-danger-bg);
-  color: var(--color-danger);
+.action-btn.delete {
+  background: var(--cf4-icon-badge-bg-danger, var(--color-danger-bg));
+  color: var(--cf4-icon-badge-fg-danger, var(--color-danger));
 }
 
 .action-btn.stock-adjust[data-stock-action="add"] {
-  color: var(--color-primary);
-}
-
-.action-btn.stock-adjust[data-stock-action="add"]:hover {
-  background: var(--color-success-bg);
-  color: var(--color-success);
+  background: var(--cf4-icon-badge-bg-success, var(--color-success-bg));
+  color: var(--cf4-icon-badge-fg-success, var(--color-success));
 }
 
 .action-btn.stock-adjust[data-stock-action="remove"] {
-  color: var(--color-danger);
-}
-
-.action-btn.stock-adjust[data-stock-action="remove"]:hover {
-  background: var(--color-danger-bg);
-  color: var(--color-danger);
+  background: var(--cf4-icon-badge-bg-danger, var(--color-danger-bg));
+  color: var(--cf4-icon-badge-fg-danger, var(--color-danger));
 }
 
 /* Un modal abierto: evita scroll de la página detrás (segunda barra vertical). */
@@ -1500,13 +1498,13 @@ html:has(#stock-adjust-modal.is-open) {
   margin: 0 0 0.25rem 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary, #1f2937);
 }
 
 .export-info p {
   margin: 0;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary, #6b7280);
 }
 
 /* ==================== VIEW PRODUCT (inventory only) ==================== */
@@ -1922,7 +1920,7 @@ html:has(#stock-adjust-modal.is-open) {
 
 .import-progress__icon[data-state="cancelled"] {
   background: color-mix(in srgb, #6b7280 16%, transparent);
-  color: #6b7280;
+  color: var(--text-secondary, #6b7280);
 }
 
 .import-progress__headings {
@@ -2282,7 +2280,7 @@ html:has(#stock-adjust-modal.is-open) {
 .import-dock__item-icon[data-state="success"] { background: color-mix(in srgb, #16a34a 16%, transparent); color: #16a34a; }
 .import-dock__item-icon[data-state="warning"] { background: color-mix(in srgb, #d97706 16%, transparent); color: #d97706; }
 .import-dock__item-icon[data-state="error"] { background: color-mix(in srgb, #dc2626 16%, transparent); color: #dc2626; }
-.import-dock__item-icon[data-state="cancelled"] { background: color-mix(in srgb, #6b7280 16%, transparent); color: #6b7280; }
+.import-dock__item-icon[data-state="cancelled"] { background: color-mix(in srgb, #6b7280 16%, transparent); color: var(--text-secondary, #6b7280); }
 
 .import-dock__item-main {
   min-width: 0;
@@ -2563,7 +2561,7 @@ img, svg, table {
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
-  color: #6b7280;
+  color: var(--text-secondary, #6b7280);
   font-size: 0.75rem;
   transition: transform 0.2s;
 }
@@ -2599,7 +2597,7 @@ img, svg, table {
   padding: 0.55rem 0.9rem;
   font-size: 0.9rem;
   cursor: pointer;
-  color: #374151;
+  color: var(--text-secondary, #374151);
   transition: background 0.15s;
 }
 
@@ -2612,7 +2610,7 @@ img, svg, table {
 .brand-combobox-no-result {
   padding: 0.6rem 0.9rem;
   font-size: 0.85rem;
-  color: #9ca3af;
+  color: var(--text-secondary, #9ca3af);
   text-align: center;
 }
 
@@ -2634,7 +2632,7 @@ img, svg, table {
 .inventory-availability--ok  { color: #059669; }
 .inventory-availability--low { color: #d97706; }
 .inventory-availability--out { color: #dc2626; }
-.inventory-availability--na  { color: #6b7280; }
+.inventory-availability--na  { color: var(--text-secondary, #6b7280); }
 
 /* ============================================================
    17. STOCK ADJUST MODAL (rama HEAD)
