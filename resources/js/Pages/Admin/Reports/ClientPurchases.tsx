@@ -86,11 +86,6 @@ export default function ClientPurchases({ period: period0, sort: sort0, dir: dir
       <Head title="Compras por cliente - Reportes" />
 
       <div className="client-purchases-report">
-        <nav className="reports-breadcrumb">
-          <a href="/reports">Reportes</a>
-          <span className="sep">/</span>
-          <span>Compras por cliente</span>
-        </nav>
 
         <PageHeader title="Compras por cliente" kicker="Reportes">
           <p>Consulta el total comprado, la cantidad de órdenes y el ticket promedio. También puedes buscar por nombre, apellido o correo.</p>

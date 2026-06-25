@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
@@ -76,12 +76,6 @@ export default function Values({ dimension, values }: PageProps) {
       <Head title={`Valores: ${dimension.label}`} />
 
       <div className="classifications-values">
-        <nav className="reports-breadcrumb" aria-label="Migas de pan">
-          <Link href="/classifications/catalog">Opciones por tipo</Link>
-          <span> / </span>
-          <Link href={`/classifications/catalog/${dimension.category_id}`}>{dimension.category_name ?? 'Tipo'}</Link>
-          <span> / {dimension.label}</span>
-        </nav>
 
         <PageHeader title={`Valores de ${dimension.label}`} kicker="Clasificación" />
 

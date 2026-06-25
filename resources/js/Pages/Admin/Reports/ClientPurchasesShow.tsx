@@ -25,13 +25,6 @@ export default function ClientPurchasesShow({ displayName, gmail, orders, listUr
       <Head title={`Compras — ${displayName} - Reportes`} />
 
       <div className="client-purchases-report client-purchases-show">
-        <nav className="reports-breadcrumb">
-          <a href="/reports">Reportes</a>
-          <span className="sep">/</span>
-          <a href={listUrl}>Compras por cliente</a>
-          <span className="sep">/</span>
-          <span>{displayName}</span>
-        </nav>
 
         <PageHeader
           title={displayName}

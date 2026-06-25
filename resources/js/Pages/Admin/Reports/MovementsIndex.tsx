@@ -43,11 +43,6 @@ export default function MovementsIndex({ products, pagination, filters }: PagePr
       <Head title="Movimientos de inventario - Reportes" />
 
       <div className="reports-hub">
-        <nav className="reports-breadcrumb" aria-label="Migas de pan">
-          <a href="/reports">Reportes</a>
-          <span className="sep">/</span>
-          <span>Movimientos de inventario</span>
-        </nav>
 
         <PageHeader title="Movimientos de inventario" kicker="Reportes">
           <p>Selecciona un producto para consultar su historial de entradas, salidas y devoluciones.</p>

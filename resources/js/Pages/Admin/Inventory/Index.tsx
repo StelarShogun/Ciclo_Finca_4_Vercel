@@ -4,7 +4,6 @@ import type { FormEvent } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
-import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
@@ -223,7 +222,6 @@ export default function Index(props: PageProps) {
           title="Inventario"
           kicker="Productos"
           icon="fa-box"
-          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Inventario' }]} />}
           actions={
             <div className="inventory-header-actions">
               <button type="button" className="btn btn-primary" onClick={openNew}>

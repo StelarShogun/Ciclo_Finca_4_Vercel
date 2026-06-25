@@ -4,7 +4,6 @@ import type { FormEvent } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
-import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
@@ -174,7 +173,6 @@ export default function Index({
           title="Encargos en línea"
           kicker="Encargos"
           icon="fa-shopping-cart"
-          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Encargos' }]} />}
           actions={
             <button type="button" className="btn btn-secondary btn-sm" onClick={() => setSettingsOpen(true)}>
               <i className="fas fa-clock" aria-hidden="true" /> Plazo de cancelación

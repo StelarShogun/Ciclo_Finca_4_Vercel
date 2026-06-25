@@ -84,11 +84,6 @@ export default function ByCategory({ rows, grandTotal, totalUnits, chartData, fi
       <Head title="Ventas por Categoría" />
 
       <div className="sales-container">
-        <nav className="reports-breadcrumb" aria-label="Migas de pan">
-          <a href="/reports">Reportes</a>
-          <span className="sep">/</span>
-          <span>Ventas por Categoría</span>
-        </nav>
 
         <PageHeader title="Ventas por categoría" kicker="Reportes">
           <p>Analiza los ingresos, unidades vendidas y participación de cada categoría en el periodo seleccionado.</p>

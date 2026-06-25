@@ -110,11 +110,6 @@ export default function SalesPerformance({ initialPreset, initialFrom, initialTo
       <Head title="Desempeño de ventas - Reportes" />
 
       <div className="sales-performance-report">
-        <nav className="reports-breadcrumb">
-          <a href="/reports">Reportes</a>
-          <span className="sep">/</span>
-          <span>Desempeño de ventas</span>
-        </nav>
 
         <PageHeader title="Desempeño de ventas" kicker="Reportes">
           <p className="sales-performance-lead">Analiza las ventas completadas y los ingresos facturados del periodo seleccionado, comparándolos con el periodo anterior equivalente.</p>

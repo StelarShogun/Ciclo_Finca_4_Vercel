@@ -386,6 +386,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
   margin-bottom: 20px;
   padding-bottom: 15px;
   border-bottom: 1px solid var(--border-color);
@@ -398,9 +400,82 @@
   margin: 0;
 }
 
+.chart-subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary, #6b7280);
+}
+
 .chart-controls {
   display: flex;
-  gap: 5px;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Selector de rango de la gráfica de ventas. */
+.sales-range-select {
+  min-height: 38px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--background-white, #fff);
+  color: var(--text-primary, inherit);
+  font-family: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sales-range-select:focus {
+  outline: none;
+  border-color: var(--brand-accent, #3fae6e);
+  box-shadow: 0 0 0 3px rgba(63, 174, 110, 0.18);
+}
+
+.sales-range-custom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sales-range-custom input[type="date"] {
+  min-height: 38px;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--background-white, #fff);
+  color: var(--text-primary, inherit);
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.sales-range-custom input[type="date"]:focus {
+  outline: none;
+  border-color: var(--brand-accent, #3fae6e);
+  box-shadow: 0 0 0 3px rgba(63, 174, 110, 0.18);
+}
+
+.sales-range-sep {
+  color: var(--text-secondary, #94a3b8);
+}
+
+.sales-range-custom .chart-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .chart-btn {

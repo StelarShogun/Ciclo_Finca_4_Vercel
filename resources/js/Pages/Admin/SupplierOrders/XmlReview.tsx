@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
-import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 
 import '../../../../css/admin/orders/orders.css';
 import './xml-review.css';
@@ -109,7 +108,6 @@ export default function XmlReview({ analysis }: { analysis: Analysis }) {
         <PageHeader
           title="Revisión de precios XML"
           kicker="Proveedores"
-          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Pedidos a proveedores', href: '/supplier-orders' }, { label: 'Revisión XML' }]} />}
           actions={
             <div className="sales-header-actions">
               <a href="/supplier-orders/xml-deviation" className="btn btn-secondary btn-sm"><i className="fas fa-redo" aria-hidden="true" /> Cargar otro XML</a>

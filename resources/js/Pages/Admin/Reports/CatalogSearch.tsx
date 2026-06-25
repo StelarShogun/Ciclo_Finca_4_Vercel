@@ -35,11 +35,6 @@ export default function CatalogSearch({ period, rows, totalEvents, uniqueProduct
       <Head title="Productos más buscados - Reportes" />
 
       <div className="catalog-search-report">
-        <nav className="reports-breadcrumb" aria-label="Migas de pan">
-          <a href="/reports">Reportes</a>
-          <span className="sep">/</span>
-          <span>Productos más buscados</span>
-        </nav>
 
         <PageHeader title="Productos más buscados" kicker="Reportes">
           <p className="csr-page-subtitle">Consulta los productos que aparecen con mayor frecuencia en las búsquedas del catálogo público.</p>

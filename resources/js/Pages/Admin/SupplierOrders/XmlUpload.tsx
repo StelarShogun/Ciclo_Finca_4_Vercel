@@ -39,11 +39,6 @@ export default function XmlUpload() {
             <p>Carga un archivo XML del proveedor para comparar los precios de compra actuales antes de aplicar cambios.</p>
           </PageHeader>
 
-          <nav className="reports-breadcrumb" aria-label="Migas de pan">
-            <a href="/supplier-orders">Pedidos a proveedor</a>
-            <span className="sep">/</span>
-            <span>Importar XML</span>
-          </nav>
 
           <div className="xml-upload-card">
             <h2><i className="fas fa-file-import xml-upload-card__icon" aria-hidden="true" />Seleccionar archivo XML</h2>

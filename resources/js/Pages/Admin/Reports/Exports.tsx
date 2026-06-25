@@ -165,11 +165,6 @@ export default function Exports({ exportsConfig }: PageProps) {
       <Head title="Exportar datos - Reportes" />
 
       <div className="reports-hub reports-exports">
-        <nav className="reports-breadcrumb">
-          <a href="/reports">Reportes</a>
-          <span className="sep">/</span>
-          <span>Exportar datos</span>
-        </nav>
 
         <PageHeader title="Exportación de datos" kicker="Reportes">
           <p>Descarga reportes y listados administrativos en PDF, Excel o XML desde un solo lugar.</p>

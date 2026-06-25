@@ -3,7 +3,6 @@ import { useState } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
-import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
 import { useToast } from '@/shared/hooks/useToast';
 import type { InertiaSharedProps } from '@/shared/types/models';
@@ -132,7 +131,6 @@ export default function Detail({ order }: { order: OrderDetail }) {
         <PageHeader
           title={`Pedido ${order.po_number}`}
           kicker="Proveedores"
-          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Pedidos a proveedores', href: '/supplier-orders' }, { label: order.po_number }]} />}
           actions={
             <div className="sales-actions">
               <a href="/supplier-orders" className="btn btn-secondary"><i className="fas fa-arrow-left" aria-hidden="true" /> Volver</a>

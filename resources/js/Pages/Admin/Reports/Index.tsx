@@ -2,7 +2,6 @@ import { Head } from '@inertiajs/react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
-import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 
 import '../../../../css/admin/reports/reports-hub.css';
 
@@ -25,7 +24,7 @@ export default function Index() {
       <Head title="Reportes - Ciclo Finca 4 Admin" />
 
       <div className="reports-hub">
-        <PageHeader title="Centro de reportes" kicker="Reportes" icon="fa-file-alt" breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Reportes' }]} />}>
+        <PageHeader title="Centro de reportes" kicker="Reportes" icon="fa-file-alt">
           <p>Consulta reportes analíticos de ventas, inventario, clientes, búsquedas y actividad administrativa.</p>
         </PageHeader>
 

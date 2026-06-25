@@ -2,7 +2,6 @@ import { Head, Link } from '@inertiajs/react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
-import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { useFlashToasts } from '@/shared/hooks/useFlashToasts';
 import type { InertiaListPagination as Pagination } from '@/types/pagination';
@@ -31,7 +30,6 @@ export default function Index({ pagination, products }: PageProps) {
         <PageHeader
           title="Características por producto"
           kicker="Clasificación"
-          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Características por producto' }]} />}
           actions={
             <Link href="/inventory" className="btn btn-secondary">
               <i className="fas fa-arrow-left" aria-hidden="true" /> Inventario

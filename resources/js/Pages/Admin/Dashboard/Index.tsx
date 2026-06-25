@@ -1,10 +1,10 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
-import { Badge } from '@/shared/components/ui/Badge';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { QuickActionCard } from '@/shared/components/ui/QuickActionCard';
 
 type RecentSale = {
   id: number;
@@ -34,10 +34,21 @@ type DashboardProps = {
   recentSales?: RecentSale[];
   lowStockList?: LowStockRow[];
   salesByDay?: SalesByDay[];
+  salesRange?: string;
+  salesFrom?: string | null;
+  salesTo?: string | null;
   productsByCategory?: CategoryRow[];
   topProducts?: TopProduct[];
   error?: string | null;
 };
+
+const SALES_RANGES: { value: string; label: string }[] = [
+  { value: 'last7', label: 'Últimos 7 días' },
+  { value: 'last15', label: 'Últimos 15 días' },
+  { value: 'last30', label: 'Últimos 30 días' },
+  { value: 'month', label: 'Este mes' },
+  { value: 'custom', label: 'Personalizado' },
+];
 
 const currency = new Intl.NumberFormat('es-CR', {
   currency: 'CRC',
@@ -81,9 +92,50 @@ export default function Index({
   recentSales = [],
   lowStockList = [],
   salesByDay = [],
+  salesRange = 'last7',
+  salesFrom = null,
+  salesTo = null,
   productsByCategory = [],
   topProducts = [],
 }: DashboardProps) {
+  const [customFrom, setCustomFrom] = useState<string>(salesFrom ?? '');
+  const [customTo, setCustomTo] = useState<string>(salesTo ?? '');
+
+  function loadSales(params: Record<string, string>) {
+    router.get('/dashboard', params, {
+      only: ['salesByDay', 'salesRange', 'salesFrom', 'salesTo'],
+      preserveState: true,
+      preserveScroll: true,
+      replace: true,
+    });
+  }
+
+  function onRangeChange(value: string) {
+    if (value === 'custom') {
+      // Espera a que el usuario elija fechas y pulse Aplicar.
+      if (customFrom && customTo) {
+        loadSales({ range: 'custom', from: customFrom, to: customTo });
+      } else {
+        // Solo refleja la selección sin recargar todavía.
+        router.get('/dashboard', { range: 'custom', from: customFrom, to: customTo }, {
+          only: ['salesRange', 'salesFrom', 'salesTo'],
+          preserveState: true,
+          preserveScroll: true,
+          replace: true,
+        });
+      }
+      return;
+    }
+    loadSales({ range: value });
+  }
+
+  function applyCustomRange() {
+    if (customFrom && customTo) {
+      loadSales({ range: 'custom', from: customFrom, to: customTo });
+    }
+  }
+
+  const salesRangeLabel = SALES_RANGES.find((r) => r.value === salesRange)?.label ?? 'Últimos 7 días';
   const salesCanvas = useRef<HTMLCanvasElement>(null);
   const categoryCanvas = useRef<HTMLCanvasElement>(null);
   const [period, setPeriod] = useState('7d');
@@ -187,13 +239,13 @@ export default function Index({
     return () => chart.destroy();
   }, [productsByCategory]);
 
-  const kpis = [
+  const kpis: { label: string; value: string; icon: string; trend?: number }[] = [
     { label: 'Total Productos', value: totalProducts.toLocaleString('es-CR'), icon: 'fa-box' },
-    { label: 'Ventas Hoy', value: currency.format(todaySales), icon: 'fa-cash-register', change: `${Math.abs(salesTrend)}%`, down: salesTrend < 0 },
+    { label: 'Ventas Hoy', value: currency.format(todaySales), icon: 'fa-cash-register', trend: salesTrend },
     { label: 'Proveedores', value: totalSuppliers.toLocaleString('es-CR'), icon: 'fa-truck' },
     { label: 'Categorías', value: totalCategories.toLocaleString('es-CR'), icon: 'fa-layer-group' },
     { label: 'Stock bajo', value: lowStockProducts.toLocaleString('es-CR'), icon: 'fa-triangle-exclamation' },
-    { label: 'Ventas del mes', value: currency.format(monthlySales), icon: 'fa-calendar', change: `${Math.abs(monthlyTrend)}%`, down: monthlyTrend < 0 },
+    { label: 'Ventas del mes', value: currency.format(monthlySales), icon: 'fa-calendar', trend: monthlyTrend },
   ];
 
   const categoryTotal = productsByCategory.reduce((sum, c) => sum + c.total, 0);
@@ -221,60 +273,48 @@ export default function Index({
               </div>
               <div className="kpi-content">
                 <h3>{kpi.label}</h3>
-                <div className="kpi-value">{kpi.value}</div>
-                {kpi.change ? <Badge tone={kpi.down ? 'danger' : 'success'}>{kpi.down ? '↓' : '↑'} {kpi.change}</Badge> : null}
+                <div className="kpi-value-row">
+                  <div className="kpi-value">{kpi.value}</div>
+                  {kpi.trend !== undefined ? (
+                    <span className={`kpi-trend kpi-trend--badge ${kpi.trend > 0 ? 'trend-up' : kpi.trend < 0 ? 'trend-down' : 'trend-neutral'}`}>
+                      <i className={`fas ${kpi.trend > 0 ? 'fa-arrow-up' : kpi.trend < 0 ? 'fa-arrow-down' : 'fa-minus'}`} aria-hidden="true" /> {Math.abs(kpi.trend)}%
+                    </span>
+                  ) : null}
+                </div>
               </div>
             </div>
           ))}
         </section>
 
         <section className="quick-actions" aria-label="Accesos rápidos">
-          <Link href="/sales" className="quick-action quick-action--primary">
-            <span className="quick-action__icon"><i className="fas fa-cash-register" aria-hidden="true" /></span>
-            <span className="quick-action__text">
-              <span className="quick-action__title">Nueva venta</span>
-              <span className="quick-action__desc">Registrar una venta de mostrador</span>
-            </span>
-            <i className="fas fa-arrow-right quick-action__arrow" aria-hidden="true" />
-          </Link>
-          <Link href="/inventory" className="quick-action">
-            <span className="quick-action__icon"><i className="fas fa-box" aria-hidden="true" /></span>
-            <span className="quick-action__text">
-              <span className="quick-action__title">Nuevo producto</span>
-              <span className="quick-action__desc">Agregar al inventario</span>
-            </span>
-            <i className="fas fa-arrow-right quick-action__arrow" aria-hidden="true" />
-          </Link>
-          <Link href="/orders" className="quick-action">
-            <span className="quick-action__icon"><i className="fas fa-shopping-cart" aria-hidden="true" /></span>
-            <span className="quick-action__text">
-              <span className="quick-action__title">Encargos</span>
-              <span className="quick-action__desc">Pedidos pendientes del carrito web</span>
-            </span>
-            <i className="fas fa-arrow-right quick-action__arrow" aria-hidden="true" />
-          </Link>
-          <Link href="/supplier-orders" className="quick-action">
-            <span className="quick-action__icon"><i className="fas fa-clipboard-list" aria-hidden="true" /></span>
-            <span className="quick-action__text">
-              <span className="quick-action__title">Pedidos a proveedores</span>
-              <span className="quick-action__desc">Reabastecer stock</span>
-            </span>
-            <i className="fas fa-arrow-right quick-action__arrow" aria-hidden="true" />
-          </Link>
-          <Link href="/reports" className="quick-action">
-            <span className="quick-action__icon"><i className="fas fa-file-alt" aria-hidden="true" /></span>
-            <span className="quick-action__text">
-              <span className="quick-action__title">Reportes</span>
-              <span className="quick-action__desc">Análisis y exportaciones</span>
-            </span>
-            <i className="fas fa-arrow-right quick-action__arrow" aria-hidden="true" />
-          </Link>
+          <QuickActionCard href="/sales" icon="fa-cash-register" title="Nueva venta" description="Registrar una venta de mostrador" />
+          <QuickActionCard href="/inventory" icon="fa-box" title="Nuevo producto" description="Agregar al inventario" />
+          <QuickActionCard href="/orders" icon="fa-shopping-cart" title="Encargos" description="Pedidos pendientes del carrito web" />
+          <QuickActionCard href="/supplier-orders" icon="fa-clipboard-list" title="Pedidos a proveedores" description="Reabastecer stock" />
+          <QuickActionCard href="/reports" icon="fa-file-alt" title="Reportes" description="Análisis y exportaciones" />
         </section>
 
         <section className="charts-section" aria-label="Gráficos">
           <div className="chart-container chart-container--sales">
             <div className="chart-header">
-              <h3>Ventas de los últimos 7 días</h3>
+              <div>
+                <h3>Ventas</h3>
+                <p className="chart-subtitle">{salesRangeLabel}</p>
+              </div>
+              <div className="chart-controls sales-range-controls">
+                <label className="sr-only" htmlFor="sales-range">Rango de ventas</label>
+                <select id="sales-range" className="sales-range-select" value={salesRange} onChange={(e) => onRangeChange(e.target.value)}>
+                  {SALES_RANGES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                </select>
+                {salesRange === 'custom' ? (
+                  <div className="sales-range-custom">
+                    <input type="date" aria-label="Desde" value={customFrom} max={customTo || undefined} onChange={(e) => setCustomFrom(e.target.value)} />
+                    <span className="sales-range-sep">–</span>
+                    <input type="date" aria-label="Hasta" value={customTo} min={customFrom || undefined} onChange={(e) => setCustomTo(e.target.value)} />
+                    <button type="button" className="chart-btn" onClick={applyCustomRange} disabled={!customFrom || !customTo}>Aplicar</button>
+                  </div>
+                ) : null}
+              </div>
             </div>
             <div className="chart-wrapper chart-wrapper--sales">
               {salesByDay.length === 0 ? (

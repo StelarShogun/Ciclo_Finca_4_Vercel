@@ -4,7 +4,6 @@ import type { FormEvent } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
-import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
@@ -31,6 +30,17 @@ type PageProps = {
 const colones = new Intl.NumberFormat('es-CR', { maximumFractionDigits: 0 });
 function formatColones(amount: number): string {
   return `₡${colones.format(Math.round(amount || 0))}`;
+}
+
+/** Insignia de variación junto al valor del KPI (positivo/negativo/neutro). */
+function TrendBadge({ value, suffix = '%' }: { value: number; suffix?: string }) {
+  const cls = value > 0 ? 'trend-up' : value < 0 ? 'trend-down' : 'trend-neutral';
+  const arrow = value > 0 ? 'fa-arrow-up' : value < 0 ? 'fa-arrow-down' : 'fa-minus';
+  return (
+    <span className={`kpi-trend kpi-trend--badge ${cls}`}>
+      <i className={`fas ${arrow}`} aria-hidden="true" /> {Math.abs(value)}{suffix}
+    </span>
+  );
 }
 
 const HEARTBEAT_URL = '/sales/history/heartbeat';
@@ -160,7 +170,6 @@ export default function Index({ sales, pagination, kpis, latestHistorySaleId, fi
           title="Gestión de ventas"
           kicker="Ventas"
           icon="fa-cash-register"
-          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Ventas' }]} />}
           actions={
             <button className="btn btn-primary" onClick={() => setNewOpen(true)}>
               <i className="fas fa-plus" aria-hidden="true" /> Nueva venta
@@ -178,30 +187,30 @@ export default function Index({ sales, pagination, kpis, latestHistorySaleId, fi
             <div className="kpi-icon success"><i className="fas fa-chart-line" aria-hidden="true" /></div>
             <div className="kpi-content">
               <h3>Ventas del Día</h3>
-              <p className="kpi-value">{formatColones(liveKpis.dailySales)}</p>
-            </div>
-            <div className={`kpi-trend kpi-trend--badge ${liveKpis.dailySalesTrend >= 0 ? 'trend-up' : 'trend-down'}`}>
-              <i className={`fas fa-arrow-${liveKpis.dailySalesTrend >= 0 ? 'up' : 'down'}`} aria-hidden="true" /> {Math.abs(liveKpis.dailySalesTrend)}%
+              <div className="kpi-value-row">
+                <p className="kpi-value">{formatColones(liveKpis.dailySales)}</p>
+                <TrendBadge value={liveKpis.dailySalesTrend} />
+              </div>
             </div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon info"><i className="fas fa-receipt" aria-hidden="true" /></div>
             <div className="kpi-content">
               <h3>Transacciones</h3>
-              <p className="kpi-value">{liveKpis.dailyTransactions}</p>
-            </div>
-            <div className={`kpi-trend kpi-trend--badge ${liveKpis.dailyTransactionsTrend >= 0 ? 'trend-up' : 'trend-down'}`}>
-              <i className={`fas fa-arrow-${liveKpis.dailyTransactionsTrend >= 0 ? 'up' : 'down'}`} aria-hidden="true" /> {Math.abs(liveKpis.dailyTransactionsTrend)}%
+              <div className="kpi-value-row">
+                <p className="kpi-value">{liveKpis.dailyTransactions}</p>
+                <TrendBadge value={liveKpis.dailyTransactionsTrend} />
+              </div>
             </div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon danger"><i className="fas fa-rotate-left" aria-hidden="true" /></div>
             <div className="kpi-content">
               <h3>Devoluciones</h3>
-              <p className="kpi-value">{liveKpis.refunds}</p>
-            </div>
-            <div className={`kpi-trend kpi-trend--badge ${liveKpis.refundsTrend >= 0 ? 'trend-up' : 'trend-down'}`}>
-              <i className={`fas fa-arrow-${liveKpis.refundsTrend >= 0 ? 'up' : 'down'}`} aria-hidden="true" /> {Math.abs(liveKpis.refundsTrend)}
+              <div className="kpi-value-row">
+                <p className="kpi-value">{liveKpis.refunds}</p>
+                <TrendBadge value={liveKpis.refundsTrend} suffix="" />
+              </div>
             </div>
           </div>
         </div>

@@ -25,7 +25,7 @@ class DashboardController extends Controller
     /** Rows loaded for dashboard inventory/sales tables (scroll after 5 visible). */
     private const DASHBOARD_TABLE_LIMIT = 10;
 
-    public function index()
+    public function index(Request $request)
     {
         if (! Auth::guard('admin')->check()) {
             return redirect()->route('admin.login')
@@ -39,6 +39,14 @@ class DashboardController extends Controller
             // Volatile KPIs: always compute on request so reload reflects today's sales.
             $data['todaySales'] = DashboardTodaySales::sumToday();
             $data['salesTrend'] = DashboardTodaySales::salesTrendPercent();
+
+            // Serie de ventas configurable por rango (query params: range/from/to).
+            // Se calcula fuera del caché porque depende de la petición.
+            [$salesFrom, $salesTo, $salesRange] = $this->resolveSalesRange($request);
+            $data['salesByDay'] = $this->salesSeries($salesFrom, $salesTo);
+            $data['salesRange'] = $salesRange;
+            $data['salesFrom'] = $salesFrom->toDateString();
+            $data['salesTo'] = $salesTo->toDateString();
 
             $data['weeklyReportDay'] = AppSetting::getWeeklyReportDay();
             $data['weeklyReportHour'] = AppSetting::getWeeklyReportHour();
@@ -440,9 +448,10 @@ class DashboardController extends Controller
             'stock' => (int) $product->stock_current,
         ])->values()->all();
 
+        // Acepta filas como objeto (Eloquent) o array (fillSalesChartSeries).
         $salesByDay = collect($data['salesByDay'] ?? [])->map(fn ($row) => [
-            'date' => Carbon::parse($row->date)->isoFormat('ddd D'),
-            'total' => (float) $row->total,
+            'date' => Carbon::parse(data_get($row, 'date'))->isoFormat('D MMM'),
+            'total' => (float) data_get($row, 'total', 0),
         ])->values()->all();
 
         $productsByCategory = collect($data['productsByCategory'] ?? [])
@@ -470,10 +479,80 @@ class DashboardController extends Controller
             'recentSales' => $recentSales,
             'lowStockList' => $lowStockList,
             'salesByDay' => $salesByDay,
+            'salesRange' => $data['salesRange'] ?? 'last7',
+            'salesFrom' => $data['salesFrom'] ?? null,
+            'salesTo' => $data['salesTo'] ?? null,
             'productsByCategory' => $productsByCategory,
             'topProducts' => $topProducts,
             'error' => $data['error'] ?? null,
         ];
+    }
+
+    /**
+     * Resuelve el rango de la serie de ventas desde los query params.
+     * Devuelve [Carbon $from, Carbon $to, string $range].
+     */
+    private function resolveSalesRange(Request $request): array
+    {
+        $range = (string) $request->query('range', 'last7');
+        $today = Carbon::today();
+
+        switch ($range) {
+            case 'last15':
+                return [$today->copy()->subDays(14), $today->copy(), 'last15'];
+            case 'last30':
+                return [$today->copy()->subDays(29), $today->copy(), 'last30'];
+            case 'month':
+                return [$today->copy()->startOfMonth(), $today->copy(), 'month'];
+            case 'custom':
+                $from = $this->parseSalesDate($request->query('from'));
+                $to = $this->parseSalesDate($request->query('to'));
+                if ($from && $to) {
+                    if ($from->gt($to)) {
+                        [$from, $to] = [$to, $from];
+                    }
+                    // Cota de seguridad: máx. ~93 días para no generar series enormes.
+                    if ($from->diffInDays($to) > 92) {
+                        $from = $to->copy()->subDays(92);
+                    }
+
+                    return [$from, $to, 'custom'];
+                }
+                // Sin fechas válidas → cae al rango por defecto.
+                break;
+        }
+
+        return [$today->copy()->subDays(6), $today->copy(), 'last7'];
+    }
+
+    private function parseSalesDate($value): ?Carbon
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * Serie diaria de ventas completadas entre dos fechas (rellena días sin ventas
+     * con 0 reutilizando fillSalesChartSeries).
+     */
+    private function salesSeries(Carbon $from, Carbon $to): array
+    {
+        $rows = Sale::query()
+            ->select(DB::raw('DATE(sale_date) as date'), DB::raw('COALESCE(SUM(total), 0) as total'))
+            ->whereBetween('sale_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->where('status', 'completed')
+            ->groupBy(DB::raw('DATE(sale_date)'))
+            ->orderBy('date')
+            ->get();
+
+        return $this->fillSalesChartSeries($rows, $from, $to);
     }
 
     private function getStartDate($period)

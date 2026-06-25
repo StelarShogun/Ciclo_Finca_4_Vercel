@@ -87,13 +87,6 @@ export default function MovementsShow({ product, availableTypes, availableOrigin
       <Head title={`Movimientos — ${product.name} - Reportes`} />
 
       <div className="inventory-movements-report">
-        <nav className="reports-breadcrumb" aria-label="Migas de pan">
-          <a href="/reports">Reportes</a>
-          <span className="sep">/</span>
-          <a href="/inventory/movements">Movimientos de inventario</a>
-          <span className="sep">/</span>
-          <span>{product.name}</span>
-        </nav>
 
         <PageHeader
           title={product.name}

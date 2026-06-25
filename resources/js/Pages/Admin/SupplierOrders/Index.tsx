@@ -4,7 +4,6 @@ import type { FormEvent } from 'react';
 
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
-import { Breadcrumbs } from '@/shared/components/ui/Breadcrumbs';
 import { InertiaListPagination } from '@/shared/components/ui/InertiaListPagination';
 import { FiltersSection } from '@/shared/components/ui/FiltersSection';
 import { useConfirmDialog } from '@/shared/components/ui/ConfirmDialogProvider';
@@ -129,7 +128,6 @@ export default function Index({ orders, pagination, openSupplierOrdersCount, sup
           title="Pedidos a Proveedores"
           kicker="Proveedores"
           icon="fa-clipboard-list"
-          breadcrumb={<Breadcrumbs items={[{ label: 'Inicio', href: '/dashboard' }, { label: 'Pedidos a proveedores' }]} />}
           actions={
             <div className="sales-header-actions">
               <a href="/supplier-orders/xml-deviation" className="btn btn-secondary btn-sm">

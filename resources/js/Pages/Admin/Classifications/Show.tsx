@@ -76,10 +76,6 @@ export default function Show({ attributes, category }: PageProps) {
       <Head title={`Atributos: ${category.name}`} />
 
       <div className="classifications-catalog-show">
-        <nav className="reports-breadcrumb" aria-label="Migas de pan">
-          <Link href="/classifications/catalog">Opciones por tipo</Link>
-          <span> / {category.parent_name ? `${category.parent_name} → ` : ''}{category.name}</span>
-        </nav>
 
         <PageHeader title={`Atributos de ${category.name}`} kicker="Clasificación" />
 

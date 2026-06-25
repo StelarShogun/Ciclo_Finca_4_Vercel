@@ -101,11 +101,6 @@ export default function ProductSales({ period: period0, sort: sort0, dir: dir0, 
       <Head title="Productos más vendidos - Reportes" />
 
       <div className="product-sales-report">
-        <nav className="reports-breadcrumb">
-          <a href="/reports">Reportes</a>
-          <span className="sep">/</span>
-          <span>Productos más vendidos</span>
-        </nav>
 
         <PageHeader title="Productos más vendidos" kicker="Reportes">
           <p>Analiza los productos con mayor rendimiento por ingresos o unidades vendidas en el periodo seleccionado.</p>
