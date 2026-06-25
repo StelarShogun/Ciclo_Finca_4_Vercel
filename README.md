@@ -1,132 +1,841 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🛒 Plataforma Web de Catálogo, Inventario y Pedidos
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema web orientado a la digitalización de negocios comerciales que requieren mostrar productos en línea, administrar inventario, gestionar pedidos, controlar proveedores, registrar ventas y generar reportes administrativos.
 
-## About Laravel
+El proyecto está diseñado como una solución adaptable para pequeñas y medianas empresas que desean modernizar sus procesos internos, mejorar su presencia digital y ofrecer una experiencia más clara y eficiente a sus clientes.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📌 Índice
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- [Descripción general](#-descripción-general)
+- [Objetivo del proyecto](#-objetivo-del-proyecto)
+- [Problema que resuelve](#-problema-que-resuelve)
+- [Adaptabilidad del sistema](#-adaptabilidad-del-sistema)
+- [Características principales](#-características-principales)
+- [Módulos del sistema](#-módulos-del-sistema)
+- [Tecnologías utilizadas](#-tecnologías-utilizadas)
+- [Arquitectura general](#-arquitectura-general)
+- [Requisitos previos](#-requisitos-previos)
+- [Instalación local](#-instalación-local)
+- [Variables de entorno](#-variables-de-entorno)
+- [Comandos útiles](#-comandos-útiles)
+- [Pruebas](#-pruebas)
+- [Despliegue](#-despliegue)
+- [Estructura del proyecto](#-estructura-del-proyecto)
+- [Seguridad](#-seguridad)
+- [Flujo principal del sistema](#-flujo-principal-del-sistema)
+- [Estado del proyecto](#-estado-del-proyecto)
+- [Documentación relacionada](#-documentación-relacionada)
+- [Licencia](#-licencia)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🧾 Descripción general
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Esta plataforma web permite a un negocio comercial contar con un catálogo digital, un sistema de pedidos, un panel administrativo y herramientas internas para controlar productos, inventario, proveedores, ventas y reportes.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+El sistema está pensado para empresas que actualmente manejan sus operaciones de forma manual, mediante hojas físicas, archivos dispersos, mensajes por aplicaciones de comunicación o registros poco centralizados.
 
-## Laravel Sponsors
+La solución permite centralizar la información, reducir errores operativos, mejorar la atención al cliente y facilitar la toma de decisiones mediante datos actualizados.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 🎯 Objetivo del proyecto
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Desarrollar una aplicación web funcional, modular y adaptable que permita:
 
-## Contributing
+- Publicar productos o servicios en un catálogo digital.
+- Consultar precios, imágenes, categorías y disponibilidad.
+- Permitir pedidos en línea con retiro, entrega o gestión posterior.
+- Administrar inventario de forma centralizada.
+- Registrar ventas y movimientos relevantes.
+- Gestionar proveedores.
+- Controlar usuarios y roles.
+- Generar reportes administrativos.
+- Mejorar la presencia digital del negocio.
+- Reducir errores derivados del manejo manual de información.
+- Facilitar futuras ampliaciones del sistema.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 🧩 Problema que resuelve
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Muchos negocios pequeños y medianos operan con procesos manuales o poco integrados, lo que puede provocar:
 
-## Security Vulnerabilities
+- Inventario desactualizado.
+- Dificultad para consultar productos disponibles.
+- Pérdida de tiempo respondiendo consultas repetitivas.
+- Errores en pedidos o cantidades.
+- Registro manual de ventas.
+- Falta de reportes confiables.
+- Dependencia excesiva de una sola persona para administrar información.
+- Baja presencia digital frente a competidores.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Esta plataforma busca resolver esos problemas mediante una solución web centralizada, accesible y escalable.
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 🔄 Adaptabilidad del sistema
 
-## Tests locales (MySQL en Docker)
+El sistema fue diseñado para ser adaptable a distintos tipos de negocios que necesiten publicar productos, gestionar inventario y recibir pedidos.
 
-Los tests Feature usan MySQL real (mismas migraciones que producción). Pasos:
+Puede adaptarse a sectores como:
 
-1. Levanta los contenedores:
+- Tiendas de repuestos.
+- Ferreterías.
+- Tiendas deportivas.
+- Tiendas de bicicletas.
+- Comercios de accesorios.
+- Tiendas de tecnología.
+- Negocios de ropa o calzado.
+- Librerías.
+- Tiendas de productos agrícolas.
+- Catálogos empresariales internos.
+- Negocios con pedidos para retiro en local.
 
-   ```bash
-   docker compose up -d db_ciclo
-   ```
+La estructura modular permite reutilizar o modificar componentes según las necesidades de cada organización.
 
-2. Crea la base `laravel_test` (una sola vez):
+Ejemplos de adaptación:
 
-   ```bash
-   docker exec mysql_db_ciclo mysql -uroot -proot \
-       -e "CREATE DATABASE IF NOT EXISTS laravel_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-           GRANT ALL PRIVILEGES ON laravel_test.* TO 'ciclo_finca_4'@'%';
-           FLUSH PRIVILEGES;"
-   ```
+- Cambiar el tipo de producto administrado.
+- Agregar nuevas categorías o atributos.
+- Modificar los estados de pedido.
+- Cambiar el flujo de entrega o retiro.
+- Agregar métodos de pago.
+- Integrar servicios externos.
+- Adaptar el panel administrativo a distintos roles.
+- Reutilizar el sistema como base para otros catálogos comerciales.
 
-3. Copia `.env.testing.example` a `.env.testing` y deja `DB_HOST=127.0.0.1` y `DB_PORT=3307` (puerto que expone `docker-compose.yml`).
+---
 
-4. Ejecuta la suite con:
+## ✨ Características principales
 
-   ```bash
-   composer test
-   # o, equivalentemente
-   ./scripts/test --filter=CF4ClientCartTest
-   ```
+### Para clientes
 
-### Habilitar `pdo_mysql` / `mysqli` sin tocar `/etc/php/php.ini`
+- Visualización de catálogo público.
+- Búsqueda y filtrado de productos.
+- Vista detallada de productos.
+- Carrito de compras o lista de pedido.
+- Confirmación de pedidos.
+- Registro e inicio de sesión.
+- Consulta de historial de pedidos.
+- Gestión de productos favoritos.
+- Interfaz adaptable a móvil, tablet y escritorio.
+- Formulario de contacto o comunicación con el negocio.
 
-En distribuciones tipo Arch / CachyOS las extensiones `pdo_mysql` y `mysqli` vienen instaladas pero **deshabilitadas** en `/etc/php/php.ini`. Para evitar pedir privilegios de root:
+### Para administradores
 
-- Este repo trae `scripts/php-ini.d/99-mysql.ini` que activa ambas extensiones.
-- `composer test` y `./scripts/test` exportan `PHP_INI_SCAN_DIR=:scripts/php-ini.d`, de modo que PHP carga ese `.ini` adicional sin perder los del sistema.
-- Si prefieres habilitarlas globalmente, descomenta `extension=pdo_mysql` y `extension=mysqli` en `/etc/php/php.ini` (requiere sudo) y ya no necesitas `PHP_INI_SCAN_DIR`.
+- Panel administrativo protegido.
+- Gestión de productos.
+- Gestión de categorías y subcategorías.
+- Control de inventario.
+- Gestión de pedidos.
+- Actualización de estados.
+- Gestión de proveedores.
+- Registro y consulta de ventas.
+- Dashboard con indicadores principales.
+- Visualización y generación de reportes.
+- Gestión de usuarios y roles.
+- Control de acciones relevantes del sistema.
 
-> **Comprobación rápida**: `PHP_INI_SCAN_DIR=:scripts/php-ini.d php -m | grep -E 'pdo_mysql|mysqli'` debe imprimir ambos.
+---
 
-## Dependencias y assets en Docker (onboarding)
+## 🧱 Módulos del sistema
 
-Tras clonar y configurar `.env`, levantá el stack e instalá todo **dentro del contenedor** (Composer + `npm ci` + Vite build) y corregí permisos en el volumen montado:
+### 1. Catálogo público
 
-```bash
-./scripts/docker-install.sh
+Permite mostrar productos o servicios disponibles al cliente final de forma clara y organizada.
+
+Incluye:
+
+- Nombre del producto.
+- Descripción.
+- Precio.
+- Imagen.
+- Categoría.
+- Subcategoría.
+- Disponibilidad.
+- Estado del producto.
+- Etiquetas visuales como destacado, nuevo, disponible o agotado.
+
+---
+
+### 2. Búsqueda y filtros
+
+Permite al usuario encontrar productos de forma rápida mediante:
+
+- Búsqueda por nombre.
+- Filtro por categoría.
+- Filtro por subcategoría.
+- Filtro por precio.
+- Filtro por disponibilidad.
+- Ordenamiento de resultados.
+- Combinación de criterios de búsqueda.
+
+---
+
+### 3. Carrito y pedidos
+
+El cliente puede agregar productos a un carrito o lista de pedido, modificar cantidades y confirmar la solicitud.
+
+Características:
+
+- Agregar productos.
+- Modificar cantidades.
+- Eliminar productos.
+- Ver subtotal y total.
+- Confirmar pedido.
+- Generar número o registro de pedido.
+- Consultar estado del pedido.
+
+El sistema puede configurarse para distintos modelos de negocio:
+
+- Pedido con retiro en tienda.
+- Pedido con entrega local.
+- Pedido sujeto a confirmación del administrador.
+- Pedido sin pago en línea.
+- Pedido con integración futura a pasarela de pago.
+
+---
+
+### 4. Panel administrativo
+
+Área privada para el personal autorizado.
+
+Desde este módulo se administra la operación interna del sistema.
+
+Incluye funciones para:
+
+- Crear productos.
+- Editar productos.
+- Desactivar productos.
+- Revisar pedidos.
+- Cambiar estados de pedidos.
+- Consultar ventas.
+- Revisar inventario.
+- Gestionar proveedores.
+- Visualizar reportes.
+- Administrar usuarios.
+
+---
+
+### 5. Inventario
+
+Permite controlar existencias y reducir errores derivados de registros manuales.
+
+Funciones principales:
+
+- Registro de productos.
+- Control de cantidades disponibles.
+- Alertas de stock bajo.
+- Actualización de stock según pedidos o ventas.
+- Historial de movimientos.
+- Validación de disponibilidad antes de confirmar pedidos.
+- Posibilidad de carga o actualización masiva de datos.
+
+---
+
+### 6. Proveedores
+
+Módulo orientado a registrar y consultar información de proveedores.
+
+Permite almacenar:
+
+- Nombre del proveedor.
+- Información de contacto.
+- Productos asociados.
+- Pedidos a proveedores.
+- Historial de transacciones.
+- Estado del proveedor.
+- Observaciones administrativas.
+
+---
+
+### 7. Ventas y reportes
+
+Permite consultar información relevante para la administración del negocio.
+
+Incluye:
+
+- Registro detallado de ventas.
+- Filtros por fecha.
+- Filtros por estado.
+- Filtros por producto.
+- Resumen de ingresos.
+- Productos con mayor movimiento.
+- Reportes administrativos.
+- Exportación o preparación de información para análisis.
+
+---
+
+### 8. Usuarios y roles
+
+Permite controlar el acceso al sistema según el tipo de usuario.
+
+Roles base:
+
+- Cliente.
+- Administrador.
+- Superadministrador.
+
+Funciones:
+
+- Registro de clientes.
+- Inicio de sesión.
+- Gestión de perfil.
+- Gestión de usuarios administrativos.
+- Protección de rutas privadas.
+- Control de permisos según rol.
+
+---
+
+## 🛠️ Tecnologías utilizadas
+
+### Backend
+
+- PHP
+- Laravel
+- Eloquent ORM
+- Laravel Migrations
+- Laravel Seeders
+- Laravel Middleware
+- Laravel Policies
+- Laravel Scheduler
+- Laravel Queues
+
+### Frontend
+
+- React
+- TypeScript
+- Inertia.js
+- Tailwind CSS
+- Blade
+- Vite
+
+### Base de datos
+
+- MySQL
+- MariaDB
+
+### Testing y calidad
+
+- PHPUnit
+- Pest
+- Playwright
+- Laravel Pint
+- ESLint
+- TypeScript
+
+### Despliegue e infraestructura
+
+- Render
+- Vercel
+- GitHub
+- Variables de entorno
+- Cron jobs
+- Base de datos externa
+- Certificado SSL/TLS
+
+---
+
+## 🧱 Arquitectura general
+
+El sistema utiliza Laravel como backend principal, con vistas modernas mediante Inertia.js y React.
+
+```txt
+Cliente Web
+   │
+   ▼
+React + Inertia + TypeScript
+   │
+   ▼
+Laravel Routes
+   │
+   ▼
+Laravel Controllers
+   │
+   ▼
+Requests / Services / Policies
+   │
+   ▼
+Models Eloquent
+   │
+   ▼
+Base de Datos MySQL
 ```
 
-## Frontend (Vite / npm) en Docker
+La aplicación separa responsabilidades mediante:
 
-Solo recompilar assets (sin reinstalar):
+- Rutas para definir accesos.
+- Controladores para manejar solicitudes.
+- Modelos para representar entidades del negocio.
+- Migraciones para estructura de base de datos.
+- Requests para validación de formularios.
+- Policies y middleware para autorización.
+- Componentes React reutilizables para la interfaz.
+- Jobs, notifications y scheduler para tareas automáticas.
 
-```bash
-./scripts/docker-vite-build.sh
+---
+
+## 📋 Requisitos previos
+
+Antes de instalar el proyecto, se requiere tener instalado:
+
+- PHP 8.1 o superior.
+- Composer.
+- Node.js 18 o superior.
+- npm.
+- MySQL o MariaDB.
+- Git.
+
+Opcional:
+
+- Docker.
+- Laravel Herd.
+- Mailpit.
+- Playwright browsers.
+
+---
+
+
+
+## 🔐 Variables de entorno
+
+Ejemplo base de configuración:
+
+```env
+APP_NAME="Plataforma Web de Catálogo e Inventario"
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://127.0.0.1:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=platform_catalog_inventory
+DB_USERNAME=root
+DB_PASSWORD=
+
+SESSION_DRIVER=database
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+
+MAIL_MAILER=smtp
+MAIL_HOST=mailpit
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="no-reply@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+
+FILESYSTEM_DISK=public
 ```
 
- Equivale a `npm run build` dentro de `app_ciclo` y ajusta permisos de `node_modules` y `public/build`. Otros comandos npm:
+En producción se recomienda:
 
-```bash
-./scripts/docker-npm.sh ci
-./scripts/docker-npm.sh run dev
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://tu-dominio.com
+SESSION_SECURE_COOKIE=true
 ```
 
-## Producción (Render) — recordatorios
+---
 
-- **Laravel Scheduler (CF4-163):** ver [docs/CRON_RENDER_LARAVEL.md](docs/CRON_RENDER_LARAVEL.md) (loop en `docker-entrypoint.sh`, heartbeat en `app_settings`, limitación Render Free).
-- **`APP_URL`** y opcionalmente **`FRONTEND_URL`**: deben ser la URL pública HTTPS. Los **workers de cola** deben tener las mismas variables o los correos pueden generar enlaces a `localhost`.
-- **`SESSION_DRIVER=database`**: requiere tabla `sessions` migrada (`database/migrations/0002_sessions.php`). Alternativa temporal: `SESSION_DRIVER=cookie`.
-- **Google OAuth**: `GOOGLE_REDIRECT_URI` debe coincidir exactamente con la URI autorizada en Google Cloud Console (`{APP_URL}/auth/google/callback`).
-- **Plazo “por recoger”**: configurable en horas (`READY_TO_PICKUP_EXPIRATION_HOURS` y ajuste en panel de pedidos).
-- **Nota Jira**: correcciones de carrito / pedidos / notificaciones **no cierran CF4-72** (esa HU es sobre variantes de producto); ver `docs/CART_ORDER_FIXES_NOTE.md`.
+## 🧪 Comandos útiles
+
+### Ejecutar servidor local
+
+```bash
+php artisan serve
+```
+
+### Ejecutar Vite
+
+```bash
+npm run dev
+```
+
+### Compilar assets para producción
+
+```bash
+npm run build
+```
+
+### Ejecutar migraciones
+
+```bash
+php artisan migrate
+```
+
+### Ejecutar migraciones desde cero con datos iniciales
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+### Limpiar cachés
+
+```bash
+php artisan optimize:clear
+```
+
+### Crear enlace de storage
+
+```bash
+php artisan storage:link
+```
+
+### Ejecutar colas
+
+```bash
+php artisan queue:work
+```
+
+### Ejecutar scheduler manualmente
+
+```bash
+php artisan schedule:run
+```
+
+### Optimizar aplicación para producción
+
+```bash
+php artisan optimize
+```
+
+---
+
+## ✅ Pruebas
+
+### Pruebas backend
+
+```bash
+php artisan test
+```
+
+O con Pest:
+
+```bash
+./vendor/bin/pest
+```
+
+---
+
+### Pruebas frontend / E2E
+
+```bash
+npx playwright test
+```
+
+---
+
+### Formato de código PHP
+
+```bash
+./vendor/bin/pint
+```
+
+---
+
+### Revisión TypeScript
+
+```bash
+npm run typecheck
+```
+
+---
+
+### Build de producción
+
+```bash
+npm run build
+```
+
+---
+
+## 🚀 Despliegue
+
+El proyecto puede desplegarse en plataformas como **Render**, **Vercel** o servidores VPS compatibles con Laravel.
+
+---
+
+### Recomendaciones para producción
+
+Antes de desplegar:
+
+```bash
+composer install --no-dev --optimize-autoloader
+npm ci
+npm run build
+php artisan migrate --force
+php artisan optimize
+php artisan storage:link
+```
+
+---
+
+### Configuración recomendada
+
+En producción se recomienda configurar:
+
+- `APP_ENV=production`
+- `APP_DEBUG=false`
+- `APP_URL=https://dominio-produccion.com`
+- Base de datos externa.
+- Certificado SSL activo.
+- Variables de entorno protegidas.
+- Worker activo para colas.
+- Scheduler configurado.
+- Backups programados.
+- Logs monitoreados.
+
+---
+
+### Scheduler
+
+Para ejecutar tareas programadas de Laravel:
+
+```bash
+php artisan schedule:run
+```
+
+En producción se recomienda configurar un cron job:
+
+```bash
+* * * * * php /ruta-del-proyecto/artisan schedule:run >> /dev/null 2>&1
+```
+
+---
+
+### Queue Worker
+
+Para procesar jobs en segundo plano:
+
+```bash
+php artisan queue:work --tries=3
+```
+
+---
+
+## 📁 Estructura del proyecto
+
+```txt
+app/
+├── Http/
+│   ├── Controllers/
+│   ├── Middleware/
+│   └── Requests/
+├── Models/
+├── Policies/
+├── Services/
+├── Jobs/
+└── Notifications/
+
+database/
+├── migrations/
+├── seeders/
+└── factories/
+
+resources/
+├── js/
+│   ├── Components/
+│   ├── Layouts/
+│   ├── Pages/
+│   └── types/
+├── css/
+└── views/
+
+routes/
+├── web.php
+├── auth.php
+└── console.php
+
+public/
+storage/
+tests/
+```
+
+---
+
+## 🔒 Seguridad
+
+El sistema contempla medidas básicas y necesarias para proteger la información del negocio y de los usuarios.
+
+Medidas principales:
+
+- Autenticación de usuarios.
+- Protección de rutas administrativas.
+- Roles y permisos.
+- Validación de formularios.
+- Hash seguro de contraseñas.
+- Protección CSRF.
+- Control de acceso mediante middleware.
+- Uso de variables de entorno para secretos.
+- Certificado SSL/TLS en producción.
+- Registro de acciones críticas.
+- Separación entre entorno local y producción.
+
+No se deben subir al repositorio:
+
+- Archivos `.env`.
+- Claves privadas.
+- Credenciales de base de datos.
+- Tokens de servicios externos.
+- Backups con información real.
+- Archivos temporales sensibles.
+
+---
+
+## 🔄 Flujo principal del sistema
+
+```txt
+Cliente entra al catálogo
+        ↓
+Busca o filtra productos
+        ↓
+Agrega productos al carrito o solicitud
+        ↓
+Confirma pedido
+        ↓
+Administrador recibe el pedido
+        ↓
+Administrador revisa disponibilidad
+        ↓
+Administrador prepara o gestiona el pedido
+        ↓
+Cliente retira, recibe o coordina el producto
+        ↓
+Sistema actualiza estado e inventario
+```
+
+---
+
+## 🧾 Estados comunes de pedido
+
+```txt
+Recibido
+En revisión
+En preparación
+Listo para retirar
+Entregado
+Cancelado
+```
+
+Estos estados pueden modificarse según el modelo de negocio.
+
+---
+
+## 📊 Estado del proyecto
+
+Estado actual:
+
+```txt
+En desarrollo / versión académica funcional
+```
+
+Funciones implementadas o en proceso:
+
+- Catálogo público.
+- Autenticación.
+- Panel administrativo.
+- Gestión de productos.
+- Gestión de pedidos.
+- Carrito o solicitud de productos.
+- Inventario.
+- Proveedores.
+- Reportes.
+- Mejoras UX/UI.
+- Pruebas funcionales.
+- Despliegue.
+- Documentación técnica.
+- Manual de usuario.
+
+---
+
+## 📚 Documentación relacionada
+
+El proyecto puede complementarse con documentación académica y técnica como:
+
+- Documento de visión y alcance.
+- Documento de reglas de negocio.
+- Especificación de requisitos de software.
+- Documento de casos de uso.
+- Priorización de casos de uso.
+- Requerimientos funcionales.
+- Requerimientos no funcionales.
+- Requerimientos de seguridad.
+- Requerimientos de desempeño.
+- Requerimientos de usabilidad.
+- Requerimientos de robustez.
+- Requerimientos de documentación.
+- Manual de usuario.
+- Evidencias de pruebas.
+- Evidencias de despliegue.
+
+---
+
+## 🧾 Convenciones de desarrollo
+
+### Ramas sugeridas
+
+```txt
+main        → rama estable
+develop     → rama de integración
+feature/*   → nuevas funcionalidades
+fix/*       → correcciones
+hotfix/*    → correcciones urgentes
+```
+
+---
+
+### Ejemplo de commits
+
+```txt
+feat: agregar módulo de proveedores
+fix: corregir cálculo de stock en pedidos
+docs: actualizar manual de instalación
+refactor: limpiar controlador de productos
+test: agregar pruebas para pedidos
+style: mejorar diseño de catálogo
+```
+
+---
+
+## 🐞 Reporte de errores
+
+Para reportar errores se recomienda incluir:
+
+- Descripción del problema.
+- Pasos para reproducirlo.
+- Resultado esperado.
+- Resultado obtenido.
+- Captura de pantalla, si aplica.
+- Navegador o dispositivo utilizado.
+- Usuario o rol con el que ocurrió el error.
+
+---
+
+## 📌 Notas importantes
+
+- El sistema puede funcionar sin pagos en línea.
+- Los métodos de pago pueden adaptarse según el negocio.
+- El inventario debe mantenerse actualizado para evitar errores de disponibilidad.
+- Las credenciales de producción deben manejarse únicamente mediante variables de entorno.
+- El sistema requiere conexión a internet para operar correctamente.
+- En producción debe mantenerse activo el worker de colas si se usan jobs.
+- En producción debe configurarse el scheduler si existen tareas automáticas.
+- Las imágenes y archivos públicos deben manejarse correctamente mediante storage.
+- Se recomienda mantener respaldos periódicos de la base de datos.
+- La solución puede extenderse para nuevos módulos o sectores comerciales.
+
+---
+
+
+
+## 🛒 Plataforma adaptable
+
+Una solución web general para mejorar la presencia digital, la gestión interna y la atención al cliente de negocios comerciales.
