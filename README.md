@@ -17,7 +17,6 @@ El proyecto está diseñado como una solución adaptable para pequeñas y median
 - [Tecnologías utilizadas](#-tecnologías-utilizadas)
 - [Arquitectura general](#-arquitectura-general)
 - [Requisitos previos](#-requisitos-previos)
-- [Instalación local](#-instalación-local)
 - [Variables de entorno](#-variables-de-entorno)
 - [Comandos útiles](#-comandos-útiles)
 - [Pruebas](#-pruebas)
@@ -27,7 +26,6 @@ El proyecto está diseñado como una solución adaptable para pequeñas y median
 - [Flujo principal del sistema](#-flujo-principal-del-sistema)
 - [Estado del proyecto](#-estado-del-proyecto)
 - [Documentación relacionada](#-documentación-relacionada)
-- [Licencia](#-licencia)
 
 ---
 
