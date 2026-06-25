@@ -3,6 +3,7 @@ import './bootstrap';
 import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import type { ComponentType } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
 import '../css/client/toasts.css';
@@ -29,6 +30,7 @@ createInertiaApp({
       <ToastProvider>
         <ConfirmDialogProvider>
           <App {...props} />
+          <Analytics />
           <SpeedInsights />
         </ConfirmDialogProvider>
       </ToastProvider>,
