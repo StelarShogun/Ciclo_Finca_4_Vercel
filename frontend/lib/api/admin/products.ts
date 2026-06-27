@@ -161,3 +161,33 @@ export async function forceDeleteProduct(id: number | string) {
   const { data } = await api.delete(`/api/v1/admin/products/${id}/force`);
   return data;
 }
+
+// --- Galería ---
+
+export type GalleryItem = { id: number; url: string };
+export type ProductGallery = { main: GalleryItem | null; gallery: GalleryItem[] };
+
+export async function getProductGallery(id: number | string): Promise<ProductGallery> {
+  const { data } = await api.get(`/api/v1/admin/products/${id}/gallery`);
+  return data.data as ProductGallery;
+}
+
+export async function uploadGalleryImage(
+  id: number | string,
+  file: File,
+): Promise<ProductGallery> {
+  const form = new FormData();
+  form.append("image", file);
+  const { data } = await api.post(`/api/v1/admin/products/${id}/gallery`, form);
+  return data.data as ProductGallery;
+}
+
+export async function promoteGalleryImage(id: number | string, mediaId: number) {
+  const { data } = await api.post(`/api/v1/admin/products/${id}/gallery/${mediaId}/promote`);
+  return data.data as ProductGallery;
+}
+
+export async function deleteGalleryImage(id: number | string, mediaId: number) {
+  const { data } = await api.delete(`/api/v1/admin/products/${id}/gallery/${mediaId}`);
+  return data.data as ProductGallery;
+}

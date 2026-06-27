@@ -113,6 +113,26 @@ class ProductsApiTest extends TestCase
         $this->getJson("/api/v1/admin/products/{$id}")->assertStatus(404);
     }
 
+    public function test_gallery_index_returns_structure(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        Category::create(['name' => 'Cat Gallery']);
+        Supplier::create(['name' => 'Sup Gallery']);
+        $product = Product::factory()->create();
+
+        // Subida/promover/eliminar se verifican con curl (escriben al filesystem).
+        $this->getJson("/api/v1/admin/products/{$product->product_id}/gallery")
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['main', 'gallery']])
+            ->assertJsonPath('data.gallery', []);
+    }
+
+    public function test_gallery_requires_auth(): void
+    {
+        $this->getJson('/api/v1/admin/products/1/gallery')->assertStatus(401);
+    }
+
     public function test_list_filters_by_search_and_status(): void
     {
         $this->actingAs($this->admin(), 'admin');

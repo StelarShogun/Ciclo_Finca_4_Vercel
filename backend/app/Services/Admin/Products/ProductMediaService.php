@@ -75,6 +75,29 @@ final class ProductMediaService
         }
     }
 
+    /**
+     * Agrega UNA imagen a la galería (subida individual), reusando el pipeline
+     * de move + sanitización. Usa el siguiente índice libre {slug}_{i} para no
+     * colisionar ni romper el glob de limpieza de syncFromUpdateRequest.
+     */
+    public function addGalleryImage(Product $product, UploadedFile $file): void
+    {
+        $slug = $this->productImageSlug($product);
+        $folderPath = $this->productImageFolderPath($product);
+
+        $existing = glob($folderPath.'/'.$slug.'_[0-9]*') ?: [];
+        $i = count($existing) + 2;
+        $ext = $file->extension() ?: $file->getClientOriginalExtension();
+        $filename = $slug.'_'.$i.'.'.$ext;
+        while (is_file($folderPath.'/'.$filename)) {
+            $i++;
+            $filename = $slug.'_'.$i.'.'.$ext;
+        }
+
+        $this->moveUploadedProductImage($file, $folderPath, $filename, 'images');
+        $this->addSanitizedMedia($product, $folderPath.'/'.$filename, 'gallery');
+    }
+
     public function syncFromUpdateRequest(Product $product, UpdateProductRequest $request): void
     {
         $slug = $this->productImageSlug($product);

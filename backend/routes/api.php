@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\ProductController;
+use App\Http\Controllers\Api\V1\Admin\ProductGalleryController;
 use App\Http\Controllers\Api\V1\Auth\AdminAuthController;
 use App\Http\Controllers\Api\V1\Auth\ClientAuthController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -45,6 +46,12 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/products/{product}/deactivate', [ProductController::class, 'deactivate'])->whereNumber('product');
         Route::post('/products/{product}/featured', [ProductController::class, 'toggleFeatured'])->whereNumber('product');
         Route::delete('/products/{product}/force', [ProductController::class, 'forceDelete'])->whereNumber('product');
+
+        // Galería de imágenes
+        Route::get('/products/{product}/gallery', [ProductGalleryController::class, 'index'])->whereNumber('product');
+        Route::post('/products/{product}/gallery', [ProductGalleryController::class, 'store'])->whereNumber('product');
+        Route::post('/products/{product}/gallery/{media}/promote', [ProductGalleryController::class, 'promote'])->whereNumber('product')->whereNumber('media');
+        Route::delete('/products/{product}/gallery/{media}', [ProductGalleryController::class, 'destroy'])->whereNumber('product')->whereNumber('media');
     });
 
     // --- Módulos cliente (se llenan en Bloque 5) ---

@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { ImageOff, Pencil, Star } from "lucide-react";
+import { Pencil, Star } from "lucide-react";
 
-import { getProductDetail, mediaUrl } from "@/lib/api/admin/products";
+import { getProductDetail } from "@/lib/api/admin/products";
 import { PageHeader } from "@/components/admin/page-header";
+import { ProductGallery } from "@/components/admin/products/product-gallery";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,7 +59,6 @@ export default function ProductDetailPage() {
     );
   }
 
-  const mainImg = data.uses_placeholder_image ? null : mediaUrl(data.media_main);
   const low = data.stock_current <= data.stock_minimum;
 
   return (
@@ -78,33 +78,7 @@ export default function ProductDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         {/* Imagen + galería */}
-        <Card>
-          <CardContent className="flex flex-col gap-3 pt-6">
-            <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg border bg-muted">
-              {mainImg ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={mainImg} alt={data.name} className="h-full w-full object-cover" />
-              ) : (
-                <ImageOff className="h-10 w-10 text-muted-foreground" />
-              )}
-            </div>
-            {data.media_gallery.length > 0 && (
-              <div className="grid grid-cols-4 gap-2">
-                {data.media_gallery.map((g, i) => {
-                  const url = mediaUrl(g);
-                  return (
-                    <div key={i} className="aspect-square overflow-hidden rounded border bg-muted">
-                      {url && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={url} alt="" className="h-full w-full object-cover" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <ProductGallery productId={id} />
 
         {/* Información */}
         <Card>
