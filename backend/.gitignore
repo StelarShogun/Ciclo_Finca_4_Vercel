@@ -1,0 +1,136 @@
+# =========================
+# VARIABLES DE ENTORNO
+# =========================
+.env
+.env.*
+!.env.example
+!.env.testing.example
+!.env.unlighthouse.example
+!.env.dusk.example
+
+# Unlighthouse — reports, browser profiles, local env (https://unlighthouse.dev/)
+.env.unlighthouse.local
+/lighthouse/
+/lighthouse-admin/
+/lighthouse-client/
+/.puppeteer-data/
+/.puppeteer-browsers/
+/chrome/
+*-chrome-linux64.zip
+
+# =========================
+# DEPENDENCIAS
+# =========================
+/vendor/
+/node_modules/
+/tools/hyperframes/node_modules/
+/tools/hyperframes/output/
+
+# =========================
+# BUILD / ASSETS (VITE)
+# =========================
+/public/build
+/public/hot
+.vite-cache/
+
+# =========================
+# STORAGE (ARCHIVOS GENERADOS)
+# =========================
+/storage/*.key
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/app/email-previews/
+
+# =========================
+# CACHE Y TESTS
+# =========================
+.phpunit.result.cache
+.phpunit.cache
+
+# PHPStan
+.phpstan-cache/
+
+# Config cache: rutas absolutas; si se genera en Docker rompe artisan/composer en el host
+/bootstrap/cache/config.php
+
+# =========================
+# IDE / EDITORES
+# =========================
+.idea/
+.vscode/
+*.code-workspace
+
+# =========================
+# SISTEMA OPERATIVO
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# ARCHIVOS TEMPORALES
+# =========================
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+
+# =========================
+# SYMLINK DE LARAVEL
+# =========================
+/public/storage
+
+# =========================
+# ARCHIVOS GENERADOS OPCIONALES
+# =========================
+# (Descomenta si no quieres subirlos)
+# public/build/manifest.json
+
+# =========================
+# HERRAMIENTAS LARAVEL IDE
+# =========================
+/vendor/_laravel_ide/
+
+# =========================
+# BASE DE DATOS LOCAL (OPCIONAL)
+# =========================
+/database/*.sqlite
+/database/*.sqlite-journal
+/storage
+storage/framework/cache/data/44/d1/44d142505dd1a3b497197e2f459d2aec779e9ed6
+storage/framework/cache/data/c2/4f/c24f92750673b2169c8cb7bfbc999cfa8457dc7c
+vendor/_laravel_ide/_model_helpers.php
+/vendor
+/vendor/composer
+/storage
+vendor/composer/autoload_static.php
+vendor/composer/autoload_real.php
+vendor/composer/autoload_classmap.php
+
+# =========================
+# CURSOR IDE
+# =========================
+# Preferencias locales del IDE (plugins, etc.); no versionar
+.cursor/settings.json
+.cursor/skills/
+.cursor/hooks/state/
+.cursor/plans/cf4-112_pdf_service_7ccce6a9.plan.md
+
+# Agent skills from `npx skills add` (e.g. heygen-com/hyperframes bundle); third-party, per-machine
+.agents/
+/skills-lock.json
+.vercel
+
+# =========================
+# PLAYWRIGHT E2E
+# =========================
+tests/e2e/.auth/
+test-results/
+playwright-report/
+playwright/.cache/
+.env*
+
+# Cookie jar de curl (dev)
+cookies.txt
