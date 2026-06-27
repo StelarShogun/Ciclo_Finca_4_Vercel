@@ -1,1 +1,0 @@
-function t(n){return n instanceof HTMLInputElement?n:null}function e(n){return n instanceof HTMLSelectElement?n:null}function a(n){return n.target instanceof Element?n.target:null}export{t as a,e as b,a as e};

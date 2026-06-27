@@ -1,1 +1,0 @@
-import{g as t}from"./index-xgxdCp6f.js";function a(i){const e=t.utils.selector(i)("#package");e.length&&(t.to(e,{y:-8,duration:1.5,ease:"sine.inOut",yoyo:!0,repeat:-1}),window.addEventListener("pagehide",()=>{t.killTweensOf(e)}))}export{a as init};

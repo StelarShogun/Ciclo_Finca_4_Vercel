@@ -14,4 +14,9 @@ Thumbs.db
 
 # .env raíz (symlink a backend/.env para docker compose)
 /.env
-backend/storage/framework/cache/data/43/a1/43a10939e7baa4c40ecf1b84b4930ee2fa2b9553
+
+# Seguridad extra contra el bloat que metió GitHub Desktop en Dev:
+# build/deps/caché del backend (las reglas reales viven en backend/.gitignore).
+/backend/node_modules
+/backend/public/build
+/backend/storage/framework/cache/data
