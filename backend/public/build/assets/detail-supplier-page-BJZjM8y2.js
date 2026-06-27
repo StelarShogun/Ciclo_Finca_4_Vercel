@@ -1,0 +1,1 @@
+import{a as i,b as t}from"./swal-BtavKoil.js";import"./preload-helper-I4rgV-VL.js";async function c(a){await t({icon:"success",title:"Recepción registrada",text:a,timer:3e3})}async function n(a){await i(a,"Pedido cerrado con faltantes")}Object.assign(window,{showReceptionSuccess:c,showPartialCloseWarning:n});

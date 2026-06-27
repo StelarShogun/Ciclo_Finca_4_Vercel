@@ -1,0 +1,1 @@
+import{j as e}from"./app-BExquN04.js";function o({className:s="",invalid:r=!1,...t}){return e.jsx("select",{className:`form-control ${r?"is-invalid":""} ${s}`.trim(),"aria-invalid":r||void 0,...t})}export{o as S};
