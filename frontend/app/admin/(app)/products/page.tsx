@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Plus, Star } from "lucide-react";
+import { Pencil, Plus, Search, Star } from "lucide-react";
 
 import { getProducts, type AdminProduct } from "@/lib/api/admin/products";
 import { PageHeader } from "@/components/admin/page-header";
@@ -13,7 +13,17 @@ import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const ALL = "all";
 
 const crc = new Intl.NumberFormat("es-CR", {
   style: "currency",
@@ -104,10 +114,31 @@ const columns: ColumnDef<AdminProduct>[] = [
 
 export default function ProductsPage() {
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [status, setStatus] = useState(ALL);
+  const [stockStatus, setStockStatus] = useState(ALL);
+
+  // Debounce de la búsqueda para no pegar a la API en cada tecla.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  // Cualquier cambio de filtro vuelve a la página 1.
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, status, stockStatus]);
+
+  const filters = {
+    search: debouncedSearch,
+    status: status === ALL ? "" : status,
+    stock_status: stockStatus === ALL ? "" : stockStatus,
+  };
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin-products", page],
-    queryFn: () => getProducts({ page }),
+    queryKey: ["admin-products", page, filters],
+    queryFn: () => getProducts({ page, ...filters }),
     placeholderData: keepPreviousData,
   });
 
@@ -125,6 +156,37 @@ export default function ProductsPage() {
           </Button>
         }
       />
+
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="relative w-full max-w-xs">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nombre o descripción…"
+            className="pl-8"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className="w-44" size="sm"><SelectValue placeholder="Estado" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Todos los estados</SelectItem>
+            <SelectItem value="active">Activo</SelectItem>
+            <SelectItem value="inactive">Inactivo</SelectItem>
+            <SelectItem value="out_of_stock">Sin stock</SelectItem>
+            <SelectItem value="discontinued">Descontinuado</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={stockStatus} onValueChange={setStockStatus}>
+          <SelectTrigger className="w-44" size="sm"><SelectValue placeholder="Stock" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Todo el stock</SelectItem>
+            <SelectItem value="in-stock">En stock</SelectItem>
+            <SelectItem value="low">Stock bajo</SelectItem>
+            <SelectItem value="out">Sin stock</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {isLoading ? (
         <Skeleton className="h-96" />

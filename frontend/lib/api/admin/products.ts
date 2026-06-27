@@ -23,11 +23,22 @@ export type AdminProduct = {
   image: string | null;
 };
 
-export async function getProducts(params: {
+export type ProductListParams = {
   page?: number;
   per_page?: number;
-}): Promise<Paginated<AdminProduct>> {
-  const { data } = await api.get("/api/v1/admin/products", { params });
+  search?: string;
+  status?: string;
+  stock_status?: string;
+};
+
+export async function getProducts(
+  params: ProductListParams,
+): Promise<Paginated<AdminProduct>> {
+  // Quita filtros vacíos para no mandar query params en blanco.
+  const clean = Object.fromEntries(
+    Object.entries(params).filter(([, v]) => v !== "" && v != null),
+  );
+  const { data } = await api.get("/api/v1/admin/products", { params: clean });
   return data as Paginated<AdminProduct>;
 }
 

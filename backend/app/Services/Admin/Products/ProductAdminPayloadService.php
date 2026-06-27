@@ -10,12 +10,16 @@ use Illuminate\Http\Request;
 
 final class ProductAdminPayloadService
 {
+    public function __construct(private AdminInventoryProductQuery $inventoryQuery) {}
+
     public function paginatedIndex(Request $request): LengthAwarePaginator
     {
-        return Product::query()
+        // Reusa el query de inventario admin: search, categoría, stock_status,
+        // status, sort. Mismos filtros que la lista de inventario web.
+        return $this->inventoryQuery->filteredQuery($request)
             ->with(['category', 'supplier'])
-            ->orderByDesc('product_id')
-            ->paginate(AdminPerPage::resolve($request->get('per_page', 10)));
+            ->paginate(AdminPerPage::resolve($request->get('per_page', 10)))
+            ->withQueryString();
     }
 
     public function detail(int|string $id): Product

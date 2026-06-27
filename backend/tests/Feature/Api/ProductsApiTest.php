@@ -4,6 +4,9 @@ namespace Tests\Feature\Api;
 
 use App\Actions\Admin\Products\ListProducts;
 use App\Models\AdminUser;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\Supplier;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
@@ -63,5 +66,24 @@ class ProductsApiTest extends TestCase
         $paginator = app(ListProducts::class)->handle(Request::create('/'));
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $paginator);
+    }
+
+    public function test_list_filters_by_search_and_status(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        Category::create(['name' => 'Cat Test']);
+        Supplier::create(['name' => 'Sup Test']);
+        Product::factory()->create(['name' => 'Bicicleta Roja Test', 'status' => 'active']);
+        Product::factory()->create(['name' => 'Casco Azul Test', 'status' => 'inactive']);
+
+        $this->getJson('/api/v1/admin/products?search=Bicicleta')
+            ->assertOk()->assertJsonPath('total', 1);
+
+        $this->getJson('/api/v1/admin/products?status=inactive')
+            ->assertOk()->assertJsonPath('total', 1);
+
+        $this->getJson('/api/v1/admin/products?search=NoExisteEsteProducto')
+            ->assertOk()->assertJsonPath('total', 0);
     }
 }
