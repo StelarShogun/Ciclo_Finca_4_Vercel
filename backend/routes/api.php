@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\ProductController;
 use App\Http\Controllers\Api\V1\Admin\ProductGalleryController;
+use App\Http\Controllers\Api\V1\Admin\ProductVariantController;
 use App\Http\Controllers\Api\V1\Auth\AdminAuthController;
 use App\Http\Controllers\Api\V1\Auth\ClientAuthController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -52,6 +53,11 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/products/{product}/gallery', [ProductGalleryController::class, 'store'])->whereNumber('product');
         Route::post('/products/{product}/gallery/{media}/promote', [ProductGalleryController::class, 'promote'])->whereNumber('product')->whereNumber('media');
         Route::delete('/products/{product}/gallery/{media}', [ProductGalleryController::class, 'destroy'])->whereNumber('product')->whereNumber('media');
+
+        // Variantes (productos existentes enlazados)
+        Route::post('/products/{product}/variants', [ProductVariantController::class, 'store'])->whereNumber('product');
+        Route::put('/products/{product}/variants/{variant}', [ProductVariantController::class, 'update'])->whereNumber('product')->whereNumber('variant');
+        Route::delete('/products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])->whereNumber('product')->whereNumber('variant');
     });
 
     // --- Módulos cliente (se llenan en Bloque 5) ---

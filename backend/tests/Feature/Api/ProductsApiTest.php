@@ -133,6 +133,25 @@ class ProductsApiTest extends TestCase
         $this->getJson('/api/v1/admin/products/1/gallery')->assertStatus(401);
     }
 
+    public function test_variant_store_requires_auth(): void
+    {
+        $this->postJson('/api/v1/admin/products/1/variants', [])->assertStatus(401);
+    }
+
+    public function test_variant_store_validates_variant_product_id(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        Category::create(['name' => 'Cat Var']);
+        Supplier::create(['name' => 'Sup Var']);
+        $product = Product::factory()->create();
+
+        // El happy-path (enlazar otro producto) se verifica con curl.
+        $this->postJson("/api/v1/admin/products/{$product->product_id}/variants", [])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('variant_product_id');
+    }
+
     public function test_list_filters_by_search_and_status(): void
     {
         $this->actingAs($this->admin(), 'admin');

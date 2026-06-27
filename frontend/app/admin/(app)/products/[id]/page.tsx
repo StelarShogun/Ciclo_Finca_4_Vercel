@@ -8,18 +8,11 @@ import { Pencil, Star } from "lucide-react";
 import { getProductDetail } from "@/lib/api/admin/products";
 import { PageHeader } from "@/components/admin/page-header";
 import { ProductGallery } from "@/components/admin/products/product-gallery";
+import { ProductVariants } from "@/components/admin/products/product-variants";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 const crc = new Intl.NumberFormat("es-CR", {
   style: "currency",
@@ -116,37 +109,7 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Variantes */}
-      {data.variants.length > 0 && (
-        <Card className="mt-6">
-          <CardHeader><CardTitle>Variantes ({data.variants.length})</CardTitle></CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead className="text-right">Precio</TableHead>
-                  <TableHead className="text-right">Stock</TableHead>
-                  <TableHead>Estado</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.variants.map((v) => (
-                  <TableRow key={v.product_id}>
-                    <TableCell>{v.name}</TableCell>
-                    <TableCell>{v.sku}</TableCell>
-                    <TableCell className="text-right">{crc.format(Number(v.sale_price))}</TableCell>
-                    <TableCell className="text-right">{v.stock_current}</TableCell>
-                    <TableCell>
-                      <StatusBadge tone={statusTone(v.status)}>{v.status}</StatusBadge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+      <ProductVariants productId={Number(id)} variants={data.variants} />
 
       {/* Clasificaciones */}
       {data.classification_values && data.classification_values.length > 0 && (

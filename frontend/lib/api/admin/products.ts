@@ -191,3 +191,17 @@ export async function deleteGalleryImage(id: number | string, mediaId: number) {
   const { data } = await api.delete(`/api/v1/admin/products/${id}/gallery/${mediaId}`);
   return data.data as ProductGallery;
 }
+
+// --- Variantes (productos existentes enlazados) ---
+
+export async function addVariant(productId: number | string, variantProductId: number) {
+  const { data } = await api.post(`/api/v1/admin/products/${productId}/variants`, {
+    variant_product_id: variantProductId,
+  });
+  return data;
+}
+
+export async function removeVariant(productId: number | string, variantId: number) {
+  const { data } = await api.delete(`/api/v1/admin/products/${productId}/variants/${variantId}`);
+  return data;
+}
