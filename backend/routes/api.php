@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Auth\AdminAuthController;
 use App\Http\Controllers\Api\V1\Auth\ClientAuthController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -32,7 +33,7 @@ Route::prefix('v1')->group(function (): void {
 
     // --- Módulos admin (se llenan en Bloque 4) ---
     Route::prefix('admin')->middleware('auth:admin')->group(function (): void {
-        //
+        Route::get('/dashboard', [DashboardController::class, 'index']);
     });
 
     // --- Módulos cliente (se llenan en Bloque 5) ---
