@@ -41,6 +41,10 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/products', [ProductController::class, 'store']);
         Route::get('/products/{product}', [ProductController::class, 'show'])->whereNumber('product');
         Route::put('/products/{product}', [ProductController::class, 'update'])->whereNumber('product');
+        Route::post('/products/{product}/activate', [ProductController::class, 'activate'])->whereNumber('product');
+        Route::post('/products/{product}/deactivate', [ProductController::class, 'deactivate'])->whereNumber('product');
+        Route::post('/products/{product}/featured', [ProductController::class, 'toggleFeatured'])->whereNumber('product');
+        Route::delete('/products/{product}/force', [ProductController::class, 'forceDelete'])->whereNumber('product');
     });
 
     // --- Módulos cliente (se llenan en Bloque 5) ---

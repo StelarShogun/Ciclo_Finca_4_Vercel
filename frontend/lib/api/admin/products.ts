@@ -139,3 +139,25 @@ export async function updateProduct(id: number | string, payload: ProductFormVal
   const { data } = await api.put(`/api/v1/admin/products/${id}`, payload);
   return data;
 }
+
+// --- Acciones rápidas ---
+
+export async function activateProduct(id: number | string) {
+  const { data } = await api.post(`/api/v1/admin/products/${id}/activate`);
+  return data;
+}
+
+export async function deactivateProduct(id: number | string) {
+  const { data } = await api.post(`/api/v1/admin/products/${id}/deactivate`);
+  return data;
+}
+
+export async function toggleProductFeatured(id: number | string) {
+  const { data } = await api.post(`/api/v1/admin/products/${id}/featured`);
+  return data;
+}
+
+export async function forceDeleteProduct(id: number | string) {
+  const { data } = await api.delete(`/api/v1/admin/products/${id}/force`);
+  return data;
+}

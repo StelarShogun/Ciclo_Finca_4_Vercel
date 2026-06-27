@@ -91,6 +91,28 @@ class ProductsApiTest extends TestCase
         $this->getJson('/api/v1/admin/products/999999')->assertStatus(404);
     }
 
+    public function test_quick_actions_change_state(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        Category::create(['name' => 'Cat QA']);
+        Supplier::create(['name' => 'Sup QA']);
+        $product = Product::factory()->create(['status' => 'active', 'is_featured' => false]);
+        $id = $product->product_id;
+
+        $this->postJson("/api/v1/admin/products/{$id}/deactivate")->assertOk();
+        $this->assertNotSame('active', $product->fresh()->status);
+
+        $this->postJson("/api/v1/admin/products/{$id}/activate")->assertOk();
+        $this->assertSame('active', $product->fresh()->status);
+
+        $this->postJson("/api/v1/admin/products/{$id}/featured")->assertOk();
+        $this->assertTrue((bool) $product->fresh()->is_featured);
+
+        $this->deleteJson("/api/v1/admin/products/{$id}/force")->assertOk();
+        $this->getJson("/api/v1/admin/products/{$id}")->assertStatus(404);
+    }
+
     public function test_list_filters_by_search_and_status(): void
     {
         $this->actingAs($this->admin(), 'admin');

@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
+use App\Actions\Admin\Products\ActivateProduct;
 use App\Actions\Admin\Products\CreateProduct;
+use App\Actions\Admin\Products\DeactivateProduct;
+use App\Actions\Admin\Products\ForceDeleteProduct;
 use App\Actions\Admin\Products\ListProducts;
+use App\Actions\Admin\Products\ToggleProductFeatured;
 use App\Actions\Admin\Products\UpdateProduct;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Products\StoreProductRequest;
@@ -97,6 +101,55 @@ final class ProductController extends Controller
             Log::error('api_product_update_failed', SensitiveDataMasker::exceptionContext($e, ['product_id' => $id]));
 
             return response()->json(['message' => 'No se pudo actualizar el producto. Inténtalo de nuevo.'], 500);
+        }
+    }
+
+    public function activate(int $id, ActivateProduct $action): JsonResponse
+    {
+        return $this->runMutation($id, 'update', fn () => $action->handle($id), 'No se pudo activar el producto.');
+    }
+
+    /** "Soft delete" = desactivar (deja inactivo, no borra la fila). */
+    public function deactivate(int $id, DeactivateProduct $action): JsonResponse
+    {
+        return $this->runMutation($id, 'delete', fn () => $action->handle($id), 'No se pudo desactivar el producto.');
+    }
+
+    public function toggleFeatured(int $id, ToggleProductFeatured $action): JsonResponse
+    {
+        return $this->runMutation($id, 'update', fn () => $action->handle($id), 'No se pudo actualizar el producto.');
+    }
+
+    /** Eliminación permanente. */
+    public function forceDelete(int $id, ForceDeleteProduct $action): JsonResponse
+    {
+        return $this->runMutation($id, 'forceDelete', fn () => $action->handle($id), 'No se pudo eliminar el producto.');
+    }
+
+    /**
+     * Orquesta una acción rápida: autoriza sobre el producto, ejecuta, invalida
+     * cachés y devuelve el payload de la Action. Maneja errores de forma segura.
+     *
+     * @param  callable():array<string,mixed>  $run
+     */
+    private function runMutation(int $id, string $ability, callable $run, string $failMessage): JsonResponse
+    {
+        $product = Product::query()->findOrFail($id);
+        Gate::forUser(Auth::guard('admin')->user())->authorize($ability, $product);
+
+        try {
+            $payload = $run();
+            ClientStorefrontCache::forgetAfterProductMutation();
+            AdminDashboardCache::forget();
+
+            return response()->json($payload);
+        } catch (\Throwable $e) {
+            Log::error('api_product_action_failed', SensitiveDataMasker::exceptionContext($e, [
+                'product_id' => $id,
+                'ability' => $ability,
+            ]));
+
+            return response()->json(['message' => $failMessage], 500);
         }
     }
 }
