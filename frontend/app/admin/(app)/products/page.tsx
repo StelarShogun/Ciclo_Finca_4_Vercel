@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Star } from "lucide-react";
+import { Pencil, Plus, Star } from "lucide-react";
 
 import { getProducts, type AdminProduct } from "@/lib/api/admin/products";
 import { PageHeader } from "@/components/admin/page-header";
 import { DataTable } from "@/components/admin/data-table";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -86,6 +88,18 @@ const columns: ColumnDef<AdminProduct>[] = [
         <span className="text-muted-foreground">—</span>
       ),
   },
+  {
+    id: "actions",
+    header: "",
+    cell: ({ row }) => (
+      <Button asChild variant="ghost" size="sm">
+        <Link href={`/admin/products/${row.original.product_id}/edit`}>
+          <Pencil className="h-4 w-4" />
+          Editar
+        </Link>
+      </Button>
+    ),
+  },
 ];
 
 export default function ProductsPage() {
@@ -101,7 +115,15 @@ export default function ProductsPage() {
     <>
       <PageHeader
         title="Productos"
-        description="Catálogo del inventario. Crear/editar y galería llegan en el próximo slice."
+        description="Catálogo del inventario."
+        actions={
+          <Button asChild>
+            <Link href="/admin/products/new">
+              <Plus className="h-4 w-4" />
+              Nuevo producto
+            </Link>
+          </Button>
+        }
       />
 
       {isLoading ? (

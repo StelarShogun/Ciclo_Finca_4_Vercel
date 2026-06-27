@@ -96,6 +96,28 @@ final readonly class ProductPayloadBuilder
     }
 
     /**
+     * Datos de referencia para los formularios de producto (crear/editar):
+     * categorías padre, subcategorías por padre, marcas y proveedores activos.
+     *
+     * @return array<string, mixed>
+     */
+    public function formOptions(): array
+    {
+        return [
+            'categories' => $this->categories(),
+            'subcategoriesByParent' => Category::subcategoriesGroupedByCanonicalParent(),
+            'brands' => $this->brands(),
+            'suppliers' => $this->suppliers(),
+            'statuses' => [
+                ['value' => 'active', 'label' => 'Activo'],
+                ['value' => 'inactive', 'label' => 'Inactivo'],
+                ['value' => 'out_of_stock', 'label' => 'Sin stock'],
+                ['value' => 'discontinued', 'label' => 'Descontinuado'],
+            ],
+        ];
+    }
+
+    /**
      * @return list<array{category_id: int, name: string}>
      */
     private function categories(): array

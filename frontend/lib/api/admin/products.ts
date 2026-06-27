@@ -30,3 +30,50 @@ export async function getProducts(params: {
   const { data } = await api.get("/api/v1/admin/products", { params });
   return data as Paginated<AdminProduct>;
 }
+
+// --- Crear / editar ---
+
+export type IdName = { category_id: number; name: string };
+export type ProductFormOptions = {
+  categories: IdName[];
+  subcategoriesByParent: Record<string, IdName[]>;
+  brands: { id: number; name: string }[];
+  suppliers: { supplier_id: number; name: string }[];
+  statuses: { value: string; label: string }[];
+};
+
+export type ProductFormValues = {
+  parent_category_id: number;
+  category_id: number;
+  brand_id: number;
+  supplier_id: number;
+  name: string;
+  description?: string | null;
+  purchase_price: number;
+  sale_price: number;
+  stock_current: number;
+  stock_minimum: number;
+  status: string;
+  is_featured: boolean;
+};
+
+export async function getProductFormOptions(): Promise<ProductFormOptions> {
+  const { data } = await api.get("/api/v1/admin/products/form-options");
+  return data.data as ProductFormOptions;
+}
+
+/** Detalle (ProductResource): incluye relaciones para precargar el form de edición. */
+export async function getProduct(id: number | string): Promise<Record<string, unknown>> {
+  const { data } = await api.get(`/api/v1/admin/products/${id}`);
+  return data.data as Record<string, unknown>;
+}
+
+export async function createProduct(payload: ProductFormValues) {
+  const { data } = await api.post("/api/v1/admin/products", payload);
+  return data;
+}
+
+export async function updateProduct(id: number | string, payload: ProductFormValues) {
+  const { data } = await api.put(`/api/v1/admin/products/${id}`, payload);
+  return data;
+}

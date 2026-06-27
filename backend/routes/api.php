@@ -35,7 +35,12 @@ Route::prefix('v1')->group(function (): void {
     // --- Módulos admin (se llenan en Bloque 4) ---
     Route::prefix('admin')->middleware('auth:admin')->group(function (): void {
         Route::get('/dashboard', [DashboardController::class, 'index']);
+
         Route::get('/products', [ProductController::class, 'index']);
+        Route::get('/products/form-options', [ProductController::class, 'formOptions']);
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::get('/products/{product}', [ProductController::class, 'show'])->whereNumber('product');
+        Route::put('/products/{product}', [ProductController::class, 'update'])->whereNumber('product');
     });
 
     // --- Módulos cliente (se llenan en Bloque 5) ---
