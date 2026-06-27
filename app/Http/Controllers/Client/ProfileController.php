@@ -10,6 +10,7 @@ use App\Http\Requests\Client\Profile\UpdateClientAvatarRequest;
 use App\Http\Requests\Client\Profile\UpdateClientPasswordRequest;
 use App\Http\Requests\Client\Profile\UpdateClientProfileRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,6 +19,7 @@ final class ProfileController extends Controller
     public function show(): Response
     {
         $client = Auth::guard('clients')->user();
+        Gate::forUser($client)->authorize('profile.view', $client);
 
         return Inertia::render('Client/Profile/Index', [
             'profile' => [
@@ -40,16 +42,25 @@ final class ProfileController extends Controller
 
     public function update(UpdateClientProfileRequest $request, UpdateClientProfile $action)
     {
+        $client = Auth::guard('clients')->user();
+        Gate::forUser($client)->authorize('profile.update', $client);
+
         return $action->handle($request);
     }
 
     public function updatePassword(UpdateClientPasswordRequest $request, UpdateClientPassword $action)
     {
+        $client = Auth::guard('clients')->user();
+        Gate::forUser($client)->authorize('profile.update', $client);
+
         return $action->handle($request);
     }
 
     public function updateAvatar(UpdateClientAvatarRequest $request, UpdateClientAvatar $action)
     {
+        $client = Auth::guard('clients')->user();
+        Gate::forUser($client)->authorize('profile.update', $client);
+
         return $action->handle($request);
     }
 }

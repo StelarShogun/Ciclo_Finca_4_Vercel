@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Admin\Clients;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Clients\BanClientRequest;
 use App\Models\Client;
-use App\Services\AuditLogger;
+use App\Services\Admin\Audit\AuditLogger;
 use App\Services\Client\Inertia\ListPaginationPayload;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use App\Support\AdminPerPage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -26,6 +30,8 @@ class ClientController extends Controller
 
     public function index(Request $request)
     {
+        Gate::forUser(Auth::guard('admin')->user())->authorize('viewAny', Client::class);
+
         $query = Client::query();
 
         if ($search = trim((string) $request->input('search', ''))) {
@@ -86,9 +92,11 @@ class ClientController extends Controller
         ]);
     }
 
-    public function ban(int $id)
+    public function ban(BanClientRequest $request, int $id)
     {
         $client = Client::findOrFail($id);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('ban', $client);
+
         $client->update(['active' => false]);
         $this->logAuditAction(
             'client_ban',
@@ -103,9 +111,11 @@ class ClientController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function unban(int $id)
+    public function unban(BanClientRequest $request, int $id)
     {
         $client = Client::findOrFail($id);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('unban', $client);
+
         $client->update(['active' => true]);
         $this->logAuditAction(
             'client_unban',
@@ -125,10 +135,9 @@ class ClientController extends Controller
         try {
             app(AuditLogger::class)->logAdminAction($actionType, 'clients', $description, $meta);
         } catch (\Throwable $e) {
-            Log::warning('Client audit log write failed', [
+            Log::warning('Client audit log write failed', SensitiveDataMasker::exceptionContext($e, [
                 'action_type' => $actionType,
-                'error' => $e->getMessage(),
-            ]);
+            ]));
         }
     }
 

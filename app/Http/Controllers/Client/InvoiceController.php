@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\Sale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 final class InvoiceController extends Controller
 {
@@ -44,7 +45,7 @@ final class InvoiceController extends Controller
     {
         $client = Auth::guard('clients')->user();
 
-        if ((int) $sale->client_id !== (int) $client->user_id) {
+        if (! Gate::forUser($client)->allows('invoices.view', $sale)) {
             abort(404);
         }
 

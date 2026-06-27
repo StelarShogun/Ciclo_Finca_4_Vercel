@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Services\SalesPerformanceDateRangeService;
+use App\Services\Admin\Reports\SalesPerformanceDateRangeService;
 use Carbon\CarbonImmutable;
 use Tests\TestCase;
 

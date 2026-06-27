@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon as SupportCarbon;
 use Illuminate\Support\Facades\Cache;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF4160DashboardTodaySalesKpiTest extends TestCase
@@ -138,8 +139,10 @@ class CF4160DashboardTodaySalesKpiTest extends TestCase
         $response = $this->actingAs($this->admin, 'admin')->get(route('dashboard'));
 
         $response->assertOk();
-        $response->assertSee('id="today-sales"', false);
-        $response->assertSee('₡12.500', false);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Dashboard/Index', false)
+            ->where('todaySales', 12500)
+        );
     }
 
     private function createClient(string $email): Client

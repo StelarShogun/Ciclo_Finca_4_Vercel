@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * @property float|int|string|null $avg_stars
@@ -53,8 +52,7 @@ class ProductReview extends Model
     public static function aggregatesForProductIds(array $productIds): array
     {
         $productIds = array_values(array_unique(array_map('intval', array_filter($productIds))));
-        $table = static::query()->getModel()->getTable();
-        if ($productIds === [] || ! Schema::hasTable($table)) {
+        if ($productIds === []) {
             return [];
         }
 

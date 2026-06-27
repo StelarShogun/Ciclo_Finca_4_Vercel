@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Enums\MovementType;
+use App\Enums\Inventory\MovementType;
 use App\Models\Client;
 use App\Models\InventoryMovement;
 use App\Models\Product;

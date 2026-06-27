@@ -8,6 +8,7 @@ use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -78,7 +79,10 @@ class SalesOrderExpiryTest extends TestCase
 
         $response = $this->actingAs($this->adminUser, 'admin')->get(route('sales.index'));
         $response->assertStatus(200);
-        $response->assertSee($sale->adminSaleDateLabel(), false);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Sales/Index', false)
+            ->where('sales.0.sale_date_label', $sale->adminSaleDateLabel())
+        );
 
         $responseJson = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
         $responseJson->assertStatus(200);

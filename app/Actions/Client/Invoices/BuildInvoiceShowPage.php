@@ -8,6 +8,7 @@ use App\Models\SaleItem;
 use App\Services\Client\Cart\CartManager;
 use App\Services\Client\Invoices\ClientInvoicePresentation;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,7 +24,7 @@ final class BuildInvoiceShowPage
         /** @var Client $client */
         $client = Auth::guard('clients')->user();
 
-        if ((int) $sale->client_id !== (int) $client->user_id) {
+        if (! Gate::forUser($client)->allows('invoices.view', $sale)) {
             abort(404);
         }
 

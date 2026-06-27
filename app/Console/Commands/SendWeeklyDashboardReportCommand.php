@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Supplier;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -176,11 +177,10 @@ class SendWeeklyDashboardReportCommand extends Command
                 $sent++;
             } catch (\Throwable $e) {
                 $failed++;
-                $this->error("Error al enviar a {$email}: {$e->getMessage()}");
-                Log::error('reports:send-weekly-dashboard — fallo al enviar correo.', [
-                    'recipient' => $email,
-                    'error' => $e->getMessage(),
-                ]);
+                $this->error("Error al enviar a {$email}. Revisa los logs.");
+                Log::error('reports:send-weekly-dashboard — fallo al enviar correo.', SensitiveDataMasker::exceptionContext($e, [
+                    'recipient_hash' => hash('sha256', $email),
+                ]));
             }
         }
 

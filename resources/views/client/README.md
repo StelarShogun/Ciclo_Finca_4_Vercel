@@ -1,6 +1,6 @@
 # Client Blade views
 
-The storefront UI is **Inertia + React** (`resources/js/Pages/Client/*`, `app/Http/Controllers/Client/*`).
+The storefront UI is **Inertia + React** (`resources/ts/Pages/Client/*`, `app/Http/Controllers/Client/*`).
 
 ## Active Blade (print only)
 

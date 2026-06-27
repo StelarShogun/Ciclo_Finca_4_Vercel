@@ -3,46 +3,38 @@
 namespace App\Http\Controllers\Admin\Categories;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Categories\StoreCategoryRequest;
+use App\Http\Requests\Admin\Categories\StoreParentCategoryRequest;
 use App\Models\Category;
 use App\Services\Client\Inertia\ListPaginationPayload;
+use App\Support\AdminDashboardCache;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
     public function createParentCategory()
     {
+        Gate::forUser(Auth::guard('admin')->user())->authorize('create', Category::class);
+
         return Inertia::render('Admin/Categories/CreateParent');
     }
 
-    public function storeParentCategory(Request $request)
+    public function storeParentCategory(StoreParentCategoryRequest $request)
     {
-        $request->merge([
-            'name' => trim((string) $request->input('name', '')),
-        ]);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('create', Category::class);
 
-        $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('categories', 'name')->where(
-                    fn ($query) => $query->whereNull('parent_category_id')
-                ),
-            ],
-            'description' => 'nullable|string',
-        ], [
-            'name.required' => 'El nombre de la categoría es obligatorio.',
-            'name.unique' => 'Ya existe una categoría con ese nombre.',
-        ]);
+        $validated = $request->validated();
 
         Category::create([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
             'parent_category_id' => null,
         ]);
+        AdminDashboardCache::forget();
 
         return redirect()
             ->route('categories.parents.create')
@@ -51,6 +43,8 @@ class CategoryController extends Controller
 
     public function createSubcategory(Request $request)
     {
+        Gate::forUser(Auth::guard('admin')->user())->authorize('viewAny', Category::class);
+
         // Avoid duplicated names in the parent selector (seeders may have inserted repeated roots).
         $categories = Category::query()
             ->selectRaw('MIN(category_id) as category_id, name')
@@ -93,25 +87,14 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
-        $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('categories', 'name')->where(function ($query) use ($request) {
-                    return $query->where('parent_category_id', $request->parent_category_id);
-                }),
-            ],
-            'description' => 'nullable|string',
-            'parent_category_id' => 'required|exists:categories,category_id',
-        ], [
-            'parent_category_id.required' => 'Debe seleccionar una categoría padre.',
-            'name.unique' => 'Ya existe una subcategoría con ese nombre bajo la categoría padre seleccionada.',
-        ]);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('create', Category::class);
+
+        $validated = $request->validated();
 
         Category::create($validated);
+        AdminDashboardCache::forget();
 
         return redirect()->back()->with('status', 'Subcategoría creada correctamente.');
     }

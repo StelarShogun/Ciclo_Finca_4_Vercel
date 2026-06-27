@@ -10,6 +10,7 @@ use App\Models\SaleItem;
 use App\Models\Supplier;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -120,7 +121,9 @@ class ProductSalesReportTest extends TestCase
             ->get(route('admin.reports.index'));
 
         $response->assertOk();
-        $response->assertSee('Productos más vendidos', false);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Reports/Index', false)
+        );
     }
 
     /** CP30-01: orden por ingresos descendente y columnas en JSON. */

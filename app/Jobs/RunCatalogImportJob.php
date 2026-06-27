@@ -4,9 +4,10 @@ namespace App\Jobs;
 
 use App\Exceptions\CatalogImportCancelled;
 use App\Models\AdminUser;
+use App\Services\Admin\Audit\AuditLogger;
 use App\Services\Admin\ProductCatalog\CatalogImportProgress;
 use App\Services\Admin\ProductCatalog\ProductCatalogImporter;
-use App\Services\AuditLogger;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -176,11 +177,14 @@ class RunCatalogImportJob implements ShouldQueue
                 'message' => 'Importación cancelada. No se aplicaron cambios.',
             ]);
         } catch (\Throwable $e) {
-            Log::error('product_catalog_import_failed', ['error' => $e->getMessage()]);
+            Log::error('product_catalog_import_failed', SensitiveDataMasker::exceptionContext($e, [
+                'import_id' => $this->importId,
+            ]));
+
             CatalogImportProgress::put($this->importId, [
                 'status' => 'failed',
                 'level' => 'error',
-                'message' => 'No se pudo importar: '.$e->getMessage(),
+                'message' => 'No fue posible importar el catálogo. Revisa el archivo e inténtalo nuevamente.',
             ]);
         } finally {
             CatalogImportProgress::clearCancel($this->importId);
@@ -193,10 +197,14 @@ class RunCatalogImportJob implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
+        Log::error('product_catalog_import_job_failed', SensitiveDataMasker::exceptionContext($exception, [
+            'import_id' => $this->importId,
+        ]));
+
         CatalogImportProgress::put($this->importId, [
             'status' => 'failed',
             'level' => 'error',
-            'message' => 'La importación falló: '.$exception->getMessage(),
+            'message' => 'La importación falló. Revisa el archivo e inténtalo nuevamente.',
         ]);
 
         $this->deleteStoredFile();

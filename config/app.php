@@ -141,7 +141,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | In non-local environments, /run-migrations and /run-seeders require
-    | ?key=<DEPLOY_SECRET>. Set DEPLOY_SECRET in the host environment only.
+    | the X-Deploy-Secret header. Set DEPLOY_SECRET in the host environment only.
     |
     */
 

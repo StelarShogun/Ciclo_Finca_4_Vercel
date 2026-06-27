@@ -2,18 +2,18 @@
 
 namespace App\Actions\Client\Cart;
 
-use App\Data\Client\Cart\CartMutationResult;
+use App\DTOs\Client\Cart\CartMutationResult;
 use App\Models\Client;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Services\Admin\Inventory\InventoryMovementService;
 use App\Services\Client\Cart\CartManager;
-use App\Services\InventoryMovementService;
-use Illuminate\Http\Request;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 final class CheckoutCart
 {
@@ -21,9 +21,15 @@ final class CheckoutCart
         private CartManager $cart,
     ) {}
 
-    public function handle(Request $request, InventoryMovementService $inventoryService): CartMutationResult
+    /**
+     * @param  array{payment_method:string}  $validatedCheckout
+     */
+    public function handle(array $validatedCheckout, InventoryMovementService $inventoryService): CartMutationResult
     {
-        $cart = $this->cart->lines();
+        $cart = collect($this->cart->lines())
+            ->sortBy(fn (array $item): int => (int) ($item['product_id'] ?? 0))
+            ->values()
+            ->all();
 
         if ($cart === []) {
             return new CartMutationResult(false, 400, [
@@ -32,20 +38,15 @@ final class CheckoutCart
             ]);
         }
 
-        $validatedCheckout = $request->validate([
-            'payment_method' => ['required', Rule::in(['cash', 'sinpe', 'transfer'])],
-        ], [
-            'payment_method.required' => 'Seleccione un método de pago.',
-            'payment_method.in' => 'Método de pago no válido.',
-        ]);
-
         DB::beginTransaction();
         try {
             $subtotal = 0;
             $validatedItems = [];
 
             foreach ($cart as $item) {
-                $product = Product::find($item['product_id']);
+                $product = Product::query()
+                    ->lockForUpdate()
+                    ->find($item['product_id']);
 
                 if (! $product || ! $product->isPurchasableByClient()) {
                     DB::rollBack();
@@ -147,9 +148,21 @@ final class CheckoutCart
         } catch (\Exception $e) {
             DB::rollBack();
 
+            Log::error('checkout_failed', SensitiveDataMasker::exceptionContext($e, [
+                'client_id' => Auth::guard('clients')->id(),
+            ]));
+
+            if ($e instanceof ValidationException) {
+                return new CartMutationResult(false, 422, [
+                    'success' => false,
+                    'message' => collect($e->errors())->flatten()->first()
+                        ?: 'No fue posible completar el pedido con el stock disponible.',
+                ]);
+            }
+
             return new CartMutationResult(false, 500, [
                 'success' => false,
-                'message' => 'Error al procesar el pedido: '.$e->getMessage(),
+                'message' => 'No fue posible procesar el pedido. Inténtalo nuevamente.',
             ]);
         }
     }

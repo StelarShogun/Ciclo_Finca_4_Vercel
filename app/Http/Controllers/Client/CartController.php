@@ -2,27 +2,29 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Actions\Client\Cart\AddCartItem;
+use App\Actions\Client\Cart\AddProductToCart;
 use App\Actions\Client\Cart\BuildCartPagePayload;
-use App\Actions\Client\Cart\CheckoutCart;
 use App\Actions\Client\Cart\ClearCart;
 use App\Actions\Client\Cart\RemoveCartItem;
 use App\Actions\Client\Cart\UpdateCartItem;
 use App\Http\Controllers\Controller;
-use App\Services\InventoryMovementService;
+use App\Http\Requests\Client\Cart\AddToCartRequest;
+use App\Http\Requests\Client\Cart\CheckoutCartRequest;
+use App\Http\Requests\Client\Cart\UpdateCartItemRequest;
+use App\Services\Client\Cart\CheckoutService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 final class CartController extends Controller
 {
-    public function addToCart(Request $request, AddCartItem $action)
+    public function addToCart(AddToCartRequest $request, AddProductToCart $action)
     {
-        return $action->handle($request)->toJsonResponse();
+        return $action->handle($request->validated())->toJsonResponse();
     }
 
-    public function updateCart(Request $request, UpdateCartItem $action)
+    public function updateCart(UpdateCartItemRequest $request, UpdateCartItem $action)
     {
-        return $action->handle($request)->toJsonResponse();
+        return $action->handle($request->validated())->toJsonResponse();
     }
 
     public function cart(Request $request, BuildCartPagePayload $buildCartPagePayload)
@@ -40,8 +42,8 @@ final class CartController extends Controller
         return $action->handle()->toJsonResponse();
     }
 
-    public function checkout(Request $request, CheckoutCart $action, InventoryMovementService $inventoryService)
+    public function checkout(CheckoutCartRequest $request, CheckoutService $checkout)
     {
-        return $action->handle($request, $inventoryService)->toJsonResponse();
+        return $checkout->checkout($request->validated())->toJsonResponse();
     }
 }

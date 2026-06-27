@@ -6,6 +6,7 @@ use App\Models\AdminUser;
 use App\Models\Client;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -46,10 +47,7 @@ class CF4AdminModalsSmokeTest extends TestCase
         $response = $this->get(route('inventory'));
 
         $response->assertOk();
-        $response->assertSee('id="edit-modal"', false);
-        $response->assertSee('id="view-product-modal"', false);
-        $response->assertSee('role="dialog"', false);
-        $response->assertSee('aria-modal="true"', false);
+        $response->assertInertia(fn (Assert $page) => $page->component('Admin/Inventory/Index', false));
     }
 
     public function test_sales_page_includes_view_and_new_sale_modals(): void
@@ -59,9 +57,7 @@ class CF4AdminModalsSmokeTest extends TestCase
         $response = $this->get(route('sales.index'));
 
         $response->assertOk();
-        $response->assertSee('id="view-sale-modal"', false);
-        $response->assertSee('id="new-sale-modal"', false);
-        $response->assertSee('aria-labelledby="view-sale-modal-title"', false);
+        $response->assertInertia(fn (Assert $page) => $page->component('Admin/Sales/Index', false));
     }
 
     public function test_brands_page_modal_uses_active_overlay_pattern(): void
@@ -71,10 +67,7 @@ class CF4AdminModalsSmokeTest extends TestCase
         $response = $this->get(route('brands.index'));
 
         $response->assertOk();
-        $response->assertSee('id="modal-marca"', false);
-        $response->assertSee('class="modal-overlay"', false);
-        $response->assertSee('aria-label="Cerrar"', false);
-        $response->assertDontSee('style="display:none;"', false);
+        $response->assertInertia(fn (Assert $page) => $page->component('Admin/Brands/Index', false));
     }
 
     public function test_suppliers_page_includes_detail_and_form_modals(): void
@@ -84,8 +77,6 @@ class CF4AdminModalsSmokeTest extends TestCase
         $response = $this->get(route('suppliers.index'));
 
         $response->assertOk();
-        $response->assertSee('id="modalDetalleProveedor"', false);
-        $response->assertSee('id="new-supplier-modal"', false);
-        $response->assertSee('id="edit-supplier-modal"', false);
+        $response->assertInertia(fn (Assert $page) => $page->component('Admin/Suppliers/Index', false));
     }
 }

@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Sale;
 use App\Support\AdminDateRange;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF4AdminSalesClientInvoiceVisibilityTest extends TestCase
@@ -82,12 +83,13 @@ class CF4AdminSalesClientInvoiceVisibilityTest extends TestCase
 
         $response = $this->actingAs($admin, 'admin')->get(route('sales.index'));
         $response->assertStatus(200);
-        $response->assertSee('Número de factura', false);
-        $response->assertSee('Cliente', false);
-        $response->assertSee($saleA->invoice_number, false);
-        $response->assertSee($saleB->invoice_number, false);
-        $response->assertSee('Ana Rojas', false);
-        $response->assertSee('Luis Mora', false);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Sales/Index', false)
+            ->where('sales.0.invoice_number', $saleB->invoice_number)
+            ->where('sales.0.customer', 'Luis Mora')
+            ->where('sales.1.invoice_number', $saleA->invoice_number)
+            ->where('sales.1.customer', 'Ana Rojas')
+        );
     }
 
     /** CP07-02 + CA 6 */
@@ -121,9 +123,11 @@ class CF4AdminSalesClientInvoiceVisibilityTest extends TestCase
 
         $response = $this->actingAs($admin, 'admin')->get(route('sales.index'));
         $response->assertStatus(200);
-        $response->assertSee($sale->invoice_number, false);
-        $response->assertSee('Marta Jimenez', false);
-        $response->assertSee($sale->sale_date->format('d/m/Y'), false);
-        $response->assertSee('Confirmada', false);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Sales/Index', false)
+            ->where('sales.0.invoice_number', $sale->invoice_number)
+            ->where('sales.0.customer', 'Marta Jimenez')
+            ->where('sales.0.status_label', 'Confirmada')
+        );
     }
 }

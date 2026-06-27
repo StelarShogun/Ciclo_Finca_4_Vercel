@@ -2,7 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\AuditLogger;
+use App\Services\Admin\Audit\AuditLogger;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -49,10 +50,9 @@ class LogSensitiveAdminModuleAccess
                 ['path' => '/'.$path]
             );
         } catch (\Throwable $e) {
-            Log::warning('module_access audit log write failed', [
+            Log::warning('module_access audit log write failed', SensitiveDataMasker::exceptionContext($e, [
                 'path' => $path,
-                'error' => $e->getMessage(),
-            ]);
+            ]));
         }
 
         return $response;

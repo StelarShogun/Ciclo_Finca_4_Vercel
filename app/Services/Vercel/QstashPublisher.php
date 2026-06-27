@@ -8,7 +8,7 @@ final class QstashPublisher
 {
     /**
      * @param  array<string, string>  $forwardHeaders  Headers que QStash debe
-     *         reenviar al destino (se envían con el prefijo Upstash-Forward-).
+     *                                                 reenviar al destino (se envían con el prefijo Upstash-Forward-).
      */
     public function publish(string $path, array $body = [], ?int $delaySeconds = null, array $forwardHeaders = []): void
     {

@@ -2,47 +2,49 @@
 
 namespace Tests\Unit;
 
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
+use App\Models\AdminUser;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class SuppliersIndexFlashAlertsTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_suppliers_index_renders_success_flash_for_sweetalert(): void
     {
         $this->withSession(['status' => 'Supplier deleted successfully.']);
 
-        $html = $this->renderSuppliersIndex();
-
-        $this->assertStringContainsString('window.__cf4Flash', $html);
-        $this->assertStringContainsString('Supplier deleted successfully.', $html);
-        $this->assertStringNotContainsString('alert-success', $html);
+        $this->actingAs($this->admin(), 'admin')
+            ->get(route('suppliers.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Suppliers/Index', false)
+                ->where('flash.status', 'Supplier deleted successfully.')
+            );
     }
 
     public function test_suppliers_index_renders_error_flash_for_sweetalert(): void
     {
         $this->withSession(['error' => 'Supplier not found.']);
 
-        $html = $this->renderSuppliersIndex();
-
-        $this->assertStringContainsString('window.__cf4Flash', $html);
-        $this->assertStringContainsString('Supplier not found.', $html);
-        $this->assertStringNotContainsString('alert-danger', $html);
+        $this->actingAs($this->admin(), 'admin')
+            ->get(route('suppliers.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Suppliers/Index', false)
+                ->where('flash.error', 'Supplier not found.')
+            );
     }
 
-    private function renderSuppliersIndex(): string
+    private function admin(): AdminUser
     {
-        $suppliers = new LengthAwarePaginator(
-            new Collection([]),
-            0,
-            10,
-            1,
-            ['path' => '/suppliers']
-        );
-
-        return view('admin.suppliers.index', [
-            'suppliers' => $suppliers,
-            'averageRating' => 0,
-        ])->render();
+        return AdminUser::create([
+            'name' => 'Admin',
+            'first_surname' => 'Suppliers',
+            'gmail' => 'admin-suppliers-flash@example.com',
+            'password' => bcrypt('password'),
+            'last_access' => now(),
+        ]);
     }
 }

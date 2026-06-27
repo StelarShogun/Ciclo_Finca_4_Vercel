@@ -9,9 +9,10 @@ use App\Models\OrderItem;
 use App\Models\OrderStateTimeline;
 use App\Models\Product;
 use App\Models\Supplier;
-use App\Services\SupplierDeliveryEstimator;
+use App\Services\Admin\SupplierOrders\SupplierDeliveryEstimator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF4143SupplierOrderEstimatedDeliveryTest extends TestCase
@@ -267,7 +268,7 @@ class CF4143SupplierOrderEstimatedDeliveryTest extends TestCase
         $this->createSupplier('Form Supplier');
 
         $response = $this->actingAs($admin, 'admin')
-            ->get(route('admin.supplier-orders.create'))
+            ->get(route('admin.supplier-orders.index'))
             ->assertOk();
 
         $html = $response->getContent();
@@ -336,11 +337,10 @@ class CF4143SupplierOrderEstimatedDeliveryTest extends TestCase
             ->get(route('admin.supplier-orders.detail', $order->num_order))
             ->assertOk();
 
-        $html = $response->getContent();
-
-        // The detail blade renders the date as d/m/Y. Confirmed 2026-06-01 + 7 -> 08/06/2026.
-        $this->assertStringContainsString('08/06/2026', $html);
-        $this->assertStringContainsString('Calculada automáticamente', $html);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/SupplierOrders/Detail', false)
+            ->where('order.estimated_delivery_date', '08/06/2026')
+        );
 
         Carbon::setTestNow();
     }

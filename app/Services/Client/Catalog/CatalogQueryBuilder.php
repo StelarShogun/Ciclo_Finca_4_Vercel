@@ -2,7 +2,7 @@
 
 namespace App\Services\Client\Catalog;
 
-use App\Data\Client\Catalog\CatalogFilterResolution;
+use App\DTOs\Client\Catalog\CatalogFilterResolution;
 use App\Models\Category;
 use App\Models\Product;
 use App\Support\AdminPerPage;

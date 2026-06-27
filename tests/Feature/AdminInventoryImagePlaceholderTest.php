@@ -6,6 +6,7 @@ use App\Models\AdminUser;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class AdminInventoryImagePlaceholderTest extends TestCase
@@ -45,8 +46,11 @@ class AdminInventoryImagePlaceholderTest extends TestCase
 
         $response = $this->actingAs($admin, 'admin')->get(route('inventory'));
         $response->assertOk();
-        $response->assertSee('product-media-placeholder--thumb-table', false);
-        $response->assertSee('fa-cogs', false);
-        $response->assertSee('Grupo Sin Foto Admin', false);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Inventory/Index', false)
+            ->where('products.0.name', 'Grupo Sin Foto Admin')
+            ->where('products.0.uses_placeholder', true)
+            ->where('products.0.placeholder_icon', 'fas fa-cogs')
+        );
     }
 }

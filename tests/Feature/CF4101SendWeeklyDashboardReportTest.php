@@ -404,8 +404,8 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
             });
     }
 
-    /** A delivery failure is logged with the affected recipient and error detail. */
-    public function test_failed_email_is_logged_with_recipient_and_error_detail(): void
+    /** A delivery failure is logged with safe recipient and exception context. */
+    public function test_failed_email_is_logged_with_sanitized_recipient_and_error_context(): void
     {
         /** @var MockInterface $logSpy */
         $logSpy = Log::spy();
@@ -421,7 +421,8 @@ class CF4101SendWeeklyDashboardReportTest extends TestCase
             ->once()
             ->withArgs(function (string $message, array $context) {
                 return str_contains($message, 'reports:send-weekly-dashboard')
-                    && isset($context['recipient'], $context['error']);
+                    && isset($context['recipient_hash'], $context['message_hash'], $context['exception'])
+                    && ! isset($context['recipient'], $context['error']);
             });
     }
 

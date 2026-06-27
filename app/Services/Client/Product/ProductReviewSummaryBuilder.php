@@ -2,7 +2,7 @@
 
 namespace App\Services\Client\Product;
 
-use App\Data\Client\Product\ProductReviewSummaryData;
+use App\DTOs\Client\Product\ProductReviewSummaryData;
 use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\Sale;

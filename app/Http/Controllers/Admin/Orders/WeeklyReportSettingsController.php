@@ -3,33 +3,17 @@
 namespace App\Http\Controllers\Admin\Orders;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Orders\UpdateWeeklyReportSettingsRequest;
 use App\Models\AppSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
 
 class WeeklyReportSettingsController extends Controller
 {
-    public function update(Request $request): RedirectResponse|JsonResponse
+    public function update(UpdateWeeklyReportSettingsRequest $request): RedirectResponse|JsonResponse
     {
-        $validated = $request->validate([
-            'weekly_report_day' => ['required', 'integer', Rule::in([0, 1, 2, 3, 4, 5, 6])],
-            'weekly_report_hour' => ['required', 'integer', 'min:0', 'max:23'],
-            'weekly_report_minute' => ['required', 'integer', 'min:0', 'max:59'],
-            'weekly_report_recipients' => ['required', 'string'],
-        ], [
-            'weekly_report_day.required' => 'Seleccione el día de envío.',
-            'weekly_report_day.in' => 'El día debe ser un valor entre 0 (domingo) y 6 (sábado).',
-            'weekly_report_hour.required' => 'Indique la hora de envío.',
-            'weekly_report_hour.min' => 'La hora debe estar entre 0 y 23.',
-            'weekly_report_hour.max' => 'La hora debe estar entre 0 y 23.',
-            'weekly_report_minute.required' => 'Indique los minutos de envío.',
-            'weekly_report_minute.min' => 'Los minutos deben estar entre 0 y 59.',
-            'weekly_report_minute.max' => 'Los minutos deben estar entre 0 y 59.',
-            'weekly_report_recipients.required' => 'Ingrese al menos un correo destinatario.',
-        ]);
+        $validated = $request->validated();
 
         // Parse recipients: comma/newline/semicolon separated, one per line, trimmed and validated.
         $rawRecipients = preg_split('/[\s,;]+/', $validated['weekly_report_recipients']);
@@ -59,7 +43,7 @@ class WeeklyReportSettingsController extends Controller
             'day' => $validated['weekly_report_day'],
             'hour' => $validated['weekly_report_hour'],
             'minute' => $validated['weekly_report_minute'],
-            'recipients' => $emails,
+            'recipients_count' => count($emails),
         ]);
 
         $message = 'Configuración del reporte semanal actualizada correctamente.';

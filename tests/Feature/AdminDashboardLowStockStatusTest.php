@@ -6,6 +6,7 @@ use App\Models\AdminUser;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class AdminDashboardLowStockStatusTest extends TestCase
@@ -44,9 +45,11 @@ class AdminDashboardLowStockStatusTest extends TestCase
         $response = $this->actingAs($admin, 'admin')->get(route('dashboard'));
 
         $response->assertOk();
-        $response->assertSee('Filtro Crítico', false);
-        $response->assertSee('Crítico', false);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Dashboard/Index', false)
+            ->where('lowStockList.0.name', 'Filtro Crítico')
+            ->where('lowStockList.0.stock', 1)
+        );
         $response->assertDontSee('>10%<', false);
-        $response->assertSee('dashboard-table--low-stock', false);
     }
 }

@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import inertia from "@inertiajs/vite";
 import laravel from "laravel-vite-plugin";
 import react from "@vitejs/plugin-react";
+import { fileURLToPath, URL } from "node:url";
 
 const vitePort = Number(process.env.VITE_PORT) || 5173;
 
@@ -9,22 +10,22 @@ const vitePort = Number(process.env.VITE_PORT) || 5173;
 // SHARED ASSETS
 // =======================
 const sharedAssets = [
-    "resources/js/app.tsx",
-    "resources/js/shared/theme-toggle.ts",
+    "resources/ts/app.tsx",
+    "resources/ts/shared/theme-toggle.ts",
 ];
 
 // =======================
 // ADMIN ASSETS
 // =======================
 const adminAssets = [
-    // JS (TypeScript entrypoints)
-    "resources/js/admin/shell.ts",
-    "resources/js/admin/dashboard/dashboard.ts",
-    "resources/js/admin/sales/sales.ts",
-    "resources/js/admin/orders/supplier-orders.ts",
-    "resources/js/admin/orders/detail-supplier-page.ts",
-    "resources/js/admin/reports/product-sales.ts",
-    "resources/js/admin/reports/sales-performance.ts",
+    // TypeScript entrypoints
+    "resources/ts/admin/shell.ts",
+    "resources/ts/admin/dashboard/dashboard.ts",
+    "resources/ts/admin/sales/sales.ts",
+    "resources/ts/admin/orders/supplier-orders.ts",
+    "resources/ts/admin/orders/detail-supplier-page.ts",
+    "resources/ts/admin/reports/product-sales.ts",
+    "resources/ts/admin/reports/sales-performance.ts",
 
     // CSS
     "resources/css/admin/products/inventory.css",
@@ -54,7 +55,7 @@ const adminAssets = [
 // ERROR PAGE ASSETS
 // =======================
 const errorAssets = [
-    "resources/js/errors/scenes.ts",
+    "resources/ts/errors/scenes.ts",
     "resources/css/errors/state-card.css",
     "resources/css/errors/404-page.css",
 ];
@@ -64,7 +65,7 @@ const errorAssets = [
 // =======================
 // Inertia storefront loads via app.tsx + dynamic import(). Only Blade residual entries here.
 const clientAssets = [
-    "resources/js/client/invoices-page.ts",
+    "resources/ts/client/invoices-page.ts",
 
     // CSS
     "resources/css/client/fonts.css",
@@ -106,6 +107,11 @@ export default defineConfig(({ command }) => {
             strictPort: true,
             hmr: {
                 host: "localhost",
+            },
+        },
+        resolve: {
+            alias: {
+                "@": fileURLToPath(new URL("./resources/ts", import.meta.url)),
             },
         },
     };

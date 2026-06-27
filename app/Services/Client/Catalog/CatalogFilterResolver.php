@@ -2,7 +2,7 @@
 
 namespace App\Services\Client\Catalog;
 
-use App\Data\Client\Catalog\CatalogFilterResolution;
+use App\DTOs\Client\Catalog\CatalogFilterResolution;
 use App\Models\Brand;
 use App\Models\Category;
 use Illuminate\Http\Request;

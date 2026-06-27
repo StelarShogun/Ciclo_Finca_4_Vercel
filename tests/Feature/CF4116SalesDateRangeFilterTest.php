@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\AdminUser;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF4116SalesDateRangeFilterTest extends TestCase
@@ -30,13 +31,16 @@ class CF4116SalesDateRangeFilterTest extends TestCase
     {
         $resp = $this->actingAs($this->getAdmin(), 'admin')
             ->get(route('sales.index', [
-                'start_date' => Carbon::today()->subDays(2)->toDateString(),
-                'end_date' => Carbon::today()->subDay()->toDateString(),
+                'date_range' => 'custom',
+                'date_from' => Carbon::today()->subDays(2)->toDateString(),
+                'date_to' => Carbon::today()->subDay()->toDateString(),
             ]));
 
         $resp->assertOk();
-        $resp->assertViewHas('sales');
-        $resp->assertSee('Fecha de venta', false);
+        $resp->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Sales/Index', false)
+            ->has('sales')
+        );
     }
 
     /** Rejects an invalid range where start date is after end date with a validation error. */
@@ -57,12 +61,16 @@ class CF4116SalesDateRangeFilterTest extends TestCase
     {
         $resp = $this->actingAs($this->getAdmin(), 'admin')
             ->get(route('sales.index', [
-                'start_date' => Carbon::today()->addDay()->toDateString(),
-                'end_date' => Carbon::today()->addDays(2)->toDateString(),
+                'date_range' => 'custom',
+                'date_from' => Carbon::today()->addDay()->toDateString(),
+                'date_to' => Carbon::today()->addDays(2)->toDateString(),
             ]));
 
         $resp->assertOk();
-        $resp->assertViewHas('sales');
+        $resp->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Sales/Index', false)
+            ->has('sales')
+        );
     }
 
     /** Ensures paginator links include the active date filter parameters. */
@@ -73,17 +81,17 @@ class CF4116SalesDateRangeFilterTest extends TestCase
 
         $resp = $this->actingAs($this->getAdmin(), 'admin')
             ->get(route('sales.index', [
-                'start_date' => $startDate,
-                'end_date' => $endDate,
+                'date_range' => 'custom',
+                'date_from' => $startDate,
+                'date_to' => $endDate,
             ]));
 
         $resp->assertOk();
-        $resp->assertViewHas('sales', function ($paginator) use ($startDate, $endDate) {
-            $url = $paginator->url(1);
-
-            return str_contains($url, 'start_date='.$startDate)
-                && str_contains($url, 'end_date='.$endDate);
-        });
+        $resp->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Sales/Index', false)
+            ->where('filters.date_from', $startDate)
+            ->where('filters.date_to', $endDate)
+        );
     }
 
     /** Date filter combined with additional filters (payment method, status) applies without errors. */
@@ -91,13 +99,19 @@ class CF4116SalesDateRangeFilterTest extends TestCase
     {
         $resp = $this->actingAs($this->getAdmin(), 'admin')
             ->get(route('sales.index', [
-                'start_date' => Carbon::today()->subDays(2)->toDateString(),
-                'end_date' => Carbon::today()->subDay()->toDateString(),
+                'date_range' => 'custom',
+                'date_from' => Carbon::today()->subDays(2)->toDateString(),
+                'date_to' => Carbon::today()->subDay()->toDateString(),
                 'payment_method' => 'cash',
                 'status' => 'completed',
             ]));
 
         $resp->assertOk();
-        $resp->assertViewHas('sales');
+        $resp->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Sales/Index', false)
+            ->has('sales')
+            ->where('filters.payment_method', 'cash')
+            ->where('filters.status', 'completed')
+        );
     }
 }

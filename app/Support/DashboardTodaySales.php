@@ -5,7 +5,6 @@ namespace App\Support;
 use App\Models\Sale;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * CF4-160 — confirmed sales total for the admin dashboard "Ventas hoy" KPI.
@@ -62,7 +61,7 @@ final class DashboardTodaySales
 
     public static function forgetDashboardCache(): void
     {
-        Cache::forget('cf4:admin:dashboard_index');
+        AdminDashboardCache::forget();
     }
 
     public static function sumForPreset(string $preset, ?string $dateFrom = null, ?string $dateTo = null): float

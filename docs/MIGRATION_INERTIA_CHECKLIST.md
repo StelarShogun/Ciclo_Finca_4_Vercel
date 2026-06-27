@@ -176,12 +176,12 @@ Pendiente:
 
 - Ruta: `/` (`clients.home`).
 - Controller: `Client\StorefrontController@home`.
-- Página React: `resources/js/Pages/Client/Home/Index.tsx`.
+- Página React: `resources/ts/Pages/Client/Home/Index.tsx`.
 - Props propias: `featuredProducts`, `categories`, `showGuestRegisterCta`, `hero`.
 - Props compartidas usadas: `auth.client`, `cartCount`, `csrfToken`, `flash`, `theme`.
 - Componentes creados: `HeroSection`, `FeaturedProducts`, `CategoryPreview`, `HomeSection`, `ProductCard`, `ImageFallback`.
-- Tipos creados: `resources/js/types/home.ts`.
-- Helper creado: `resources/js/lib/cart.ts` para encapsular el POST legacy `/cart/add`.
+- Tipos creados: `resources/ts/types/home.ts`.
+- Helper creado: `resources/ts/lib/cart.ts` para encapsular el POST legacy `/cart/add`.
 - CSS: `app.tsx` queda liviano; CSS cliente/admin se carga desde layouts/páginas.
 - Tests: `InertiaMigrationPilotTest`, `CF4ClientHomeGuestCtaTest`, `CF4ClientLegalPagesTest`.
 - Siguen en Blade: checkout flow completo, dashboard admin real y módulos operativos admin.
@@ -190,13 +190,13 @@ Pendiente:
 
 - Ruta: `/catalog` (`clients.catalog`).
 - Controller: `Client\StorefrontController@catalog`.
-- Página React: `resources/js/Pages/Client/Catalog/Index.tsx`.
+- Página React: `resources/ts/Pages/Client/Catalog/Index.tsx`.
 - Props propias: `products`, `pagination`, `categories`, `brands`, `filters`, `selectedCategory`, `subcategories`, `parentCategoryForSubcats`, `catalogSpotlight`, `favoriteProductIds`, `emptyCategoryNoProducts`, `catalogVersion`, `summary`.
 - Props compartidas usadas: `auth.client`, `cartCount`, `csrfToken`, `flash`, `theme`.
 - Componentes creados: `CatalogFilters`, `CategoryRail`, `CatalogProductCard`, `CatalogPagination`.
-- Tipos creados: `resources/js/types/catalog.ts`.
-- Helper creado: `resources/js/lib/favorites.ts` para `POST /favorites/toggle`.
-- Reutiliza `resources/js/lib/cart.ts` para `POST /cart/add`.
+- Tipos creados: `resources/ts/types/catalog.ts`.
+- Helper creado: `resources/ts/lib/favorites.ts` para `POST /favorites/toggle`.
+- Reutiliza `resources/ts/lib/cart.ts` para `POST /cart/add`.
 - Mantiene endpoints JSON legacy: `/api/catalog/heartbeat`, `/api/products/suggestions`, `/api/catalog/search-trending`.
 - Legacy TS vía dynamic import: `bundles/catalog.ts` (catálogo Inertia). Eliminados: `bundles/product`, `bundles/cart`, `clients-*.js` (ver `docs/LEGACY_JS_TO_TS_MIGRATION.md`).
 

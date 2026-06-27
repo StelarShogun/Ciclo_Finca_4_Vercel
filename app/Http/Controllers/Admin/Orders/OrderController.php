@@ -3,20 +3,21 @@
 namespace App\Http\Controllers\Admin\Orders;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Orders\AdminOrderIndexRequest;
 use App\Models\AppSetting;
 use App\Models\Sale;
 use App\Services\Client\Inertia\ListPaginationPayload;
 use App\Support\AdminDateRange;
 use App\Support\AdminPerPage;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class OrderController extends Controller
 {
-    public function index(Request $request)
+    public function index(AdminOrderIndexRequest $request)
     {
-        $status = $request->get('status');
-        $search = $request->get('search');
+        $filters = $request->validated();
+        $status = $filters['status'] ?? '';
+        $search = $filters['search'] ?? '';
 
         $baseWebOrdersQuery = $this->baseWebOrdersQuery();
 
@@ -28,20 +29,20 @@ class OrderController extends Controller
         }
 
         $dateRange = AdminDateRange::resolvePresetFromRequest(
-            $request->input('date_range'),
-            $request->input('date_from'),
-            $request->input('date_to'),
+            $filters['date_range'] ?? null,
+            $filters['date_from'] ?? null,
+            $filters['date_to'] ?? null,
         );
 
         if ($dateRange !== null) {
             if ($dateRange === AdminDateRange::PRESET_CUSTOM) {
-                if ($request->filled('date_from') || $request->filled('date_to')) {
+                if (($filters['date_from'] ?? '') !== '' || ($filters['date_to'] ?? '') !== '') {
                     AdminDateRange::applyDateTimeBetween(
                         $query,
                         'sale_date',
                         AdminDateRange::PRESET_CUSTOM,
-                        $request->input('date_from'),
-                        $request->input('date_to'),
+                        $filters['date_from'] ?? null,
+                        $filters['date_to'] ?? null,
                         storedAsUtc: true,
                     );
                 }
@@ -64,7 +65,7 @@ class OrderController extends Controller
             });
         }
 
-        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
+        $perPage = AdminPerPage::resolve($filters['per_page'] ?? 10);
         $orders = $query->orderBy('sale_date', 'desc')->paginate($perPage)->withQueryString();
 
         $basePurchasesQuery = (clone $baseWebOrdersQuery)
@@ -133,9 +134,9 @@ class OrderController extends Controller
             'usesEnvDefaultForExpiry' => (bool) $usesEnvDefaultForExpiry,
             'filters' => [
                 'status' => (string) ($status ?? ''),
-                'date_range' => (string) $request->input('date_range', ''),
-                'date_from' => (string) $request->input('date_from', ''),
-                'date_to' => (string) $request->input('date_to', ''),
+                'date_range' => (string) ($filters['date_range'] ?? ''),
+                'date_from' => (string) ($filters['date_from'] ?? ''),
+                'date_to' => (string) ($filters['date_to'] ?? ''),
                 'search' => (string) ($search ?? ''),
             ],
         ]);

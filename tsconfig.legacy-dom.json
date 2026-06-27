@@ -15,7 +15,7 @@
     "noEmit": true,
     "noImplicitAny": false,
     "paths": {
-      "@/*": ["resources/js/*"]
+      "@/*": ["resources/ts/*"]
     },
     "resolveJsonModule": true,
     "skipLibCheck": true,
@@ -24,21 +24,21 @@
     "types": ["vite/client"]
   },
   "include": [
-    "resources/js/admin/**/*.ts",
-    "resources/js/client/**/*.ts",
-    "resources/js/errors/scenes.ts",
-    "resources/js/errors/scenes/*.ts",
-    "resources/js/shared/ajax-pagination.ts",
-    "resources/js/shared/client-pagination.ts",
-    "resources/js/shared/legacy-dom.ts",
-    "resources/js/shared/escape-html.ts",
-    "resources/js/shared/product-media-placeholder.ts",
-    "resources/js/types/legacy-globals.d.ts",
-    "resources/js/types/legacy-client-modules.d.ts"
+    "resources/ts/admin/**/*.ts",
+    "resources/ts/client/**/*.ts",
+    "resources/ts/errors/scenes.ts",
+    "resources/ts/errors/scenes/*.ts",
+    "resources/ts/shared/ajax-pagination.ts",
+    "resources/ts/shared/client-pagination.ts",
+    "resources/ts/shared/legacy-dom.ts",
+    "resources/ts/shared/escape-html.ts",
+    "resources/ts/shared/product-media-placeholder.ts",
+    "resources/ts/types/legacy-globals.d.ts",
+    "resources/ts/types/legacy-client-modules.d.ts"
   ],
   "exclude": [
-    "resources/js/admin/login/login.ts",
-    "resources/js/client/header-menu-alert.ts",
-    "resources/js/client/checkout-copy.ts"
+    "resources/ts/admin/login/login.ts",
+    "resources/ts/client/header-menu-alert.ts",
+    "resources/ts/client/checkout-copy.ts"
   ]
 }

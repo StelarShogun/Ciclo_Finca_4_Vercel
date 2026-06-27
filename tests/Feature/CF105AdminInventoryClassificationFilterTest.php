@@ -12,6 +12,7 @@ use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF105AdminInventoryClassificationFilterTest extends TestCase
@@ -204,7 +205,10 @@ class CF105AdminInventoryClassificationFilterTest extends TestCase
         ]));
 
         $response->assertOk();
-        $response->assertSee('No hay productos para la combinación de clasificaciones seleccionada.');
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Inventory/Index', false)
+            ->where('pagination.total', 0)
+        );
     }
 
     public function test_cp005_clearing_filters_shows_complete_catalog_and_dynamic_dimension_options(): void
@@ -216,14 +220,16 @@ class CF105AdminInventoryClassificationFilterTest extends TestCase
             'classifications' => ['material' => ClassificationValue::normalizeStoredValue('Algodón')],
         ]));
         $filtered->assertOk();
-        $filtered->assertSee('Material');
         $filtered->assertSee($productMRed->name);
         $filtered->assertSee($productMBlue->name);
         $filtered->assertDontSee($productLBlue->name);
 
         $cleared = $this->get(route('inventory'));
         $cleared->assertOk();
-        $cleared->assertSee('Más filtros por clasificación');
+        $cleared->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Inventory/Index', false)
+            ->where('pagination.total', 3)
+        );
         $cleared->assertSee($productMRed->name);
         $cleared->assertSee($productLBlue->name);
         $cleared->assertSee($productMBlue->name);

@@ -4,11 +4,15 @@ namespace Tests\Feature;
 
 use App\Models\AdminUser;
 use App\Models\Client;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class AdminClientsPaginationTest extends TestCase
 {
+    use RefreshDatabase;
+
     private function makeAdmin(): AdminUser
     {
         return AdminUser::create([
@@ -61,10 +65,13 @@ class AdminClientsPaginationTest extends TestCase
             ]));
 
             $page1->assertOk();
-            $page1->assertSee('cf4-pagination-toolbar', false);
-            $page1->assertSee('Mostrando 1–10 de 12', false);
-            $page1->assertSee('data-page="2"', false);
-            $page1->assertSee('data-cf4-ajax-pagination', false);
+            $page1->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Clients/Index', false)
+                ->where('pagination.currentPage', 1)
+                ->where('pagination.perPage', 10)
+                ->where('pagination.total', 12)
+                ->where('filters.search', $search)
+            );
 
             $page2 = $this->get(route('admin.clients.index', [
                 'per_page' => 10,
@@ -73,7 +80,12 @@ class AdminClientsPaginationTest extends TestCase
             ]));
 
             $page2->assertOk();
-            $page2->assertSee('Mostrando 11–12 de 12', false);
+            $page2->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Clients/Index', false)
+                ->where('pagination.currentPage', 2)
+                ->where('pagination.from', 11)
+                ->where('pagination.to', 12)
+            );
         } finally {
             Client::query()->whereIn('user_id', $ids)->delete();
             $admin->delete();
@@ -214,8 +226,11 @@ class AdminClientsPaginationTest extends TestCase
             ]));
             $desc->assertOk();
             $desc->assertSeeInOrder(['Zebra', 'Alpha'], false);
-            $desc->assertSee('th-sort is-active', false);
-            $desc->assertSee('fa-sort-down', false);
+            $desc->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Clients/Index', false)
+                ->where('sort', 'name')
+                ->where('dir', 'desc')
+            );
         } finally {
             Client::query()->whereIn('user_id', [(int) $zebra->user_id, (int) $alpha->user_id])->delete();
             $admin->delete();

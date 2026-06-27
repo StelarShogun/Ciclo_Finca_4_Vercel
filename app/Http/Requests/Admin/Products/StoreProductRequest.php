@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Admin\Products;
 
 use App\Models\Category;
-use App\Services\ProductClassificationAssignmentService;
+use App\Services\Admin\Classifications\ProductClassificationAssignmentService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;

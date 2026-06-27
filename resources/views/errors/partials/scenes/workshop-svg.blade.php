@@ -1,5 +1,5 @@
 {{-- Taller 500/503 · bicicleta invertida en reparación, panel de herramientas y piso de taller.
-     Los ids #gear y #wrench los anima resources/js/errors/scenes/workshop.ts — no renombrar. --}}
+     Los ids #gear y #wrench los anima resources/ts/errors/scenes/workshop.ts — no renombrar. --}}
 <svg class="cf4-scene-svg" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
     <defs>
         <linearGradient id="ws-bg" x1="0" y1="0" x2="0" y2="1">

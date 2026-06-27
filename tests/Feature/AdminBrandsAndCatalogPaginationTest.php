@@ -7,6 +7,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class AdminBrandsAndCatalogPaginationTest extends TestCase
@@ -38,13 +39,19 @@ class AdminBrandsAndCatalogPaginationTest extends TestCase
 
         $pageOne = $this->get(route('brands.index', ['per_page' => 10]));
         $pageOne->assertOk();
-        $pageOne->assertSee('cf4-pagination-toolbar', false);
-        $pageOne->assertSee('Mostrando 1–10 de', false);
-        $pageOne->assertSee('pagination-wrapper', false);
+        $pageOne->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Brands/Index', false)
+            ->where('pagination.currentPage', 1)
+            ->where('pagination.perPage', 10)
+            ->where('pagination.total', 12)
+        );
 
         $pageTwo = $this->get(route('brands.index', ['per_page' => 10, 'page' => 2]));
         $pageTwo->assertOk();
-        $pageTwo->assertSee('aria-current="page">2', false);
+        $pageTwo->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Brands/Index', false)
+            ->where('pagination.currentPage', 2)
+        );
     }
 
     public function test_classification_catalog_index_is_paginated(): void
@@ -67,12 +74,18 @@ class AdminBrandsAndCatalogPaginationTest extends TestCase
 
         $pageOne = $this->get(route('admin.classifications.catalog.index', ['per_page' => 10]));
         $pageOne->assertOk();
-        $pageOne->assertSee('cf4-pagination-toolbar', false);
-        $pageOne->assertSee('Mostrando 1–10 de', false);
-        $pageOne->assertSee('Opciones por tipo de producto', false);
+        $pageOne->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Classifications/Index', false)
+            ->where('pagination.currentPage', 1)
+            ->where('pagination.perPage', 10)
+            ->where('pagination.total', 12)
+        );
 
         $pageTwo = $this->get(route('admin.classifications.catalog.index', ['per_page' => 10, 'page' => 2]));
         $pageTwo->assertOk();
-        $pageTwo->assertSee('aria-current="page">2', false);
+        $pageTwo->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Classifications/Index', false)
+            ->where('pagination.currentPage', 2)
+        );
     }
 }

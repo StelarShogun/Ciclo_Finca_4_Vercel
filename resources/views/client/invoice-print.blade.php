@@ -18,5 +18,5 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/client/invoices-page.ts'])
+    @vite(['resources/ts/client/invoices-page.ts'])
 @endpush

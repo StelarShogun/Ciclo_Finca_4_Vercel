@@ -2,13 +2,13 @@
 
 namespace App\Services\Client\Catalog;
 
-use App\Data\Client\Catalog\CatalogFilterResolution;
+use App\DTOs\Client\Catalog\CatalogFilterResolution;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductReview;
 use App\Services\Client\Storefront\ClientStorefrontCache;
-use App\Services\Media\ProductImageUrls;
+use App\Services\Shared\Media\ProductImageUrls;
 use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;

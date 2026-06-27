@@ -3,18 +3,27 @@
 namespace App\Http\Controllers\Admin\Brands;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Brands\StoreBrandRequest;
+use App\Http\Requests\Admin\Brands\UpdateBrandRequest;
 use App\Models\Brand;
 use App\Services\Client\Inertia\ListPaginationPayload;
 use App\Services\Client\Storefront\ClientStorefrontCache;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use App\Support\AdminPerPage;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class BrandController extends Controller
 {
     public function index(Request $request)
     {
+        Gate::forUser(Auth::guard('admin')->user())->authorize('viewAny', Brand::class);
+
         $query = Brand::query();
 
         if ($request->filled('name')) {
@@ -34,24 +43,15 @@ class BrandController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreBrandRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100',
-        ], [
-            'name.required' => 'El nombre de la marca es obligatorio.',
-            'name.max' => 'El nombre no puede tener más de 100 caracteres.',
-        ]);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('create', Brand::class);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
-        }
+        $validated = $request->validated();
+        $name = $validated['name'];
 
         // Exact case-sensitive match
-        $exactMatch = Brand::whereRaw('BINARY name = ?', [$request->name])->first();
+        $exactMatch = $this->exactNameQuery($name)->first();
         if ($exactMatch) {
             return response()->json([
                 'success' => false,
@@ -62,7 +62,7 @@ class BrandController extends Controller
         }
 
         // Case-insensitive match (different capitalization)
-        $existing = Brand::whereRaw('LOWER(name) = ?', [strtolower($request->name)])->first();
+        $existing = Brand::whereRaw('LOWER(name) = ?', [strtolower($name)])->first();
         if ($existing) {
             return response()->json([
                 'success' => false,
@@ -72,7 +72,7 @@ class BrandController extends Controller
             ], 422);
         }
 
-        $brand = Brand::create(['name' => $request->name]);
+        $brand = Brand::create(['name' => $name]);
         ClientStorefrontCache::forgetAfterBrandMutation();
 
         return response()->json([
@@ -82,24 +82,15 @@ class BrandController extends Controller
         ]);
     }
 
-    public function update(Request $request, Brand $brand)
+    public function update(UpdateBrandRequest $request, Brand $brand)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100',
-        ], [
-            'name.required' => 'El nombre de la marca es obligatorio.',
-            'name.max' => 'El nombre no puede tener más de 100 caracteres.',
-        ]);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('update', $brand);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
-        }
+        $validated = $request->validated();
+        $name = $validated['name'];
 
         // Exact case-sensitive match (excluding self)
-        $exactMatch = Brand::whereRaw('BINARY name = ?', [$request->name])
+        $exactMatch = $this->exactNameQuery($name)
             ->where('id', '!=', $brand->id)
             ->first();
         if ($exactMatch) {
@@ -112,7 +103,7 @@ class BrandController extends Controller
         }
 
         // Case-insensitive match excluding self (different capitalization)
-        $existing = Brand::whereRaw('LOWER(name) = ?', [strtolower($request->name)])
+        $existing = Brand::whereRaw('LOWER(name) = ?', [strtolower($name)])
             ->where('id', '!=', $brand->id)
             ->first();
         if ($existing) {
@@ -124,7 +115,7 @@ class BrandController extends Controller
             ], 422);
         }
 
-        $brand->update(['name' => $request->name]);
+        $brand->update(['name' => $name]);
         ClientStorefrontCache::forgetAfterBrandMutation();
 
         return response()->json([
@@ -136,12 +127,19 @@ class BrandController extends Controller
 
     public function destroy(Brand $brand)
     {
+        Gate::forUser(Auth::guard('admin')->user())->authorize('delete', $brand);
+
         try {
             $productCount = $brand->products()->count();
         } catch (\Throwable $e) {
+            Log::error('brand_delete_product_count_failed', SensitiveDataMasker::exceptionContext($e, [
+                'brand_id' => $brand->id,
+                'admin_id' => auth('admin')->id(),
+            ]));
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error al verificar los productos asociados: '.$e->getMessage(),
+                'message' => 'No fue posible verificar los productos asociados. Inténtelo nuevamente.',
             ], 500);
         }
 
@@ -160,5 +158,16 @@ class BrandController extends Controller
             'success' => true,
             'message' => 'Marca eliminada correctamente.',
         ]);
+    }
+
+    private function exactNameQuery(string $name): Builder
+    {
+        $query = Brand::query();
+
+        if (DB::connection()->getDriverName() === 'mysql') {
+            return $query->whereRaw('BINARY name = ?', [$name]);
+        }
+
+        return $query->where('name', $name);
     }
 }

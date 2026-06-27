@@ -2,7 +2,7 @@
 
 namespace App\Services\Admin\ProductCatalog;
 
-use App\Data\Admin\ProductCatalog\CatalogImportOptions;
+use App\DTOs\Admin\ProductCatalog\CatalogImportOptions;
 use App\Jobs\GenerateCatalogImportMediaConversionsJob;
 use App\Models\Brand;
 use App\Models\Category;
@@ -11,9 +11,10 @@ use App\Models\ClassificationValue;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Supplier;
+use App\Services\Admin\Classifications\ProductClassificationAssignmentService;
 use App\Services\Admin\Images\ProductImageOptimizerService;
 use App\Services\Client\Storefront\ClientStorefrontCache;
-use App\Services\ProductClassificationAssignmentService;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use App\Services\Vercel\QstashPublisher;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -160,11 +161,10 @@ final class ProductCatalogImporter
                     $stats[$result]++;
                 } catch (\Throwable $e) {
                     $stats['skipped']++;
-                    $stats['errors'][] = 'Fila '.($index + 1).': '.$e->getMessage();
-                    Log::warning('product_catalog_import_row_failed', [
+                    $stats['errors'][] = 'Fila '.($index + 1).': no se pudo importar esta fila. Revisá formato, SKU, categoría e imagen.';
+                    Log::warning('product_catalog_import_row_failed', SensitiveDataMasker::exceptionContext($e, [
                         'row' => $index + 1,
-                        'error' => $e->getMessage(),
-                    ]);
+                    ]));
                 }
 
                 $this->reportProgress($index + 1, $total, $stats);
@@ -185,7 +185,7 @@ final class ProductCatalogImporter
                 app(QstashPublisher::class)->publish(
                     'internal/vercel/jobs/media-conversions',
                     ['mediaIds' => $mediaIds],
-                    forwardHeaders: ['X-Internal-Key' => (string) config('app.deploy_secret')],
+                    forwardHeaders: ['X-Deploy-Secret' => (string) config('app.deploy_secret')],
                 );
             } else {
                 GenerateCatalogImportMediaConversionsJob::dispatch($mediaIds)->afterResponse();

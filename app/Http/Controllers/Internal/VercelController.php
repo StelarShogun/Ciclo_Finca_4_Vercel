@@ -3,33 +3,30 @@
 namespace App\Http\Controllers\Internal;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Internal\CatalogImportJobRequest;
+use App\Http\Requests\Internal\MediaConversionsJobRequest;
 use App\Jobs\GenerateCatalogImportMediaConversionsJob;
 use App\Jobs\RunCatalogImportJob;
 use App\Services\Admin\Images\MissingProductMediaConversionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 
 final class VercelController extends Controller
 {
     public function scheduler(Request $request): JsonResponse
     {
-        $this->authorizeInternal($request, allowVercelCron: true);
+        $this->authorizeInternal($request);
 
         return $this->runArtisan('schedule:run');
     }
 
-    public function catalogImport(Request $request): JsonResponse
+    public function catalogImport(CatalogImportJobRequest $request): JsonResponse
     {
         $this->authorizeInternal($request);
 
-        $payload = $request->validate([
-            'importId' => ['required', 'string'],
-            'adminId' => ['required', 'integer'],
-            'storedPath' => ['required', 'string'],
-            'originalName' => ['required', 'string'],
-            'disk' => ['nullable', 'string'],
-        ]);
+        $payload = $request->validated();
 
         $startedAt = hrtime(true);
 
@@ -52,15 +49,11 @@ final class VercelController extends Controller
         ]);
     }
 
-    public function mediaConversions(Request $request, MissingProductMediaConversionService $service): JsonResponse
+    public function mediaConversions(MediaConversionsJobRequest $request, MissingProductMediaConversionService $service): JsonResponse
     {
         $this->authorizeInternal($request);
 
-        $payload = $request->validate([
-            'mediaIds' => ['nullable', 'array'],
-            'mediaIds.*' => ['integer'],
-            'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
-        ]);
+        $payload = $request->validated();
 
         $startedAt = hrtime(true);
         $ids = isset($payload['mediaIds'])
@@ -73,8 +66,7 @@ final class VercelController extends Controller
             'ok' => true,
             'job' => 'media-conversions',
             'status' => 'done',
-            'media_ids' => $ids,
-            'result' => $result,
+            'processed' => count($result),
             'duration_ms' => (int) ((hrtime(true) - $startedAt) / 1_000_000),
         ]);
     }
@@ -107,34 +99,31 @@ final class VercelController extends Controller
     {
         $startedAt = hrtime(true);
         $exitCode = Artisan::call($command);
+        $output = trim(Artisan::output());
+
+        if ($exitCode !== 0) {
+            Log::error('internal_vercel_artisan_failed', [
+                'command' => $command,
+                'exit_code' => $exitCode,
+                'output_length' => mb_strlen($output),
+            ]);
+        }
 
         return response()->json([
             'ok' => $exitCode === 0,
             'job' => $command,
             'status' => $exitCode === 0 ? 'done' : 'failed',
             'exit_code' => $exitCode,
-            'output' => trim(Artisan::output()),
             'duration_ms' => (int) ((hrtime(true) - $startedAt) / 1_000_000),
         ], $exitCode === 0 ? 200 : 500);
     }
 
-    private function authorizeInternal(Request $request, bool $allowVercelCron = false): void
+    private function authorizeInternal(Request $request): void
     {
         $secret = (string) config('app.deploy_secret', '');
-        // Aceptamos el secreto por query (?key=) o por header reenviado por QStash
-        // (X-Internal-Key), ya que QStash puede no preservar el query del destino.
-        $provided = (string) $request->query('key', '');
-        $providedHeader = (string) $request->header('X-Internal-Key', '');
+        $providedHeader = (string) ($request->header('X-Deploy-Secret') ?: $request->header('X-Internal-Key'));
 
-        if ($secret !== '' && (hash_equals($secret, $provided) || hash_equals($secret, $providedHeader))) {
-            return;
-        }
-
-        if (
-            $allowVercelCron
-            && config('vercel.enabled')
-            && str_contains((string) $request->userAgent(), 'vercel-cron/1.0')
-        ) {
+        if ($secret !== '' && hash_equals($secret, $providedHeader)) {
             return;
         }
 

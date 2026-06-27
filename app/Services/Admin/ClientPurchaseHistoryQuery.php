@@ -2,8 +2,11 @@
 
 namespace App\Services\Admin;
 
+use App\Models\Client;
+use App\Support\AdminPerPage;
 use Carbon\Carbon;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -14,6 +17,171 @@ final class ClientPurchaseHistoryQuery
     public const PERIODS = ['7d', '30d', '90d'];
 
     public const SORTS = ['total_purchased', 'orders_count', 'avg_ticket'];
+
+    /**
+     * @param  array<string,mixed>  $filters
+     * @return array<string,string>
+     */
+    public function indexPayload(array $filters): array
+    {
+        return [
+            'period' => self::sanitizePeriod((string) ($filters['period'] ?? '30d')),
+            'sort' => self::sanitizeSort((string) ($filters['sort'] ?? 'total_purchased')),
+            'dir' => self::sanitizeDir((string) ($filters['dir'] ?? 'desc')),
+            'q' => self::normalizeSearchInput(isset($filters['q']) ? (string) $filters['q'] : null),
+        ];
+    }
+
+    /**
+     * @param  array<string,mixed>  $queryParams
+     * @return array<string,mixed>
+     */
+    public function showPayload(int $clientId, array $queryParams): array
+    {
+        $client = Client::query()->where('user_id', $clientId)->firstOrFail();
+        $orders = DB::table('sales')
+            ->where('client_id', $clientId)
+            ->where('status', 'completed')
+            ->orderByDesc('sale_date')
+            ->get(['sale_id', 'invoice_number', 'sale_date', 'total']);
+
+        $backParams = array_filter([
+            'back_period' => $queryParams['back_period'] ?? null,
+            'back_sort' => $queryParams['back_sort'] ?? null,
+            'back_dir' => $queryParams['back_dir'] ?? null,
+            'back_page' => $queryParams['back_page'] ?? null,
+            'back_q' => $queryParams['back_q'] ?? null,
+            'back_per_page' => $queryParams['back_per_page'] ?? null,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        $listQuery = array_filter([
+            'period' => $backParams['back_period'] ?? '30d',
+            'sort' => $backParams['back_sort'] ?? null,
+            'dir' => $backParams['back_dir'] ?? null,
+            'page' => $backParams['back_page'] ?? null,
+            'per_page' => $backParams['back_per_page'] ?? null,
+            'q' => $backParams['back_q'] ?? null,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        return [
+            'clientId' => $clientId,
+            'displayName' => $this->clientDisplayName($client),
+            'gmail' => (string) $client->gmail,
+            'orders' => $orders
+                ->map(fn (object $order): array => $this->showOrderRow($order))
+                ->values()
+                ->all(),
+            'listUrl' => route('admin.reports.client-purchases', $listQuery),
+        ];
+    }
+
+    /**
+     * @param  array<string,mixed>  $filters
+     * @return array<string,mixed>
+     */
+    public function tablePayload(array $filters): array
+    {
+        $period = self::sanitizePeriod((string) $filters['period']);
+        $search = self::normalizeSearchInput(isset($filters['q']) ? (string) $filters['q'] : null);
+        $sort = self::sanitizeSort((string) $filters['sort']);
+        $dir = self::sanitizeDir((string) $filters['dir']);
+        $page = max(1, (int) ($filters['page'] ?? 1));
+        $perPage = AdminPerPage::resolve($filters['per_page'] ?? 10);
+
+        [$start, $end] = self::periodBounds($period);
+
+        $aggregateQuery = self::baseAggregates($start, $end, $search);
+        $total = (int) DB::query()->fromSub($aggregateQuery, 'client_purchase_agg')->count();
+
+        $sorted = self::baseAggregates($start, $end, $search);
+        self::applySort($sorted, $sort, $dir);
+
+        $rows = $sorted
+            ->offset(($page - 1) * $perPage)
+            ->limit($perPage)
+            ->get()
+            ->map(fn (object $row): array => self::formatAggregateRow($row))
+            ->values();
+
+        $paginator = new LengthAwarePaginator($rows, $total, $perPage, $page, [
+            'path' => route('admin.reports.client-purchases.table'),
+            'pageName' => 'page',
+        ]);
+        $paginator->appends(array_merge($filters, ['per_page' => $perPage]));
+
+        return [
+            'success' => true,
+            'period' => $period,
+            'sort' => $sort,
+            'dir' => $dir,
+            'q' => $search,
+            'rows' => $rows,
+            'pagination' => [
+                'page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+            ],
+            'pagination_html' => view('components.admin.pagination', [
+                'paginator' => $paginator,
+                'label' => 'clientes',
+                'perPageSubmit' => false,
+            ])->render(),
+        ];
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function clientOrdersPayload(int $clientId, string $period): array
+    {
+        $period = self::sanitizePeriod($period);
+        [$start, $end] = self::periodBounds($period);
+
+        $client = Client::query()->where('user_id', $clientId)->first();
+        if (! $client) {
+            return ['success' => false, 'message' => 'Cliente no encontrado.', 'status' => 404];
+        }
+
+        $orders = DB::table('sales')
+            ->where('client_id', $clientId)
+            ->where('status', 'completed')
+            ->where('sale_date', '>=', $start)
+            ->where('sale_date', '<=', $end)
+            ->orderByDesc('sale_date')
+            ->get(['sale_id', 'invoice_number', 'sale_date', 'total', 'status']);
+
+        if ($orders->isEmpty()) {
+            return ['success' => false, 'message' => 'Sin compras en el periodo.', 'status' => 404];
+        }
+
+        return [
+            'success' => true,
+            'client' => [
+                'client_id' => (int) $client->user_id,
+                'display_name' => $this->clientDisplayName($client),
+                'gmail' => (string) $client->gmail,
+            ],
+            'orders' => $orders
+                ->map(fn (object $order): array => $this->periodOrderRow($order))
+                ->values(),
+        ];
+    }
+
+    public static function sanitizePeriod(string $period): string
+    {
+        return in_array($period, self::PERIODS, true) ? $period : '30d';
+    }
+
+    public static function sanitizeSort(string $sort): string
+    {
+        return in_array($sort, self::SORTS, true) ? $sort : 'total_purchased';
+    }
+
+    public static function sanitizeDir(string $dir): string
+    {
+        return strtolower($dir) === 'asc' ? 'asc' : 'desc';
+    }
 
     /**
      * @return array{0: Carbon, 1: Carbon}
@@ -124,6 +292,39 @@ final class ClientPurchaseHistoryQuery
             'orders_count' => (int) $row->orders_count,
             'total_purchased' => round((float) $row->total_purchased, 2),
             'avg_ticket' => round((float) $row->avg_ticket, 2),
+        ];
+    }
+
+    private function clientDisplayName(Client $client): string
+    {
+        $parts = array_filter([
+            (string) $client->name,
+            (string) ($client->first_surname ?? ''),
+            (string) ($client->second_surname ?? ''),
+        ], fn (string $part): bool => $part !== '');
+        $displayName = trim(implode(' ', $parts));
+
+        return $displayName !== '' ? $displayName : (string) $client->gmail;
+    }
+
+    private function showOrderRow(object $order): array
+    {
+        return [
+            'sale_id' => (int) $order->sale_id,
+            'invoice_number' => $order->invoice_number ?? ('#'.$order->sale_id),
+            'sale_date' => Carbon::parse($order->sale_date, config('app.timezone'))->format('d/m/Y H:i'),
+            'total' => (float) $order->total,
+        ];
+    }
+
+    private function periodOrderRow(object $order): array
+    {
+        return [
+            'sale_id' => (int) $order->sale_id,
+            'invoice_number' => (string) $order->invoice_number,
+            'sale_date' => Carbon::parse($order->sale_date, config('app.timezone'))->format('d/m/Y H:i'),
+            'total' => round((float) $order->total, 2),
+            'status' => (string) $order->status,
         ];
     }
 }

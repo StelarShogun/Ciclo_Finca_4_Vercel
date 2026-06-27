@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Admin\Products;
 
 use App\Models\Product;
-use App\Services\ProductClassificationAssignmentService;
+use App\Services\Admin\Classifications\ProductClassificationAssignmentService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;

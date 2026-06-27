@@ -14,11 +14,11 @@
     "moduleResolution": "Bundler",
     "noEmit": true,
     "paths": {
-      "@/client/bundles/catalog": ["resources/js/types/shims/legacy-dynamic-imports.d.ts"],
-      "@/client/clients-catalog-heartbeat": ["resources/js/types/shims/legacy-dynamic-imports.d.ts"],
-      "@/client/header-catalog-search": ["resources/js/types/shims/legacy-dynamic-imports.d.ts"],
-      "@/client/swal": ["resources/js/types/shims/legacy-dynamic-imports.d.ts"],
-      "@/*": ["resources/js/*"]
+      "@/client/bundles/catalog": ["resources/ts/types/shims/legacy-dynamic-imports.d.ts"],
+      "@/client/clients-catalog-heartbeat": ["resources/ts/types/shims/legacy-dynamic-imports.d.ts"],
+      "@/client/header-catalog-search": ["resources/ts/types/shims/legacy-dynamic-imports.d.ts"],
+      "@/client/swal": ["resources/ts/types/shims/legacy-dynamic-imports.d.ts"],
+      "@/*": ["resources/ts/*"]
     },
     "resolveJsonModule": true,
     "skipLibCheck": true,
@@ -27,24 +27,24 @@
     "types": ["vite/client"]
   },
   "include": [
-    "resources/js/**/*.tsx",
-    "resources/js/app.tsx",
-    "resources/js/bootstrap.ts",
-    "resources/js/shared/**/*.ts",
-    "resources/js/features/**/*.ts",
-    "resources/js/Pages/**/*.tsx",
-    "resources/js/Pages/**/*.ts",
-    "resources/js/types/**/*.d.ts",
-    "resources/js/types/**/*.ts",
-    "resources/js/client/header-menu-alert.ts",
-    "resources/js/types/shims/**/*.d.ts",
-    "resources/js/shared/legacy-dom.ts"
+    "resources/ts/**/*.tsx",
+    "resources/ts/app.tsx",
+    "resources/ts/bootstrap.ts",
+    "resources/ts/shared/**/*.ts",
+    "resources/ts/features/**/*.ts",
+    "resources/ts/Pages/**/*.tsx",
+    "resources/ts/Pages/**/*.ts",
+    "resources/ts/types/**/*.d.ts",
+    "resources/ts/types/**/*.ts",
+    "resources/ts/client/header-menu-alert.ts",
+    "resources/ts/types/shims/**/*.d.ts",
+    "resources/ts/shared/legacy-dom.ts"
   ],
   "exclude": [
-    "resources/js/admin/**",
-    "resources/js/client/**",
-    "resources/js/errors/scenes/wrong-route.ts",
-    "resources/js/shared/ajax-pagination.ts",
-    "resources/js/shared/client-pagination.ts"
+    "resources/ts/admin/**",
+    "resources/ts/client/**",
+    "resources/ts/errors/scenes/wrong-route.ts",
+    "resources/ts/shared/ajax-pagination.ts",
+    "resources/ts/shared/client-pagination.ts"
   ]
 }

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\MovementType;
+use App\Enums\Inventory\MovementType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 

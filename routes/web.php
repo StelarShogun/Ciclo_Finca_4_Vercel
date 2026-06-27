@@ -43,10 +43,9 @@ use App\Http\Controllers\Client\ProductPageController;
 use App\Http\Controllers\Client\ProductReviewController;
 use App\Http\Controllers\Client\ProfileController;
 use App\Http\Controllers\Client\StorefrontController;
+use App\Http\Controllers\Internal\DeployHelperController;
 use App\Http\Controllers\Internal\VercelController;
 use App\Services\Client\Cart\CartDatabaseStore;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -58,79 +57,11 @@ Route::prefix('internal/vercel')->group(function () {
     Route::post('/jobs/order-maintenance', [VercelController::class, 'orderMaintenance']);
 });
 
-// Restricts deploy helper routes outside local and testing environments.
-$assertDeployHelperAllowed = function (Request $request): void {
-    if (app()->environment('local', 'testing')) {
-        return;
-    }
-
-    $secret = (string) config('app.deploy_secret', '');
-
-    // Hide the endpoint when no deploy secret is configured.
-    if ($secret === '') {
-        abort(404);
-    }
-
-    // Compare the provided secret using a timing-safe check.
-    if (! hash_equals($secret, (string) $request->query('key', ''))) {
-        abort(404);
-    }
-};
-
 // Protected deploy utilities.
-Route::get('/run-migrations', function (Request $request) use ($assertDeployHelperAllowed) {
-    $assertDeployHelperAllowed($request);
-
-    try {
-        $exitCode = Artisan::call('migrate', ['--force' => true]);
-        $output = Artisan::output();
-
-        if ($exitCode !== 0) {
-            return response(
-                '❌ migrate exited with code '.$exitCode.'<br><pre>'.e($output).'</pre>',
-                500
-            );
-        }
-
-        return '✅ Migrations executed successfully:<br><pre>'.e($output).'</pre>';
-    } catch (Throwable $e) {
-        return response('❌ Error running migrations: '.e($e->getMessage()), 500);
-    }
-});
+Route::get('/run-migrations', [DeployHelperController::class, 'migrations']);
 
 // Runs seeders with optional class-based execution.
-Route::get('/run-seeders/{class?}', function (Request $request, ?string $class = null) use ($assertDeployHelperAllowed) {
-    $assertDeployHelperAllowed($request);
-
-    // Restrict execution to valid seeder class names.
-    if ($class !== null && $class !== '') {
-        if (! preg_match('/^Database\\\\Seeders\\\\[A-Za-z0-9_]+$/', $class)) {
-            return response('❌ Invalid seeder class name.', 400);
-        }
-    }
-
-    try {
-        $params = ['--force' => true];
-
-        if ($class) {
-            $params['--class'] = $class;
-        }
-
-        $exitCode = Artisan::call('db:seed', $params);
-        $output = Artisan::output();
-
-        if ($exitCode !== 0) {
-            return response(
-                '❌ db:seed exited with code '.$exitCode.'<br><pre>'.e($output).'</pre>',
-                500
-            );
-        }
-
-        return '✅ Seeder executed:<br><pre>'.e($output).'</pre>';
-    } catch (Throwable $e) {
-        return response('❌ Error: '.e($e->getMessage()), 500);
-    }
-})->where('class', '[A-Za-z0-9\\\\_]+');
+Route::get('/run-seeders/{class?}', [DeployHelperController::class, 'seeders'])->where('class', '[A-Za-z0-9\\\\_]+');
 
 // Admin authentication routes.
 Route::get('/admin/login', [AdminUserController::class, 'showLoginForm'])->name('admin.login');
@@ -503,6 +434,8 @@ Route::middleware(['auth:clients'])->group(function () {
     Route::get('/invoices/heartbeat', [InvoiceController::class, 'invoicesHeartbeat'])->name('clients.invoices.heartbeat');
     Route::get('/notifications/heartbeat', [NotificationController::class, 'notificationsHeartbeat'])->name('clients.notifications.heartbeat');
     Route::get('/notifications', [NotificationController::class, 'notifications'])->name('clients.notifications');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('clients.notifications.read-all');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('clients.notifications.read');
     Route::get('/invoices/{sale}/print', [InvoiceController::class, 'printInvoice'])
         ->whereNumber('sale')
         ->name('clients.invoices.print');

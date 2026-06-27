@@ -10,15 +10,12 @@ use App\Http\Requests\Admin\Classifications\UpdateClassificationValueRequest;
 use App\Models\Category;
 use App\Models\ClassificationDimension;
 use App\Models\ClassificationValue;
-use App\Services\Client\Inertia\ListPaginationPayload;
-use App\Support\AdminPerPage;
+use App\Services\Admin\Classifications\ClassificationCatalogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -27,181 +24,40 @@ use Inertia\Response as InertiaResponse;
  */
 class ClassificationCatalogController extends Controller
 {
-    private const OPTIONS_CACHE_TTL_SECONDS = 300;
-
-    private static function classificationOptionsCacheKey(int $categoryId): string
-    {
-        return 'classification.catalog.options.'.$categoryId;
-    }
-
     public static function forgetClassificationOptionsCacheForCategory(int $categoryId): void
     {
-        Cache::forget(self::classificationOptionsCacheKey($categoryId));
-    }
-
-    private function assertSubcategory(Category $category): void
-    {
-        if ($category->parent_category_id === null) {
-            abort(404);
-        }
-    }
-
-    private function generateUniqueSlug(string $label, int $categoryId, ?int $ignoreId = null): string
-    {
-        $base = Str::slug($label) ?: 'attr';
-        $slug = $base;
-        $i = 2;
-
-        while (true) {
-            $query = ClassificationDimension::withTrashed()
-                ->where('category_id', $categoryId)
-                ->where('slug', $slug);
-
-            if ($ignoreId) {
-                $query->where('id', '!=', $ignoreId);
-            }
-
-            if (! $query->exists()) {
-                break;
-            }
-
-            $slug = $base.'-'.$i;
-            $i++;
-        }
-
-        return $slug;
+        app(ClassificationCatalogService::class)->forgetOptions($categoryId);
     }
 
     /**
      * JSON para el inventario: atributos y valores posibles por subcategoría.
      */
-    public function optionsForCategory(Category $category): JsonResponse
+    public function optionsForCategory(Category $category, ClassificationCatalogService $catalog): JsonResponse
     {
-        if ($category->parent_category_id === null) {
-            $empty = [];
+        Gate::forUser(Auth::guard('admin')->user())->authorize('viewAny', ClassificationDimension::class);
 
-            return response()->json(['attributes' => $empty, 'dimensions' => $empty]);
-        }
-
-        $cid = (int) $category->category_id;
-        $list = Cache::remember(
-            self::classificationOptionsCacheKey($cid),
-            self::OPTIONS_CACHE_TTL_SECONDS,
-            function () use ($cid) {
-                $dimensions = ClassificationDimension::query()
-                    ->forCategory($cid)
-                    ->orderBy('sort_order')
-                    ->orderBy('id')
-                    ->with(['values' => fn ($q) => $q->orderBy('sort_order')->orderBy('id')])
-                    ->get();
-
-                return $dimensions->map(fn (ClassificationDimension $d) => [
-                    'id' => $d->id,
-                    'label' => $d->label,
-                    'slug' => $d->slug,
-                    'values' => $d->values->map(fn (ClassificationValue $v) => [
-                        'id' => $v->id,
-                        'value' => $v->value,
-                    ])->values(),
-                ])->values();
-            }
-        );
-
-        return response()->json([
-            'attributes' => $list,
-            'dimensions' => $list,
-        ]);
+        return response()->json($catalog->optionsPayload($category));
     }
 
-    public function index(Request $request): InertiaResponse
+    public function index(Request $request, ClassificationCatalogService $catalog): InertiaResponse
     {
-        $subcategoriesAll = Category::hierarchyRowsForAdminDisplay()
-            ->filter(fn (Category $c) => $c->parent_category_id !== null)
-            ->sortBy(fn (Category $c) => mb_strtolower((string) ($c->name ?? '')))
-            ->values();
+        Gate::forUser(Auth::guard('admin')->user())->authorize('viewAny', ClassificationDimension::class);
 
-        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-
-        $subcategories = new LengthAwarePaginator(
-            $subcategoriesAll->forPage($currentPage, $perPage)->values(),
-            $subcategoriesAll->count(),
-            $perPage,
-            $currentPage,
-            ['path' => $request->url()]
-        );
-        $subcategories->withQueryString();
-
-        $ids = $subcategories->getCollection()->pluck('category_id')->all();
-        if ($ids !== []) {
-            $counts = DB::table('classification_dimensions')
-                ->whereIn('category_id', $ids)
-                ->whereNull('deleted_at')
-                ->selectRaw('category_id, count(*) as c')
-                ->groupBy('category_id')
-                ->pluck('c', 'category_id');
-
-            foreach ($subcategories as $cat) {
-                $cat->setAttribute(
-                    'classification_dimensions_count',
-                    (int) ($counts[$cat->category_id] ?? 0)
-                );
-            }
-        }
-
-        return Inertia::render('Admin/Classifications/Index', [
-            'subcategories' => $subcategories->getCollection()->map(fn (Category $c): array => [
-                'category_id' => (int) $c->category_id,
-                'name' => $c->name,
-                'parent_name' => optional($c->parent)->name,
-                'dimensions_count' => (int) ($c->getAttribute('classification_dimensions_count') ?? 0),
-            ])->values()->all(),
-            'pagination' => ListPaginationPayload::from($subcategories),
-        ]);
+        return Inertia::render('Admin/Classifications/Index', $catalog->indexPayload($request));
     }
 
-    public function showCategory(Category $category): InertiaResponse
+    public function showCategory(Category $category, ClassificationCatalogService $catalog): InertiaResponse
     {
-        $this->assertSubcategory($category);
-        $category->load('parent:category_id,name');
-        $attributes = ClassificationDimension::withTrashed()
-            ->forCategory((int) $category->category_id)
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->withCount(['values' => fn ($q) => $q->whereNull('deleted_at')])
-            ->get();
+        Gate::forUser(Auth::guard('admin')->user())->authorize('viewAny', ClassificationDimension::class);
 
-        return Inertia::render('Admin/Classifications/Show', [
-            'category' => [
-                'category_id' => (int) $category->category_id,
-                'name' => $category->name,
-                'parent_name' => optional($category->parent)->name,
-            ],
-            'attributes' => $attributes->map(fn (ClassificationDimension $d): array => [
-                'id' => (int) $d->id,
-                'label' => $d->label,
-                'slug' => $d->slug,
-                'values_count' => (int) $d->values_count,
-                'trashed' => $d->trashed(),
-            ])->values()->all(),
-        ]);
+        return Inertia::render('Admin/Classifications/Show', $catalog->showPayload($category));
     }
 
-    public function storeDimension(StoreClassificationDimensionRequest $request, Category $category): JsonResponse|RedirectResponse
+    public function storeDimension(StoreClassificationDimensionRequest $request, Category $category, ClassificationCatalogService $catalog): JsonResponse|RedirectResponse
     {
-        $this->assertSubcategory($category);
-        $data = $request->validated();
-        $data['slug'] = $data['slug'] ?? $this->generateUniqueSlug($data['label'], (int) $category->category_id);
-        $data['category_id'] = $category->category_id;
+        Gate::forUser(Auth::guard('admin')->user())->authorize('create', ClassificationDimension::class);
 
-        $maxOrder = ClassificationDimension::withTrashed()
-            ->where('category_id', $category->category_id)
-            ->max('sort_order') ?? -1;
-        $data['sort_order'] = $maxOrder + 1;
-
-        /** @var ClassificationDimension $dimension */
-        $dimension = ClassificationDimension::create($data);
-        self::forgetClassificationOptionsCacheForCategory((int) $category->category_id);
+        $dimension = $catalog->createDimension($category, $request->validated());
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -219,36 +75,33 @@ class ClassificationCatalogController extends Controller
             ->with('status', 'Atributo creado.');
     }
 
-    public function editDimension(ClassificationDimension $dimension): RedirectResponse
+    public function editDimension(ClassificationDimension $dimension, ClassificationCatalogService $catalog): RedirectResponse
     {
+        Gate::forUser(Auth::guard('admin')->user())->authorize('update', $dimension);
+
         // La edición se hace en un modal de la vista Inertia; redirigimos al detalle.
         $dimension->load('category');
-        $this->assertSubcategory($dimension->category);
+        $catalog->assertSubcategory($dimension->category);
 
         return redirect()->route('admin.classifications.catalog.show', $dimension->category);
     }
 
-    public function updateDimension(UpdateClassificationDimensionRequest $request, ClassificationDimension $dimension): RedirectResponse
+    public function updateDimension(UpdateClassificationDimensionRequest $request, ClassificationDimension $dimension, ClassificationCatalogService $catalog): RedirectResponse
     {
-        $dimension->load('category');
-        $this->assertSubcategory($dimension->category);
-        $data = $request->validated();
-        $data['slug'] = $this->generateUniqueSlug($data['label'], (int) $dimension->category_id, $dimension->id);
-        $dimension->update($data);
-        self::forgetClassificationOptionsCacheForCategory((int) $dimension->category->category_id);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('update', $dimension);
+
+        $category = $catalog->updateDimension($dimension, $request->validated());
 
         return redirect()
-            ->route('admin.classifications.catalog.show', $dimension->category)
+            ->route('admin.classifications.catalog.show', $category)
             ->with('status', 'Atributo actualizado.');
     }
 
-    public function destroyDimension(Request $request, ClassificationDimension $dimension): RedirectResponse|JsonResponse
+    public function destroyDimension(Request $request, ClassificationDimension $dimension, ClassificationCatalogService $catalog): RedirectResponse|JsonResponse
     {
-        $dimension->load('category');
-        $this->assertSubcategory($dimension->category);
-        $catId = (int) $dimension->category->category_id;
-        $dimension->delete();
-        self::forgetClassificationOptionsCacheForCategory($catId);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('delete', $dimension);
+
+        $category = $catalog->deleteDimension($dimension);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -257,60 +110,34 @@ class ClassificationCatalogController extends Controller
         }
 
         return redirect()
-            ->route('admin.classifications.catalog.show', $dimension->category)
+            ->route('admin.classifications.catalog.show', $category)
             ->with('status', 'Atributo desactivado. Los productos que ya tenían un valor siguen igual.');
     }
 
-    public function restoreDimension(int $dimensionId): RedirectResponse
+    public function restoreDimension(int $dimensionId, ClassificationCatalogService $catalog): RedirectResponse
     {
         $dimension = ClassificationDimension::withTrashed()->findOrFail($dimensionId);
-        $dimension->load('category');
-        $this->assertSubcategory($dimension->category);
-        $dimension->restore();
-        self::forgetClassificationOptionsCacheForCategory((int) $dimension->category->category_id);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('restore', $dimension);
+
+        $category = $catalog->restoreDimension($dimensionId);
 
         return redirect()
-            ->route('admin.classifications.catalog.show', $dimension->category)
+            ->route('admin.classifications.catalog.show', $category)
             ->with('status', 'Atributo activado de nuevo.');
     }
 
-    public function indexValues(ClassificationDimension $dimension): InertiaResponse
+    public function indexValues(ClassificationDimension $dimension, ClassificationCatalogService $catalog): InertiaResponse
     {
-        $dimension->load(['category.parent', 'values' => fn ($q) => $q->withTrashed()->orderBy('sort_order')->orderBy('id')]);
-        $this->assertSubcategory($dimension->category);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('view', $dimension);
 
-        return Inertia::render('Admin/Classifications/Values', [
-            'dimension' => [
-                'id' => (int) $dimension->id,
-                'label' => $dimension->label,
-                'category_id' => (int) $dimension->category_id,
-                'category_name' => optional($dimension->category)->name,
-                'parent_name' => optional(optional($dimension->category)->parent)->name,
-            ],
-            'values' => $dimension->values->map(fn (ClassificationValue $v): array => [
-                'id' => (int) $v->id,
-                'value' => $v->value,
-                'trashed' => $v->trashed(),
-            ])->values()->all(),
-        ]);
+        return Inertia::render('Admin/Classifications/Values', $catalog->valuesPayload($dimension));
     }
 
-    public function storeValue(StoreClassificationValueRequest $request, ClassificationDimension $dimension): JsonResponse|RedirectResponse
+    public function storeValue(StoreClassificationValueRequest $request, ClassificationDimension $dimension, ClassificationCatalogService $catalog): JsonResponse|RedirectResponse
     {
-        $dimension->load('category');
-        $this->assertSubcategory($dimension->category);
-        $data = $request->validated();
-        $data['classification_dimension_id'] = $dimension->id;
-        $data['normalized_value'] = ClassificationValue::normalizeStoredValue($data['value']);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('create', ClassificationValue::class);
 
-        $maxOrder = ClassificationValue::withTrashed()
-            ->where('classification_dimension_id', $dimension->id)
-            ->max('sort_order') ?? -1;
-        $data['sort_order'] = $maxOrder + 1;
-
-        /** @var ClassificationValue $value */
-        $value = ClassificationValue::create($data);
-        self::forgetClassificationOptionsCacheForCategory((int) $dimension->category->category_id);
+        $value = $catalog->createValue($dimension, $request->validated());
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -327,53 +154,46 @@ class ClassificationCatalogController extends Controller
             ->with('status', 'Valor añadido.');
     }
 
-    public function editValue(ClassificationValue $value): RedirectResponse
+    public function editValue(ClassificationValue $value, ClassificationCatalogService $catalog): RedirectResponse
     {
+        Gate::forUser(Auth::guard('admin')->user())->authorize('update', $value);
+
         // La edición se hace en un modal de la vista Inertia; redirigimos al listado de valores.
         $value->load('dimension.category');
         $dimension = $value->dimension;
-        $this->assertSubcategory($dimension->category);
+        $catalog->assertSubcategory($dimension->category);
 
         return redirect()->route('admin.classifications.values.index', $dimension);
     }
 
-    public function updateValue(UpdateClassificationValueRequest $request, ClassificationValue $value): RedirectResponse
+    public function updateValue(UpdateClassificationValueRequest $request, ClassificationValue $value, ClassificationCatalogService $catalog): RedirectResponse
     {
-        $value->load('dimension.category');
-        $dimension = $value->dimension;
-        $this->assertSubcategory($dimension->category);
-        $data = $request->validated();
-        $data['normalized_value'] = ClassificationValue::normalizeStoredValue($data['value']);
-        $value->update($data);
-        self::forgetClassificationOptionsCacheForCategory((int) $dimension->category->category_id);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('update', $value);
+
+        $dimension = $catalog->updateValue($value, $request->validated());
 
         return redirect()
             ->route('admin.classifications.values.index', $dimension)
             ->with('status', 'Valor actualizado.');
     }
 
-    public function destroyValue(ClassificationValue $value): RedirectResponse
+    public function destroyValue(ClassificationValue $value, ClassificationCatalogService $catalog): RedirectResponse
     {
-        $value->load('dimension.category');
-        $dimension = $value->dimension;
-        $this->assertSubcategory($dimension->category);
-        $catId = (int) $dimension->category->category_id;
-        $value->delete();
-        self::forgetClassificationOptionsCacheForCategory($catId);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('delete', $value);
+
+        $dimension = $catalog->deleteValue($value);
 
         return redirect()
             ->route('admin.classifications.values.index', $dimension)
             ->with('status', 'Valor desactivado.');
     }
 
-    public function restoreValue(int $valueId): RedirectResponse
+    public function restoreValue(int $valueId, ClassificationCatalogService $catalog): RedirectResponse
     {
         $value = ClassificationValue::withTrashed()->findOrFail($valueId);
-        $value->load('dimension.category');
-        $dimension = $value->dimension;
-        $this->assertSubcategory($dimension->category);
-        $value->restore();
-        self::forgetClassificationOptionsCacheForCategory((int) $dimension->category->category_id);
+        Gate::forUser(Auth::guard('admin')->user())->authorize('restore', $value);
+
+        $dimension = $catalog->restoreValue($valueId);
 
         return redirect()
             ->route('admin.classifications.values.index', $dimension)

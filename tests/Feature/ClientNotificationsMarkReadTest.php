@@ -11,6 +11,8 @@ use App\Notifications\OrderCompletedNotification;
 use App\Notifications\OrderReadyToPickupNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ClientNotificationsMarkReadTest extends TestCase
@@ -80,6 +82,131 @@ class ClientNotificationsMarkReadTest extends TestCase
         $client->refresh();
         $this->assertSame(0, $client->unreadNotifications()->count());
         $this->assertNotNull($client->notifications()->first()->read_at);
+    }
+
+    public function test_client_can_mark_own_notification_as_read(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Owner',
+            'second_surname' => null,
+            'gmail' => 'cliente-notification-owner@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $notificationId = (string) Str::uuid();
+        DB::table('notifications')->insert([
+            'id' => $notificationId,
+            'type' => 'test',
+            'notifiable_type' => Client::class,
+            'notifiable_id' => $client->user_id,
+            'data' => json_encode(['message' => 'Prueba']),
+            'read_at' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($client, 'clients')
+            ->postJson(route('clients.notifications.read', ['notification' => $notificationId]))
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertNotNull(DB::table('notifications')->where('id', $notificationId)->value('read_at'));
+    }
+
+    public function test_client_cannot_mark_other_client_notification_as_read(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'Owner',
+            'second_surname' => null,
+            'gmail' => 'cliente-notification-owner-2@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $otherClient = Client::create([
+            'name' => 'Otro',
+            'first_surname' => 'Cliente',
+            'second_surname' => null,
+            'gmail' => 'cliente-notification-other@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $notificationId = (string) Str::uuid();
+        DB::table('notifications')->insert([
+            'id' => $notificationId,
+            'type' => 'test',
+            'notifiable_type' => Client::class,
+            'notifiable_id' => $otherClient->user_id,
+            'data' => json_encode(['message' => 'Prueba']),
+            'read_at' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($client, 'clients')
+            ->postJson(route('clients.notifications.read', ['notification' => $notificationId]))
+            ->assertOk()
+            ->assertJson(['success' => false]);
+
+        $this->assertNull(DB::table('notifications')->where('id', $notificationId)->value('read_at'));
+    }
+
+    public function test_client_mark_all_read_only_updates_own_notifications(): void
+    {
+        $client = Client::create([
+            'name' => 'Cliente',
+            'first_surname' => 'All',
+            'second_surname' => null,
+            'gmail' => 'cliente-notification-all@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $otherClient = Client::create([
+            'name' => 'Otro',
+            'first_surname' => 'All',
+            'second_surname' => null,
+            'gmail' => 'cliente-notification-all-other@example.com',
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+
+        $ownNotificationId = (string) Str::uuid();
+        $otherNotificationId = (string) Str::uuid();
+        DB::table('notifications')->insert([
+            [
+                'id' => $ownNotificationId,
+                'type' => 'test',
+                'notifiable_type' => Client::class,
+                'notifiable_id' => $client->user_id,
+                'data' => json_encode(['message' => 'Propia']),
+                'read_at' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => $otherNotificationId,
+                'type' => 'test',
+                'notifiable_type' => Client::class,
+                'notifiable_id' => $otherClient->user_id,
+                'data' => json_encode(['message' => 'Ajena']),
+                'read_at' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        $this->actingAs($client, 'clients')
+            ->postJson(route('clients.notifications.read-all'))
+            ->assertOk()
+            ->assertJson(['success' => true, 'updated' => 1]);
+
+        $this->assertNotNull(DB::table('notifications')->where('id', $ownNotificationId)->value('read_at'));
+        $this->assertNull(DB::table('notifications')->where('id', $otherNotificationId)->value('read_at'));
     }
 
     public function test_notifications_heartbeat_returns_ready_to_pickup_toast_payload(): void

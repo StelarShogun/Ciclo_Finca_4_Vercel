@@ -3,9 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Models\Sale;
-use App\Services\AuditLogger;
-use App\Services\InventoryMovementService;
-use App\Services\OrderCancellationNotifier;
+use App\Services\Admin\Audit\AuditLogger;
+use App\Services\Admin\Inventory\InventoryMovementService;
+use App\Services\Admin\Sales\OrderCancellationNotifier;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -107,10 +108,9 @@ class CancelExpiredReadyOrdersCommand extends Command
                 try {
                     $notifier->notify($sale, $reason, $cancelledAt);
                 } catch (\Throwable $e) {
-                    Log::warning('Auto-cancellation notification failed.', [
+                    Log::warning('Auto-cancellation notification failed.', SensitiveDataMasker::exceptionContext($e, [
                         'sale_id' => $sale->sale_id,
-                        'error' => $e->getMessage(),
-                    ]);
+                    ]));
                 }
 
                 try {
@@ -128,10 +128,9 @@ class CancelExpiredReadyOrdersCommand extends Command
                         ]
                     );
                 } catch (\Throwable $e) {
-                    Log::warning('Auto-cancellation audit log failed.', [
+                    Log::warning('Auto-cancellation audit log failed.', SensitiveDataMasker::exceptionContext($e, [
                         'sale_id' => $sale->sale_id,
-                        'error' => $e->getMessage(),
-                    ]);
+                    ]));
                 }
 
                 $this->info("Pedido {$label} cancelado y stock devuelto correctamente.");
@@ -139,11 +138,10 @@ class CancelExpiredReadyOrdersCommand extends Command
 
             } catch (\Throwable $e) {
                 $failed++;
-                $this->error("Error al cancelar el pedido {$label}: {$e->getMessage()}");
-                Log::error('Auto-cancellation of expired ready_to_pickup order failed.', [
+                $this->error("Error al cancelar el pedido {$label}. Revisa los logs.");
+                Log::error('Auto-cancellation of expired ready_to_pickup order failed.', SensitiveDataMasker::exceptionContext($e, [
                     'sale_id' => $sale->sale_id,
-                    'error' => $e->getMessage(),
-                ]);
+                ]));
             }
         });
 

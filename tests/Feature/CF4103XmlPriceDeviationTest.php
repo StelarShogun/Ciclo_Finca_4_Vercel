@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AdminUser;
 use App\Models\Product;
-use App\Services\XmlPriceDeviationService;
+use App\Services\Admin\Suppliers\XmlPriceDeviationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Session;

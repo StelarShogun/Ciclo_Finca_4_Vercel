@@ -3,6 +3,7 @@
 namespace App\Services\Admin\Images;
 
 use App\Models\Product;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use App\Support\GdImage;
 use Illuminate\Support\Facades\Log;
 use Spatie\MediaLibrary\Conversions\FileManipulator;
@@ -108,10 +109,9 @@ final class MissingProductMediaConversionService
                         $processed++;
                     } catch (\Throwable $e) {
                         $failed++;
-                        Log::warning('catalog_media_conversion_failed', [
+                        Log::warning('catalog_media_conversion_failed', SensitiveDataMasker::exceptionContext($e, [
                             'media_id' => $media->id,
-                            'error' => $e->getMessage(),
-                        ]);
+                        ]));
                     }
                 });
         }

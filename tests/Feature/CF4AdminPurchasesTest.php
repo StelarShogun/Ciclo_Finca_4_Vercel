@@ -10,6 +10,7 @@ use App\Models\SaleItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF4AdminPurchasesTest extends TestCase
@@ -124,14 +125,12 @@ class CF4AdminPurchasesTest extends TestCase
         $response = $this->get(route('admin.orders.index'));
         $response->assertStatus(200);
 
-        $response->assertSee('Pendiente', false);
-        $response->assertSee($salePending->invoice_number, false);
-        $response->assertSee($saleCompleted->invoice_number, false);
-        $response->assertSee('cliente-admin-purchases@example.com', false);
-        $response->assertSee('Confirmado', false);
-        $response->assertSee('Fecha de pedido', false);
-        $response->assertSee('Fecha listo para recoger', false);
-        $response->assertSee('Fecha de confirmación', false);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Orders/Index', false)
+            ->where('orders.0.invoice_number', $salePending->invoice_number)
+            ->where('orders.1.invoice_number', $saleCompleted->invoice_number)
+            ->where('orders.0.customer_email', 'cliente-admin-purchases@example.com')
+        );
     }
 
     public function test_admin_purchases_heartbeat_detects_new_web_cart_sale(): void
@@ -266,9 +265,10 @@ class CF4AdminPurchasesTest extends TestCase
 
         $response = $this->get(route('admin.orders.index'));
         $response->assertStatus(200);
-        $response->assertSee('data-cf4-orders-heartbeat', false);
-        $response->assertSee('id="cf4-orders-new-banner"', false);
-        $response->assertSee('cf4-latest-purchase-sale-id', false);
-        $response->assertSee('data-cf4-orders-pending-badge', false);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Orders/Index', false)
+            ->has('latestPurchaseSaleId')
+            ->has('pendingWebOrdersCount')
+        );
     }
 }

@@ -3,9 +3,9 @@
 namespace App\Actions\Client\Catalog;
 
 use App\Models\FavoriteProduct;
-use App\Services\Catalog\CatalogProductSearchTelemetry;
 use App\Services\Client\Catalog\CatalogFilterResolver;
 use App\Services\Client\Catalog\CatalogPayloadBuilder;
+use App\Services\Client\Catalog\CatalogProductSearchTelemetry;
 use App\Services\Client\Catalog\CatalogQueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

@@ -3,8 +3,19 @@
 namespace App\Providers;
 
 use App\Models\AdminUser;
-use App\Services\Filesystem\VercelBlobAdapter;
+use App\Models\ClassificationDimension;
+use App\Models\ClassificationValue;
+use App\Models\FavoriteProduct;
+use App\Policies\ClassificationPolicy;
+use App\Policies\FavoritePolicy;
+use App\Policies\InvoicePolicy;
+use App\Policies\NotificationPolicy;
+use App\Policies\ReportPolicy;
+use App\Policies\SupplierOrderPolicy;
+use App\Policies\UserProfilePolicy;
+use App\Services\Shared\Filesystem\VercelBlobAdapter;
 use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
@@ -45,5 +56,19 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('viewPulse', function ($user = null): bool {
             return auth('admin')->user() instanceof AdminUser;
         });
+
+        Gate::policy(FavoriteProduct::class, FavoritePolicy::class);
+        Gate::policy(ClassificationDimension::class, ClassificationPolicy::class);
+        Gate::policy(ClassificationValue::class, ClassificationPolicy::class);
+        Gate::policy(DatabaseNotification::class, NotificationPolicy::class);
+
+        Gate::define('reports.view', [ReportPolicy::class, 'view']);
+        Gate::define('reports.export', [ReportPolicy::class, 'export']);
+        Gate::define('invoices.view', [InvoicePolicy::class, 'view']);
+        Gate::define('invoices.export', [InvoicePolicy::class, 'export']);
+        Gate::define('profile.view', [UserProfilePolicy::class, 'view']);
+        Gate::define('profile.update', [UserProfilePolicy::class, 'update']);
+        Gate::define('supplier-orders.receive', [SupplierOrderPolicy::class, 'receive']);
+        Gate::define('supplier-orders.close-partial', [SupplierOrderPolicy::class, 'closePartial']);
     }
 }

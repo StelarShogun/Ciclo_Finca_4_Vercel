@@ -5,7 +5,7 @@ namespace App\Services\Client\Inertia;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductReview;
-use App\Services\Media\ProductImageUrls;
+use App\Services\Shared\Media\ProductImageUrls;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;

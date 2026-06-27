@@ -3,7 +3,7 @@
 namespace App\Services\Client\Favorites;
 
 use App\Models\FavoriteProduct;
-use App\Services\Media\ProductImageUrls;
+use App\Services\Shared\Media\ProductImageUrls;
 
 final class ClientFavoriteFormatter
 {

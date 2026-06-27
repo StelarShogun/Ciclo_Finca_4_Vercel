@@ -35,7 +35,7 @@
         })();
     </script>
     @viteReactRefresh
-    @vite(['resources/js/app.tsx'])
+    @vite(['resources/ts/app.tsx'])
     @inertiaHead
 </head>
 <body>

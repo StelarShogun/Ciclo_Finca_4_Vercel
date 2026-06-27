@@ -8,7 +8,7 @@ use App\Models\ClassificationDimension;
 use App\Models\ClassificationValue;
 use App\Models\Product;
 use App\Models\Supplier;
-use App\Services\ProductClassificationAssignmentService;
+use App\Services\Admin\Classifications\ProductClassificationAssignmentService;
 use Illuminate\Database\Seeder;
 
 /**

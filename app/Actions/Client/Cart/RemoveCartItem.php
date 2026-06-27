@@ -2,7 +2,7 @@
 
 namespace App\Actions\Client\Cart;
 
-use App\Data\Client\Cart\CartMutationResult;
+use App\DTOs\Client\Cart\CartMutationResult;
 use App\Services\Client\Cart\CartManager;
 
 final class RemoveCartItem

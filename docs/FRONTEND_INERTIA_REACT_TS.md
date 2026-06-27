@@ -12,10 +12,10 @@ Esta guía documenta la migración progresiva de Ciclo Finca 4 desde Blade + Jav
 
 ## Arquitectura frontend (por características + shared)
 
-Inertia resuelve páginas solo desde `resources/js/Pages`. Esas páginas deben ser **delgadas** (re-export del módulo real):
+Inertia resuelve páginas solo desde `resources/ts/Pages`. Esas páginas deben ser **delgadas** (re-export del módulo real):
 
 ```tsx
-// resources/js/Pages/Client/Products/Show.tsx
+// resources/ts/Pages/Client/Products/Show.tsx
 export { default } from '@/features/client/product/pages/ProductShowPage';
 ```
 
@@ -31,10 +31,10 @@ export { default } from '@/features/client/product/pages/ProductShowPage';
 ### Estructura aplicada
 
 ```txt
-resources/js/
+resources/ts/
   app.tsx
   bootstrap.ts
-  **/*.ts                   # legacy admin/shared/client (sin .js en resources/js)
+  **/*.ts                   # legacy admin/shared/client (sin .js en resources/ts)
   Pages/Client/...          # capa delgada Inertia
   features/client/
     home|catalog|product|cart|auth|profile|invoices|favorites|notifications|legal/
@@ -60,13 +60,13 @@ resources/js/
 ## Archivos base
 
 - Root Inertia: `resources/views/app.blade.php`
-- Entrypoint React: `resources/js/app.tsx`
-- Bootstrap TS/axios: `resources/js/bootstrap.ts`
+- Entrypoint React: `resources/ts/app.tsx`
+- Bootstrap TS/axios: `resources/ts/bootstrap.ts`
 - Middleware compartido: `app/Http/Middleware/HandleInertiaRequests.php`
-- Tipos compartidos: `resources/js/shared/types/`; tipos de página en `resources/js/types/` (catalog, home, invoices, …)
-- Layouts canónicos: `resources/js/shared/components/layout/`
-- UI compartida: `resources/js/shared/components/ui/`
-- Módulos: `resources/js/features/client/*`
+- Tipos compartidos: `resources/ts/shared/types/`; tipos de página en `resources/ts/types/` (catalog, home, invoices, …)
+- Layouts canónicos: `resources/ts/shared/components/layout/`
+- UI compartida: `resources/ts/shared/components/ui/`
+- Módulos: `resources/ts/features/client/*`
 - API de dominio: `features/client/{cart,favorites}/api.ts`
 
 ## Props compartidas
@@ -130,7 +130,7 @@ Componentes creados para Home:
 
 Tipos específicos:
 
-- `resources/js/types/home.ts`
+- `resources/ts/types/home.ts`
 
 La ruta `/` usa Inertia (`Client/Home/Index`); no quedan vistas Blade de storefront.
 
@@ -160,7 +160,7 @@ Componentes creados para catálogo:
 
 Tipos específicos:
 
-- `resources/js/types/catalog.ts`
+- `resources/ts/types/catalog.ts`
 
 Patrón de filtros: `CatalogFilters` usa `router.get('/catalog', params, { preserveScroll: true })`, conservando query string y dejando Laravel como fuente de verdad para validaciones de precio, filtros, orden y paginación.
 
@@ -228,7 +228,7 @@ Se quitaron shims `@deprecated` ya sin consumidores: `Components/{Home,Catalog,U
 La API canónica está en:
 
 ```txt
-resources/js/features/client/cart/api.ts
+resources/ts/features/client/cart/api.ts
 ```
 
 Funciones disponibles:
@@ -251,7 +251,7 @@ features/client/favorites/api.ts
 
 ## Cómo crear una página Inertia
 
-1. Crear el componente en `resources/js/Pages/...`.
+1. Crear el componente en `resources/ts/Pages/...`.
 2. En el controller, cambiar solo la ruta migrada a `Inertia::render(...)`.
 3. Enviar props serializables y pequeñas.
 4. Mantener validaciones en Form Requests o controller.
@@ -280,7 +280,7 @@ Laravel mantiene la validación; React muestra errores desde `form.errors`.
 
 - `shared/components/layout/ClientLayout.tsx`: composición de `ClientHeader`, `FavoritesDrawer`, `main`, `ClientFooter`.
 - `shared/components/layout/ClientAuthLayout.tsx`: auth cliente sin shell completo.
-- `AdminLayout`: shell admin piloto (`resources/js/Layouts/AdminLayout.tsx`); **no migrar admin** en esta fase.
+- `AdminLayout`: shell admin piloto (`resources/ts/Layouts/AdminLayout.tsx`); **no migrar admin** en esta fase.
 - Re-export: `@/Layouts/ClientLayout` → shared.
 
 Los layouts importan CSS cliente existente; no introducen Tailwind como sistema visual.
@@ -299,7 +299,7 @@ El sistema visual sigue usando:
 - `resources/css/admin/shell-base.css`
 - `resources/css/admin/dashboard/dashboard.css`
 
-`resources/js/app.tsx` se mantiene como entrypoint liviano. El CSS cliente se importa desde `ClientLayout` y páginas cliente específicas; el CSS admin se importa desde `AdminLayout`. Esto evita mezclar CSS admin en pantallas cliente durante la migración progresiva.
+`resources/ts/app.tsx` se mantiene como entrypoint liviano. El CSS cliente se importa desde `ClientLayout` y páginas cliente específicas; el CSS admin se importa desde `AdminLayout`. Esto evita mezclar CSS admin en pantallas cliente durante la migración progresiva.
 
 No usar CSS-in-JS ni reescribir tokens globales en esta fase.
 
@@ -307,7 +307,7 @@ No usar CSS-in-JS ni reescribir tokens globales en esta fase.
 
 Corrida agresiva documentada en `docs/LEGACY_JS_TO_TS_MIGRATION.md`:
 
-- `resources/js/**/*.js` eliminado o convertido a `.ts`.
+- `resources/ts/**/*.ts` eliminado o convertido a `.ts`.
 - Entradas Vite cliente reducidas a `invoices-page.ts` (Blade print) + CSS; storefront vía `app.tsx`.
 - Bundles `clients-*.js` eliminados donde la ruta ya es Inertia; catálogo conserva `bundles/catalog.ts` vía `import()` dinámico.
 

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AdminUser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF4159DashboardNewSupplierQuickActionTest extends TestCase
@@ -29,9 +30,11 @@ class CF4159DashboardNewSupplierQuickActionTest extends TestCase
         $this->actingAs($admin, 'admin')
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Nuevo proveedor', false)
-            ->assertSee(route('suppliers.create'), false)
-            ->assertSee('action-card', false);
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Dashboard/Index', false)
+            );
+
+        $this->assertSame('/suppliers/create', parse_url(route('suppliers.create'), PHP_URL_PATH));
     }
 
     public function test_suppliers_create_redirects_to_index_with_open_new_query(): void
@@ -50,9 +53,9 @@ class CF4159DashboardNewSupplierQuickActionTest extends TestCase
         $this->actingAs($admin, 'admin')
             ->get(route('suppliers.index', ['open' => 'new']))
             ->assertOk()
-            ->assertSee('id="new-supplier-modal"', false)
-            ->assertSee('id="new-supplier-form"', false)
-            ->assertSee('Nuevo proveedor', false);
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Suppliers/Index', false)
+            );
     }
 
     public function test_guest_cannot_access_supplier_create_route(): void

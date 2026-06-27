@@ -7,7 +7,7 @@ use App\Services\Client\Cart\CartManager;
 use App\Services\Client\Cart\CartProductLookup;
 use App\Services\Client\Catalog\CatalogSpotlightBuilder;
 use App\Services\Client\Inertia\CartPagePayloadBuilder;
-use App\Services\Media\ProductImageUrls;
+use App\Services\Shared\Media\ProductImageUrls;
 use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;

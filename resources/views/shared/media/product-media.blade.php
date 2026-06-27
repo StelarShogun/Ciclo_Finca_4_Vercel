@@ -1,5 +1,5 @@
 @php
-    use App\Services\Media\ProductImageUrls;
+    use App\Services\Shared\Media\ProductImageUrls;
 
     $variant = $variant ?? 'card';
     $alt = $alt ?? $product->name;

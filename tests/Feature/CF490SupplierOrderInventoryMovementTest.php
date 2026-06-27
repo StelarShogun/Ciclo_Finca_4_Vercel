@@ -2,14 +2,14 @@
 
 namespace Tests\Feature;
 
-use App\Enums\MovementType;
+use App\Enums\Inventory\MovementType;
 use App\Models\AdminUser;
 use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Supplier;
-use App\Services\InventoryMovementService;
+use App\Services\Admin\Inventory\InventoryMovementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

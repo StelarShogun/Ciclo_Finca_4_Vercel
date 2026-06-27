@@ -6,6 +6,7 @@ use App\Models\AdminUser;
 use App\Models\Client;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -48,12 +49,11 @@ class AdminPdfExportReportTest extends TestCase
         $response = $this->get('/reports/exportaciones');
 
         $response->assertOk();
-        $response->assertSee('Exportar datos', false);
-        $response->assertSee('Reportes en PDF y Excel', false);
-        $response->assertSee('cf4-export-config', false);
-        $response->assertSee(route('dashboard.export'), false);
-        $response->assertSee('Listados administrativos', false);
-        $response->assertSee('/reports/exportaciones/descarga/proveedores', false);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Reports/Exports', false)
+            ->where('exportsConfig.exports.dashboard.baseUrls.pdf', route('dashboard.export'))
+            ->where('exportsConfig.exports.productSales.title', 'Productos más vendidos')
+        );
     }
 
     public function test_exports_page_propagates_inventory_filters_to_catalog_download_links(): void

@@ -4,7 +4,7 @@ namespace App\Services\Client\Inertia;
 
 use App\Models\Product;
 use App\Services\Client\Storefront\ClientPickupPolicy;
-use App\Services\Media\ProductImageUrls;
+use App\Services\Shared\Media\ProductImageUrls;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class CartPagePayloadBuilder

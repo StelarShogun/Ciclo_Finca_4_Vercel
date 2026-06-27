@@ -3,7 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\Sale;
-use App\Services\OrderCancellationNotifier;
+use App\Services\Admin\Sales\OrderCancellationNotifier;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -47,10 +48,9 @@ class DeleteExpiredSalesCommand extends Command
             try {
                 $notifier->notify($sale, $reason, $cancelledAt);
             } catch (\Throwable $e) {
-                Log::warning('Automatic cancellation notification failed.', [
+                Log::warning('Automatic cancellation notification failed.', SensitiveDataMasker::exceptionContext($e, [
                     'sale_id' => $sale->sale_id,
-                    'error' => $e->getMessage(),
-                ]);
+                ]));
             }
         });
 

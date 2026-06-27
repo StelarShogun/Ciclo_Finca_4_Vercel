@@ -6,6 +6,7 @@ use App\Models\AdminUser;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -63,8 +64,9 @@ class AdminBladeImagePlaceholderTest extends TestCase
         $response = $this->actingAs($admin, 'admin')->get(route($routeName));
 
         $response->assertOk();
-        $response->assertSee('product-media-placeholder--thumb-table', false);
-        $response->assertSee('fa-cogs', false);
-        $response->assertSee($productName, false);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->has($routeName === 'dashboard' ? 'lowStockList' : 'products')
+        );
+        $this->assertStringContainsString($productName, $response->getContent());
     }
 }

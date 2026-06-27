@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Admin\Suppliers;
 
+use App\Actions\Admin\Suppliers\AnalyzeXmlPriceDeviation;
+use App\Actions\Admin\Suppliers\ApplyXmlPriceDeviation;
 use App\Http\Controllers\Controller;
-use App\Services\AuditLogger;
-use App\Services\XmlPriceDeviationService;
-use Illuminate\Http\Request;
+use App\Http\Requests\Admin\Suppliers\AnalyzeXmlPriceDeviationRequest;
+use App\Http\Requests\Admin\Suppliers\ApplyXmlPriceDeviationRequest;
+use App\Services\Admin\Suppliers\XmlPriceDeviationStorage;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
@@ -37,7 +40,7 @@ class XmlPriceDeviationController extends Controller
     private const SESSION_KEY = 'xml_price_deviation_analysis';
 
     public function __construct(
-        private readonly XmlPriceDeviationService $service
+        private readonly XmlPriceDeviationStorage $storage,
     ) {}
 
     // ─── 1. Upload form ───────────────────────────────────────────────────────
@@ -49,45 +52,33 @@ class XmlPriceDeviationController extends Controller
 
     // ─── 2. Parse & redirect to review ───────────────────────────────────────
 
-    public function analyse(Request $request)
+    public function analyse(AnalyzeXmlPriceDeviationRequest $request, AnalyzeXmlPriceDeviation $action)
     {
-        $request->validate([
-            'xml_file' => ['required', 'file', 'mimes:xml,text', 'max:5120'],
-            'threshold' => ['required', 'numeric', 'min:0', 'max:100'],
-        ], [
-            'xml_file.required' => 'Debe seleccionar un archivo XML.',
-            'xml_file.mimes' => 'El archivo debe ser de tipo XML.',
-            'xml_file.max' => 'El archivo no puede superar los 5 MB.',
-            'threshold.required' => 'Debe indicar el umbral de desvío.',
-            'threshold.min' => 'El umbral no puede ser negativo.',
-            'threshold.max' => 'El umbral no puede superar el 100%.',
-        ]);
-
         try {
-            $analysis = $this->service->analyse(
+            $analysisId = $action->handle(
+                adminId: (int) auth('admin')->id(),
                 file: $request->file('xml_file'),
-                thresholdPct: (float) $request->input('threshold', 10)
+                thresholdPct: (float) $request->input('threshold', 10),
             );
         } catch (\RuntimeException $e) {
-            return back()->withInput()->withErrors(['xml_file' => $e->getMessage()]);
-        } catch (\Throwable $e) {
-            Log::error('XmlPriceDeviationController@analyse failed.', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+            Log::warning('XmlPriceDeviationController@analyse rejected XML.', SensitiveDataMasker::exceptionContext($e, [
+                'admin_id' => auth('admin')->id(),
+            ]));
+
+            return back()->withInput()->withErrors([
+                'xml_file' => 'No fue posible analizar el XML. Verifique que el archivo tenga productos válidos.',
             ]);
+        } catch (\Throwable $e) {
+            Log::error('XmlPriceDeviationController@analyse failed.', SensitiveDataMasker::exceptionContext($e, [
+                'admin_id' => auth('admin')->id(),
+            ]));
 
             return back()->withInput()->withErrors([
                 'xml_file' => 'Ocurrió un error al procesar el archivo. Verifique que el formato sea correcto.',
             ]);
         }
 
-        if (empty($analysis['items'])) {
-            return back()->withInput()->withErrors([
-                'xml_file' => 'No se encontraron productos en el archivo XML.',
-            ]);
-        }
-
-        Session::put(self::SESSION_KEY, $analysis);
+        Session::put(self::SESSION_KEY, $analysisId);
 
         return redirect()->route('admin.supplier-orders.xml-deviation.review');
     }
@@ -96,7 +87,7 @@ class XmlPriceDeviationController extends Controller
 
     public function review()
     {
-        $analysis = Session::get(self::SESSION_KEY);
+        $analysis = $this->currentAnalysis();
 
         if (! $analysis) {
             return redirect()
@@ -122,17 +113,9 @@ class XmlPriceDeviationController extends Controller
      *                        If the field is empty / absent → sale_price is NOT changed.
      *   reason            — optional free-text note
      */
-    public function apply(Request $request)
+    public function apply(ApplyXmlPriceDeviationRequest $request, ApplyXmlPriceDeviation $action)
     {
-        $request->validate([
-            'updates' => ['present', 'array'],
-            'updates.*' => ['integer', 'min:1'],
-            'sale_prices' => ['nullable', 'array'],
-            'sale_prices.*' => ['nullable', 'numeric', 'min:0'],
-            'reason' => ['nullable', 'string', 'max:500'],
-        ]);
-
-        $analysis = Session::get(self::SESSION_KEY);
+        $analysis = $this->currentAnalysis();
 
         if (! $analysis) {
             return redirect()
@@ -140,44 +123,20 @@ class XmlPriceDeviationController extends Controller
                 ->withErrors(['xml_file' => 'La sesión de análisis expiró. Por favor, cargue el XML nuevamente.']);
         }
 
-        $selectedIds = array_map('intval', $request->input('updates', []));
+        try {
+            $count = $action->handle($analysis, $request->validated(), (int) auth('admin')->id());
+        } catch (\Throwable $e) {
+            Log::error('XmlPriceDeviationController@apply failed.', SensitiveDataMasker::exceptionContext($e, [
+                'admin_id' => auth('admin')->id(),
+                'analysis_id' => $this->currentAnalysisId(),
+            ]));
 
-        // Build the sale_prices map: [product_id (int) => new_sale_price (float|null)]
-        // Only keep entries that actually have a non-empty numeric value.
-        $salePricesRaw = $request->input('sale_prices', []);
-        $salePrices = [];
-
-        foreach ($salePricesRaw as $productId => $value) {
-            $productId = (int) $productId;
-            if ($productId > 0 && $value !== null && $value !== '') {
-                $salePrices[$productId] = (float) $value;
-            }
+            return back()->withErrors([
+                'updates' => 'No fue posible aplicar los cambios seleccionados. Inténtelo nuevamente.',
+            ]);
         }
 
-        // Filter items: must be found in DB and ticked by admin.
-        $toUpdate = collect($analysis['items'])
-            ->filter(fn ($item) => $item['found'] &&
-                ! is_null($item['product_id']) &&
-                in_array((int) $item['product_id'], $selectedIds, true)
-            )
-            ->values()
-            ->all();
-
-        $count = 0;
-
-        if (! empty($toUpdate)) {
-            $count = $this->service->applyUpdates(
-                updates: $toUpdate,
-                thresholdPct: (float) $analysis['threshold_percentage'],
-                xmlFileName: $analysis['file_name'],
-                reason: $request->input('reason'),
-                changedBy: (int) auth('admin')->id(),
-                salePrices: $salePrices,      // ← new
-            );
-
-            $this->logAudit($analysis['file_name'], $count, $selectedIds, $salePrices);
-        }
-
+        $this->storage->forget((int) auth('admin')->id(), $this->currentAnalysisId());
         Session::forget(self::SESSION_KEY);
 
         $message = $count > 0
@@ -191,24 +150,20 @@ class XmlPriceDeviationController extends Controller
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    private function logAudit(string $fileName, int $count, array $selectedIds, array $salePrices): void
+    private function currentAnalysis(): ?array
     {
-        try {
-            app(AuditLogger::class)->logAdminAction(
-                'xml_price_deviation_apply',
-                'supplier_orders',
-                "Actualización de precios desde XML: {$fileName}. Productos actualizados: {$count}.",
-                [
-                    'xml_file_name' => $fileName,
-                    'updated_count' => $count,
-                    'selected_ids' => $selectedIds,
-                    'sale_price_updates' => $salePrices,
-                ]
-            );
-        } catch (\Throwable $e) {
-            Log::warning('XmlPriceDeviationController: audit log write failed.', [
-                'error' => $e->getMessage(),
-            ]);
+        $legacyAnalysis = Session::get(self::SESSION_KEY);
+        if (is_array($legacyAnalysis)) {
+            return $legacyAnalysis;
         }
+
+        return $this->storage->get((int) auth('admin')->id(), $this->currentAnalysisId());
+    }
+
+    private function currentAnalysisId(): ?string
+    {
+        $value = Session::get(self::SESSION_KEY);
+
+        return is_string($value) ? $value : null;
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Requests\Admin\Products\StoreProductRequest;
 use App\Http\Requests\Admin\Products\UpdateProductRequest;
 use App\Models\Product;
 use App\Services\Admin\Images\ProductImageOptimizerService;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -177,12 +178,11 @@ final class ProductMediaService
                 return;
             }
 
-            Log::warning('cf4_image_sanitize_failed', [
+            Log::warning('cf4_image_sanitize_failed', SensitiveDataMasker::exceptionContext($e, [
                 'path' => $destination,
                 'collection' => $field === 'image' ? 'main_image' : 'gallery',
                 'stage' => 'move',
-                'error' => $e->getMessage(),
-            ]);
+            ]));
 
             throw ValidationException::withMessages([
                 $field => ['No se pudo procesar la imagen de forma segura. Usá JPEG, PNG, GIF o WebP.'],
@@ -202,11 +202,10 @@ final class ProductMediaService
                 @unlink($absolutePath);
             }
 
-            Log::warning('cf4_image_sanitize_failed', [
+            Log::warning('cf4_image_sanitize_failed', SensitiveDataMasker::exceptionContext($e, [
                 'path' => $absolutePath,
                 'collection' => $collection,
-                'error' => $e->getMessage(),
-            ]);
+            ]));
 
             throw ValidationException::withMessages([
                 $field => ['No se pudo procesar la imagen de forma segura. Usá JPEG, PNG, GIF o WebP.'],

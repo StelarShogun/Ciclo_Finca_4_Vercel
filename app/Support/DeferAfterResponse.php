@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Services\Shared\Security\SensitiveDataMasker;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -15,9 +16,7 @@ final class DeferAfterResponse
             try {
                 $callback();
             } catch (\Throwable $e) {
-                Log::warning('Deferred after-response task failed.', [
-                    'error' => $e->getMessage(),
-                ]);
+                Log::warning('Deferred after-response task failed.', SensitiveDataMasker::exceptionContext($e));
             }
         })->afterResponse();
     }

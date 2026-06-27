@@ -11,7 +11,9 @@ final class ProductSalesReportQuery
 {
     public static function base(Carbon $start, string $q, ?Carbon $end = null): Builder
     {
-        $skuExpr = "CONCAT('BK-', LPAD(products.product_id, 3, '0'))";
+        $skuExpr = DB::connection()->getDriverName() === 'sqlite'
+            ? "printf('BK-%03d', products.product_id)"
+            : "CONCAT('BK-', LPAD(products.product_id, 3, '0'))";
 
         $query = DB::table('sale_items')
             ->join('products', 'sale_items.product_id', '=', 'products.product_id')

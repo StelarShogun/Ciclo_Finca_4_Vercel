@@ -3,144 +3,71 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Dashboard\DashboardChartRequest;
+use App\Http\Requests\Admin\Dashboard\DashboardExportRequest;
+use App\Http\Requests\Admin\Dashboard\DashboardIndexRequest;
 use App\Models\AppSetting;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\Sale;
-use App\Models\Supplier;
-use App\Services\Admin\AdminPdfExportService;
-use App\Support\DashboardTodaySales;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
+use App\Services\Admin\Dashboard\DashboardChartService;
+use App\Services\Admin\Dashboard\DashboardExportService;
+use App\Services\Admin\Dashboard\DashboardKpiService;
+use App\Services\Shared\Security\SensitiveDataMasker;
+use App\Support\AdminDashboardCache;
+use App\ViewModels\Admin\DashboardViewModel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    /** Rows loaded for dashboard inventory/sales tables (scroll after 5 visible). */
-    private const DASHBOARD_TABLE_LIMIT = 10;
-
-    public function index(Request $request)
+    public function index(DashboardIndexRequest $request, DashboardKpiService $dashboard): Response
     {
-        if (! Auth::guard('admin')->check()) {
-            return redirect()->route('admin.login')
-                ->with('error', 'Debe iniciar sesión como administrador para acceder.');
-        }
+        $this->authorizeDashboard();
 
         try {
             $ttl = max(15, (int) config('cf4_performance.admin_dashboard_index_ttl', 60));
-            $data = Cache::remember('cf4:admin:dashboard_index', $ttl, fn () => $this->gatherDashboardData());
-
-            // Volatile KPIs: always compute on request so reload reflects today's sales.
-            $data['todaySales'] = DashboardTodaySales::sumToday();
-            $data['salesTrend'] = DashboardTodaySales::salesTrendPercent();
-
-            // Serie de ventas configurable por rango (query params: range/from/to).
-            // Se calcula fuera del caché porque depende de la petición.
-            [$salesFrom, $salesTo, $salesRange] = $this->resolveSalesRange($request);
-            $data['salesByDay'] = $this->salesSeries($salesFrom, $salesTo);
-            $data['salesRange'] = $salesRange;
-            $data['salesFrom'] = $salesFrom->toDateString();
-            $data['salesTo'] = $salesTo->toDateString();
-
+            $data = Cache::remember(AdminDashboardCache::indexKey(), $ttl, fn () => $dashboard->summary());
+            $data = $dashboard->withRequestRange($data, $request);
             $data['weeklyReportDay'] = AppSetting::getWeeklyReportDay();
             $data['weeklyReportHour'] = AppSetting::getWeeklyReportHour();
             $data['weeklyReportMinute'] = AppSetting::getWeeklyReportMinute();
             $data['weeklyReportRecipients'] = AppSetting::getWeeklyReportRecipients();
 
-            return Inertia::render('Admin/Dashboard/Index', $this->dashboardInertiaPayload($data));
+            return Inertia::render('Admin/Dashboard/Index', DashboardViewModel::from($data));
+        } catch (\Throwable $e) {
+            $this->logDashboardError('admin_dashboard_index_failed', $e);
 
-        } catch (\Exception $e) {
-            Log::error('Error en DashboardController: '.$e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return Inertia::render('Admin/Dashboard/Index', [
-                'totalProducts' => 0,
-                'totalSuppliers' => 0,
-                'totalCategories' => 0,
-                'todaySales' => 0,
-                'lowStockProducts' => 0,
-                'salesTrend' => 0,
-                'monthlySales' => 0,
-                'monthlyTrend' => 0,
-                'error' => 'Error al cargar datos del dashboard',
-            ]);
+            return Inertia::render('Admin/Dashboard/Index', DashboardViewModel::empty());
         }
     }
 
-    public function inertiaPilot(): Response
+    public function inertiaPilot(DashboardIndexRequest $request, DashboardKpiService $dashboard): Response
     {
-        if (! Auth::guard('admin')->check()) {
-            abort(403);
-        }
+        $this->authorizeDashboard();
 
         try {
             $ttl = max(15, (int) config('cf4_performance.admin_dashboard_index_ttl', 60));
-            $data = Cache::remember('cf4:admin:dashboard_index', $ttl, fn () => $this->gatherDashboardData());
+            $data = Cache::remember(AdminDashboardCache::indexKey(), $ttl, fn () => $dashboard->summary());
+            $data = $dashboard->withRequestRange($data, $request);
 
-            $data['todaySales'] = DashboardTodaySales::sumToday();
-            $data['salesTrend'] = DashboardTodaySales::salesTrendPercent();
+            return Inertia::render('Admin/Dashboard/Index', DashboardViewModel::from($data));
+        } catch (\Throwable $e) {
+            $this->logDashboardError('admin_dashboard_inertia_pilot_failed', $e);
 
-            return Inertia::render('Admin/Dashboard/Index', $this->dashboardInertiaPayload($data));
-        } catch (\Exception $e) {
-            Log::error('Error en DashboardController Inertia pilot: '.$e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-
-            return Inertia::render('Admin/Dashboard/Index', [
-                'totalProducts' => 0,
-                'totalSuppliers' => 0,
-                'totalCategories' => 0,
-                'todaySales' => 0,
-                'lowStockProducts' => 0,
-                'salesTrend' => 0,
-                'monthlySales' => 0,
-                'monthlyTrend' => 0,
-                'error' => 'Error al cargar datos del dashboard',
-            ]);
+            return Inertia::render('Admin/Dashboard/Index', DashboardViewModel::empty());
         }
     }
 
-    public function getDashboardData()
+    public function getDashboardData(DashboardKpiService $dashboard)
     {
+        $this->authorizeDashboard();
+
         try {
-            if (! Schema::hasTable('products') || ! Schema::hasTable('categories') || ! Schema::hasTable('suppliers') || ! Schema::hasTable('sales')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Database tables not found',
-                ], 500);
-            }
-
-            $totalProducts = Product::count();
-            $totalSuppliers = Supplier::count();
-            $totalCategories = Category::count();
-
-            $todaySales = DashboardTodaySales::sumToday();
-            $salesTrend = DashboardTodaySales::salesTrendPercent();
-
-            $lowStockProducts = Product::whereColumn('stock_current', '<', 'stock_minimum')->count();
-
-            return response()->json([
-                'success' => true,
-                'totalProducts' => $totalProducts,
-                'totalSuppliers' => $totalSuppliers,
-                'totalCategories' => $totalCategories,
-                'todaySales' => $todaySales,
-                'salesTrend' => $salesTrend,
-                'lowStockProducts' => $lowStockProducts,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error en getDashboardData: '.$e->getMessage());
+            return response()->json($dashboard->jsonSummary());
+        } catch (\Throwable $e) {
+            $this->logDashboardError('admin_dashboard_data_failed', $e);
 
             return response()->json([
                 'success' => false,
@@ -149,453 +76,67 @@ class DashboardController extends Controller
         }
     }
 
-    public function getChartData(Request $request)
+    public function getChartData(DashboardChartRequest $request, DashboardChartService $dashboard)
     {
-        $period = $request->get('period', '7d');
-        if (! in_array($period, ['7d', '30d', '90d'], true)) {
-            $period = '7d';
-        }
+        $this->authorizeDashboard();
+
+        $period = $request->period();
 
         try {
             $ttl = max(60, (int) config('cf4_performance.admin_dashboard_charts_ttl', 300));
-            $payload = Cache::remember(
-                'cf4:admin:dashboard_charts:'.$period,
-                $ttl,
-                function () use ($period) {
-                    $startDate = $this->getStartDate($period)->startOfDay();
-
-                    $salesRows = Sale::query()
-                        ->select(
-                            DB::raw('DATE(sale_date) as date'),
-                            DB::raw('SUM(total) as total')
-                        )
-                        ->where('sale_date', '>=', $startDate)
-                        ->where('status', 'completed')
-                        ->groupBy(DB::raw('DATE(sale_date)'))
-                        ->orderBy('date')
-                        ->get();
-
-                    $salesData = $this->fillSalesChartSeries(
-                        collect($salesRows),
-                        $startDate,
-                        Carbon::now()->startOfDay()
-                    );
-
-                    $categoryData = Category::withCount(['products' => function ($query) {
-                        $query->where('status', 'active');
-                    }])
-                        ->orderBy('products_count', 'desc')
-                        ->get()
-                        ->map(function (Category $category) {
-                            return [
-                                'categoria' => $category->name,
-                                'total' => $category->products_count,
-                            ];
-                        })
-                        ->all();
-
-                    return [
-                        'sales' => $salesData,
-                        'categories' => $categoryData,
-                    ];
-                }
-            );
+            $payload = Cache::remember(AdminDashboardCache::chartKey($period), $ttl, fn () => $dashboard->chartData($period));
 
             return response()->json([
                 'success' => true,
                 'sales' => $payload['sales'],
                 'categories' => $payload['categories'],
             ]);
+        } catch (\Throwable $e) {
+            $this->logDashboardError('admin_dashboard_chart_data_failed', $e);
 
-        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener datos: '.$e->getMessage(),
+                'message' => 'No fue posible obtener los datos del gráfico.',
             ], 500);
         }
     }
 
-    public function exportReport(Request $request)
+    public function exportReport(DashboardExportRequest $request, DashboardExportService $export)
+    {
+        Gate::forUser(Auth::guard('admin')->user())->authorize('reports.export');
+
+        $format = $request->exportFormat();
+        $period = $request->period();
+
+        try {
+            return $export->download($format, $period);
+        } catch (\Throwable $e) {
+            Log::error('admin_dashboard_export_failed', SensitiveDataMasker::exceptionContext($e, [
+                'admin_id' => Auth::guard('admin')->id(),
+                'format' => $format,
+                'period' => $period,
+            ]));
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No fue posible exportar el reporte del dashboard.',
+            ], 500);
+        }
+    }
+
+    private function authorizeDashboard(): void
     {
         if (! Auth::guard('admin')->check()) {
-            return redirect()->route('admin.login')
-                ->with('error', 'Debe iniciar sesión como administrador para acceder.');
+            abort(403);
         }
 
-        $format = $request->get('format', 'pdf');
-        $period = $request->get('period', '7d');
-        if (! in_array($period, ['7d', '30d', '90d'], true)) {
-            $period = '7d';
-        }
-
-        try {
-            if (! Schema::hasTable('products') || ! Schema::hasTable('categories') || ! Schema::hasTable('suppliers') || ! Schema::hasTable('sales')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Database tables not found',
-                ], 500);
-            }
-
-            $data = $this->gatherDashboardData();
-
-            $startDate = $this->getStartDate($period)->startOfDay();
-            $salesRows = Sale::query()
-                ->select(
-                    DB::raw('DATE(sale_date) as date'),
-                    DB::raw('SUM(total) as total')
-                )
-                ->where('sale_date', '>=', $startDate)
-                ->where('status', 'completed')
-                ->groupBy(DB::raw('DATE(sale_date)'))
-                ->orderBy('date')
-                ->get();
-            $salesChartSeries = $this->fillSalesChartSeries(collect($salesRows), $startDate, Carbon::now()->startOfDay());
-
-            $filterLines = [
-                'Gráfico de ventas: '.$this->chartPeriodLabel($period),
-            ];
-
-            $logoPath = public_path('assets/images/brand/logo-ciclo-finca-icon.png');
-
-            if ($format === 'pdf') {
-                $pdfData = array_merge($data, [
-                    'salesChartSeries' => $salesChartSeries,
-                    'chartPeriodLabel' => $this->chartPeriodLabel($period),
-                    'pdfTitle' => 'Reporte del dashboard',
-                    'pdfSubtitle' => 'Resumen operativo — Ciclo Finca 4',
-                    'logoPath' => is_file($logoPath) ? $logoPath : null,
-                    'filterLines' => $filterLines,
-                    'generatedFor' => 'Administración',
-                ]);
-
-                return app(AdminPdfExportService::class)->download(
-                    'admin.exports.dashboard-pdf',
-                    $pdfData,
-                    'dashboard'
-                );
-            }
-
-            if ($format === 'excel') {
-                return $this->exportExcel($data);
-            }
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Formato no soportado',
-            ], 400);
-
-        } catch (\Exception $e) {
-            Log::error('Error al exportar dashboard: '.$e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al exportar reporte: '.$e->getMessage(),
-            ], 500);
-        }
+        Gate::forUser(Auth::guard('admin')->user())->authorize('reports.view');
     }
 
-    private function chartPeriodLabel(string $period): string
+    private function logDashboardError(string $event, \Throwable $e): void
     {
-        return match ($period) {
-            '30d' => 'últimos 30 días',
-            '90d' => 'últimos 90 días',
-            default => 'últimos 7 días',
-        };
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function gatherDashboardData(): array
-    {
-        if (! Schema::hasTable('products') || ! Schema::hasTable('categories') || ! Schema::hasTable('suppliers') || ! Schema::hasTable('sales')) {
-            throw new \RuntimeException('Database tables not found');
-        }
-
-        if (config('app.debug')) {
-            $categoriasExistentes = Category::count();
-            Log::debug("Categorías en DB: {$categoriasExistentes}");
-        }
-
-        $totalProducts = Product::count();
-        $totalSuppliers = Supplier::count();
-        $totalCategories = Category::count();
-
-        $todaySales = DashboardTodaySales::sumToday();
-
-        $lowStockProducts = Product::lowStockAlert()->count();
-
-        $lowStockProductsList = Product::with(['category', 'supplier'])
-            ->lowStockAlert()
-            ->orderBy('stock_current', 'asc')
-            ->limit(self::DASHBOARD_TABLE_LIMIT)
-            ->get();
-
-        $recentSales = Sale::with(['client'])
-            ->orderBy('sale_date', 'desc')
-            ->limit(self::DASHBOARD_TABLE_LIMIT)
-            ->get();
-
-        $salesByDay = Sale::select(
-            DB::raw('DATE(sale_date) as date'),
-            DB::raw('COALESCE(SUM(total), 0) as total')
-        )
-            ->where('sale_date', '>=', Carbon::now()->subDays(6))
-            ->where('status', 'completed')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-
-        $productsByCategory = Category::withCount(['products' => function ($query) {
-            $query->where('status', 'active');
-        }])
-            ->orderBy('products_count', 'desc')
-            ->get()
-            ->map(function (Category $categoria) {
-                return [
-                    'categoria' => $categoria->name,
-                    'total' => $categoria->products_count,
-                ];
-            });
-
-        $salesTrend = DashboardTodaySales::salesTrendPercent();
-
-        $monthlySales = Sale::whereMonth('sale_date', Carbon::now()->month)
-            ->whereYear('sale_date', Carbon::now()->year)
-            ->where('status', 'completed')
-            ->sum('total');
-
-        $lastMonthSales = Sale::whereMonth('sale_date', Carbon::now()->subMonth()->month)
-            ->whereYear('sale_date', Carbon::now()->subMonth()->year)
-            ->where('status', 'completed')
-            ->sum('total');
-
-        $monthlyTrend = $this->calculateTrend($monthlySales, $lastMonthSales);
-
-        $topProducts = DB::table('sale_items')
-            ->join('products', 'sale_items.product_id', '=', 'products.product_id')
-            ->join('sales', 'sale_items.sale_id', '=', 'sales.sale_id')
-            ->where('sales.status', 'completed')
-            ->where('sales.sale_date', '>=', Carbon::now()->subDays(30))
-            ->select(
-                'products.name',
-                'products.image',
-                DB::raw('SUM(sale_items.quantity) as total_vendido'),
-                DB::raw('SUM(sale_items.total) as ingresos')
-            )
-            ->groupBy('products.product_id', 'products.name', 'products.image')
-            ->orderBy('total_vendido', 'desc')
-            ->limit(5)
-            ->get();
-
-        $topSuppliers = Supplier::withCount('products')
-            ->orderBy('products_count', 'desc')
-            ->limit(5)
-            ->get();
-
-        return compact(
-            'totalProducts',
-            'totalSuppliers',
-            'totalCategories',
-            'todaySales',
-            'lowStockProducts',
-            'lowStockProductsList',
-            'recentSales',
-            'salesByDay',
-            'productsByCategory',
-            'salesTrend',
-            'monthlySales',
-            'monthlyTrend',
-            'topProducts',
-            'topSuppliers'
-        );
-    }
-
-    private function calculateTrend($current, $previous)
-    {
-        if ($previous == 0) {
-            return $current > 0 ? 100 : 0;
-        }
-
-        return round((($current - $previous) / $previous) * 100, 1);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
-     */
-    private function dashboardInertiaPayload(array $data): array
-    {
-        $recentSales = collect($data['recentSales'] ?? [])->map(fn (Sale $sale) => [
-            'id' => $sale->sale_id,
-            'invoice' => $sale->adminDashboardInvoiceLabel(),
-            'client' => $sale->adminDashboardClientLabel(),
-            'total' => (float) $sale->total,
-            'dateShort' => $sale->adminSaleDateShortLabel(),
-            'dateFull' => $sale->adminSaleDateLabel(),
-            'statusClass' => $sale->adminDashboardStatusBadgeClass(),
-            'statusShort' => $sale->adminDashboardStatusShortLabel(),
-            'statusTitle' => $sale->adminDashboardStatusTitle(),
-        ])->values()->all();
-
-        $lowStockList = collect($data['lowStockProductsList'] ?? [])->map(fn (Product $product) => [
-            'id' => $product->product_id,
-            'name' => $product->name,
-            'sku' => $product->sku,
-            'category' => $product->category->name ?? '—',
-            'stock' => (int) $product->stock_current,
-        ])->values()->all();
-
-        // Acepta filas como objeto (Eloquent) o array (fillSalesChartSeries).
-        $salesByDay = collect($data['salesByDay'] ?? [])->map(fn ($row) => [
-            'date' => Carbon::parse(data_get($row, 'date'))->isoFormat('D MMM'),
-            'total' => (float) data_get($row, 'total', 0),
-        ])->values()->all();
-
-        $productsByCategory = collect($data['productsByCategory'] ?? [])
-            ->filter(fn ($row) => (int) ($row['total'] ?? 0) > 0)
-            ->map(fn ($row) => [
-                'label' => $row['categoria'],
-                'total' => (int) $row['total'],
-            ])->values()->all();
-
-        $topProducts = collect($data['topProducts'] ?? [])->map(fn ($row) => [
-            'name' => $row->name,
-            'units' => (int) $row->total_vendido,
-            'revenue' => (float) $row->ingresos,
-        ])->values()->all();
-
-        return [
-            'totalProducts' => (int) ($data['totalProducts'] ?? 0),
-            'totalSuppliers' => (int) ($data['totalSuppliers'] ?? 0),
-            'totalCategories' => (int) ($data['totalCategories'] ?? 0),
-            'todaySales' => (float) ($data['todaySales'] ?? 0),
-            'lowStockProducts' => (int) ($data['lowStockProducts'] ?? 0),
-            'salesTrend' => (float) ($data['salesTrend'] ?? 0),
-            'monthlySales' => (float) ($data['monthlySales'] ?? 0),
-            'monthlyTrend' => (float) ($data['monthlyTrend'] ?? 0),
-            'recentSales' => $recentSales,
-            'lowStockList' => $lowStockList,
-            'salesByDay' => $salesByDay,
-            'salesRange' => $data['salesRange'] ?? 'last7',
-            'salesFrom' => $data['salesFrom'] ?? null,
-            'salesTo' => $data['salesTo'] ?? null,
-            'productsByCategory' => $productsByCategory,
-            'topProducts' => $topProducts,
-            'error' => $data['error'] ?? null,
-        ];
-    }
-
-    /**
-     * Resuelve el rango de la serie de ventas desde los query params.
-     * Devuelve [Carbon $from, Carbon $to, string $range].
-     */
-    private function resolveSalesRange(Request $request): array
-    {
-        $range = (string) $request->query('range', 'last7');
-        $today = Carbon::today();
-
-        switch ($range) {
-            case 'last15':
-                return [$today->copy()->subDays(14), $today->copy(), 'last15'];
-            case 'last30':
-                return [$today->copy()->subDays(29), $today->copy(), 'last30'];
-            case 'month':
-                return [$today->copy()->startOfMonth(), $today->copy(), 'month'];
-            case 'custom':
-                $from = $this->parseSalesDate($request->query('from'));
-                $to = $this->parseSalesDate($request->query('to'));
-                if ($from && $to) {
-                    if ($from->gt($to)) {
-                        [$from, $to] = [$to, $from];
-                    }
-                    // Cota de seguridad: máx. ~93 días para no generar series enormes.
-                    if ($from->diffInDays($to) > 92) {
-                        $from = $to->copy()->subDays(92);
-                    }
-
-                    return [$from, $to, 'custom'];
-                }
-                // Sin fechas válidas → cae al rango por defecto.
-                break;
-        }
-
-        return [$today->copy()->subDays(6), $today->copy(), 'last7'];
-    }
-
-    private function parseSalesDate($value): ?Carbon
-    {
-        if (! is_string($value) || trim($value) === '') {
-            return null;
-        }
-
-        try {
-            return Carbon::parse($value)->startOfDay();
-        } catch (\Throwable) {
-            return null;
-        }
-    }
-
-    /**
-     * Serie diaria de ventas completadas entre dos fechas (rellena días sin ventas
-     * con 0 reutilizando fillSalesChartSeries).
-     */
-    private function salesSeries(Carbon $from, Carbon $to): array
-    {
-        $rows = Sale::query()
-            ->select(DB::raw('DATE(sale_date) as date'), DB::raw('COALESCE(SUM(total), 0) as total'))
-            ->whereBetween('sale_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
-            ->where('status', 'completed')
-            ->groupBy(DB::raw('DATE(sale_date)'))
-            ->orderBy('date')
-            ->get();
-
-        return $this->fillSalesChartSeries($rows, $from, $to);
-    }
-
-    private function getStartDate($period)
-    {
-        switch ($period) {
-            case '7d':
-                return Carbon::now()->subDays(6);
-            case '30d':
-                return Carbon::now()->subDays(29);
-            case '90d':
-                return Carbon::now()->subDays(89);
-            default:
-                return Carbon::now()->subDays(6);
-        }
-    }
-
-    /**
-     * @param  iterable<int, Sale|object>  $rows
-     * @return array<int, array{date: string, total: float}>
-     */
-    private function fillSalesChartSeries(iterable $rows, Carbon $rangeStart, Carbon $rangeEnd): array
-    {
-        $byDate = [];
-        foreach ($rows as $row) {
-            $d = data_get($row, 'date');
-            $key = $d instanceof Carbon ? $d->format('Y-m-d') : substr((string) $d, 0, 10);
-            $byDate[$key] = (float) data_get($row, 'total');
-        }
-
-        $out = [];
-        $cursor = $rangeStart->copy()->startOfDay();
-        $end = $rangeEnd->copy()->startOfDay();
-        while ($cursor->lte($end)) {
-            $key = $cursor->format('Y-m-d');
-            $out[] = ['date' => $key, 'total' => $byDate[$key] ?? 0.0];
-            $cursor->addDay();
-        }
-
-        return $out;
-    }
-
-    private function exportExcel(array $data)
-    {
-        return response()->json($data);
+        Log::error($event, SensitiveDataMasker::exceptionContext($e, [
+            'admin_id' => Auth::guard('admin')->id(),
+        ]));
     }
 }

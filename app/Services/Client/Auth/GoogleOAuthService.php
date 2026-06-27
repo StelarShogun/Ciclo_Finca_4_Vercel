@@ -4,6 +4,7 @@ namespace App\Services\Client\Auth;
 
 use App\Models\Client;
 use App\Services\Client\Cart\CartManager;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use App\Support\Client\Auth\GoogleProfileNameParser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -108,18 +109,11 @@ final class GoogleOAuthService
                 'displayName' => $this->sessionState->welcomeDisplayName($client),
             ]);
         } catch (\Throwable $e) {
-            $detail = $e->getMessage() ?: get_class($e).' en '.$e->getFile().':'.$e->getLine();
-            Log::error('Error en Google OAuth: '.$detail, [
-                'exception' => get_class($e),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            $message = config('app.debug')
-                ? 'Error al iniciar sesión con Google: '.$detail
-                : 'Error al iniciar sesión con Google. Revisa storage/logs/laravel.log';
+            Log::error('client_google_oauth_failed', SensitiveDataMasker::exceptionContext($e));
 
-            return redirect()->route('clients.home')->with('error', $message);
+            return redirect()
+                ->route('clients.home')
+                ->with('error', 'No fue posible iniciar sesión con Google. Inténtalo nuevamente.');
         }
     }
 

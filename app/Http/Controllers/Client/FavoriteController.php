@@ -2,108 +2,43 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Actions\Client\Favorites\ListFavoriteProducts;
+use App\Actions\Client\Favorites\ToggleFavoriteProduct;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Client\Favorites\ToggleFavoriteRequest;
 use App\Models\FavoriteProduct;
-use App\Services\Client\Favorites\ClientFavoriteFormatter;
-use App\Services\Client\Inertia\ListPaginationPayload;
-use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class FavoriteController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, ListFavoriteProducts $favorites)
     {
-        if (! Schema::hasTable('favorite_products')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'La tabla de favoritos no existe. Ejecuta las migraciones.',
-            ], 500);
-        }
+        $client = Auth::guard('clients')->user();
+        Gate::forUser($client)->authorize('viewAny', FavoriteProduct::class);
 
-        $clientId = (int) Auth::guard('clients')->id();
-        $perPage = AdminPerPage::resolve($request->input('per_page', 10));
-
-        $paginator = FavoriteProduct::query()
-            ->with(['product.category'])
-            ->where('user_id', $clientId)
-            ->latest('id')
-            ->paginate($perPage);
-
-        $favorites = ClientFavoriteFormatter::collect($paginator->items());
+        $payload = $favorites->handle((int) $client->user_id, $request);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'favorites' => $favorites,
-                'pagination' => [
-                    'current_page' => $paginator->currentPage(),
-                    'last_page' => $paginator->lastPage(),
-                    'per_page' => $paginator->perPage(),
-                    'total' => $paginator->total(),
-                    'from' => $paginator->firstItem(),
-                    'to' => $paginator->lastItem(),
-                ],
+                'favorites' => $payload['favorites'],
+                'pagination' => $payload['json_pagination'],
             ]);
         }
 
-        return Inertia::render('Client/Favorites/Index', [
-            'favorites' => $favorites,
-            'pagination' => ListPaginationPayload::from($paginator),
-        ]);
+        unset($payload['json_pagination']);
+
+        return Inertia::render('Client/Favorites/Index', $payload);
     }
 
-    public function toggle(Request $request)
+    public function toggle(ToggleFavoriteRequest $request, ToggleFavoriteProduct $toggleFavorite)
     {
-        if (! Schema::hasTable('favorite_products')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'La tabla de favoritos no existe. Ejecuta las migraciones.',
-            ], 500);
-        }
+        $client = Auth::guard('clients')->user();
+        Gate::forUser($client)->authorize('toggle', FavoriteProduct::class);
 
-        $request->validate([
-            'product_id' => 'required|exists:products,product_id',
-        ]);
-
-        $clientId = (int) Auth::guard('clients')->id();
-        $productId = (int) $request->input('product_id');
-
-        $favorite = FavoriteProduct::query()
-            ->where('user_id', $clientId)
-            ->where('product_id', $productId)
-            ->first();
-
-        try {
-            if ($favorite) {
-                $favorite->delete();
-
-                return response()->json([
-                    'success' => true,
-                    'is_favorite' => false,
-                    'message' => 'Quitado de favoritos.',
-                ]);
-            }
-
-            FavoriteProduct::create([
-                'user_id' => $clientId,
-                'product_id' => $productId,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'is_favorite' => true,
-                'message' => 'Agregado a favoritos.',
-            ]);
-        } catch (\Throwable $e) {
-            report($e);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'No se pudo guardar el favorito en este momento.',
-            ], 500);
-        }
+        return $toggleFavorite->handle((int) $client->user_id, (int) $request->validated('product_id'));
     }
 }

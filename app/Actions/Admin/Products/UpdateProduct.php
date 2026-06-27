@@ -2,11 +2,11 @@
 
 namespace App\Actions\Admin\Products;
 
-use App\Data\Admin\Products\ProductMutationResult;
+use App\DTOs\Admin\Products\ProductMutationResult;
 use App\Http\Requests\Admin\Products\UpdateProductRequest;
 use App\Models\Product;
+use App\Services\Admin\Classifications\ProductClassificationAssignmentService;
 use App\Services\Admin\Products\ProductMediaService;
-use App\Services\ProductClassificationAssignmentService;
 use Illuminate\Support\Facades\DB;
 
 final class UpdateProduct

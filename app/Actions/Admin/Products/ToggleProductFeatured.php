@@ -5,6 +5,7 @@ namespace App\Actions\Admin\Products;
 use App\Models\Product;
 use App\Services\Admin\Products\ProductAuditLogger;
 use App\Services\Client\Storefront\ClientStorefrontCache;
+use App\Support\AdminDashboardCache;
 
 final class ToggleProductFeatured
 {
@@ -31,6 +32,7 @@ final class ToggleProductFeatured
             ]
         );
         ClientStorefrontCache::forgetAfterProductMutation();
+        AdminDashboardCache::forget();
 
         return [
             'success' => true,

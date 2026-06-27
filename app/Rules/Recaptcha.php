@@ -2,7 +2,7 @@
 
 namespace App\Rules;
 
-use App\Services\Security\RecaptchaVerifier;
+use App\Services\Shared\Security\RecaptchaVerifier;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 

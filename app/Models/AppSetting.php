@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 class AppSetting extends Model
@@ -43,10 +42,6 @@ class AppSetting extends Model
     private static function getSettingValue(string $key): ?string
     {
         try {
-            if (! Schema::hasTable((new static)->getTable())) {
-                return null;
-            }
-
             return static::query()
                 ->where('key', $key)
                 ->value('value');

@@ -3,25 +3,19 @@
 namespace App\Http\Controllers\Admin\Orders;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Orders\UpdateOrderSettingsRequest;
 use App\Models\AppSetting;
-use App\Services\AuditLogger;
+use App\Services\Admin\Audit\AuditLogger;
+use App\Services\Shared\Security\SensitiveDataMasker;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class OrderSettingsController extends Controller
 {
-    public function update(Request $request): RedirectResponse|JsonResponse
+    public function update(UpdateOrderSettingsRequest $request): RedirectResponse|JsonResponse
     {
-        $validated = $request->validate([
-            'ready_to_pickup_expiration_hours' => ['required', 'integer', 'min:1', 'max:8760'],
-        ], [
-            'ready_to_pickup_expiration_hours.required' => 'Indique el número de horas.',
-            'ready_to_pickup_expiration_hours.integer' => 'El plazo debe ser un número entero.',
-            'ready_to_pickup_expiration_hours.min' => 'El plazo debe ser mayor que cero.',
-            'ready_to_pickup_expiration_hours.max' => 'El plazo no puede superar 8760 horas (1 año).',
-        ]);
+        $validated = $request->validated();
 
         $hours = (int) $validated['ready_to_pickup_expiration_hours'];
         $previousHours = AppSetting::getStoredReadyToPickupExpirationHours();
@@ -56,10 +50,9 @@ class OrderSettingsController extends Controller
         try {
             app(AuditLogger::class)->logAdminAction($actionType, 'orders', $description, $meta);
         } catch (\Throwable $e) {
-            Log::warning('Order settings audit log write failed', [
+            Log::warning('Order settings audit log write failed', SensitiveDataMasker::exceptionContext($e, [
                 'action_type' => $actionType,
-                'error' => $e->getMessage(),
-            ]);
+            ]));
         }
     }
 }

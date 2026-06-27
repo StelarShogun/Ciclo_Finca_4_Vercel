@@ -7,6 +7,7 @@ use App\Models\AdminUser;
 use App\Models\Category;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -176,11 +177,12 @@ class AdminParentCategoryCreateTest extends TestCase
         $response = $this->get(route('categories.subcategories.create'));
         $response->assertOk();
 
-        // Aparece como opción en el select de categoría padre.
-        $response->assertSee($name, false);
-
         $created = Category::whereNull('parent_category_id')->where('name', $name)->firstOrFail();
-        $response->assertSee('value="'.$created->category_id.'"', false);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Categories/CreateSubcategory', false)
+            ->where('categories.0.category_id', (int) $created->category_id)
+            ->where('categories.0.name', $name)
+        );
     }
 
     public function test_subcategory_create_hierarchy_table_is_paginated(): void
@@ -201,11 +203,20 @@ class AdminParentCategoryCreateTest extends TestCase
 
         $pageOne = $this->get(route('categories.subcategories.create', ['hierarchy_page' => 1, 'per_page' => 10]));
         $pageOne->assertOk();
-        $pageOne->assertSee('Mostrando 1–10 de', false);
+        $pageOne->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Categories/CreateSubcategory', false)
+            ->where('pagination.currentPage', 1)
+            ->where('pagination.perPage', 10)
+            ->where('pagination.total', 19)
+        );
 
-        $pageTwo = $this->get(route('categories.subcategories.create', ['hierarchy_page' => 2, 'per_page' => 10]));
+        $pageTwo = $this->get(route('categories.subcategories.create', ['page' => 2, 'per_page' => 10]));
         $pageTwo->assertOk();
-        $pageTwo->assertSee('Mostrando 11–19 de 19', false);
-        $pageTwo->assertSee('aria-current="page">2', false);
+        $pageTwo->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Categories/CreateSubcategory', false)
+            ->where('pagination.currentPage', 2)
+            ->where('pagination.from', 11)
+            ->where('pagination.to', 19)
+        );
     }
 }

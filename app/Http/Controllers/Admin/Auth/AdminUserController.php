@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Rules\Recaptcha;
-use App\Services\AuditLogger;
+use App\Services\Admin\Audit\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;

@@ -2,10 +2,9 @@
 
 namespace App\Actions\Client\Cart;
 
-use App\Data\Client\Cart\CartMutationResult;
+use App\DTOs\Client\Cart\CartMutationResult;
 use App\Models\Product;
 use App\Services\Client\Cart\CartManager;
-use Illuminate\Http\Request;
 
 final class UpdateCartItem
 {
@@ -13,14 +12,15 @@ final class UpdateCartItem
         private CartManager $cart,
     ) {}
 
-    public function handle(Request $request): CartMutationResult
+    /**
+     * @param  array{product_id:int, quantity:int}  $data
+     */
+    public function handle(array $data): CartMutationResult
     {
-        $request->validate([
-            'product_id' => 'required|exists:products,product_id',
-            'quantity' => 'required|integer|min:1',
-        ]);
+        $productId = (int) $data['product_id'];
+        $requestedQty = (int) $data['quantity'];
 
-        $product = Product::findOrFail($request->product_id);
+        $product = Product::findOrFail($productId);
 
         if (! $product->isPurchasableByClient()) {
             return new CartMutationResult(false, 400, [
@@ -28,8 +28,6 @@ final class UpdateCartItem
                 'message' => Product::MSG_CLIENT_AGOTADO,
             ]);
         }
-
-        $requestedQty = (int) $request->quantity;
 
         if ($product->stock_current < 1 || $requestedQty > (int) $product->stock_current) {
             return new CartMutationResult(false, 400, [
@@ -45,7 +43,7 @@ final class UpdateCartItem
         $found = false;
 
         foreach ($cart as $index => $item) {
-            if ($item['product_id'] == $request->product_id) {
+            if ($item['product_id'] == $productId) {
                 $cart[$index] = [
                     'product_id' => (int) $item['product_id'],
                     'name' => (string) ($item['name'] ?? ''),

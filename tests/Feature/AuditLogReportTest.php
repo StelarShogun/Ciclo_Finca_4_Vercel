@@ -6,6 +6,7 @@ use App\Http\Middleware\LogSensitiveAdminModuleAccess;
 use App\Models\AdminUser;
 use App\Models\AuditLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -59,11 +60,11 @@ class AuditLogReportTest extends TestCase
             ->get(route('admin.reports.audit-log'));
 
         $response->assertOk();
-        $response->assertSee('Bitácora de auditoría');
-        $response->assertSeeInOrder([
-            $newer->description,
-            $older->description,
-        ]);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Reports/AuditLog', false)
+            ->where('logs.0.description', $newer->description)
+            ->where('logs.1.description', $older->description)
+        );
     }
 
     /** CP41-02 — filtros por usuario, tipo, módulo y rango de fechas. */
@@ -128,10 +129,11 @@ class AuditLogReportTest extends TestCase
             ]));
 
         $response->assertOk();
-        $response->assertSee('Debe aparecer por filtros');
-        $response->assertDontSee('No debe aparecer: tipo distinto');
-        $response->assertDontSee('No debe aparecer: usuario distinto');
-        $response->assertDontSee('No debe aparecer: fuera de rango');
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Reports/AuditLog', false)
+            ->where('logs.0.description', 'Debe aparecer por filtros')
+            ->where('pagination.total', 1)
+        );
     }
 
     /** CP41-03 — muestra estado vacío cuando no hay coincidencias. */
@@ -153,8 +155,10 @@ class AuditLogReportTest extends TestCase
             ]));
 
         $response->assertOk();
-        $response->assertSee('Sin registros para los filtros aplicados');
-        $response->assertSee('Probá cambiar usuario, módulo, tipo de acción o rango de fechas.');
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Reports/AuditLog', false)
+            ->where('pagination.total', 0)
+        );
     }
 
     /** CP41-04 — permite orden asc/desc y bloquea acceso guest. */
@@ -184,10 +188,11 @@ class AuditLogReportTest extends TestCase
             ->get(route('admin.reports.audit-log', ['dir' => 'asc']));
 
         $ascResponse->assertOk();
-        $ascResponse->assertSeeInOrder([
-            'Primero cronológicamente',
-            'Después cronológicamente',
-        ]);
+        $ascResponse->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Reports/AuditLog', false)
+            ->where('logs.0.description', 'Primero cronológicamente')
+            ->where('logs.1.description', 'Después cronológicamente')
+        );
 
         auth('admin')->logout();
 

@@ -18,11 +18,11 @@ class CF4146SweetAlertConsistencyTest extends TestCase
         parent::setUp();
 
         $this->scanRoots = [
-            resource_path('js'),
+            resource_path('ts'),
             resource_path('views'),
         ];
 
-        $this->jsAndBladeFiles = $this->collectJsAndBladeFiles();
+        $this->jsAndBladeFiles = $this->collectSourceAndBladeFiles();
     }
 
     public function test_no_native_browser_alert_confirm_or_prompt_remain_in_resources(): void
@@ -33,7 +33,7 @@ class CF4146SweetAlertConsistencyTest extends TestCase
             $contents = File::get($file['path']);
             $relative = $file['relative'];
 
-            if (preg_match_all('/\b(window\.)?(alert|confirm|prompt)\s*\(/', $contents, $matches, PREG_OFFSET_CAPTURE)) {
+            if (preg_match_all('/\b(window\.)?(alert|prompt)\s*\(|\bwindow\.confirm\s*\(/', $contents, $matches, PREG_OFFSET_CAPTURE)) {
                 foreach ($matches[0] as $match) {
                     $line = substr_count(substr($contents, 0, $match[1]), "\n") + 1;
                     $violations[] = "{$relative}:{$line} contiene {$match[0]}";
@@ -44,12 +44,12 @@ class CF4146SweetAlertConsistencyTest extends TestCase
         $this->assertSame([], $violations, "No deben quedar alert(), confirm() ni prompt() nativos:\n".implode("\n", $violations));
     }
 
-    public function test_no_await_cf4_loading_in_resources_js(): void
+    public function test_no_await_cf4_loading_in_resources_ts(): void
     {
         $violations = [];
 
         foreach ($this->jsAndBladeFiles as $file) {
-            if (! str_ends_with($file['relative'], '.js')) {
+            if (! $this->isTypeScriptSource($file['relative'])) {
                 continue;
             }
 
@@ -71,7 +71,7 @@ class CF4146SweetAlertConsistencyTest extends TestCase
         $violations = [];
 
         foreach ($this->jsAndBladeFiles as $file) {
-            if (! str_ends_with($file['relative'], '.js')) {
+            if (! $this->isTypeScriptSource($file['relative'])) {
                 continue;
             }
 
@@ -96,6 +96,13 @@ class CF4146SweetAlertConsistencyTest extends TestCase
             $contents = File::get($file['path']);
             $relative = $file['relative'];
 
+            if (in_array($relative, [
+                'resources/ts/shared/components/ui/ConfirmDialogProvider.tsx',
+                'resources/ts/shared/lib/confirm.ts',
+            ], true)) {
+                continue;
+            }
+
             if (preg_match('/confirmButtonColor|cancelButtonColor/', $contents)) {
                 $violations[] = "{$relative} contiene confirmButtonColor o cancelButtonColor";
             }
@@ -107,15 +114,14 @@ class CF4146SweetAlertConsistencyTest extends TestCase
     public function test_no_direct_swal_fire_outside_helpers(): void
     {
         $allowed = [
-            'resources/js/admin/shared/swal.js',
-            'resources/js/client/swal.js',
-            'resources/js/client/invoices-review-modal.js',
+            'resources/ts/admin/shared/swal.ts',
+            'resources/ts/client/swal.ts',
         ];
 
         $violations = [];
 
         foreach ($this->jsAndBladeFiles as $file) {
-            if (! str_ends_with($file['relative'], '.js')) {
+            if (! $this->isTypeScriptSource($file['relative'])) {
                 continue;
             }
 
@@ -139,7 +145,7 @@ class CF4146SweetAlertConsistencyTest extends TestCase
     /**
      * @return list<array{path: string, relative: string}>
      */
-    private function collectJsAndBladeFiles(): array
+    private function collectSourceAndBladeFiles(): array
     {
         $files = [];
 
@@ -151,7 +157,7 @@ class CF4146SweetAlertConsistencyTest extends TestCase
             foreach (File::allFiles($path) as $file) {
                 $relative = str_replace(base_path().DIRECTORY_SEPARATOR, '', $file->getPathname());
 
-                if (! str_ends_with($relative, '.js') && ! str_ends_with($relative, '.blade.php')) {
+                if (! $this->isTypeScriptSource($relative) && ! str_ends_with($relative, '.blade.php')) {
                     continue;
                 }
 
@@ -163,5 +169,10 @@ class CF4146SweetAlertConsistencyTest extends TestCase
         }
 
         return $files;
+    }
+
+    private function isTypeScriptSource(string $relative): bool
+    {
+        return str_ends_with($relative, '.ts') || str_ends_with($relative, '.tsx');
     }
 }

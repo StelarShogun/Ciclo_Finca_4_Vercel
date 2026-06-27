@@ -10,6 +10,7 @@ use App\Models\Sale;
 use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CF100AdminCardsToggleTest extends TestCase
@@ -60,14 +61,19 @@ class CF100AdminCardsToggleTest extends TestCase
 
         $baseResponse = $this->get(route('admin.orders.index'));
         $baseResponse->assertStatus(200);
-        $baseResponse->assertSee('Ver encargos pendientes');
-        $baseResponse->assertSee(route('admin.orders.index', ['status' => 'pending']), false);
+        $baseResponse->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Orders/Index', false)
+            ->where('pendingWebOrdersCount', 1)
+            ->where('filters.status', '')
+        );
 
         $filteredResponse = $this->get(route('admin.orders.index', ['status' => 'pending']));
         $filteredResponse->assertStatus(200);
-        $filteredResponse->assertSee('Ver todo');
-        $filteredResponse->assertSee('cf4-kpi-reset-text');
-        $filteredResponse->assertSee(route('admin.orders.index'), false);
+        $filteredResponse->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Orders/Index', false)
+            ->where('filters.status', 'pending')
+            ->where('pagination.total', 1)
+        );
     }
 
     public function test_supplier_orders_card_toggles_between_open_filter_and_view_all(): void
@@ -96,14 +102,19 @@ class CF100AdminCardsToggleTest extends TestCase
 
         $baseResponse = $this->get(route('admin.supplier-orders.index'));
         $baseResponse->assertStatus(200);
-        $baseResponse->assertSee('Ver pedidos no finales');
-        $baseResponse->assertSee(route('admin.supplier-orders.index', ['state' => 'open']), false);
+        $baseResponse->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/SupplierOrders/Index', false)
+            ->where('openSupplierOrdersCount', 1)
+            ->where('filters.state', '')
+        );
 
         $filteredResponse = $this->get(route('admin.supplier-orders.index', ['state' => 'open']));
         $filteredResponse->assertStatus(200);
-        $filteredResponse->assertSee('Ver todo');
-        $filteredResponse->assertSee('cf4-kpi-reset-text');
-        $filteredResponse->assertSee(route('admin.supplier-orders.index'), false);
+        $filteredResponse->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/SupplierOrders/Index', false)
+            ->where('filters.state', 'open')
+            ->where('pagination.total', 1)
+        );
     }
 
     public function test_inventory_card_toggles_between_low_stock_filter_and_view_all(): void
@@ -125,13 +136,18 @@ class CF100AdminCardsToggleTest extends TestCase
 
         $baseResponse = $this->get(route('inventory'));
         $baseResponse->assertStatus(200);
-        $baseResponse->assertSee('Abrir inventario filtrado');
-        $baseResponse->assertSee(route('inventory', ['stock_status' => 'low']), false);
+        $baseResponse->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Inventory/Index', false)
+            ->where('inventorySummary.lowStock', 1)
+            ->where('filters.stock_status', '')
+        );
 
         $filteredResponse = $this->get(route('inventory', ['stock_status' => 'low']));
         $filteredResponse->assertStatus(200);
-        $filteredResponse->assertSee('Ver todo');
-        $filteredResponse->assertSee('inventory-kpi-card-link--reset');
-        $filteredResponse->assertSee(route('inventory'), false);
+        $filteredResponse->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Inventory/Index', false)
+            ->where('filters.stock_status', 'low')
+            ->where('pagination.total', 1)
+        );
     }
 }

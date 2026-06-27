@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Enums\MovementType;
+use App\Enums\Inventory\MovementType;
 use App\Models\AdminUser;
 use App\Models\AuditLog;
 use App\Models\InventoryMovement;

@@ -2,14 +2,14 @@
 
 namespace App\Services\Client\Invoices;
 
-use App\Data\Client\Invoices\ClientInvoiceOrderRow;
-use App\Data\Client\Invoices\InvoiceShowLineItem;
-use App\Data\Client\Invoices\InvoiceShowOrderMeta;
-use App\Data\Client\Invoices\InvoiceShowTotals;
+use App\DTOs\Client\Invoices\ClientInvoiceOrderRow;
+use App\DTOs\Client\Invoices\InvoiceShowLineItem;
+use App\DTOs\Client\Invoices\InvoiceShowOrderMeta;
+use App\DTOs\Client\Invoices\InvoiceShowTotals;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Services\Media\ProductImageUrls;
+use App\Services\Shared\Media\ProductImageUrls;
 use Illuminate\Support\Collection;
 
 final class ClientInvoicePresentation

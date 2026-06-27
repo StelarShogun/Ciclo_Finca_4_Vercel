@@ -2,7 +2,7 @@
 
 namespace App\Actions\Client\Invoices;
 
-use App\Data\Client\Invoices\ClientPendingReviewProduct;
+use App\DTOs\Client\Invoices\ClientPendingReviewProduct;
 use App\Models\Client;
 use App\Models\ProductReview;
 use App\Models\Sale;

@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Sale;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class OrderExpirationSettingsTest extends TestCase
@@ -41,8 +42,10 @@ class OrderExpirationSettingsTest extends TestCase
 
         $this->get(route('admin.orders.index'))
             ->assertStatus(200)
-            ->assertSee('order-expiration-modal', false)
-            ->assertSee('Plazo para cancelación automática', false);
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Orders/Index', false)
+                ->where('readyToPickupExpirationHours', 72)
+            );
     }
 
     public function test_admin_can_save_order_expiration_hours_via_put(): void
@@ -67,7 +70,10 @@ class OrderExpirationSettingsTest extends TestCase
 
         $this->get(route('admin.orders.index'))
             ->assertStatus(200)
-            ->assertSee('value="168"', false);
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Orders/Index', false)
+                ->where('readyToPickupExpirationHours', 168)
+            );
 
         $this->assertSame(168, Sale::getReadyToPickupExpirationHours());
     }

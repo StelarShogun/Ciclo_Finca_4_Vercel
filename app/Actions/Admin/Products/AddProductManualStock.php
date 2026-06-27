@@ -4,7 +4,8 @@ namespace App\Actions\Admin\Products;
 
 use App\Http\Requests\Admin\Products\ManualStockAdjustmentRequest;
 use App\Models\Product;
-use App\Services\InventoryMovementService;
+use App\Services\Admin\Inventory\InventoryMovementService;
+use App\Support\AdminDashboardCache;
 
 final class AddProductManualStock
 {
@@ -25,6 +26,7 @@ final class AddProductManualStock
             quantity: (int) $validated['quantity'],
             reason: $validated['reason'],
         );
+        AdminDashboardCache::forget();
 
         return [
             'success' => true,

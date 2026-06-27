@@ -12,6 +12,7 @@ use App\Services\Admin\ProductCatalog\ProductCatalogExporter;
 use App\Services\Admin\ProductCatalog\ProductCatalogImporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -124,6 +125,28 @@ class ProductCatalogImportExportTest extends TestCase
         $product->refresh();
         $this->assertSame(2500.0, (float) $product->sale_price);
         $this->assertSame(9, (int) $product->stock_current);
+    }
+
+    public function test_import_removes_old_local_import_files_before_storing_new_one(): void
+    {
+        Storage::fake('local');
+        config(['vercel.enabled' => false, 'vercel.import_prefix' => 'catalog-imports']);
+
+        Storage::disk('local')->put('catalog-imports/old.csv', 'old');
+        Storage::disk('local')->put('catalog-imports/recent.csv', 'recent');
+        touch(Storage::disk('local')->path('catalog-imports/old.csv'), now()->subDays(2)->getTimestamp());
+
+        $admin = $this->createAdmin();
+        $this->createActiveSupplier();
+        $file = UploadedFile::fake()->createWithContent('proveedor.csv', "nombre,precio_venta,stock_actual,categoria\nNuevo,1000,1,General");
+
+        $this->actingAs($admin, 'admin')
+            ->from(route('inventory'))
+            ->post(route('products.import'), ['import_file' => $file])
+            ->assertStatus(202);
+
+        Storage::disk('local')->assertMissing('catalog-imports/old.csv');
+        Storage::disk('local')->assertExists('catalog-imports/recent.csv');
     }
 
     public function test_admin_import_queues_job_and_processes_for_ajax_request(): void

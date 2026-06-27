@@ -5,6 +5,7 @@ namespace App\Actions\Admin\Products;
 use App\Models\Product;
 use App\Services\Admin\Products\ProductAuditLogger;
 use App\Services\Client\Storefront\ClientStorefrontCache;
+use App\Support\AdminDashboardCache;
 use Illuminate\Support\Facades\DB;
 
 final class DeactivateProduct
@@ -39,6 +40,7 @@ final class DeactivateProduct
             'name' => $productName,
         ]);
         ClientStorefrontCache::forgetAfterProductMutation();
+        AdminDashboardCache::forget();
 
         return [
             'success' => true,

@@ -41,5 +41,5 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/errors/scenes.ts'])
+    @vite(['resources/ts/errors/scenes.ts'])
 @endpush
