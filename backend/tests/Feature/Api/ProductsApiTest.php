@@ -68,6 +68,29 @@ class ProductsApiTest extends TestCase
         $this->assertInstanceOf(LengthAwarePaginator::class, $paginator);
     }
 
+    public function test_show_returns_product_detail(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        Category::create(['name' => 'Cat Show']);
+        Supplier::create(['name' => 'Sup Show']);
+        $product = Product::factory()->create(['name' => 'Producto Detalle Test']);
+
+        $this->getJson("/api/v1/admin/products/{$product->product_id}")
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.product_id', (int) $product->product_id)
+            ->assertJsonPath('data.name', 'Producto Detalle Test')
+            ->assertJsonStructure(['data' => ['media_gallery', 'variants', 'media_main']]);
+    }
+
+    public function test_show_missing_product_returns_404(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        $this->getJson('/api/v1/admin/products/999999')->assertStatus(404);
+    }
+
     public function test_list_filters_by_search_and_status(): void
     {
         $this->actingAs($this->admin(), 'admin');

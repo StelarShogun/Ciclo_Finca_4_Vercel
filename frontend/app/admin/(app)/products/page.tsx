@@ -41,7 +41,12 @@ const columns: ColumnDef<AdminProduct>[] = [
     header: "Producto",
     cell: ({ row }) => (
       <div className="flex flex-col">
-        <span className="font-medium">{row.original.name}</span>
+        <Link
+          href={`/admin/products/${row.original.product_id}`}
+          className="font-medium hover:underline"
+        >
+          {row.original.name}
+        </Link>
         <span className="text-xs text-muted-foreground">
           {row.original.sku ?? "Sin SKU"}
         </span>
