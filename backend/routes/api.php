@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Admin\ProductController;
 use App\Http\Controllers\Api\V1\Admin\ProductClassificationController;
 use App\Http\Controllers\Api\V1\Admin\ProductGalleryController;
 use App\Http\Controllers\Api\V1\Admin\ProductVariantController;
+use App\Http\Controllers\Api\V1\Admin\ReportController;
 use App\Http\Controllers\Api\V1\Admin\SaleController;
 use App\Http\Controllers\Api\V1\Admin\SupplierController;
 use App\Http\Controllers\Api\V1\Admin\SupplierOrderController;
@@ -125,6 +126,11 @@ Route::prefix('v1')->group(function (): void {
 
         // Auditoría (bitácora, solo lectura)
         Route::get('/audit-logs', [AuditLogController::class, 'index']);
+
+        // Reportes (previsualización JSON; PDF/Excel/CSV se descargan desde rutas web)
+        Route::get('/reports/sales-performance', [ReportController::class, 'salesPerformance']);
+        Route::get('/reports/product-sales', [ReportController::class, 'productSales']);
+        Route::get('/reports/category-sales', [ReportController::class, 'categorySales']);
     });
 
     // --- Módulos cliente (se llenan en Bloque 5) ---
