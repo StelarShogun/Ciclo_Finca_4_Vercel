@@ -9,6 +9,7 @@ import {
   FileText,
   Tags,
   Layers,
+  ListChecks,
   ScrollText,
   type LucideIcon,
 } from "lucide-react";
@@ -21,6 +22,7 @@ export const ADMIN_NAV: NavItem[] = [
   { title: "Productos", href: "/admin/products", icon: Package },
   { title: "Marcas", href: "/admin/brands", icon: Tags },
   { title: "Categorías", href: "/admin/categories", icon: Layers },
+  { title: "Opciones por tipo", href: "/admin/classification-catalog", icon: ListChecks },
   { title: "Ventas", href: "/admin/sales", icon: ShoppingCart },
   { title: "Pedidos a proveedores", href: "/admin/supplier-orders", icon: ClipboardList },
   { title: "Proveedores", href: "/admin/suppliers", icon: Truck },

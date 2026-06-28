@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Admin\AuditLogController;
 use App\Http\Controllers\Api\V1\Admin\BrandController;
 use App\Http\Controllers\Api\V1\Admin\CategoryController;
+use App\Http\Controllers\Api\V1\Admin\ClassificationCatalogController;
 use App\Http\Controllers\Api\V1\Admin\ClientController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\InventoryController;
@@ -126,6 +127,19 @@ Route::prefix('v1')->group(function (): void {
 
         // Auditoría (bitácora, solo lectura)
         Route::get('/audit-logs', [AuditLogController::class, 'index']);
+
+        // Catálogo de clasificaciones ("Opciones por tipo": atributos y valores por subcategoría)
+        Route::get('/classification-catalog', [ClassificationCatalogController::class, 'index']);
+        Route::get('/classification-catalog/{category}', [ClassificationCatalogController::class, 'show'])->whereNumber('category');
+        Route::post('/classification-catalog/{category}/dimensions', [ClassificationCatalogController::class, 'storeDimension'])->whereNumber('category');
+        Route::put('/classification-catalog/dimensions/{dimension}', [ClassificationCatalogController::class, 'updateDimension'])->whereNumber('dimension');
+        Route::delete('/classification-catalog/dimensions/{dimension}', [ClassificationCatalogController::class, 'destroyDimension'])->whereNumber('dimension');
+        Route::post('/classification-catalog/dimensions/{dimensionId}/restore', [ClassificationCatalogController::class, 'restoreDimension'])->whereNumber('dimensionId');
+        Route::get('/classification-catalog/dimensions/{dimension}/values', [ClassificationCatalogController::class, 'values'])->whereNumber('dimension');
+        Route::post('/classification-catalog/dimensions/{dimension}/values', [ClassificationCatalogController::class, 'storeValue'])->whereNumber('dimension');
+        Route::put('/classification-catalog/values/{value}', [ClassificationCatalogController::class, 'updateValue'])->whereNumber('value');
+        Route::delete('/classification-catalog/values/{value}', [ClassificationCatalogController::class, 'destroyValue'])->whereNumber('value');
+        Route::post('/classification-catalog/values/{valueId}/restore', [ClassificationCatalogController::class, 'restoreValue'])->whereNumber('valueId');
 
         // Reportes (previsualización JSON; PDF/Excel/CSV se descargan desde rutas web)
         Route::get('/reports/sales-performance', [ReportController::class, 'salesPerformance']);
