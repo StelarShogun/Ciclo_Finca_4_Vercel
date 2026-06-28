@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import { Heart, LogOut, Receipt, ShoppingCart } from "lucide-react";
+import { Bell, Heart, LogOut, Receipt, ShoppingCart, User } from "lucide-react";
 
 import { clientLogout } from "@/lib/api/auth";
 import { useMe } from "@/lib/auth/use-me";
@@ -17,6 +17,8 @@ const LINKS = [
   { href: "/cart", label: "Mi carrito", icon: ShoppingCart },
   { href: "/favorites", label: "Favoritos", icon: Heart },
   { href: "/invoices", label: "Mis facturas", icon: Receipt },
+  { href: "/notifications", label: "Notificaciones", icon: Bell },
+  { href: "/profile", label: "Mi perfil", icon: User },
 ];
 
 export default function AccountPage() {

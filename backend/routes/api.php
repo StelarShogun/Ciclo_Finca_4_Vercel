@@ -19,6 +19,8 @@ use App\Http\Controllers\Api\V1\Client\CartController as ClientCartController;
 use App\Http\Controllers\Api\V1\Client\CatalogController as ClientCatalogController;
 use App\Http\Controllers\Api\V1\Client\FavoriteController as ClientFavoriteController;
 use App\Http\Controllers\Api\V1\Client\InvoiceController as ClientInvoiceController;
+use App\Http\Controllers\Api\V1\Client\NotificationController as ClientNotificationController;
+use App\Http\Controllers\Api\V1\Client\ProfileController as ClientProfileController;
 use App\Http\Controllers\Api\V1\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Api\V1\Auth\AdminAuthController;
 use App\Http\Controllers\Api\V1\Auth\ClientAuthController;
@@ -175,5 +177,16 @@ Route::prefix('v1')->group(function (): void {
         // Facturas (pertenencia por InvoicePolicy)
         Route::get('/invoices', [ClientInvoiceController::class, 'index']);
         Route::get('/invoices/{sale}', [ClientInvoiceController::class, 'show'])->whereNumber('sale');
+
+        // Notificaciones (solo las del propio cliente)
+        Route::get('/notifications', [ClientNotificationController::class, 'index']);
+        Route::get('/notifications/heartbeat', [ClientNotificationController::class, 'heartbeat']);
+        Route::post('/notifications/{notification}/read', [ClientNotificationController::class, 'markRead']);
+        Route::post('/notifications/read-all', [ClientNotificationController::class, 'markAllRead']);
+
+        // Perfil
+        Route::get('/profile', [ClientProfileController::class, 'show']);
+        Route::put('/profile', [ClientProfileController::class, 'update']);
+        Route::put('/profile/password', [ClientProfileController::class, 'updatePassword']);
     });
 });

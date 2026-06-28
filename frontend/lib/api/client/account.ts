@@ -89,3 +89,69 @@ export async function getInvoice(id: number | string): Promise<InvoiceDetail> {
   const { data } = await api.get(`/api/v1/invoices/${id}`);
   return data.data as InvoiceDetail;
 }
+
+// --- Notificaciones ---
+
+export type NotificationItem = {
+  id: string;
+  createdAtLabel: string;
+  message: string;
+  actionUrl: string | null;
+  actionLabel: string;
+};
+
+export type NotificationsResponse = {
+  notifications: NotificationItem[];
+  pagination: { currentPage: number; lastPage: number; total: number };
+};
+
+export async function getNotifications(page = 1): Promise<NotificationsResponse> {
+  const { data } = await api.get("/api/v1/notifications", { params: { page } });
+  return data.data as NotificationsResponse;
+}
+
+export async function markNotificationRead(id: string) {
+  const { data } = await api.post(`/api/v1/notifications/${id}/read`);
+  return data;
+}
+
+export async function markAllNotificationsRead() {
+  const { data } = await api.post("/api/v1/notifications/read-all");
+  return data;
+}
+
+// --- Perfil ---
+
+export type ClientProfile = {
+  name: string;
+  first_surname: string;
+  second_surname: string;
+  gmail: string;
+  provider: string;
+  avatar_url: string | null;
+  isGoogleOnly: boolean;
+};
+
+export async function getProfile(): Promise<ClientProfile> {
+  const { data } = await api.get("/api/v1/profile");
+  return data.data as ClientProfile;
+}
+
+export async function updateProfile(values: {
+  name: string;
+  first_surname: string;
+  second_surname: string | null;
+  gmail: string;
+}) {
+  const { data } = await api.put("/api/v1/profile", values);
+  return data;
+}
+
+export async function updatePassword(values: {
+  current_password?: string;
+  new_password: string;
+  new_password_confirmation: string;
+}) {
+  const { data } = await api.put("/api/v1/profile/password", values);
+  return data;
+}
