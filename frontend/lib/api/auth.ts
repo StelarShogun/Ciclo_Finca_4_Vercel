@@ -49,6 +49,34 @@ export async function clientLogout(): Promise<void> {
   await api.post("/api/v1/auth/logout");
 }
 
+export type RegisterInput = {
+  name: string;
+  first_surname: string;
+  second_surname?: string | null;
+  gmail: string;
+  password: string;
+  password_confirmation: string;
+  accept_terms: boolean;
+};
+
+export async function clientRegister(
+  input: RegisterInput,
+): Promise<{ success: boolean; pending_gmail: string; mail_warning: string | null }> {
+  await csrfCookie();
+  const { data } = await api.post("/api/v1/auth/register", input);
+  return data;
+}
+
+/** Verifica el código de 6 dígitos; al validar, /me devuelve el cliente. */
+export async function verifyCode(code: string): Promise<Me> {
+  await api.post("/api/v1/auth/verify", { verification_code: code });
+  return me();
+}
+
+export async function resendCode(): Promise<void> {
+  await api.post("/api/v1/auth/verify/resend");
+}
+
 export async function me(): Promise<Me> {
   const { data } = await api.get("/api/v1/me");
   return data.data as Me;

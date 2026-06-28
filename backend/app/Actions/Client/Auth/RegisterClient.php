@@ -18,6 +18,21 @@ final class RegisterClient
 
     public function handle(RegisterClientRequest $request): RedirectResponse
     {
+        ['client' => $client, 'mailWarning' => $mailWarning] = $this->register($request);
+
+        return redirect()->route('clients.verify.form')
+            ->with('pending_gmail', $client->gmail)
+            ->with('mail_warning', $mailWarning);
+    }
+
+    /**
+     * Crea el cliente (sin verificar), deja pendiente la verificación en sesión
+     * y envía el código. Reusado por el SPA Next para responder JSON.
+     *
+     * @return array{client: Client, mailWarning: string|null}
+     */
+    public function register(RegisterClientRequest $request): array
+    {
         $client = Client::create([
             'name' => $request->string('name')->toString(),
             'first_surname' => $request->string('first_surname')->toString(),
@@ -35,8 +50,6 @@ final class RegisterClient
             ClientVerificationCodeIssuer::CONTEXT_REGISTRATION
         );
 
-        return redirect()->route('clients.verify.form')
-            ->with('pending_gmail', $client->gmail)
-            ->with('mail_warning', $mailWarning);
+        return ['client' => $client, 'mailWarning' => $mailWarning];
     }
 }
