@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
-import { Minus, Plus, ShoppingCart, Star } from "lucide-react";
+import { Heart, Minus, Plus, ShoppingCart, Star } from "lucide-react";
 
 import { addToCart } from "@/lib/api/client/cart";
+import { toggleFavorite } from "@/lib/api/client/account";
+import { useMe } from "@/lib/auth/use-me";
 import { getProductDetail } from "@/lib/api/client/product";
 import { storeMediaUrl } from "@/lib/api/client/catalog";
 import { ProductCard } from "@/components/storefront/product-card";
@@ -18,7 +20,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const me = useMe();
   const [qty, setQty] = useState(1);
   const [slide, setSlide] = useState(0);
 
@@ -27,6 +31,23 @@ export default function ProductDetailPage() {
     queryFn: () => getProductDetail(id),
     enabled: !!id,
   });
+
+  const fav = useMutation({
+    mutationFn: () => toggleFavorite(Number(id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["product-detail", id] });
+      queryClient.invalidateQueries({ queryKey: ["favorites"] });
+    },
+    onError: (e) => toast.error((isAxiosError(e) && (e.response?.data?.message as string)) || "No se pudo actualizar el favorito."),
+  });
+
+  function onFavorite() {
+    if (me.data?.type !== "client") {
+      router.push(`/login?redirect=/product/${id}`);
+      return;
+    }
+    fav.mutate();
+  }
 
   const add = useMutation({
     mutationFn: () => addToCart(Number(id), qty),
@@ -144,6 +165,16 @@ export default function ProductDetailPage() {
                 onClick={() => add.mutate()}
               >
                 <ShoppingCart className="h-4 w-4" /> Agregar al carrito
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                title="Favorito"
+                disabled={fav.isPending}
+                onClick={onFavorite}
+              >
+                <Heart className={`h-4 w-4 ${p.isFavorite ? "fill-[#235347] text-[#235347]" : ""}`} />
               </Button>
             </div>
           ) : (

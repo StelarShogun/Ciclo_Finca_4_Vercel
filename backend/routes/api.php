@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\V1\Admin\SupplierController;
 use App\Http\Controllers\Api\V1\Admin\SupplierOrderController;
 use App\Http\Controllers\Api\V1\Client\CartController as ClientCartController;
 use App\Http\Controllers\Api\V1\Client\CatalogController as ClientCatalogController;
+use App\Http\Controllers\Api\V1\Client\FavoriteController as ClientFavoriteController;
+use App\Http\Controllers\Api\V1\Client\InvoiceController as ClientInvoiceController;
 use App\Http\Controllers\Api\V1\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Api\V1\Auth\AdminAuthController;
 use App\Http\Controllers\Api\V1\Auth\ClientAuthController;
@@ -165,5 +167,13 @@ Route::prefix('v1')->group(function (): void {
     // --- Cliente autenticado ---
     Route::middleware('auth:clients')->group(function (): void {
         Route::post('/cart/checkout', [ClientCartController::class, 'checkout']);
+
+        // Favoritos (único por user+product; toggle idempotente)
+        Route::get('/favorites', [ClientFavoriteController::class, 'index']);
+        Route::post('/favorites/toggle', [ClientFavoriteController::class, 'toggle']);
+
+        // Facturas (pertenencia por InvoicePolicy)
+        Route::get('/invoices', [ClientInvoiceController::class, 'index']);
+        Route::get('/invoices/{sale}', [ClientInvoiceController::class, 'show'])->whereNumber('sale');
     });
 });

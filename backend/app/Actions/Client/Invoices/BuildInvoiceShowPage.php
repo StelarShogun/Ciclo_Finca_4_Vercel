@@ -28,12 +28,23 @@ final class BuildInvoiceShowPage
             abort(404);
         }
 
+        return Inertia::render('Client/Invoices/Show', $this->props($sale, $client));
+    }
+
+    /**
+     * Props del detalle de factura (sin Inertia ni gate). El llamador valida la
+     * propiedad con la InvoicePolicy. Reusado por el SPA Next.
+     *
+     * @return array<string, mixed>
+     */
+    public function props(Sale $sale, Client $client): array
+    {
         $sale->load(['saleItems.product.category.parent', 'client', 'sellerAdmin']);
 
         $items = $sale->saleItems ?? collect();
         $clientId = (int) $client->user_id;
 
-        return Inertia::render('Client/Invoices/Show', [
+        return [
             'invoiceCount' => Sale::countActiveClientInvoices($clientId),
             'backUrl' => route('clients.invoices', ['tab' => $sale->clientInvoicesBackTab()], false),
             'cartCount' => $this->cartManager->totalItemCount(),
@@ -46,6 +57,6 @@ final class BuildInvoiceShowPage
                 ->values()
                 ->all(),
             'printUrl' => route('clients.invoices.print', $sale, false),
-        ]);
+        ];
     }
 }

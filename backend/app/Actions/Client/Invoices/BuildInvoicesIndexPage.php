@@ -24,6 +24,16 @@ final class BuildInvoicesIndexPage
 
     public function handle(Request $request): Response
     {
+        return Inertia::render('Client/Invoices/Index', $this->props($request));
+    }
+
+    /**
+     * Props de la página de facturas (sin Inertia). Reusado por el SPA Next.
+     *
+     * @return array<string, mixed>
+     */
+    public function props(Request $request): array
+    {
         /** @var Client $client */
         $client = Auth::guard('clients')->user();
         $tab = $request->query('tab', 'facturas');
@@ -77,7 +87,7 @@ final class BuildInvoicesIndexPage
             ->values()
             ->all();
 
-        return Inertia::render('Client/Invoices/Index', [
+        return [
             'tab' => $tab,
             'orders' => $ordersRows,
             'pagination' => ListPaginationPayload::from($orders),
@@ -91,7 +101,7 @@ final class BuildInvoicesIndexPage
                 ->count(),
             'heartbeatUrl' => route('clients.invoices.heartbeat', [], false),
             'pendingReviewProducts' => $pendingReviewProducts,
-        ]);
+        ];
     }
 
     /**
