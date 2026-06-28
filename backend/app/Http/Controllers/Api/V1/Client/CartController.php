@@ -9,7 +9,9 @@ use App\Actions\Client\Cart\RemoveCartItem;
 use App\Actions\Client\Cart\UpdateCartItem;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Client\Cart\AddToCartRequest;
+use App\Http\Requests\Client\Cart\CheckoutCartRequest;
 use App\Http\Requests\Client\Cart\UpdateCartItemRequest;
+use App\Services\Client\Cart\CheckoutService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -42,5 +44,11 @@ final class CartController extends Controller
     public function clear(ClearCart $action): JsonResponse
     {
         return $action->handle()->toJsonResponse();
+    }
+
+    /** Checkout (requiere cliente logueado). Stock con locks/transacción en la Action. */
+    public function checkout(CheckoutCartRequest $request, CheckoutService $checkout): JsonResponse
+    {
+        return $checkout->checkout($request->validated())->toJsonResponse();
     }
 }

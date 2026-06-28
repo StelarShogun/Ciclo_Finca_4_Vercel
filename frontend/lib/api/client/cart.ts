@@ -50,3 +50,15 @@ export async function clearCart() {
   const { data } = await api.delete("/api/v1/cart/clear");
   return data;
 }
+
+export type CheckoutResult = {
+  success: boolean;
+  message: string;
+  sale_id: number;
+  invoice_number: string;
+};
+
+export async function checkout(paymentMethod: string): Promise<CheckoutResult> {
+  const { data } = await api.post("/api/v1/cart/checkout", { payment_method: paymentMethod });
+  return data as CheckoutResult;
+}

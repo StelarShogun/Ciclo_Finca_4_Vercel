@@ -162,8 +162,8 @@ Route::prefix('v1')->group(function (): void {
     Route::delete('/cart/remove/{id}', [ClientCartController::class, 'remove'])->whereNumber('id');
     Route::delete('/cart/clear', [ClientCartController::class, 'clear']);
 
-    // --- Módulos cliente autenticado (se llenan en Bloque 5) ---
-    Route::prefix('client')->middleware('auth:clients')->group(function (): void {
-        //
+    // --- Cliente autenticado ---
+    Route::middleware('auth:clients')->group(function (): void {
+        Route::post('/cart/checkout', [ClientCartController::class, 'checkout']);
     });
 });
