@@ -37,6 +37,21 @@ final class BuildProductDetailPage
             ), 301);
         }
 
+        return Inertia::render('Client/Products/Show', $this->payload($request, $product));
+    }
+
+    /**
+     * Construye el payload del detalle (sin Inertia ni redirect de slug). Lo
+     * reusa el SPA Next vía API. Carga el producto si se pasa el id.
+     *
+     * @return array<string, mixed>
+     */
+    public function payload(Request $request, Product|int $product): array
+    {
+        if (is_int($product)) {
+            $product = Product::with(['category.parent', 'brands', 'classificationValues.dimension'])->findOrFail($product);
+        }
+
         $related = $this->relatedProducts->forProduct($product);
 
         $favoriteProductIds = collect();
@@ -90,9 +105,6 @@ final class BuildProductDetailPage
             isProductFavorite: $isProductFavorite,
         );
 
-        return Inertia::render(
-            'Client/Products/Show',
-            $this->payloadBuilder->build($context),
-        );
+        return $this->payloadBuilder->build($context);
     }
 }

@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\Admin\SaleController;
 use App\Http\Controllers\Api\V1\Admin\SupplierController;
 use App\Http\Controllers\Api\V1\Admin\SupplierOrderController;
 use App\Http\Controllers\Api\V1\Client\CatalogController as ClientCatalogController;
+use App\Http\Controllers\Api\V1\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Api\V1\Auth\AdminAuthController;
 use App\Http\Controllers\Api\V1\Auth\ClientAuthController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -151,6 +152,7 @@ Route::prefix('v1')->group(function (): void {
     // --- Tienda pública (sin auth; el guard clients se consulta para favoritos) ---
     Route::get('/catalog', [ClientCatalogController::class, 'index']);
     Route::get('/catalog/heartbeat', [ClientCatalogController::class, 'heartbeat']);
+    Route::get('/products/{product}', [ClientProductController::class, 'show'])->whereNumber('product');
 
     // --- Módulos cliente autenticado (se llenan en Bloque 5) ---
     Route::prefix('client')->middleware('auth:clients')->group(function (): void {
