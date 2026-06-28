@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\ProductController;
+use App\Http\Controllers\Api\V1\Admin\ProductClassificationController;
 use App\Http\Controllers\Api\V1\Admin\ProductGalleryController;
 use App\Http\Controllers\Api\V1\Admin\ProductVariantController;
 use App\Http\Controllers\Api\V1\Auth\AdminAuthController;
@@ -58,6 +59,10 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/products/{product}/variants', [ProductVariantController::class, 'store'])->whereNumber('product');
         Route::put('/products/{product}/variants/{variant}', [ProductVariantController::class, 'update'])->whereNumber('product')->whereNumber('variant');
         Route::delete('/products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])->whereNumber('product')->whereNumber('variant');
+
+        // Clasificaciones (por categoría, un valor por dimensión)
+        Route::get('/products/{product}/classifications', [ProductClassificationController::class, 'index'])->whereNumber('product');
+        Route::put('/products/{product}/classifications', [ProductClassificationController::class, 'update'])->whereNumber('product');
     });
 
     // --- Módulos cliente (se llenan en Bloque 5) ---

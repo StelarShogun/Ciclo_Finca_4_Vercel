@@ -192,6 +192,38 @@ export async function deleteGalleryImage(id: number | string, mediaId: number) {
   return data.data as ProductGallery;
 }
 
+// --- Clasificaciones (por categoría, un valor por dimensión) ---
+
+export type ClassificationAttribute = {
+  id: number;
+  label: string;
+  selected: number | null;
+  values: { id: number; value: string }[];
+};
+
+export type ProductClassifications = {
+  editable: boolean;
+  reason?: string;
+  attributes: ClassificationAttribute[];
+};
+
+export async function getProductClassifications(
+  id: number | string,
+): Promise<ProductClassifications> {
+  const { data } = await api.get(`/api/v1/admin/products/${id}/classifications`);
+  return data.data as ProductClassifications;
+}
+
+export async function updateProductClassifications(
+  id: number | string,
+  classificationValueIds: number[],
+) {
+  const { data } = await api.put(`/api/v1/admin/products/${id}/classifications`, {
+    classification_value_ids: classificationValueIds,
+  });
+  return data;
+}
+
 // --- Variantes (productos existentes enlazados) ---
 
 export async function addVariant(productId: number | string, variantProductId: number) {

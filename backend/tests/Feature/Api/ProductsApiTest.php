@@ -5,6 +5,8 @@ namespace Tests\Feature\Api;
 use App\Actions\Admin\Products\ListProducts;
 use App\Models\AdminUser;
 use App\Models\Category;
+use App\Models\ClassificationDimension;
+use App\Models\ClassificationValue;
 use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -150,6 +152,59 @@ class ProductsApiTest extends TestCase
         $this->postJson("/api/v1/admin/products/{$product->product_id}/variants", [])
             ->assertStatus(422)
             ->assertJsonValidationErrors('variant_product_id');
+    }
+
+    public function test_classifications_not_editable_for_parent_category(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        $parent = Category::create(['name' => 'Bicicletas']);
+        Supplier::create(['name' => 'Sup Cls Parent']);
+        $product = Product::factory()->create(['category_id' => $parent->category_id]);
+
+        $this->getJson("/api/v1/admin/products/{$product->product_id}/classifications")
+            ->assertOk()
+            ->assertJsonPath('data.editable', false)
+            ->assertJsonPath('data.attributes', []);
+    }
+
+    public function test_classifications_index_and_update_for_concrete_subcategory(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        $parent = Category::create(['name' => 'Bicicletas Cls']);
+        $sub = Category::create(['name' => 'Montaña Cls', 'parent_category_id' => $parent->category_id]);
+        Supplier::create(['name' => 'Sup Cls']);
+        $product = Product::factory()->create(['category_id' => $sub->category_id]);
+
+        $dim = ClassificationDimension::create([
+            'category_id' => $sub->category_id,
+            'slug' => 'color',
+            'label' => 'Color',
+            'sort_order' => 1,
+        ]);
+        $rojo = ClassificationValue::create(['classification_dimension_id' => $dim->id, 'value' => 'Rojo', 'normalized_value' => 'rojo', 'sort_order' => 1]);
+        ClassificationValue::create(['classification_dimension_id' => $dim->id, 'value' => 'Azul', 'normalized_value' => 'azul', 'sort_order' => 2]);
+
+        $this->getJson("/api/v1/admin/products/{$product->product_id}/classifications")
+            ->assertOk()
+            ->assertJsonPath('data.editable', true)
+            ->assertJsonPath('data.attributes.0.label', 'Color')
+            ->assertJsonPath('data.attributes.0.selected', null)
+            ->assertJsonCount(2, 'data.attributes.0.values');
+
+        $this->putJson("/api/v1/admin/products/{$product->product_id}/classifications", [
+            'classification_value_ids' => [$rojo->id],
+        ])->assertOk()->assertJsonPath('success', true);
+
+        $this->getJson("/api/v1/admin/products/{$product->product_id}/classifications")
+            ->assertOk()
+            ->assertJsonPath('data.attributes.0.selected', $rojo->id);
+    }
+
+    public function test_classifications_requires_auth(): void
+    {
+        $this->getJson('/api/v1/admin/products/1/classifications')->assertStatus(401);
     }
 
     public function test_list_filters_by_search_and_status(): void

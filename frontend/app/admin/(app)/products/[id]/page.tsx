@@ -7,6 +7,7 @@ import { Pencil, Star } from "lucide-react";
 
 import { getProductDetail } from "@/lib/api/admin/products";
 import { PageHeader } from "@/components/admin/page-header";
+import { ProductClassifications } from "@/components/admin/products/product-classifications";
 import { ProductGallery } from "@/components/admin/products/product-gallery";
 import { ProductVariants } from "@/components/admin/products/product-variants";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
@@ -111,20 +112,8 @@ export default function ProductDetailPage() {
       {/* Variantes */}
       <ProductVariants productId={Number(id)} variants={data.variants} />
 
-      {/* Clasificaciones */}
-      {data.classification_values && data.classification_values.length > 0 && (
-        <Card className="mt-6">
-          <CardHeader><CardTitle>Clasificaciones</CardTitle></CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            {data.classification_values.map((c) => (
-              <span key={c.id} className="rounded-md border px-2 py-1 text-sm">
-                {c.dimension?.name ? `${c.dimension.name}: ` : ""}
-                {c.value ?? c.id}
-              </span>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+      {/* Clasificaciones (editor) */}
+      <ProductClassifications productId={id} />
     </>
   );
 }
