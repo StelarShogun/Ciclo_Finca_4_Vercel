@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\Admin\ReportController;
 use App\Http\Controllers\Api\V1\Admin\SaleController;
 use App\Http\Controllers\Api\V1\Admin\SupplierController;
 use App\Http\Controllers\Api\V1\Admin\SupplierOrderController;
+use App\Http\Controllers\Api\V1\Client\CartController as ClientCartController;
 use App\Http\Controllers\Api\V1\Client\CatalogController as ClientCatalogController;
 use App\Http\Controllers\Api\V1\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Api\V1\Auth\AdminAuthController;
@@ -153,6 +154,13 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/catalog', [ClientCatalogController::class, 'index']);
     Route::get('/catalog/heartbeat', [ClientCatalogController::class, 'heartbeat']);
     Route::get('/products/{product}', [ClientProductController::class, 'show'])->whereNumber('product');
+
+    // Carrito (invitado por sesión o cliente por DB; CartManager decide)
+    Route::get('/cart', [ClientCartController::class, 'index']);
+    Route::post('/cart/add', [ClientCartController::class, 'add']);
+    Route::put('/cart/update', [ClientCartController::class, 'update']);
+    Route::delete('/cart/remove/{id}', [ClientCartController::class, 'remove'])->whereNumber('id');
+    Route::delete('/cart/clear', [ClientCartController::class, 'clear']);
 
     // --- Módulos cliente autenticado (se llenan en Bloque 5) ---
     Route::prefix('client')->middleware('auth:clients')->group(function (): void {

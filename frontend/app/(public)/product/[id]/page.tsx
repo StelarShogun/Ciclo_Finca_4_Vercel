@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { toast } from "sonner";
 import { Minus, Plus, ShoppingCart, Star } from "lucide-react";
 
+import { addToCart } from "@/lib/api/client/cart";
 import { getProductDetail } from "@/lib/api/client/product";
 import { storeMediaUrl } from "@/lib/api/client/catalog";
 import { ProductCard } from "@/components/storefront/product-card";
@@ -16,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
   const [qty, setQty] = useState(1);
   const [slide, setSlide] = useState(0);
 
@@ -23,6 +26,18 @@ export default function ProductDetailPage() {
     queryKey: ["product-detail", id],
     queryFn: () => getProductDetail(id),
     enabled: !!id,
+  });
+
+  const add = useMutation({
+    mutationFn: () => addToCart(Number(id), qty),
+    onSuccess: () => {
+      toast.success("Agregado al carrito");
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
+    onError: (e) =>
+      toast.error(
+        (isAxiosError(e) && (e.response?.data?.message as string)) || "No se pudo agregar al carrito.",
+      ),
   });
 
   if (isLoading) {
@@ -123,10 +138,10 @@ export default function ProductDetailPage() {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              {/* ponytail: el carrito se cablea en el slice de Carrito; por ahora avisa. */}
               <Button
                 className="flex-1 bg-[#235347] hover:bg-[#1a3f37]"
-                onClick={() => toast.info("El carrito se habilita en el próximo paso.")}
+                disabled={add.isPending}
+                onClick={() => add.mutate()}
               >
                 <ShoppingCart className="h-4 w-4" /> Agregar al carrito
               </Button>

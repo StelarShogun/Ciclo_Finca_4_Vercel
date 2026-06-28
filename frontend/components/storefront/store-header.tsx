@@ -3,9 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { Heart, Search, ShoppingCart, User } from "lucide-react";
 
 import { useMe } from "@/lib/auth/use-me";
+import { getCart } from "@/lib/api/client/cart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -14,6 +16,9 @@ export function StoreHeader() {
   const params = useSearchParams();
   const { data } = useMe();
   const [search, setSearch] = useState(params.get("search") ?? "");
+
+  const cart = useQuery({ queryKey: ["cart"], queryFn: getCart, staleTime: 30_000 });
+  const cartCount = cart.data?.items.reduce((n, i) => n + i.quantity, 0) ?? 0;
 
   const isClient = data?.type === "client";
 
@@ -49,9 +54,14 @@ export function StoreHeader() {
               <Heart className="h-5 w-5" />
             </Link>
           </Button>
-          <Button asChild variant="ghost" size="icon" className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white">
+          <Button asChild variant="ghost" size="icon" className="relative text-[#DAF1DE] hover:bg-[#235347] hover:text-white">
             <Link href="/cart" aria-label="Carrito">
               <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
             </Link>
           </Button>
           <Button asChild variant="ghost" size="sm" className="gap-2 text-[#DAF1DE] hover:bg-[#235347] hover:text-white">
