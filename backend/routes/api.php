@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Admin\ProductController;
 use App\Http\Controllers\Api\V1\Admin\ProductClassificationController;
 use App\Http\Controllers\Api\V1\Admin\ProductGalleryController;
 use App\Http\Controllers\Api\V1\Admin\ProductVariantController;
+use App\Http\Controllers\Api\V1\Admin\SaleController;
 use App\Http\Controllers\Api\V1\Auth\AdminAuthController;
 use App\Http\Controllers\Api\V1\Auth\ClientAuthController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -76,6 +77,18 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/categories', [CategoryController::class, 'index']);
         Route::post('/categories/parent', [CategoryController::class, 'storeParent']);
         Route::post('/categories/subcategory', [CategoryController::class, 'storeSubcategory']);
+
+        // Ventas (historial + ciclo de vida; stock con transacciones en las Actions)
+        Route::get('/sales', [SaleController::class, 'index']);
+        Route::get('/sales/heartbeat', [SaleController::class, 'heartbeat']);
+        Route::post('/sales', [SaleController::class, 'store']);
+        Route::get('/sales/{sale}', [SaleController::class, 'show'])->whereNumber('sale');
+        Route::put('/sales/{sale}', [SaleController::class, 'update'])->whereNumber('sale');
+        Route::delete('/sales/{sale}', [SaleController::class, 'destroy'])->whereNumber('sale');
+        Route::post('/sales/{sale}/ready', [SaleController::class, 'markReady'])->whereNumber('sale');
+        Route::post('/sales/{sale}/complete', [SaleController::class, 'complete'])->whereNumber('sale');
+        Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel'])->whereNumber('sale');
+        Route::post('/sales/{sale}/return', [SaleController::class, 'returnSale'])->whereNumber('sale');
     });
 
     // --- Módulos cliente (se llenan en Bloque 5) ---
