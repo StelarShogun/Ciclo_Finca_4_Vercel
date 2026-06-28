@@ -32,6 +32,23 @@ export async function adminLogout(): Promise<void> {
   await api.post("/api/v1/auth/admin/logout");
 }
 
+export type ClientLoginInput = {
+  gmail: string;
+  password: string;
+  "g-recaptcha-response"?: string;
+};
+
+/** Login de cliente: la sesión se establece por cookie; luego /me da el usuario. */
+export async function clientLogin(input: ClientLoginInput): Promise<Me> {
+  await csrfCookie();
+  await api.post("/api/v1/auth/login", input);
+  return me();
+}
+
+export async function clientLogout(): Promise<void> {
+  await api.post("/api/v1/auth/logout");
+}
+
 export async function me(): Promise<Me> {
   const { data } = await api.get("/api/v1/me");
   return data.data as Me;
