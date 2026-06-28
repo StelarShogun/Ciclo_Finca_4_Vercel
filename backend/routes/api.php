@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AuditLogController;
 use App\Http\Controllers\Api\V1\Admin\BrandController;
 use App\Http\Controllers\Api\V1\Admin\CategoryController;
+use App\Http\Controllers\Api\V1\Admin\ClientController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\InventoryController;
 use App\Http\Controllers\Api\V1\Admin\ProductController;
@@ -114,6 +116,15 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/inventory/{product}/add', [InventoryController::class, 'addStock'])->whereNumber('product');
         Route::post('/inventory/{product}/remove', [InventoryController::class, 'removeStock'])->whereNumber('product');
         Route::get('/inventory/{product}/movements', [InventoryController::class, 'movements'])->whereNumber('product');
+
+        // Clientes (lista + historial de compras + bloqueo/desbloqueo)
+        Route::get('/clients', [ClientController::class, 'index']);
+        Route::get('/clients/{client}', [ClientController::class, 'show'])->whereNumber('client');
+        Route::post('/clients/{client}/ban', [ClientController::class, 'ban'])->whereNumber('client');
+        Route::post('/clients/{client}/unban', [ClientController::class, 'unban'])->whereNumber('client');
+
+        // Auditoría (bitácora, solo lectura)
+        Route::get('/audit-logs', [AuditLogController::class, 'index']);
     });
 
     // --- Módulos cliente (se llenan en Bloque 5) ---
