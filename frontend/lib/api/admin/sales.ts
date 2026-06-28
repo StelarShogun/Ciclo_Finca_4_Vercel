@@ -110,6 +110,30 @@ export async function getSalesHeartbeat(since: number): Promise<SalesHeartbeat> 
   return data as SalesHeartbeat;
 }
 
+export type NewSaleItem = {
+  product_id: number;
+  quantity: number;
+  precio_unitario: number;
+  total: number;
+};
+
+export type NewSalePayload = {
+  buyer_name?: string;
+  buyer_email?: string;
+  client_id?: number;
+  payment_method: string;
+  payment_reference?: string;
+  discount: number;
+  iva_percentage: number;
+  notes?: string;
+  items: NewSaleItem[];
+};
+
+export async function createSale(payload: NewSalePayload) {
+  const { data } = await api.post("/api/v1/admin/sales", payload);
+  return data;
+}
+
 export async function getSale(id: number): Promise<SaleDetail> {
   const { data } = await api.get(`/api/v1/admin/sales/${id}`);
   return data.sale as SaleDetail;

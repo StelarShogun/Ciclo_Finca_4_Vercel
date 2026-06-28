@@ -136,4 +136,49 @@ class SalesApiTest extends TestCase
             ->assertStatus(422)
             ->assertJsonValidationErrors('reason');
     }
+
+    public function test_store_creates_sale_and_decrements_stock(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+        Category::firstOrCreate(['name' => 'Cat Store']);
+        Supplier::firstOrCreate(['name' => 'Sup Store']);
+        $product = Product::factory()->create(['stock_current' => 8, 'sale_price' => 1000, 'purchase_price' => 500]);
+
+        $this->postJson('/api/v1/admin/sales', [
+            'buyer_name' => 'Cliente Mostrador',
+            'payment_method' => 'cash',
+            'discount' => 0,
+            'iva_percentage' => 13,
+            'items' => [[
+                'product_id' => $product->product_id,
+                'quantity' => 3,
+                'precio_unitario' => 1000,
+                'total' => 3000,
+            ]],
+        ])->assertOk()->assertJsonPath('success', true);
+
+        $this->assertSame(5, $product->fresh()->stock_current);
+    }
+
+    public function test_store_rejects_insufficient_stock(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+        Category::firstOrCreate(['name' => 'Cat Stock']);
+        Supplier::firstOrCreate(['name' => 'Sup Stock']);
+        $product = Product::factory()->create(['stock_current' => 2, 'sale_price' => 1000, 'purchase_price' => 500]);
+
+        $this->postJson('/api/v1/admin/sales', [
+            'payment_method' => 'cash',
+            'discount' => 0,
+            'iva_percentage' => 13,
+            'items' => [[
+                'product_id' => $product->product_id,
+                'quantity' => 5,
+                'precio_unitario' => 1000,
+                'total' => 5000,
+            ]],
+        ])->assertStatus(400)->assertJsonPath('success', false);
+
+        $this->assertSame(2, $product->fresh()->stock_current);
+    }
 }

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CreditCard, Download, RotateCcw, Search, ShoppingCart } from "lucide-react";
+import Link from "next/link";
+import { CreditCard, Download, Plus, RotateCcw, Search, ShoppingCart } from "lucide-react";
 
 import { getSales, type SaleRow } from "@/lib/api/admin/sales";
 import { PageHeader } from "@/components/admin/page-header";
@@ -122,12 +123,20 @@ export default function SalesPage() {
         title="Ventas"
         description="Historial de ventas y gestión de pedidos."
         actions={
-          <Button asChild variant="outline">
-            <a href={exportHref} target="_blank" rel="noopener noreferrer">
-              <Download className="h-4 w-4" />
-              Exportar
-            </a>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <a href={exportHref} target="_blank" rel="noopener noreferrer">
+                <Download className="h-4 w-4" />
+                Exportar
+              </a>
+            </Button>
+            <Button asChild>
+              <Link href="/admin/sales/new">
+                <Plus className="h-4 w-4" />
+                Nueva venta
+              </Link>
+            </Button>
+          </div>
         }
       />
 
