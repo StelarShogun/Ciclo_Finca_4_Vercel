@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Admin\ProductClassificationController;
 use App\Http\Controllers\Api\V1\Admin\ProductGalleryController;
 use App\Http\Controllers\Api\V1\Admin\ProductVariantController;
 use App\Http\Controllers\Api\V1\Admin\SaleController;
+use App\Http\Controllers\Api\V1\Admin\SupplierOrderController;
 use App\Http\Controllers\Api\V1\Auth\AdminAuthController;
 use App\Http\Controllers\Api\V1\Auth\ClientAuthController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -89,6 +90,15 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/sales/{sale}/complete', [SaleController::class, 'complete'])->whereNumber('sale');
         Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel'])->whereNumber('sale');
         Route::post('/sales/{sale}/return', [SaleController::class, 'returnSale'])->whereNumber('sale');
+
+        // Pedidos a proveedores (recepción con stock de entrada en las Actions)
+        Route::get('/supplier-orders', [SupplierOrderController::class, 'index']);
+        Route::get('/supplier-orders/search-products', [SupplierOrderController::class, 'searchProducts']);
+        Route::post('/supplier-orders', [SupplierOrderController::class, 'store']);
+        Route::get('/supplier-orders/{order}', [SupplierOrderController::class, 'show'])->whereNumber('order');
+        Route::post('/supplier-orders/{order}/state', [SupplierOrderController::class, 'updateState'])->whereNumber('order');
+        Route::post('/supplier-orders/{order}/close-partial', [SupplierOrderController::class, 'closePartial'])->whereNumber('order');
+        Route::post('/supplier-orders/{order}/receive', [SupplierOrderController::class, 'receive'])->whereNumber('order');
     });
 
     // --- Módulos cliente (se llenan en Bloque 5) ---

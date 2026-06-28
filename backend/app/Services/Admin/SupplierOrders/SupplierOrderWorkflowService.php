@@ -24,6 +24,16 @@ final readonly class SupplierOrderWorkflowService
 
     public function create(array $validated): RedirectResponse
     {
+        $order = $this->createOrder($validated);
+
+        return redirect()
+            ->route('admin.supplier-orders.detail', $order->num_order)
+            ->with('status', 'Pedido creado correctamente.');
+    }
+
+    /** Crea el pedido (estado draft) dentro de una transacción y lo devuelve. Lo reusa el SPA Next vía API. */
+    public function createOrder(array $validated): Order
+    {
         $items = $validated['items'];
 
         return DB::transaction(function () use ($validated, $items) {
@@ -102,9 +112,7 @@ final readonly class SupplierOrderWorkflowService
                 'total' => (float) $order->total,
             ]);
 
-            return redirect()
-                ->route('admin.supplier-orders.detail', $order->num_order)
-                ->with('status', 'Pedido creado correctamente.');
+            return $order;
         });
     }
 
