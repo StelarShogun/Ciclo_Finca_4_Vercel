@@ -60,9 +60,12 @@ export default function AdminLoginPage() {
   });
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm">
+    <main className="flex min-h-svh items-center justify-center bg-[oklch(0.97_0.02_175)] p-4 dark:bg-background">
+      <Card className="w-full max-w-sm overflow-hidden border-t-4 border-t-primary">
         <CardHeader>
+          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+            CF
+          </div>
           <CardTitle className="text-xl">Panel administrativo</CardTitle>
           <CardDescription>Ingresá con tu cuenta de administrador.</CardDescription>
         </CardHeader>

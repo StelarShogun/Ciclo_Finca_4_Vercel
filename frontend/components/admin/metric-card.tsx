@@ -22,12 +22,16 @@ export function MetricCard({ label, value, icon: Icon, trend }: MetricCardProps)
           : "text-muted-foreground";
 
   return (
-    <Card>
+    <Card className="border-l-4 border-l-primary/70">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {label}
         </CardTitle>
-        {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+        {Icon && (
+          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-accent-foreground">
+            <Icon className="h-4 w-4" />
+          </span>
+        )}
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-semibold">{value}</div>

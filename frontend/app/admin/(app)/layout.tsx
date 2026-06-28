@@ -43,7 +43,7 @@ export default function AdminAppLayout({
   return (
     <SidebarProvider>
       <AdminSidebar />
-      <SidebarInset>
+      <SidebarInset className="bg-[oklch(0.985_0.01_170)] dark:bg-background">
         <AdminHeader />
         <div className="flex-1 p-6">{children}</div>
       </SidebarInset>
