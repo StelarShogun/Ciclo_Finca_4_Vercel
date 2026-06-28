@@ -3,11 +3,13 @@
 use App\Http\Controllers\Api\V1\Admin\BrandController;
 use App\Http\Controllers\Api\V1\Admin\CategoryController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
+use App\Http\Controllers\Api\V1\Admin\InventoryController;
 use App\Http\Controllers\Api\V1\Admin\ProductController;
 use App\Http\Controllers\Api\V1\Admin\ProductClassificationController;
 use App\Http\Controllers\Api\V1\Admin\ProductGalleryController;
 use App\Http\Controllers\Api\V1\Admin\ProductVariantController;
 use App\Http\Controllers\Api\V1\Admin\SaleController;
+use App\Http\Controllers\Api\V1\Admin\SupplierController;
 use App\Http\Controllers\Api\V1\Admin\SupplierOrderController;
 use App\Http\Controllers\Api\V1\Auth\AdminAuthController;
 use App\Http\Controllers\Api\V1\Auth\ClientAuthController;
@@ -99,6 +101,19 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/supplier-orders/{order}/state', [SupplierOrderController::class, 'updateState'])->whereNumber('order');
         Route::post('/supplier-orders/{order}/close-partial', [SupplierOrderController::class, 'closePartial'])->whereNumber('order');
         Route::post('/supplier-orders/{order}/receive', [SupplierOrderController::class, 'receive'])->whereNumber('order');
+
+        // Proveedores (CRUD)
+        Route::get('/suppliers', [SupplierController::class, 'index']);
+        Route::post('/suppliers', [SupplierController::class, 'store']);
+        Route::get('/suppliers/{supplier}', [SupplierController::class, 'show'])->whereNumber('supplier');
+        Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])->whereNumber('supplier');
+        Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->whereNumber('supplier');
+
+        // Inventario (stock + ajustes manuales con movimiento + historial)
+        Route::get('/inventory', [InventoryController::class, 'index']);
+        Route::post('/inventory/{product}/add', [InventoryController::class, 'addStock'])->whereNumber('product');
+        Route::post('/inventory/{product}/remove', [InventoryController::class, 'removeStock'])->whereNumber('product');
+        Route::get('/inventory/{product}/movements', [InventoryController::class, 'movements'])->whereNumber('product');
     });
 
     // --- Módulos cliente (se llenan en Bloque 5) ---
