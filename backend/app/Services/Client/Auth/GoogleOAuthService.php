@@ -31,13 +31,16 @@ final class GoogleOAuthService
 
     public function redirectToProvider(): RedirectResponse
     {
+        // El SPA Next inicia el flujo con ?from=spa; al volver, redirigimos al
+        // frontend en vez de a las rutas web Inertia.
+        if (request()->query('from') === 'spa') {
+            session(['oauth_from_spa' => true]);
+        }
+
         $googleConfig = config('services.google');
 
         if (empty($googleConfig['client_id']) || empty($googleConfig['redirect'])) {
-            return redirect()->route('clients.home')->with(
-                'error',
-                'Falta configurar GOOGLE_CLIENT_ID o GOOGLE_REDIRECT_URI en el entorno.'
-            );
+            return $this->oauthErrorRedirect('Falta configurar GOOGLE_CLIENT_ID o GOOGLE_REDIRECT_URI en el entorno.');
         }
 
         $state = $this->issueState();
@@ -59,12 +62,11 @@ final class GoogleOAuthService
 
     public function handleCallback(Request $request): RedirectResponse
     {
+        $fromSpa = (bool) session('oauth_from_spa');
+
         try {
             if ($request->filled('error')) {
-                return redirect()->route('clients.home')->with(
-                    'error',
-                    'Google rechazó la autenticación: '.$request->string('error')
-                );
+                return $this->oauthErrorRedirect('Google rechazó la autenticación: '.$request->string('error'), $fromSpa);
             }
 
             if (! $this->consumeState($request)) {
@@ -75,12 +77,12 @@ final class GoogleOAuthService
                     'cache_store' => config('cache.default'),
                 ]);
 
-                return redirect()->route('clients.home')->with('error', 'Sesión OAuth inválida. Inténtalo de nuevo.');
+                return $this->oauthErrorRedirect('Sesión OAuth inválida. Inténtalo de nuevo.', $fromSpa);
             }
 
             $authCode = (string) $request->query('code', '');
             if ($authCode === '') {
-                return redirect()->route('clients.home')->with('error', 'No se recibió el código OAuth de Google.');
+                return $this->oauthErrorRedirect('No se recibió el código OAuth de Google.', $fromSpa);
             }
 
             $googleUser = $this->fetchGoogleUserProfile($authCode);
@@ -95,13 +97,19 @@ final class GoogleOAuthService
             if ($client->active === false) {
                 $msg = 'En este momento se encuentra baneado, contactar con el administrador para más información.';
 
-                return redirect()->route('clients.home')->with('error', $msg);
+                return $this->oauthErrorRedirect($msg, $fromSpa);
             }
 
             Auth::guard('clients')->login($client);
             $request->session()->regenerate();
             $this->sessionState->setAuthenticatedClientSession($client);
             $this->cartManager->mergeOnLogin((int) $client->user_id);
+
+            if ($fromSpa) {
+                session()->forget('oauth_from_spa');
+
+                return redirect()->away($this->spaUrl('/account'));
+            }
 
             return redirect()->route('clients.catalog')->with('client_success_modal', [
                 'kind' => 'welcome',
@@ -111,10 +119,30 @@ final class GoogleOAuthService
         } catch (\Throwable $e) {
             Log::error('client_google_oauth_failed', SensitiveDataMasker::exceptionContext($e));
 
-            return redirect()
-                ->route('clients.home')
-                ->with('error', 'No fue posible iniciar sesión con Google. Inténtalo nuevamente.');
+            return $this->oauthErrorRedirect('No fue posible iniciar sesión con Google. Inténtalo nuevamente.', $fromSpa);
         }
+    }
+
+    /** Base URL del SPA Next para los redirects de OAuth (separada del web). */
+    private function spaUrl(string $path = ''): string
+    {
+        $base = rtrim((string) config('app.spa_url'), '/');
+
+        return $base.$path;
+    }
+
+    /** Redirige al origen correcto (SPA o web Inertia) con el mensaje de error. */
+    private function oauthErrorRedirect(string $message, ?bool $fromSpa = null): RedirectResponse
+    {
+        $fromSpa ??= (bool) session('oauth_from_spa');
+
+        if ($fromSpa) {
+            session()->forget('oauth_from_spa');
+
+            return redirect()->away($this->spaUrl('/login?oauth_error='.urlencode($message)));
+        }
+
+        return redirect()->route('clients.home')->with('error', $message);
     }
 
     /**

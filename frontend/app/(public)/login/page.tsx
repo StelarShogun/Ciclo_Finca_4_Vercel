@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -29,11 +29,19 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+
 function LoginInner() {
   const router = useRouter();
   const params = useSearchParams();
   const queryClient = useQueryClient();
   const redirectTo = params.get("redirect") ?? "/account";
+  const oauthError = params.get("oauth_error");
+
+  // Mensaje de error si volvemos de un OAuth fallido.
+  useEffect(() => {
+    if (oauthError) toast.error(oauthError);
+  }, [oauthError]);
 
   const { register, handleSubmit, setError, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -86,6 +94,14 @@ function LoginInner() {
               {mutation.isPending ? "Ingresando…" : "Ingresar"}
             </Button>
           </form>
+
+          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" /> o <span className="h-px flex-1 bg-border" />
+          </div>
+          <Button asChild variant="outline" className="w-full">
+            <a href={`${API_URL}/auth/google?from=spa`}>Continuar con Google</a>
+          </Button>
+
           <p className="mt-4 text-center text-sm text-muted-foreground">
             ¿No tenés cuenta?{" "}
             <Link href="/register" className="font-medium text-[#235347] hover:underline">

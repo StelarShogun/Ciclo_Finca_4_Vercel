@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V1\Admin\SupplierOrderController;
 use App\Http\Controllers\Api\V1\Client\CartController as ClientCartController;
 use App\Http\Controllers\Api\V1\Client\CatalogController as ClientCatalogController;
 use App\Http\Controllers\Api\V1\Client\FavoriteController as ClientFavoriteController;
+use App\Http\Controllers\Api\V1\Client\HomeController as ClientHomeController;
 use App\Http\Controllers\Api\V1\Client\InvoiceController as ClientInvoiceController;
 use App\Http\Controllers\Api\V1\Client\NotificationController as ClientNotificationController;
 use App\Http\Controllers\Api\V1\Client\ProfileController as ClientProfileController;
@@ -158,6 +159,7 @@ Route::prefix('v1')->group(function (): void {
     });
 
     // --- Tienda pública (sin auth; el guard clients se consulta para favoritos) ---
+    Route::get('/home', [ClientHomeController::class, 'index']);
     Route::get('/catalog', [ClientCatalogController::class, 'index']);
     Route::get('/catalog/heartbeat', [ClientCatalogController::class, 'heartbeat']);
     Route::get('/products/{product}', [ClientProductController::class, 'show'])->whereNumber('product');

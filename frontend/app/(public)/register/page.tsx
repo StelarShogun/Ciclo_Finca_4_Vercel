@@ -39,6 +39,8 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+
 export default function RegisterPage() {
   const router = useRouter();
   const { register, handleSubmit, control, setError, formState: { errors } } = useForm<FormValues>({
@@ -125,6 +127,13 @@ export default function RegisterPage() {
               {mutation.isPending ? "Creando…" : "Crear cuenta"}
             </Button>
           </form>
+
+          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" /> o <span className="h-px flex-1 bg-border" />
+          </div>
+          <Button asChild variant="outline" className="w-full">
+            <a href={`${API_URL}/auth/google?from=spa`}>Continuar con Google</a>
+          </Button>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             ¿Ya tenés cuenta?{" "}
             <Link href="/login" className="font-medium text-[#235347] hover:underline">Ingresá</Link>
