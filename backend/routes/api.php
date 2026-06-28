@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\BrandController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\ProductController;
 use App\Http\Controllers\Api\V1\Admin\ProductClassificationController;
@@ -63,6 +64,12 @@ Route::prefix('v1')->group(function (): void {
         // Clasificaciones (por categoría, un valor por dimensión)
         Route::get('/products/{product}/classifications', [ProductClassificationController::class, 'index'])->whereNumber('product');
         Route::put('/products/{product}/classifications', [ProductClassificationController::class, 'update'])->whereNumber('product');
+
+        // Marcas
+        Route::get('/brands', [BrandController::class, 'index']);
+        Route::post('/brands', [BrandController::class, 'store']);
+        Route::put('/brands/{brand}', [BrandController::class, 'update'])->whereNumber('brand');
+        Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->whereNumber('brand');
     });
 
     // --- Módulos cliente (se llenan en Bloque 5) ---
