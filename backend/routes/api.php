@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\BrandController;
+use App\Http\Controllers\Api\V1\Admin\CategoryController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\ProductController;
 use App\Http\Controllers\Api\V1\Admin\ProductClassificationController;
@@ -70,6 +71,11 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/brands', [BrandController::class, 'store']);
         Route::put('/brands/{brand}', [BrandController::class, 'update'])->whereNumber('brand');
         Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->whereNumber('brand');
+
+        // Categorías (jerarquía padre/subcategoría)
+        Route::get('/categories', [CategoryController::class, 'index']);
+        Route::post('/categories/parent', [CategoryController::class, 'storeParent']);
+        Route::post('/categories/subcategory', [CategoryController::class, 'storeSubcategory']);
     });
 
     // --- Módulos cliente (se llenan en Bloque 5) ---
