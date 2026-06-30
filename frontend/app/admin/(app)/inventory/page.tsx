@@ -6,6 +6,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Boxes, PackageX, Search, TriangleAlert } from "lucide-react";
 
 import { getInventory, type InventoryProduct } from "@/lib/api/admin/inventory";
+import { mediaUrl } from "@/lib/api/admin/products";
 import { PageHeader } from "@/components/admin/page-header";
 import { MetricCard } from "@/components/admin/metric-card";
 import { DataTable } from "@/components/admin/data-table";
@@ -62,12 +63,25 @@ export default function InventoryPage() {
     {
       accessorKey: "name",
       header: "Producto",
-      cell: ({ row }) => (
-        <div className="flex flex-col">
-          <span className="font-medium">{row.original.name}</span>
-          <span className="text-xs text-muted-foreground">{row.original.sku}</span>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const img = mediaUrl(row.original.image_url);
+        return (
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border bg-muted">
+              {img && !row.original.uses_placeholder ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={img} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-base">🚲</div>
+              )}
+            </div>
+            <div className="flex flex-col">
+              <span className="font-medium">{row.original.name}</span>
+              <span className="text-xs text-muted-foreground">{row.original.sku}</span>
+            </div>
+          </div>
+        );
+      },
     },
     { id: "category", header: "Categoría", cell: ({ row }) => row.original.category_name },
     {

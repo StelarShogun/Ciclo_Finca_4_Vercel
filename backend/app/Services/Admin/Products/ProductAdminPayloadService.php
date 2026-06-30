@@ -4,6 +4,7 @@ namespace App\Services\Admin\Products;
 
 use App\Http\Resources\Admin\ProductResource;
 use App\Models\Product;
+use App\Services\Shared\Media\ProductImageUrls;
 use App\Support\AdminPerPage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
@@ -19,7 +20,15 @@ final class ProductAdminPayloadService
         return $this->inventoryQuery->filteredQuery($request)
             ->with(['category', 'supplier'])
             ->paginate(AdminPerPage::resolve($request->get('per_page', 10)))
-            ->withQueryString();
+            ->withQueryString()
+            ->through(function (Product $product): Product {
+                // Adjunta la URL de imagen (igual que el inventario) para que el
+                // SPA muestre la miniatura en la tabla de productos.
+                $product->setAttribute('image_url', ProductImageUrls::fallbackUrl($product));
+                $product->setAttribute('uses_placeholder', ProductImageUrls::usesPlaceholder($product));
+
+                return $product;
+            });
     }
 
     public function detail(int|string $id): Product

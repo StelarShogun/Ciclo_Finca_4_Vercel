@@ -21,6 +21,8 @@ export type AdminProduct = {
   category: { name: string } | null;
   supplier: { name: string } | null;
   image: string | null;
+  image_url: string | null;
+  uses_placeholder: boolean;
 };
 
 export type ProductListParams = {

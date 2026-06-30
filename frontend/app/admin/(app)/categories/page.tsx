@@ -13,6 +13,7 @@ import {
   type ParentOption,
 } from "@/lib/api/admin/categories";
 import { PageHeader } from "@/components/admin/page-header";
+import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -57,6 +58,9 @@ export default function CategoriesPage() {
     queryKey: ["admin-categories"],
     queryFn: getCategories,
   });
+
+  const [page, setPage] = useState(1);
+  const PER_PAGE = 15;
 
   const [parentOpen, setParentOpen] = useState(false);
   const [subOpen, setSubOpen] = useState(false);
@@ -121,6 +125,7 @@ export default function CategoriesPage() {
           </CardContent>
         </Card>
       ) : (
+        <>
         <Card>
           <CardContent className="p-0">
             <Table>
@@ -139,7 +144,7 @@ export default function CategoriesPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  data.hierarchy.map((row) => (
+                  data.hierarchy.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((row) => (
                     <TableRow key={row.category_id}>
                       <TableCell className={row.is_parent ? "font-medium" : "pl-8"}>
                         {row.name}
@@ -158,7 +163,14 @@ export default function CategoriesPage() {
               </TableBody>
             </Table>
           </CardContent>
-        </Card>
+          </Card>
+          <PaginationControls
+            currentPage={page}
+            lastPage={Math.max(1, Math.ceil(data.hierarchy.length / PER_PAGE))}
+            total={data.hierarchy.length}
+            onPageChange={setPage}
+          />
+        </>
       )}
 
       {/* Nueva categoría padre */}

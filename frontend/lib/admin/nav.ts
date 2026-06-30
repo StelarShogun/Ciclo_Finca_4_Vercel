@@ -11,7 +11,6 @@ import {
   Layers,
   ListChecks,
   PackageCheck,
-  ScrollText,
   type LucideIcon,
 } from "lucide-react";
 
@@ -31,5 +30,4 @@ export const ADMIN_NAV: NavItem[] = [
   { title: "Inventario", href: "/admin/inventory", icon: Boxes },
   { title: "Clientes", href: "/admin/clients", icon: Users },
   { title: "Reportes", href: "/admin/reports", icon: FileText },
-  { title: "Auditoría", href: "/admin/audit", icon: ScrollText },
 ];

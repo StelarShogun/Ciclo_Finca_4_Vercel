@@ -6,7 +6,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Plus, Search, Star } from "lucide-react";
 
-import { getProducts, type AdminProduct } from "@/lib/api/admin/products";
+import { getProducts, mediaUrl, type AdminProduct } from "@/lib/api/admin/products";
 import { PageHeader } from "@/components/admin/page-header";
 import { ProductRowActions } from "@/components/admin/products/product-row-actions";
 import { DataTable } from "@/components/admin/data-table";
@@ -40,19 +40,27 @@ const columns: ColumnDef<AdminProduct>[] = [
   {
     accessorKey: "name",
     header: "Producto",
-    cell: ({ row }) => (
-      <div className="flex flex-col">
-        <Link
-          href={`/admin/products/${row.original.product_id}`}
-          className="font-medium hover:underline"
-        >
-          {row.original.name}
-        </Link>
-        <span className="text-xs text-muted-foreground">
-          {row.original.sku ?? "Sin SKU"}
-        </span>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const img = mediaUrl(row.original.image_url);
+      return (
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border bg-muted">
+            {img && !row.original.uses_placeholder ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={img} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-base">🚲</div>
+            )}
+          </div>
+          <div className="flex flex-col">
+            <Link href={`/admin/products/${row.original.product_id}`} className="font-medium hover:underline">
+              {row.original.name}
+            </Link>
+            <span className="text-xs text-muted-foreground">{row.original.sku ?? "Sin SKU"}</span>
+          </div>
+        </div>
+      );
+    },
   },
   {
     id: "category",
@@ -125,9 +133,8 @@ export default function ProductsPage() {
   }, [search]);
 
   // Cualquier cambio de filtro vuelve a la página 1.
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, status, stockStatus]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setPage(1), [debouncedSearch, status, stockStatus]);
 
   const filters = {
     search: debouncedSearch,

@@ -4,6 +4,8 @@ export type InventoryProduct = {
   product_id: number;
   name: string;
   sku: string;
+  image_url: string | null;
+  uses_placeholder: boolean;
   category_name: string;
   stock: number;
   stock_minimum: number;

@@ -76,9 +76,9 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           onClick={onFavorite}
           disabled={fav.isPending}
           aria-label="Favorito"
-          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#235347] shadow-sm transition hover:bg-white"
+          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#235347] shadow-sm transition hover:bg-white dark:bg-[#071F1F]/90 dark:text-[#8EB69B] dark:hover:bg-[#071F1F]"
         >
-          <Heart className={cn("h-4 w-4", product.isFavorite && "fill-[#235347] text-[#235347]")} />
+          <Heart className={cn("h-4 w-4", product.isFavorite && "fill-current text-[#12B36A] dark:text-[#2ED27E]")} />
         </button>
       </div>
 
