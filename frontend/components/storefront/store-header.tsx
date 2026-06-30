@@ -11,6 +11,7 @@ import { clientLogout } from "@/lib/api/auth";
 import { useMe } from "@/lib/auth/use-me";
 import { getCart } from "@/lib/api/client/cart";
 import { getSuggestions } from "@/lib/api/client/catalog";
+import { useFavoritesDrawer } from "@/components/storefront/favorites-drawer";
 import { api } from "@/lib/api/client";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ export function StoreHeader() {
   const params = useSearchParams();
   const queryClient = useQueryClient();
   const { data } = useMe();
+  const favoritesDrawer = useFavoritesDrawer();
   const [search, setSearch] = useState(params.get("search") ?? "");
   const [debounced, setDebounced] = useState("");
   const [open, setOpen] = useState(false);
@@ -174,6 +176,16 @@ export function StoreHeader() {
         <div className="ml-auto flex items-center gap-1">
           <ThemeToggle className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white" />
 
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Favoritos"
+            className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white"
+            onClick={() => favoritesDrawer.open()}
+          >
+            <Heart className="h-5 w-5" />
+          </Button>
+
           <Button asChild variant="ghost" size="icon" className="relative text-[#DAF1DE] hover:bg-[#235347] hover:text-white">
             <Link href="/cart" aria-label="Carrito">
               <ShoppingCart className="h-5 w-5" />
@@ -200,7 +212,7 @@ export function StoreHeader() {
                 <DropdownMenuLabel className="truncate">{data?.user.gmail}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild><Link href="/profile"><User className="h-4 w-4" /> Mi perfil</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link href="/favorites"><Heart className="h-4 w-4" /> Mis favoritos</Link></DropdownMenuItem>
+                <DropdownMenuItem onClick={() => favoritesDrawer.open()}><Heart className="h-4 w-4" /> Mis favoritos</DropdownMenuItem>
                 <DropdownMenuItem asChild><Link href="/invoices"><Receipt className="h-4 w-4" /> Mis facturas</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/notifications">
