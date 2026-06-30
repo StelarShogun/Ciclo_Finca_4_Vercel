@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Plus, Search } from "lucide-react";
@@ -12,6 +11,7 @@ import { DataTable } from "@/components/admin/data-table";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
 import { SupplierOrderDetail } from "@/components/admin/supplier-orders/supplier-order-detail";
+import { NewSupplierOrderDialog } from "@/components/admin/supplier-orders/new-supplier-order-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,7 @@ export default function SupplierOrdersPage() {
   const [debounced, setDebounced] = useState("");
   const [state, setState] = useState(ALL);
   const [openId, setOpenId] = useState<number | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 350);
@@ -100,14 +101,13 @@ export default function SupplierOrdersPage() {
           data ? `${data.openSupplierOrdersCount} pedido(s) abiertos.` : "Pedidos de reabastecimiento."
         }
         actions={
-          <Button asChild>
-            <Link href="/admin/supplier-orders/new">
-              <Plus className="h-4 w-4" />
-              Nuevo pedido
-            </Link>
+          <Button onClick={() => setNewOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Nuevo pedido
           </Button>
         }
       />
+      <NewSupplierOrderDialog open={newOpen} onClose={() => setNewOpen(false)} />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="relative w-full max-w-xs">

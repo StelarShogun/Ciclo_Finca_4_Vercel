@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import Link from "next/link";
 import { CreditCard, Download, Plus, RotateCcw, Search, ShoppingCart } from "lucide-react";
 
 import { getSales, type SaleRow } from "@/lib/api/admin/sales";
@@ -13,6 +12,7 @@ import { DataTable } from "@/components/admin/data-table";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
 import { SaleRowActions } from "@/components/admin/sales/sale-row-actions";
+import { NewSaleDialog } from "@/components/admin/sales/new-sale-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -94,6 +94,7 @@ export default function SalesPage() {
   const [status, setStatus] = useState("completed");
   const [dateRange, setDateRange] = useState("month");
   const [payment, setPayment] = useState(ALL);
+  const [newOpen, setNewOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 350);
@@ -130,15 +131,14 @@ export default function SalesPage() {
                 Exportar
               </a>
             </Button>
-            <Button asChild>
-              <Link href="/admin/sales/new">
-                <Plus className="h-4 w-4" />
-                Nueva venta
-              </Link>
+            <Button onClick={() => setNewOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Nueva venta
             </Button>
           </div>
         }
       />
+      <NewSaleDialog open={newOpen} onClose={() => setNewOpen(false)} />
 
       {data && (
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
