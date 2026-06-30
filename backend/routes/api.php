@@ -172,6 +172,7 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/home', [ClientHomeController::class, 'index']);
     Route::get('/catalog', [ClientCatalogController::class, 'index']);
     Route::get('/catalog/heartbeat', [ClientCatalogController::class, 'heartbeat']);
+    Route::get('/catalog/suggestions', [ClientCatalogController::class, 'suggestions']);
     Route::get('/products/{product}', [ClientProductController::class, 'show'])->whereNumber('product');
 
     // Carrito (invitado por sesión o cliente por DB; CartManager decide)

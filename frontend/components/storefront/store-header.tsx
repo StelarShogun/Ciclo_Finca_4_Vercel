@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Bell, Heart, Home, LogOut, Receipt, Search, ShoppingCart, Store, User } from "lucide-react";
+import { Bell, Heart, Home, LogOut, Receipt, Search, ShoppingCart, Store, Tag, User } from "lucide-react";
 
 import { clientLogout } from "@/lib/api/auth";
 import { useMe } from "@/lib/auth/use-me";
 import { getCart } from "@/lib/api/client/cart";
+import { getSuggestions } from "@/lib/api/client/catalog";
 import { api } from "@/lib/api/client";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -47,8 +48,32 @@ export function StoreHeader() {
   const queryClient = useQueryClient();
   const { data } = useMe();
   const [search, setSearch] = useState(params.get("search") ?? "");
+  const [debounced, setDebounced] = useState("");
+  const [open, setOpen] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
 
   const isClient = data?.type === "client";
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(search), 250);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  // Cerrar el dropdown al hacer clic afuera.
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  const suggestions = useQuery({
+    queryKey: ["suggestions", debounced],
+    queryFn: () => getSuggestions(debounced),
+    enabled: open && debounced.trim().length >= 2,
+    placeholderData: keepPreviousData,
+  });
 
   const cart = useQuery({ queryKey: ["cart"], queryFn: getCart, staleTime: 30_000 });
   const cartCount = cart.data?.items.reduce((n, i) => n + i.quantity, 0) ?? 0;
@@ -98,16 +123,52 @@ export function StoreHeader() {
           <NavLink href="/catalog" active={pathname.startsWith("/catalog")} icon={Store}>Catálogo</NavLink>
         </nav>
 
-        {/* Búsqueda */}
-        <form onSubmit={submitSearch} className="relative ml-2 hidden flex-1 lg:block">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#235347]" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar productos…"
-            className="border-0 bg-white pl-9 text-foreground"
-          />
-        </form>
+        {/* Búsqueda inteligente */}
+        <div ref={boxRef} className="relative ml-2 hidden flex-1 lg:block">
+          <form onSubmit={submitSearch} className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#235347]" />
+            <Input
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setOpen(true); }}
+              onFocus={() => setOpen(true)}
+              placeholder="Buscar productos…"
+              className="border-0 bg-white pl-9 text-foreground"
+            />
+          </form>
+          {open && debounced.trim().length >= 2 && (
+            <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-lg">
+              {suggestions.isLoading ? (
+                <p className="px-3 py-3 text-sm text-muted-foreground">Buscando…</p>
+              ) : (suggestions.data ?? []).length === 0 ? (
+                <p className="px-3 py-3 text-sm text-muted-foreground">Sin sugerencias.</p>
+              ) : (
+                <ul className="max-h-80 overflow-y-auto py-1">
+                  {(suggestions.data ?? []).map((s) => (
+                    <li key={`${s.type}-${s.id}`}>
+                      <Link
+                        href={s.type === "category" ? `/catalog?category_id=${s.id}` : `/product/${s.id}`}
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
+                      >
+                        {s.type === "category" ? <Tag className="h-4 w-4 text-muted-foreground" /> : <Search className="h-4 w-4 text-muted-foreground" />}
+                        <span className="flex-1 truncate">{s.name}</span>
+                        {s.category && <span className="text-xs text-muted-foreground">{s.category}</span>}
+                      </Link>
+                    </li>
+                  ))}
+                  <li className="border-t">
+                    <button
+                      onClick={() => { setOpen(false); router.push(`/catalog?search=${encodeURIComponent(search.trim())}`); }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-[#235347] hover:bg-accent dark:text-[#8EB69B]"
+                    >
+                      <Search className="h-4 w-4" /> Ver todos los resultados de “{search.trim()}”
+                    </button>
+                  </li>
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Acciones */}
         <div className="ml-auto flex items-center gap-1">

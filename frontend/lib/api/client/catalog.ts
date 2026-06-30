@@ -80,6 +80,22 @@ export type CatalogParams = {
   page?: number;
 };
 
+export type Suggestion = {
+  type: "product" | "category";
+  id: number;
+  name: string;
+  sku: string | null;
+  category: string | null;
+  image_url: string | null;
+  url: string;
+};
+
+export async function getSuggestions(q: string): Promise<Suggestion[]> {
+  if (q.trim().length < 2) return [];
+  const { data } = await api.get("/api/v1/catalog/suggestions", { params: { q } });
+  return (data.suggestions ?? []) as Suggestion[];
+}
+
 export async function getCatalog(params: CatalogParams): Promise<CatalogResponse> {
   const clean = Object.fromEntries(
     Object.entries(params).filter(([, v]) => v !== "" && v != null),

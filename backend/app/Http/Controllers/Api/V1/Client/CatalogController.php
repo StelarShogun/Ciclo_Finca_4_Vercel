@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Client;
 
+use App\Actions\Client\Catalog\GetProductSuggestions;
 use App\Http\Controllers\Controller;
 use App\Models\FavoriteProduct;
 use App\Services\Client\Catalog\CatalogFilterResolver;
@@ -55,5 +56,16 @@ final class CatalogController extends Controller
     public function heartbeat(): JsonResponse
     {
         return response()->json(['version' => ClientStorefrontCache::catalogVersion()]);
+    }
+
+    /** Sugerencias para el buscador inteligente del header. */
+    public function suggestions(Request $request, GetProductSuggestions $action): JsonResponse
+    {
+        $q = trim((string) $request->query('q', ''));
+        if (mb_strlen($q) < 2) {
+            return response()->json(['suggestions' => []]);
+        }
+
+        return response()->json(['suggestions' => $action->handle($q)]);
     }
 }

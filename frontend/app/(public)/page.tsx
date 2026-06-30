@@ -18,6 +18,7 @@ import {
 import { getHome, type HomeProduct } from "@/lib/api/client/home";
 import { useMe } from "@/lib/auth/use-me";
 import { ProductCard } from "@/components/storefront/product-card";
+import { CarouselRow } from "@/components/storefront/carousel-row";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -121,12 +122,14 @@ export default function HomePage() {
             <Link href="/catalog" className="text-sm font-medium text-[#235347] hover:underline dark:text-[#8EB69B]">Ver todos</Link>
           </div>
           {isLoading ? (
-            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="aspect-[3/4]" />)}
+            <div className="mt-4 flex gap-4 overflow-hidden">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="aspect-[3/4] w-60 shrink-0" />)}
             </div>
           ) : (
-            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {(data?.featuredProducts ?? []).slice(0, 8).map((p) => <ProductCard key={p.id} product={toCardProduct(p)} />)}
+            <div className="mt-4">
+              <CarouselRow itemClassName="w-60">
+                {(data?.featuredProducts ?? []).map((p) => <ProductCard key={p.id} product={toCardProduct(p)} />)}
+              </CarouselRow>
             </div>
           )}
         </section>
@@ -135,13 +138,13 @@ export default function HomePage() {
         {data && data.categories.length > 0 && (
           <section className="mb-14">
             <h2 className="mb-1 text-2xl font-semibold tracking-tight">Explora por categoría</h2>
-            <p className="mb-4 text-sm text-muted-foreground">Cada familia de productos y sus subcategorías.</p>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            <p className="mb-4 text-sm text-muted-foreground">Desliza para ver cada familia de productos y sus subcategorías.</p>
+            <CarouselRow itemClassName="w-64">
               {data.categories.map((c) => (
-                <Link key={c.id} href={`/catalog?category_id=${c.id}`}>
+                <Link key={c.id} href={`/catalog?category_id=${c.id}`} className="block h-full">
                   <Card className="h-full transition-shadow hover:shadow-md">
                     <CardContent className="flex flex-col gap-2 p-4">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-[#235347]"><Store className="h-5 w-5" /></span>
+                      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-[#235347] dark:text-[#8EB69B]"><Store className="h-5 w-5" /></span>
                       <span className="font-medium text-[#235347] dark:text-[#8EB69B]">{c.name}</span>
                       {c.children.length > 0 && (
                         <span className="line-clamp-2 text-xs text-muted-foreground">
@@ -152,7 +155,7 @@ export default function HomePage() {
                   </Card>
                 </Link>
               ))}
-            </div>
+            </CarouselRow>
           </section>
         )}
 
