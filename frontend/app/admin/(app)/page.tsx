@@ -28,6 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const crc = new Intl.NumberFormat("es-CR", {
   style: "currency",
@@ -139,18 +140,78 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Ventas recientes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <DataTable
-                columns={recentColumns}
-                data={data.recentSales}
-                emptyTitle="Sin ventas recientes"
-              />
-            </CardContent>
-          </Card>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Productos por categoría */}
+            <Card>
+              <CardHeader><CardTitle>Productos por categoría</CardTitle></CardHeader>
+              <CardContent>
+                {data.productsByCategory.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-muted-foreground">Sin datos.</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={data.productsByCategory} layout="vertical" margin={{ left: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
+                      <YAxis type="category" dataKey="label" tick={{ fontSize: 12 }} width={110} />
+                      <Tooltip />
+                      <Bar dataKey="total" fill="#235347" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Stock bajo */}
+            <Card>
+              <CardHeader><CardTitle>Stock bajo</CardTitle></CardHeader>
+              <CardContent className="p-0">
+                {data.lowStockList.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-muted-foreground">Sin productos con stock bajo.</p>
+                ) : (
+                  <ul className="divide-y">
+                    {data.lowStockList.map((p) => (
+                      <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{p.name}</p>
+                          <p className="text-xs text-muted-foreground">{p.category || "—"}</p>
+                        </div>
+                        <StatusBadge tone="danger">{p.stock}</StatusBadge>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Ventas recientes */}
+            <Card>
+              <CardHeader><CardTitle>Ventas recientes</CardTitle></CardHeader>
+              <CardContent>
+                <DataTable columns={recentColumns} data={data.recentSales} emptyTitle="Sin ventas recientes" />
+              </CardContent>
+            </Card>
+
+            {/* Top productos */}
+            <Card>
+              <CardHeader><CardTitle>Productos más vendidos</CardTitle></CardHeader>
+              <CardContent className="p-0">
+                {data.topProducts.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-muted-foreground">Sin ventas todavía.</p>
+                ) : (
+                  <ul className="divide-y">
+                    {data.topProducts.map((p, i) => (
+                      <li key={i} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+                        <span className="truncate font-medium">{p.name}</span>
+                        <span className="shrink-0 text-muted-foreground">{p.units} u · {crc.format(p.revenue)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
     </>
