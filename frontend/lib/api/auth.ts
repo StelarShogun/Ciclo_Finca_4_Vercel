@@ -77,6 +77,27 @@ export async function resendCode(): Promise<void> {
   await api.post("/api/v1/auth/verify/resend");
 }
 
+// ---- Recuperación de contraseña ----
+
+export async function recoverySend(gmail: string) {
+  await csrfCookie();
+  const { data } = await api.post("/api/v1/auth/recovery", { gmail });
+  return data;
+}
+
+export async function recoveryVerify(code: string) {
+  const { data } = await api.post("/api/v1/auth/recovery/verify", { verification_code: code });
+  return data;
+}
+
+export async function recoveryReset(newPassword: string, confirmation: string) {
+  const { data } = await api.post("/api/v1/auth/recovery/reset", {
+    new_password: newPassword,
+    new_password_confirmation: confirmation,
+  });
+  return data;
+}
+
 export async function me(): Promise<Me> {
   const { data } = await api.get("/api/v1/me");
   return data.data as Me;

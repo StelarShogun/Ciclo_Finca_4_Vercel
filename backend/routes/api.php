@@ -47,6 +47,9 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/register', [ClientAuthController::class, 'register'])->middleware('throttle:5,1');
         Route::post('/verify', [ClientAuthController::class, 'verify'])->middleware('throttle:10,1');
         Route::post('/verify/resend', [ClientAuthController::class, 'resendCode'])->middleware('throttle:3,1');
+        Route::post('/recovery', [ClientAuthController::class, 'recoverySend'])->middleware('throttle:3,1');
+        Route::post('/recovery/verify', [ClientAuthController::class, 'recoveryVerify'])->middleware('throttle:10,1');
+        Route::post('/recovery/reset', [ClientAuthController::class, 'recoveryReset'])->middleware('throttle:5,1');
 
         // Admin
         Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:5,1');

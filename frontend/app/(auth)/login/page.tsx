@@ -86,7 +86,10 @@ function LoginInner() {
               {errors.gmail && <p className="text-sm text-destructive">{errors.gmail.message}</p>}
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Contraseña</Label>
+                <Link href="/recovery" className="text-xs text-[#235347] hover:underline dark:text-[#8EB69B]">¿Olvidaste tu contraseña?</Link>
+              </div>
               <Input id="password" type="password" autoComplete="current-password" {...register("password")} aria-invalid={!!errors.password} />
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
