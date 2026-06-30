@@ -134,26 +134,46 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* 4. Categorías */}
+        {/* 4. Explora por categoría (railway) */}
         {data && data.categories.length > 0 && (
           <section className="mb-14">
             <h2 className="mb-1 text-2xl font-semibold tracking-tight">Explora por categoría</h2>
-            <p className="mb-4 text-sm text-muted-foreground">Desliza para ver cada familia de productos y sus subcategorías.</p>
-            <CarouselRow itemClassName="w-64">
+            <p className="mb-3 text-sm text-muted-foreground">Desliza para ver cada familia de productos y sus subcategorías.</p>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <Link href="/catalog" className="inline-flex items-center gap-1.5 text-sm font-medium text-[#235347] hover:underline dark:text-[#8EB69B]">
+                <Store className="h-4 w-4" /> Ver todo el catálogo
+              </Link>
+              <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:inline-flex">
+                <ArrowRight className="h-3 w-3" /> Desliza para descubrir más
+              </span>
+            </div>
+            <CarouselRow itemClassName="w-72">
               {data.categories.map((c) => (
-                <Link key={c.id} href={`/catalog?category_id=${c.id}`} className="block h-full">
-                  <Card className="h-full transition-shadow hover:shadow-md">
-                    <CardContent className="flex flex-col gap-2 p-4">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-[#235347] dark:text-[#8EB69B]"><Store className="h-5 w-5" /></span>
-                      <span className="font-medium text-[#235347] dark:text-[#8EB69B]">{c.name}</span>
-                      {c.children.length > 0 && (
-                        <span className="line-clamp-2 text-xs text-muted-foreground">
-                          {c.children.slice(0, 3).map((s) => s.name).join(" · ")}
-                        </span>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Link>
+                <Card key={c.id} className="flex h-full flex-col transition-shadow hover:shadow-md">
+                  <CardContent className="flex flex-1 flex-col gap-3 p-5">
+                    <Link href={`/catalog?category_id=${c.id}`} className="group/cat flex flex-col gap-2">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-[#235347] dark:text-[#8EB69B]"><Store className="h-6 w-6" /></span>
+                      <h3 className="text-lg font-semibold">{c.name}</h3>
+                      {c.description && <p className="line-clamp-2 text-sm text-muted-foreground">{c.description}</p>}
+                      <span className="inline-flex items-center gap-1 text-sm font-medium text-[#12B36A] group-hover/cat:gap-2 dark:text-[#2ED27E]">
+                        Ver todo en {c.name} <ArrowRight className="h-4 w-4 transition-all" />
+                      </span>
+                    </Link>
+                    {c.children.length > 0 && (
+                      <div className="mt-auto flex flex-wrap gap-1.5 border-t pt-3">
+                        {c.children.slice(0, 6).map((s) => (
+                          <Link
+                            key={s.id}
+                            href={`/catalog?category_id=${s.id}`}
+                            className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-[#235347] hover:text-[#235347] dark:hover:border-[#8EB69B] dark:hover:text-[#8EB69B]"
+                          >
+                            {s.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               ))}
             </CarouselRow>
           </section>

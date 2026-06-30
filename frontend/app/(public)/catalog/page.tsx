@@ -83,22 +83,41 @@ function CatalogInner() {
           <Card>
             <CardContent className="p-4">
               <h2 className="mb-3 text-sm font-semibold">Categorías</h2>
-              <ul className="space-y-1 text-sm">
+              <ul className="space-y-0.5 text-sm">
                 <li>
                   <Link href="/catalog" className={cn("block rounded px-2 py-1.5 hover:bg-accent", !categoryId && "bg-accent font-medium text-[#235347] dark:text-[#8EB69B]")}>
                     Todos los productos
                   </Link>
                 </li>
-                {(data?.categories ?? []).map((c) => (
-                  <li key={c.id}>
-                    <Link
-                      href={`/catalog?category_id=${c.id}`}
-                      className={cn("block rounded px-2 py-1.5 hover:bg-accent", String(c.id) === categoryId && "bg-accent font-medium text-[#235347] dark:text-[#8EB69B]")}
-                    >
-                      {c.name}
-                    </Link>
-                  </li>
-                ))}
+                {(data?.categories ?? []).map((c) => {
+                  const childActive = c.children.some((ch) => String(ch.id) === categoryId);
+                  const parentActive = String(c.id) === categoryId;
+                  const expanded = parentActive || childActive;
+                  return (
+                    <li key={c.id}>
+                      <Link
+                        href={`/catalog?category_id=${c.id}`}
+                        className={cn("block rounded px-2 py-1.5 hover:bg-accent", parentActive && "bg-accent font-medium text-[#235347] dark:text-[#8EB69B]")}
+                      >
+                        {c.name}
+                      </Link>
+                      {c.children.length > 0 && expanded && (
+                        <ul className="mb-1 ml-3 mt-0.5 space-y-0.5 border-l pl-2">
+                          {c.children.map((ch) => (
+                            <li key={ch.id}>
+                              <Link
+                                href={`/catalog?category_id=${ch.id}`}
+                                className={cn("block rounded px-2 py-1 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground", String(ch.id) === categoryId && "font-medium text-[#235347] dark:text-[#8EB69B]")}
+                              >
+                                {ch.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </CardContent>
           </Card>

@@ -46,8 +46,9 @@ export type CatalogPagination = {
 export type CatalogCategoryNav = {
   id: number;
   name: string;
-  url?: string;
-  [key: string]: unknown;
+  icon?: string;
+  url_parent?: string;
+  children: { id: number; name: string; url: string }[];
 };
 
 export type CatalogResponse = {
