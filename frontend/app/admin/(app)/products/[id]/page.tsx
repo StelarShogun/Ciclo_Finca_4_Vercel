@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Pencil, Star } from "lucide-react";
 
 import { getProductDetail } from "@/lib/api/admin/products";
 import { PageHeader } from "@/components/admin/page-header";
+import { ProductFormDialog } from "@/components/admin/products/product-form-dialog";
 import { ProductClassifications } from "@/components/admin/products/product-classifications";
 import { ProductGallery } from "@/components/admin/products/product-gallery";
 import { ProductVariants } from "@/components/admin/products/product-variants";
@@ -36,6 +37,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const [editOpen, setEditOpen] = useState(false);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin-product-detail", id],
     queryFn: () => getProductDetail(id),
@@ -61,14 +63,13 @@ export default function ProductDetailPage() {
         title={data.name}
         description={data.sku ? `SKU ${data.sku}` : "Sin SKU"}
         actions={
-          <Button asChild>
-            <Link href={`/admin/products/${id}/edit`}>
-              <Pencil className="h-4 w-4" />
-              Editar
-            </Link>
+          <Button onClick={() => setEditOpen(true)}>
+            <Pencil className="h-4 w-4" />
+            Editar
           </Button>
         }
       />
+      <ProductFormDialog open={editOpen} productId={Number(id)} onClose={() => setEditOpen(false)} />
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         {/* Imagen + galería */}

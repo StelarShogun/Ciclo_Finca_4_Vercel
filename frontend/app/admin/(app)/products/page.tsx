@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -9,6 +9,7 @@ import { Plus, Search, Star } from "lucide-react";
 import { getProducts, mediaUrl, type AdminProduct } from "@/lib/api/admin/products";
 import { PageHeader } from "@/components/admin/page-header";
 import { ProductRowActions } from "@/components/admin/products/product-row-actions";
+import { ProductFormDialog } from "@/components/admin/products/product-form-dialog";
 import { DataTable } from "@/components/admin/data-table";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
@@ -36,7 +37,8 @@ function statusTone(status: string): StatusTone {
   return status === "active" ? "success" : "neutral";
 }
 
-const columns: ColumnDef<AdminProduct>[] = [
+function buildColumns(onEdit: (id: number) => void): ColumnDef<AdminProduct>[] {
+  return [
   {
     accessorKey: "name",
     header: "Producto",
@@ -115,9 +117,10 @@ const columns: ColumnDef<AdminProduct>[] = [
   {
     id: "actions",
     header: "",
-    cell: ({ row }) => <ProductRowActions product={row.original} />,
+    cell: ({ row }) => <ProductRowActions product={row.original} onEdit={onEdit} />,
   },
-];
+  ];
+}
 
 export default function ProductsPage() {
   const [page, setPage] = useState(1);
@@ -125,6 +128,12 @@ export default function ProductsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [status, setStatus] = useState(ALL);
   const [stockStatus, setStockStatus] = useState(ALL);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+
+  const openCreate = () => { setEditId(null); setFormOpen(true); };
+  const openEdit = (id: number) => { setEditId(id); setFormOpen(true); };
+  const columns = useMemo(() => buildColumns(openEdit), []);
 
   // Debounce de la búsqueda para no pegar a la API en cada tecla.
   useEffect(() => {
@@ -154,11 +163,9 @@ export default function ProductsPage() {
         title="Productos"
         description="Catálogo del inventario."
         actions={
-          <Button asChild>
-            <Link href="/admin/products/new">
-              <Plus className="h-4 w-4" />
-              Nuevo producto
-            </Link>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4" />
+            Nuevo producto
           </Button>
         }
       />
@@ -217,6 +224,8 @@ export default function ProductsPage() {
           />
         </>
       )}
+
+      <ProductFormDialog open={formOpen} productId={editId} onClose={() => setFormOpen(false)} />
     </>
   );
 }

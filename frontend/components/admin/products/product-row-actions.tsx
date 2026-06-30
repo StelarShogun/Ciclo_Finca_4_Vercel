@@ -35,7 +35,7 @@ import {
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
-export function ProductRowActions({ product }: { product: AdminProduct }) {
+export function ProductRowActions({ product, onEdit }: { product: AdminProduct; onEdit?: (id: number) => void }) {
   const queryClient = useQueryClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const id = product.product_id;
@@ -92,11 +92,17 @@ export function ProductRowActions({ product }: { product: AdminProduct }) {
               <Eye className="h-4 w-4" /> Ver detalle
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href={`/admin/products/${id}/edit`}>
+          {onEdit ? (
+            <DropdownMenuItem onClick={() => onEdit(id)}>
               <Pencil className="h-4 w-4" /> Editar
-            </Link>
-          </DropdownMenuItem>
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem asChild>
+              <Link href={`/admin/products/${id}/edit`}>
+                <Pencil className="h-4 w-4" /> Editar
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onClick={() => toggleStatus.mutate()}
             disabled={toggleStatus.isPending}

@@ -62,9 +62,11 @@ function FieldError({ msg }: { msg?: string }) {
 export function ProductForm({
   productId,
   defaultValues,
+  onSuccess,
 }: {
   productId?: number | string;
   defaultValues?: Partial<ProductFormValues>;
+  onSuccess?: () => void;
 }) {
   const router = useRouter();
   const isEdit = productId !== undefined;
@@ -98,7 +100,8 @@ export function ProductForm({
       isEdit ? updateProduct(productId, values) : createProduct(values),
     onSuccess: () => {
       toast.success(isEdit ? "Producto actualizado" : "Producto creado");
-      router.push("/admin/products");
+      if (onSuccess) onSuccess();
+      else router.push("/admin/products");
     },
     onError: (error) => {
       if (isAxiosError(error) && error.response?.status === 422) {
