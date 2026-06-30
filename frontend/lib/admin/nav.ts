@@ -10,6 +10,7 @@ import {
   Tags,
   Layers,
   ListChecks,
+  PackageCheck,
   ScrollText,
   type LucideIcon,
 } from "lucide-react";
@@ -24,6 +25,7 @@ export const ADMIN_NAV: NavItem[] = [
   { title: "Categorías", href: "/admin/categories", icon: Layers },
   { title: "Opciones por tipo", href: "/admin/classification-catalog", icon: ListChecks },
   { title: "Ventas", href: "/admin/sales", icon: ShoppingCart },
+  { title: "Encargos", href: "/admin/orders", icon: PackageCheck },
   { title: "Pedidos a proveedores", href: "/admin/supplier-orders", icon: ClipboardList },
   { title: "Proveedores", href: "/admin/suppliers", icon: Truck },
   { title: "Inventario", href: "/admin/inventory", icon: Boxes },

@@ -99,3 +99,67 @@ export async function getCategorySales(dateRange = "month"): Promise<CategorySal
   });
   return data.data as CategorySales;
 }
+
+// --- Compras por cliente ---
+
+export type ClientPurchaseRow = {
+  client_id: number;
+  display_name: string;
+  gmail: string;
+  orders_count: number;
+  total_purchased: number;
+  avg_ticket: number;
+};
+
+export type ClientPurchases = {
+  rows: ClientPurchaseRow[];
+  pagination: { page: number; per_page: number; total: number; last_page: number };
+};
+
+export async function getClientPurchases(period = "30d", page = 1): Promise<ClientPurchases> {
+  const { data } = await api.get("/api/v1/admin/reports/client-purchases", { params: { period, page } });
+  return data.data as ClientPurchases;
+}
+
+// --- Productos más buscados ---
+
+export type SearchRow = { product_id: number; name: string; sku: string; hit_count: number };
+
+export type CatalogSearch = {
+  period: string;
+  rows: SearchRow[];
+  totalEvents: number;
+  uniqueProducts: number;
+  topProductName: string | null;
+  maxHits: number;
+};
+
+export async function getCatalogSearch(period = "30d"): Promise<CatalogSearch> {
+  const { data } = await api.get("/api/v1/admin/reports/catalog-search", { params: { period } });
+  return data.data as CatalogSearch;
+}
+
+// --- Movimientos de inventario (global, por producto) ---
+
+export type MovementProduct = {
+  product: { product_id: number; name: string; sku: string; category_name: string; supplier_name: string | null; stock_current: number };
+  [key: string]: unknown;
+};
+
+export type InventoryMovements = {
+  products: MovementProduct[];
+  pagination: { currentPage: number; lastPage: number; total: number };
+};
+
+export async function getInventoryMovements(search = "", page = 1): Promise<InventoryMovements> {
+  const { data } = await api.get("/api/v1/admin/reports/inventory-movements", { params: { search, page } });
+  return data.data as InventoryMovements;
+}
+
+// --- Exportaciones (descargas servidas por el backend web) ---
+
+export const REPORT_EXPORTS: { label: string; href: string; format: string }[] = [
+  { label: "Productos vendidos (PDF)", href: `${API_URL}/reports/productos-vendidos/pdf?period=month`, format: "PDF" },
+  { label: "Productos vendidos (Excel)", href: `${API_URL}/reports/productos-vendidos/excel?period=month`, format: "Excel" },
+  { label: "Inventario (Excel)", href: `${API_URL}/inventory/export/excel`, format: "Excel" },
+];

@@ -98,4 +98,26 @@ class ReportsApiTest extends TestCase
             ->assertOk()
             ->assertJsonStructure(['data' => ['rows', 'grandTotal', 'totalUnits', 'chartData']]);
     }
+
+    public function test_client_purchases_returns_table(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+        $this->seedSale();
+
+        $this->getJson('/api/v1/admin/reports/client-purchases?period=30d')
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['rows', 'pagination']])
+            ->assertJsonMissingPath('data.pagination_html');
+    }
+
+    public function test_catalog_search_and_movements(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+        $this->seedSale();
+
+        $this->getJson('/api/v1/admin/reports/catalog-search?period=30d')->assertOk();
+        $this->getJson('/api/v1/admin/reports/inventory-movements')
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['products', 'pagination']]);
+    }
 }
