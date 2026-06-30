@@ -31,6 +31,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning className={`${poppins.variable} h-full antialiased`}>
+      <head>
+        {/* Font Awesome para los íconos de placeholder por categoría (mismos que el Inertia). */}
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3w=="
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
       </body>

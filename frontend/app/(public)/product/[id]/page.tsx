@@ -118,7 +118,7 @@ export default function ProductDetailPage() {
               // eslint-disable-next-line @next/next/no-img-element
               <img src={img} alt={p.name} className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-6xl">🚲</div>
+              <div className="flex h-full w-full items-center justify-center text-muted-foreground"><i className={`${p.placeholderIconClass ?? "fas fa-box"} text-6xl`} aria-hidden /></div>
             )}
           </div>
           {slides.length > 1 && (

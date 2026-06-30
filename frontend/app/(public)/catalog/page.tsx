@@ -23,12 +23,6 @@ import {
 import { cn } from "@/lib/utils";
 
 const ALL = "all";
-const SORTS = [
-  { value: "created_at:desc", label: "Más recientes" },
-  { value: "sale_price:asc", label: "Precio: menor a mayor" },
-  { value: "sale_price:desc", label: "Precio: mayor a menor" },
-  { value: "name:asc", label: "Nombre A-Z" },
-];
 
 function CatalogInner() {
   const params = useSearchParams();
@@ -36,19 +30,20 @@ function CatalogInner() {
   const categoryId = params.get("category_id");
 
   const [page, setPage] = useState(1);
-  const [sort, setSort] = useState("created_at:desc");
+  const [sortField, setSortField] = useState("created_at");
+  const [direction, setDirection] = useState("desc");
+  const [perPage, setPerPage] = useState("10");
   const [brand, setBrand] = useState(ALL);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [appliedPrice, setAppliedPrice] = useState<{ min: string; max: string }>({ min: "", max: "" });
-  const [sortField, sortDir] = sort.split(":");
 
   // Cualquier cambio de filtro vuelve a la página 1.
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => setPage(1), [search, categoryId, sort, brand, appliedPrice]);
+  useEffect(() => setPage(1), [search, categoryId, sortField, direction, perPage, brand, appliedPrice]);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["catalog", search, categoryId, page, sort, brand, appliedPrice],
+    queryKey: ["catalog", search, categoryId, page, sortField, direction, perPage, brand, appliedPrice],
     queryFn: () =>
       getCatalog({
         search,
@@ -57,7 +52,8 @@ function CatalogInner() {
         min_price: appliedPrice.min || undefined,
         max_price: appliedPrice.max || undefined,
         sort: sortField,
-        direction: sortDir,
+        direction,
+        per_page: Number(perPage),
         page,
       }),
     placeholderData: keepPreviousData,
@@ -154,21 +150,52 @@ function CatalogInner() {
 
         {/* Main */}
         <div>
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              {hasFilters && (
-                <Button asChild size="sm" variant="ghost" className="text-muted-foreground">
-                  <Link href="/catalog"><X className="h-4 w-4" /> Limpiar filtros</Link>
-                </Button>
-              )}
-              {data?.selectedCategory && (
-                <span className="rounded-full bg-accent px-3 py-1 text-xs text-[#235347] dark:text-[#8EB69B]">{data.selectedCategory.name}</span>
-              )}
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            {hasFilters && (
+              <Button asChild size="sm" variant="ghost" className="text-muted-foreground">
+                <Link href="/catalog"><X className="h-4 w-4" /> Limpiar filtros</Link>
+              </Button>
+            )}
+            {data?.selectedCategory && (
+              <span className="rounded-full bg-accent px-3 py-1 text-xs text-[#235347] dark:text-[#8EB69B]">{data.selectedCategory.name}</span>
+            )}
+          </div>
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              {data ? `Mostrando ${data.products.length} de ${data.pagination.total} productos` : ""}
+            </p>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Ordenar por</Label>
+                <Select value={sortField} onValueChange={setSortField}>
+                  <SelectTrigger className="w-40" size="sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="created_at">Más recientes</SelectItem>
+                    <SelectItem value="sale_price">Precio</SelectItem>
+                    <SelectItem value="name">Nombre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Dirección</Label>
+                <Select value={direction} onValueChange={setDirection}>
+                  <SelectTrigger className="w-36" size="sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="desc">Descendente</SelectItem>
+                    <SelectItem value="asc">Ascendente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Por página</Label>
+                <Select value={perPage} onValueChange={setPerPage}>
+                  <SelectTrigger className="w-24" size="sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["10", "25", "50", "100"].map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="w-56" size="sm"><SelectValue /></SelectTrigger>
-              <SelectContent>{SORTS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-            </Select>
           </div>
 
           {isLoading ? (

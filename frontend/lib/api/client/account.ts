@@ -12,6 +12,7 @@ export type FavoriteItem = {
   url: string;
   image_url: string | null;
   uses_placeholder_image: boolean;
+  placeholder_icon_class: string | null;
 };
 
 export type FavoritesResponse = {

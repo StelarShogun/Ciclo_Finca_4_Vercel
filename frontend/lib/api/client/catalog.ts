@@ -78,6 +78,7 @@ export type CatalogParams = {
   max_price?: string;
   sort?: string;
   direction?: string;
+  per_page?: number;
   page?: number;
 };
 

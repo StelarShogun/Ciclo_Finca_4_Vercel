@@ -63,7 +63,9 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={img} alt={product.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-4xl">🚲</div>
+            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+              <i className={`${product.image.placeholderIconClass ?? "fas fa-box"} text-4xl`} aria-hidden />
+            </div>
           )}
         </Link>
         {/* Badges */}
@@ -86,7 +88,10 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         {product.category && <span className="text-xs text-muted-foreground">{product.category.name}</span>}
         <Link href={`/product/${product.id}`} className="line-clamp-2 text-sm font-medium hover:underline">{product.name}</Link>
         {product.brands.length > 0 && (
-          <span className="text-xs text-muted-foreground">{product.brands.map((b) => b.name).join(", ")}</span>
+          <span className="text-xs text-muted-foreground">Marca: {product.brands.map((b) => b.name).join(", ")}</span>
+        )}
+        {product.description && (
+          <p className="line-clamp-2 text-xs text-muted-foreground">{product.description}</p>
         )}
         <div className="flex items-center gap-2">
           <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", stockTone(product.stockLabel, product.canBuy))}>

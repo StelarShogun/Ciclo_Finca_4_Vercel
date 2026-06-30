@@ -68,7 +68,7 @@ export default function FavoritesPage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={img} alt={f.name} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-4xl">🚲</div>
+                    <div className="flex h-full w-full items-center justify-center text-muted-foreground"><i className={`${f.placeholder_icon_class ?? "fas fa-box"} text-4xl`} aria-hidden /></div>
                   )}
                 </Link>
                 <div className="flex flex-1 flex-col gap-1 p-3">

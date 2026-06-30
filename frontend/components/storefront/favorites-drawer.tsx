@@ -79,7 +79,7 @@ export function FavoritesDrawerProvider({ children }: { children: React.ReactNod
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={img} alt={f.name} className="h-full w-full object-cover" />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center">🚲</div>
+                          <div className="flex h-full w-full items-center justify-center text-muted-foreground"><i className={f.placeholder_icon_class ?? "fas fa-box"} aria-hidden /></div>
                         )}
                       </Link>
                       <div className="min-w-0 flex-1">
