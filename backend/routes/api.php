@@ -175,6 +175,9 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware('auth:clients')->group(function (): void {
         Route::post('/cart/checkout', [ClientCartController::class, 'checkout']);
 
+        // Reseñas de producto (valida compra previa)
+        Route::post('/products/{product}/reviews', [ClientProductController::class, 'storeReview'])->whereNumber('product');
+
         // Favoritos (único por user+product; toggle idempotente)
         Route::get('/favorites', [ClientFavoriteController::class, 'index']);
         Route::post('/favorites/toggle', [ClientFavoriteController::class, 'toggle']);

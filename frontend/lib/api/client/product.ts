@@ -32,10 +32,9 @@ export type ReviewRow = {
   id: number;
   author: string;
   stars: number;
-  comment: string | null;
-  createdAt: string;
+  publishedAt: string | null;
   verified: boolean;
-  [key: string]: unknown;
+  mine: boolean;
 };
 
 export type RelatedProduct = {
@@ -62,6 +61,8 @@ export type ProductDetail = {
     totalCount: number;
     averageStars: number;
     starDistribution: Record<string, number>;
+    clientCanReview: boolean;
+    clientReviewStars: number | null;
     items: ReviewRow[];
   };
   relatedProducts: RelatedProduct[];
@@ -70,4 +71,9 @@ export type ProductDetail = {
 export async function getProductDetail(id: number | string): Promise<ProductDetail> {
   const { data } = await api.get(`/api/v1/products/${id}`);
   return data.data as ProductDetail;
+}
+
+export async function saveReview(productId: number | string, stars: number) {
+  const { data } = await api.post(`/api/v1/products/${productId}/reviews`, { stars });
+  return data;
 }

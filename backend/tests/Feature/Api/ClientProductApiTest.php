@@ -3,7 +3,10 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Category;
+use App\Models\Client;
 use App\Models\Product;
+use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -52,5 +55,52 @@ class ClientProductApiTest extends TestCase
     public function test_missing_product_returns_404(): void
     {
         $this->getJson('/api/v1/products/999999')->assertStatus(404);
+    }
+
+    public function test_review_requires_auth(): void
+    {
+        $product = $this->product();
+        $this->postJson("/api/v1/products/{$product->product_id}/reviews", ['stars' => 5])->assertStatus(401);
+    }
+
+    public function test_review_blocked_without_purchase(): void
+    {
+        $product = $this->product();
+        $client = Client::create([
+            'name' => 'Sin', 'first_surname' => 'Compra', 'second_surname' => null,
+            'gmail' => 'sincompra@gmail.com', 'password' => bcrypt('x'),
+            'email_verified' => true, 'active' => true, 'provider' => 'local',
+        ]);
+        $this->actingAs($client, 'clients');
+
+        $this->postJson("/api/v1/products/{$product->product_id}/reviews", ['stars' => 4])
+            ->assertStatus(403);
+    }
+
+    public function test_review_saved_after_purchase(): void
+    {
+        $product = $this->product();
+        $client = Client::create([
+            'name' => 'Con', 'first_surname' => 'Compra', 'second_surname' => null,
+            'gmail' => 'concompra@gmail.com', 'password' => bcrypt('x'),
+            'email_verified' => true, 'active' => true, 'provider' => 'local',
+        ]);
+        $sale = Sale::create([
+            'invoice_number' => 'INV-REV-1', 'client_id' => $client->user_id,
+            'subtotal' => 100, 'iva' => 13, 'discount' => 0, 'total' => 113,
+            'payment_method' => 'cash', 'status' => 'completed', 'sale_date' => now(),
+        ]);
+        SaleItem::create([
+            'sale_id' => $sale->sale_id, 'product_id' => $product->product_id,
+            'name' => $product->name, 'quantity' => 1, 'unit_price' => 100, 'total' => 100,
+        ]);
+        $this->actingAs($client, 'clients');
+
+        $this->postJson("/api/v1/products/{$product->product_id}/reviews", ['stars' => 5])
+            ->assertOk()->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('product_reviews', [
+            'product_id' => $product->product_id, 'client_id' => $client->user_id, 'stars' => 5,
+        ]);
     }
 }
