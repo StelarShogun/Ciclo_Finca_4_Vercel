@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Admin\ClassificationCatalogController;
 use App\Http\Controllers\Api\V1\Admin\ClientController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\InventoryController;
+use App\Http\Controllers\Api\V1\Admin\OrderController;
 use App\Http\Controllers\Api\V1\Admin\ProductController;
 use App\Http\Controllers\Api\V1\Admin\ProductClassificationController;
 use App\Http\Controllers\Api\V1\Admin\ProductGalleryController;
@@ -110,6 +111,9 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/sales/{sale}/complete', [SaleController::class, 'complete'])->whereNumber('sale');
         Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel'])->whereNumber('sale');
         Route::post('/sales/{sale}/return', [SaleController::class, 'returnSale'])->whereNumber('sale');
+
+        // Encargos (pedidos del carrito web; ciclo de vida via /sales)
+        Route::get('/orders', [OrderController::class, 'index']);
 
         // Pedidos a proveedores (recepción con stock de entrada en las Actions)
         Route::get('/supplier-orders', [SupplierOrderController::class, 'index']);
