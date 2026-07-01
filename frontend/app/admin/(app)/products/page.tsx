@@ -10,6 +10,7 @@ import { getProducts, mediaUrl, type AdminProduct } from "@/lib/api/admin/produc
 import { PageHeader } from "@/components/admin/page-header";
 import { ProductRowActions } from "@/components/admin/products/product-row-actions";
 import { ProductFormDialog } from "@/components/admin/products/product-form-dialog";
+import { ViewProductModal } from "@/components/admin/products/view-product-modal";
 import { DataTable } from "@/components/admin/data-table";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
@@ -37,7 +38,7 @@ function statusTone(status: string): StatusTone {
   return status === "active" ? "success" : "neutral";
 }
 
-function buildColumns(onEdit: (id: number) => void): ColumnDef<AdminProduct>[] {
+function buildColumns(onEdit: (id: number) => void, onView: (id: number) => void): ColumnDef<AdminProduct>[] {
   return [
   {
     accessorKey: "name",
@@ -117,7 +118,7 @@ function buildColumns(onEdit: (id: number) => void): ColumnDef<AdminProduct>[] {
   {
     id: "actions",
     header: "",
-    cell: ({ row }) => <ProductRowActions product={row.original} onEdit={onEdit} />,
+    cell: ({ row }) => <ProductRowActions product={row.original} onEdit={onEdit} onView={onView} />,
   },
   ];
 }
@@ -130,10 +131,12 @@ export default function ProductsPage() {
   const [stockStatus, setStockStatus] = useState(ALL);
   const [formOpen, setFormOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
+  const [viewId, setViewId] = useState<number | null>(null);
 
   const openCreate = () => { setEditId(null); setFormOpen(true); };
   const openEdit = (id: number) => { setEditId(id); setFormOpen(true); };
-  const columns = useMemo(() => buildColumns(openEdit), []);
+  const openView = (id: number) => setViewId(id);
+  const columns = useMemo(() => buildColumns(openEdit, openView), []);
 
   // Debounce de la búsqueda para no pegar a la API en cada tecla.
   useEffect(() => {
@@ -226,6 +229,7 @@ export default function ProductsPage() {
       )}
 
       <ProductFormDialog open={formOpen} productId={editId} onClose={() => setFormOpen(false)} />
+      <ViewProductModal productId={viewId} open={viewId !== null} onClose={() => setViewId(null)} onEdit={openEdit} />
     </>
   );
 }

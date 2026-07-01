@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
+use App\Actions\Admin\Products\ImportProductCatalog;
 use App\Actions\Admin\Products\UpdateManualStock;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Inventory\InventoryMovementIndexRequest;
+use App\Http\Requests\Admin\Products\ImportCatalogRequest;
 use App\Http\Requests\Admin\Products\ManualStockAdjustmentRequest;
 use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Services\Admin\Inventory\InventoryMovementQuery;
+use App\Services\Admin\ProductCatalog\CatalogImportProgress;
 use App\Services\Admin\Products\ProductPayloadBuilder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -52,6 +55,25 @@ final class InventoryController extends Controller
         $product = Product::query()->findOrFail($id);
 
         return response()->json($query->jsonPayload($product, $request->validated()));
+    }
+
+    /** Importación de catálogo: encola el job y devuelve el importId para hacer polling. */
+    public function import(ImportCatalogRequest $request, ImportProductCatalog $action): JsonResponse
+    {
+        Gate::forUser(Auth::guard('admin')->user())->authorize('create', Product::class);
+
+        return $action->handle($request, (int) Auth::guard('admin')->id());
+    }
+
+    public function importProgress(string $importId): JsonResponse
+    {
+        Gate::forUser(Auth::guard('admin')->user())->authorize('viewAny', Product::class);
+
+        $progress = CatalogImportProgress::get($importId);
+
+        return $progress === null
+            ? response()->json(['status' => 'unknown'], 404)
+            : response()->json($progress);
     }
 
     /** Envuelve los ajustes manuales con el mismo manejo de errores del controller web. */

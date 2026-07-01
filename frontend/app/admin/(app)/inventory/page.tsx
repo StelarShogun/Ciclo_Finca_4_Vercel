@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Boxes, PackageX, Search, TriangleAlert } from "lucide-react";
+import { Boxes, PackageX, Search, TriangleAlert, Upload } from "lucide-react";
 
 import { getInventory, type InventoryProduct } from "@/lib/api/admin/inventory";
 import { mediaUrl } from "@/lib/api/admin/products";
+import { ImportModal } from "@/components/admin/inventory/import-modal";
 import { PageHeader } from "@/components/admin/page-header";
 import { MetricCard } from "@/components/admin/metric-card";
 import { DataTable } from "@/components/admin/data-table";
@@ -45,6 +46,7 @@ export default function InventoryPage() {
   const [debounced, setDebounced] = useState("");
   const [stockStatus, setStockStatus] = useState(ALL);
   const [adjust, setAdjust] = useState<InventoryProduct | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 350);
@@ -120,7 +122,17 @@ export default function InventoryPage() {
 
   return (
     <>
-      <PageHeader title="Inventario" description="Stock y ajustes manuales con movimientos." />
+      <PageHeader
+        title="Inventario"
+        description="Stock y ajustes manuales con movimientos."
+        actions={
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="h-4 w-4" />
+            Importar
+          </Button>
+        }
+      />
+      <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
 
       {data && (
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

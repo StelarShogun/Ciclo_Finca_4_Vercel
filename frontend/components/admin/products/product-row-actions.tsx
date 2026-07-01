@@ -35,7 +35,7 @@ import {
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
-export function ProductRowActions({ product, onEdit }: { product: AdminProduct; onEdit?: (id: number) => void }) {
+export function ProductRowActions({ product, onEdit, onView }: { product: AdminProduct; onEdit?: (id: number) => void; onView?: (id: number) => void }) {
   const queryClient = useQueryClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const id = product.product_id;
@@ -87,11 +87,17 @@ export function ProductRowActions({ product, onEdit }: { product: AdminProduct; 
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem asChild>
-            <Link href={`/admin/products/${id}`}>
+          {onView ? (
+            <DropdownMenuItem onClick={() => onView(id)}>
               <Eye className="h-4 w-4" /> Ver detalle
-            </Link>
-          </DropdownMenuItem>
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem asChild>
+              <Link href={`/admin/products/${id}`}>
+                <Eye className="h-4 w-4" /> Ver detalle
+              </Link>
+            </DropdownMenuItem>
+          )}
           {onEdit ? (
             <DropdownMenuItem onClick={() => onEdit(id)}>
               <Pencil className="h-4 w-4" /> Editar

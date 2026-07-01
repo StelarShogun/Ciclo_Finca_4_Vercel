@@ -136,6 +136,8 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/inventory/{product}/add', [InventoryController::class, 'addStock'])->whereNumber('product');
         Route::post('/inventory/{product}/remove', [InventoryController::class, 'removeStock'])->whereNumber('product');
         Route::get('/inventory/{product}/movements', [InventoryController::class, 'movements'])->whereNumber('product');
+        Route::post('/inventory/import', [InventoryController::class, 'import']);
+        Route::get('/inventory/import/{importId}/progress', [InventoryController::class, 'importProgress']);
 
         // Clientes (lista + historial de compras + bloqueo/desbloqueo)
         Route::get('/clients', [ClientController::class, 'index']);

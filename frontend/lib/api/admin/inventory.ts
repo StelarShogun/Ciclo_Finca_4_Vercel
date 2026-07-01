@@ -92,3 +92,27 @@ export async function getMovements(productId: number, page = 1): Promise<Movemen
   });
   return data as MovementsPayload;
 }
+
+// --- Importación de catálogo ---
+
+export type ImportProgress = {
+  status: string; // queued | processing | done | failed | unknown
+  processed?: number;
+  total?: number;
+  created?: number;
+  updated?: number;
+  message?: string;
+  [key: string]: unknown;
+};
+
+export async function importCatalog(file: File): Promise<{ importId: string }> {
+  const fd = new FormData();
+  fd.append("import_file", file);
+  const { data } = await api.post("/api/v1/admin/inventory/import", fd);
+  return data as { importId: string };
+}
+
+export async function getImportProgress(importId: string): Promise<ImportProgress> {
+  const { data } = await api.get(`/api/v1/admin/inventory/import/${importId}/progress`);
+  return data as ImportProgress;
+}
