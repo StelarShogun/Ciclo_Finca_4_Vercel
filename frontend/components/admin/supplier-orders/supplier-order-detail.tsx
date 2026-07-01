@@ -162,7 +162,7 @@ export function SupplierOrderDetail({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-h-[90vh] sm:max-w-[56rem] overflow-y-auto">
         {isLoading ? (
           <Skeleton className="h-72" />
         ) : isError || !data ? (

@@ -11,6 +11,9 @@ import { ImportModal } from "@/components/admin/inventory/import-modal";
 import { PageHeader } from "@/components/admin/page-header";
 import { MetricCard } from "@/components/admin/metric-card";
 import { DataTable } from "@/components/admin/data-table";
+import { AdminCard, CardThumb } from "@/components/admin/admin-card";
+import { ActionBar, ActionBtn } from "@/components/admin/action-btn";
+import { useViewMode, ViewToggle } from "@/components/admin/view-toggle";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
 import { StockAdjust } from "@/components/admin/inventory/stock-adjust";
@@ -47,6 +50,7 @@ export default function InventoryPage() {
   const [stockStatus, setStockStatus] = useState(ALL);
   const [adjust, setAdjust] = useState<InventoryProduct | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [view, setView] = useViewMode("inventory");
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 350);
@@ -111,11 +115,12 @@ export default function InventoryPage() {
     },
     {
       id: "actions",
-      header: "",
+      header: "Acciones",
       cell: ({ row }) => (
-        <Button size="sm" variant="outline" onClick={() => setAdjust(row.original)}>
-          Ajustar
-        </Button>
+        <ActionBar>
+          <ActionBtn icon="fa-plus" label="Agregar stock" tone="activate" onClick={() => setAdjust(row.original)} />
+          <ActionBtn icon="fa-sliders" label="Ajustar stock" tone="stock" onClick={() => setAdjust(row.original)} />
+        </ActionBar>
       ),
     },
   ];
@@ -165,6 +170,9 @@ export default function InventoryPage() {
             <SelectItem value="out">Sin stock</SelectItem>
           </SelectContent>
         </Select>
+        <div className="ml-auto">
+          <ViewToggle view={view} onChange={setView} />
+        </div>
       </div>
 
       {isLoading ? (
@@ -177,7 +185,43 @@ export default function InventoryPage() {
         </Card>
       ) : (
         <>
-          <DataTable columns={columns} data={data.products} emptyTitle="Sin productos" />
+          <DataTable
+            columns={columns}
+            data={data.products}
+            emptyTitle="Sin productos"
+            view={view}
+            rowKey={(p) => p.product_id}
+            renderCard={(p) => (
+              <AdminCard
+                media={<CardThumb src={p.uses_placeholder ? null : mediaUrl(p.image_url)} alt={p.name} />}
+                title={p.name}
+                subtitle={p.sku}
+                badge={<StatusBadge tone={statusClassToTone(p.status_class)}>{p.availability_label}</StatusBadge>}
+                meta={
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Categoría</span>
+                      <span>{p.category_name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Stock</span>
+                      <span>{p.stock} <span className="text-xs text-muted-foreground">/ mín {p.stock_minimum}</span></span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Precio</span>
+                      <span className="font-medium">{crc.format(Number(p.price))}</span>
+                    </div>
+                  </>
+                }
+                actions={
+                  <ActionBar>
+                    <ActionBtn icon="fa-plus" label="Agregar stock" tone="activate" onClick={() => setAdjust(p)} />
+                    <ActionBtn icon="fa-sliders" label="Ajustar stock" tone="stock" onClick={() => setAdjust(p)} />
+                  </ActionBar>
+                }
+              />
+            )}
+          />
           <PaginationControls
             currentPage={data.pagination.currentPage}
             lastPage={data.pagination.lastPage}

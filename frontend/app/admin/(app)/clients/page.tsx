@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
-import { Ban, History, Search, ShieldCheck } from "lucide-react";
+import { Search } from "lucide-react";
 
 import {
   banClient,
@@ -14,6 +14,9 @@ import {
   type AdminClient,
 } from "@/lib/api/admin/clients";
 import { PageHeader } from "@/components/admin/page-header";
+import { AdminCard } from "@/components/admin/admin-card";
+import { ActionBar, ActionBtn } from "@/components/admin/action-btn";
+import { useViewMode, ViewToggle } from "@/components/admin/view-toggle";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
@@ -61,6 +64,10 @@ export default function ClientsPage() {
   const [debounced, setDebounced] = useState("");
   const [status, setStatus] = useState(ALL);
   const [historyFor, setHistoryFor] = useState<AdminClient | null>(null);
+  const [view, setView] = useViewMode("clients");
+
+  const clientName = (c: AdminClient) =>
+    [c.name, c.first_surname, c.second_surname].filter(Boolean).join(" ");
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 350);
@@ -115,6 +122,9 @@ export default function ClientsPage() {
             <SelectItem value="banned">Bloqueados</SelectItem>
           </SelectContent>
         </Select>
+        <div className="ml-auto">
+          <ViewToggle view={view} onChange={setView} />
+        </div>
       </div>
 
       {isLoading ? (
@@ -125,33 +135,65 @@ export default function ClientsPage() {
             No fue posible cargar los clientes.
           </CardContent>
         </Card>
+      ) : data.clients.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">Sin clientes.</CardContent>
+        </Card>
       ) : (
         <>
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Correo</TableHead>
-                    <TableHead>Registro</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="w-32 text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.clients.length === 0 ? (
+          {view === "grid" ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {data.clients.map((c) => (
+                <AdminCard
+                  key={c.user_id}
+                  media={
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-[#235347] dark:text-[#8EB69B]">
+                      <i className="fas fa-user" aria-hidden />
+                    </div>
+                  }
+                  title={clientName(c)}
+                  subtitle={c.gmail}
+                  badge={
+                    <StatusBadge tone={c.active ? "success" : "danger"}>
+                      {c.active ? "Activo" : "Bloqueado"}
+                    </StatusBadge>
+                  }
+                  meta={
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Registro</span>
+                      <span>{c.created_at ?? "—"}</span>
+                    </div>
+                  }
+                  actions={
+                    <ActionBar>
+                      <ActionBtn icon="fa-clock-rotate-left" label="Historial" tone="view" onClick={() => setHistoryFor(c)} />
+                      {c.active ? (
+                        <ActionBtn icon="fa-ban" label="Bloquear" tone="delete" disabled={toggle.isPending} onClick={() => toggle.mutate(c)} />
+                      ) : (
+                        <ActionBtn icon="fa-shield-halved" label="Desbloquear" tone="activate" disabled={toggle.isPending} onClick={() => toggle.mutate(c)} />
+                      )}
+                    </ActionBar>
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
-                        Sin clientes.
-                      </TableCell>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Correo</TableHead>
+                      <TableHead>Registro</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="w-32 text-right">Acciones</TableHead>
                     </TableRow>
-                  ) : (
-                    data.clients.map((c) => (
+                  </TableHeader>
+                  <TableBody>
+                    {data.clients.map((c) => (
                       <TableRow key={c.user_id}>
-                        <TableCell className="font-medium">
-                          {[c.name, c.first_surname, c.second_surname].filter(Boolean).join(" ")}
-                        </TableCell>
+                        <TableCell className="font-medium">{clientName(c)}</TableCell>
                         <TableCell className="text-muted-foreground">{c.gmail}</TableCell>
                         <TableCell>{c.created_at ?? "—"}</TableCell>
                         <TableCell>
@@ -159,28 +201,25 @@ export default function ClientsPage() {
                             {c.active ? "Activo" : "Bloqueado"}
                           </StatusBadge>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Historial" onClick={() => setHistoryFor(c)}>
-                            <History className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className={`h-8 w-8 ${c.active ? "text-destructive" : "text-emerald-600"}`}
-                            title={c.active ? "Bloquear" : "Desbloquear"}
-                            disabled={toggle.isPending}
-                            onClick={() => toggle.mutate(c)}
-                          >
-                            {c.active ? <Ban className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-                          </Button>
+                        <TableCell>
+                          <div className="flex justify-end">
+                            <ActionBar>
+                              <ActionBtn icon="fa-clock-rotate-left" label="Historial" tone="view" onClick={() => setHistoryFor(c)} />
+                              {c.active ? (
+                                <ActionBtn icon="fa-ban" label="Bloquear" tone="delete" disabled={toggle.isPending} onClick={() => toggle.mutate(c)} />
+                              ) : (
+                                <ActionBtn icon="fa-shield-halved" label="Desbloquear" tone="activate" disabled={toggle.isPending} onClick={() => toggle.mutate(c)} />
+                              )}
+                            </ActionBar>
+                          </div>
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
           <PaginationControls
             currentPage={data.pagination.currentPage}
             lastPage={data.pagination.lastPage}
@@ -192,7 +231,7 @@ export default function ClientsPage() {
 
       {/* Historial de compras */}
       <Dialog open={!!historyFor} onOpenChange={(o) => !o && setHistoryFor(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-[38rem]">
           <DialogHeader>
             <DialogTitle>{history.data?.displayName ?? "Historial de compras"}</DialogTitle>
             <DialogDescription>{history.data?.gmail ?? historyFor?.gmail}</DialogDescription>

@@ -47,7 +47,7 @@ export function ViewProductModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+      <DialogContent className="max-h-[90vh] sm:max-w-[56rem] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <i className="fas fa-eye text-[#235347] dark:text-[#8EB69B]" aria-hidden /> {data?.name ?? "Producto"}

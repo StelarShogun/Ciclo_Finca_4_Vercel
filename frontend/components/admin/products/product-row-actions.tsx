@@ -1,27 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
-import { Eye, MoreHorizontal, Pencil, Power, Star, Trash2 } from "lucide-react";
 
 import {
   activateProduct,
   deactivateProduct,
   forceDeleteProduct,
-  toggleProductFeatured,
   type AdminProduct,
 } from "@/lib/api/admin/products";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ActionBar, ActionBtn } from "@/components/admin/action-btn";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,14 +25,21 @@ import {
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
-export function ProductRowActions({ product, onEdit, onView }: { product: AdminProduct; onEdit?: (id: number) => void; onView?: (id: number) => void }) {
+export function ProductRowActions({
+  product,
+  onEdit,
+  onView,
+}: {
+  product: AdminProduct;
+  onEdit?: (id: number) => void;
+  onView?: (id: number) => void;
+}) {
   const queryClient = useQueryClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const id = product.product_id;
   const isActive = product.status === "active";
 
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["admin-products"] });
 
   function mutationFor(fn: () => Promise<unknown>, ok: string) {
     return {
@@ -65,9 +62,6 @@ export function ProductRowActions({ product, onEdit, onView }: { product: AdminP
       isActive ? "Producto desactivado" : "Producto activado",
     ),
   );
-  const toggleFeatured = useMutation(
-    mutationFor(() => toggleProductFeatured(id), "Destacado actualizado"),
-  );
   const remove = useMutation({
     ...mutationFor(() => forceDeleteProduct(id), "Producto eliminado"),
     onSuccess: () => {
@@ -79,62 +73,43 @@ export function ProductRowActions({ product, onEdit, onView }: { product: AdminP
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <MoreHorizontal className="h-4 w-4" />
-            <span className="sr-only">Acciones</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          {onView ? (
-            <DropdownMenuItem onClick={() => onView(id)}>
-              <Eye className="h-4 w-4" /> Ver detalle
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem asChild>
-              <Link href={`/admin/products/${id}`}>
-                <Eye className="h-4 w-4" /> Ver detalle
-              </Link>
-            </DropdownMenuItem>
-          )}
-          {onEdit ? (
-            <DropdownMenuItem onClick={() => onEdit(id)}>
-              <Pencil className="h-4 w-4" /> Editar
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem asChild>
-              <Link href={`/admin/products/${id}/edit`}>
-                <Pencil className="h-4 w-4" /> Editar
-              </Link>
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem
-            onClick={() => toggleStatus.mutate()}
+      <ActionBar>
+        <ActionBtn
+          icon="fa-eye"
+          label="Ver detalle"
+          tone="view"
+          onClick={() => (onView ? onView(id) : undefined)}
+        />
+        <ActionBtn
+          icon="fa-pen-to-square"
+          label="Editar"
+          tone="edit"
+          onClick={() => (onEdit ? onEdit(id) : undefined)}
+        />
+        {isActive ? (
+          <ActionBtn
+            icon="fa-ban"
+            label="Desactivar"
+            tone="delete"
             disabled={toggleStatus.isPending}
-          >
-            <Power className="h-4 w-4" />
-            {isActive ? "Desactivar" : "Activar"}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => toggleFeatured.mutate()}
-            disabled={toggleFeatured.isPending}
-          >
-            <Star className="h-4 w-4" />
-            {product.is_featured ? "Quitar destacado" : "Destacar"}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onSelect={(e) => {
-              e.preventDefault();
-              setConfirmOpen(true);
-            }}
-          >
-            <Trash2 className="h-4 w-4" /> Eliminar
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            onClick={() => toggleStatus.mutate()}
+          />
+        ) : (
+          <ActionBtn
+            icon="fa-circle-check"
+            label="Reactivar"
+            tone="activate"
+            disabled={toggleStatus.isPending}
+            onClick={() => toggleStatus.mutate()}
+          />
+        )}
+        <ActionBtn
+          icon="fa-trash"
+          label="Eliminar"
+          tone="delete"
+          onClick={() => setConfirmOpen(true)}
+        />
+      </ActionBar>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>

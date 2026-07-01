@@ -5,13 +5,16 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import type { ColumnDef } from "@tanstack/react-table";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
-import { CheckCircle2, Eye, PackageCheck, Search, XCircle } from "lucide-react";
+import { PackageCheck, Search } from "lucide-react";
 
 import { getOrders, type OrderRow } from "@/lib/api/admin/orders";
 import { cancelSale, completeSale, getSale, markSaleReady, type SaleDetail } from "@/lib/api/admin/sales";
 import { PageHeader } from "@/components/admin/page-header";
 import { MetricCard } from "@/components/admin/metric-card";
 import { DataTable } from "@/components/admin/data-table";
+import { AdminCard } from "@/components/admin/admin-card";
+import { ActionBar, ActionBtn } from "@/components/admin/action-btn";
+import { useViewMode, ViewToggle } from "@/components/admin/view-toggle";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
@@ -44,6 +47,7 @@ export default function OrdersPage() {
   const [detail, setDetail] = useState<SaleDetail | null>(null);
   const [cancelId, setCancelId] = useState<number | null>(null);
   const [reason, setReason] = useState("");
+  const [view, setView] = useViewMode("orders");
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 350);
@@ -76,18 +80,25 @@ export default function OrdersPage() {
     { accessorKey: "order_placed_label", header: "Fecha" },
     { accessorKey: "total", header: () => <div className="text-right">Total</div>, cell: ({ row }) => <div className="text-right">{crc.format(row.original.total)}</div> },
     { accessorKey: "status", header: "Estado", cell: ({ row }) => <StatusBadge tone={tone(row.original.status)}>{row.original.status_label}</StatusBadge> },
-    { id: "actions", header: "", cell: ({ row }) => {
-      const o = row.original;
-      return (
-        <div className="flex items-center justify-end gap-1">
-          <Button size="icon" variant="ghost" className="h-8 w-8" title="Ver" onClick={() => openDetail.mutate(o.sale_id)}><Eye className="h-4 w-4" /></Button>
-          {o.status === "pending" && <Button size="icon" variant="ghost" className="h-8 w-8 text-amber-600" title="Marcar listo" onClick={() => ready.mutate(o.sale_id)}><PackageCheck className="h-4 w-4" /></Button>}
-          {o.status === "ready_to_pickup" && <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-600" title="Confirmar" onClick={() => complete.mutate(o.sale_id)}><CheckCircle2 className="h-4 w-4" /></Button>}
-          {(o.status === "pending" || o.status === "ready_to_pickup") && <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" title="Rechazar" onClick={() => setCancelId(o.sale_id)}><XCircle className="h-4 w-4" /></Button>}
-        </div>
-      );
-    } },
+    { id: "actions", header: "Acciones", cell: ({ row }) => renderActions(row.original) },
   ];
+
+  function renderActions(o: OrderRow) {
+    return (
+      <ActionBar>
+        <ActionBtn icon="fa-eye" label="Ver detalle" tone="view" onClick={() => openDetail.mutate(o.sale_id)} />
+        {o.status === "pending" && (
+          <ActionBtn icon="fa-box-open" label="Marcar listo" tone="stock" onClick={() => ready.mutate(o.sale_id)} />
+        )}
+        {o.status === "ready_to_pickup" && (
+          <ActionBtn icon="fa-circle-check" label="Confirmar" tone="activate" onClick={() => complete.mutate(o.sale_id)} />
+        )}
+        {(o.status === "pending" || o.status === "ready_to_pickup") && (
+          <ActionBtn icon="fa-xmark" label="Rechazar" tone="delete" onClick={() => setCancelId(o.sale_id)} />
+        )}
+      </ActionBar>
+    );
+  }
 
   return (
     <>
@@ -114,6 +125,9 @@ export default function OrdersPage() {
             <SelectItem value="cancelled">Rechazado</SelectItem>
           </SelectContent>
         </Select>
+        <div className="ml-auto">
+          <ViewToggle view={view} onChange={setView} />
+        </div>
       </div>
 
       {isLoading ? (
@@ -122,14 +136,45 @@ export default function OrdersPage() {
         <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No fue posible cargar los encargos.</CardContent></Card>
       ) : (
         <>
-          <DataTable columns={columns} data={data.orders} emptyTitle="Sin encargos" />
+          <DataTable
+            columns={columns}
+            data={data.orders}
+            emptyTitle="Sin encargos"
+            view={view}
+            rowKey={(o) => o.sale_id}
+            renderCard={(o) => (
+              <AdminCard
+                media={
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-[#235347] dark:text-[#8EB69B]">
+                    <i className="fas fa-clipboard-list" aria-hidden />
+                  </div>
+                }
+                title={o.reference}
+                subtitle={o.customer}
+                badge={<StatusBadge tone={tone(o.status)}>{o.status_label}</StatusBadge>}
+                meta={
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Fecha</span>
+                      <span>{o.order_placed_label}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total</span>
+                      <span className="font-medium">{crc.format(o.total)}</span>
+                    </div>
+                  </>
+                }
+                actions={renderActions(o)}
+              />
+            )}
+          />
           <PaginationControls currentPage={data.pagination.currentPage} lastPage={data.pagination.lastPage} total={data.pagination.total} onPageChange={setPage} />
         </>
       )}
 
       {/* Detalle */}
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-h-[90vh] sm:max-w-[56rem] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <i className="fas fa-clipboard-list text-[#235347] dark:text-[#8EB69B]" aria-hidden />
@@ -156,7 +201,7 @@ export default function OrdersPage() {
 
       {/* Rechazar con motivo */}
       <Dialog open={cancelId !== null} onOpenChange={(o) => !o && setCancelId(null)}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[38rem]">
           <form onSubmit={(e) => { e.preventDefault(); if (reason.trim().length >= 3) cancel.mutate(); }}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">

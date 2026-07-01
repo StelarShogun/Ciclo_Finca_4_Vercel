@@ -9,6 +9,8 @@ import { getSales, type SaleRow } from "@/lib/api/admin/sales";
 import { PageHeader } from "@/components/admin/page-header";
 import { MetricCard } from "@/components/admin/metric-card";
 import { DataTable } from "@/components/admin/data-table";
+import { AdminCard } from "@/components/admin/admin-card";
+import { useViewMode, ViewToggle } from "@/components/admin/view-toggle";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
 import { SaleRowActions } from "@/components/admin/sales/sale-row-actions";
@@ -95,6 +97,7 @@ export default function SalesPage() {
   const [dateRange, setDateRange] = useState("month");
   const [payment, setPayment] = useState(ALL);
   const [newOpen, setNewOpen] = useState(false);
+  const [view, setView] = useViewMode("sales");
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 350);
@@ -197,6 +200,9 @@ export default function SalesPage() {
             <SelectItem value="transfer">Transferencia</SelectItem>
           </SelectContent>
         </Select>
+        <div className="ml-auto">
+          <ViewToggle view={view} onChange={setView} />
+        </div>
       </div>
 
       {isLoading ? (
@@ -209,7 +215,42 @@ export default function SalesPage() {
         </Card>
       ) : (
         <>
-          <DataTable columns={columns} data={data.sales} emptyTitle="Sin ventas" />
+          <DataTable
+            columns={columns}
+            data={data.sales}
+            emptyTitle="Sin ventas"
+            view={view}
+            rowKey={(s) => s.sale_id}
+            renderCard={(s) => (
+              <AdminCard
+                media={
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-[#235347] dark:text-[#8EB69B]">
+                    <i className="fas fa-receipt" aria-hidden />
+                  </div>
+                }
+                title={s.invoice_number}
+                subtitle={s.customer}
+                badge={<StatusBadge tone={statusTone(s.status)}>{s.status_label}</StatusBadge>}
+                meta={
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Fecha</span>
+                      <span>{s.sale_date_label}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Pago</span>
+                      <span>{s.payment_label}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total</span>
+                      <span className="font-medium">{crc.format(s.total)}</span>
+                    </div>
+                  </>
+                }
+                actions={<SaleRowActions sale={s} />}
+              />
+            )}
+          />
           <PaginationControls
             currentPage={data.pagination.currentPage}
             lastPage={data.pagination.lastPage}

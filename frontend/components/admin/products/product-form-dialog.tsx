@@ -54,7 +54,7 @@ export function ProductFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-h-[92vh] sm:max-w-[56rem] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <i className={`fas ${isEdit ? "fa-pen-to-square" : "fa-box"} text-[#235347] dark:text-[#8EB69B]`} aria-hidden />

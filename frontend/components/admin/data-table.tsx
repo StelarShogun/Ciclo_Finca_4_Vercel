@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
   type ColumnDef,
   flexRender,
@@ -15,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { ViewMode } from "./view-toggle";
 import { EmptyState } from "./empty-state";
 
 type DataTableProps<TData, TValue> = {
@@ -22,6 +24,12 @@ type DataTableProps<TData, TValue> = {
   data: TData[];
   emptyTitle?: string;
   emptyDescription?: string;
+  /** Modo de vista. En "grid" se usa `renderCard` en vez de la tabla. */
+  view?: ViewMode;
+  /** Render de tarjeta por fila para el modo grid. */
+  renderCard?: (row: TData) => ReactNode;
+  /** Clave estable por fila para el modo grid. */
+  rowKey?: (row: TData) => string | number;
 };
 
 /**
@@ -33,6 +41,9 @@ export function DataTable<TData, TValue>({
   data,
   emptyTitle = "Sin datos",
   emptyDescription,
+  view = "table",
+  renderCard,
+  rowKey,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -42,6 +53,16 @@ export function DataTable<TData, TValue>({
 
   if (data.length === 0) {
     return <EmptyState title={emptyTitle} description={emptyDescription} />;
+  }
+
+  if (view === "grid" && renderCard) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {data.map((row, i) => (
+          <div key={rowKey ? rowKey(row) : i}>{renderCard(row)}</div>
+        ))}
+      </div>
+    );
   }
 
   return (

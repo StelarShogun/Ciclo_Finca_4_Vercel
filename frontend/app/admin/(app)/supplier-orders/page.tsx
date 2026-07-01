@@ -8,6 +8,9 @@ import { Plus, Search } from "lucide-react";
 import { getSupplierOrders, type SupplierOrderRow } from "@/lib/api/admin/supplier-orders";
 import { PageHeader } from "@/components/admin/page-header";
 import { DataTable } from "@/components/admin/data-table";
+import { AdminCard } from "@/components/admin/admin-card";
+import { ActionBar, ActionBtn } from "@/components/admin/action-btn";
+import { useViewMode, ViewToggle } from "@/components/admin/view-toggle";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
 import { SupplierOrderDetail } from "@/components/admin/supplier-orders/supplier-order-detail";
@@ -45,6 +48,7 @@ export default function SupplierOrdersPage() {
   const [state, setState] = useState(ALL);
   const [openId, setOpenId] = useState<number | null>(null);
   const [newOpen, setNewOpen] = useState(false);
+  const [view, setView] = useViewMode("supplier-orders");
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 350);
@@ -91,6 +95,15 @@ export default function SupplierOrdersPage() {
         <StatusBadge tone={stateTone(row.original.state)}>{row.original.state_label}</StatusBadge>
       ),
     },
+    {
+      id: "actions",
+      header: "Acciones",
+      cell: ({ row }) => (
+        <ActionBar>
+          <ActionBtn icon="fa-eye" label="Ver detalle" tone="view" onClick={() => setOpenId(row.original.num_order)} />
+        </ActionBar>
+      ),
+    },
   ];
 
   return (
@@ -133,6 +146,9 @@ export default function SupplierOrdersPage() {
             <SelectItem value="cancelled">Cancelado</SelectItem>
           </SelectContent>
         </Select>
+        <div className="ml-auto">
+          <ViewToggle view={view} onChange={setView} />
+        </div>
       </div>
 
       {isLoading ? (
@@ -145,7 +161,46 @@ export default function SupplierOrdersPage() {
         </Card>
       ) : (
         <>
-          <DataTable columns={columns} data={data.orders} emptyTitle="Sin pedidos" />
+          <DataTable
+            columns={columns}
+            data={data.orders}
+            emptyTitle="Sin pedidos"
+            view={view}
+            rowKey={(o) => o.num_order}
+            renderCard={(o) => (
+              <AdminCard
+                media={
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-[#235347] dark:text-[#8EB69B]">
+                    <i className="fas fa-truck-ramp-box" aria-hidden />
+                  </div>
+                }
+                title={o.po_full}
+                subtitle={o.supplier_name ?? "—"}
+                badge={<StatusBadge tone={stateTone(o.state)}>{o.state_label}</StatusBadge>}
+                meta={
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Fecha</span>
+                      <span>{o.date_label}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Entrega est.</span>
+                      <span>{o.edd_label}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total</span>
+                      <span className="font-medium">{crc.format(o.initial_total)}</span>
+                    </div>
+                  </>
+                }
+                actions={
+                  <ActionBar>
+                    <ActionBtn icon="fa-eye" label="Ver detalle" tone="view" onClick={() => setOpenId(o.num_order)} />
+                  </ActionBar>
+                }
+              />
+            )}
+          />
           <PaginationControls
             currentPage={data.pagination.currentPage}
             lastPage={data.pagination.lastPage}

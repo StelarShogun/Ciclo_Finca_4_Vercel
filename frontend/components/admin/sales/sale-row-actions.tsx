@@ -4,16 +4,6 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
-import {
-  CheckCircle2,
-  Eye,
-  FileText,
-  MoreHorizontal,
-  PackageCheck,
-  Printer,
-  RotateCcw,
-  XCircle,
-} from "lucide-react";
 
 import {
   cancelSale,
@@ -30,13 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ActionBar, ActionBtn } from "@/components/admin/action-btn";
 import {
   Dialog,
   DialogContent,
@@ -132,71 +116,59 @@ export function SaleRowActions({ sale }: { sale: SaleRow }) {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <MoreHorizontal className="h-4 w-4" />
-            <span className="sr-only">Acciones</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-52">
-          <DropdownMenuItem onClick={() => setDetailOpen(true)}>
-            <Eye className="h-4 w-4" /> Ver detalle
-          </DropdownMenuItem>
-          {isCompleted && (
-            <DropdownMenuItem asChild>
-              <a href={invoiceUrl(id)} target="_blank" rel="noopener noreferrer">
-                <FileText className="h-4 w-4" /> Factura
-              </a>
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem asChild>
-            <a href={printUrl(id)} target="_blank" rel="noopener noreferrer">
-              <Printer className="h-4 w-4" /> Imprimir
-            </a>
-          </DropdownMenuItem>
-
-          {(isPending || isReady) && <DropdownMenuSeparator />}
-          {isPending && (
-            <DropdownMenuItem onClick={() => ready.mutate()} disabled={ready.isPending}>
-              <PackageCheck className="h-4 w-4" /> Marcar listo
-            </DropdownMenuItem>
-          )}
-          {isReady && (
-            <DropdownMenuItem onClick={() => complete.mutate()} disabled={complete.isPending}>
-              <CheckCircle2 className="h-4 w-4" /> Confirmar venta
-            </DropdownMenuItem>
-          )}
-
-          <DropdownMenuSeparator />
-          {isCompleted && (
-            <DropdownMenuItem
-              variant="destructive"
-              onSelect={(e) => {
-                e.preventDefault();
-                setReasonAction("return");
-              }}
-            >
-              <RotateCcw className="h-4 w-4" /> Devolver
-            </DropdownMenuItem>
-          )}
-          {(isPending || isReady) && (
-            <DropdownMenuItem
-              variant="destructive"
-              onSelect={(e) => {
-                e.preventDefault();
-                setReasonAction("cancel");
-              }}
-            >
-              <XCircle className="h-4 w-4" /> Rechazar
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <ActionBar>
+        <ActionBtn icon="fa-eye" label="Ver detalle" tone="view" onClick={() => setDetailOpen(true)} />
+        {isCompleted && (
+          <a
+            href={invoiceUrl(id)}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Factura"
+            aria-label="Factura"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-sky-600 transition-colors hover:bg-sky-100 dark:text-sky-400 dark:hover:bg-sky-950"
+          >
+            <i className="fas fa-file-invoice" aria-hidden />
+          </a>
+        )}
+        <a
+          href={printUrl(id)}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Imprimir"
+          aria-label="Imprimir"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted"
+        >
+          <i className="fas fa-print" aria-hidden />
+        </a>
+        {isPending && (
+          <ActionBtn
+            icon="fa-box-open"
+            label="Marcar listo"
+            tone="stock"
+            disabled={ready.isPending}
+            onClick={() => ready.mutate()}
+          />
+        )}
+        {isReady && (
+          <ActionBtn
+            icon="fa-circle-check"
+            label="Confirmar venta"
+            tone="activate"
+            disabled={complete.isPending}
+            onClick={() => complete.mutate()}
+          />
+        )}
+        {isCompleted && (
+          <ActionBtn icon="fa-rotate-left" label="Devolver" tone="delete" onClick={() => setReasonAction("return")} />
+        )}
+        {(isPending || isReady) && (
+          <ActionBtn icon="fa-xmark" label="Rechazar" tone="delete" onClick={() => setReasonAction("cancel")} />
+        )}
+      </ActionBar>
 
       {/* Detalle */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-h-[90vh] sm:max-w-[56rem] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <i className="fas fa-receipt text-[#235347] dark:text-[#8EB69B]" aria-hidden />
@@ -272,7 +244,7 @@ export function SaleRowActions({ sale }: { sale: SaleRow }) {
 
       {/* Acción con motivo (rechazar / devolver / eliminar) */}
       <Dialog open={reasonAction !== null} onOpenChange={(o) => !o && closeReason()}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[38rem]">
           <form
             onSubmit={(e) => {
               e.preventDefault();

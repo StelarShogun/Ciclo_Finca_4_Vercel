@@ -66,7 +66,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[38rem]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><i className="fas fa-file-import text-[#235347] dark:text-[#8EB69B]" aria-hidden /> Importar catálogo</DialogTitle>
           <DialogDescription>Archivo ZIP, JSON, XML o CSV con productos.</DialogDescription>

@@ -4,13 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus, Search, Star } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 import { getProducts, mediaUrl, type AdminProduct } from "@/lib/api/admin/products";
 import { PageHeader } from "@/components/admin/page-header";
 import { ProductRowActions } from "@/components/admin/products/product-row-actions";
 import { ProductFormDialog } from "@/components/admin/products/product-form-dialog";
 import { ViewProductModal } from "@/components/admin/products/view-product-modal";
+import { FeaturedStar } from "@/components/admin/products/featured-star";
+import { AdminCard } from "@/components/admin/admin-card";
+import { useViewMode, ViewToggle } from "@/components/admin/view-toggle";
 import { DataTable } from "@/components/admin/data-table";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge, type StatusTone } from "@/components/admin/status-badge";
@@ -47,13 +50,16 @@ function buildColumns(onEdit: (id: number) => void, onView: (id: number) => void
       const img = mediaUrl(row.original.image_url);
       return (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border bg-muted">
-            {img && !row.original.uses_placeholder ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={img} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-base">🚲</div>
-            )}
+          <div className="relative h-11 w-11 shrink-0">
+            <FeaturedStar productId={row.original.product_id} isFeatured={row.original.is_featured} />
+            <div className="h-full w-full overflow-hidden rounded-md border bg-muted">
+              {img && !row.original.uses_placeholder ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={img} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-base">🚲</div>
+              )}
+            </div>
           </div>
           <div className="flex flex-col">
             <Link href={`/admin/products/${row.original.product_id}`} className="font-medium hover:underline">
@@ -106,21 +112,66 @@ function buildColumns(onEdit: (id: number) => void, onView: (id: number) => void
     ),
   },
   {
-    accessorKey: "is_featured",
-    header: "Destacado",
-    cell: ({ row }) =>
-      row.original.is_featured ? (
-        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-      ) : (
-        <span className="text-muted-foreground">—</span>
-      ),
-  },
-  {
     id: "actions",
-    header: "",
+    header: "Acciones",
     cell: ({ row }) => <ProductRowActions product={row.original} onEdit={onEdit} onView={onView} />,
   },
   ];
+}
+
+/** Tarjeta de producto para la vista de tarjetas. */
+function ProductCard({
+  product,
+  onEdit,
+  onView,
+}: {
+  product: AdminProduct;
+  onEdit: (id: number) => void;
+  onView: (id: number) => void;
+}) {
+  const img = mediaUrl(product.image_url);
+  const low = product.stock_current <= product.stock_minimum;
+  return (
+    <AdminCard
+      media={
+        <div className="relative h-14 w-14 shrink-0">
+          <FeaturedStar productId={product.product_id} isFeatured={product.is_featured} />
+          <div className="h-full w-full overflow-hidden rounded-lg border bg-muted">
+            {img && !product.uses_placeholder ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={img} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-xl">🚲</div>
+            )}
+          </div>
+        </div>
+      }
+      title={product.name}
+      subtitle={product.sku ?? "Sin SKU"}
+      badge={
+        <StatusBadge tone={statusTone(product.status)}>
+          {product.status === "active" ? "Activo" : "Inactivo"}
+        </StatusBadge>
+      }
+      meta={
+        <>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Categoría</span>
+            <span>{product.category?.name ?? "—"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Precio</span>
+            <span className="font-medium">{crc.format(Number(product.sale_price))}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Stock</span>
+            <StatusBadge tone={low ? "danger" : "neutral"}>{product.stock_current}</StatusBadge>
+          </div>
+        </>
+      }
+      actions={<ProductRowActions product={product} onEdit={onEdit} onView={onView} />}
+    />
+  );
 }
 
 export default function ProductsPage() {
@@ -132,6 +183,7 @@ export default function ProductsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [viewId, setViewId] = useState<number | null>(null);
+  const [view, setView] = useViewMode("products");
 
   const openCreate = () => { setEditId(null); setFormOpen(true); };
   const openEdit = (id: number) => { setEditId(id); setFormOpen(true); };
@@ -202,6 +254,9 @@ export default function ProductsPage() {
             <SelectItem value="out">Sin stock</SelectItem>
           </SelectContent>
         </Select>
+        <div className="ml-auto">
+          <ViewToggle view={view} onChange={setView} />
+        </div>
       </div>
 
       {isLoading ? (
@@ -218,6 +273,9 @@ export default function ProductsPage() {
             columns={columns}
             data={data.data}
             emptyTitle="Sin productos"
+            view={view}
+            rowKey={(p) => p.product_id}
+            renderCard={(p) => <ProductCard product={p} onEdit={openEdit} onView={openView} />}
           />
           <PaginationControls
             currentPage={data.current_page}

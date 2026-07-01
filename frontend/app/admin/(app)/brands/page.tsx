@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 import {
   createBrand,
@@ -14,6 +14,9 @@ import {
   type Brand,
 } from "@/lib/api/admin/brands";
 import { PageHeader } from "@/components/admin/page-header";
+import { AdminCard } from "@/components/admin/admin-card";
+import { ActionBar, ActionBtn } from "@/components/admin/action-btn";
+import { useViewMode, ViewToggle } from "@/components/admin/view-toggle";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -69,6 +72,7 @@ export default function BrandsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState("");
   const [deleting, setDeleting] = useState<Brand | null>(null);
+  const [view, setView] = useViewMode("brands");
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 350);
@@ -142,6 +146,9 @@ export default function BrandsPage() {
             }}
           />
         </div>
+        <div className="ml-auto">
+          <ViewToggle view={view} onChange={setView} />
+        </div>
       </div>
 
       {isLoading ? (
@@ -152,43 +159,61 @@ export default function BrandsPage() {
             No fue posible cargar las marcas.
           </CardContent>
         </Card>
+      ) : data.data.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">Sin marcas.</CardContent>
+        </Card>
       ) : (
         <>
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead className="w-24 text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.data.length === 0 ? (
+          {view === "grid" ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {data.data.map((b) => (
+                <AdminCard
+                  key={b.id}
+                  media={
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-[#235347] dark:text-[#8EB69B]">
+                      <i className="fas fa-tag" aria-hidden />
+                    </div>
+                  }
+                  title={b.name}
+                  actions={
+                    <ActionBar>
+                      <ActionBtn icon="fa-pen-to-square" label="Editar" tone="edit" onClick={() => openEdit(b)} />
+                      <ActionBtn icon="fa-trash" label="Eliminar" tone="delete" onClick={() => setDeleting(b)} />
+                    </ActionBar>
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={2} className="py-8 text-center text-sm text-muted-foreground">
-                        Sin marcas.
-                      </TableCell>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead className="w-24 text-right">Acciones</TableHead>
                     </TableRow>
-                  ) : (
-                    data.data.map((b) => (
+                  </TableHeader>
+                  <TableBody>
+                    {data.data.map((b) => (
                       <TableRow key={b.id}>
                         <TableCell className="font-medium">{b.name}</TableCell>
-                        <TableCell className="text-right">
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Editar" onClick={() => openEdit(b)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" title="Eliminar" onClick={() => setDeleting(b)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <TableCell>
+                          <div className="flex justify-end">
+                            <ActionBar>
+                              <ActionBtn icon="fa-pen-to-square" label="Editar" tone="edit" onClick={() => openEdit(b)} />
+                              <ActionBtn icon="fa-trash" label="Eliminar" tone="delete" onClick={() => setDeleting(b)} />
+                            </ActionBar>
+                          </div>
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
           <PaginationControls
             currentPage={data.current_page}
             lastPage={data.last_page}
@@ -200,7 +225,7 @@ export default function BrandsPage() {
 
       {/* Crear / editar */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[38rem]">
           <form
             onSubmit={(e) => {
               e.preventDefault();

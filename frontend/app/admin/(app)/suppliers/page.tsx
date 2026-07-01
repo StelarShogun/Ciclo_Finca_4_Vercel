@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
-import { Pencil, Plus, Search, Star, Trash2 } from "lucide-react";
+import { Plus, Search, Star } from "lucide-react";
 
 import {
   createSupplier,
@@ -15,6 +15,9 @@ import {
   type SupplierFormValues,
 } from "@/lib/api/admin/suppliers";
 import { PageHeader } from "@/components/admin/page-header";
+import { AdminCard } from "@/components/admin/admin-card";
+import { ActionBar, ActionBtn } from "@/components/admin/action-btn";
+import { useViewMode, ViewToggle } from "@/components/admin/view-toggle";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -75,6 +78,7 @@ export default function SuppliersPage() {
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [form, setForm] = useState<SupplierFormValues>(EMPTY);
   const [deleting, setDeleting] = useState<Supplier | null>(null);
+  const [view, setView] = useViewMode("suppliers");
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 350);
@@ -159,6 +163,9 @@ export default function SuppliersPage() {
             }}
           />
         </div>
+        <div className="ml-auto">
+          <ViewToggle view={view} onChange={setView} />
+        </div>
       </div>
 
       {isLoading ? (
@@ -169,31 +176,74 @@ export default function SuppliersPage() {
             No fue posible cargar los proveedores.
           </CardContent>
         </Card>
+      ) : data.suppliers.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">Sin proveedores.</CardContent>
+        </Card>
       ) : (
         <>
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Contacto</TableHead>
-                    <TableHead>Teléfono</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead className="text-center">Entrega</TableHead>
-                    <TableHead className="text-center">Rating</TableHead>
-                    <TableHead className="w-24 text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.suppliers.length === 0 ? (
+          {view === "grid" ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {data.suppliers.map((s) => (
+                <AdminCard
+                  key={s.supplier_id}
+                  media={
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-[#235347] dark:text-[#8EB69B]">
+                      <i className="fas fa-truck-field" aria-hidden />
+                    </div>
+                  }
+                  title={s.name}
+                  subtitle={s.primary_contact}
+                  badge={
+                    s.rating !== null ? (
+                      <span className="inline-flex items-center gap-1 text-sm">
+                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                        {s.rating.toFixed(1)}
+                      </span>
+                    ) : undefined
+                  }
+                  meta={
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Teléfono</span>
+                        <span>{s.phone}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Email</span>
+                        <span className="truncate">{s.email}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Entrega</span>
+                        <span>{s.delivery_time} d</span>
+                      </div>
+                    </>
+                  }
+                  actions={
+                    <ActionBar>
+                      <ActionBtn icon="fa-pen-to-square" label="Editar" tone="edit" onClick={() => openEdit(s)} />
+                      <ActionBtn icon="fa-trash" label="Eliminar" tone="delete" onClick={() => setDeleting(s)} />
+                    </ActionBar>
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
-                        Sin proveedores.
-                      </TableCell>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Contacto</TableHead>
+                      <TableHead>Teléfono</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead className="text-center">Entrega</TableHead>
+                      <TableHead className="text-center">Rating</TableHead>
+                      <TableHead className="w-24 text-right">Acciones</TableHead>
                     </TableRow>
-                  ) : (
-                    data.suppliers.map((s) => (
+                  </TableHeader>
+                  <TableBody>
+                    {data.suppliers.map((s) => (
                       <TableRow key={s.supplier_id}>
                         <TableCell className="font-medium">{s.name}</TableCell>
                         <TableCell>{s.primary_contact}</TableCell>
@@ -208,21 +258,21 @@ export default function SuppliersPage() {
                             </span>
                           ) : "—"}
                         </TableCell>
-                        <TableCell className="text-right">
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Editar" onClick={() => openEdit(s)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" title="Eliminar" onClick={() => setDeleting(s)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <TableCell>
+                          <div className="flex justify-end">
+                            <ActionBar>
+                              <ActionBtn icon="fa-pen-to-square" label="Editar" tone="edit" onClick={() => openEdit(s)} />
+                              <ActionBtn icon="fa-trash" label="Eliminar" tone="delete" onClick={() => setDeleting(s)} />
+                            </ActionBar>
+                          </div>
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
           <PaginationControls
             currentPage={data.pagination.currentPage}
             lastPage={data.pagination.lastPage}
@@ -234,7 +284,7 @@ export default function SuppliersPage() {
 
       {/* Crear / editar */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-h-[90vh] sm:max-w-[56rem] overflow-y-auto">
           <form
             onSubmit={(e) => {
               e.preventDefault();

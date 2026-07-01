@@ -169,7 +169,7 @@ export function CatalogManager({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="sm:max-w-[38rem]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {inValues && (

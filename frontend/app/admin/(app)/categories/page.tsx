@@ -13,6 +13,8 @@ import {
   type ParentOption,
 } from "@/lib/api/admin/categories";
 import { PageHeader } from "@/components/admin/page-header";
+import { AdminCard } from "@/components/admin/admin-card";
+import { useViewMode, ViewToggle } from "@/components/admin/view-toggle";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
@@ -60,6 +62,7 @@ export default function CategoriesPage() {
   });
 
   const [page, setPage] = useState(1);
+  const [view, setView] = useViewMode("categories");
   const PER_PAGE = 15;
 
   const [parentOpen, setParentOpen] = useState(false);
@@ -126,25 +129,46 @@ export default function CategoriesPage() {
         </Card>
       ) : (
         <>
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Categoría padre</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.hierarchy.length === 0 ? (
+        <div className="mb-4 flex justify-end">
+          <ViewToggle view={view} onChange={setView} />
+        </div>
+        {data.hierarchy.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center text-sm text-muted-foreground">Sin categorías.</CardContent>
+          </Card>
+        ) : view === "grid" ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {data.hierarchy.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((row) => (
+              <AdminCard
+                key={row.category_id}
+                media={
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-[#235347] dark:text-[#8EB69B]">
+                    <i className={`fas ${row.is_parent ? "fa-folder" : "fa-folder-tree"}`} aria-hidden />
+                  </div>
+                }
+                title={row.name}
+                subtitle={row.parent_name ? `En ${row.parent_name}` : undefined}
+                badge={
+                  <StatusBadge tone={row.is_parent ? "success" : "neutral"}>
+                    {row.is_parent ? "Categoría" : "Subcategoría"}
+                  </StatusBadge>
+                }
+              />
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={3} className="py-8 text-center text-sm text-muted-foreground">
-                      Sin categorías.
-                    </TableCell>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Categoría padre</TableHead>
                   </TableRow>
-                ) : (
-                  data.hierarchy.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((row) => (
+                </TableHeader>
+                <TableBody>
+                  {data.hierarchy.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((row) => (
                     <TableRow key={row.category_id}>
                       <TableCell className={row.is_parent ? "font-medium" : "pl-8"}>
                         {row.name}
@@ -158,12 +182,12 @@ export default function CategoriesPage() {
                         {row.parent_name ?? "—"}
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
           </Card>
+        )}
           <PaginationControls
             currentPage={page}
             lastPage={Math.max(1, Math.ceil(data.hierarchy.length / PER_PAGE))}
@@ -175,7 +199,7 @@ export default function CategoriesPage() {
 
       {/* Nueva categoría padre */}
       <Dialog open={parentOpen} onOpenChange={setParentOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[38rem]">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -209,7 +233,7 @@ export default function CategoriesPage() {
 
       {/* Nueva subcategoría */}
       <Dialog open={subOpen} onOpenChange={setSubOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[38rem]">
           <form
             onSubmit={(e) => {
               e.preventDefault();
