@@ -8,6 +8,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 
 import { getCatalog } from "@/lib/api/client/catalog";
 import { ProductCard } from "@/components/storefront/product-card";
+import { CategoryRail } from "@/components/storefront/category-rail";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 
 const ALL = "all";
 
@@ -73,51 +73,11 @@ function CatalogInner() {
         )}
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-        {/* Sidebar */}
-        <aside className="space-y-6">
-          <Card>
-            <CardContent className="p-4">
-              <h2 className="mb-3 text-sm font-semibold">Categorías</h2>
-              <ul className="space-y-0.5 text-sm">
-                <li>
-                  <Link href="/catalog" className={cn("block rounded px-2 py-1.5 hover:bg-accent", !categoryId && "bg-accent font-medium text-[#235347] dark:text-[#8EB69B]")}>
-                    Todos los productos
-                  </Link>
-                </li>
-                {(data?.categories ?? []).map((c) => {
-                  const childActive = c.children.some((ch) => String(ch.id) === categoryId);
-                  const parentActive = String(c.id) === categoryId;
-                  const expanded = parentActive || childActive;
-                  return (
-                    <li key={c.id}>
-                      <Link
-                        href={`/catalog?category_id=${c.id}`}
-                        className={cn("block rounded px-2 py-1.5 hover:bg-accent", parentActive && "bg-accent font-medium text-[#235347] dark:text-[#8EB69B]")}
-                      >
-                        {c.name}
-                      </Link>
-                      {c.children.length > 0 && expanded && (
-                        <ul className="mb-1 ml-3 mt-0.5 space-y-0.5 border-l pl-2">
-                          {c.children.map((ch) => (
-                            <li key={ch.id}>
-                              <Link
-                                href={`/catalog?category_id=${ch.id}`}
-                                className={cn("block rounded px-2 py-1 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground", String(ch.id) === categoryId && "font-medium text-[#235347] dark:text-[#8EB69B]")}
-                              >
-                                {ch.name}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </CardContent>
-          </Card>
+      <div className="flex flex-col gap-6 lg:flex-row">
+        <CategoryRail categories={data?.categories ?? []} activeCategoryId={categoryId} />
 
+        {/* Filtros */}
+        <aside className="w-full shrink-0 space-y-6 lg:w-60">
           <Card>
             <CardContent className="space-y-4 p-4">
               <h2 className="flex items-center gap-2 text-sm font-semibold"><SlidersHorizontal className="h-4 w-4" /> Refinar búsqueda</h2>
@@ -149,7 +109,7 @@ function CatalogInner() {
         </aside>
 
         {/* Main */}
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             {hasFilters && (
               <Button asChild size="sm" variant="ghost" className="text-muted-foreground">
