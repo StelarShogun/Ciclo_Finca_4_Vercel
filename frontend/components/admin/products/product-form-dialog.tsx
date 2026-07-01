@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getProduct, type ProductFormValues } from "@/lib/api/admin/products";
+import { getProduct, mediaUrl, type ProductFormValues } from "@/lib/api/admin/products";
 import { ProductForm } from "@/components/admin/products/product-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -54,9 +54,12 @@ export function ProductFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Editar producto" : "Nuevo producto"}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <i className={`fas ${isEdit ? "fa-pen-to-square" : "fa-box"} text-[#235347] dark:text-[#8EB69B]`} aria-hidden />
+            {isEdit ? "Editar producto" : "Nuevo producto"}
+          </DialogTitle>
           <DialogDescription>Datos básicos, precios y stock. Galería, variantes y clasificaciones se editan desde el detalle.</DialogDescription>
         </DialogHeader>
         {isEdit && isLoading ? (
@@ -67,6 +70,7 @@ export function ProductFormDialog({
           <ProductForm
             productId={isEdit ? (productId as number) : undefined}
             defaultValues={isEdit && data ? toDefaults(data) : undefined}
+            currentImageUrl={isEdit && data ? mediaUrl((data.media_main as string | null) ?? null) : null}
             onSuccess={done}
           />
         )}

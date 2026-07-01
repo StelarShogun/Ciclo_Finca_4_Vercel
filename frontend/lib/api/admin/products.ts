@@ -132,13 +132,40 @@ export function mediaUrl(path: string | null | undefined): string | null {
   return `${process.env.NEXT_PUBLIC_API_URL ?? ""}${path}`;
 }
 
-export async function createProduct(payload: ProductFormValues) {
-  const { data } = await api.post("/api/v1/admin/products", payload);
+export type ProductImages = { image?: File | null; images?: File[] };
+
+/** Arma FormData cuando hay imágenes; el backend acepta image/images[]. */
+function productFormData(payload: ProductFormValues, imgs?: ProductImages): FormData {
+  const fd = new FormData();
+  Object.entries(payload).forEach(([k, v]) => {
+    if (v === undefined || v === null) return;
+    fd.append(k, typeof v === "boolean" ? (v ? "1" : "0") : String(v));
+  });
+  if (imgs?.image) fd.append("image", imgs.image);
+  (imgs?.images ?? []).forEach((f) => fd.append("images[]", f));
+  return fd;
+}
+
+export async function createProduct(payload: ProductFormValues, imgs?: ProductImages) {
+  const hasFiles = !!imgs?.image || (imgs?.images?.length ?? 0) > 0;
+  if (!hasFiles) {
+    const { data } = await api.post("/api/v1/admin/products", payload);
+    return data;
+  }
+  const { data } = await api.post("/api/v1/admin/products", productFormData(payload, imgs));
   return data;
 }
 
-export async function updateProduct(id: number | string, payload: ProductFormValues) {
-  const { data } = await api.put(`/api/v1/admin/products/${id}`, payload);
+export async function updateProduct(id: number | string, payload: ProductFormValues, imgs?: ProductImages) {
+  const hasFiles = !!imgs?.image || (imgs?.images?.length ?? 0) > 0;
+  if (!hasFiles) {
+    const { data } = await api.put(`/api/v1/admin/products/${id}`, payload);
+    return data;
+  }
+  // Laravel: PUT con archivos requiere method spoofing sobre POST.
+  const fd = productFormData(payload, imgs);
+  fd.append("_method", "PUT");
+  const { data } = await api.post(`/api/v1/admin/products/${id}`, fd);
   return data;
 }
 

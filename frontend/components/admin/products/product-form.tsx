@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,12 +16,13 @@ import {
   type ProductFormValues,
 } from "@/lib/api/admin/products";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CollapsibleSection } from "@/components/admin/collapsible-section";
+import { FileUpload } from "@/components/admin/file-upload";
 import {
   Select,
   SelectContent,
@@ -62,14 +64,18 @@ function FieldError({ msg }: { msg?: string }) {
 export function ProductForm({
   productId,
   defaultValues,
+  currentImageUrl,
   onSuccess,
 }: {
   productId?: number | string;
   defaultValues?: Partial<ProductFormValues>;
+  currentImageUrl?: string | null;
   onSuccess?: () => void;
 }) {
   const router = useRouter();
   const isEdit = productId !== undefined;
+  const [mainImage, setMainImage] = useState<File | null>(null);
+  const [gallery, setGallery] = useState<File[]>([]);
 
   const { data: options, isLoading } = useQuery({
     queryKey: ["product-form-options"],
@@ -85,19 +91,17 @@ export function ProductForm({
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as Resolver<FormValues>,
-    defaultValues: {
-      status: "active",
-      is_featured: false,
-      ...defaultValues,
-    } as FormValues,
+    defaultValues: { status: "active", is_featured: false, ...defaultValues } as FormValues,
   });
 
   const parentId = watch("parent_category_id");
   const subcategories = options?.subcategoriesByParent[String(parentId)] ?? [];
 
   const mutation = useMutation({
-    mutationFn: (values: ProductFormValues) =>
-      isEdit ? updateProduct(productId, values) : createProduct(values),
+    mutationFn: (values: ProductFormValues) => {
+      const imgs = { image: mainImage, images: gallery };
+      return isEdit ? updateProduct(productId, values, imgs) : createProduct(values, imgs);
+    },
     onSuccess: () => {
       toast.success(isEdit ? "Producto actualizado" : "Producto creado");
       if (onSuccess) onSuccess();
@@ -113,10 +117,7 @@ export function ProductForm({
         }
         return;
       }
-      toast.error(
-        (isAxiosError(error) && (error.response?.data?.message as string)) ||
-          "No fue posible guardar el producto.",
-      );
+      toast.error((isAxiosError(error) && (error.response?.data?.message as string)) || "No fue posible guardar el producto.");
     },
   });
 
@@ -125,170 +126,119 @@ export function ProductForm({
   }
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <form
-          className="grid gap-6 md:grid-cols-2"
-          onSubmit={handleSubmit((v) => mutation.mutate(v as ProductFormValues))}
-          noValidate
-        >
-          <div className="flex flex-col gap-2 md:col-span-2">
+    <form
+      id="product-form"
+      className="space-y-4"
+      onSubmit={handleSubmit((v) => mutation.mutate(v as ProductFormValues))}
+      noValidate
+    >
+      <CollapsibleSection title="Datos básicos" icon="fa-circle-info">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
             <Label htmlFor="name">Nombre</Label>
             <Input id="name" {...register("name")} aria-invalid={!!errors.name} />
             <FieldError msg={errors.name?.message} />
           </div>
-
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <Label>Categoría</Label>
-            <Controller
-              control={control}
-              name="parent_category_id"
-              render={({ field }) => (
-                <Select
-                  value={field.value ? String(field.value) : ""}
-                  onValueChange={(v) => field.onChange(Number(v))}
-                >
-                  <SelectTrigger><SelectValue placeholder="Elegí categoría" /></SelectTrigger>
-                  <SelectContent>
-                    {options.categories.map((c) => (
-                      <SelectItem key={c.category_id} value={String(c.category_id)}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
+            <Controller control={control} name="parent_category_id" render={({ field }) => (
+              <Select value={field.value ? String(field.value) : ""} onValueChange={(v) => field.onChange(Number(v))}>
+                <SelectTrigger><SelectValue placeholder="Elegí categoría" /></SelectTrigger>
+                <SelectContent>{options.categories.map((c) => <SelectItem key={c.category_id} value={String(c.category_id)}>{c.name}</SelectItem>)}</SelectContent>
+              </Select>
+            )} />
             <FieldError msg={errors.parent_category_id?.message} />
           </div>
-
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <Label>Subcategoría</Label>
-            <Controller
-              control={control}
-              name="category_id"
-              render={({ field }) => (
-                <Select
-                  value={field.value ? String(field.value) : ""}
-                  onValueChange={(v) => field.onChange(Number(v))}
-                  disabled={!parentId}
-                >
-                  <SelectTrigger><SelectValue placeholder={parentId ? "Elegí subcategoría" : "Elegí categoría primero"} /></SelectTrigger>
-                  <SelectContent>
-                    {subcategories.map((c) => (
-                      <SelectItem key={c.category_id} value={String(c.category_id)}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
+            <Controller control={control} name="category_id" render={({ field }) => (
+              <Select value={field.value ? String(field.value) : ""} onValueChange={(v) => field.onChange(Number(v))} disabled={!parentId}>
+                <SelectTrigger><SelectValue placeholder={parentId ? "Elegí subcategoría" : "Elegí categoría primero"} /></SelectTrigger>
+                <SelectContent>{subcategories.map((c) => <SelectItem key={c.category_id} value={String(c.category_id)}>{c.name}</SelectItem>)}</SelectContent>
+              </Select>
+            )} />
             <FieldError msg={errors.category_id?.message} />
           </div>
-
-          <div className="flex flex-col gap-2">
-            <Label>Marca</Label>
-            <Controller
-              control={control}
-              name="brand_id"
-              render={({ field }) => (
-                <Select value={field.value ? String(field.value) : ""} onValueChange={(v) => field.onChange(Number(v))}>
-                  <SelectTrigger><SelectValue placeholder="Elegí marca" /></SelectTrigger>
-                  <SelectContent>
-                    {options.brands.map((b) => (
-                      <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            <FieldError msg={errors.brand_id?.message} />
-          </div>
-
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <Label>Proveedor</Label>
-            <Controller
-              control={control}
-              name="supplier_id"
-              render={({ field }) => (
-                <Select value={field.value ? String(field.value) : ""} onValueChange={(v) => field.onChange(Number(v))}>
-                  <SelectTrigger><SelectValue placeholder="Elegí proveedor" /></SelectTrigger>
-                  <SelectContent>
-                    {options.suppliers.map((s) => (
-                      <SelectItem key={s.supplier_id} value={String(s.supplier_id)}>{s.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
+            <Controller control={control} name="supplier_id" render={({ field }) => (
+              <Select value={field.value ? String(field.value) : ""} onValueChange={(v) => field.onChange(Number(v))}>
+                <SelectTrigger><SelectValue placeholder="Elegí proveedor" /></SelectTrigger>
+                <SelectContent>{options.suppliers.map((s) => <SelectItem key={s.supplier_id} value={String(s.supplier_id)}>{s.name}</SelectItem>)}</SelectContent>
+              </Select>
+            )} />
             <FieldError msg={errors.supplier_id?.message} />
           </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Marca</Label>
+            <Controller control={control} name="brand_id" render={({ field }) => (
+              <Select value={field.value ? String(field.value) : ""} onValueChange={(v) => field.onChange(Number(v))}>
+                <SelectTrigger><SelectValue placeholder="Elegí marca" /></SelectTrigger>
+                <SelectContent>{options.brands.map((b) => <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>)}</SelectContent>
+              </Select>
+            )} />
+            <FieldError msg={errors.brand_id?.message} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Estado</Label>
+            <Controller control={control} name="status" render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{options.statuses.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+              </Select>
+            )} />
+          </div>
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <Label htmlFor="description">Descripción</Label>
+            <Textarea id="description" rows={3} {...register("description")} />
+          </div>
+          <div className="flex items-center gap-3 sm:col-span-2">
+            <Controller control={control} name="is_featured" render={({ field }) => (
+              <Switch id="is_featured" checked={field.value} onCheckedChange={field.onChange} />
+            )} />
+            <Label htmlFor="is_featured">Destacado en tienda</Label>
+          </div>
+        </div>
+      </CollapsibleSection>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="purchase_price">Precio de compra</Label>
+      <CollapsibleSection title="Precios y stock" icon="fa-coins">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="purchase_price">Precio de compra (₡)</Label>
             <Input id="purchase_price" type="number" step="0.01" {...register("purchase_price")} />
             <FieldError msg={errors.purchase_price?.message} />
           </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="sale_price">Precio de venta</Label>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="sale_price">Precio de venta (₡)</Label>
             <Input id="sale_price" type="number" step="0.01" {...register("sale_price")} aria-invalid={!!errors.sale_price} />
             <FieldError msg={errors.sale_price?.message} />
           </div>
-
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="stock_current">Stock actual</Label>
             <Input id="stock_current" type="number" {...register("stock_current")} aria-invalid={!!errors.stock_current} />
             <FieldError msg={errors.stock_current?.message} />
           </div>
-
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="stock_minimum">Stock mínimo</Label>
             <Input id="stock_minimum" type="number" {...register("stock_minimum")} />
             <FieldError msg={errors.stock_minimum?.message} />
           </div>
+        </div>
+      </CollapsibleSection>
 
-          <div className="flex flex-col gap-2">
-            <Label>Estado</Label>
-            <Controller
-              control={control}
-              name="status"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {options.statuses.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
+      <CollapsibleSection title="Imágenes" icon="fa-images" defaultOpen={false}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FileUpload label="Imagen principal" previewUrl={currentImageUrl} onChange={(files) => setMainImage(files[0] ?? null)} />
+          <FileUpload label="Galería (varias)" multiple hint="Arrastrá o elegí varias imágenes" onChange={setGallery} />
+        </div>
+      </CollapsibleSection>
 
-          <div className="flex flex-col gap-2 md:col-span-2">
-            <Label htmlFor="description">Descripción</Label>
-            <Textarea id="description" rows={3} {...register("description")} />
-          </div>
-
-          <div className="flex items-center gap-3 md:col-span-2">
-            <Controller
-              control={control}
-              name="is_featured"
-              render={({ field }) => (
-                <Switch id="is_featured" checked={field.value} onCheckedChange={field.onChange} />
-              )}
-            />
-            <Label htmlFor="is_featured">Producto destacado</Label>
-          </div>
-
-          <div className="flex gap-2 md:col-span-2">
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Guardando…" : isEdit ? "Guardar cambios" : "Crear producto"}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => router.push("/admin/products")}>
-              Cancelar
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="outline" onClick={() => (onSuccess ? onSuccess() : router.push("/admin/products"))}>Cancelar</Button>
+        <Button type="submit" disabled={mutation.isPending} className="bg-[#235347] hover:bg-[#1a3f37]">
+          {mutation.isPending ? "Guardando…" : isEdit ? "Guardar cambios" : "Crear producto"}
+        </Button>
+      </div>
+    </form>
   );
 }
