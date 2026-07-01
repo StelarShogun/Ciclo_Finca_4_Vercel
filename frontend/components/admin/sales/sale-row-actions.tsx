@@ -198,7 +198,10 @@ export function SaleRowActions({ sale }: { sale: SaleRow }) {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Venta {sale.invoice_number}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <i className="fas fa-receipt text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+              Venta {sale.invoice_number}
+            </DialogTitle>
             <DialogDescription>{sale.sale_date_label}</DialogDescription>
           </DialogHeader>
           {detail.isLoading ? (
@@ -277,7 +280,10 @@ export function SaleRowActions({ sale }: { sale: SaleRow }) {
             }}
           >
             <DialogHeader>
-              <DialogTitle>{reasonAction && reasonCopy[reasonAction].title}</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <i className="fas fa-triangle-exclamation text-[#d32f2f] dark:text-[#F87171]" aria-hidden />
+                {reasonAction && reasonCopy[reasonAction].title}
+              </DialogTitle>
               <DialogDescription>{reasonAction && reasonCopy[reasonAction].desc}</DialogDescription>
             </DialogHeader>
             <div className="space-y-1.5 py-4">

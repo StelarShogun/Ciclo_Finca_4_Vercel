@@ -131,7 +131,10 @@ export default function OrdersPage() {
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Encargo {detail?.invoice_number ?? ""}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <i className="fas fa-clipboard-list text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+              Encargo {detail?.invoice_number ?? ""}
+            </DialogTitle>
             <DialogDescription>{detail?.sale_date_label}</DialogDescription>
           </DialogHeader>
           {detail && (
@@ -156,7 +159,10 @@ export default function OrdersPage() {
         <DialogContent>
           <form onSubmit={(e) => { e.preventDefault(); if (reason.trim().length >= 3) cancel.mutate(); }}>
             <DialogHeader>
-              <DialogTitle>Rechazar encargo</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <i className="fas fa-triangle-exclamation text-[#d32f2f] dark:text-[#F87171]" aria-hidden />
+                Rechazar encargo
+              </DialogTitle>
               <DialogDescription>Libera el stock reservado. Indicá el motivo.</DialogDescription>
             </DialogHeader>
             <div className="space-y-1.5 py-4">

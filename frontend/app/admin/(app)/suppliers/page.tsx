@@ -242,7 +242,10 @@ export default function SuppliersPage() {
             }}
           >
             <DialogHeader>
-              <DialogTitle>{editing ? "Editar proveedor" : "Nuevo proveedor"}</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <i className={`fas ${editing ? "fa-pen-to-square" : "fa-truck-field"} text-[#235347] dark:text-[#8EB69B]`} aria-hidden />
+                {editing ? "Editar proveedor" : "Nuevo proveedor"}
+              </DialogTitle>
               <DialogDescription>Datos de contacto y entrega.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4 sm:grid-cols-2">

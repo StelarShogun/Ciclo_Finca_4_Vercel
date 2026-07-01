@@ -103,7 +103,10 @@ export function ProductVariants({
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Agregar variante</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <i className="fas fa-layer-group text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+                Agregar variante
+              </DialogTitle>
             </DialogHeader>
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />

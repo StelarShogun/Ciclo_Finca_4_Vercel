@@ -79,7 +79,10 @@ export function StockAdjust({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{product?.name}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <i className="fas fa-boxes-stacked text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+            {product?.name}
+          </DialogTitle>
           <DialogDescription>
             {product?.sku} · stock actual {product?.stock}
           </DialogDescription>

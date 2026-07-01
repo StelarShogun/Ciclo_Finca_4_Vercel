@@ -183,7 +183,10 @@ export default function CategoriesPage() {
             }}
           >
             <DialogHeader>
-              <DialogTitle>Nueva categoría</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <i className="fas fa-folder-plus text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+                Nueva categoría
+              </DialogTitle>
               <DialogDescription>Categoría raíz del catálogo.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -214,7 +217,10 @@ export default function CategoriesPage() {
             }}
           >
             <DialogHeader>
-              <DialogTitle>Nueva subcategoría</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <i className="fas fa-folder-tree text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+                Nueva subcategoría
+              </DialogTitle>
               <DialogDescription>Cuelga de una categoría existente.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">

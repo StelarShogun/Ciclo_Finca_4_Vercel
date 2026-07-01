@@ -123,7 +123,10 @@ export function NewSaleDialog({ open, onClose }: { open: boolean; onClose: () =>
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nueva venta</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <i className="fas fa-cash-register text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+            Nueva venta
+          </DialogTitle>
           <DialogDescription>Registrá una venta de mostrador.</DialogDescription>
         </DialogHeader>
 

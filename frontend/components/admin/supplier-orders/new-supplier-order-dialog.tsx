@@ -68,7 +68,10 @@ export function NewSupplierOrderDialog({ open, onClose }: { open: boolean; onClo
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nuevo pedido a proveedor</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <i className="fas fa-truck-ramp-box text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+            Nuevo pedido a proveedor
+          </DialogTitle>
           <DialogDescription>Pedido de reabastecimiento en borrador.</DialogDescription>
         </DialogHeader>
 
