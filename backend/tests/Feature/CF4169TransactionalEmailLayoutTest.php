@@ -29,6 +29,7 @@ class CF4169TransactionalEmailLayoutTest extends TestCase
     {
         parent::setUp();
         Config::set('mail.default', 'array');
+        Config::set('mail.from.address', 'cicloecommerce0@gmail.com');
         Config::set('app.url', 'https://cf4.example.test');
         Config::set('app.frontend_url', 'https://cf4.example.test');
     }
@@ -154,6 +155,8 @@ class CF4169TransactionalEmailLayoutTest extends TestCase
         $this->assertStringContainsString('CICLO', $html);
         $this->assertStringContainsString('FINCA', $html);
         $this->assertStringContainsString('Contacto Ciclo Finca 4', $html);
+        $this->assertStringContainsString('cicloecommerce0@gmail.com', $html);
+        $this->assertStringNotContainsString('ciclo.finca4@gmail.com', $html);
         $this->assertStringNotContainsString('<img', $html);
         $this->assertStringContainsString('max-width:620px', $html);
     }
