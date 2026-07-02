@@ -34,7 +34,7 @@ export default function ProductDetailPage() {
   });
 
   const fav = useMutation({
-    mutationFn: () => toggleFavorite(Number(id)),
+    mutationFn: () => toggleFavorite(String(id)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product-detail", id] });
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
@@ -61,7 +61,7 @@ export default function ProductDetailPage() {
   });
 
   const add = useMutation({
-    mutationFn: () => addToCart(Number(id), qty),
+    mutationFn: () => addToCart(String(id), qty),
     onSuccess: () => {
       toast.success("Agregado al carrito");
       queryClient.invalidateQueries({ queryKey: ["cart"] });

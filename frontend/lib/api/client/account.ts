@@ -3,7 +3,7 @@ import { api } from "@/lib/api/client";
 // --- Favoritos ---
 
 export type FavoriteItem = {
-  product_id: number;
+  product_id: string; // ID público (ULID)
   name: string;
   category: string;
   price: number;
@@ -25,7 +25,7 @@ export async function getFavorites(page = 1): Promise<FavoritesResponse> {
   return data.data as FavoritesResponse;
 }
 
-export async function toggleFavorite(productId: number) {
+export async function toggleFavorite(productId: string) {
   const { data } = await api.post("/api/v1/favorites/toggle", { product_id: productId });
   return data;
 }
@@ -33,7 +33,7 @@ export async function toggleFavorite(productId: number) {
 // --- Facturas ---
 
 export type InvoiceRow = {
-  id: number;
+  id: string; // ID público (ULID) de la venta
   invoiceNumber: string | null;
   saleDateLabel: string;
   statusLabel: string;
@@ -55,7 +55,7 @@ export async function getInvoices(tab = "facturas", page = 1): Promise<InvoicesI
 }
 
 export type InvoiceLineItem = {
-  productId: number;
+  productId: string; // ID público (ULID)
   name: string;
   quantity: number;
   unitPriceFormatted: string;
@@ -86,7 +86,7 @@ export type InvoiceDetail = {
   printUrl: string;
 };
 
-export async function getInvoice(id: number | string): Promise<InvoiceDetail> {
+export async function getInvoice(id: string): Promise<InvoiceDetail> {
   const { data } = await api.get(`/api/v1/invoices/${id}`);
   return data.data as InvoiceDetail;
 }

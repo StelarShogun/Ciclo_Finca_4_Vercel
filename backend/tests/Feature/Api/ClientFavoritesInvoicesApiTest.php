@@ -67,7 +67,7 @@ class ClientFavoritesInvoicesApiTest extends TestCase
         $product = $this->product();
         $this->actingAs($client, 'clients');
 
-        $this->postJson('/api/v1/favorites/toggle', ['product_id' => $product->product_id])->assertOk();
+        $this->postJson('/api/v1/favorites/toggle', ['product_id' => $product->public_id])->assertOk();
         $this->assertDatabaseHas('favorite_products', ['user_id' => $client->user_id, 'product_id' => $product->product_id]);
 
         $this->getJson('/api/v1/favorites')
@@ -89,7 +89,7 @@ class ClientFavoritesInvoicesApiTest extends TestCase
             ->assertOk()
             ->assertJsonStructure(['data' => ['orders', 'pagination', 'tab']]);
 
-        $this->getJson("/api/v1/invoices/{$sale->sale_id}")
+        $this->getJson("/api/v1/invoices/{$sale->public_id}")
             ->assertOk()
             ->assertJsonStructure(['data' => ['items', 'totals', 'invoiceNumber']]);
     }
@@ -102,6 +102,6 @@ class ClientFavoritesInvoicesApiTest extends TestCase
         $intruder = $this->client('intruder@gmail.com');
         $this->actingAs($intruder, 'clients');
 
-        $this->getJson("/api/v1/invoices/{$sale->sale_id}")->assertStatus(404);
+        $this->getJson("/api/v1/invoices/{$sale->public_id}")->assertStatus(404);
     }
 }

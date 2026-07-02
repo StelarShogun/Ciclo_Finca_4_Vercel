@@ -7,6 +7,7 @@ use App\Support\GdImage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Concerns\HasPublicId;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -28,7 +29,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 // Product model with media support and inventory-related helpers.
 class Product extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, HasPublicId, InteractsWithMedia;
 
     protected $table = 'products';
 

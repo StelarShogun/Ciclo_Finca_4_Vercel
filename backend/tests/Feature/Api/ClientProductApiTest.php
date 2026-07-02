@@ -45,7 +45,7 @@ class ClientProductApiTest extends TestCase
     {
         $product = $this->product();
 
-        $this->getJson("/api/v1/products/{$product->product_id}")
+        $this->getJson("/api/v1/products/{$product->public_id}")
             ->assertOk()
             ->assertJsonStructure(['data' => ['product' => ['id', 'name', 'priceFormatted', 'carouselSlides', 'canBuy'], 'specs', 'reviews', 'relatedProducts', 'taxonomy']])
             ->assertJsonPath('data.product.id', (int) $product->product_id)
@@ -55,12 +55,13 @@ class ClientProductApiTest extends TestCase
     public function test_missing_product_returns_404(): void
     {
         $this->getJson('/api/v1/products/999999')->assertStatus(404);
+        $this->getJson('/api/v1/products/01JZZZZZZZZZZZZZZZZZZZZZZZ')->assertStatus(404);
     }
 
     public function test_review_requires_auth(): void
     {
         $product = $this->product();
-        $this->postJson("/api/v1/products/{$product->product_id}/reviews", ['stars' => 5])->assertStatus(401);
+        $this->postJson("/api/v1/products/{$product->public_id}/reviews", ['stars' => 5])->assertStatus(401);
     }
 
     public function test_review_blocked_without_purchase(): void
@@ -73,7 +74,7 @@ class ClientProductApiTest extends TestCase
         ]);
         $this->actingAs($client, 'clients');
 
-        $this->postJson("/api/v1/products/{$product->product_id}/reviews", ['stars' => 4])
+        $this->postJson("/api/v1/products/{$product->public_id}/reviews", ['stars' => 4])
             ->assertStatus(403);
     }
 
@@ -96,7 +97,7 @@ class ClientProductApiTest extends TestCase
         ]);
         $this->actingAs($client, 'clients');
 
-        $this->postJson("/api/v1/products/{$product->product_id}/reviews", ['stars' => 5])
+        $this->postJson("/api/v1/products/{$product->public_id}/reviews", ['stars' => 5])
             ->assertOk()->assertJsonPath('success', true);
 
         $this->assertDatabaseHas('product_reviews', [

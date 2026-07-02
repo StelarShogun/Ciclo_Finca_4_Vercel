@@ -30,7 +30,7 @@ export function FavoritesDrawerProvider({ children }: { children: React.ReactNod
   });
 
   const remove = useMutation({
-    mutationFn: (id: number) => toggleFavorite(id),
+    mutationFn: (id: string) => toggleFavorite(id),
     onSuccess: () => {
       toast.success("Quitado de favoritos");
       queryClient.invalidateQueries({ queryKey: ["favorites"] });

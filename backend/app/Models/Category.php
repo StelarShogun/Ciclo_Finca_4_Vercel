@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,6 +15,8 @@ use Illuminate\Support\Collection;
  */
 class Category extends Model
 {
+    use HasPublicId;
+
     protected $table = 'categories';
 
     protected $primaryKey = 'category_id';

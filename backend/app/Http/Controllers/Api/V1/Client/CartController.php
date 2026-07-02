@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Client\Cart\AddToCartRequest;
 use App\Http\Requests\Client\Cart\CheckoutCartRequest;
 use App\Http\Requests\Client\Cart\UpdateCartItemRequest;
+use App\Services\Api\PublicIdMapper;
 use App\Services\Client\Cart\CheckoutService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,9 +22,9 @@ use Illuminate\Http\Request;
  */
 final class CartController extends Controller
 {
-    public function index(Request $request, BuildCartPagePayload $action): JsonResponse
+    public function index(Request $request, BuildCartPagePayload $action, PublicIdMapper $publicIds): JsonResponse
     {
-        return response()->json(['data' => $action->handle($request)]);
+        return response()->json(['data' => $publicIds->map('cart', $action->handle($request))]);
     }
 
     public function add(AddToCartRequest $request, AddProductToCart $action): JsonResponse
@@ -36,9 +37,15 @@ final class CartController extends Controller
         return $action->handle($request->validated())->toJsonResponse();
     }
 
-    public function remove(int $id, RemoveCartItem $action): JsonResponse
+    public function remove(string $id, RemoveCartItem $action, PublicIdMapper $publicIds): JsonResponse
     {
-        return $action->handle($id)->toJsonResponse();
+        // Solo ID público; un numérico interno o desconocido => 404.
+        $internal = $publicIds->internalId('product', $id);
+        if ($internal === null) {
+            return response()->json(['message' => 'Producto no encontrado.'], 404);
+        }
+
+        return $action->handle($internal)->toJsonResponse();
     }
 
     public function clear(ClearCart $action): JsonResponse

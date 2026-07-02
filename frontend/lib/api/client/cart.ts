@@ -1,7 +1,7 @@
 import { api } from "@/lib/api/client";
 
 export type CartItem = {
-  productId: number;
+  productId: string; // ID público (ULID)
   name: string;
   productUrl: string;
   unitPrice: number;
@@ -31,17 +31,17 @@ export async function getCart(): Promise<Cart> {
   return data.data as Cart;
 }
 
-export async function addToCart(productId: number, quantity: number) {
+export async function addToCart(productId: string, quantity: number) {
   const { data } = await api.post("/api/v1/cart/add", { product_id: productId, quantity });
   return data;
 }
 
-export async function updateCartItem(productId: number, quantity: number) {
+export async function updateCartItem(productId: string, quantity: number) {
   const { data } = await api.put("/api/v1/cart/update", { product_id: productId, quantity });
   return data;
 }
 
-export async function removeCartItem(productId: number) {
+export async function removeCartItem(productId: string) {
   const { data } = await api.delete(`/api/v1/cart/remove/${productId}`);
   return data;
 }

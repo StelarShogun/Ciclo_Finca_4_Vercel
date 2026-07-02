@@ -7,6 +7,7 @@ use App\Actions\Client\Favorites\ToggleFavoriteProduct;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Client\Favorites\ToggleFavoriteRequest;
 use App\Models\FavoriteProduct;
+use App\Services\Api\PublicIdMapper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,17 +19,17 @@ use Illuminate\Support\Facades\Gate;
  */
 final class FavoriteController extends Controller
 {
-    public function index(Request $request, ListFavoriteProducts $favorites): JsonResponse
+    public function index(Request $request, ListFavoriteProducts $favorites, PublicIdMapper $publicIds): JsonResponse
     {
         $client = Auth::guard('clients')->user();
         Gate::forUser($client)->authorize('viewAny', FavoriteProduct::class);
 
         $payload = $favorites->handle((int) $client->user_id, $request);
 
-        return response()->json(['data' => [
+        return response()->json(['data' => $publicIds->map('favorites', [
             'favorites' => $payload['favorites'],
             'pagination' => $payload['json_pagination'],
-        ]]);
+        ])]);
     }
 
     public function toggle(ToggleFavoriteRequest $request, ToggleFavoriteProduct $toggle): JsonResponse

@@ -6,6 +6,7 @@ use App\Actions\Client\Invoices\BuildInvoiceShowPage;
 use App\Actions\Client\Invoices\BuildInvoicesIndexPage;
 use App\Http\Controllers\Controller;
 use App\Models\Sale;
+use App\Services\Api\PublicIdMapper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,18 +19,18 @@ use Illuminate\Support\Facades\Gate;
  */
 final class InvoiceController extends Controller
 {
-    public function index(Request $request, BuildInvoicesIndexPage $page): JsonResponse
+    public function index(Request $request, BuildInvoicesIndexPage $page, PublicIdMapper $publicIds): JsonResponse
     {
-        return response()->json(['data' => $page->props($request)]);
+        return response()->json(['data' => $publicIds->map('invoices', $page->props($request))]);
     }
 
-    public function show(Sale $sale, BuildInvoiceShowPage $page): JsonResponse
+    public function show(Sale $sale, BuildInvoiceShowPage $page, PublicIdMapper $publicIds): JsonResponse
     {
         $client = Auth::guard('clients')->user();
         if (! Gate::forUser($client)->allows('invoices.view', $sale)) {
             return response()->json(['message' => 'Factura no encontrada.'], 404);
         }
 
-        return response()->json(['data' => $page->props($sale, $client)]);
+        return response()->json(['data' => $publicIds->map('invoiceDetail', $page->props($sale, $client))]);
     }
 }

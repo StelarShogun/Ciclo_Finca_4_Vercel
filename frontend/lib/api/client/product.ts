@@ -7,7 +7,7 @@ export type CarouselSlide = {
 };
 
 export type ProductDetailProduct = {
-  id: number;
+  id: string; // ID público (ULID)
   name: string;
   slug: string;
   sku: string | null;
@@ -38,7 +38,7 @@ export type ReviewRow = {
 };
 
 export type RelatedProduct = {
-  id: number;
+  id: string;
   name: string;
   url: string;
   sku: string | null;
@@ -50,10 +50,10 @@ export type RelatedProduct = {
 export type ProductDetail = {
   product: ProductDetailProduct;
   taxonomy: {
-    parentCategory: { id: number; name: string } | null;
-    subcategory: { id: number; name: string } | null;
+    parentCategory: { id: string; name: string } | null;
+    subcategory: { id: string; name: string } | null;
   };
-  primaryBrand: { id: number; name: string } | null;
+  primaryBrand: { id: string; name: string } | null;
   isNoveltyProduct: boolean;
   orderReservationHours: number;
   specs: ProductSpec[];
@@ -68,12 +68,15 @@ export type ProductDetail = {
   relatedProducts: RelatedProduct[];
 };
 
-export async function getProductDetail(id: number | string): Promise<ProductDetail> {
+export async function getProductDetail(id: string): Promise<ProductDetail> {
   const { data } = await api.get(`/api/v1/products/${id}`);
-  return data.data as ProductDetail;
+  const detail = data.data as ProductDetail;
+  // Sin reseñas el backend manda null; el tipo promete number.
+  detail.reviews.averageStars = Number(detail.reviews.averageStars ?? 0);
+  return detail;
 }
 
-export async function saveReview(productId: number | string, stars: number) {
+export async function saveReview(productId: string, stars: number) {
   const { data } = await api.post(`/api/v1/products/${productId}/reviews`, { stars });
   return data;
 }

@@ -65,8 +65,8 @@ function CatalogInner() {
     queryFn: () =>
       getCatalog({
         search,
-        category_id: categoryId ? Number(categoryId) : undefined,
-        brand_id: brand === ALL ? undefined : Number(brand),
+        category_id: categoryId ?? undefined,
+        brand_id: brand === ALL ? undefined : brand,
         min_price: appliedMin || undefined,
         max_price: appliedMax || undefined,
         sort: sortField,

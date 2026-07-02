@@ -39,7 +39,8 @@ use Illuminate\Support\Facades\Route;
 | Actions/Services existentes.
 */
 
-Route::prefix('v1')->group(function (): void {
+// throttle general anti-scraping/abuso; las rutas de auth traen límites más estrictos propios.
+Route::prefix('v1')->middleware('throttle:120,1')->group(function (): void {
     // --- Autenticación ---
     Route::prefix('auth')->group(function (): void {
         // Cliente
@@ -176,21 +177,20 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/catalog', [ClientCatalogController::class, 'index']);
     Route::get('/catalog/heartbeat', [ClientCatalogController::class, 'heartbeat']);
     Route::get('/catalog/suggestions', [ClientCatalogController::class, 'suggestions']);
-    Route::get('/products/{product}', [ClientProductController::class, 'show'])->whereNumber('product');
-
-    // Carrito (invitado por sesión o cliente por DB; CartManager decide)
-    Route::get('/cart', [ClientCartController::class, 'index']);
-    Route::post('/cart/add', [ClientCartController::class, 'add']);
-    Route::put('/cart/update', [ClientCartController::class, 'update']);
-    Route::delete('/cart/remove/{id}', [ClientCartController::class, 'remove'])->whereNumber('id');
-    Route::delete('/cart/clear', [ClientCartController::class, 'clear']);
+    Route::get('/products/{publicId}', [ClientProductController::class, 'show']);
 
     // --- Cliente autenticado ---
     Route::middleware('auth:clients')->group(function (): void {
+        // Carrito: requiere sesión de cliente, como en la app vieja.
+        Route::get('/cart', [ClientCartController::class, 'index']);
+        Route::post('/cart/add', [ClientCartController::class, 'add']);
+        Route::put('/cart/update', [ClientCartController::class, 'update']);
+        Route::delete('/cart/remove/{id}', [ClientCartController::class, 'remove']);
+        Route::delete('/cart/clear', [ClientCartController::class, 'clear']);
         Route::post('/cart/checkout', [ClientCartController::class, 'checkout']);
 
         // Reseñas de producto (valida compra previa)
-        Route::post('/products/{product}/reviews', [ClientProductController::class, 'storeReview'])->whereNumber('product');
+        Route::post('/products/{product:public_id}/reviews', [ClientProductController::class, 'storeReview']);
 
         // Favoritos (único por user+product; toggle idempotente)
         Route::get('/favorites', [ClientFavoriteController::class, 'index']);
@@ -198,7 +198,7 @@ Route::prefix('v1')->group(function (): void {
 
         // Facturas (pertenencia por InvoicePolicy)
         Route::get('/invoices', [ClientInvoiceController::class, 'index']);
-        Route::get('/invoices/{sale}', [ClientInvoiceController::class, 'show'])->whereNumber('sale');
+        Route::get('/invoices/{sale:public_id}', [ClientInvoiceController::class, 'show']);
 
         // Notificaciones (solo las del propio cliente)
         Route::get('/notifications', [ClientNotificationController::class, 'index']);

@@ -23,7 +23,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       type="button"
       variant="ghost"
       size="icon"
-      aria-label={isDark ? "Activar modo claro" : "Activar modo oscuro"}
+      aria-label={mounted && isDark ? "Activar modo claro" : "Activar modo oscuro"}
       aria-pressed={mounted ? isDark : undefined}
       className={cn("relative", className)}
       onClick={() => setTheme(isDark ? "light" : "dark")}

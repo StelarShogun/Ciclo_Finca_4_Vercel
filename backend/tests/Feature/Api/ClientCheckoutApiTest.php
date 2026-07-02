@@ -55,7 +55,7 @@ class ClientCheckoutApiTest extends TestCase
         $product = $this->product(5);
         $this->actingAs($client, 'clients');
 
-        $this->postJson('/api/v1/cart/add', ['product_id' => $product->product_id, 'quantity' => 2])->assertOk();
+        $this->postJson('/api/v1/cart/add', ['product_id' => $product->public_id, 'quantity' => 2])->assertOk();
 
         $this->postJson('/api/v1/cart/checkout', ['payment_method' => 'cash'])
             ->assertOk()

@@ -2,7 +2,7 @@ import { api } from "@/lib/api/client";
 
 /** El home devuelve `category` como string y omite favoritos/isNew. */
 export type HomeProduct = {
-  id: number;
+  id: string; // ID público (ULID)
   name: string;
   description: string | null;
   category: string;
@@ -24,12 +24,12 @@ export type HomeProduct = {
 };
 
 export type HomeCategory = {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
   url: string;
   iconClass: string | null;
-  children: { id: number; name: string; url: string }[];
+  children: { id: string; name: string; url: string }[];
 };
 
 export type HomeHero = {

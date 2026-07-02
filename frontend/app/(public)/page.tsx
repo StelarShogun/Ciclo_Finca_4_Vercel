@@ -29,7 +29,7 @@ function toCardProduct(p: HomeProduct) {
     isFeatured: false,
     isNew: false,
     isFavorite: false,
-    category: p.category ? { id: 0, name: p.category } : null,
+    category: p.category ? { id: "", name: p.category } : null,
     parentCategory: null,
     brands: [],
     image: { ...p.image },

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Client;
 
 use App\Http\Controllers\Controller;
+use App\Services\Api\PublicIdMapper;
 use App\ViewModels\Client\StorefrontViewModel;
 use Illuminate\Http\JsonResponse;
 
@@ -12,8 +13,8 @@ use Illuminate\Http\JsonResponse;
  */
 final class HomeController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(PublicIdMapper $publicIds): JsonResponse
     {
-        return response()->json(['data' => StorefrontViewModel::home()]);
+        return response()->json(['data' => $publicIds->map('home', StorefrontViewModel::home())]);
     }
 }

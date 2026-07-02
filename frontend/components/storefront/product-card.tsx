@@ -115,7 +115,13 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
             )}
             disabled={!product.canBuy || add.isPending}
             title={product.canBuy ? "Agregar al carrito" : "No disponible"}
-            onClick={() => add.mutate()}
+            onClick={() => {
+              if (me?.type !== "client") {
+                router.push(`/login?redirect=/product/${product.id}`);
+                return;
+              }
+              add.mutate();
+            }}
           >
             {product.canBuy ? (
               <><ShoppingCart className="h-4 w-4" /> Agregar</>

@@ -30,7 +30,7 @@ export default function FavoritesPage() {
   const { data, isLoading } = useQuery({ queryKey: ["favorites"], queryFn: () => getFavorites() });
 
   const remove = useMutation({
-    mutationFn: (id: number) => toggleFavorite(id),
+    mutationFn: (id: string) => toggleFavorite(id),
     onSuccess: () => {
       toast.success("Quitado de favoritos");
       queryClient.invalidateQueries({ queryKey: ["favorites"] });

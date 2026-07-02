@@ -48,8 +48,8 @@ export function CategoryRail({
       })}
     </nav>
 
-    {/* Desktop: rail sticky que acompaña el scroll de la página */}
-    <div className="sticky top-20 hidden w-14 shrink-0 self-start lg:block">
+    {/* Desktop: rail sticky que acompaña el scroll; z-30 para volar sobre filtros y cards */}
+    <div className="sticky top-20 z-30 hidden w-14 shrink-0 self-start lg:block">
       <nav
         aria-label="Categorías del catálogo"
         className="group/rail absolute left-0 top-0 z-30 flex max-h-[calc(100dvh-7rem)] w-14 flex-col gap-2 overflow-visible rounded-[22px] border border-[#8EB69B]/40 bg-card/90 p-2.5 shadow-lg backdrop-blur transition-[width] duration-200 hover:w-56"

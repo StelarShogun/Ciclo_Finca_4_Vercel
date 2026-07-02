@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Client\Reviews\StoreProductReviewRequest;
 use App\Models\Client;
 use App\Models\Product;
+use App\Services\Api\PublicIdMapper;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -21,10 +22,16 @@ use Illuminate\Support\Facades\Auth;
  */
 final class ProductController extends Controller
 {
-    public function show(Request $request, int $id, BuildProductDetailPage $builder): JsonResponse
+    public function show(Request $request, string $publicId, BuildProductDetailPage $builder, PublicIdMapper $publicIds): JsonResponse
     {
+        // El SPA solo conoce IDs públicos (ULID); el interno jamás sale en la URL.
+        $id = $publicIds->internalId('product', $publicId);
+        if ($id === null) {
+            return response()->json(['message' => 'Producto no encontrado.'], 404);
+        }
+
         try {
-            return response()->json(['data' => $builder->payload($request, $id)]);
+            return response()->json(['data' => $publicIds->map('productDetail', $builder->payload($request, $id))]);
         } catch (ModelNotFoundException) {
             return response()->json(['message' => 'Producto no encontrado.'], 404);
         }

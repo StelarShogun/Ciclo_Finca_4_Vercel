@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FavoriteProduct;
 use App\Services\Client\Catalog\CatalogFilterResolver;
 use App\Services\Client\Catalog\CatalogPayloadBuilder;
+use App\Services\Api\PublicIdMapper;
 use App\Services\Client\Catalog\CatalogProductSearchTelemetry;
 use App\Services\Client\Catalog\CatalogQueryBuilder;
 use App\Services\Client\Storefront\ClientStorefrontCache;
@@ -24,10 +25,21 @@ final class CatalogController extends Controller
         private CatalogFilterResolver $filterResolver,
         private CatalogQueryBuilder $queryBuilder,
         private CatalogPayloadBuilder $payloadBuilder,
+        private PublicIdMapper $publicIds,
     ) {}
 
     public function index(Request $request): JsonResponse
     {
+        // El SPA filtra por IDs públicos; los services trabajan con internos.
+        // Cualquier valor que no sea un ID público válido (incluido un numérico
+        // interno) se vuelve -1: filtro imposible, sin enumeración posible.
+        foreach (['category_id' => 'category', 'brand_id' => 'brand'] as $param => $entity) {
+            $value = $request->query($param);
+            if (is_string($value) && $value !== '') {
+                $request->merge([$param => $this->publicIds->internalId($entity, $value) ?? -1]);
+            }
+        }
+
         $filters = $this->filterResolver->resolve($request);
         if ($filters->priceValidationRedirect !== null) {
             return response()->json(['message' => 'Rango de precios inválido.'], 422);
@@ -50,7 +62,7 @@ final class CatalogController extends Controller
 
         $props = $this->payloadBuilder->build($request, $filters, $products, $favoriteProductIds);
 
-        return response()->json(['data' => $props]);
+        return response()->json(['data' => $this->publicIds->map('catalog', $props)]);
     }
 
     public function heartbeat(): JsonResponse
@@ -66,6 +78,15 @@ final class CatalogController extends Controller
             return response()->json(['suggestions' => []]);
         }
 
-        return response()->json(['suggestions' => $action->handle($q)]);
+        // Las sugerencias mezclan productos y categorías: mapear cada una según su tipo.
+        $suggestions = array_map(
+            fn (array $item): array => $this->publicIds->map(
+                ($item['type'] ?? '') === 'category' ? 'suggestionCategory' : 'suggestionProduct',
+                $item,
+            ),
+            $action->handle($q),
+        );
+
+        return response()->json(['suggestions' => $suggestions]);
     }
 }

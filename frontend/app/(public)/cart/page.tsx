@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ import { CartItemRow } from "@/components/storefront/cart/cart-item-row";
 import { CartSummary, type CartPaymentMethod } from "@/components/storefront/cart/cart-summary";
 import { CartEmptyState } from "@/components/storefront/cart/cart-empty-state";
 import { ListPagination } from "@/components/shared/list-pagination";
+import { useMe } from "@/lib/auth/use-me";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,10 +33,21 @@ function errMsg(e: unknown, fallback: string) {
 }
 
 export default function CartPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const me = useMe();
+
+  // El carrito exige sesión de cliente, como en la app vieja.
+  useEffect(() => {
+    const unauth = me.isError && isAxiosError(me.error) && me.error.response?.status === 401;
+    if (unauth || (me.data && me.data.type !== "client")) {
+      router.replace("/login?redirect=/cart");
+    }
+  }, [me.isError, me.error, me.data, router]);
+
   const [page, setPage] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<CartPaymentMethod>("cash");
-  const [busyItemId, setBusyItemId] = useState<number | null>(null);
+  const [busyItemId, setBusyItemId] = useState<string | null>(null);
   const [done, setDone] = useState<CheckoutResult | null>(null);
 
   const { data, isLoading, isError } = useQuery({ queryKey: ["cart"], queryFn: getCart });

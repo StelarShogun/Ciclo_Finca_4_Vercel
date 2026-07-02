@@ -10,7 +10,7 @@ export function storeMediaUrl(path: string | null | undefined): string | null {
 }
 
 export type CatalogProduct = {
-  id: number;
+  id: string; // ID público (ULID); el autoincremental nunca sale del API
   name: string;
   description: string | null;
   price: number;
@@ -23,9 +23,9 @@ export type CatalogProduct = {
   isFavorite: boolean;
   sku: string | null;
   url: string;
-  category: { id: number; name: string } | null;
-  parentCategory: { id: number; name: string } | null;
-  brands: { id: number; name: string }[];
+  category: { id: string; name: string } | null;
+  parentCategory: { id: string; name: string } | null;
+  brands: { id: string; name: string }[];
   image: {
     fallback: string | null;
     desktopWebp: string | null;
@@ -44,36 +44,36 @@ export type CatalogPagination = {
 };
 
 export type CatalogCategoryNav = {
-  id: number;
+  id: string;
   name: string;
   icon?: string;
   url_parent?: string;
-  children: { id: number; name: string; url: string }[];
+  children: { id: string; name: string; url: string }[];
 };
 
 export type CatalogResponse = {
   products: CatalogProduct[];
   pagination: CatalogPagination;
   categories: CatalogCategoryNav[];
-  brands: { id: number; name: string }[];
+  brands: { id: string; name: string }[];
   filters: {
     search: string;
-    categoryId: number | null;
-    brandId: number | null;
+    categoryId: string | null;
+    brandId: string | null;
     minPrice: string;
     maxPrice: string;
     sort: string;
     direction: string;
     perPage: number;
   };
-  selectedCategory: { id: number; name: string } | null;
+  selectedCategory: { id: string; name: string } | null;
   summary: { totalProducts: number; totalCategories: number; activeFilterCount: number };
 };
 
 export type CatalogParams = {
   search?: string;
-  category_id?: number;
-  brand_id?: number;
+  category_id?: string;
+  brand_id?: string;
   min_price?: string;
   max_price?: string;
   sort?: string;
