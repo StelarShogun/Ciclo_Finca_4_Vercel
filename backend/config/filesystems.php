@@ -36,6 +36,9 @@ return [
             'serve' => true,
             'throw' => false,
             'report' => false,
+            // En Vercel el filesystem es de solo lectura: crear el root al
+            // instanciar el disco (comportamiento default de Flysystem) revienta.
+            'lazy_root_creation' => true,
         ],
 
         'public' => [
@@ -45,6 +48,7 @@ return [
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
+            'lazy_root_creation' => true,
         ],
 
         's3' => [

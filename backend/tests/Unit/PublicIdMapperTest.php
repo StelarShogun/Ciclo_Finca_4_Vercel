@@ -40,6 +40,7 @@ class PublicIdMapperTest extends TestCase
             'brands' => [['id' => 2, 'name' => 'Marca']],
             'filters' => ['categoryId' => 3, 'brandId' => 2, 'search' => ''],
             'selectedCategory' => ['id' => 3, 'name' => 'Cascos'],
+            'catalogSpotlight' => [['product' => ['id' => 7, 'brands' => [['id' => 2]]]]],
             'pagination' => ['currentPage' => 1, 'total' => 1],
         ];
 
@@ -56,6 +57,8 @@ class PublicIdMapperTest extends TestCase
         $this->assertSame('PUBC3', $out['selectedCategory']['id']);
         // El scrub reescribe la URL embebida con id numérico.
         $this->assertSame('/catalog?category_id=PUBC3', $out['categories'][0]['children'][0]['url']);
+        $this->assertSame('PUBP7', $out['catalogSpotlight'][0]['product']['id']);
+        $this->assertSame('PUBB2', $out['catalogSpotlight'][0]['product']['brands'][0]['id']);
         // Lo no mapeado no se toca.
         $this->assertSame(1, $out['pagination']['currentPage']);
     }

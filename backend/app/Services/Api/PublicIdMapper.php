@@ -35,6 +35,10 @@ final class PublicIdMapper
             'filters.categoryId' => 'category',
             'filters.brandId' => 'brand',
             'selectedCategory.id' => 'category',
+            'catalogSpotlight.*.product.id' => 'product',
+            'catalogSpotlight.*.product.category.id' => 'category',
+            'catalogSpotlight.*.product.parentCategory.id' => 'category',
+            'catalogSpotlight.*.product.brands.*.id' => 'brand',
         ],
         'home' => [
             'featuredProducts.*.id' => 'product',
