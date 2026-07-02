@@ -55,6 +55,8 @@ export type ProductDetail = {
   };
   primaryBrand: { id: string; name: string } | null;
   isNoveltyProduct: boolean;
+  whatsappConsultUrl: string | null;
+  tabs: { defaultTab: string; hasDescription: boolean; hasSpecs: boolean; hasRelated: boolean };
   orderReservationHours: number;
   specs: ProductSpec[];
   reviews: {

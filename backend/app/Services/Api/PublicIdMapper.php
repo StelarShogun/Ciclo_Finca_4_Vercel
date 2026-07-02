@@ -197,7 +197,7 @@ final class PublicIdMapper
                 $this->scrubUrls($value);
                 continue;
             }
-            if (! is_string($value) || ! in_array($key, ['url', 'url_parent', 'productUrl'], true)) {
+            if (! is_string($value) || ! in_array($key, ['url', 'url_parent', 'productUrl', 'catalogUrl'], true)) {
                 continue;
             }
 
@@ -211,6 +211,12 @@ final class PublicIdMapper
                 $this->load(['category' => [(int) $m[1]]]);
 
                 return 'category_id='.($this->maps['category'][(int) $m[1]] ?? '');
+            }, $value) ?? $value;
+
+            $value = preg_replace_callback('#brand_id=(\d+)#', function (array $m): string {
+                $this->load(['brand' => [(int) $m[1]]]);
+
+                return 'brand_id='.($this->maps['brand'][(int) $m[1]] ?? '');
             }, $value) ?? $value;
         }
     }
