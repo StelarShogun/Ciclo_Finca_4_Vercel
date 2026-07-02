@@ -28,7 +28,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // En Vercel el bundle es de solo lectura y Flysystem crea el root del
+        // disco local al instanciarlo: cualquier getUrl()/exists() sobre media
+        // con disk local reventaba. /tmp es el único path escribible en lambda.
+        if (config('vercel.enabled')) {
+            config([
+                'filesystems.disks.local.root' => '/tmp/storage/app/private',
+                'filesystems.disks.public.root' => '/tmp/storage/app/public',
+            ]);
+        }
     }
 
     /**
