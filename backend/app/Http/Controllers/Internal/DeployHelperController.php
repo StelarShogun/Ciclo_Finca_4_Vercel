@@ -53,7 +53,12 @@ final class DeployHelperController extends Controller
                 return response()->json(['ok' => false, 'message' => 'No fue posible ejecutar la operación.'], 500);
             }
 
-            return response()->json(['ok' => true, 'message' => 'Operación ejecutada.']);
+            return response()->json([
+                'ok' => true,
+                'message' => 'Operación ejecutada.',
+                // Solo con APP_DEBUG: diagnóstico de qué corrió artisan.
+                'output' => config('app.debug') ? $output : null,
+            ]);
         } catch (\Throwable $exception) {
             Log::error($event.'_exception', SensitiveDataMasker::exceptionContext($exception, $context));
 
