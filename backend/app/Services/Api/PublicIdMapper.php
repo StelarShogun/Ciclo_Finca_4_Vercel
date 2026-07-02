@@ -74,6 +74,10 @@ final class PublicIdMapper
     /** Aplica el spec nombrado y limpia URLs embebidas con ids numéricos. */
     public function map(string $spec, array $payload): array
     {
+        // Los builders compartidos mezclan Collections/objetos; el recorrido
+        // por paths necesita arrays puros en cada nivel.
+        $payload = json_decode((string) json_encode($payload), true) ?? [];
+
         $paths = self::SPECS[$spec] ?? [];
 
         // 1) Recolectar ids internos por entidad.
