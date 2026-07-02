@@ -103,6 +103,8 @@ export default function CategoriesPage() {
   return (
     <>
       <PageHeader
+        kicker="Catálogo"
+        icon="fa-folder-tree"
         title="Categorías"
         description="Jerarquía de categorías y subcategorías del catálogo."
         actions={

@@ -140,6 +140,8 @@ export default function SuppliersPage() {
   return (
     <>
       <PageHeader
+        kicker="Catálogo"
+        icon="fa-truck-field"
         title="Proveedores"
         description={data ? `Calificación promedio: ${data.averageRating.toFixed(1)} / 5` : "Proveedores del catálogo."}
         actions={

@@ -60,6 +60,8 @@ export default function ProductDetailPage() {
   return (
     <>
       <PageHeader
+        kicker="Producto"
+        icon="fa-box"
         title={data.name}
         description={data.sku ? `SKU ${data.sku}` : "Sin SKU"}
         actions={

@@ -86,9 +86,24 @@ export async function removeStock(productId: number, quantity: number, reason: s
   return data;
 }
 
-export async function getMovements(productId: number, page = 1): Promise<MovementsPayload> {
+export type MovementFilters = {
+  page?: number;
+  type?: string;
+  origin?: string;
+  date_from?: string;
+  date_to?: string;
+};
+
+export async function getMovements(
+  productId: number,
+  filters: MovementFilters | number = 1,
+): Promise<MovementsPayload> {
+  const params = typeof filters === "number" ? { page: filters } : filters;
+  const clean = Object.fromEntries(
+    Object.entries(params).filter(([, v]) => v !== "" && v != null),
+  );
   const { data } = await api.get(`/api/v1/admin/inventory/${productId}/movements`, {
-    params: { page },
+    params: clean,
   });
   return data as MovementsPayload;
 }

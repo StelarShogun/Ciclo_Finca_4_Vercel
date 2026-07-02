@@ -99,7 +99,7 @@ export default function ClientsPage() {
 
   return (
     <>
-      <PageHeader title="Clientes" description="Clientes registrados en la tienda." />
+      <PageHeader kicker="Usuarios" icon="fa-users" title="Clientes" description="Clientes registrados en la tienda." />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="relative w-full max-w-xs">

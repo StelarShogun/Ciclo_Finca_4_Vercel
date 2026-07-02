@@ -215,6 +215,8 @@ export default function ProductsPage() {
   return (
     <>
       <PageHeader
+        kicker="Catálogo"
+        icon="fa-box"
         title="Productos"
         description="Catálogo del inventario."
         actions={

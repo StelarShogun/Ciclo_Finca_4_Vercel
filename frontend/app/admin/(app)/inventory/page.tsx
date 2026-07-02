@@ -128,6 +128,8 @@ export default function InventoryPage() {
   return (
     <>
       <PageHeader
+        kicker="Productos"
+        icon="fa-warehouse"
         title="Inventario"
         description="Stock y ajustes manuales con movimientos."
         actions={

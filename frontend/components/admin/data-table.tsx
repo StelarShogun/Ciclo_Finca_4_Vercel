@@ -65,8 +65,9 @@ export function DataTable<TData, TValue>({
     );
   }
 
+  // Mismo lienzo que <Card> para que todas las tablas compartan color.
   return (
-    <div className="rounded-lg border">
+    <div className="overflow-hidden rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((group) => (

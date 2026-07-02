@@ -110,6 +110,24 @@ class ReportsApiTest extends TestCase
             ->assertJsonMissingPath('data.pagination_html');
     }
 
+    public function test_exports_config_returns_hub_definitions(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+        $this->seedSale();
+
+        $response = $this->getJson('/api/v1/admin/reports/exports-config')
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['exports' => ['dashboard' => ['id', 'title', 'baseUrls'], 'inventory', 'sales', 'productSales', 'registry.suppliers']]]);
+
+        $this->assertSame('query', $response->json('data.exports.dashboard.formatMode'));
+        $this->assertNotEmpty($response->json('data.exports.inventory.baseUrls.excel'));
+    }
+
+    public function test_exports_config_requires_authentication(): void
+    {
+        $this->getJson('/api/v1/admin/reports/exports-config')->assertStatus(401);
+    }
+
     public function test_catalog_search_and_movements(): void
     {
         $this->actingAs($this->admin(), 'admin');

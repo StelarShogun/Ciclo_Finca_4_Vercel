@@ -97,6 +97,8 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
+        kicker="Panel"
+        icon="fa-gauge-high"
         title="Dashboard"
         description="Resumen de ventas, inventario y actividad reciente."
       />

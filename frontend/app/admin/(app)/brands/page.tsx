@@ -123,6 +123,8 @@ export default function BrandsPage() {
   return (
     <>
       <PageHeader
+        kicker="Catálogo"
+        icon="fa-tag"
         title="Marcas"
         description="Marcas del catálogo de productos."
         actions={

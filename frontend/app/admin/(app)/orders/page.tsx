@@ -102,7 +102,7 @@ export default function OrdersPage() {
 
   return (
     <>
-      <PageHeader title="Encargos" description="Pedidos del carrito web: listos para recoger y confirmación." />
+      <PageHeader kicker="Ventas" icon="fa-clipboard-check" title="Encargos" description="Pedidos del carrito web: listos para recoger y confirmación." />
 
       {data && (
         <div className="mb-6 grid gap-4 sm:grid-cols-3">

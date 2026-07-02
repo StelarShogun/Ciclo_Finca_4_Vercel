@@ -65,7 +65,7 @@ export default function AuditPage() {
 
   return (
     <>
-      <PageHeader title="Auditoría" description="Bitácora de acciones administrativas." />
+      <PageHeader kicker="Reportes" icon="fa-clipboard-list" title="Auditoría" description="Bitácora de acciones administrativas." />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="relative w-full max-w-xs">

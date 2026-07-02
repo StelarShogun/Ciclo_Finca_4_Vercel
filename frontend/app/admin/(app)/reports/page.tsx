@@ -6,7 +6,6 @@ import {
   BarChart3,
   ClipboardList,
   FileDown,
-  FileText,
   History,
   LineChart,
   PieChart,
@@ -14,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 
+import { PageHeader } from "@/components/admin/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 
 const REPORTS = [
@@ -30,21 +30,12 @@ const REPORTS = [
 export default function ReportsHubPage() {
   return (
     <>
-      {/* Header medallón estilo "Centro de reportes" */}
-      <div className="mb-6 overflow-hidden rounded-xl border bg-gradient-to-r from-[#0B2B26] to-[#163832] text-[#DAF1DE] shadow-sm">
-        <div className="flex items-start gap-4 border-l-4 border-[#12B36A] p-6">
-          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/10 text-white">
-            <FileText className="h-6 w-6" />
-          </span>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-[#8EB69B]">Reportes</p>
-            <h1 className="text-2xl font-semibold text-white">Centro de reportes</h1>
-            <p className="mt-1 max-w-2xl text-sm text-[#DAF1DE]/80">
-              Consulta reportes analíticos de ventas, inventario, clientes, búsquedas y actividad administrativa.
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        kicker="Reportes"
+        icon="fa-file-lines"
+        title="Centro de reportes"
+        description="Consulta reportes analíticos de ventas, inventario, clientes, búsquedas y actividad administrativa."
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {REPORTS.map((r) => (

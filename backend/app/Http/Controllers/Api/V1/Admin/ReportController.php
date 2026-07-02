@@ -12,6 +12,7 @@ use App\Services\Admin\Inventory\InventoryMovementQuery;
 use App\Services\Admin\Reports\CatalogMostSearchedProductsReportService;
 use App\Services\Admin\Reports\CategorySalesReportService;
 use App\Services\Admin\Reports\ProductSalesReportService;
+use App\Services\Admin\Reports\ReportsExportHubBuilder;
 use App\Services\Admin\Reports\SalesPerformanceReportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -70,6 +71,13 @@ final class ReportController extends Controller
         Gate::forUser(Auth::guard('admin')->user())->authorize('viewAny', Sale::class);
 
         return response()->json(['data' => $service->payload($request->query('period', '30d'))]);
+    }
+
+    public function exportsConfig(Request $request, ReportsExportHubBuilder $hub): JsonResponse
+    {
+        Gate::forUser(Auth::guard('admin')->user())->authorize('viewAny', Sale::class);
+
+        return response()->json(['data' => $hub->build($request)]);
     }
 
     public function inventoryMovements(Request $request, InventoryMovementQuery $query): JsonResponse

@@ -168,6 +168,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/reports/client-purchases', [ReportController::class, 'clientPurchases']);
         Route::get('/reports/catalog-search', [ReportController::class, 'catalogSearch']);
         Route::get('/reports/inventory-movements', [ReportController::class, 'inventoryMovements']);
+        Route::get('/reports/exports-config', [ReportController::class, 'exportsConfig']);
     });
 
     // --- Tienda pública (sin auth; el guard clients se consulta para favoritos) ---

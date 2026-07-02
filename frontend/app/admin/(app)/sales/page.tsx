@@ -124,6 +124,8 @@ export default function SalesPage() {
   return (
     <>
       <PageHeader
+        kicker="Ventas"
+        icon="fa-cash-register"
         title="Ventas"
         description="Historial de ventas y gestión de pedidos."
         actions={

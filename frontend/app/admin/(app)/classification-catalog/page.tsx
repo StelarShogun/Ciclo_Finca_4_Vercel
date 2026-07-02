@@ -33,6 +33,8 @@ export default function ClassificationCatalogPage() {
   return (
     <>
       <PageHeader
+        kicker="Catálogo"
+        icon="fa-layer-group"
         title="Opciones por tipo"
         description="Atributos (ej. Color, Talla) y sus valores por tipo de producto."
       />

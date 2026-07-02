@@ -63,24 +63,39 @@ export default function HomePage() {
   return (
     <div>
       {/* 1. Hero */}
-      <section className="relative overflow-hidden text-white">
+      {/* Réplica del hero viejo: overlay negro neutro (no verde), más imagen
+          visible a la derecha, badge claro y subtítulo + descripción. */}
+      <section className="relative flex min-h-[min(85vh,720px)] items-center overflow-hidden text-white">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: "url('/hero/hero-downhill-1920.webp')" }}
           aria-hidden
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#051F20]/95 via-[#051F20]/85 to-[#051F20]/40" aria-hidden />
-        <div className="relative mx-auto max-w-7xl px-4 py-20 sm:py-28">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.58) 55%, rgba(0,0,0,0.42) 100%), linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%)",
+          }}
+          aria-hidden
+        />
+        <div className="relative mx-auto w-full max-w-7xl px-4 py-16">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-[#DAF1DE] ring-1 ring-white/20">
-              <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> Atención ciclista especializada en tienda
+            <span className="inline-flex items-center gap-2 rounded-md border border-white/[0.28] bg-white/[0.12] px-4 py-2 text-sm font-semibold text-white">
+              Atención ciclista especializada en tienda
             </span>
-            <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+            <h1 className="mt-5 text-4xl font-bold leading-[1.08] tracking-tight [text-shadow:0_2px_32px_rgba(0,0,0,0.5),0_1px_4px_rgba(0,0,0,0.3)] sm:text-5xl">
               {data?.hero.title ?? "Equípate para rodar"}{" "}
-              <span className="text-[#8EB69B]">{data?.hero.emphasis ?? "con asesoría real en tienda"}</span>
+              <strong className="font-bold text-[#c8e6c9]">
+                {data?.hero.emphasis ?? "con asesoría real en tienda"}
+              </strong>
             </h1>
-            <p className="mt-4 max-w-xl text-lg text-white/90">
+            <div className="mt-5 h-1 w-16 rounded-full bg-[#12B36A]" aria-hidden />
+            <p className="mt-5 max-w-xl text-lg text-white/95">
               {data?.hero.subtitle ?? "Bicicletas, componentes y accesorios listos para encargo con retiro rápido."}
+            </p>
+            <p className="mt-2 max-w-xl text-base text-white/80">
+              {data?.hero.description ?? "Te guiamos en elección, ajuste y preparación para que retires con confianza."}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg" className="bg-[#12B36A] hover:bg-[#0E9558]">

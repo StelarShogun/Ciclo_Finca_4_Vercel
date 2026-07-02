@@ -109,6 +109,8 @@ export default function SupplierOrdersPage() {
   return (
     <>
       <PageHeader
+        kicker="Abastecimiento"
+        icon="fa-truck-ramp-box"
         title="Pedidos a proveedores"
         description={
           data ? `${data.openSupplierOrdersCount} pedido(s) abiertos.` : "Pedidos de reabastecimiento."

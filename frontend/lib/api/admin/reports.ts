@@ -47,6 +47,7 @@ export type ProductSales = {
   period: string;
   sort: string;
   dir: string;
+  top10_metric: string;
   top10: ProductSalesRow[];
   rows: ProductSalesRow[];
   pagination: { page: number; per_page: number; total: number; last_page: number };
@@ -57,6 +58,9 @@ export async function getProductSales(params: {
   sort?: string;
   dir?: string;
   q?: string;
+  top10?: string;
+  date_from?: string;
+  date_to?: string;
   page?: number;
 }): Promise<ProductSales> {
   const clean = Object.fromEntries(
@@ -93,9 +97,16 @@ export type CategorySales = {
   chartData: { label: string; value: number; percent: number }[];
 };
 
-export async function getCategorySales(dateRange = "month"): Promise<CategorySales> {
+export async function getCategorySales(
+  dateRange = "month",
+  dateFrom?: string,
+  dateTo?: string,
+): Promise<CategorySales> {
   const { data } = await api.get("/api/v1/admin/reports/category-sales", {
-    params: { date_range: dateRange },
+    params: {
+      date_range: dateRange,
+      ...(dateRange === "custom" ? { date_from: dateFrom, date_to: dateTo } : {}),
+    },
   });
   return data.data as CategorySales;
 }
@@ -116,8 +127,17 @@ export type ClientPurchases = {
   pagination: { page: number; per_page: number; total: number; last_page: number };
 };
 
-export async function getClientPurchases(period = "30d", page = 1): Promise<ClientPurchases> {
-  const { data } = await api.get("/api/v1/admin/reports/client-purchases", { params: { period, page } });
+export async function getClientPurchases(params: {
+  period?: string;
+  sort?: string;
+  dir?: string;
+  q?: string;
+  page?: number;
+}): Promise<ClientPurchases> {
+  const clean = Object.fromEntries(
+    Object.entries(params).filter(([, v]) => v !== "" && v != null),
+  );
+  const { data } = await api.get("/api/v1/admin/reports/client-purchases", { params: clean });
   return data.data as ClientPurchases;
 }
 
@@ -131,6 +151,7 @@ export type CatalogSearch = {
   totalEvents: number;
   uniqueProducts: number;
   topProductName: string | null;
+  topProductHits: number | null;
   maxHits: number;
 };
 
@@ -142,8 +163,14 @@ export async function getCatalogSearch(period = "30d"): Promise<CatalogSearch> {
 // --- Movimientos de inventario (global, por producto) ---
 
 export type MovementProduct = {
-  product: { product_id: number; name: string; sku: string; category_name: string; supplier_name: string | null; stock_current: number };
-  [key: string]: unknown;
+  product_id: number;
+  sku: string;
+  name: string;
+  category_name: string;
+  supplier_name: string | null;
+  stock_badge_class: string;
+  stock_label: string;
+  stock_current: number;
 };
 
 export type InventoryMovements = {
@@ -156,10 +183,39 @@ export async function getInventoryMovements(search = "", page = 1): Promise<Inve
   return data.data as InventoryMovements;
 }
 
-// --- Exportaciones (descargas servidas por el backend web) ---
+// --- Hub de exportaciones (config dinámica del backend; descargas web) ---
 
-export const REPORT_EXPORTS: { label: string; href: string; format: string }[] = [
-  { label: "Productos vendidos (PDF)", href: `${API_URL}/reports/productos-vendidos/pdf?period=month`, format: "PDF" },
-  { label: "Productos vendidos (Excel)", href: `${API_URL}/reports/productos-vendidos/excel?period=month`, format: "Excel" },
-  { label: "Inventario (Excel)", href: `${API_URL}/inventory/export/excel`, format: "Excel" },
-];
+export type FilterOption = { value: string; label: string };
+
+export type ExportFilterDef = {
+  name: string;
+  label: string;
+  type?: string;
+  help?: string;
+  placeholder?: string;
+  readonly?: boolean;
+  default?: string;
+  options?: FilterOption[];
+  cascades?: string;
+  cascadeOptions?: Record<string, FilterOption[]>;
+  autofills?: string[];
+  autofillData?: Record<string, Record<string, string>>;
+};
+
+export type ExportDef = {
+  id: string;
+  title: string;
+  subtitle?: string;
+  formatMode?: "query" | "path";
+  baseUrls: Record<string, string>;
+  filters?: ExportFilterDef[];
+  initialValues?: Record<string, string>;
+  staticParams?: Record<string, string>;
+};
+
+export type ExportsConfig = { exports: Record<string, ExportDef> };
+
+export async function getExportsConfig(): Promise<ExportsConfig> {
+  const { data } = await api.get("/api/v1/admin/reports/exports-config");
+  return data.data as ExportsConfig;
+}
