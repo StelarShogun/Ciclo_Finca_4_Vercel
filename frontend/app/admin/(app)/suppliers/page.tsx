@@ -279,6 +279,7 @@ export default function SuppliersPage() {
             currentPage={data.pagination.currentPage}
             lastPage={data.pagination.lastPage}
             total={data.pagination.total}
+            perPage={data.pagination.perPage}
             onPageChange={setPage}
           />
         </>

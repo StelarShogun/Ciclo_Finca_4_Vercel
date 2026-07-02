@@ -77,9 +77,12 @@ export function ProductForm({
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [gallery, setGallery] = useState<File[]>([]);
 
+  // staleTime alto: los selects abren con opciones al instante en vez de
+  // refetchear (y "saltar") cada vez que se abre el modal.
   const { data: options, isLoading } = useQuery({
     queryKey: ["product-form-options"],
     queryFn: getProductFormOptions,
+    staleTime: 5 * 60_000,
   });
 
   const {

@@ -227,6 +227,7 @@ function ProductMovements({ product, onBack }: { product: MovementProduct; onBac
                   currentPage={meta.current_page}
                   lastPage={meta.last_page}
                   total={meta.total}
+                  perPage={meta.per_page}
                   onPageChange={setPage}
                 />
               )}

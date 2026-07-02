@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Plus, Search } from "lucide-react";
 
-import { getProducts, mediaUrl, type AdminProduct } from "@/lib/api/admin/products";
+import { getProductFormOptions, getProducts, mediaUrl, type AdminProduct } from "@/lib/api/admin/products";
 import { PageHeader } from "@/components/admin/page-header";
 import { ProductRowActions } from "@/components/admin/products/product-row-actions";
 import { ProductFormDialog } from "@/components/admin/products/product-form-dialog";
@@ -196,6 +196,16 @@ export default function ProductsPage() {
     return () => clearTimeout(t);
   }, [search]);
 
+  // Precarga las opciones del formulario: el modal abre con los selects llenos.
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    void queryClient.prefetchQuery({
+      queryKey: ["product-form-options"],
+      queryFn: getProductFormOptions,
+      staleTime: 5 * 60_000,
+    });
+  }, [queryClient]);
+
   // Cualquier cambio de filtro vuelve a la página 1.
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setPage(1), [debouncedSearch, status, stockStatus]);
@@ -283,6 +293,7 @@ export default function ProductsPage() {
             currentPage={data.current_page}
             lastPage={data.last_page}
             total={data.total}
+            perPage={data.per_page}
             onPageChange={setPage}
           />
         </>

@@ -93,6 +93,7 @@ export default function ClassificationCatalogPage() {
             currentPage={data.pagination.currentPage}
             lastPage={data.pagination.lastPage}
             total={data.pagination.total}
+            perPage={data.pagination.perPage}
             onPageChange={setPage}
           />
         </>

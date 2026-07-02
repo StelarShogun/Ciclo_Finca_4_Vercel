@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { PackageCheck, Search } from "lucide-react";
 
 import { getOrders, type OrderRow } from "@/lib/api/admin/orders";
-import { cancelSale, completeSale, getSale, markSaleReady, type SaleDetail } from "@/lib/api/admin/sales";
+import { cancelSale, completeSale, getSale, invoiceUrl, markSaleReady, type SaleDetail } from "@/lib/api/admin/sales";
 import { PageHeader } from "@/components/admin/page-header";
 import { MetricCard } from "@/components/admin/metric-card";
 import { DataTable } from "@/components/admin/data-table";
@@ -95,6 +95,18 @@ export default function OrdersPage() {
         )}
         {(o.status === "pending" || o.status === "ready_to_pickup") && (
           <ActionBtn icon="fa-xmark" label="Rechazar" tone="delete" onClick={() => setCancelId(o.sale_id)} />
+        )}
+        {o.status === "completed" && (
+          <a
+            href={invoiceUrl(o.sale_id)}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Ver factura"
+            aria-label="Ver factura"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-sky-600 transition-colors hover:bg-sky-100 dark:text-sky-400 dark:hover:bg-sky-950"
+          >
+            <i className="fas fa-file-invoice" aria-hidden />
+          </a>
         )}
       </ActionBar>
     );

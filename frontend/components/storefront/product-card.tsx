@@ -106,13 +106,22 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
           <span className="font-semibold text-[#235347] dark:text-[#8EB69B]">{product.priceFormatted}</span>
           <Button
-            size="icon"
-            className="h-8 w-8 bg-[#12B36A] hover:bg-[#0E9558]"
+            size="sm"
+            className={cn(
+              "h-8",
+              product.canBuy
+                ? "bg-[#12B36A] hover:bg-[#0E9558]"
+                : "bg-muted text-muted-foreground hover:bg-muted",
+            )}
             disabled={!product.canBuy || add.isPending}
             title={product.canBuy ? "Agregar al carrito" : "No disponible"}
             onClick={() => add.mutate()}
           >
-            <ShoppingCart className="h-4 w-4" />
+            {product.canBuy ? (
+              <><ShoppingCart className="h-4 w-4" /> Agregar</>
+            ) : (
+              <><i className="fas fa-ban" aria-hidden /> {product.stockLabel}</>
+            )}
           </Button>
         </div>
       </div>

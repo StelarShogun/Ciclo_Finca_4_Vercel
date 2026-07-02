@@ -69,8 +69,9 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
       data-slot="table-head"
+      // Header verde oscuro, réplica del .admin-table viejo (brand-dark + brand-lightest).
       className={cn(
-        "h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
+        "bg-[#0B2B26] px-4 py-3 text-left align-middle text-xs font-semibold tracking-wide whitespace-nowrap text-[#DAF1DE] [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}
@@ -82,8 +83,9 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   return (
     <td
       data-slot="table-cell"
+      // Envuelve texto largo y respira como el admin-table viejo (padding .75rem 1rem).
       className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        "px-4 py-3 align-middle [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LogOut, Store, User } from "lucide-react";
@@ -37,11 +38,12 @@ export function AdminHeader() {
       <SidebarTrigger />
       <Separator orientation="vertical" className="mr-1 h-5" />
       <div className="ml-auto flex items-center gap-1">
+        {/* Same-tab, como el /admin/visit-store viejo; el header de la tienda muestra "Volver al panel". */}
         <Button asChild variant="ghost" size="sm" className="gap-2" title="Ir al sitio web">
-          <a href="/" target="_blank" rel="noopener noreferrer">
+          <Link href="/">
             <Store className="h-4 w-4" />
             <span className="hidden sm:inline">Ir al sitio</span>
-          </a>
+          </Link>
         </Button>
         <ThemeToggle />
         <DropdownMenu>

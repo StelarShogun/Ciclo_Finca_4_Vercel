@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -11,16 +11,20 @@ import { isAxiosError } from "axios";
 import { toast } from "sonner";
 
 import { clientLogin } from "@/lib/api/auth";
-import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  AuthBackLink,
+  AuthBox,
+  AuthDivider,
+  AuthLogo,
+  AuthSubmitButton,
+  AuthSubtitle,
+  AuthTitle,
+  FieldError,
+  FieldLabel,
+  GoogleButton,
+  PasswordToggle,
+} from "@/components/auth/auth-shell";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 const schema = z.object({
   gmail: z.string().email("Correo inválido"),
@@ -37,6 +41,7 @@ function LoginInner() {
   const queryClient = useQueryClient();
   const redirectTo = params.get("redirect") ?? "/account";
   const oauthError = params.get("oauth_error");
+  const [showPass, setShowPass] = useState(false);
 
   // Mensaje de error si volvemos de un OAuth fallido.
   useEffect(() => {
@@ -72,48 +77,69 @@ function LoginInner() {
   });
 
   return (
-    <div className="mx-auto flex max-w-md items-center justify-center px-4 py-16">
-      <Card className="w-full border-t-4 border-t-[#235347]">
-        <CardHeader>
-          <CardTitle className="text-xl">Iniciar sesión</CardTitle>
-          <CardDescription>Ingresá a tu cuenta de Ciclo Finca.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit((v) => mutation.mutate(v))} noValidate>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="gmail">Correo</Label>
-              <Input id="gmail" type="email" autoComplete="username" {...register("gmail")} aria-invalid={!!errors.gmail} />
-              {errors.gmail && <p className="text-sm text-destructive">{errors.gmail.message}</p>}
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Contraseña</Label>
-                <Link href="/recovery" className="text-xs text-[#235347] hover:underline dark:text-[#8EB69B]">¿Olvidaste tu contraseña?</Link>
-              </div>
-              <Input id="password" type="password" autoComplete="current-password" {...register("password")} aria-invalid={!!errors.password} />
-              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-            </div>
-            <Button type="submit" className="w-full bg-[#235347] hover:bg-[#1a3f37]" disabled={mutation.isPending}>
-              {mutation.isPending ? "Ingresando…" : "Ingresar"}
-            </Button>
-          </form>
+    <AuthBox>
+      <AuthBackLink />
+      <AuthLogo />
+      <AuthTitle>Bienvenido de nuevo</AuthTitle>
+      <AuthSubtitle>Ingresa a tu cuenta para continuar</AuthSubtitle>
 
-          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> o <span className="h-px flex-1 bg-border" />
+      <form className="flex w-full flex-col gap-4" onSubmit={handleSubmit((v) => mutation.mutate(v))} noValidate>
+        <div className="flex flex-col gap-1.5">
+          <FieldLabel htmlFor="gmail" icon="fas fa-envelope">Correo Electrónico</FieldLabel>
+          <Input
+            id="gmail"
+            type="email"
+            maxLength={120}
+            autoComplete="email"
+            placeholder="ejemplo@correo.com"
+            {...register("gmail")}
+            aria-invalid={!!errors.gmail}
+          />
+          <FieldError>{errors.gmail?.message}</FieldError>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <FieldLabel htmlFor="password" icon="fas fa-lock">Contraseña</FieldLabel>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPass ? "text" : "password"}
+              maxLength={128}
+              autoComplete="current-password"
+              placeholder="Ingresa tu contraseña"
+              className="pr-10"
+              {...register("password")}
+              aria-invalid={!!errors.password}
+            />
+            <PasswordToggle visible={showPass} onToggle={() => setShowPass((v) => !v)} />
           </div>
-          <Button asChild variant="outline" className="w-full">
-            <a href={`${API_URL}/auth/google?from=spa`}>Continuar con Google</a>
-          </Button>
-
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            ¿No tenés cuenta?{" "}
-            <Link href="/register" className="font-medium text-[#235347] hover:underline">
-              Registrate
+          <FieldError>{errors.password?.message}</FieldError>
+          <div className="text-right">
+            <Link href="/recovery" className="text-[0.85rem] font-medium text-[#12B36A] hover:underline">
+              ¿Olvidó su contraseña?
             </Link>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+          </div>
+        </div>
+
+        <AuthSubmitButton icon="fas fa-sign-in-alt" pending={mutation.isPending} pendingText="Ingresando...">
+          Iniciar Sesión
+        </AuthSubmitButton>
+      </form>
+
+      <AuthDivider />
+      <GoogleButton href={`${API_URL}/auth/google?from=spa`} />
+
+      <div className="mt-5 w-full text-center">
+        <p className="mb-2.5 text-sm text-muted-foreground">¿No tienes una cuenta?</p>
+        <Link
+          href="/register"
+          className="inline-flex w-full items-center justify-center gap-2.5 rounded-[10px] border-[1.5px] border-[#dadce0] bg-card px-3.5 py-[11px] text-[0.95rem] font-semibold text-[#235347] transition hover:border-[#235347] hover:bg-accent dark:border-border dark:text-[#8EB69B]"
+        >
+          <i className="fas fa-user-plus" aria-hidden />
+          <span>Crear cuenta</span>
+        </Link>
+      </div>
+    </AuthBox>
   );
 }
 

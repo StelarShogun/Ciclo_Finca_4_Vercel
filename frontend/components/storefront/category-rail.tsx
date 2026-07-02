@@ -18,7 +18,38 @@ export function CategoryRail({
   activeCategoryId: string | null;
 }) {
   return (
-    <div className="relative hidden w-14 shrink-0 lg:block">
+    <>
+    {/* Móvil: pills horizontales, como el catálogo viejo */}
+    <nav aria-label="Categorías del catálogo" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:hidden">
+      <Link
+        href="/catalog"
+        className={cn(
+          "shrink-0 whitespace-nowrap rounded-full border border-[#8EB69B]/40 bg-card px-3.5 py-1.5 text-xs font-semibold",
+          !activeCategoryId && "border-[#235347] bg-accent text-[#235347] dark:text-[#8EB69B]",
+        )}
+      >
+        Todos
+      </Link>
+      {categories.map((c) => {
+        const active = String(c.id) === activeCategoryId || c.children.some((ch) => String(ch.id) === activeCategoryId);
+        return (
+          <Link
+            key={c.id}
+            href={`/catalog?category_id=${c.id}`}
+            className={cn(
+              "shrink-0 whitespace-nowrap rounded-full border border-[#8EB69B]/40 bg-card px-3.5 py-1.5 text-xs font-semibold",
+              active && "border-[#235347] bg-accent text-[#235347] dark:text-[#8EB69B]",
+            )}
+          >
+            {c.icon && <i className={cn(c.icon, "mr-1.5")} aria-hidden />}
+            {c.name}
+          </Link>
+        );
+      })}
+    </nav>
+
+    {/* Desktop: rail sticky que acompaña el scroll de la página */}
+    <div className="sticky top-20 hidden w-14 shrink-0 self-start lg:block">
       <nav
         aria-label="Categorías del catálogo"
         className="group/rail absolute left-0 top-0 z-30 flex max-h-[calc(100dvh-7rem)] w-14 flex-col gap-2 overflow-visible rounded-[22px] border border-[#8EB69B]/40 bg-card/90 p-2.5 shadow-lg backdrop-blur transition-[width] duration-200 hover:w-56"
@@ -93,5 +124,6 @@ export function CategoryRail({
         </div>
       </nav>
     </div>
+    </>
   );
 }

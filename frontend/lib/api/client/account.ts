@@ -156,3 +156,12 @@ export async function updatePassword(values: {
   const { data } = await api.put("/api/v1/profile/password", values);
   return data;
 }
+
+export async function updateAvatar(file: File): Promise<{ avatar_url: string | null }> {
+  const form = new FormData();
+  form.append("avatar", file);
+  const { data } = await api.post("/api/v1/profile/avatar", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data.data as { avatar_url: string | null };
+}

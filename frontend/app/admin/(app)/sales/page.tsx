@@ -257,6 +257,7 @@ export default function SalesPage() {
             currentPage={data.pagination.currentPage}
             lastPage={data.pagination.lastPage}
             total={data.pagination.total}
+            perPage={data.pagination.perPage}
             onPageChange={setPage}
           />
         </>

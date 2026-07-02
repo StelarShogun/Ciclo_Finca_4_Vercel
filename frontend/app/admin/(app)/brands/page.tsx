@@ -220,6 +220,7 @@ export default function BrandsPage() {
             currentPage={data.current_page}
             lastPage={data.last_page}
             total={data.total}
+            perPage={data.per_page}
             onPageChange={setPage}
           />
         </>

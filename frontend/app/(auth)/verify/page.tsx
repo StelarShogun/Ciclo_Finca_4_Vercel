@@ -1,22 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
 
 import { resendCode, verifyCode } from "@/lib/api/auth";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { AuthBox, AuthSubmitButton, AuthSubtitle, AuthTitle } from "@/components/auth/auth-shell";
+import { OtpInput } from "@/components/auth/otp-input";
 
 function errMsg(e: unknown, fallback: string) {
   return (isAxiosError(e) && (e.response?.data?.message as string)) || fallback;
@@ -44,42 +37,53 @@ export default function VerifyPage() {
   });
 
   return (
-    <div className="mx-auto flex max-w-md items-center justify-center px-4 py-16">
-      <Card className="w-full border-t-4 border-t-[#235347]">
-        <CardHeader>
-          <CardTitle className="text-xl">Verificá tu correo</CardTitle>
-          <CardDescription>Ingresá el código de 6 dígitos que te enviamos.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form
-            className="flex flex-col gap-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (code.length === 6) verify.mutate();
-            }}
-          >
-            <div className="space-y-1.5">
-              <Label htmlFor="code">Código</Label>
-              <Input
-                id="code"
-                inputMode="numeric"
-                maxLength={6}
-                autoFocus
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                className="text-center text-lg tracking-[0.4em]"
-                placeholder="••••••"
-              />
-            </div>
-            <Button type="submit" className="bg-[#235347] hover:bg-[#1a3f37]" disabled={code.length !== 6 || verify.isPending}>
-              {verify.isPending ? "Verificando…" : "Verificar"}
-            </Button>
-          </form>
-          <Button variant="ghost" className="mt-2 w-full text-sm text-muted-foreground" disabled={resend.isPending} onClick={() => resend.mutate()}>
-            Reenviar código
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthBox className="max-w-[420px]">
+      <div className="mb-3 text-center">
+        <i className="fas fa-envelope-open-text text-5xl text-[#12B36A]" aria-hidden />
+      </div>
+      <AuthTitle>Verifica que eres tú</AuthTitle>
+      <AuthSubtitle>Código de verificación ha sido enviado a tu correo</AuthSubtitle>
+
+      <form
+        className="flex w-full flex-col gap-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (code.length === 6) verify.mutate();
+        }}
+        noValidate
+      >
+        <div>
+          <p className="mb-1 text-center text-sm font-semibold">Código de verificación</p>
+          <OtpInput value={code} onChange={setCode} disabled={verify.isPending} />
+        </div>
+
+        <AuthSubmitButton
+          icon="fas fa-check-circle"
+          disabled={code.length !== 6}
+          pending={verify.isPending}
+          pendingText="Verificando..."
+        >
+          Verificar Código
+        </AuthSubmitButton>
+      </form>
+
+      <div className="mt-6 text-center">
+        <p className="mb-1.5 text-sm text-muted-foreground">¿No recibiste el código?</p>
+        <button
+          type="button"
+          onClick={() => resend.mutate()}
+          disabled={resend.isPending}
+          className="text-sm font-semibold text-[#12B36A] hover:underline disabled:opacity-60"
+        >
+          {resend.isPending ? "Enviando..." : "Reenviar código"}
+        </button>
+      </div>
+
+      <div className="mt-4 text-center">
+        <Link href="/register" className="text-sm text-muted-foreground hover:text-foreground">
+          <i className="fas fa-arrow-left" aria-hidden /> Volver al registro
+        </Link>
+      </div>
+    </AuthBox>
   );
 }

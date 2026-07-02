@@ -194,6 +194,7 @@ export default function CategoriesPage() {
             currentPage={page}
             lastPage={Math.max(1, Math.ceil(data.hierarchy.length / PER_PAGE))}
             total={data.hierarchy.length}
+            perPage={PER_PAGE}
             onPageChange={setPage}
           />
         </>

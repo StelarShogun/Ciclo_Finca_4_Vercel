@@ -210,5 +210,6 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/profile', [ClientProfileController::class, 'show']);
         Route::put('/profile', [ClientProfileController::class, 'update']);
         Route::put('/profile/password', [ClientProfileController::class, 'updatePassword']);
+        Route::post('/profile/avatar', [ClientProfileController::class, 'updateAvatar']);
     });
 });

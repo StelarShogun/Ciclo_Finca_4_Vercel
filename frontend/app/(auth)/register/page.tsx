@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
@@ -10,16 +11,20 @@ import { isAxiosError } from "axios";
 import { toast } from "sonner";
 
 import { clientRegister } from "@/lib/api/auth";
-import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  AuthBackLink,
+  AuthBox,
+  AuthDivider,
+  AuthLogo,
+  AuthSubmitButton,
+  AuthSubtitle,
+  AuthTitle,
+  FieldError,
+  FieldLabel,
+  GoogleButton,
+  PasswordToggle,
+} from "@/components/auth/auth-shell";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const schema = z
@@ -43,6 +48,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [showPass, setShowPass] = useState(false);
+  const [showPass2, setShowPass2] = useState(false);
+
   const { register, handleSubmit, control, setError, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { accept_terms: false },
@@ -69,77 +77,89 @@ export default function RegisterPage() {
     },
   });
 
-  return (
-    <div className="mx-auto flex max-w-md items-center justify-center px-4 py-12">
-      <Card className="w-full border-t-4 border-t-[#235347]">
-        <CardHeader>
-          <CardTitle className="text-xl">Crear cuenta</CardTitle>
-          <CardDescription>Registrate con tu correo de Gmail.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit((v) => mutation.mutate(v))} noValidate>
-            <div className="space-y-1.5">
-              <Label htmlFor="name">Nombre</Label>
-              <Input id="name" {...register("name")} aria-invalid={!!errors.name} />
-              {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="fs">Primer apellido</Label>
-              <Input id="fs" {...register("first_surname")} aria-invalid={!!errors.first_surname} />
-              {errors.first_surname && <p className="text-xs text-destructive">{errors.first_surname.message}</p>}
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="ss">Segundo apellido (opcional)</Label>
-              <Input id="ss" {...register("second_surname")} />
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="gmail">Correo</Label>
-              <Input id="gmail" type="email" {...register("gmail")} aria-invalid={!!errors.gmail} />
-              {errors.gmail && <p className="text-xs text-destructive">{errors.gmail.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="pw">Contraseña</Label>
-              <Input id="pw" type="password" {...register("password")} aria-invalid={!!errors.password} />
-              {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="pwc">Confirmar</Label>
-              <Input id="pwc" type="password" {...register("password_confirmation")} aria-invalid={!!errors.password_confirmation} />
-              {errors.password_confirmation && <p className="text-xs text-destructive">{errors.password_confirmation.message}</p>}
-            </div>
-            <div className="sm:col-span-2">
-              <label className="flex items-start gap-2 text-sm">
-                <Controller
-                  control={control}
-                  name="accept_terms"
-                  render={({ field }) => (
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={(c) => field.onChange(c === true)}
-                    />
-                  )}
-                />
-                <span>Acepto los términos y condiciones.</span>
-              </label>
-              {errors.accept_terms && <p className="text-xs text-destructive">{errors.accept_terms.message}</p>}
-            </div>
-            <Button type="submit" className="bg-[#235347] hover:bg-[#1a3f37] sm:col-span-2" disabled={mutation.isPending}>
-              {mutation.isPending ? "Creando…" : "Crear cuenta"}
-            </Button>
-          </form>
+  const required = <span className="text-destructive">*</span>;
 
-          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> o <span className="h-px flex-1 bg-border" />
+  return (
+    <AuthBox className="max-w-[480px]">
+      <AuthBackLink href="/login">Volver a iniciar sesión</AuthBackLink>
+      <AuthLogo />
+      <AuthTitle>Crear Cuenta</AuthTitle>
+      <AuthSubtitle>Regístrate para comprar en Ciclo Finca 4</AuthSubtitle>
+
+      <form className="flex w-full flex-col gap-3.5" onSubmit={handleSubmit((v) => mutation.mutate(v))} noValidate>
+        <div className="flex flex-col gap-1.5">
+          <FieldLabel htmlFor="name" icon="fas fa-user">Nombre {required}</FieldLabel>
+          <Input id="name" placeholder="Ej: Juan" {...register("name")} aria-invalid={!!errors.name} />
+          <FieldError>{errors.name?.message}</FieldError>
+        </div>
+
+        <div className="grid gap-3.5 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel htmlFor="fs" icon="fas fa-user">Primer apellido {required}</FieldLabel>
+            <Input id="fs" placeholder="Ej: Pérez" {...register("first_surname")} aria-invalid={!!errors.first_surname} />
+            <FieldError>{errors.first_surname?.message}</FieldError>
           </div>
-          <Button asChild variant="outline" className="w-full">
-            <a href={`${API_URL}/auth/google?from=spa`}>Continuar con Google</a>
-          </Button>
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            ¿Ya tenés cuenta?{" "}
-            <Link href="/login" className="font-medium text-[#235347] hover:underline">Ingresá</Link>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel htmlFor="ss" icon="fas fa-user">Segundo apellido</FieldLabel>
+            <Input id="ss" placeholder="Ej: García (opcional)" {...register("second_surname")} />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <FieldLabel htmlFor="gmail" icon="fas fa-envelope">Correo Electrónico {required}</FieldLabel>
+          <Input id="gmail" type="email" placeholder="ejemplo@gmail.com" autoComplete="email" {...register("gmail")} aria-invalid={!!errors.gmail} />
+          <FieldError>{errors.gmail?.message}</FieldError>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <FieldLabel htmlFor="pw" icon="fas fa-lock">Contraseña {required}</FieldLabel>
+          <div className="relative">
+            <Input id="pw" type={showPass ? "text" : "password"} placeholder="Mínimo 8 caracteres" autoComplete="new-password" className="pr-10" {...register("password")} aria-invalid={!!errors.password} />
+            <PasswordToggle visible={showPass} onToggle={() => setShowPass((v) => !v)} />
+          </div>
+          <FieldError>{errors.password?.message}</FieldError>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <FieldLabel htmlFor="pwc" icon="fas fa-lock">Confirmar contraseña {required}</FieldLabel>
+          <div className="relative">
+            <Input id="pwc" type={showPass2 ? "text" : "password"} placeholder="Repite la contraseña" autoComplete="new-password" className="pr-10" {...register("password_confirmation")} aria-invalid={!!errors.password_confirmation} />
+            <PasswordToggle visible={showPass2} onToggle={() => setShowPass2((v) => !v)} />
+          </div>
+          <FieldError>{errors.password_confirmation?.message}</FieldError>
+        </div>
+
+        <div>
+          <label className="flex items-start gap-2 text-sm leading-relaxed">
+            <Controller
+              control={control}
+              name="accept_terms"
+              render={({ field }) => (
+                <Checkbox className="mt-0.5" checked={field.value} onCheckedChange={(c) => field.onChange(c === true)} />
+              )}
+            />
+            <span>
+              Al registrarme acepto los{" "}
+              <a href="/legal/terminos" target="_blank" rel="noopener noreferrer" className="font-medium text-[#235347] underline underline-offset-2 dark:text-[#8EB69B]">Términos y condiciones</a>{" "}
+              y la{" "}
+              <a href="/legal/privacidad" target="_blank" rel="noopener noreferrer" className="font-medium text-[#235347] underline underline-offset-2 dark:text-[#8EB69B]">Política de privacidad</a>.
+            </span>
+          </label>
+          <FieldError>{errors.accept_terms?.message}</FieldError>
+        </div>
+
+        <AuthSubmitButton icon="fas fa-user-plus" pending={mutation.isPending} pendingText="Registrando...">
+          Crear Cuenta
+        </AuthSubmitButton>
+      </form>
+
+      <AuthDivider />
+      <GoogleButton href={`${API_URL}/auth/google?from=spa`} />
+
+      <p className="mt-5 text-center text-sm text-muted-foreground">
+        ¿Ya tienes cuenta?{" "}
+        <Link href="/login" className="font-semibold text-[#235347] hover:underline dark:text-[#8EB69B]">Iniciar sesión</Link>
+      </p>
+    </AuthBox>
   );
 }

@@ -65,13 +65,13 @@ export function DataTable<TData, TValue>({
     );
   }
 
-  // Mismo lienzo que <Card> para que todas las tablas compartan color.
+  // Mismo lienzo que <Card>; el estilo viejo de celdas/encabezado vive en ui/table.tsx.
   return (
     <div className="overflow-hidden rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((group) => (
-            <TableRow key={group.id}>
+            <TableRow key={group.id} className="hover:bg-transparent">
               {group.headers.map((header) => (
                 <TableHead key={header.id}>
                   {header.isPlaceholder

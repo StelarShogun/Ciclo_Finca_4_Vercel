@@ -1,21 +1,30 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
-import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 import {
+  checkout,
   clearCart,
   getCart,
   removeCartItem,
   updateCartItem,
+  type CartItem,
+  type CheckoutResult,
 } from "@/lib/api/client/cart";
-import { storeMediaUrl } from "@/lib/api/client/catalog";
+import { CartItemRow } from "@/components/storefront/cart/cart-item-row";
+import { CartSummary, type CartPaymentMethod } from "@/components/storefront/cart/cart-summary";
+import { CartEmptyState } from "@/components/storefront/cart/cart-empty-state";
+import { ListPagination } from "@/components/shared/list-pagination";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const PER_PAGE = 10; // mismo tamaño de página que el carrito viejo
 
 function errMsg(e: unknown, fallback: string) {
   return (isAxiosError(e) && (e.response?.data?.message as string)) || fallback;
@@ -23,110 +32,174 @@ function errMsg(e: unknown, fallback: string) {
 
 export default function CartPage() {
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+  const [paymentMethod, setPaymentMethod] = useState<CartPaymentMethod>("cash");
+  const [busyItemId, setBusyItemId] = useState<number | null>(null);
+  const [done, setDone] = useState<CheckoutResult | null>(null);
+
   const { data, isLoading, isError } = useQuery({ queryKey: ["cart"], queryFn: getCart });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["cart"] });
 
   const update = useMutation({
-    mutationFn: ({ id, qty }: { id: number; qty: number }) => updateCartItem(id, qty),
+    mutationFn: ({ item, qty }: { item: CartItem; qty: number }) => {
+      setBusyItemId(item.productId);
+      return updateCartItem(item.productId, qty);
+    },
     onSuccess: invalidate,
     onError: (e) => toast.error(errMsg(e, "No se pudo actualizar el carrito.")),
+    onSettled: () => setBusyItemId(null),
   });
   const remove = useMutation({
-    mutationFn: (id: number) => removeCartItem(id),
+    mutationFn: (item: CartItem) => {
+      setBusyItemId(item.productId);
+      return removeCartItem(item.productId);
+    },
     onSuccess: () => { toast.success("Producto quitado"); invalidate(); },
     onError: (e) => toast.error(errMsg(e, "No se pudo quitar el producto.")),
+    onSettled: () => setBusyItemId(null),
   });
   const empty = useMutation({
     mutationFn: clearCart,
     onSuccess: () => { toast.success("Carrito vaciado"); invalidate(); },
+    onError: (e) => toast.error(errMsg(e, "No se pudo vaciar el carrito.")),
+  });
+  const place = useMutation({
+    mutationFn: () => checkout(paymentMethod),
+    onSuccess: (res) => { setDone(res); invalidate(); },
+    onError: (e) => toast.error(errMsg(e, "No fue posible procesar el pedido.")),
   });
 
-  if (isLoading) {
-    return <div className="mx-auto max-w-4xl px-4 py-12"><Skeleton className="h-64" /></div>;
-  }
+  const items = useMemo(() => data?.items ?? [], [data]);
+  const totalQuantity = useMemo(() => items.reduce((sum, i) => sum + i.quantity, 0), [items]);
+  const lastPage = Math.max(1, Math.ceil(items.length / PER_PAGE));
+  const safePage = Math.min(page, lastPage);
+  const pageItems = items.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
+  const hasItems = items.length > 0;
 
-  const items = data?.items ?? [];
-
-  return (
-    <div className="mx-auto max-w-4xl px-4 py-12">
-      <h1 className="mb-6 text-2xl font-semibold tracking-tight">Mi carrito</h1>
-
-      {isError ? (
-        <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">No fue posible cargar el carrito.</CardContent></Card>
-      ) : items.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-4 py-16 text-center">
-            <ShoppingCart className="h-10 w-10 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Tu carrito está vacío.</p>
-            <Button asChild className="bg-[#235347] hover:bg-[#1a3f37]">
-              <Link href="/catalog">Ver catálogo</Link>
-            </Button>
+  if (done) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-16">
+        <Card className="border-t-4 border-t-[#235347]">
+          <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+            <CheckCircle2 className="h-12 w-12 text-[#235347]" />
+            <h1 className="text-xl font-semibold">¡Pedido confirmado!</h1>
+            <p className="text-sm text-muted-foreground">
+              Factura <span className="font-medium text-foreground">{done.invoice_number}</span>. Te avisaremos cuando esté listo para retirar.
+            </p>
+            <div className="flex gap-2">
+              <Button asChild variant="outline"><Link href="/catalog">Seguir comprando</Link></Button>
+              <Button asChild className="bg-[#235347] hover:bg-[#1a3f37]"><Link href="/invoices">Mis facturas</Link></Button>
+            </div>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-          <div className="space-y-3">
-            {items.map((item) => {
-              const img = storeMediaUrl(item.image.desktopWebp ?? item.image.fallback);
-              return (
-                <Card key={item.productId}>
-                  <CardContent className="flex items-center gap-4 p-3">
-                    <Link href={`/product/${item.productId}`} className="h-16 w-16 shrink-0 overflow-hidden rounded bg-muted">
-                      {img && !item.image.usesPlaceholder ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={img} alt={item.name} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">🚲</div>
-                      )}
-                    </Link>
-                    <div className="min-w-0 flex-1">
-                      <Link href={`/product/${item.productId}`} className="line-clamp-1 text-sm font-medium hover:underline">
-                        {item.name}
-                      </Link>
-                      <p className="text-sm text-muted-foreground">{item.unitPriceFormatted}</p>
-                    </div>
-                    <div className="flex items-center rounded-md border">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" disabled={update.isPending || item.quantity <= 1}
-                        onClick={() => update.mutate({ id: item.productId, qty: item.quantity - 1 })}>
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="w-8 text-center text-sm">{item.quantity}</span>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" disabled={update.isPending || item.quantity >= item.stockCurrent}
-                        onClick={() => update.mutate({ id: item.productId, qty: item.quantity + 1 })}>
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <span className="w-24 text-right text-sm font-medium">{item.subtotalFormatted}</span>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" disabled={remove.isPending}
-                      onClick={() => remove.mutate(item.productId)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => empty.mutate()} disabled={empty.isPending}>
-              Vaciar carrito
-            </Button>
+      </div>
+    );
+  }
+
+  return (
+    <section aria-labelledby="cart-page-title">
+      {/* Hero, fiel al cart-hero viejo */}
+      <header className="bg-[#051F20] py-10 text-[#DAF1DE]">
+        <div className="mx-auto max-w-6xl px-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-[#8EB69B]">Ciclo Finca 4</p>
+          <h1 id="cart-page-title" className="text-3xl font-bold tracking-tight">Tu carrito</h1>
+          <p className="mt-1 text-sm text-[#DAF1DE]/80">Revisá cantidades, elegí cómo pagar y confirmá cuando estés listo.</p>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-6xl px-4 py-6">
+        {/* Migas de pan */}
+        <nav className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground" aria-label="Migas de pan">
+          <Link href="/" className="hover:text-foreground hover:underline">Inicio</Link>
+          <span>/</span>
+          <span>Carrito</span>
+        </nav>
+
+        {/* Política de retiro en tienda */}
+        {data?.pickupPolicyNotice && (
+          <aside className="mb-4 rounded-xl border border-[#8EB69B]/50 bg-accent/60 p-4" aria-label="Política de retiro en tienda">
+            <div className="mb-1 flex items-center gap-2 font-bold text-[#235347] dark:text-[#8EB69B]">
+              <i className="fas fa-store" aria-hidden />
+              Retiro en tienda
+            </div>
+            <p className="text-sm text-muted-foreground">{data.pickupPolicyNotice}</p>
+          </aside>
+        )}
+
+        <div className="rounded-2xl border bg-card/50 p-4 sm:p-5">
+          {/* Toolbar */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-sm font-semibold">Resumen rápido</span>
+              {hasItems && (
+                <span className="text-sm text-muted-foreground">
+                  {totalQuantity} {totalQuantity === 1 ? "artículo" : "artículos"}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/catalog"
+                className="inline-flex items-center gap-2 rounded-lg border border-[#235347]/40 px-3.5 py-2 text-sm font-semibold text-[#235347] transition hover:bg-accent dark:text-[#8EB69B]"
+              >
+                <i className="fas fa-bicycle" aria-hidden />
+                Seguir comprando
+              </Link>
+              {hasItems && (
+                <button
+                  type="button"
+                  disabled={empty.isPending}
+                  onClick={() => empty.mutate()}
+                  className="inline-flex items-center gap-2 rounded-lg border border-red-300 px-3.5 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:hover:bg-red-950"
+                >
+                  <i className="fas fa-trash-alt" aria-hidden />
+                  {empty.isPending ? "Vaciando..." : "Vaciar carrito"}
+                </button>
+              )}
+            </div>
           </div>
 
-          <Card className="h-fit">
-            <CardContent className="space-y-4 p-5">
-              <div className="flex justify-between text-base font-semibold">
-                <span>Total</span>
-                <span className="text-[#235347]">{data?.totalFormatted}</span>
+          {isLoading ? (
+            <Skeleton className="h-64" />
+          ) : isError ? (
+            <p className="py-12 text-center text-sm text-muted-foreground">No fue posible cargar el carrito.</p>
+          ) : hasItems && data ? (
+            <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+              <div>
+                <ul className="space-y-3" aria-label="Productos en el carrito">
+                  {pageItems.map((item) => (
+                    <CartItemRow
+                      key={item.productId}
+                      item={item}
+                      isBusy={busyItemId === item.productId}
+                      onQuantityChange={(it, qty) => update.mutate({ item: it, qty })}
+                      onRemove={(it) => remove.mutate(it)}
+                    />
+                  ))}
+                </ul>
+                <ListPagination
+                  pagination={{ currentPage: safePage, lastPage, total: items.length, perPage: PER_PAGE }}
+                  onPageChange={setPage}
+                  label="carrito"
+                />
               </div>
-              {data?.pickupPolicyLine && (
-                <p className="text-xs text-muted-foreground">{data.pickupPolicyLine}</p>
-              )}
-              <Button asChild className="w-full bg-[#235347] hover:bg-[#1a3f37]">
-                <Link href="/checkout">Continuar al pago</Link>
-              </Button>
-            </CardContent>
-          </Card>
+
+              <CartSummary
+                subtotalFormatted={data.totalFormatted}
+                totalFormatted={data.totalFormatted}
+                paymentMethod={paymentMethod}
+                pickupPolicyLine={data.pickupPolicyLine}
+                isCheckingOut={place.isPending}
+                onCheckout={() => place.mutate()}
+                onPaymentMethodChange={setPaymentMethod}
+              />
+            </div>
+          ) : (
+            <CartEmptyState />
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </section>
   );
 }

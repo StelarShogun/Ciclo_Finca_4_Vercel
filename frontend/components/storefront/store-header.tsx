@@ -109,6 +109,21 @@ export function StoreHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#235347]/40 bg-[#051F20] text-[#DAF1DE]">
+      {/* Modo administrador: equivalente SPA del admin_catalog_mode viejo */}
+      {data?.type === "admin" && (
+        <div className="bg-[#F59E0B] text-[#051F20]">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-1.5 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1.5">
+              <i className="fas fa-user-shield" aria-hidden />
+              Estás navegando el sitio como administrador
+            </span>
+            <Link href="/admin" className="inline-flex items-center gap-1.5 rounded-full bg-[#051F20] px-3 py-1 text-[#DAF1DE] transition hover:bg-[#0B2B26]">
+              <i className="fas fa-arrow-left" aria-hidden />
+              Volver al panel
+            </Link>
+          </div>
+        </div>
+      )}
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
         {/* Logo */}
         <Link href="/" className="flex shrink-0 items-center gap-2">
