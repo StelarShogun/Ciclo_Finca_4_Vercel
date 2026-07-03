@@ -57,7 +57,9 @@ export function StoreFooter() {
             <div>
               <h3 className="text-lg font-semibold text-white">Ciclo Finca 4</h3>
               <p className="mt-1 text-sm text-[#DAF1DE]/70">
-                Especialistas en bicicletas, componentes y retiro en tienda.
+                Ciclo Finca 4 es la tienda en línea para comprar bicicletas, componentes y
+                accesorios con retiro en tienda. Creá tu cuenta para encargar productos,
+                seguir tus pedidos y guardar favoritos.
               </p>
             </div>
           </div>

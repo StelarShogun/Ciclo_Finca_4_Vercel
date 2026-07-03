@@ -130,7 +130,7 @@ export function StoreHeader() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/logo-ciclo-finca-icon-64.webp" alt="Ciclo Finca 4" width={36} height={36} className="h-9 w-9 object-contain" />
           <span className="hidden text-base font-semibold leading-tight sm:block">
-            Ciclo <span className="text-[#8EB69B]">Finca</span>
+            Ciclo <span className="text-[#8EB69B]">Finca 4</span>
           </span>
         </Link>
 
