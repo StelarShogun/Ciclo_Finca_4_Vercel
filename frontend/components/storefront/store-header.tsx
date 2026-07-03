@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Bell, Heart, Home, LogOut, Receipt, Search, ShoppingCart, Store, Tag, User } from "lucide-react";
+import { Bell, Heart, Home, LogOut, Menu, Receipt, Search, ShoppingCart, Store, Tag, User } from "lucide-react";
 
 import { clientLogout } from "@/lib/api/auth";
 import { useMe } from "@/lib/auth/use-me";
@@ -25,6 +25,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 function NavLink({ href, active, icon: Icon, children }: { href: string; active: boolean; icon: React.ElementType; children: React.ReactNode }) {
@@ -141,6 +148,7 @@ export function StoreHeader() {
   const queryClient = useQueryClient();
   const { data } = useMe();
   const favoritesDrawer = useFavoritesDrawer();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const isClient = data?.type === "client";
 
@@ -195,8 +203,8 @@ export function StoreHeader() {
           </span>
         </Link>
 
-        {/* Nav */}
-        <nav className="ml-1 flex items-center gap-1">
+        {/* Nav (desktop) */}
+        <nav className="ml-1 hidden items-center gap-1 md:flex">
           <NavLink href="/" active={pathname === "/"} icon={Home}>Inicio</NavLink>
           <NavLink href="/catalog" active={pathname.startsWith("/catalog")} icon={Store}>Catálogo</NavLink>
         </nav>
@@ -204,8 +212,132 @@ export function StoreHeader() {
         {/* Búsqueda inteligente (fila principal, solo desktop) */}
         <SmartSearch className="ml-2 hidden flex-1 lg:block" />
 
-        {/* Acciones */}
-        <div className="ml-auto flex items-center gap-1">
+        {/* Móvil: carrito + hamburguesa, como el header viejo */}
+        <div className="ml-auto flex items-center gap-1 md:hidden">
+          <Button asChild variant="ghost" size="icon" className="relative text-[#DAF1DE] hover:bg-[#235347] hover:text-white">
+            <Link href="/cart" aria-label="Carrito">
+              <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          </Button>
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={menuOpen ? "Cerrar menú de navegación" : "Abrir menú de navegación"}
+                className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="flex w-[85vw] max-w-sm flex-col gap-0 overflow-y-auto bg-[#051F20] p-0 text-[#DAF1DE]">
+              <SheetHeader className="border-b border-[#235347]/40 p-4">
+                <SheetTitle className="flex items-center gap-2 text-[#DAF1DE]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/brand/logo-ciclo-finca-icon-64.webp" alt="" width={28} height={28} className="h-7 w-7 object-contain" />
+                  Ciclo <span className="text-[#8EB69B]">Finca 4</span>
+                </SheetTitle>
+              </SheetHeader>
+
+              <div className="flex flex-col gap-1 p-4">
+                <SmartSearch className="mb-3" />
+
+                {[
+                  { href: "/", label: "Inicio", icon: Home, active: pathname === "/" },
+                  { href: "/catalog", label: "Catálogo", icon: Store, active: pathname.startsWith("/catalog") },
+                  { href: "/cart", label: "Carrito", icon: ShoppingCart, active: pathname.startsWith("/cart"), badge: cartCount },
+                ].map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium",
+                      item.active ? "bg-[#235347] text-white" : "hover:bg-[#235347]/60 hover:text-white",
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" /> {item.label}
+                    {!!item.badge && (
+                      <span className="ml-auto rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white">{item.badge}</span>
+                    )}
+                  </Link>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => { setMenuOpen(false); favoritesDrawer.open(); }}
+                  className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium hover:bg-[#235347]/60 hover:text-white"
+                >
+                  <Heart className="h-4 w-4" /> Favoritos
+                </button>
+
+                <div className="my-2 border-t border-[#235347]/40" />
+
+                <div className="flex items-center justify-between px-3 py-1.5 text-sm font-medium">
+                  Tema
+                  <ThemeToggle className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white" />
+                </div>
+
+                <div className="my-2 border-t border-[#235347]/40" />
+
+                {isClient ? (
+                  <>
+                    <div className="flex items-center gap-3 px-3 py-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-[#235347] text-xs text-white">{initials || "U"}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">{data?.user.name}</p>
+                        <p className="truncate text-xs text-[#DAF1DE]/60">{data?.user.gmail}</p>
+                      </div>
+                    </div>
+                    {[
+                      { href: "/profile", label: "Mi perfil", icon: User },
+                      { href: "/invoices", label: "Mis facturas", icon: Receipt },
+                      { href: "/notifications", label: "Notificaciones", icon: Bell, badge: unread },
+                    ].map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium hover:bg-[#235347]/60 hover:text-white"
+                      >
+                        <item.icon className="h-4 w-4" /> {item.label}
+                        {!!item.badge && (
+                          <span className="ml-auto rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white">{item.badge}</span>
+                        )}
+                      </Link>
+                    ))}
+                    <button
+                      type="button"
+                      disabled={logout.isPending}
+                      onClick={() => { setMenuOpen(false); logout.mutate(); }}
+                      className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-red-300 hover:bg-red-500/15"
+                    >
+                      <LogOut className="h-4 w-4" /> Cerrar sesión
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-2 px-1 pt-1">
+                    <Button asChild className="w-full bg-[#12B36A] text-white hover:bg-[#0E9558]" onClick={() => setMenuOpen(false)}>
+                      <Link href="/login">Iniciar sesión</Link>
+                    </Button>
+                    <Button asChild variant="outline" className="w-full border-[#8EB69B]/50 bg-transparent text-[#DAF1DE] hover:bg-[#235347] hover:text-white" onClick={() => setMenuOpen(false)}>
+                      <Link href="/register">Crear cuenta</Link>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Acciones (desktop) */}
+        <div className="ml-auto hidden items-center gap-1 md:flex">
           <ThemeToggle className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white" />
 
           <Button
@@ -259,39 +391,20 @@ export function StoreHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <>
-              {/* Móvil: las dos acciones de auth colapsan en un menú de usuario */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Cuenta"
-                    className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white sm:hidden"
-                  >
-                    <User className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem asChild><Link href="/login"><LogOut className="h-4 w-4 rotate-180" /> Iniciar sesión</Link></DropdownMenuItem>
-                  <DropdownMenuItem asChild><Link href="/register"><User className="h-4 w-4" /> Crear cuenta</Link></DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <div className="hidden items-center gap-1 sm:flex">
-                <Button asChild variant="ghost" size="sm" className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white">
-                  <Link href="/login">Iniciar sesión</Link>
-                </Button>
-                <Button asChild size="sm" className="bg-[#12B36A] text-white hover:bg-[#0E9558]">
-                  <Link href="/register">Crear cuenta</Link>
-                </Button>
-              </div>
-            </>
+            <div className="flex items-center gap-1">
+              <Button asChild variant="ghost" size="sm" className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white">
+                <Link href="/login">Iniciar sesión</Link>
+              </Button>
+              <Button asChild size="sm" className="bg-[#12B36A] text-white hover:bg-[#0E9558]">
+                <Link href="/register">Crear cuenta</Link>
+              </Button>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Búsqueda en fila propia para móvil/tablet */}
-      <div className="mx-auto max-w-7xl px-4 pb-3 lg:hidden">
+      {/* Búsqueda en fila propia para tablet (en móvil vive en el menú hamburguesa) */}
+      <div className="mx-auto hidden max-w-7xl px-4 pb-3 md:block lg:hidden">
         <SmartSearch />
       </div>
     </header>
