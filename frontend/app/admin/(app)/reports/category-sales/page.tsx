@@ -25,7 +25,7 @@ function Kpi({ title, value, icon }: { title: string; value: string; icon: strin
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <p className="text-2xl font-bold">{value}</p>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-[#235347] dark:text-[#8EB69B]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-brand-medium dark:text-brand-light">
           <i className={`fas ${icon}`} aria-hidden />
         </div>
       </CardContent>
@@ -135,7 +135,7 @@ export default function CategorySalesReport() {
                             <span className="text-sm">{r.percentage}%</span>
                             <span className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
                               <span
-                                className="block h-full rounded-full bg-[#235347] dark:bg-[#8EB69B]"
+                                className="block h-full rounded-full bg-brand-medium dark:bg-brand-light"
                                 style={{ width: `${r.percentage}%` }}
                               />
                             </span>

@@ -68,7 +68,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
     <Dialog open={open} onOpenChange={(o) => !o && close()}>
       <DialogContent className="sm:max-w-[38rem]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><i className="fas fa-file-import text-[#235347] dark:text-[#8EB69B]" aria-hidden /> Importar catálogo</DialogTitle>
+          <DialogTitle className="flex items-center gap-2"><i className="fas fa-file-import text-brand-medium dark:text-brand-light" aria-hidden /> Importar catálogo</DialogTitle>
           <DialogDescription>Archivo ZIP, JSON, XML o CSV con productos.</DialogDescription>
         </DialogHeader>
 
@@ -76,7 +76,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
           <div className="space-y-4">
             <div
               onClick={() => inputRef.current?.click()}
-              className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-6 text-center hover:border-[#235347]/60"
+              className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-6 text-center hover:border-brand-medium/60"
             >
               <FileUp className="h-8 w-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">{file ? file.name : "Hacé clic para elegir el archivo"}</p>
@@ -86,16 +86,16 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
         ) : (
           <div className="flex flex-col items-center gap-3 py-6 text-center">
             {progress?.status === "done" ? (
-              <><CheckCircle2 className="h-10 w-10 text-[#235347]" /><p className="font-medium">Importación completada</p></>
+              <><CheckCircle2 className="h-10 w-10 text-brand-medium" /><p className="font-medium">Importación completada</p></>
             ) : progress?.status === "failed" ? (
               <><XCircle className="h-10 w-10 text-destructive" /><p className="font-medium">La importación falló</p></>
             ) : (
-              <><Loader2 className="h-10 w-10 animate-spin text-[#235347]" /><p className="font-medium">Procesando…</p></>
+              <><Loader2 className="h-10 w-10 animate-spin text-brand-medium" /><p className="font-medium">Procesando…</p></>
             )}
             {progress?.message && <p className="text-sm text-muted-foreground">{progress.message}</p>}
             {pct !== null && running && (
               <div className="w-full">
-                <div className="h-2 overflow-hidden rounded bg-muted"><div className="h-full bg-[#12B36A] transition-all" style={{ width: `${pct}%` }} /></div>
+                <div className="h-2 overflow-hidden rounded bg-muted"><div className="h-full bg-cta transition-all" style={{ width: `${pct}%` }} /></div>
                 <p className="mt-1 text-xs text-muted-foreground">{progress?.processed ?? 0} / {progress?.total} ({pct}%)</p>
               </div>
             )}
@@ -109,7 +109,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
           {!importId ? (
             <>
               <Button variant="outline" onClick={close}>Cancelar</Button>
-              <Button className="bg-[#235347] hover:bg-[#1a3f37]" disabled={!file || start.isPending} onClick={() => start.mutate()}>
+              <Button className="bg-brand-medium hover:bg-brand-medium-dark" disabled={!file || start.isPending} onClick={() => start.mutate()}>
                 {start.isPending ? "Subiendo…" : "Importar"}
               </Button>
             </>

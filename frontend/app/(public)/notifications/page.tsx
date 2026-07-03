@@ -45,7 +45,7 @@ export default function NotificationsPage() {
     <div className="mx-auto max-w-2xl px-4 py-12">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          <Bell className="h-6 w-6 text-[#235347]" /> Notificaciones
+          <Bell className="h-6 w-6 text-brand-medium" /> Notificaciones
         </h1>
         {items.length > 0 && (
           <Button variant="outline" size="sm" onClick={() => markAll.mutate()} disabled={markAll.isPending}>
@@ -65,7 +65,7 @@ export default function NotificationsPage() {
                   <p className="text-sm">{n.message}</p>
                   <p className="text-xs text-muted-foreground">{n.createdAtLabel}</p>
                   {n.actionUrl && (
-                    <Link href={n.actionUrl} className="text-xs font-medium text-[#235347] hover:underline">
+                    <Link href={n.actionUrl} className="text-xs font-medium text-brand-medium hover:underline">
                       {n.actionLabel}
                     </Link>
                   )}

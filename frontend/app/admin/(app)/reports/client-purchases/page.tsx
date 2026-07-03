@@ -198,7 +198,7 @@ export default function ClientPurchasesReport() {
         <DialogContent className="max-h-[90vh] sm:max-w-[38rem] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <i className="fas fa-user text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+              <i className="fas fa-user text-brand-medium dark:text-brand-light" aria-hidden />
               {history.data?.displayName ?? historyFor?.display_name ?? "Compras del cliente"}
             </DialogTitle>
             <DialogDescription>{history.data?.gmail ?? historyFor?.gmail}</DialogDescription>
@@ -252,7 +252,7 @@ export default function ClientPurchasesReport() {
         <DialogContent className="max-h-[90vh] sm:max-w-[56rem] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <i className="fas fa-receipt text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+              <i className="fas fa-receipt text-brand-medium dark:text-brand-light" aria-hidden />
               Venta {saleDetail?.invoice_number ?? ""}
             </DialogTitle>
             <DialogDescription>{saleDetail?.sale_date_label}</DialogDescription>

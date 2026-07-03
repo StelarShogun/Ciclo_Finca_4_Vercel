@@ -90,7 +90,7 @@ export default function HomePage() {
                 {data?.hero.emphasis ?? "con asesoría real en tienda"}
               </strong>
             </h1>
-            <div className="mt-5 h-1 w-16 rounded-full bg-[#12B36A]" aria-hidden />
+            <div className="mt-5 h-1 w-16 rounded-full bg-cta" aria-hidden />
             <p className="mt-5 max-w-xl text-lg text-white/95">
               {data?.hero.subtitle ?? "Bicicletas, componentes y accesorios listos para encargo con retiro rápido."}
             </p>
@@ -98,7 +98,7 @@ export default function HomePage() {
               {data?.hero.description ?? "Te guiamos en elección, ajuste y preparación para que retires con confianza."}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="bg-[#12B36A] hover:bg-[#0E9558]">
+              <Button asChild size="lg" className="bg-cta hover:bg-cta-strong">
                 <Link href="/catalog">Ver catálogo <ArrowRight className="h-4 w-4" /></Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white">
@@ -119,7 +119,7 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:grid-cols-3">
           {TRUST.map((t) => (
             <div key={t.title} className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-[#235347]"><t.icon className="h-5 w-5" /></span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-brand-medium"><t.icon className="h-5 w-5" /></span>
               <div><p className="font-semibold">{t.title}</p><p className="text-sm text-muted-foreground">{t.text}</p></div>
             </div>
           ))}
@@ -134,7 +134,7 @@ export default function HomePage() {
               <h2 className="text-2xl font-semibold tracking-tight">Productos destacados</h2>
               <p className="text-sm text-muted-foreground">Lo más buscado por nuestros clientes esta semana.</p>
             </div>
-            <Link href="/catalog" className="text-sm font-medium text-[#235347] hover:underline dark:text-[#8EB69B]">Ver todos</Link>
+            <Link href="/catalog" className="text-sm font-medium text-brand-medium hover:underline dark:text-brand-light">Ver todos</Link>
           </div>
           {isLoading ? (
             <div className="mt-4 flex gap-4 overflow-hidden">
@@ -155,7 +155,7 @@ export default function HomePage() {
             <h2 className="mb-1 text-2xl font-semibold tracking-tight">Explora por categoría</h2>
             <p className="mb-3 text-sm text-muted-foreground">Desliza para ver cada familia de productos y sus subcategorías.</p>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <Link href="/catalog" className="inline-flex items-center gap-1.5 text-sm font-medium text-[#235347] hover:underline dark:text-[#8EB69B]">
+              <Link href="/catalog" className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-medium hover:underline dark:text-brand-light">
                 <Store className="h-4 w-4" /> Ver todo el catálogo
               </Link>
               <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:inline-flex">
@@ -167,10 +167,10 @@ export default function HomePage() {
                 <Card key={c.id} className="flex h-full flex-col transition-shadow hover:shadow-md">
                   <CardContent className="flex flex-1 flex-col gap-3 p-5">
                     <Link href={`/catalog?category_id=${c.id}`} className="group/cat flex flex-col gap-2">
-                      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-[#235347] dark:text-[#8EB69B]"><Store className="h-6 w-6" /></span>
+                      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-brand-medium dark:text-brand-light"><Store className="h-6 w-6" /></span>
                       <h3 className="text-lg font-semibold">{c.name}</h3>
                       {c.description && <p className="line-clamp-2 text-sm text-muted-foreground">{c.description}</p>}
-                      <span className="inline-flex items-center gap-1 text-sm font-medium text-[#12B36A] group-hover/cat:gap-2 dark:text-[#2ED27E]">
+                      <span className="inline-flex items-center gap-1 text-sm font-medium text-cta group-hover/cat:gap-2 dark:text-[#2ED27E]">
                         Ver todo en {c.name} <ArrowRight className="h-4 w-4 transition-all" />
                       </span>
                     </Link>
@@ -180,7 +180,7 @@ export default function HomePage() {
                           <Link
                             key={s.id}
                             href={`/catalog?category_id=${s.id}`}
-                            className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-[#235347] hover:text-[#235347] dark:hover:border-[#8EB69B] dark:hover:text-[#8EB69B]"
+                            className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-brand-medium hover:text-brand-medium dark:hover:border-brand-light dark:hover:text-brand-light"
                           >
                             {s.name}
                           </Link>
@@ -202,7 +202,7 @@ export default function HomePage() {
             {BENEFITS.map((b) => (
               <Card key={b.title}>
                 <CardContent className="flex flex-col gap-2 p-5">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#235347] text-white"><b.icon className="h-5 w-5" /></span>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-medium text-white"><b.icon className="h-5 w-5" /></span>
                   <p className="font-semibold">{b.title}</p>
                   <p className="text-sm text-muted-foreground">{b.text}</p>
                 </CardContent>
@@ -224,13 +224,13 @@ export default function HomePage() {
               <Card key={s.n}>
                 <CardContent className="flex flex-col gap-2 p-5">
                   <div className="flex items-center gap-2">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#12B36A] text-sm font-bold text-white">{s.n}</span>
-                    <s.icon className="h-5 w-5 text-[#235347] dark:text-[#8EB69B]" />
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cta text-sm font-bold text-white">{s.n}</span>
+                    <s.icon className="h-5 w-5 text-brand-medium dark:text-brand-light" />
                   </div>
                   <p className="font-semibold">{s.title}</p>
                   <p className="text-sm text-muted-foreground">{s.text}</p>
                   {s.cta && (
-                    <Link href={s.cta[1]} className="mt-1 text-sm font-medium text-[#235347] hover:underline dark:text-[#8EB69B]">{s.cta[0]} →</Link>
+                    <Link href={s.cta[1]} className="mt-1 text-sm font-medium text-brand-medium hover:underline dark:text-brand-light">{s.cta[0]} →</Link>
                   )}
                 </CardContent>
               </Card>
@@ -257,12 +257,12 @@ export default function HomePage() {
       </div>
 
       {/* 8. CTA final */}
-      <section className="bg-[#051F20] text-white">
+      <section className="bg-brand-darkest text-white">
         <div className="mx-auto max-w-7xl px-4 py-16 text-center">
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">¿Listo para tu próximo rodaje?</h2>
           <p className="mx-auto mt-2 max-w-xl text-white/80">Explorá el catálogo y dejá tu solicitud para prepararlo en tienda con respaldo técnico.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg" className="bg-[#12B36A] hover:bg-[#0E9558]"><Link href="/catalog">Ver catálogo</Link></Button>
+            <Button asChild size="lg" className="bg-cta hover:bg-cta-strong"><Link href="/catalog">Ver catálogo</Link></Button>
             <Button asChild size="lg" variant="outline" className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white">
               <Link href={isGuest ? "/register" : "/cart"}>{isGuest ? "Crear cuenta" : "Ir al carrito"}</Link>
             </Button>

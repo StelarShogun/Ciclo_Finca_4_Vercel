@@ -24,8 +24,8 @@ export function CategoryRail({
       <Link
         href="/catalog"
         className={cn(
-          "shrink-0 whitespace-nowrap rounded-full border border-[#8EB69B]/40 bg-card px-3.5 py-1.5 text-xs font-semibold",
-          !activeCategoryId && "border-[#235347] bg-accent text-[#235347] dark:text-[#8EB69B]",
+          "shrink-0 whitespace-nowrap rounded-full border border-brand-light/40 bg-card px-3.5 py-1.5 text-xs font-semibold",
+          !activeCategoryId && "border-brand-medium bg-accent text-brand-medium dark:text-brand-light",
         )}
       >
         Todos
@@ -37,8 +37,8 @@ export function CategoryRail({
             key={c.id}
             href={`/catalog?category_id=${c.id}`}
             className={cn(
-              "shrink-0 whitespace-nowrap rounded-full border border-[#8EB69B]/40 bg-card px-3.5 py-1.5 text-xs font-semibold",
-              active && "border-[#235347] bg-accent text-[#235347] dark:text-[#8EB69B]",
+              "shrink-0 whitespace-nowrap rounded-full border border-brand-light/40 bg-card px-3.5 py-1.5 text-xs font-semibold",
+              active && "border-brand-medium bg-accent text-brand-medium dark:text-brand-light",
             )}
           >
             {c.icon && <i className={cn(c.icon, "mr-1.5")} aria-hidden />}
@@ -52,13 +52,13 @@ export function CategoryRail({
     <div className="sticky top-20 z-30 hidden w-14 shrink-0 self-start lg:block">
       <nav
         aria-label="Categorías del catálogo"
-        className="group/rail absolute left-0 top-0 z-30 flex max-h-[calc(100dvh-7rem)] w-14 flex-col gap-2 overflow-visible rounded-[22px] border border-[#8EB69B]/40 bg-card/90 p-2.5 shadow-lg backdrop-blur transition-[width] duration-200 hover:w-56"
+        className="group/rail absolute left-0 top-0 z-30 flex max-h-[calc(100dvh-7rem)] w-14 flex-col gap-2 overflow-visible rounded-[22px] border border-brand-light/40 bg-card/90 p-2.5 shadow-lg backdrop-blur transition-[width] duration-200 hover:w-56"
       >
-        <div className="flex items-center gap-2 border-b border-[#8EB69B]/30 pb-2.5">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[14px] bg-[#0B2B26] text-white shadow">
+        <div className="flex items-center gap-2 border-b border-brand-light/30 pb-2.5">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[14px] bg-brand-dark text-white shadow">
             <i className="fas fa-bars" aria-hidden />
           </span>
-          <span className="hidden whitespace-nowrap text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#051F20] group-hover/rail:inline dark:text-[#DAF1DE]">
+          <span className="hidden whitespace-nowrap text-[11px] font-extrabold uppercase tracking-[0.12em] text-brand-darkest group-hover/rail:inline dark:text-brand-lightest">
             Categorías
           </span>
         </div>
@@ -68,9 +68,9 @@ export function CategoryRail({
             href="/catalog"
             title="Todos los productos"
             className={cn(
-              "flex min-h-11 items-center gap-3 rounded-[15px] px-3 text-sm font-bold text-[#051F20] transition-colors hover:bg-accent dark:text-[#DAF1DE]",
+              "flex min-h-11 items-center gap-3 rounded-[15px] px-3 text-sm font-bold text-brand-darkest transition-colors hover:bg-accent dark:text-brand-lightest",
               "justify-center group-hover/rail:justify-start",
-              !activeCategoryId && "bg-accent text-[#235347] dark:text-[#8EB69B]",
+              !activeCategoryId && "bg-accent text-brand-medium dark:text-brand-light",
             )}
           >
             <i className="fas fa-list w-5 text-center" aria-hidden />
@@ -86,9 +86,9 @@ export function CategoryRail({
                   href={`/catalog?category_id=${c.id}`}
                   title={c.name}
                   className={cn(
-                    "flex min-h-11 items-center gap-3 rounded-[15px] px-3 text-sm font-bold text-[#051F20] transition-colors hover:bg-accent dark:text-[#DAF1DE]",
+                    "flex min-h-11 items-center gap-3 rounded-[15px] px-3 text-sm font-bold text-brand-darkest transition-colors hover:bg-accent dark:text-brand-lightest",
                     "justify-center group-hover/rail:justify-start",
-                    (parentActive || childActive) && "bg-accent text-[#235347] dark:text-[#8EB69B]",
+                    (parentActive || childActive) && "bg-accent text-brand-medium dark:text-brand-light",
                   )}
                 >
                   <i className={cn(c.icon || "fas fa-tag", "w-5 text-center")} aria-hidden />
@@ -107,8 +107,8 @@ export function CategoryRail({
                           <Link
                             href={`/catalog?category_id=${ch.id}`}
                             className={cn(
-                              "block rounded-md px-2.5 py-2 text-sm text-foreground/80 transition-colors hover:bg-accent hover:text-[#235347] dark:hover:text-[#8EB69B]",
-                              String(ch.id) === activeCategoryId && "bg-[#235347] font-semibold text-white",
+                              "block rounded-md px-2.5 py-2 text-sm text-foreground/80 transition-colors hover:bg-accent hover:text-brand-medium dark:hover:text-brand-light",
+                              String(ch.id) === activeCategoryId && "bg-brand-medium font-semibold text-white",
                             )}
                           >
                             {ch.name}

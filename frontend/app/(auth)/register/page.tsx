@@ -140,9 +140,9 @@ export default function RegisterPage() {
             />
             <span>
               Al registrarme acepto los{" "}
-              <a href="/legal/terminos" target="_blank" rel="noopener noreferrer" className="font-medium text-[#235347] underline underline-offset-2 dark:text-[#8EB69B]">Términos y condiciones</a>{" "}
+              <a href="/legal/terminos" target="_blank" rel="noopener noreferrer" className="font-medium text-brand-medium underline underline-offset-2 dark:text-brand-light">Términos y condiciones</a>{" "}
               y la{" "}
-              <a href="/legal/privacidad" target="_blank" rel="noopener noreferrer" className="font-medium text-[#235347] underline underline-offset-2 dark:text-[#8EB69B]">Política de privacidad</a>.
+              <a href="/legal/privacidad" target="_blank" rel="noopener noreferrer" className="font-medium text-brand-medium underline underline-offset-2 dark:text-brand-light">Política de privacidad</a>.
             </span>
           </label>
           <FieldError>{errors.accept_terms?.message}</FieldError>
@@ -158,7 +158,7 @@ export default function RegisterPage() {
 
       <p className="mt-5 text-center text-sm text-muted-foreground">
         ¿Ya tienes cuenta?{" "}
-        <Link href="/login" className="font-semibold text-[#235347] hover:underline dark:text-[#8EB69B]">Iniciar sesión</Link>
+        <Link href="/login" className="font-semibold text-brand-medium hover:underline dark:text-brand-light">Iniciar sesión</Link>
       </p>
     </AuthBox>
   );

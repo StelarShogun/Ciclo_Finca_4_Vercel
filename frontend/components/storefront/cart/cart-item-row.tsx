@@ -35,10 +35,10 @@ export function CartItemRow({ item, isBusy = false, onQuantityChange, onRemove }
           <Link href={productUrl} className="hover:underline">{item.name}</Link>
         </h3>
         <div className="mt-1 flex flex-wrap items-center gap-2.5">
-          <span className="text-sm font-medium text-[#235347] dark:text-[#8EB69B]">
+          <span className="text-sm font-medium text-brand-medium dark:text-brand-light">
             {item.unitPriceFormatted} <span className="text-xs font-normal text-muted-foreground">c/u</span>
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-[#235347] dark:text-[#8EB69B]" title="Stock disponible en tienda">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-brand-medium dark:text-brand-light" title="Stock disponible en tienda">
             <i className="fas fa-boxes-stacked" aria-hidden />
             {item.stockCurrent} disponibles
           </span>
@@ -86,7 +86,7 @@ export function CartItemRow({ item, isBusy = false, onQuantityChange, onRemove }
       <div className="flex items-center gap-3">
         <div className="text-right">
           <span className="block text-[11px] font-medium text-muted-foreground">Subtotal</span>
-          <span className="text-sm font-bold text-[#235347] dark:text-[#8EB69B]">{item.subtotalFormatted}</span>
+          <span className="text-sm font-bold text-brand-medium dark:text-brand-light">{item.subtotalFormatted}</span>
         </div>
         <button
           type="button"

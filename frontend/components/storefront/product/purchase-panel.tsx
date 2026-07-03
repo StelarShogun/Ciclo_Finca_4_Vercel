@@ -18,14 +18,14 @@ function Badge({
   children: React.ReactNode;
 }) {
   const tones: Record<string, string> = {
-    category: "bg-accent text-[#235347] dark:text-[#8EB69B]",
-    subcategory: "bg-accent/70 text-[#235347] dark:text-[#8EB69B]",
+    category: "bg-accent text-brand-medium dark:text-brand-light",
+    subcategory: "bg-accent/70 text-brand-medium dark:text-brand-light",
     brand: "border bg-card text-foreground",
     stock: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
     low: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
     out: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
     featured: "bg-amber-500 text-white",
-    new: "bg-[#12B36A] text-white",
+    new: "bg-cta text-white",
   };
   const cls = cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold", tones[tone]);
   const body = (
@@ -142,7 +142,7 @@ export function PurchasePanel({
 
       <div>
         <span className="block text-xs font-medium uppercase tracking-wide text-muted-foreground">Precio</span>
-        <span className="text-[clamp(1.75rem,4vw,2.35rem)] font-bold leading-tight text-[#051F20] dark:text-[#DAF1DE]">
+        <span className="text-[clamp(1.75rem,4vw,2.35rem)] font-bold leading-tight text-brand-darkest dark:text-brand-lightest">
           {p.priceFormatted}
         </span>
       </div>
@@ -184,7 +184,7 @@ export function PurchasePanel({
               type="button"
               disabled={isBusy}
               onClick={onAddToCart}
-              className="flex w-full items-center justify-center gap-2.5 rounded-[10px] bg-[#235347] px-5 py-3 font-bold text-white shadow-[0_4px_14px_rgba(35,83,71,0.22)] transition hover:-translate-y-px hover:bg-[#256428] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2.5 rounded-[10px] bg-brand-medium px-5 py-3 font-bold text-white shadow-[0_4px_14px_rgba(35,83,71,0.22)] transition hover:-translate-y-px hover:bg-[#256428] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <i className={isBusy ? "fas fa-spinner fa-spin" : "fas fa-cart-plus"} aria-hidden />
               Agregar al carrito
@@ -197,8 +197,8 @@ export function PurchasePanel({
               className={cn(
                 "flex w-full items-center justify-center gap-2.5 rounded-[10px] border-[1.5px] px-5 py-2.5 text-sm font-semibold transition disabled:opacity-60",
                 p.isFavorite
-                  ? "border-[#12B36A] bg-accent text-[#0E9558] dark:text-[#2ED27E]"
-                  : "border-border text-foreground hover:border-[#12B36A] hover:text-[#0E9558]",
+                  ? "border-cta bg-accent text-cta-strong dark:text-[#2ED27E]"
+                  : "border-border text-foreground hover:border-cta hover:text-cta-strong",
               )}
             >
               <i className={cn(p.isFavorite ? "fas" : "far", "fa-heart")} aria-hidden />
@@ -229,7 +229,7 @@ export function PurchasePanel({
           ...(detail.whatsappConsultUrl ? [["fas fa-comment-alt", "Atención por WhatsApp"]] : []),
         ].map(([icon, text]) => (
           <li key={text} className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent text-[#235347] dark:text-[#8EB69B]" aria-hidden>
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent text-brand-medium dark:text-brand-light" aria-hidden>
               <i className={icon} />
             </span>
             {text}

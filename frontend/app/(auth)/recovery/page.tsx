@@ -73,7 +73,7 @@ export default function RecoveryPage() {
     return (
       <AuthBox className="max-w-[420px]">
         <div className="mb-3 text-center">
-          <i className="fas fa-envelope-open-text text-5xl text-[#12B36A]" aria-hidden />
+          <i className="fas fa-envelope-open-text text-5xl text-cta" aria-hidden />
         </div>
         <AuthTitle>Verifica que eres tú</AuthTitle>
         <AuthSubtitle>
@@ -119,7 +119,7 @@ export default function RecoveryPage() {
     return (
       <AuthBox className="max-w-[460px]">
         <div className="mb-3 text-center">
-          <i className="fas fa-key text-5xl text-[#12B36A]" aria-hidden />
+          <i className="fas fa-key text-5xl text-cta" aria-hidden />
         </div>
         <AuthTitle>Nueva contraseña</AuthTitle>
         <AuthSubtitle>Define tu nueva contraseña para continuar</AuthSubtitle>
@@ -157,7 +157,7 @@ export default function RecoveryPage() {
         </form>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          <Link href="/login" className="font-semibold text-[#235347] hover:underline dark:text-[#8EB69B]">Volver a iniciar sesión</Link>
+          <Link href="/login" className="font-semibold text-brand-medium hover:underline dark:text-brand-light">Volver a iniciar sesión</Link>
         </p>
       </AuthBox>
     );

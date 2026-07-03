@@ -64,23 +64,23 @@ export default function AdminLoginPage() {
   });
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-gradient-to-b from-[#051F20] via-[#0B2B26] to-[#163832] p-4">
+    <main className="flex min-h-svh items-center justify-center bg-gradient-to-b from-brand-darkest via-brand-dark to-brand-medium-dark p-4">
       <div className="w-full max-w-md">
         <div className="mb-6 flex flex-col items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/brand/logo-ciclo-finca-icon-128.webp"
             alt="Ciclo Finca 4"
-            className="mb-3 h-16 w-16 rounded-full border-2 border-[#8EB69B]/60 bg-[#DAF1DE] object-contain p-1"
+            className="mb-3 h-16 w-16 rounded-full border-2 border-brand-light/60 bg-brand-lightest object-contain p-1"
           />
           <h1 className="text-2xl font-bold text-white">Ciclo Finca 4</h1>
-          <p className="text-sm text-[#DAF1DE]/70">Panel administrativo</p>
+          <p className="text-sm text-brand-lightest/70">Panel administrativo</p>
         </div>
 
         <Card className="overflow-hidden border-0 shadow-2xl">
           <CardHeader className="space-y-2 pb-2">
             <h2 className="text-lg font-semibold">Iniciar sesión</h2>
-            <div className="flex items-start gap-2 rounded-lg border border-[#235347]/25 bg-[#DAF1DE]/40 px-3 py-2 text-xs text-[#163832] dark:border-[#8EB69B]/25 dark:bg-[#163832]/40 dark:text-[#DAF1DE]">
+            <div className="flex items-start gap-2 rounded-lg border border-brand-medium/25 bg-brand-lightest/40 px-3 py-2 text-xs text-brand-medium-dark dark:border-brand-light/25 dark:bg-brand-medium-dark/40 dark:text-brand-lightest">
               <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
               <span>
                 <strong>Acceso restringido:</strong> este sistema está disponible únicamente para
@@ -142,7 +142,7 @@ export default function AdminLoginPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-[#235347] hover:bg-[#1a3f37]"
+                className="w-full bg-brand-medium hover:bg-brand-medium-dark"
                 disabled={mutation.isPending || Boolean(siteKey && !recaptcha.token)}
               >
                 <LogIn className="h-4 w-4" aria-hidden />
@@ -152,7 +152,7 @@ export default function AdminLoginPage() {
           </CardContent>
         </Card>
 
-        <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-[#DAF1DE]/60">
+        <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-brand-lightest/60">
           <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
           Conexión protegida · los accesos quedan registrados en auditoría
         </p>

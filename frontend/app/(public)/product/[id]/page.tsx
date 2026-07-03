@@ -155,13 +155,13 @@ export default function ProductDetailPage() {
               className={cn(
                 "-mb-px inline-flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-sm font-semibold transition",
                 currentTab === tab.id
-                  ? "border-[#235347] text-[#235347] dark:border-[#8EB69B] dark:text-[#8EB69B]"
+                  ? "border-brand-medium text-brand-medium dark:border-brand-light dark:text-brand-light"
                   : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >
               {tab.label}
               {typeof tab.count === "number" && (
-                <span className="rounded-full bg-accent px-1.5 text-xs text-[#235347] dark:text-[#8EB69B]">{tab.count}</span>
+                <span className="rounded-full bg-accent px-1.5 text-xs text-brand-medium dark:text-brand-light">{tab.count}</span>
               )}
             </button>
           ))}
@@ -263,7 +263,7 @@ export default function ProductDetailPage() {
                           <Star key={i} className={cn("h-3.5 w-3.5", i < r.stars ? "fill-amber-400 text-amber-400" : "text-muted-foreground")} />
                         ))}
                         {r.verified && (
-                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-medium text-[#235347] dark:text-[#8EB69B]">
+                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-medium text-brand-medium dark:text-brand-light">
                             <i className="fas fa-check-circle" aria-hidden /> Compra verificada
                           </span>
                         )}

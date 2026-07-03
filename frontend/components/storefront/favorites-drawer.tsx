@@ -47,7 +47,7 @@ export function FavoritesDrawerProvider({ children }: { children: React.ReactNod
         <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
           <SheetHeader className="border-b px-4 py-3">
             <SheetTitle className="flex items-center gap-2">
-              <Heart className="h-5 w-5 text-[#235347] dark:text-[#8EB69B]" /> Mis favoritos
+              <Heart className="h-5 w-5 text-brand-medium dark:text-brand-light" /> Mis favoritos
             </SheetTitle>
           </SheetHeader>
 
@@ -56,7 +56,7 @@ export function FavoritesDrawerProvider({ children }: { children: React.ReactNod
               <div className="flex flex-col items-center gap-3 py-12 text-center">
                 <HeartOff className="h-8 w-8 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">Iniciá sesión para ver tus favoritos.</p>
-                <Button asChild className="bg-[#235347] hover:bg-[#1a3f37]" onClick={() => setIsOpen(false)}>
+                <Button asChild className="bg-brand-medium hover:bg-brand-medium-dark" onClick={() => setIsOpen(false)}>
                   <Link href="/login">Iniciar sesión</Link>
                 </Button>
               </div>
@@ -84,7 +84,7 @@ export function FavoritesDrawerProvider({ children }: { children: React.ReactNod
                       </Link>
                       <div className="min-w-0 flex-1">
                         <Link href={`/product/${f.product_id}`} onClick={() => setIsOpen(false)} className="line-clamp-1 text-sm font-medium hover:underline">{f.name}</Link>
-                        <p className="text-sm text-[#235347] dark:text-[#8EB69B]">{f.price_formatted}</p>
+                        <p className="text-sm text-brand-medium dark:text-brand-light">{f.price_formatted}</p>
                       </div>
                       <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" disabled={remove.isPending} onClick={() => remove.mutate(f.product_id)} title="Quitar">
                         <X className="h-4 w-4" />

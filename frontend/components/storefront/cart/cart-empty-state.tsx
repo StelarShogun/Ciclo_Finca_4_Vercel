@@ -14,7 +14,7 @@ export function CartEmptyState() {
   return (
     <div>
       <div className="flex flex-col items-center gap-3 py-12 text-center">
-        <span className="grid h-16 w-16 place-items-center rounded-full bg-accent text-2xl text-[#235347] dark:text-[#8EB69B]" aria-hidden>
+        <span className="grid h-16 w-16 place-items-center rounded-full bg-accent text-2xl text-brand-medium dark:text-brand-light" aria-hidden>
           <i className="fas fa-cart-shopping" />
         </span>
         <h2 className="text-xl font-bold">Tu carrito está vacío</h2>
@@ -22,14 +22,14 @@ export function CartEmptyState() {
         <div className="mt-2 flex flex-wrap justify-center gap-2.5">
           <Link
             href="/catalog"
-            className="inline-flex items-center gap-2 rounded-[10px] bg-[#235347] px-5 py-2.5 font-semibold text-white transition hover:bg-[#256428]"
+            className="inline-flex items-center gap-2 rounded-[10px] bg-brand-medium px-5 py-2.5 font-semibold text-white transition hover:bg-[#256428]"
           >
             <i className="fas fa-bicycle" aria-hidden />
             Ir al catálogo
           </Link>
           <Link
             href="/catalog"
-            className="inline-flex items-center gap-2 rounded-[10px] border border-[#235347]/40 px-5 py-2.5 font-semibold text-[#235347] transition hover:bg-accent dark:text-[#8EB69B]"
+            className="inline-flex items-center gap-2 rounded-[10px] border border-brand-medium/40 px-5 py-2.5 font-semibold text-brand-medium transition hover:bg-accent dark:text-brand-light"
           >
             <i className="fas fa-star" aria-hidden />
             Ver destacados
@@ -67,7 +67,7 @@ export function CartEmptyState() {
                     </span>
                     <span className="block p-2.5">
                       <span className="line-clamp-1 text-sm font-medium">{product.name}</span>
-                      <span className="text-sm font-semibold text-[#235347] dark:text-[#8EB69B]">{product.priceFormatted}</span>
+                      <span className="text-sm font-semibold text-brand-medium dark:text-brand-light">{product.priceFormatted}</span>
                     </span>
                   </Link>
                 </li>

@@ -10,8 +10,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <Link href="/" className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/logo-ciclo-finca-icon-64.webp" alt="Ciclo Finca 4" width={36} height={36} className="h-9 w-9 object-contain" />
-          <span className="text-base font-semibold text-[#235347] dark:text-[#8EB69B]">
-            Ciclo <span className="text-[#12B36A]">Finca</span>
+          <span className="text-base font-semibold text-brand-medium dark:text-brand-light">
+            Ciclo <span className="text-cta">Finca</span>
           </span>
         </Link>
         <ThemeToggle />

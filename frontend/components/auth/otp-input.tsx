@@ -86,8 +86,8 @@ export function OtpInput({
           onKeyDown={(e) => onKeyDown(i, e)}
           onFocus={(e) => e.target.select()}
           className={cn(
-            "otp-box aspect-[7/8] min-w-0 flex-1 rounded-xl border-2 border-border bg-background text-center text-[clamp(1.3rem,5vw,1.9rem)] font-bold caret-[#12B36A] outline-none transition",
-            "max-w-[56px] hover:border-[#12B36A] focus:-translate-y-0.5 focus:border-[#12B36A] focus:shadow-[0_0_0_4px_rgba(18,179,106,0.15)]",
+            "otp-box aspect-[7/8] min-w-0 flex-1 rounded-xl border-2 border-border bg-background text-center text-[clamp(1.3rem,5vw,1.9rem)] font-bold caret-cta outline-none transition",
+            "max-w-[56px] hover:border-cta focus:-translate-y-0.5 focus:border-cta focus:shadow-[0_0_0_4px_rgba(18,179,106,0.15)]",
             digit && "is-filled",
           )}
         />

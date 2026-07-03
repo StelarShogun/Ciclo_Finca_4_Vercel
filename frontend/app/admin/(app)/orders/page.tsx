@@ -157,7 +157,7 @@ export default function OrdersPage() {
             renderCard={(o) => (
               <AdminCard
                 media={
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-[#235347] dark:text-[#8EB69B]">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-brand-medium dark:text-brand-light">
                     <i className="fas fa-clipboard-list" aria-hidden />
                   </div>
                 }
@@ -189,7 +189,7 @@ export default function OrdersPage() {
         <DialogContent className="max-h-[90vh] sm:max-w-[56rem] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <i className="fas fa-clipboard-list text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+              <i className="fas fa-clipboard-list text-brand-medium dark:text-brand-light" aria-hidden />
               Encargo {detail?.invoice_number ?? ""}
             </DialogTitle>
             <DialogDescription>{detail?.sale_date_label}</DialogDescription>

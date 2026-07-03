@@ -19,7 +19,7 @@ function stockTone(label: string, canBuy: boolean): string {
   const l = label.toLowerCase();
   if (!canBuy || l.includes("agotado") || l.includes("no disponible")) return "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300";
   if (l.includes("última") || l.includes("ultima") || l.includes("pocas")) return "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300";
-  return "bg-accent text-[#235347] dark:text-[#8EB69B]";
+  return "bg-accent text-brand-medium dark:text-brand-light";
 }
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
@@ -70,7 +70,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         </Link>
         {/* Badges */}
         <div className="absolute left-2 top-2 flex flex-col gap-1">
-          {product.isNew && <span className="rounded bg-[#235347] px-1.5 py-0.5 text-[10px] font-semibold text-white">Nuevo</span>}
+          {product.isNew && <span className="rounded bg-brand-medium px-1.5 py-0.5 text-[10px] font-semibold text-white">Nuevo</span>}
           {product.isFeatured && <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">Destacado</span>}
         </div>
         {/* Favorito */}
@@ -78,9 +78,9 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           onClick={onFavorite}
           disabled={fav.isPending}
           aria-label="Favorito"
-          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#235347] shadow-sm transition hover:bg-white dark:bg-[#071F1F]/90 dark:text-[#8EB69B] dark:hover:bg-[#071F1F]"
+          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-brand-medium shadow-sm transition hover:bg-white dark:bg-[#071F1F]/90 dark:text-brand-light dark:hover:bg-[#071F1F]"
         >
-          <Heart className={cn("h-4 w-4", product.isFavorite && "fill-current text-[#12B36A] dark:text-[#2ED27E]")} />
+          <Heart className={cn("h-4 w-4", product.isFavorite && "fill-current text-cta dark:text-[#2ED27E]")} />
         </button>
       </div>
 
@@ -104,13 +104,13 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           )}
         </div>
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <span className="font-semibold text-[#235347] dark:text-[#8EB69B]">{product.priceFormatted}</span>
+          <span className="font-semibold text-brand-medium dark:text-brand-light">{product.priceFormatted}</span>
           <Button
             size="sm"
             className={cn(
               "h-8",
               product.canBuy
-                ? "bg-[#12B36A] hover:bg-[#0E9558]"
+                ? "bg-cta hover:bg-cta-strong"
                 : "bg-muted text-muted-foreground hover:bg-muted",
             )}
             disabled={!product.canBuy || add.isPending}

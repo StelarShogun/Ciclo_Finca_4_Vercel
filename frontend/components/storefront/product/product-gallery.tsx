@@ -58,7 +58,7 @@ export function ProductGallery({ product }: { product: ProductDetailProduct }) {
               aria-label="Imagen anterior"
               disabled={current === 0}
               onClick={() => setCurrent((s) => Math.max(0, s - 1))}
-              className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-[#235347] shadow transition hover:bg-white disabled:opacity-40 dark:bg-[#071F1F]/90 dark:text-[#8EB69B]"
+              className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-brand-medium shadow transition hover:bg-white disabled:opacity-40 dark:bg-[#071F1F]/90 dark:text-brand-light"
             >
               <i className="fas fa-chevron-left" aria-hidden />
             </button>
@@ -67,7 +67,7 @@ export function ProductGallery({ product }: { product: ProductDetailProduct }) {
               aria-label="Imagen siguiente"
               disabled={current >= slideCount - 1}
               onClick={() => setCurrent((s) => Math.min(slideCount - 1, s + 1))}
-              className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-[#235347] shadow transition hover:bg-white disabled:opacity-40 dark:bg-[#071F1F]/90 dark:text-[#8EB69B]"
+              className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-brand-medium shadow transition hover:bg-white disabled:opacity-40 dark:bg-[#071F1F]/90 dark:text-brand-light"
             >
               <i className="fas fa-chevron-right" aria-hidden />
             </button>
@@ -89,7 +89,7 @@ export function ProductGallery({ product }: { product: ProductDetailProduct }) {
                   onClick={() => setCurrent(i)}
                   className={cn(
                     "h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition",
-                    i === current ? "border-[#235347] dark:border-[#8EB69B]" : "border-transparent opacity-70 hover:opacity-100",
+                    i === current ? "border-brand-medium dark:border-brand-light" : "border-transparent opacity-70 hover:opacity-100",
                   )}
                 >
                   {thumb && (

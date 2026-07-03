@@ -9,7 +9,7 @@ function FooterColumn({ title, links }: { title: string; links: [string, string]
   return (
     <div>
       <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/90">{title}</h4>
-      <ul className="space-y-2 text-sm text-[#DAF1DE]/70">
+      <ul className="space-y-2 text-sm text-brand-lightest/70">
         {links.map(([label, href]) => (
           <li key={href}>
             <Link href={href} className="transition-colors hover:text-white">
@@ -41,7 +41,7 @@ export function StoreFooter() {
       ];
 
   return (
-    <footer className="mt-16 bg-[#051F20] text-[#DAF1DE]" aria-label="Pie de página">
+    <footer className="mt-16 bg-brand-darkest text-brand-lightest" aria-label="Pie de página">
       <div className="mx-auto max-w-7xl px-4 py-12">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Marca */}
@@ -56,7 +56,7 @@ export function StoreFooter() {
             />
             <div>
               <h3 className="text-lg font-semibold text-white">Ciclo Finca 4</h3>
-              <p className="mt-1 text-sm text-[#DAF1DE]/70">
+              <p className="mt-1 text-sm text-brand-lightest/70">
                 Ciclo Finca 4 es la tienda en línea para comprar bicicletas, componentes y
                 accesorios con retiro en tienda. Creá tu cuenta para encargar productos,
                 seguir tus pedidos y guardar favoritos.
@@ -68,7 +68,7 @@ export function StoreFooter() {
 
           <div>
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/90">Servicio</h4>
-            <ul className="space-y-2 text-sm text-[#DAF1DE]/70">
+            <ul className="space-y-2 text-sm text-brand-lightest/70">
               <li>Asesoría personalizada</li>
               <li>Preparación en taller</li>
               <li>Retiro en tienda</li>
@@ -78,7 +78,7 @@ export function StoreFooter() {
 
           <div>
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/90">Contacto</h4>
-            <ul className="space-y-2 text-sm text-[#DAF1DE]/70">
+            <ul className="space-y-2 text-sm text-brand-lightest/70">
               <li className="flex items-center gap-2">
                 <Store className="h-4 w-4 shrink-0" />
                 <span>Tienda física · retiro de pedidos</span>
@@ -93,7 +93,7 @@ export function StoreFooter() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-[#DAF1DE]/15 pt-6 text-xs text-[#DAF1DE]/60 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 flex flex-col gap-3 border-t border-brand-lightest/15 pt-6 text-xs text-brand-lightest/60 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Ciclo Finca 4. Todos los derechos reservados.</p>
           <nav className="flex flex-wrap items-center gap-x-3 gap-y-1" aria-label="Información legal">
             <Link href="/terminos" className="hover:text-white">Términos y condiciones</Link>

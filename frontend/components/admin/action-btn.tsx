@@ -6,7 +6,7 @@ export type ActionTone = "view" | "edit" | "stock" | "activate" | "delete" | "fe
 
 const TONES: Record<ActionTone, string> = {
   view: "text-sky-600 hover:bg-sky-100 dark:text-sky-400 dark:hover:bg-sky-950",
-  edit: "text-[#235347] hover:bg-[#DAF1DE] dark:text-[#8EB69B] dark:hover:bg-[#0B2B26]",
+  edit: "text-brand-medium hover:bg-brand-lightest dark:text-brand-light dark:hover:bg-brand-dark",
   stock: "text-amber-600 hover:bg-amber-100 dark:text-amber-400 dark:hover:bg-amber-950",
   activate: "text-emerald-600 hover:bg-emerald-100 dark:text-emerald-400 dark:hover:bg-emerald-950",
   delete: "text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-950",

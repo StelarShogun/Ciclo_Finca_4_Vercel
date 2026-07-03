@@ -127,7 +127,7 @@ function CatalogInner() {
             <Input type="number" min={0} placeholder="Máx" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="h-9" />
           </div>
         </div>
-        <Button className="w-full bg-[#235347] hover:bg-[#1a3f37]" onClick={() => setParams({ min_price: minPrice, max_price: maxPrice })}>
+        <Button className="w-full bg-brand-medium hover:bg-brand-medium-dark" onClick={() => setParams({ min_price: minPrice, max_price: maxPrice })}>
           Ver resultados
         </Button>
       </CardContent>
@@ -137,7 +137,7 @@ function CatalogInner() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <header className="mb-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-[#235347] dark:text-[#8EB69B]">Ciclo Finca 4</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-brand-medium dark:text-brand-light">Ciclo Finca 4</p>
         <h1 className="text-2xl font-semibold tracking-tight">{search ? `Resultados para “${search}”` : "Catálogo de productos"}</h1>
         {data && (
           <p className="text-sm text-muted-foreground">
@@ -165,7 +165,7 @@ function CatalogInner() {
                 <Button variant="outline" size="sm" className="w-full">
                   <SlidersHorizontal className="h-4 w-4" /> Filtros
                   {chips.length > 0 && (
-                    <span className="ml-1 rounded-full bg-[#235347] px-1.5 text-[11px] text-white">{chips.length}</span>
+                    <span className="ml-1 rounded-full bg-brand-medium px-1.5 text-[11px] text-white">{chips.length}</span>
                   )}
                 </Button>
               </SheetTrigger>
@@ -186,7 +186,7 @@ function CatalogInner() {
                   key={chip.label}
                   type="button"
                   onClick={chip.onRemove}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-medium text-[#235347] transition hover:bg-accent/70 dark:text-[#8EB69B]"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-medium text-brand-medium transition hover:bg-accent/70 dark:text-brand-light"
                   aria-label={`Quitar filtro: ${chip.label}`}
                 >
                   {chip.label}
@@ -245,7 +245,7 @@ function CatalogInner() {
           ) : data.products.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
-                <span className="grid h-14 w-14 place-items-center rounded-full bg-accent text-[#235347] dark:text-[#8EB69B]">
+                <span className="grid h-14 w-14 place-items-center rounded-full bg-accent text-brand-medium dark:text-brand-light">
                   <PackageSearch className="h-7 w-7" />
                 </span>
                 <div>

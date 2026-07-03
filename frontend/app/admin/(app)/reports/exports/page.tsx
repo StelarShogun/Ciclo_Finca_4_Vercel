@@ -230,7 +230,7 @@ export default function ExportsReport() {
         <DialogContent className="max-h-[90vh] sm:max-w-[38rem] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <i className="fas fa-file-arrow-down text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+              <i className="fas fa-file-arrow-down text-brand-medium dark:text-brand-light" aria-hidden />
               {activeDef?.title ?? "Exportar"}
             </DialogTitle>
             {activeDef?.subtitle ? <DialogDescription>{activeDef.subtitle}</DialogDescription> : null}
@@ -238,11 +238,11 @@ export default function ExportsReport() {
 
           <fieldset className="flex gap-6" aria-label="Alcance de la exportación">
             <label className="flex items-center gap-2 text-sm">
-              <input type="radio" name="scope" className="accent-[#235347] dark:accent-[#8EB69B]" checked={scope === "all"} onChange={() => setScope("all")} />
+              <input type="radio" name="scope" className="accent-brand-medium dark:accent-brand-light" checked={scope === "all"} onChange={() => setScope("all")} />
               Todo
             </label>
             <label className="flex items-center gap-2 text-sm">
-              <input type="radio" name="scope" className="accent-[#235347] dark:accent-[#8EB69B]" checked={scope === "filtered"} onChange={() => setScope("filtered")} />
+              <input type="radio" name="scope" className="accent-brand-medium dark:accent-brand-light" checked={scope === "filtered"} onChange={() => setScope("filtered")} />
               Con filtros
             </label>
           </fieldset>

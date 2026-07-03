@@ -71,7 +71,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
       data-slot="table-head"
       // Header verde oscuro, réplica del .admin-table viejo (brand-dark + brand-lightest).
       className={cn(
-        "bg-[#0B2B26] px-4 py-3 text-left align-middle text-xs font-semibold tracking-wide whitespace-nowrap text-[#DAF1DE] [&:has([role=checkbox])]:pr-0",
+        "bg-brand-dark px-4 py-3 text-left align-middle text-xs font-semibold tracking-wide whitespace-nowrap text-brand-lightest [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}

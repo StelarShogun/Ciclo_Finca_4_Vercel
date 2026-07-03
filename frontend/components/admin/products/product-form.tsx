@@ -238,7 +238,7 @@ export function ProductForm({
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={() => (onSuccess ? onSuccess() : router.push("/admin/products"))}>Cancelar</Button>
-        <Button type="submit" disabled={mutation.isPending} className="bg-[#235347] hover:bg-[#1a3f37]">
+        <Button type="submit" disabled={mutation.isPending} className="bg-brand-medium hover:bg-brand-medium-dark">
           {mutation.isPending ? "Guardando…" : isEdit ? "Guardar cambios" : "Crear producto"}
         </Button>
       </div>

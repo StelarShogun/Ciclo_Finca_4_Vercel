@@ -173,7 +173,7 @@ export default function BrandsPage() {
                 <AdminCard
                   key={b.id}
                   media={
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-[#235347] dark:text-[#8EB69B]">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-brand-medium dark:text-brand-light">
                       <i className="fas fa-tag" aria-hidden />
                     </div>
                   }
@@ -237,7 +237,7 @@ export default function BrandsPage() {
           >
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <i className={`fas ${editing ? "fa-pen-to-square" : "fa-tag"} text-[#235347] dark:text-[#8EB69B]`} aria-hidden />
+                <i className={`fas ${editing ? "fa-pen-to-square" : "fa-tag"} text-brand-medium dark:text-brand-light`} aria-hidden />
                 {editing ? "Editar marca" : "Nueva marca"}
               </DialogTitle>
               <DialogDescription>El nombre debe ser único.</DialogDescription>

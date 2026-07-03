@@ -46,7 +46,7 @@ export default function FavoritesPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
       <h1 className="mb-6 flex items-center gap-2 text-2xl font-semibold tracking-tight">
-        <Heart className="h-6 w-6 text-[#235347]" /> Favoritos
+        <Heart className="h-6 w-6 text-brand-medium" /> Favoritos
       </h1>
 
       {items.length === 0 ? (
@@ -54,7 +54,7 @@ export default function FavoritesPage() {
           <CardContent className="flex flex-col items-center gap-4 py-16 text-center">
             <HeartOff className="h-10 w-10 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">Todavía no tenés favoritos.</p>
-            <Button asChild className="bg-[#235347] hover:bg-[#1a3f37]"><Link href="/catalog">Ver catálogo</Link></Button>
+            <Button asChild className="bg-brand-medium hover:bg-brand-medium-dark"><Link href="/catalog">Ver catálogo</Link></Button>
           </CardContent>
         </Card>
       ) : (
@@ -75,7 +75,7 @@ export default function FavoritesPage() {
                   <span className="text-xs text-muted-foreground">{f.category}</span>
                   <Link href={`/product/${f.product_id}`} className="line-clamp-2 text-sm font-medium hover:underline">{f.name}</Link>
                   <div className="mt-auto flex items-center justify-between pt-2">
-                    <span className="font-semibold text-[#235347]">{f.price_formatted}</span>
+                    <span className="font-semibold text-brand-medium">{f.price_formatted}</span>
                     <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" title="Quitar"
                       disabled={remove.isPending} onClick={() => remove.mutate(f.product_id)}>
                       <Heart className="h-4 w-4 fill-current" />

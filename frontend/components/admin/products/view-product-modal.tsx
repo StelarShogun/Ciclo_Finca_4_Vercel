@@ -50,7 +50,7 @@ export function ViewProductModal({
       <DialogContent className="max-h-[90vh] sm:max-w-[56rem] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <i className="fas fa-eye text-[#235347] dark:text-[#8EB69B]" aria-hidden /> {data?.name ?? "Producto"}
+            <i className="fas fa-eye text-brand-medium dark:text-brand-light" aria-hidden /> {data?.name ?? "Producto"}
           </DialogTitle>
           <DialogDescription>{data?.sku ? `SKU ${data.sku}` : "Detalle del producto"}</DialogDescription>
         </DialogHeader>
@@ -87,7 +87,7 @@ export function ViewProductModal({
             <div className="flex justify-end gap-2">
               <Button asChild variant="outline"><Link href={`/admin/products/${data.product_id}`} onClick={onClose}>Ficha completa</Link></Button>
               {onEdit && (
-                <Button className="bg-[#235347] hover:bg-[#1a3f37]" onClick={() => { onClose(); onEdit(data.product_id); }}>
+                <Button className="bg-brand-medium hover:bg-brand-medium-dark" onClick={() => { onClose(); onEdit(data.product_id); }}>
                   <Pencil className="h-4 w-4" /> Editar
                 </Button>
               )}

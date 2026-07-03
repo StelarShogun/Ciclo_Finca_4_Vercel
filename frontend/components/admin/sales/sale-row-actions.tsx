@@ -171,7 +171,7 @@ export function SaleRowActions({ sale }: { sale: SaleRow }) {
         <DialogContent className="max-h-[90vh] sm:max-w-[56rem] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <i className="fas fa-receipt text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+              <i className="fas fa-receipt text-brand-medium dark:text-brand-light" aria-hidden />
               Venta {sale.invoice_number}
             </DialogTitle>
             <DialogDescription>{sale.sale_date_label}</DialogDescription>

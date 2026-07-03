@@ -26,7 +26,7 @@ export function AuthBackLink({ href = "/", children = "Regresar" }: { href?: str
   return (
     <Link
       href={href}
-      className="mb-4 inline-flex items-center gap-2 self-start text-sm font-semibold text-[#5f6368] transition-colors hover:text-[#235347] dark:text-muted-foreground dark:hover:text-[#8EB69B]"
+      className="mb-4 inline-flex items-center gap-2 self-start text-sm font-semibold text-[#5f6368] transition-colors hover:text-brand-medium dark:text-muted-foreground dark:hover:text-brand-light"
     >
       <i className="fas fa-arrow-left" aria-hidden />
       <span>{children}</span>
@@ -41,7 +41,7 @@ export function AuthLogo() {
       <img
         src="/brand/logo-ciclo-finca-icon-64.webp"
         alt="Ciclo Finca 4"
-        className="block h-[60px] w-[60px] rounded-full border-2 border-[#235347] bg-card object-cover p-[3px]"
+        className="block h-[60px] w-[60px] rounded-full border-2 border-brand-medium bg-card object-cover p-[3px]"
       />
     </div>
   );
@@ -58,7 +58,7 @@ export function AuthSubtitle({ children }: { children: React.ReactNode }) {
 export function FieldLabel({ htmlFor, icon, children }: { htmlFor: string; icon?: string; children: React.ReactNode }) {
   return (
     <label htmlFor={htmlFor} className="flex items-center gap-2 text-sm font-semibold">
-      {icon && <i className={cn(icon, "text-[#235347] dark:text-[#8EB69B]")} aria-hidden />}
+      {icon && <i className={cn(icon, "text-brand-medium dark:text-brand-light")} aria-hidden />}
       {children}
     </label>
   );
@@ -90,7 +90,7 @@ export function AuthSubmitButton({
     <button
       type="submit"
       disabled={disabled || pending}
-      className="mt-2 flex w-full items-center justify-center gap-2.5 rounded-[10px] bg-[#235347] px-5 py-3.5 font-bold text-white shadow-[0_4px_14px_rgba(35,83,71,0.22)] transition hover:-translate-y-px hover:bg-[#256428] hover:shadow-[0_6px_20px_rgba(35,83,71,0.32)] active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none disabled:hover:translate-y-0"
+      className="mt-2 flex w-full items-center justify-center gap-2.5 rounded-[10px] bg-brand-medium px-5 py-3.5 font-bold text-white shadow-[0_4px_14px_rgba(35,83,71,0.22)] transition hover:-translate-y-px hover:bg-[#256428] hover:shadow-[0_6px_20px_rgba(35,83,71,0.32)] active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none disabled:hover:translate-y-0"
     >
       {icon && <i className={cn(icon, "text-[0.95rem] opacity-90")} aria-hidden />}
       <span>{pending && pendingText ? pendingText : children}</span>
@@ -141,9 +141,9 @@ export function GoogleButton({ href }: { href: string }) {
       </a>
       <p className="mt-2.5 text-center text-[0.78rem] leading-relaxed text-muted-foreground">
         Si creas tu cuenta con Google, aceptas los{" "}
-        <a href="/legal/terminos" target="_blank" rel="noopener noreferrer" className="font-medium text-[#235347] underline underline-offset-2 dark:text-[#8EB69B]">Términos y condiciones</a>{" "}
+        <a href="/legal/terminos" target="_blank" rel="noopener noreferrer" className="font-medium text-brand-medium underline underline-offset-2 dark:text-brand-light">Términos y condiciones</a>{" "}
         y la{" "}
-        <a href="/legal/privacidad" target="_blank" rel="noopener noreferrer" className="font-medium text-[#235347] underline underline-offset-2 dark:text-[#8EB69B]">Política de privacidad</a>.
+        <a href="/legal/privacidad" target="_blank" rel="noopener noreferrer" className="font-medium text-brand-medium underline underline-offset-2 dark:text-brand-light">Política de privacidad</a>.
       </p>
     </div>
   );
@@ -155,7 +155,7 @@ export function PasswordToggle({ visible, onToggle }: { visible: boolean; onTogg
       type="button"
       onClick={onToggle}
       aria-label="Mostrar/ocultar contraseña"
-      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-[#235347] dark:hover:text-[#8EB69B]"
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-brand-medium dark:hover:text-brand-light"
     >
       <i className={`fas ${visible ? "fa-eye-slash" : "fa-eye"}`} aria-hidden />
     </button>

@@ -55,8 +55,8 @@ export function CartSummary({
                   className={cn(
                     "flex flex-col items-center gap-1.5 rounded-lg border-2 px-1.5 py-2.5 text-center text-[11px] font-semibold transition-colors",
                     paymentMethod === option.value
-                      ? "border-[#235347] bg-accent text-[#235347] dark:text-[#8EB69B]"
-                      : "border-border text-muted-foreground hover:border-[#8EB69B]",
+                      ? "border-brand-medium bg-accent text-brand-medium dark:text-brand-light"
+                      : "border-border text-muted-foreground hover:border-brand-light",
                   )}
                 >
                   <i className={cn(option.iconClass, "text-base")} aria-hidden />
@@ -78,7 +78,7 @@ export function CartSummary({
           </div>
           <div className="flex justify-between border-t pt-2 text-base font-bold">
             <span>Total estimado</span>
-            <span className="text-[#235347] dark:text-[#8EB69B]">{totalFormatted}</span>
+            <span className="text-brand-medium dark:text-brand-light">{totalFormatted}</span>
           </div>
         </div>
 
@@ -87,7 +87,7 @@ export function CartSummary({
             type="button"
             disabled={isCheckingOut}
             onClick={onCheckout}
-            className="flex w-full items-center justify-center gap-2.5 rounded-[10px] bg-[#235347] px-5 py-3 font-bold text-white shadow-[0_4px_14px_rgba(35,83,71,0.22)] transition hover:bg-[#256428] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2.5 rounded-[10px] bg-brand-medium px-5 py-3 font-bold text-white shadow-[0_4px_14px_rgba(35,83,71,0.22)] transition hover:bg-[#256428] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <i className={isCheckingOut ? "fas fa-spinner fa-spin" : "fas fa-check"} aria-hidden />
             {isCheckingOut ? "Procesando..." : "Confirmar pedido"}
