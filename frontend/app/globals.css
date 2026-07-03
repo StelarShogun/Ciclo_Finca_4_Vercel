@@ -305,3 +305,23 @@
     transform: none;
   }
 }
+
+/* Scrollbars finas con los colores del sitio (Firefox + WebKit). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-medium) transparent;
+}
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--brand-medium);
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-light);
+}
