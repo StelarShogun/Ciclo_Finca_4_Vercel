@@ -51,8 +51,14 @@ export type CatalogCategoryNav = {
   children: { id: string; name: string; url: string }[];
 };
 
+export type CatalogSpotlightItem = {
+  kind: string; // "featured" | "novelty"
+  product: CatalogProduct;
+};
+
 export type CatalogResponse = {
   products: CatalogProduct[];
+  catalogSpotlight: CatalogSpotlightItem[];
   pagination: CatalogPagination;
   categories: CatalogCategoryNav[];
   brands: { id: string; name: string }[];

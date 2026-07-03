@@ -87,4 +87,17 @@ class AuthApiTest extends TestCase
 
         $this->getJson('/api/v1/me')->assertStatus(401);
     }
+
+    public function test_auth_meta_exposes_recaptcha_site_key(): void
+    {
+        config(['services.recaptcha.key' => 'clave-publica']);
+        $this->getJson('/api/v1/auth/meta')
+            ->assertOk()
+            ->assertJsonPath('data.recaptchaSiteKey', 'clave-publica');
+
+        config(['services.recaptcha.key' => null]);
+        $this->getJson('/api/v1/auth/meta')
+            ->assertOk()
+            ->assertJsonPath('data.recaptchaSiteKey', null);
+    }
 }

@@ -1,25 +1,43 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { OTP_LENGTH as LENGTH, applyOtpInput } from "@/lib/otp";
 import { cn } from "@/lib/utils";
 
+export type OtpStatus = "idle" | "verifying" | "success" | "fail";
+
 /**
- * OTP de 6 cajas fiel al VerifyCode viejo: auto-avance al escribir,
- * backspace regresa a la anterior y pegar distribuye los dígitos.
+ * OTP de 6 cajas fiel al diseño viejo (verify_gmail_code): auto-avance,
+ * backspace regresa, pegar distribuye, pop por dígito, shake en error,
+ * onda al verificar y colapso en insignia ✓/✕ según el resultado.
+ * `errorSignal` es un contador: cada incremento dispara el shake.
  */
 export function OtpInput({
   value,
   onChange,
+  status = "idle",
+  errorSignal = 0,
   disabled,
 }: {
   value: string;
   onChange: (code: string) => void;
+  status?: OtpStatus;
+  errorSignal?: number;
   disabled?: boolean;
 }) {
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
+  const [shaking, setShaking] = useState(false);
   const digits = Array.from({ length: LENGTH }, (_, i) => value[i] ?? "");
+  const locked = disabled || status !== "idle";
+
+  useEffect(() => {
+    if (!errorSignal) return;
+    setShaking(true);
+    inputsRef.current[0]?.focus();
+    const t = setTimeout(() => setShaking(false), 450);
+    return () => clearTimeout(t);
+  }, [errorSignal]);
 
   function commit(next: string[], focusIndex?: number) {
     onChange(next.join(""));
@@ -43,7 +61,16 @@ export function OtpInput({
   }
 
   return (
-    <fieldset className="mt-1.5 flex w-full justify-center gap-[clamp(6px,2.5vw,12px)] border-0 p-0" aria-label="Código de verificación">
+    <fieldset
+      className={cn(
+        "otp-inputs mt-1.5 flex w-full justify-center gap-2 border-0 p-0 sm:gap-3",
+        shaking && "is-error",
+        status === "verifying" && "is-verifying",
+        status === "success" && "is-success",
+        status === "fail" && "is-fail",
+      )}
+      aria-label="Código de verificación"
+    >
       {digits.map((digit, i) => (
         <input
           key={i}
@@ -53,17 +80,21 @@ export function OtpInput({
           autoComplete={i === 0 ? "one-time-code" : "off"}
           aria-label={`Dígito ${i + 1}`}
           disabled={disabled}
+          readOnly={locked && !disabled}
           value={digit}
           onChange={(e) => onInput(i, e.target.value)}
           onKeyDown={(e) => onKeyDown(i, e)}
           onFocus={(e) => e.target.select()}
           className={cn(
-            "h-[clamp(50px,15vw,64px)] w-[clamp(42px,13vw,56px)] rounded-xl border-2 border-border bg-background text-center text-[clamp(1.4rem,6vw,1.9rem)] font-bold caret-[#12B36A] outline-none transition",
-            "hover:border-[#12B36A] focus:-translate-y-0.5 focus:border-[#12B36A] focus:shadow-[0_0_0_4px_rgba(18,179,106,0.15)]",
-            digit && "border-[#12B36A]/60",
+            "otp-box aspect-[7/8] min-w-0 flex-1 rounded-xl border-2 border-border bg-background text-center text-[clamp(1.3rem,5vw,1.9rem)] font-bold caret-[#12B36A] outline-none transition",
+            "max-w-[56px] hover:border-[#12B36A] focus:-translate-y-0.5 focus:border-[#12B36A] focus:shadow-[0_0_0_4px_rgba(18,179,106,0.15)]",
+            digit && "is-filled",
           )}
         />
       ))}
+      <span className="otp-result" aria-hidden>
+        {status === "fail" ? "✕" : "✓"}
+      </span>
     </fieldset>
   );
 }

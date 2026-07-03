@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,16 +8,12 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
+import { Eye, EyeOff, Lock, LogIn, ShieldCheck } from "lucide-react";
 
 import { adminLogin } from "@/lib/api/auth";
+import { useRecaptchaSiteKey, useRecaptchaV2 } from "@/lib/recaptcha";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -29,6 +26,11 @@ type FormValues = z.infer<typeof schema>;
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const [showPwd, setShowPwd] = useState(false);
+  const meta = useRecaptchaSiteKey();
+  const siteKey = meta.data?.recaptchaSiteKey ?? null;
+  const recaptcha = useRecaptchaV2(siteKey);
+
   const {
     register,
     handleSubmit,
@@ -37,18 +39,20 @@ export default function AdminLoginPage() {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   const mutation = useMutation({
-    mutationFn: adminLogin,
+    mutationFn: (values: FormValues) =>
+      adminLogin(siteKey ? { ...values, "g-recaptcha-response": recaptcha.token } : values),
     onSuccess: (me) => {
       toast.success(`Bienvenido, ${me.user.name}`);
       router.push("/admin");
     },
     onError: (error) => {
+      recaptcha.reset();
       if (isAxiosError(error) && error.response?.status === 422) {
         const fieldErrors = error.response.data?.errors ?? {};
         for (const [field, messages] of Object.entries(fieldErrors)) {
-          setError(field as keyof FormValues, {
-            message: Array.isArray(messages) ? String(messages[0]) : String(messages),
-          });
+          const msg = Array.isArray(messages) ? String(messages[0]) : String(messages);
+          if (field === "gmail" || field === "password") setError(field, { message: msg });
+          else toast.error(msg);
         }
         return;
       }
@@ -60,55 +64,98 @@ export default function AdminLoginPage() {
   });
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-[oklch(0.97_0.02_175)] p-4 dark:bg-background">
-      <Card className="w-full max-w-sm overflow-hidden border-t-4 border-t-primary">
-        <CardHeader>
-          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-            CF
-          </div>
-          <CardTitle className="text-xl">Panel administrativo</CardTitle>
-          <CardDescription>Ingresá con tu cuenta de administrador.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form
-            className="flex flex-col gap-4"
-            onSubmit={handleSubmit((values) => mutation.mutate(values))}
-            noValidate
-          >
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="gmail">Correo</Label>
-              <Input
-                id="gmail"
-                type="email"
-                autoComplete="username"
-                {...register("gmail")}
-                aria-invalid={!!errors.gmail}
-              />
-              {errors.gmail && (
-                <p className="text-sm text-destructive">{errors.gmail.message}</p>
-              )}
-            </div>
+    <main className="flex min-h-svh items-center justify-center bg-gradient-to-b from-[#051F20] via-[#0B2B26] to-[#163832] p-4">
+      <div className="w-full max-w-md">
+        <div className="mb-6 flex flex-col items-center text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/logo-ciclo-finca-icon-128.webp"
+            alt="Ciclo Finca 4"
+            className="mb-3 h-16 w-16 rounded-full border-2 border-[#8EB69B]/60 bg-[#DAF1DE] object-contain p-1"
+          />
+          <h1 className="text-2xl font-bold text-white">Ciclo Finca 4</h1>
+          <p className="text-sm text-[#DAF1DE]/70">Panel administrativo</p>
+        </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                {...register("password")}
-                aria-invalid={!!errors.password}
-              />
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
-              )}
+        <Card className="overflow-hidden border-0 shadow-2xl">
+          <CardHeader className="space-y-2 pb-2">
+            <h2 className="text-lg font-semibold">Iniciar sesión</h2>
+            <div className="flex items-start gap-2 rounded-lg border border-[#235347]/25 bg-[#DAF1DE]/40 px-3 py-2 text-xs text-[#163832] dark:border-[#8EB69B]/25 dark:bg-[#163832]/40 dark:text-[#DAF1DE]">
+              <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+              <span>
+                <strong>Acceso restringido:</strong> este sistema está disponible únicamente para
+                usuarios con rol de administrador.
+              </span>
             </div>
+          </CardHeader>
+          <CardContent>
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={handleSubmit((values) => mutation.mutate(values))}
+              noValidate
+            >
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="gmail">Correo electrónico</Label>
+                <Input
+                  id="gmail"
+                  type="email"
+                  placeholder="ejemplo@correo.com"
+                  autoComplete="username"
+                  {...register("gmail")}
+                  aria-invalid={!!errors.gmail}
+                />
+                {errors.gmail && <p className="text-sm text-destructive">{errors.gmail.message}</p>}
+              </div>
 
-            <Button type="submit" className="w-full" disabled={mutation.isPending}>
-              {mutation.isPending ? "Ingresando…" : "Ingresar"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="password">Contraseña</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPwd ? "text" : "password"}
+                    placeholder="Ingresa tu contraseña"
+                    autoComplete="current-password"
+                    className="pr-10"
+                    {...register("password")}
+                    aria-invalid={!!errors.password}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPwd((v) => !v)}
+                    aria-label={showPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+                  >
+                    {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password.message}</p>
+                )}
+              </div>
+
+              {siteKey && (
+                <div className="flex justify-center">
+                  <div ref={recaptcha.widgetRef} />
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full bg-[#235347] hover:bg-[#1a3f37]"
+                disabled={mutation.isPending || Boolean(siteKey && !recaptcha.token)}
+              >
+                <LogIn className="h-4 w-4" aria-hidden />
+                {mutation.isPending ? "Ingresando…" : "Iniciar sesión"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-[#DAF1DE]/60">
+          <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
+          Conexión protegida · los accesos quedan registrados en auditoría
+        </p>
+      </div>
     </main>
   );
 }

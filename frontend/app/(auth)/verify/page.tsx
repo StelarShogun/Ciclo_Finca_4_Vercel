@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 import { resendCode, verifyCode } from "@/lib/api/auth";
 import { AuthBox, AuthSubmitButton, AuthSubtitle, AuthTitle } from "@/components/auth/auth-shell";
-import { OtpInput } from "@/components/auth/otp-input";
+import { OtpInput, type OtpStatus } from "@/components/auth/otp-input";
 
 function errMsg(e: unknown, fallback: string) {
   return (isAxiosError(e) && (e.response?.data?.message as string)) || fallback;
@@ -19,16 +19,32 @@ export default function VerifyPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [code, setCode] = useState("");
+  const [otpStatus, setOtpStatus] = useState<OtpStatus>("idle");
+  const [otpError, setOtpError] = useState(0);
 
   const verify = useMutation({
     mutationFn: () => verifyCode(code),
+    onMutate: () => setOtpStatus("verifying"),
     onSuccess: (m) => {
-      queryClient.setQueryData(["me"], m);
+      setOtpStatus("success");
       toast.success("¡Cuenta verificada!");
-      router.push("/account");
+      setTimeout(() => {
+        queryClient.setQueryData(["me"], m);
+        router.push("/account");
+      }, 700);
     },
-    onError: (e) => toast.error(errMsg(e, "Código inválido o expirado.")),
+    onError: (e) => {
+      setOtpStatus("fail");
+      toast.error(errMsg(e, "Código inválido o expirado."));
+      setTimeout(() => { setOtpStatus("idle"); setCode(""); setOtpError((n) => n + 1); }, 650);
+    },
   });
+
+  // Fiel al flujo viejo: con los 6 dígitos el código se verifica solo.
+  useEffect(() => {
+    if (code.length === 6 && otpStatus === "idle" && !verify.isPending) verify.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code]);
 
   const resend = useMutation({
     mutationFn: resendCode,
@@ -54,12 +70,12 @@ export default function VerifyPage() {
       >
         <div>
           <p className="mb-1 text-center text-sm font-semibold">Código de verificación</p>
-          <OtpInput value={code} onChange={setCode} disabled={verify.isPending} />
+          <OtpInput value={code} onChange={setCode} status={otpStatus} errorSignal={otpError} />
         </div>
 
         <AuthSubmitButton
           icon="fas fa-check-circle"
-          disabled={code.length !== 6}
+          disabled={code.length !== 6 || otpStatus !== "idle"}
           pending={verify.isPending}
           pendingText="Verificando..."
         >
