@@ -38,6 +38,10 @@ final class CatalogQueryBuilder
             }
         }
 
+        if ($request->filled('category_id') && ! $filters->selectedCategory) {
+            $query->whereRaw('1 = 0');
+        }
+
         if ($filters->selectedCategory) {
             if (is_null($filters->selectedCategory->parent_category_id)) {
                 $childIds = Category::where('parent_category_id', $filters->selectedCategory->category_id)

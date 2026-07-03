@@ -57,6 +57,14 @@ class ClientCatalogApiTest extends TestCase
         $this->assertFalse($names->contains('Bicicleta Verde Catalogo'));
     }
 
+    public function test_invalid_category_public_id_returns_empty_not_full_catalog(): void
+    {
+        $this->product(['name' => 'Bici Filtrada Catalogo']);
+
+        $res = $this->getJson('/api/v1/catalog?category_id=999999')->assertOk();
+        $this->assertSame([], $res->json('data.products'));
+    }
+
     public function test_heartbeat_returns_version(): void
     {
         $this->getJson('/api/v1/catalog/heartbeat')
