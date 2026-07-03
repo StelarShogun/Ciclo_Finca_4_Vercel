@@ -1,0 +1,133 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\AdminUser;
+use App\Models\Client;
+use App\Models\Sale;
+use App\Support\AdminDateRange;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
+
+class CF4AdminSalesClientInvoiceVisibilityTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['app.timezone' => 'America/Costa_Rica']);
+    }
+
+    private function makeAdmin(): AdminUser
+    {
+        return AdminUser::create([
+            'name' => 'Admin',
+            'first_surname' => 'CF4',
+            'second_surname' => null,
+            'gmail' => 'admin-cf4-7@example.com',
+            'password' => bcrypt('password'),
+            'last_access' => now(),
+        ]);
+    }
+
+    private function makeClient(string $email, string $name, string $surname): Client
+    {
+        return Client::create([
+            'name' => $name,
+            'first_surname' => $surname,
+            'second_surname' => null,
+            'gmail' => $email,
+            'password' => bcrypt('password'),
+            'provider' => 'local',
+        ]);
+    }
+
+    /** CP07-01 + CA 1-2-4 */
+    public function test_admin_sales_list_shows_client_name_and_unique_invoice_number_per_row(): void
+    {
+        $admin = $this->makeAdmin();
+        $clientA = $this->makeClient('cliente-a-cf4-7@example.com', 'Ana', 'Rojas');
+        $clientB = $this->makeClient('cliente-b-cf4-7@example.com', 'Luis', 'Mora');
+
+        $saleA = Sale::create([
+            'invoice_number' => 'CF4-7001',
+            'client_id' => $clientA->user_id,
+            'seller_admin_id' => $admin->user_id,
+            'sale_date' => AdminDateRange::now()->copy()->startOfDay()->addHours(2)->utc(),
+            'payment_method' => 'cash',
+            'status' => 'completed',
+            'subtotal' => 10000,
+            'iva' => 0,
+            'discount' => 0,
+            'total' => 10000,
+            'order_source' => 'web_cart',
+        ]);
+
+        $saleB = Sale::create([
+            'invoice_number' => 'CF4-7002',
+            'client_id' => $clientB->user_id,
+            'seller_admin_id' => $admin->user_id,
+            'sale_date' => AdminDateRange::now()->copy()->startOfDay()->addHours(4)->utc(),
+            'payment_method' => 'sinpe',
+            'status' => 'completed',
+            'subtotal' => 15000,
+            'iva' => 0,
+            'discount' => 0,
+            'total' => 15000,
+            'order_source' => 'web_cart',
+        ]);
+
+        $this->assertNotSame($saleA->invoice_number, $saleB->invoice_number, 'El número de factura no debe repetirse entre ventas.');
+
+        $response = $this->actingAs($admin, 'admin')->get(route('sales.index'));
+        $response->assertStatus(200);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Sales/Index', false)
+            ->where('sales.0.invoice_number', $saleB->invoice_number)
+            ->where('sales.0.customer', 'Luis Mora')
+            ->where('sales.1.invoice_number', $saleA->invoice_number)
+            ->where('sales.1.customer', 'Ana Rojas')
+        );
+    }
+
+    /** CP07-02 + CA 6 */
+    public function test_non_admin_cannot_access_sales_list(): void
+    {
+        $client = $this->makeClient('cliente-no-admin-cf4-7@example.com', 'Cliente', 'NoAdmin');
+
+        $response = $this->actingAs($client, 'web')->get(route('sales.index'));
+        $response->assertRedirect(route('admin.login'));
+    }
+
+    /** CP07-03 + CA 5 */
+    public function test_sales_list_row_includes_basic_fields_with_client_and_invoice(): void
+    {
+        $admin = $this->makeAdmin();
+        $client = $this->makeClient('cliente-basico-cf4-7@example.com', 'Marta', 'Jimenez');
+
+        $sale = Sale::create([
+            'invoice_number' => 'CF4-7003',
+            'client_id' => $client->user_id,
+            'seller_admin_id' => $admin->user_id,
+            'sale_date' => AdminDateRange::now()->copy()->startOfDay()->addHours(3)->utc(),
+            'payment_method' => 'transfer',
+            'status' => 'completed',
+            'subtotal' => 22000,
+            'iva' => 0,
+            'discount' => 0,
+            'total' => 22000,
+            'order_source' => 'web_cart',
+        ]);
+
+        $response = $this->actingAs($admin, 'admin')->get(route('sales.index'));
+        $response->assertStatus(200);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Sales/Index', false)
+            ->where('sales.0.invoice_number', $sale->invoice_number)
+            ->where('sales.0.customer', 'Marta Jimenez')
+            ->where('sales.0.status_label', 'Confirmada')
+        );
+    }
+}

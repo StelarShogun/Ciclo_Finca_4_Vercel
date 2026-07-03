@@ -1,0 +1,228 @@
+<?php
+
+namespace Tests\Feature\Api;
+
+use App\Actions\Admin\Products\ListProducts;
+use App\Models\AdminUser;
+use App\Models\Category;
+use App\Models\ClassificationDimension;
+use App\Models\ClassificationValue;
+use App\Models\Product;
+use App\Models\Supplier;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Tests\TestCase;
+
+/**
+ * API v1 admin products (lista). Cubre auth y que ListProducts devuelve un
+ * paginador (regresión: antes declaraba ': array' y tiraba TypeError).
+ */
+class ProductsApiTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['sanctum.stateful' => ['localhost', 'localhost:3000', '127.0.0.1']]);
+        $this->withHeader('Origin', 'http://localhost:3000');
+    }
+
+    private function admin(): AdminUser
+    {
+        return AdminUser::firstOrCreate(
+            ['gmail' => 'prod-admin@example.com'],
+            [
+                'name' => 'Prod',
+                'first_surname' => 'Admin',
+                'second_surname' => null,
+                'password' => bcrypt('password123'),
+                'last_access' => now(),
+            ]
+        );
+    }
+
+    public function test_requires_authentication(): void
+    {
+        $this->getJson('/api/v1/admin/products')->assertStatus(401);
+    }
+
+    public function test_returns_paginated_products_for_admin(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        $this->getJson('/api/v1/admin/products')
+            ->assertOk()
+            ->assertJsonStructure([
+                'data',
+                'current_page',
+                'last_page',
+                'per_page',
+                'total',
+            ]);
+    }
+
+    public function test_list_products_action_returns_paginator(): void
+    {
+        $paginator = app(ListProducts::class)->handle(Request::create('/'));
+
+        $this->assertInstanceOf(LengthAwarePaginator::class, $paginator);
+    }
+
+    public function test_show_returns_product_detail(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        Category::create(['name' => 'Cat Show']);
+        Supplier::create(['name' => 'Sup Show']);
+        $product = Product::factory()->create(['name' => 'Producto Detalle Test']);
+
+        $this->getJson("/api/v1/admin/products/{$product->product_id}")
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.product_id', (int) $product->product_id)
+            ->assertJsonPath('data.name', 'Producto Detalle Test')
+            ->assertJsonStructure(['data' => ['media_gallery', 'variants', 'media_main']]);
+    }
+
+    public function test_show_missing_product_returns_404(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        $this->getJson('/api/v1/admin/products/999999')->assertStatus(404);
+    }
+
+    public function test_quick_actions_change_state(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        Category::create(['name' => 'Cat QA']);
+        Supplier::create(['name' => 'Sup QA']);
+        $product = Product::factory()->create(['status' => 'active', 'is_featured' => false]);
+        $id = $product->product_id;
+
+        $this->postJson("/api/v1/admin/products/{$id}/deactivate")->assertOk();
+        $this->assertNotSame('active', $product->fresh()->status);
+
+        $this->postJson("/api/v1/admin/products/{$id}/activate")->assertOk();
+        $this->assertSame('active', $product->fresh()->status);
+
+        $this->postJson("/api/v1/admin/products/{$id}/featured")->assertOk();
+        $this->assertTrue((bool) $product->fresh()->is_featured);
+
+        $this->deleteJson("/api/v1/admin/products/{$id}/force")->assertOk();
+        $this->getJson("/api/v1/admin/products/{$id}")->assertStatus(404);
+    }
+
+    public function test_gallery_index_returns_structure(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        Category::create(['name' => 'Cat Gallery']);
+        Supplier::create(['name' => 'Sup Gallery']);
+        $product = Product::factory()->create();
+
+        // Subida/promover/eliminar se verifican con curl (escriben al filesystem).
+        $this->getJson("/api/v1/admin/products/{$product->product_id}/gallery")
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['main', 'gallery']])
+            ->assertJsonPath('data.gallery', []);
+    }
+
+    public function test_gallery_requires_auth(): void
+    {
+        $this->getJson('/api/v1/admin/products/1/gallery')->assertStatus(401);
+    }
+
+    public function test_variant_store_requires_auth(): void
+    {
+        $this->postJson('/api/v1/admin/products/1/variants', [])->assertStatus(401);
+    }
+
+    public function test_variant_store_validates_variant_product_id(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        Category::create(['name' => 'Cat Var']);
+        Supplier::create(['name' => 'Sup Var']);
+        $product = Product::factory()->create();
+
+        // El happy-path (enlazar otro producto) se verifica con curl.
+        $this->postJson("/api/v1/admin/products/{$product->product_id}/variants", [])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('variant_product_id');
+    }
+
+    public function test_classifications_not_editable_for_parent_category(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        $parent = Category::create(['name' => 'Bicicletas']);
+        Supplier::create(['name' => 'Sup Cls Parent']);
+        $product = Product::factory()->create(['category_id' => $parent->category_id]);
+
+        $this->getJson("/api/v1/admin/products/{$product->product_id}/classifications")
+            ->assertOk()
+            ->assertJsonPath('data.editable', false)
+            ->assertJsonPath('data.attributes', []);
+    }
+
+    public function test_classifications_index_and_update_for_concrete_subcategory(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        $parent = Category::create(['name' => 'Bicicletas Cls']);
+        $sub = Category::create(['name' => 'Montaña Cls', 'parent_category_id' => $parent->category_id]);
+        Supplier::create(['name' => 'Sup Cls']);
+        $product = Product::factory()->create(['category_id' => $sub->category_id]);
+
+        $dim = ClassificationDimension::create([
+            'category_id' => $sub->category_id,
+            'slug' => 'color',
+            'label' => 'Color',
+            'sort_order' => 1,
+        ]);
+        $rojo = ClassificationValue::create(['classification_dimension_id' => $dim->id, 'value' => 'Rojo', 'normalized_value' => 'rojo', 'sort_order' => 1]);
+        ClassificationValue::create(['classification_dimension_id' => $dim->id, 'value' => 'Azul', 'normalized_value' => 'azul', 'sort_order' => 2]);
+
+        $this->getJson("/api/v1/admin/products/{$product->product_id}/classifications")
+            ->assertOk()
+            ->assertJsonPath('data.editable', true)
+            ->assertJsonPath('data.attributes.0.label', 'Color')
+            ->assertJsonPath('data.attributes.0.selected', null)
+            ->assertJsonCount(2, 'data.attributes.0.values');
+
+        $this->putJson("/api/v1/admin/products/{$product->product_id}/classifications", [
+            'classification_value_ids' => [$rojo->id],
+        ])->assertOk()->assertJsonPath('success', true);
+
+        $this->getJson("/api/v1/admin/products/{$product->product_id}/classifications")
+            ->assertOk()
+            ->assertJsonPath('data.attributes.0.selected', $rojo->id);
+    }
+
+    public function test_classifications_requires_auth(): void
+    {
+        $this->getJson('/api/v1/admin/products/1/classifications')->assertStatus(401);
+    }
+
+    public function test_list_filters_by_search_and_status(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+
+        Category::create(['name' => 'Cat Test']);
+        Supplier::create(['name' => 'Sup Test']);
+        Product::factory()->create(['name' => 'Bicicleta Roja Test', 'status' => 'active']);
+        Product::factory()->create(['name' => 'Casco Azul Test', 'status' => 'inactive']);
+
+        $this->getJson('/api/v1/admin/products?search=Bicicleta')
+            ->assertOk()->assertJsonPath('total', 1);
+
+        $this->getJson('/api/v1/admin/products?status=inactive')
+            ->assertOk()->assertJsonPath('total', 1);
+
+        $this->getJson('/api/v1/admin/products?search=NoExisteEsteProducto')
+            ->assertOk()->assertJsonPath('total', 0);
+    }
+}

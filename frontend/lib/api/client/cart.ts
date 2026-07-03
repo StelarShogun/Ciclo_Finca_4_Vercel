@@ -1,0 +1,64 @@
+import { api } from "@/lib/api/client";
+
+export type CartItem = {
+  productId: string; // ID público (ULID)
+  name: string;
+  productUrl: string;
+  unitPrice: number;
+  unitPriceFormatted: string;
+  quantity: number;
+  subtotal: number;
+  subtotalFormatted: string;
+  stockCurrent: number;
+  image: {
+    fallback: string | null;
+    desktopWebp: string | null;
+    mobileWebp: string | null;
+    usesPlaceholder: boolean;
+  };
+};
+
+export type Cart = {
+  items: CartItem[];
+  total: number;
+  totalFormatted: string;
+  pickupPolicyLine: string | null;
+  pickupPolicyNotice: string | null;
+};
+
+export async function getCart(): Promise<Cart> {
+  const { data } = await api.get("/api/v1/cart");
+  return data.data as Cart;
+}
+
+export async function addToCart(productId: string, quantity: number) {
+  const { data } = await api.post("/api/v1/cart/add", { product_id: productId, quantity });
+  return data;
+}
+
+export async function updateCartItem(productId: string, quantity: number) {
+  const { data } = await api.put("/api/v1/cart/update", { product_id: productId, quantity });
+  return data;
+}
+
+export async function removeCartItem(productId: string) {
+  const { data } = await api.delete(`/api/v1/cart/remove/${productId}`);
+  return data;
+}
+
+export async function clearCart() {
+  const { data } = await api.delete("/api/v1/cart/clear");
+  return data;
+}
+
+export type CheckoutResult = {
+  success: boolean;
+  message: string;
+  sale_id: number;
+  invoice_number: string;
+};
+
+export async function checkout(paymentMethod: string): Promise<CheckoutResult> {
+  const { data } = await api.post("/api/v1/cart/checkout", { payment_method: paymentMethod });
+  return data as CheckoutResult;
+}

@@ -5,7 +5,7 @@ Date: 2026-06-02
 
 ## Goal
 
-- `resources/js/**/*.js` → **0** (achieved)
+- `resources/ts/**/*.ts` → **0** (achieved)
 - Legacy scripts → `.ts` with minimal typing
 - Client storefront bundles replaced by Inertia where routes already point to React
 - Known breaks documented for the next pass
@@ -14,9 +14,9 @@ Date: 2026-06-02
 
 | Metric | Before | After |
 |--------|--------|-------|
-| `resources/js/**/*.js` | ~90 | **0** |
-| `resources/js/**/*.ts` | ~35 | **~100** |
-| `resources/js/**/*.tsx` | ~81 | **~81** (unchanged) |
+| `resources/ts/**/*.ts` | ~90 | **0** |
+| `resources/ts/**/*.ts` | ~35 | **~100** |
+| `resources/ts/**/*.tsx` | ~81 | **~81** (unchanged) |
 
 ## Client JS eliminated (Inertia replacement)
 
@@ -56,10 +56,10 @@ Loaded via **dynamic `import()`** from React or single Blade residual:
 
 ## Admin + shared + errors
 
-All former `resources/js/admin/**/*.js` and `resources/js/shared/**/*.js` were renamed to `.ts`.  
+All former `resources/ts/admin/**/*.ts` and `resources/ts/shared/**/*.ts` were renamed to `.ts`.
 `vite.config.js` lists **only** `.ts` / `.tsx` entrypoints (plus CSS).
 
-Global typings: `resources/js/types/legacy-globals.d.ts`, `legacy-client-modules.d.ts`.
+Global typings: `resources/ts/types/legacy-globals.d.ts`, `legacy-client-modules.d.ts`.
 
 ## Vite (`vite.config.js`)
 
@@ -68,7 +68,7 @@ Global typings: `resources/js/types/legacy-globals.d.ts`, `legacy-client-modules
 - **Admin:** full `.ts` entry list (includes `reports-by-category.ts`)
 - **Errors:** `scenes.ts`
 
-No `resources/js/**/*.js` in `input`.
+No `resources/ts/**/*.ts` in `input`.
 
 ## Blade `@vite` changes
 
@@ -89,8 +89,8 @@ No `resources/js/**/*.js` in `input`.
 
 | Check | Resultado |
 |-------|-----------|
-| `find resources/js -name '*.js'` | **0 archivos** |
-| `rg '"resources/js/.+\.js"' vite.config.js` | **0** |
+| `find resources/ts -name '*.js'` | **0 archivos** |
+| `rg '"resources/ts/.+\.ts"' vite.config.js` | **0** |
 | `python3 scripts/audit-vite-blade-assets.py` | **OK** |
 | `npm run build` | **OK** |
 | `npm run typecheck` | **OK** — 0 errores |
@@ -120,7 +120,7 @@ Imports dinámicos desde React hacia bundles legacy (`catalog`, `swal`, etc.) se
 
 | Acción | Detalle |
 |--------|---------|
-| Storefront | Inertia (`resources/js/Pages/Client/*`) |
+| Storefront | Inertia (`resources/ts/Pages/Client/*`) |
 | Print | `invoice-print.blade.php` + `layouts/print.blade.php` |
 | Admin thumbs | `shared/media/product-media.blade.php` |
 | README | `resources/views/client/README.md` |
@@ -128,8 +128,8 @@ Imports dinámicos desde React hacia bundles legacy (`catalog`, `swal`, etc.) se
 ## Commands (regression)
 
 ```bash
-find resources/js -type f -name '*.js' | sort   # expect empty
-rg '"resources/js/.+\.js"' vite.config.js       # expect empty
+find resources/ts -type f -name '*.js' | sort   # expect empty
+rg '"resources/ts/.+\.ts"' vite.config.js       # expect empty
 npm run typecheck
 npm run build
 python3 scripts/audit-vite-blade-assets.py
@@ -146,7 +146,7 @@ Backend:
 
 Frontend:
 
-- Eliminado `resources/js/lib/*` (5 shims sin consumidores).
+- Eliminado `resources/ts/lib/*` (5 shims sin consumidores).
 - Eliminados re-exports `@deprecated`: `types/models`, `types/product`, `types/cart`, `types/inertia.d.ts`, `CatalogPagination.tsx`.
 - Imports `@/types/models` → `@/shared/types/models`.
 - `@ts-nocheck` reducido en `errors/scenes*`, `admin/login/login.ts` (57 archivos restantes en admin/client legacy DOM).

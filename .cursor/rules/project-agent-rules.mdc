@@ -1,0 +1,16 @@
+---
+description: Shared project rules for AI agents working in this Laravel/Inertia repo.
+alwaysApply: true
+---
+
+# Project Agent Rules
+
+Read `AGENTS.md` and `CLAUDE.md` before substantial changes.
+
+- Respond to the user in Spanish unless they explicitly request another language.
+- Write Git commit messages and PR titles/descriptions in English.
+- Use `resources/ts`; do not recreate `resources/js`.
+- Reuse existing Actions, Services, Form Requests, Policies, Enums, DTOs, Resources, ViewModels, and shared TS components.
+- Keep public routes and business rules unchanged unless explicitly requested.
+- Run the smallest useful check while editing. Before merge to `Dev`, run `./scripts/ci-check-docker.sh`.
+- Never leak secrets, tokens, raw exception messages, SQL/filesystem errors, or private user data.

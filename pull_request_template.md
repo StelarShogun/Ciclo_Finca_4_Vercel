@@ -56,7 +56,7 @@ Briefly describe what this PR changes and why it is needed.
 
 - `app/Http/Controllers/`
 - `resources/views/`
-- `resources/js/`
+- `resources/ts/`
 - `routes/`
 - `database/migrations/`
 

@@ -257,7 +257,7 @@ Storefront wins on the same pass:
 
 - `public/favicon.svg` had a stray second `<svg>` glued on the end. Trimming it took the file from 115 KiB to 0.75 KiB (the SVG is what every modern browser actually fetches).
 - `public/favicon.ico` was a 1024×1024 JPEG renamed to `.ico` (114 KiB). Regenerated with `magick … -define icon:auto-resize=48,32,16` it is now 15 KiB. The PNG variants in `public/` (16/32 and the PWA icons) are real PNGs again instead of base64 text blobs.
-- `resources/js/client/clients-header.js` was reduced from 8.6 KiB → 0.9 KiB. Header search trending (`header-catalog-search.js`), the catalog favorites delegation, the authenticated user menu / favorites drawer and the invoice heartbeat polling all load through `requestIdleCallback` after DOMContentLoaded.
+- `resources/ts/client/clients-header.ts` was reduced from 8.6 KiB → 0.9 KiB. Header search trending (`header-catalog-search.js`), the catalog favorites delegation, the authenticated user menu / favorites drawer and the invoice heartbeat polling all load through `requestIdleCallback` after DOMContentLoaded.
 
 Reports: `./lighthouse-admin/localhost/6a9f/`. All routes authenticated (no `/admin/login` in `finalUrl`).
 

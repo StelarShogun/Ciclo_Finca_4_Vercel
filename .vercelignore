@@ -1,12 +1,9 @@
-.git
-.vercel
-node_modules
-vendor
-storage
-bootstrap/cache/*.php
-.phpunit.cache
-.phpstan-cache
-.vite-cache
-tests/Browser/screenshots
-tests/Browser/console
-tests/Browser/source
+# Artefactos locales que el deploy CLI no debe subir (docker deja storage/ con
+# permisos de otro usuario y el runtime de Vercel no los necesita).
+backend/storage
+backend/node_modules
+backend/vendor
+backend/test-results
+backend/playwright-report
+frontend/node_modules
+frontend/.next

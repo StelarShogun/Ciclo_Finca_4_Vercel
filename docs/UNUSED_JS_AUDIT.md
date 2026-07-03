@@ -10,12 +10,12 @@ React Doctor’s `deslop/unused-file` rule traces reachability from **static** e
 |-----------|--------|----------------|
 | **Vite `input`** | `vite.config.js` | Admin/client CSS+JS bundles built for production |
 | **Blade `@vite([...])`** | `resources/views/**/*.blade.php` | Legacy Blade pages still on JS bundles (not Inertia) |
-| **Inertia** | `resources/js/app.tsx` | `import.meta.glob('./Pages/**/*.tsx')` — resolves pages at runtime |
+| **Inertia** | `resources/ts/app.tsx` | `import.meta.glob('./Pages/**/*.tsx')` — resolves pages at runtime |
 | **Dynamic `import()`** | e.g. `useCatalogPageInit`, `HeaderCatalogSearch` | `client/bundles/catalog.ts`, `header-catalog-search.ts`, etc. |
 
 ## Categories
 
-### 1. False positive — Inertia pages (`resources/js/Pages/**`)
+### 1. False positive — Inertia pages (`resources/ts/Pages/**`)
 
 All `Pages/Client/*.tsx` and `Pages/Admin/*.tsx` files are **reachable** via `app.tsx` glob when Inertia renders a route. They will appear as “unused” in deslop.
 
@@ -25,9 +25,9 @@ Every path in `adminAssets`, `clientAssets`, `sharedAssets`, and `errorAssets` i
 
 ### 3. False positive — Blade-only legacy bundles
 
-Admin JS under `resources/js/admin/**/*.ts` referenced from Blade `@vite`. Client storefront JS entrypoints were removed in favor of Inertia (`docs/LEGACY_JS_TO_TS_MIGRATION.md`); legacy Blade views may still exist but no longer load deleted bundles.
+Admin JS under `resources/ts/admin/**/*.ts` referenced from Blade `@vite`. Client storefront JS entrypoints were removed in favor of Inertia (`docs/LEGACY_JS_TO_TS_MIGRATION.md`); legacy Blade views may still exist but no longer load deleted bundles.
 
-### 4. False positive — Feature modules (`resources/js/features/**`, `resources/js/shared/**`)
+### 4. False positive — Feature modules (`resources/ts/features/**`, `resources/ts/shared/**`)
 
 Imported by Inertia pages and by each other. The static analyzer does not follow the glob entry.
 
@@ -42,20 +42,20 @@ Only after **all** of:
 1. Not in `vite.config.js` `input`
 2. Not in any `@vite([...])` in Blade
 3. Not in any `import()` from TS/JS entry
-4. Not referenced from another reachable bundle (grep `resources/js`)
+4. Not referenced from another reachable bundle (grep `resources/ts`)
 
 Use:
 
 ```bash
 # Blade + Vite cross-check (from repo root)
 rg "@vite\(" -n resources/views
-rg "resources/js" vite.config.js
+rg "resources/ts" vite.config.js
 
 # Dynamic imports from React
-rg "import\(['\"]@/client/" resources/js
+rg "import\(['\"]@/client/" resources/ts
 
 # Legacy bundle imports
-rg "import\(|require\(" resources/js/client resources/js/admin
+rg "import\(|require\(" resources/ts/client resources/ts/admin
 ```
 
 ## Regenerate Blade ↔ Vite map

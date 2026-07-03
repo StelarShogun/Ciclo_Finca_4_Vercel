@@ -53,7 +53,7 @@ Lighthouse flagged **render-blocking** Font Awesome + Google Fonts on every admi
 **Applied (2026-05-21):**
 
 - `resources/css/admin/shell-base.css` — self-hosted Poppins (`@fontsource`) + Font Awesome via Vite (no cdnjs/googleapis).
-- `resources/js/admin/shell.js` — prefetch SweetAlert2 on idle (replaces blocking CDN `<script>`).
+- `resources/ts/admin/shell.ts` — prefetch SweetAlert2 on idle (replaces blocking CDN `<script>`).
 - Dashboard: Chart.js init deferred with `requestIdleCallback` so header/KPIs paint before the chart bundle.
 - CLS guards: `min-height` + `contain: layout` on filters, orders table card, charts section.
 
@@ -113,7 +113,7 @@ flowchart TB
 | Priority | Task | Expected impact | Files |
 |----------|------|-----------------|-------|
 | P1 | **Font Awesome** — self-host subset or `@fortawesome` tree-shaken build | −500–800 ms render-blocking on catalog | [`app.blade.php`](../resources/views/client/layouts/app.blade.php), Vite |
-| P1 | **Home logged-in (41)** — audit why worse than guest: cart badge polling, `clients-users` remnants, third-party scripts | +15–25 perf points on `/` | [`clients-header.js`](../resources/js/client/clients-header.js), [`home.blade.php`](../resources/views/client/home.blade.php) |
+| P1 | **Home logged-in (41)** — audit why worse than guest: cart badge polling, `clients-users` remnants, third-party scripts | +15–25 perf points on `/` | [`clients-header.js`](../resources/ts/client/clients-header.ts), [`home.blade.php`](../resources/views/client/home.blade.php) |
 | P2 | **Catalog** — ensure `clients-page.js` only on catalog/product/cart; Swiper stays dynamic import | Stable ~81+ on catalog | [`catalog.blade.php`](../resources/views/client/catalog.blade.php) |
 | P2 | **Cart / profile** — measure after explicit URLs; defer SweetAlert2 until needed | — | layout + per-page `@vite` |
 | P3 | Hero `image-delivery` ~66 KiB on mobile | Minor LCP win on guest `/` | [`home.blade.php`](../resources/views/client/home.blade.php) |
@@ -126,7 +126,7 @@ flowchart TB
 
 | Priority | Task | Expected impact | Files |
 |----------|------|-----------------|-------|
-| P1 | **Code-split `inventory.js`** — modals, PDF export, classification UI via `import()` | −200–400 KiB initial JS on `/inventory` | [`inventory.js`](../resources/js/admin/inventory/inventory.js) |
+| P1 | **Code-split `inventory.js`** — modals, PDF export, classification UI via `import()` | −200–400 KiB initial JS on `/inventory` | [`inventory.js`](../resources/ts/admin/inventory/inventory.ts) |
 | P1 | **Per-page Vite entries** — do not load inventory bundle on dashboard/orders | Lower payload on dashboard | admin Blade views, [`vite.config.js`](../vite.config.js) |
 | P2 | **Admin CSS** — shared critical CSS in layout; defer report-specific CSS | render-blocking −1–2 s | [`resources/css/admin/`](../resources/css/admin/) |
 | P2 | **Charts** — load Chart.js only on dashboard/reports pages | bootup-time ↓ on inventory | dashboard JS |
