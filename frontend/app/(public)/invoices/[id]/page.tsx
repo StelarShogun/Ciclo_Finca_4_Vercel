@@ -91,7 +91,7 @@ export default function InvoiceDetailPage() {
             <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>{data.totals.subtotalFormatted}</span></div>
             <div className="flex justify-between text-muted-foreground"><span>IVA</span><span>{data.totals.ivaFormatted}</span></div>
             <div className="flex justify-between text-muted-foreground"><span>Descuento</span><span>{data.totals.discountFormatted}</span></div>
-            <div className="flex justify-between border-t pt-1 text-base font-semibold"><span>Total</span><span className="text-[#235347]">{data.totals.totalFormatted}</span></div>
+            <div className="flex justify-between border-t pt-1 text-base font-semibold"><span>Total</span><span className="text-brand-medium">{data.totals.totalFormatted}</span></div>
           </div>
         </CardContent>
       </Card>

@@ -104,7 +104,7 @@ export function ProductVariants({
           <DialogContent className="sm:max-w-[38rem]">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <i className="fas fa-layer-group text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+                <i className="fas fa-layer-group text-brand-medium dark:text-brand-light" aria-hidden />
                 Agregar variante
               </DialogTitle>
             </DialogHeader>

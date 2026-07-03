@@ -57,7 +57,7 @@ export function ProductFormDialog({
       <DialogContent className="max-h-[92vh] sm:max-w-[56rem] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <i className={`fas ${isEdit ? "fa-pen-to-square" : "fa-box"} text-[#235347] dark:text-[#8EB69B]`} aria-hidden />
+            <i className={`fas ${isEdit ? "fa-pen-to-square" : "fa-box"} text-brand-medium dark:text-brand-light`} aria-hidden />
             {isEdit ? "Editar producto" : "Nuevo producto"}
           </DialogTitle>
           <DialogDescription>Datos básicos, precios y stock. Galería, variantes y clasificaciones se editan desde el detalle.</DialogDescription>

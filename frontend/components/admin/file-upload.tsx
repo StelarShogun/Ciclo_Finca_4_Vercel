@@ -55,7 +55,7 @@ export function FileUpload({
         onClick={() => inputRef.current?.click()}
         className={cn(
           "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-4 text-center transition-colors",
-          dragOver ? "border-[#235347] bg-accent/50" : "border-input hover:border-[#235347]/60",
+          dragOver ? "border-brand-medium bg-accent/50" : "border-input hover:border-brand-medium/60",
         )}
       >
         {shownPreview && !multiple ? (

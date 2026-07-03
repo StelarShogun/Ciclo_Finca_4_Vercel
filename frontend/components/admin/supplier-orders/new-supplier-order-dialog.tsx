@@ -69,7 +69,7 @@ export function NewSupplierOrderDialog({ open, onClose }: { open: boolean; onClo
       <DialogContent className="max-h-[90vh] sm:max-w-[56rem] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <i className="fas fa-truck-ramp-box text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+            <i className="fas fa-truck-ramp-box text-brand-medium dark:text-brand-light" aria-hidden />
             Nuevo pedido a proveedor
           </DialogTitle>
           <DialogDescription>Pedido de reabastecimiento en borrador.</DialogDescription>
@@ -126,7 +126,7 @@ export function NewSupplierOrderDialog({ open, onClose }: { open: boolean; onClo
           <div className="flex items-center justify-between border-t pt-3 text-base font-semibold">
             <span>Total</span><span>{crc.format(total)}</span>
           </div>
-          <Button className="w-full bg-[#235347] hover:bg-[#1a3f37]" disabled={!supplierId || lines.length === 0 || save.isPending} onClick={() => save.mutate()}>
+          <Button className="w-full bg-brand-medium hover:bg-brand-medium-dark" disabled={!supplierId || lines.length === 0 || save.isPending} onClick={() => save.mutate()}>
             Crear pedido
           </Button>
         </div>

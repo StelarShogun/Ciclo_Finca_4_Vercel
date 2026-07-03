@@ -55,7 +55,7 @@ export default function VerifyPage() {
   return (
     <AuthBox className="max-w-[420px]">
       <div className="mb-3 text-center">
-        <i className="fas fa-envelope-open-text text-5xl text-[#12B36A]" aria-hidden />
+        <i className="fas fa-envelope-open-text text-5xl text-cta" aria-hidden />
       </div>
       <AuthTitle>Verifica que eres tú</AuthTitle>
       <AuthSubtitle>Código de verificación ha sido enviado a tu correo</AuthSubtitle>
@@ -89,7 +89,7 @@ export default function VerifyPage() {
           type="button"
           onClick={() => resend.mutate()}
           disabled={resend.isPending}
-          className="text-sm font-semibold text-[#12B36A] hover:underline disabled:opacity-60"
+          className="text-sm font-semibold text-cta hover:underline disabled:opacity-60"
         >
           {resend.isPending ? "Enviando..." : "Reenviar código"}
         </button>

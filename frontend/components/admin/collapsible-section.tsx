@@ -29,7 +29,7 @@ export function CollapsibleSection({
         className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/50"
       >
         {icon && (
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-accent text-[#235347] dark:text-[#8EB69B]">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-accent text-brand-medium dark:text-brand-light">
             <i className={`fas ${icon}`} aria-hidden />
           </span>
         )}

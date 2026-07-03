@@ -40,7 +40,7 @@ function NavLink({ href, active, icon: Icon, children }: { href: string; active:
       href={href}
       className={cn(
         "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-        active ? "bg-[#235347] text-white" : "text-[#DAF1DE] hover:bg-[#235347]/60 hover:text-white",
+        active ? "bg-brand-medium text-white" : "text-brand-lightest hover:bg-brand-medium/60 hover:text-white",
       )}
     >
       <Icon className="h-4 w-4" />
@@ -96,7 +96,7 @@ function SmartSearch({ className }: { className?: string }) {
   return (
     <div ref={boxRef} className={cn("relative", className)}>
       <form onSubmit={submitSearch} className="relative">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#235347]" />
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-brand-medium" />
         <Input
           value={search}
           onChange={(e) => { setSearch(e.target.value); setOpen(true); }}
@@ -129,7 +129,7 @@ function SmartSearch({ className }: { className?: string }) {
               <li className="border-t">
                 <button
                   onClick={() => { setOpen(false); router.push(`/catalog?search=${encodeURIComponent(search.trim())}`); }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-[#235347] hover:bg-accent dark:text-[#8EB69B]"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-brand-medium hover:bg-accent dark:text-brand-light"
                 >
                   <Search className="h-4 w-4" /> Ver todos los resultados de “{search.trim()}”
                 </button>
@@ -177,16 +177,16 @@ export function StoreHeader() {
     : "";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#235347]/40 bg-[#051F20] text-[#DAF1DE]">
+    <header className="sticky top-0 z-40 border-b border-brand-medium/40 bg-brand-darkest text-brand-lightest">
       {/* Modo administrador: equivalente SPA del admin_catalog_mode viejo */}
       {data?.type === "admin" && (
-        <div className="bg-[#F59E0B] text-[#051F20]">
+        <div className="bg-[#F59E0B] text-brand-darkest">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-1.5 text-xs font-semibold">
             <span className="inline-flex items-center gap-1.5">
               <i className="fas fa-user-shield" aria-hidden />
               Estás navegando el sitio como administrador
             </span>
-            <Link href="/admin" className="inline-flex items-center gap-1.5 rounded-full bg-[#051F20] px-3 py-1 text-[#DAF1DE] transition hover:bg-[#0B2B26]">
+            <Link href="/admin" className="inline-flex items-center gap-1.5 rounded-full bg-brand-darkest px-3 py-1 text-brand-lightest transition hover:bg-brand-dark">
               <i className="fas fa-arrow-left" aria-hidden />
               Volver al panel
             </Link>
@@ -199,7 +199,7 @@ export function StoreHeader() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/logo-ciclo-finca-icon-64.webp" alt="Ciclo Finca 4" width={36} height={36} className="h-9 w-9 object-contain" />
           <span className="hidden text-base font-semibold leading-tight sm:block">
-            Ciclo <span className="text-[#8EB69B]">Finca 4</span>
+            Ciclo <span className="text-brand-light">Finca 4</span>
           </span>
         </Link>
 
@@ -214,7 +214,7 @@ export function StoreHeader() {
 
         {/* Móvil: carrito + hamburguesa, como el header viejo */}
         <div className="ml-auto flex items-center gap-1 md:hidden">
-          <Button asChild variant="ghost" size="icon" className="relative text-[#DAF1DE] hover:bg-[#235347] hover:text-white">
+          <Button asChild variant="ghost" size="icon" className="relative text-brand-lightest hover:bg-brand-medium hover:text-white">
             <Link href="/cart" aria-label="Carrito">
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
@@ -230,17 +230,17 @@ export function StoreHeader() {
                 variant="ghost"
                 size="icon"
                 aria-label={menuOpen ? "Cerrar menú de navegación" : "Abrir menú de navegación"}
-                className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white"
+                className="text-brand-lightest hover:bg-brand-medium hover:text-white"
               >
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="flex w-[85vw] max-w-sm flex-col gap-0 overflow-y-auto bg-[#051F20] p-0 text-[#DAF1DE]">
-              <SheetHeader className="border-b border-[#235347]/40 p-4">
-                <SheetTitle className="flex items-center gap-2 text-[#DAF1DE]">
+            <SheetContent side="right" className="flex w-[85vw] max-w-sm flex-col gap-0 overflow-y-auto bg-brand-darkest p-0 text-brand-lightest">
+              <SheetHeader className="border-b border-brand-medium/40 p-4">
+                <SheetTitle className="flex items-center gap-2 text-brand-lightest">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/brand/logo-ciclo-finca-icon-64.webp" alt="" width={28} height={28} className="h-7 w-7 object-contain" />
-                  Ciclo <span className="text-[#8EB69B]">Finca 4</span>
+                  Ciclo <span className="text-brand-light">Finca 4</span>
                 </SheetTitle>
               </SheetHeader>
 
@@ -258,7 +258,7 @@ export function StoreHeader() {
                     onClick={() => setMenuOpen(false)}
                     className={cn(
                       "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium",
-                      item.active ? "bg-[#235347] text-white" : "hover:bg-[#235347]/60 hover:text-white",
+                      item.active ? "bg-brand-medium text-white" : "hover:bg-brand-medium/60 hover:text-white",
                     )}
                   >
                     <item.icon className="h-4 w-4" /> {item.label}
@@ -270,29 +270,29 @@ export function StoreHeader() {
                 <button
                   type="button"
                   onClick={() => { setMenuOpen(false); favoritesDrawer.open(); }}
-                  className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium hover:bg-[#235347]/60 hover:text-white"
+                  className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium hover:bg-brand-medium/60 hover:text-white"
                 >
                   <Heart className="h-4 w-4" /> Favoritos
                 </button>
 
-                <div className="my-2 border-t border-[#235347]/40" />
+                <div className="my-2 border-t border-brand-medium/40" />
 
                 <div className="flex items-center justify-between px-3 py-1.5 text-sm font-medium">
                   Tema
-                  <ThemeToggle className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white" />
+                  <ThemeToggle className="text-brand-lightest hover:bg-brand-medium hover:text-white" />
                 </div>
 
-                <div className="my-2 border-t border-[#235347]/40" />
+                <div className="my-2 border-t border-brand-medium/40" />
 
                 {isClient ? (
                   <>
                     <div className="flex items-center gap-3 px-3 py-2">
                       <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-[#235347] text-xs text-white">{initials || "U"}</AvatarFallback>
+                        <AvatarFallback className="bg-brand-medium text-xs text-white">{initials || "U"}</AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold">{data?.user.name}</p>
-                        <p className="truncate text-xs text-[#DAF1DE]/60">{data?.user.gmail}</p>
+                        <p className="truncate text-xs text-brand-lightest/60">{data?.user.gmail}</p>
                       </div>
                     </div>
                     {[
@@ -304,7 +304,7 @@ export function StoreHeader() {
                         key={item.href}
                         href={item.href}
                         onClick={() => setMenuOpen(false)}
-                        className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium hover:bg-[#235347]/60 hover:text-white"
+                        className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium hover:bg-brand-medium/60 hover:text-white"
                       >
                         <item.icon className="h-4 w-4" /> {item.label}
                         {!!item.badge && (
@@ -323,10 +323,10 @@ export function StoreHeader() {
                   </>
                 ) : (
                   <div className="flex flex-col gap-2 px-1 pt-1">
-                    <Button asChild className="w-full bg-[#12B36A] text-white hover:bg-[#0E9558]" onClick={() => setMenuOpen(false)}>
+                    <Button asChild className="w-full bg-cta text-white hover:bg-cta-strong" onClick={() => setMenuOpen(false)}>
                       <Link href="/login">Iniciar sesión</Link>
                     </Button>
-                    <Button asChild variant="outline" className="w-full border-[#8EB69B]/50 bg-transparent text-[#DAF1DE] hover:bg-[#235347] hover:text-white" onClick={() => setMenuOpen(false)}>
+                    <Button asChild variant="outline" className="w-full border-brand-light/50 bg-transparent text-brand-lightest hover:bg-brand-medium hover:text-white" onClick={() => setMenuOpen(false)}>
                       <Link href="/register">Crear cuenta</Link>
                     </Button>
                   </div>
@@ -338,19 +338,19 @@ export function StoreHeader() {
 
         {/* Acciones (desktop) */}
         <div className="ml-auto hidden items-center gap-1 md:flex">
-          <ThemeToggle className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white" />
+          <ThemeToggle className="text-brand-lightest hover:bg-brand-medium hover:text-white" />
 
           <Button
             variant="ghost"
             size="icon"
             aria-label="Favoritos"
-            className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white"
+            className="text-brand-lightest hover:bg-brand-medium hover:text-white"
             onClick={() => favoritesDrawer.open()}
           >
             <Heart className="h-5 w-5" />
           </Button>
 
-          <Button asChild variant="ghost" size="icon" className="relative text-[#DAF1DE] hover:bg-[#235347] hover:text-white">
+          <Button asChild variant="ghost" size="icon" className="relative text-brand-lightest hover:bg-brand-medium hover:text-white">
             <Link href="/cart" aria-label="Carrito">
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
@@ -364,9 +364,9 @@ export function StoreHeader() {
           {isClient ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="gap-2 px-2 text-[#DAF1DE] hover:bg-[#235347] hover:text-white">
+                <Button variant="ghost" className="gap-2 px-2 text-brand-lightest hover:bg-brand-medium hover:text-white">
                   <Avatar className="h-7 w-7">
-                    <AvatarFallback className="bg-[#235347] text-xs text-white">{initials || "U"}</AvatarFallback>
+                    <AvatarFallback className="bg-brand-medium text-xs text-white">{initials || "U"}</AvatarFallback>
                   </Avatar>
                   <span className="hidden max-w-28 truncate sm:inline">{data?.user.name}</span>
                   {unread > 0 && <span className="h-2 w-2 rounded-full bg-amber-400" />}
@@ -392,10 +392,10 @@ export function StoreHeader() {
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-1">
-              <Button asChild variant="ghost" size="sm" className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white">
+              <Button asChild variant="ghost" size="sm" className="text-brand-lightest hover:bg-brand-medium hover:text-white">
                 <Link href="/login">Iniciar sesión</Link>
               </Button>
-              <Button asChild size="sm" className="bg-[#12B36A] text-white hover:bg-[#0E9558]">
+              <Button asChild size="sm" className="bg-cta text-white hover:bg-cta-strong">
                 <Link href="/register">Crear cuenta</Link>
               </Button>
             </div>

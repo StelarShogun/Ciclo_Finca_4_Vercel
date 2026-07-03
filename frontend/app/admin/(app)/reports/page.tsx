@@ -42,7 +42,7 @@ export default function ReportsHubPage() {
           <Link key={r.href} href={r.href}>
             <Card className="h-full transition-shadow hover:shadow-md">
               <CardContent className="flex items-start gap-4 p-5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-[#235347] dark:text-[#8EB69B]">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-brand-medium dark:text-brand-light">
                   <r.icon className="h-5 w-5" />
                 </span>
                 <div className="min-w-0 flex-1">

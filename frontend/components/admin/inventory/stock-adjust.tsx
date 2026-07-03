@@ -80,7 +80,7 @@ export function StockAdjust({
       <DialogContent className="sm:max-w-[38rem]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <i className="fas fa-boxes-stacked text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+            <i className="fas fa-boxes-stacked text-brand-medium dark:text-brand-light" aria-hidden />
             {product?.name}
           </DialogTitle>
           <DialogDescription>

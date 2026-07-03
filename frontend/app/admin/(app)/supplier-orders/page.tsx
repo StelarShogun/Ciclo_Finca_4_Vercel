@@ -181,7 +181,7 @@ export default function SupplierOrdersPage() {
             renderCard={(o) => (
               <AdminCard
                 media={
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-[#235347] dark:text-[#8EB69B]">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-brand-medium dark:text-brand-light">
                     <i className="fas fa-truck-ramp-box" aria-hidden />
                   </div>
                 }

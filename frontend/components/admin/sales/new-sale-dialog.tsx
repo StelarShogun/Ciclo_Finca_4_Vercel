@@ -124,7 +124,7 @@ export function NewSaleDialog({ open, onClose }: { open: boolean; onClose: () =>
       <DialogContent className="max-h-[90vh] sm:max-w-[56rem] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <i className="fas fa-cash-register text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+            <i className="fas fa-cash-register text-brand-medium dark:text-brand-light" aria-hidden />
             Nueva venta
           </DialogTitle>
           <DialogDescription>Registrá una venta de mostrador.</DialogDescription>
@@ -196,7 +196,7 @@ export function NewSaleDialog({ open, onClose }: { open: boolean; onClose: () =>
               <div className="flex justify-between text-muted-foreground"><span>IVA ({IVA}%)</span><span>{crc.format(iva)}</span></div>
               <div className="flex justify-between border-t pt-2 text-base font-semibold"><span>Total</span><span>{crc.format(total)}</span></div>
             </div>
-            <Button className="w-full bg-[#235347] hover:bg-[#1a3f37]" disabled={!canSave} onClick={() => save.mutate()}>Registrar venta</Button>
+            <Button className="w-full bg-brand-medium hover:bg-brand-medium-dark" disabled={!canSave} onClick={() => save.mutate()}>Registrar venta</Button>
           </div>
         </div>
       </DialogContent>

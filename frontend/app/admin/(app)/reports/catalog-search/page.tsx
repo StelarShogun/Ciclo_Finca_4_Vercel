@@ -28,7 +28,7 @@ function Kpi({ label, icon, children }: { label: string; icon: string; children:
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
           {children}
         </div>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-[#235347] dark:text-[#8EB69B]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-brand-medium dark:text-brand-light">
           <i className={`fas ${icon}`} aria-hidden />
         </span>
       </CardContent>
@@ -85,7 +85,7 @@ export default function CatalogSearchReport() {
               {data.topProductName ? (
                 <>
                   <p className="truncate font-semibold" title={data.topProductName}>{data.topProductName}</p>
-                  <span className="mt-1 inline-block rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-[#235347] dark:text-[#8EB69B]">
+                  <span className="mt-1 inline-block rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-brand-medium dark:text-brand-light">
                     {nf.format(data.topProductHits ?? 0)} apariciones
                   </span>
                 </>
@@ -124,12 +124,12 @@ export default function CatalogSearchReport() {
                           <p className="text-xs text-muted-foreground">{row.sku}</p>
                           <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted" aria-hidden>
                             <div
-                              className="h-full rounded-full bg-[#235347] dark:bg-[#8EB69B]"
+                              className="h-full rounded-full bg-brand-medium dark:bg-brand-light"
                               style={{ width: `${pct}%` }}
                             />
                           </div>
                         </div>
-                        <span className="shrink-0 rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-[#235347] dark:text-[#8EB69B]">
+                        <span className="shrink-0 rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-brand-medium dark:text-brand-light">
                           {nf.format(row.hit_count)}
                         </span>
                       </div>

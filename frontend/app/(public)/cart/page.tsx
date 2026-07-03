@@ -93,16 +93,16 @@ export default function CartPage() {
   if (done) {
     return (
       <div className="mx-auto max-w-md px-4 py-16">
-        <Card className="border-t-4 border-t-[#235347]">
+        <Card className="border-t-4 border-t-brand-medium">
           <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-            <CheckCircle2 className="h-12 w-12 text-[#235347]" />
+            <CheckCircle2 className="h-12 w-12 text-brand-medium" />
             <h1 className="text-xl font-semibold">¡Pedido confirmado!</h1>
             <p className="text-sm text-muted-foreground">
               Factura <span className="font-medium text-foreground">{done.invoice_number}</span>. Te avisaremos cuando esté listo para retirar.
             </p>
             <div className="flex gap-2">
               <Button asChild variant="outline"><Link href="/catalog">Seguir comprando</Link></Button>
-              <Button asChild className="bg-[#235347] hover:bg-[#1a3f37]"><Link href="/invoices">Mis facturas</Link></Button>
+              <Button asChild className="bg-brand-medium hover:bg-brand-medium-dark"><Link href="/invoices">Mis facturas</Link></Button>
             </div>
           </CardContent>
         </Card>
@@ -113,11 +113,11 @@ export default function CartPage() {
   return (
     <section aria-labelledby="cart-page-title">
       {/* Hero, fiel al cart-hero viejo */}
-      <header className="bg-[#051F20] py-10 text-[#DAF1DE]">
+      <header className="bg-brand-darkest py-10 text-brand-lightest">
         <div className="mx-auto max-w-6xl px-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-[#8EB69B]">Ciclo Finca 4</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-brand-light">Ciclo Finca 4</p>
           <h1 id="cart-page-title" className="text-3xl font-bold tracking-tight">Tu carrito</h1>
-          <p className="mt-1 text-sm text-[#DAF1DE]/80">Revisá cantidades, elegí cómo pagar y confirmá cuando estés listo.</p>
+          <p className="mt-1 text-sm text-brand-lightest/80">Revisá cantidades, elegí cómo pagar y confirmá cuando estés listo.</p>
         </div>
       </header>
 
@@ -131,8 +131,8 @@ export default function CartPage() {
 
         {/* Política de retiro en tienda */}
         {data?.pickupPolicyNotice && (
-          <aside className="mb-4 rounded-xl border border-[#8EB69B]/50 bg-accent/60 p-4" aria-label="Política de retiro en tienda">
-            <div className="mb-1 flex items-center gap-2 font-bold text-[#235347] dark:text-[#8EB69B]">
+          <aside className="mb-4 rounded-xl border border-brand-light/50 bg-accent/60 p-4" aria-label="Política de retiro en tienda">
+            <div className="mb-1 flex items-center gap-2 font-bold text-brand-medium dark:text-brand-light">
               <i className="fas fa-store" aria-hidden />
               Retiro en tienda
             </div>
@@ -154,7 +154,7 @@ export default function CartPage() {
             <div className="flex items-center gap-2">
               <Link
                 href="/catalog"
-                className="inline-flex items-center gap-2 rounded-lg border border-[#235347]/40 px-3.5 py-2 text-sm font-semibold text-[#235347] transition hover:bg-accent dark:text-[#8EB69B]"
+                className="inline-flex items-center gap-2 rounded-lg border border-brand-medium/40 px-3.5 py-2 text-sm font-semibold text-brand-medium transition hover:bg-accent dark:text-brand-light"
               >
                 <i className="fas fa-bicycle" aria-hidden />
                 Seguir comprando

@@ -36,9 +36,9 @@ function MetricBlock({
   primary?: boolean;
 }) {
   return (
-    <Card className={primary ? "border-[#235347]/40 bg-[#235347]/5 dark:bg-[#8EB69B]/10" : undefined}>
+    <Card className={primary ? "border-brand-medium/40 bg-brand-medium/5 dark:bg-brand-light/10" : undefined}>
       <CardContent className="p-4">
-        <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-[#235347] dark:text-[#8EB69B]">
+        <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-brand-medium dark:text-brand-light">
           <i className={`fas ${icon}`} aria-hidden />
         </div>
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
@@ -176,13 +176,13 @@ export default function SalesPerformanceReport() {
                   <ul className="divide-y text-sm">
                     <li className="flex justify-between py-2">
                       <span>Ingresos (actual − anterior)</span>
-                      <span className={`font-semibold ${revenueDiff >= 0 ? "text-[#0E9558] dark:text-[#2ED27E]" : "text-[#d32f2f] dark:text-[#F87171]"}`}>
+                      <span className={`font-semibold ${revenueDiff >= 0 ? "text-cta-strong dark:text-[#2ED27E]" : "text-[#d32f2f] dark:text-[#F87171]"}`}>
                         {`${revenueDiff >= 0 ? "+" : "−"}${crc(Math.abs(revenueDiff))}`}
                       </span>
                     </li>
                     <li className="flex justify-between py-2">
                       <span>Ventas (actual − anterior)</span>
-                      <span className={`font-semibold ${countDiff >= 0 ? "text-[#0E9558] dark:text-[#2ED27E]" : "text-[#d32f2f] dark:text-[#F87171]"}`}>
+                      <span className={`font-semibold ${countDiff >= 0 ? "text-cta-strong dark:text-[#2ED27E]" : "text-[#d32f2f] dark:text-[#F87171]"}`}>
                         {`${countDiff >= 0 ? "+" : "−"}${Math.abs(countDiff)}`}
                       </span>
                     </li>

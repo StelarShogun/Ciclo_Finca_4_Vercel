@@ -120,7 +120,7 @@ export default function ProfilePage() {
       {/* Hero: avatar + nombre + accesos rápidos, fiel al ProfileHero viejo */}
       <div className="mb-6 flex flex-col items-center gap-5 rounded-2xl border bg-card p-6 sm:flex-row sm:items-center">
         <div className="relative">
-          <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-full border-2 border-[#235347] bg-accent text-3xl font-bold text-[#235347] dark:text-[#8EB69B]">
+          <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-full border-2 border-brand-medium bg-accent text-3xl font-bold text-brand-medium dark:text-brand-light">
             {showAvatar ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -140,7 +140,7 @@ export default function ProfilePage() {
             aria-label="Cambiar foto de perfil"
             title="Cambiar foto de perfil"
             onClick={() => fileInputRef.current?.click()}
-            className="absolute -bottom-1 -right-1 grid h-9 w-9 place-items-center rounded-full bg-[#235347] text-sm text-white shadow transition hover:bg-[#256428] disabled:opacity-60"
+            className="absolute -bottom-1 -right-1 grid h-9 w-9 place-items-center rounded-full bg-brand-medium text-sm text-white shadow transition hover:bg-[#256428] disabled:opacity-60"
           >
             <i className={uploadAvatar.isPending ? "fas fa-spinner fa-spin" : "fas fa-camera"} aria-hidden />
           </button>
@@ -174,13 +174,13 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={favorites.open}
-              className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-[#235347] transition hover:bg-[#DAF1DE] dark:text-[#8EB69B]"
+              className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-brand-medium transition hover:bg-brand-lightest dark:text-brand-light"
             >
               <i className="fas fa-heart" aria-hidden /> Mis favoritos
             </button>
             <Link
               href="/notifications"
-              className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-[#235347] transition hover:bg-[#DAF1DE] dark:text-[#8EB69B]"
+              className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-brand-medium transition hover:bg-brand-lightest dark:text-brand-light"
             >
               <i className="fas fa-bell" aria-hidden /> Notificaciones
             </Link>
@@ -194,7 +194,7 @@ export default function ProfilePage() {
         <div className="rounded-2xl border bg-card p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-base font-bold">
-              <i className="fas fa-user-circle text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+              <i className="fas fa-user-circle text-brand-medium dark:text-brand-light" aria-hidden />
               Datos Personales
             </h2>
             {!isEditing && (
@@ -226,7 +226,7 @@ export default function ProfilePage() {
 
             {isEditing && (
               <div className="flex gap-2 pt-1">
-                <Button type="submit" className="bg-[#235347] hover:bg-[#256428]" disabled={saveProfile.isPending}>
+                <Button type="submit" className="bg-brand-medium hover:bg-[#256428]" disabled={saveProfile.isPending}>
                   <i className="fas fa-save" aria-hidden /> Guardar Cambios
                 </Button>
                 <Button
@@ -244,7 +244,7 @@ export default function ProfilePage() {
         {/* Contraseña */}
         <div className="rounded-2xl border bg-card p-5">
           <h2 className="mb-4 flex items-center gap-2 text-base font-bold">
-            <i className="fas fa-lock text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+            <i className="fas fa-lock text-brand-medium dark:text-brand-light" aria-hidden />
             {data?.isGoogleOnly ? "Definir contraseña" : "Cambiar contraseña"}
           </h2>
 
@@ -274,7 +274,7 @@ export default function ProfilePage() {
             </div>
             <Button
               type="submit"
-              className="bg-[#235347] hover:bg-[#256428]"
+              className="bg-brand-medium hover:bg-[#256428]"
               disabled={savePassword.isPending || pwd.new_password.length < 8 || pwd.new_password !== pwd.new_password_confirmation}
             >
               <i className="fas fa-key" aria-hidden /> Actualizar contraseña

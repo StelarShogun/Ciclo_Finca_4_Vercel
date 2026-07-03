@@ -55,16 +55,16 @@ export default function CheckoutPage() {
   if (done) {
     return (
       <div className="mx-auto max-w-md px-4 py-16">
-        <Card className="border-t-4 border-t-[#235347]">
+        <Card className="border-t-4 border-t-brand-medium">
           <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-            <CheckCircle2 className="h-12 w-12 text-[#235347]" />
+            <CheckCircle2 className="h-12 w-12 text-brand-medium" />
             <h1 className="text-xl font-semibold">¡Pedido confirmado!</h1>
             <p className="text-sm text-muted-foreground">
               Factura <span className="font-medium text-foreground">{done.invoice_number}</span>. Te avisaremos cuando esté listo para retirar.
             </p>
             <div className="flex gap-2">
               <Button asChild variant="outline"><Link href="/catalog">Seguir comprando</Link></Button>
-              <Button asChild className="bg-[#235347] hover:bg-[#1a3f37]"><Link href="/invoices">Mis facturas</Link></Button>
+              <Button asChild className="bg-brand-medium hover:bg-brand-medium-dark"><Link href="/invoices">Mis facturas</Link></Button>
             </div>
           </CardContent>
         </Card>
@@ -86,7 +86,7 @@ export default function CheckoutPage() {
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
             Tu carrito está vacío.{" "}
-            <Link href="/catalog" className="text-[#235347] hover:underline">Ver catálogo</Link>
+            <Link href="/catalog" className="text-brand-medium hover:underline">Ver catálogo</Link>
           </CardContent>
         </Card>
       ) : (
@@ -122,10 +122,10 @@ export default function CheckoutPage() {
               )}
               <div className="flex justify-between border-t pt-3 text-base font-semibold">
                 <span>Total</span>
-                <span className="text-[#235347]">{cart.data?.totalFormatted}</span>
+                <span className="text-brand-medium">{cart.data?.totalFormatted}</span>
               </div>
               <Button
-                className="w-full bg-[#235347] hover:bg-[#1a3f37]"
+                className="w-full bg-brand-medium hover:bg-brand-medium-dark"
                 disabled={place.isPending}
                 onClick={() => place.mutate()}
               >

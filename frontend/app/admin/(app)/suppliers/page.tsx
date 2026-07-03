@@ -190,7 +190,7 @@ export default function SuppliersPage() {
                 <AdminCard
                   key={s.supplier_id}
                   media={
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-[#235347] dark:text-[#8EB69B]">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-brand-medium dark:text-brand-light">
                       <i className="fas fa-truck-field" aria-hidden />
                     </div>
                   }
@@ -296,7 +296,7 @@ export default function SuppliersPage() {
           >
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <i className={`fas ${editing ? "fa-pen-to-square" : "fa-truck-field"} text-[#235347] dark:text-[#8EB69B]`} aria-hidden />
+                <i className={`fas ${editing ? "fa-pen-to-square" : "fa-truck-field"} text-brand-medium dark:text-brand-light`} aria-hidden />
                 {editing ? "Editar proveedor" : "Nuevo proveedor"}
               </DialogTitle>
               <DialogDescription>Datos de contacto y entrega.</DialogDescription>

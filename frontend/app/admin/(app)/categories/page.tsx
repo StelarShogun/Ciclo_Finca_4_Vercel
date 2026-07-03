@@ -144,7 +144,7 @@ export default function CategoriesPage() {
               <AdminCard
                 key={row.category_id}
                 media={
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-[#235347] dark:text-[#8EB69B]">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-brand-medium dark:text-brand-light">
                     <i className={`fas ${row.is_parent ? "fa-folder" : "fa-folder-tree"}`} aria-hidden />
                   </div>
                 }
@@ -211,7 +211,7 @@ export default function CategoriesPage() {
           >
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <i className="fas fa-folder-plus text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+                <i className="fas fa-folder-plus text-brand-medium dark:text-brand-light" aria-hidden />
                 Nueva categoría
               </DialogTitle>
               <DialogDescription>Categoría raíz del catálogo.</DialogDescription>
@@ -245,7 +245,7 @@ export default function CategoriesPage() {
           >
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <i className="fas fa-folder-tree text-[#235347] dark:text-[#8EB69B]" aria-hidden />
+                <i className="fas fa-folder-tree text-brand-medium dark:text-brand-light" aria-hidden />
                 Nueva subcategoría
               </DialogTitle>
               <DialogDescription>Cuelga de una categoría existente.</DialogDescription>

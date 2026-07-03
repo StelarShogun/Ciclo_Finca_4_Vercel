@@ -115,7 +115,7 @@ function LoginInner() {
           </div>
           <FieldError>{errors.password?.message}</FieldError>
           <div className="text-right">
-            <Link href="/recovery" className="text-[0.85rem] font-medium text-[#12B36A] hover:underline">
+            <Link href="/recovery" className="text-[0.85rem] font-medium text-cta hover:underline">
               ¿Olvidó su contraseña?
             </Link>
           </div>
@@ -133,7 +133,7 @@ function LoginInner() {
         <p className="mb-2.5 text-sm text-muted-foreground">¿No tienes una cuenta?</p>
         <Link
           href="/register"
-          className="inline-flex w-full items-center justify-center gap-2.5 rounded-[10px] border-[1.5px] border-[#dadce0] bg-card px-3.5 py-[11px] text-[0.95rem] font-semibold text-[#235347] transition hover:border-[#235347] hover:bg-accent dark:border-border dark:text-[#8EB69B]"
+          className="inline-flex w-full items-center justify-center gap-2.5 rounded-[10px] border-[1.5px] border-[#dadce0] bg-card px-3.5 py-[11px] text-[0.95rem] font-semibold text-brand-medium transition hover:border-brand-medium hover:bg-accent dark:border-border dark:text-brand-light"
         >
           <i className="fas fa-user-plus" aria-hidden />
           <span>Crear cuenta</span>

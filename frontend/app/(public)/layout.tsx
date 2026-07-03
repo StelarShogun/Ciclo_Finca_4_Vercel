@@ -8,7 +8,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <FavoritesDrawerProvider>
       <div className="flex min-h-svh flex-col">
-        <Suspense fallback={<div className="h-16 bg-[#051F20]" />}>
+        <Suspense fallback={<div className="h-16 bg-brand-darkest" />}>
           <StoreHeader />
         </Suspense>
         <main className="flex-1">{children}</main>

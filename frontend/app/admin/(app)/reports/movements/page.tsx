@@ -160,10 +160,10 @@ function ProductMovements({ product, onBack }: { product: MovementProduct; onBac
                 <p className="text-2xl font-bold">{nf.format(meta?.total ?? 0)}</p>
               </CardContent>
             </Card>
-            <Card className="border-[#0E9558]/40">
+            <Card className="border-cta-strong/40">
               <CardContent className="p-4">
                 <p className="text-sm font-medium text-muted-foreground">Unidades entradas</p>
-                <p className="text-2xl font-bold text-[#0E9558] dark:text-[#2ED27E]">
+                <p className="text-2xl font-bold text-cta-strong dark:text-[#2ED27E]">
                   {nf.format(summary.total_entradas)}
                 </p>
               </CardContent>
