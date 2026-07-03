@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Bell, Heart, Home, LogOut, Receipt, Search, ShoppingCart, Store, Tag, User } from "lucide-react";
@@ -45,11 +45,15 @@ function NavLink({ href, active, icon: Icon, children }: { href: string; active:
 export function StoreHeader() {
   const router = useRouter();
   const pathname = usePathname();
-  const params = useSearchParams();
   const queryClient = useQueryClient();
   const { data } = useMe();
   const favoritesDrawer = useFavoritesDrawer();
-  const [search, setSearch] = useState(params.get("search") ?? "");
+  // Sin useSearchParams: fuerza CSR bail-out y saca el header (con el nombre
+  // de la marca) del HTML estático, y el verificador de Google no lo ve.
+  const [search, setSearch] = useState("");
+  useEffect(() => {
+    setSearch(new URLSearchParams(window.location.search).get("search") ?? "");
+  }, []);
   const [debounced, setDebounced] = useState("");
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
