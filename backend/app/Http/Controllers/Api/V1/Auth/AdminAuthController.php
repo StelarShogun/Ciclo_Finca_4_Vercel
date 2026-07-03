@@ -17,6 +17,14 @@ use Illuminate\Validation\ValidationException;
  */
 final class AdminAuthController extends Controller
 {
+    /** Config pública que el SPA necesita antes de autenticar (site key de reCAPTCHA). */
+    public function meta(): JsonResponse
+    {
+        return response()->json([
+            'data' => ['recaptchaSiteKey' => config('services.recaptcha.key') ?: null],
+        ]);
+    }
+
     public function login(Request $request, AuditLogger $auditLogger): JsonResponse
     {
         // Un cliente logueado no puede tomar sesión de admin.

@@ -7,6 +7,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { SlidersHorizontal, X } from "lucide-react";
 
 import { getCatalog } from "@/lib/api/client/catalog";
+import { CatalogSpotlight } from "@/components/storefront/catalog-spotlight";
 import { ProductCard } from "@/components/storefront/product-card";
 import { ListPagination } from "@/components/shared/list-pagination";
 import { CategoryRail } from "@/components/storefront/category-rail";
@@ -58,7 +59,11 @@ function CatalogInner() {
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
-  const setPage = (p: number) => setParams({ page: p <= 1 ? null : String(p) }, { resetPage: false });
+  const setPage = (p: number) => {
+    setParams({ page: p <= 1 ? null : String(p) }, { resetPage: false });
+    // Fiel al catálogo viejo: al cambiar de página se vuelve arriba.
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["catalog", search, categoryId, page, sortField, direction, perPage, brand, appliedMin, appliedMax],
@@ -78,6 +83,8 @@ function CatalogInner() {
   });
 
   const hasFilters = !!categoryId || brand !== ALL || !!appliedMin || !!appliedMax || !!search;
+  // Como en el catálogo viejo: destacados solo en la primera página y sin filtros.
+  const showSpotlight = page === 1 && !hasFilters && (data?.catalogSpotlight?.length ?? 0) > 0;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -128,6 +135,7 @@ function CatalogInner() {
 
         {/* Main */}
         <div className="min-w-0 flex-1">
+          {showSpotlight && <CatalogSpotlight items={data!.catalogSpotlight} />}
           <div className="mb-2 flex flex-wrap items-center gap-2">
             {hasFilters && (
               <Button asChild size="sm" variant="ghost" className="text-muted-foreground">

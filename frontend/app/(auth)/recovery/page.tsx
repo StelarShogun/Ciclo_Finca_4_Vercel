@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
@@ -18,7 +18,7 @@ import {
   FieldLabel,
   PasswordToggle,
 } from "@/components/auth/auth-shell";
-import { OtpInput } from "@/components/auth/otp-input";
+import { OtpInput, type OtpStatus } from "@/components/auth/otp-input";
 import { Input } from "@/components/ui/input";
 
 function errMsg(e: unknown, fallback: string) {
@@ -30,6 +30,8 @@ export default function RecoveryPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [gmail, setGmail] = useState("");
   const [code, setCode] = useState("");
+  const [otpStatus, setOtpStatus] = useState<OtpStatus>("idle");
+  const [otpError, setOtpError] = useState(0);
   const [pwd, setPwd] = useState("");
   const [pwd2, setPwd2] = useState("");
   const [showPwd, setShowPwd] = useState(false);
@@ -42,9 +44,24 @@ export default function RecoveryPage() {
   });
   const verify = useMutation({
     mutationFn: () => recoveryVerify(code),
-    onSuccess: () => { toast.success("Código verificado"); setStep(3); },
-    onError: (e) => toast.error(errMsg(e, "Código inválido o expirado.")),
+    onMutate: () => setOtpStatus("verifying"),
+    onSuccess: () => {
+      setOtpStatus("success");
+      toast.success("Código verificado");
+      setTimeout(() => { setStep(3); setOtpStatus("idle"); setCode(""); }, 700);
+    },
+    onError: (e) => {
+      setOtpStatus("fail");
+      toast.error(errMsg(e, "Código inválido o expirado."));
+      setTimeout(() => { setOtpStatus("idle"); setCode(""); setOtpError((n) => n + 1); }, 650);
+    },
   });
+
+  // Fiel al flujo viejo: con los 6 dígitos el código se verifica solo.
+  useEffect(() => {
+    if (step === 2 && code.length === 6 && otpStatus === "idle" && !verify.isPending) verify.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code, step]);
   const reset = useMutation({
     mutationFn: () => recoveryReset(pwd, pwd2),
     onSuccess: () => { toast.success("Contraseña actualizada"); router.push("/login"); },
@@ -72,11 +89,11 @@ export default function RecoveryPage() {
         >
           <div>
             <p className="mb-1 text-center text-sm font-semibold">Código de verificación</p>
-            <OtpInput value={code} onChange={setCode} disabled={verify.isPending} />
+            <OtpInput value={code} onChange={setCode} status={otpStatus} errorSignal={otpError} />
           </div>
           <AuthSubmitButton
             icon="fas fa-check-circle"
-            disabled={code.length !== 6}
+            disabled={code.length !== 6 || otpStatus !== "idle"}
             pending={verify.isPending}
             pendingText="Verificando..."
           >

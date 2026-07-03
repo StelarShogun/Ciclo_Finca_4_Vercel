@@ -54,6 +54,7 @@ Route::prefix('v1')->middleware('throttle:120,1')->group(function (): void {
         Route::post('/recovery/reset', [ClientAuthController::class, 'recoveryReset'])->middleware('throttle:5,1');
 
         // Admin
+        Route::get('/meta', [AdminAuthController::class, 'meta']);
         Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:5,1');
         Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->middleware('auth:admin');
     });
