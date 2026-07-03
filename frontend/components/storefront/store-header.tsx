@@ -42,12 +42,13 @@ function NavLink({ href, active, icon: Icon, children }: { href: string; active:
   );
 }
 
-export function StoreHeader() {
+/**
+ * Búsqueda inteligente con sugerencias. Componente propio para poder montarla
+ * dos veces (fila principal en desktop, segunda fila en móvil) con estado
+ * independiente sin duplicar lógica.
+ */
+function SmartSearch({ className }: { className?: string }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const queryClient = useQueryClient();
-  const { data } = useMe();
-  const favoritesDrawer = useFavoritesDrawer();
   // Sin useSearchParams: fuerza CSR bail-out y saca el header (con el nombre
   // de la marca) del HTML estático, y el verificador de Google no lo ve.
   const [search, setSearch] = useState("");
@@ -57,8 +58,6 @@ export function StoreHeader() {
   const [debounced, setDebounced] = useState("");
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
-
-  const isClient = data?.type === "client";
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 250);
@@ -81,6 +80,70 @@ export function StoreHeader() {
     placeholderData: keepPreviousData,
   });
 
+  function submitSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const q = search.trim();
+    router.push(q ? `/catalog?search=${encodeURIComponent(q)}` : "/catalog");
+  }
+
+  return (
+    <div ref={boxRef} className={cn("relative", className)}>
+      <form onSubmit={submitSearch} className="relative">
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#235347]" />
+        <Input
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          placeholder="Buscar productos…"
+          className="border-0 bg-white pl-9 text-foreground"
+        />
+      </form>
+      {open && debounced.trim().length >= 2 && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-lg">
+          {suggestions.isLoading ? (
+            <p className="px-3 py-3 text-sm text-muted-foreground">Buscando…</p>
+          ) : (suggestions.data ?? []).length === 0 ? (
+            <p className="px-3 py-3 text-sm text-muted-foreground">Sin sugerencias.</p>
+          ) : (
+            <ul className="max-h-80 overflow-y-auto py-1">
+              {(suggestions.data ?? []).map((s) => (
+                <li key={`${s.type}-${s.id}`}>
+                  <Link
+                    href={s.type === "category" ? `/catalog?category_id=${s.id}` : `/product/${s.id}`}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
+                  >
+                    {s.type === "category" ? <Tag className="h-4 w-4 text-muted-foreground" /> : <Search className="h-4 w-4 text-muted-foreground" />}
+                    <span className="flex-1 truncate">{s.name}</span>
+                    {s.category && <span className="text-xs text-muted-foreground">{s.category}</span>}
+                  </Link>
+                </li>
+              ))}
+              <li className="border-t">
+                <button
+                  onClick={() => { setOpen(false); router.push(`/catalog?search=${encodeURIComponent(search.trim())}`); }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-[#235347] hover:bg-accent dark:text-[#8EB69B]"
+                >
+                  <Search className="h-4 w-4" /> Ver todos los resultados de “{search.trim()}”
+                </button>
+              </li>
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function StoreHeader() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const queryClient = useQueryClient();
+  const { data } = useMe();
+  const favoritesDrawer = useFavoritesDrawer();
+
+  const isClient = data?.type === "client";
+
   const cart = useQuery({ queryKey: ["cart"], queryFn: getCart, staleTime: 30_000 });
   const cartCount = cart.data?.items.reduce((n, i) => n + i.quantity, 0) ?? 0;
 
@@ -100,12 +163,6 @@ export function StoreHeader() {
       router.replace("/");
     },
   });
-
-  function submitSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const q = search.trim();
-    router.push(q ? `/catalog?search=${encodeURIComponent(q)}` : "/catalog");
-  }
 
   const initials = isClient
     ? `${data?.user.name?.[0] ?? ""}${data?.user.first_surname?.[0] ?? ""}`.toUpperCase()
@@ -128,7 +185,7 @@ export function StoreHeader() {
           </div>
         </div>
       )}
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-4">
         {/* Logo */}
         <Link href="/" className="flex shrink-0 items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -144,52 +201,8 @@ export function StoreHeader() {
           <NavLink href="/catalog" active={pathname.startsWith("/catalog")} icon={Store}>Catálogo</NavLink>
         </nav>
 
-        {/* Búsqueda inteligente */}
-        <div ref={boxRef} className="relative ml-2 hidden flex-1 lg:block">
-          <form onSubmit={submitSearch} className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#235347]" />
-            <Input
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setOpen(true); }}
-              onFocus={() => setOpen(true)}
-              placeholder="Buscar productos…"
-              className="border-0 bg-white pl-9 text-foreground"
-            />
-          </form>
-          {open && debounced.trim().length >= 2 && (
-            <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-lg">
-              {suggestions.isLoading ? (
-                <p className="px-3 py-3 text-sm text-muted-foreground">Buscando…</p>
-              ) : (suggestions.data ?? []).length === 0 ? (
-                <p className="px-3 py-3 text-sm text-muted-foreground">Sin sugerencias.</p>
-              ) : (
-                <ul className="max-h-80 overflow-y-auto py-1">
-                  {(suggestions.data ?? []).map((s) => (
-                    <li key={`${s.type}-${s.id}`}>
-                      <Link
-                        href={s.type === "category" ? `/catalog?category_id=${s.id}` : `/product/${s.id}`}
-                        onClick={() => setOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
-                      >
-                        {s.type === "category" ? <Tag className="h-4 w-4 text-muted-foreground" /> : <Search className="h-4 w-4 text-muted-foreground" />}
-                        <span className="flex-1 truncate">{s.name}</span>
-                        {s.category && <span className="text-xs text-muted-foreground">{s.category}</span>}
-                      </Link>
-                    </li>
-                  ))}
-                  <li className="border-t">
-                    <button
-                      onClick={() => { setOpen(false); router.push(`/catalog?search=${encodeURIComponent(search.trim())}`); }}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-[#235347] hover:bg-accent dark:text-[#8EB69B]"
-                    >
-                      <Search className="h-4 w-4" /> Ver todos los resultados de “{search.trim()}”
-                    </button>
-                  </li>
-                </ul>
-              )}
-            </div>
-          )}
-        </div>
+        {/* Búsqueda inteligente (fila principal, solo desktop) */}
+        <SmartSearch className="ml-2 hidden flex-1 lg:block" />
 
         {/* Acciones */}
         <div className="ml-auto flex items-center gap-1">
@@ -246,16 +259,40 @@ export function StoreHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center gap-1">
-              <Button asChild variant="ghost" size="sm" className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white">
-                <Link href="/login">Iniciar sesión</Link>
-              </Button>
-              <Button asChild size="sm" className="bg-[#12B36A] text-white hover:bg-[#0E9558]">
-                <Link href="/register">Crear cuenta</Link>
-              </Button>
-            </div>
+            <>
+              {/* Móvil: las dos acciones de auth colapsan en un menú de usuario */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Cuenta"
+                    className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white sm:hidden"
+                  >
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem asChild><Link href="/login"><LogOut className="h-4 w-4 rotate-180" /> Iniciar sesión</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link href="/register"><User className="h-4 w-4" /> Crear cuenta</Link></DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <div className="hidden items-center gap-1 sm:flex">
+                <Button asChild variant="ghost" size="sm" className="text-[#DAF1DE] hover:bg-[#235347] hover:text-white">
+                  <Link href="/login">Iniciar sesión</Link>
+                </Button>
+                <Button asChild size="sm" className="bg-[#12B36A] text-white hover:bg-[#0E9558]">
+                  <Link href="/register">Crear cuenta</Link>
+                </Button>
+              </div>
+            </>
           )}
         </div>
+      </div>
+
+      {/* Búsqueda en fila propia para móvil/tablet */}
+      <div className="mx-auto max-w-7xl px-4 pb-3 lg:hidden">
+        <SmartSearch />
       </div>
     </header>
   );
