@@ -286,3 +286,22 @@
     transition: none;
   }
 }
+
+/* Toggle de tema: crossfade + escala sol ↔ luna (port del AnimatedThemeToggle viejo). */
+.theme-toggle-anim__sun,
+.theme-toggle-anim__moon {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+.theme-toggle-anim__sun { opacity: 1; transform: scale(1) rotate(0deg); }
+.theme-toggle-anim__moon { opacity: 0; transform: scale(0) rotate(-45deg); }
+.theme-toggle-anim.is-dark .theme-toggle-anim__sun { opacity: 0; transform: scale(0) rotate(45deg); }
+.theme-toggle-anim.is-dark .theme-toggle-anim__moon { opacity: 1; transform: scale(1) rotate(0deg); }
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle-anim__sun,
+  .theme-toggle-anim__moon {
+    transition: opacity 0.2s ease;
+    transform: none;
+  }
+}

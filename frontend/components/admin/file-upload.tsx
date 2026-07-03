@@ -30,7 +30,9 @@ export function FileUpload({
   function handleFiles(fileList: FileList | null) {
     const files = fileList ? Array.from(fileList) : [];
     setNames(files.map((f) => f.name));
-    if (!multiple && files[0]) setLocalPreview(URL.createObjectURL(files[0]));
+    // Previsualización solo para imágenes (un XML generaría un <img> roto).
+    if (!multiple && files[0]?.type.startsWith("image/")) setLocalPreview(URL.createObjectURL(files[0]));
+    else setLocalPreview(null);
     onChange(files);
   }
 
