@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus, Search } from "lucide-react";
+import Link from "next/link";
+import { FileCode2, Plus, Search } from "lucide-react";
 
 import { getSupplierOrders, type SupplierOrderRow } from "@/lib/api/admin/supplier-orders";
 import { PageHeader } from "@/components/admin/page-header";
@@ -116,10 +117,18 @@ export default function SupplierOrdersPage() {
           data ? `${data.openSupplierOrdersCount} pedido(s) abiertos.` : "Pedidos de reabastecimiento."
         }
         actions={
-          <Button onClick={() => setNewOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Nuevo pedido
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="secondary">
+              <Link href="/admin/supplier-orders/xml-deviation">
+                <FileCode2 className="h-4 w-4" />
+                Importar XML
+              </Link>
+            </Button>
+            <Button onClick={() => setNewOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Nuevo pedido
+            </Button>
+          </div>
         }
       />
       <NewSupplierOrderDialog open={newOpen} onClose={() => setNewOpen(false)} />

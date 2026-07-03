@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\Admin\ReportController;
 use App\Http\Controllers\Api\V1\Admin\SaleController;
 use App\Http\Controllers\Api\V1\Admin\SupplierController;
 use App\Http\Controllers\Api\V1\Admin\SupplierOrderController;
+use App\Http\Controllers\Api\V1\Admin\XmlPriceDeviationController;
 use App\Http\Controllers\Api\V1\Client\CartController as ClientCartController;
 use App\Http\Controllers\Api\V1\Client\CatalogController as ClientCatalogController;
 use App\Http\Controllers\Api\V1\Client\FavoriteController as ClientFavoriteController;
@@ -118,6 +119,8 @@ Route::prefix('v1')->middleware('throttle:120,1')->group(function (): void {
         Route::get('/orders', [OrderController::class, 'index']);
 
         // Pedidos a proveedores (recepción con stock de entrada en las Actions)
+        Route::post('/supplier-orders/xml-deviation/analyse', [XmlPriceDeviationController::class, 'analyse']);
+        Route::post('/supplier-orders/xml-deviation/apply', [XmlPriceDeviationController::class, 'apply']);
         Route::get('/supplier-orders', [SupplierOrderController::class, 'index']);
         Route::get('/supplier-orders/search-products', [SupplierOrderController::class, 'searchProducts']);
         Route::post('/supplier-orders', [SupplierOrderController::class, 'store']);

@@ -135,7 +135,8 @@ export default function AdminLoginPage() {
 
               {siteKey && (
                 <div className="flex justify-center">
-                  <div ref={recaptcha.widgetRef} />
+                  {/* El iframe de reCAPTCHA mide 304px fijos; en pantallas muy angostas se escala. */}
+                  <div ref={recaptcha.widgetRef} className="origin-center max-[359px]:scale-[0.85]" />
                 </div>
               )}
 

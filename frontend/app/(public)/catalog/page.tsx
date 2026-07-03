@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { SlidersHorizontal, X } from "lucide-react";
+import { PackageSearch, SlidersHorizontal, X } from "lucide-react";
 
 import { getCatalog } from "@/lib/api/client/catalog";
 import { CatalogSpotlight } from "@/components/storefront/catalog-spotlight";
@@ -23,6 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const ALL = "all";
 
@@ -86,6 +93,47 @@ function CatalogInner() {
   // Como en el catálogo viejo: destacados solo en la primera página y sin filtros.
   const showSpotlight = page === 1 && !hasFilters && (data?.catalogSpotlight?.length ?? 0) > 0;
 
+  // Chips por filtro activo con quitar individual (CatalogActiveFilters viejo).
+  const brandName = data?.brands.find((b) => String(b.id) === brand)?.name;
+  const chips: { label: string; onRemove: () => void }[] = [];
+  if (search) chips.push({ label: `Búsqueda: “${search}”`, onRemove: () => setParams({ search: null }) });
+  if (data?.selectedCategory) chips.push({ label: data.selectedCategory.name, onRemove: () => setParams({ category_id: null }) });
+  if (brand !== ALL) chips.push({ label: `Marca: ${brandName ?? brand}`, onRemove: () => setParams({ brand_id: null }) });
+  if (appliedMin) chips.push({ label: `Desde ₡${appliedMin}`, onRemove: () => setParams({ min_price: null }) });
+  if (appliedMax) chips.push({ label: `Hasta ₡${appliedMax}`, onRemove: () => setParams({ max_price: null }) });
+
+  // Card de filtros compartida entre el aside (desktop) y el drawer (móvil).
+  const filtersCard = (
+    <Card>
+      <CardContent className="space-y-4 p-4">
+        <h2 className="flex items-center gap-2 text-sm font-semibold"><SlidersHorizontal className="h-4 w-4" /> Refinar búsqueda</h2>
+        <div className="space-y-1.5">
+          <Label>Marca</Label>
+          <Select value={brand} onValueChange={(v) => setParams({ brand_id: v })}>
+            <SelectTrigger><SelectValue placeholder="Todas las marcas" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Todas las marcas</SelectItem>
+              {(data?.brands ?? []).map((b) => (
+                <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Precio (₡)</Label>
+          <div className="flex items-center gap-2">
+            <Input type="number" min={0} placeholder="Mín" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="h-9" />
+            <span className="text-muted-foreground">–</span>
+            <Input type="number" min={0} placeholder="Máx" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="h-9" />
+          </div>
+        </div>
+        <Button className="w-full bg-[#235347] hover:bg-[#1a3f37]" onClick={() => setParams({ min_price: minPrice, max_price: maxPrice })}>
+          Ver resultados
+        </Button>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <header className="mb-6">
@@ -101,51 +149,55 @@ function CatalogInner() {
       <div className="flex flex-col gap-6 lg:flex-row">
         <CategoryRail categories={data?.categories ?? []} activeCategoryId={categoryId} />
 
-        {/* Filtros */}
-        <aside className="w-full shrink-0 space-y-6 self-start lg:sticky lg:top-20 lg:max-h-[calc(100dvh-4rem-2rem)] lg:w-60 lg:overflow-y-auto">
-          <Card>
-            <CardContent className="space-y-4 p-4">
-              <h2 className="flex items-center gap-2 text-sm font-semibold"><SlidersHorizontal className="h-4 w-4" /> Refinar búsqueda</h2>
-              <div className="space-y-1.5">
-                <Label>Marca</Label>
-                <Select value={brand} onValueChange={(v) => setParams({ brand_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Todas las marcas" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ALL}>Todas las marcas</SelectItem>
-                    {(data?.brands ?? []).map((b) => (
-                      <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Precio (₡)</Label>
-                <div className="flex items-center gap-2">
-                  <Input type="number" min={0} placeholder="Mín" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="h-9" />
-                  <span className="text-muted-foreground">–</span>
-                  <Input type="number" min={0} placeholder="Máx" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="h-9" />
-                </div>
-              </div>
-              <Button className="w-full bg-[#235347] hover:bg-[#1a3f37]" onClick={() => setParams({ min_price: minPrice, max_price: maxPrice })}>
-                Ver resultados
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Filtros: aside en desktop, drawer en móvil (CatalogMobileControls viejo) */}
+        <aside className="hidden w-60 shrink-0 space-y-6 self-start lg:sticky lg:top-20 lg:block lg:max-h-[calc(100dvh-4rem-2rem)] lg:overflow-y-auto">
+          {filtersCard}
         </aside>
 
         {/* Main */}
         <div className="min-w-0 flex-1">
           {showSpotlight && <CatalogSpotlight items={data!.catalogSpotlight} />}
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            {hasFilters && (
-              <Button asChild size="sm" variant="ghost" className="text-muted-foreground">
-                <Link href="/catalog"><X className="h-4 w-4" /> Limpiar filtros</Link>
-              </Button>
-            )}
-            {data?.selectedCategory && (
-              <span className="rounded-full bg-accent px-3 py-1 text-xs text-[#235347] dark:text-[#8EB69B]">{data.selectedCategory.name}</span>
-            )}
+
+          {/* Botón de filtros en móvil */}
+          <div className="mb-3 lg:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="w-full">
+                  <SlidersHorizontal className="h-4 w-4" /> Filtros
+                  {chips.length > 0 && (
+                    <span className="ml-1 rounded-full bg-[#235347] px-1.5 text-[11px] text-white">{chips.length}</span>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[85vw] max-w-sm overflow-y-auto p-4">
+                <SheetHeader className="p-0 pb-3">
+                  <SheetTitle>Refinar búsqueda</SheetTitle>
+                </SheetHeader>
+                {filtersCard}
+              </SheetContent>
+            </Sheet>
           </div>
+
+          {/* Chips de filtros activos, con quitar individual (como el viejo) */}
+          {chips.length > 0 && (
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              {chips.map((chip) => (
+                <button
+                  key={chip.label}
+                  type="button"
+                  onClick={chip.onRemove}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-medium text-[#235347] transition hover:bg-accent/70 dark:text-[#8EB69B]"
+                  aria-label={`Quitar filtro: ${chip.label}`}
+                >
+                  {chip.label}
+                  <X className="h-3 w-3" />
+                </button>
+              ))}
+              <Button asChild size="sm" variant="ghost" className="h-7 text-muted-foreground">
+                <Link href="/catalog">Limpiar todo</Link>
+              </Button>
+            </div>
+          )}
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <p className="text-sm text-muted-foreground">
               {data ? `Mostrando ${data.products.length} de ${data.pagination.total} productos` : ""}
@@ -191,7 +243,24 @@ function CatalogInner() {
           ) : isError || !data ? (
             <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">No fue posible cargar el catálogo.</CardContent></Card>
           ) : data.products.length === 0 ? (
-            <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">No se encontraron productos.</CardContent></Card>
+            <Card>
+              <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
+                <span className="grid h-14 w-14 place-items-center rounded-full bg-accent text-[#235347] dark:text-[#8EB69B]">
+                  <PackageSearch className="h-7 w-7" />
+                </span>
+                <div>
+                  <p className="font-semibold">No se encontraron productos</p>
+                  <p className="text-sm text-muted-foreground">
+                    {hasFilters ? "Probá ajustar o quitar algunos filtros." : "Pronto agregaremos más productos al catálogo."}
+                  </p>
+                </div>
+                {hasFilters && (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/catalog"><X className="h-4 w-4" /> Limpiar filtros</Link>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
           ) : (
             <>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
