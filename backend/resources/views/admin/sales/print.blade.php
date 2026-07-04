@@ -3,7 +3,7 @@
 @section('Titulo pagina', 'Imprimir ' . ($sale->invoice_number ?? 'pedido #' . $sale->sale_id) . ' — Ciclo Finca 4')
 
 @push('styles')
-    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/invoice-document.css'])
+    @vite(['resources/css/admin/fonts.css', 'resources/css/admin/fontawesome.css', 'resources/css/admin/sales/invoice-document.css'])
 @endpush
 
 @push('extra-meta')
@@ -23,7 +23,7 @@
             <button type="button" class="btn-print" data-confirm-print data-invoice-label="{{ $sale->invoice_number ?? '#' . $sale->sale_id }}">
                 <i class="fas fa-print" aria-hidden="true"></i> Imprimir
             </button>
-            <a href="{{ route('sales.index') }}" class="btn-back">
+            <a href="/admin/sales" class="btn-back">
                 <i class="fas fa-list" aria-hidden="true"></i> Lista de ventas
             </a>
         </div>

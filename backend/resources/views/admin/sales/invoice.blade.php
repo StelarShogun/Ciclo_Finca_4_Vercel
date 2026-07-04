@@ -3,11 +3,11 @@
 @section('Titulo pagina', 'Factura ' . ($sale->invoice_number ?? $sale->sale_id) . ' — Ciclo Finca 4')
 
 @push('styles')
-    @vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/invoice-document.css'])
+    @vite(['resources/css/admin/fonts.css', 'resources/css/admin/fontawesome.css', 'resources/css/admin/sales/invoice-document.css'])
 @endpush
 
 @push('scripts')
-    @vite(['resources/ts/admin/sales/sales.ts'])
+    @vite(['resources/ts/admin/sales/invoice-print.ts'])
 @endpush
 
 @push('extra-meta')
@@ -31,11 +31,11 @@
                     && preg_match('~/(?:admin/)?sales/\d+/?$~', $previousPath) === 1;
                 $historyUrl = ($previousUrl && $previousUrl !== $currentUrl && ! $looksLikeJsonSaleShow)
                     ? $previousUrl
-                    : route('sales.index');
+                    : '/admin/sales';
 
                 $backUrl = match(request('from')) {
-                    'orders' => route('admin.orders.index'),
-                    'sales'  => route('sales.index'),
+                    'orders' => '/admin/orders',
+                    'sales'  => '/admin/sales',
                     default  => $historyUrl,
                 };
             @endphp

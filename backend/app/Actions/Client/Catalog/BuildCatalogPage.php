@@ -9,8 +9,6 @@ use App\Services\Client\Catalog\CatalogProductSearchTelemetry;
 use App\Services\Client\Catalog\CatalogQueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Inertia\Response;
-use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 final class BuildCatalogPage
 {
@@ -20,11 +18,11 @@ final class BuildCatalogPage
         private CatalogPayloadBuilder $payloadBuilder,
     ) {}
 
-    public function handle(Request $request): Response|HttpResponse
+    public function handle(Request $request): array
     {
         $filters = $this->filterResolver->resolve($request);
         if ($filters->priceValidationRedirect !== null) {
-            return $filters->priceValidationRedirect;
+            return ['error' => 'invalid_price_range'];
         }
 
         $query = $this->queryBuilder->filteredQuery($request, $filters);
@@ -42,8 +40,6 @@ final class BuildCatalogPage
                 ->map(fn ($id) => (int) $id);
         }
 
-        $props = $this->payloadBuilder->build($request, $filters, $products, $favoriteProductIds);
-
-        return $this->payloadBuilder->inertiaResponse($props);
+        return $this->payloadBuilder->build($request, $filters, $products, $favoriteProductIds);
     }
 }

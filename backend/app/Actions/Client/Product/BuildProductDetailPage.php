@@ -12,9 +12,6 @@ use App\Services\Client\Product\ProductReviewSummaryBuilder;
 use App\Services\Client\Product\RelatedProductFinder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
-use Inertia\Response;
-use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 final class BuildProductDetailPage
 {
@@ -24,21 +21,6 @@ final class BuildProductDetailPage
         private ProductDetailPageSupport $pageSupport,
         private ProductDetailPayloadBuilder $payloadBuilder,
     ) {}
-
-    public function handle(Request $request, int $id, ?string $slug = null): Response|HttpResponse
-    {
-        $product = Product::with(['category.parent', 'brands', 'classificationValues.dimension'])->findOrFail($id);
-
-        $canonicalSlug = $product->clientPublicSlug();
-        if ($slug !== $canonicalSlug) {
-            return redirect()->route('clients.product', array_merge(
-                ['id' => $product->product_id, 'slug' => $canonicalSlug],
-                $request->only(['reviews_sort', 'page', 'review_filter'])
-            ), 301);
-        }
-
-        return Inertia::render('Client/Products/Show', $this->payload($request, $product));
-    }
 
     /**
      * Construye el payload del detalle (sin Inertia ni redirect de slug). Lo
@@ -66,7 +48,7 @@ final class BuildProductDetailPage
         $taxonomy = $this->pageSupport->taxonomy($product);
         $primaryBrand = $product->brands->first();
         $catalogBrandUrl = $primaryBrand
-            ? route('clients.catalog', ['brand_id' => $primaryBrand->id])
+            ? '/catalog?brand_id='.$primaryBrand->id
             : null;
 
         $reviews = $this->reviewSummary->build($product, $request);

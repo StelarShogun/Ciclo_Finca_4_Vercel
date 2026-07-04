@@ -15,9 +15,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
-use Inertia\Inertia;
-use Inertia\Response;
-use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 final class CatalogPayloadBuilder
 {
@@ -100,14 +97,6 @@ final class CatalogPayloadBuilder
                 'activeFilterCount' => $this->filterResolver->activeFilterCount($request),
             ],
         ];
-    }
-
-    public function inertiaResponse(array $props): Response|HttpResponse
-    {
-        return Inertia::render('Client/Catalog/Index', $props)
-            ->toResponse(request())
-            ->header('Cache-Control', 'private, no-cache, max-age=0, must-revalidate')
-            ->header('Pragma', 'no-cache');
     }
 
     /**

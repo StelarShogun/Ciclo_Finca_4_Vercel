@@ -1,7 +1,6 @@
 {
   "files": [],
   "references": [
-    { "path": "./tsconfig.modern.json" },
     { "path": "./tsconfig.legacy-dom.json" }
   ]
 }

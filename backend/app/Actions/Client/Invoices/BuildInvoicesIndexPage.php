@@ -12,8 +12,6 @@ use App\Services\Client\Invoices\ClientInvoicePresentation;
 use App\Support\AdminPerPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
-use Inertia\Response;
 
 final class BuildInvoicesIndexPage
 {
@@ -21,11 +19,6 @@ final class BuildInvoicesIndexPage
         private readonly CartManager $cartManager,
         private readonly ClientInvoicePresentation $presentation,
     ) {}
-
-    public function handle(Request $request): Response
-    {
-        return Inertia::render('Client/Invoices/Index', $this->props($request));
-    }
 
     /**
      * Props de la página de facturas (sin Inertia). Reusado por el SPA Next.
@@ -99,7 +92,7 @@ final class BuildInvoicesIndexPage
                 ->where('client_id', $clientId)
                 ->where('status', 'ready_to_pickup')
                 ->count(),
-            'heartbeatUrl' => route('clients.invoices.heartbeat', [], false),
+            'heartbeatUrl' => '/api/v1/invoices',
             'pendingReviewProducts' => $pendingReviewProducts,
         ];
     }

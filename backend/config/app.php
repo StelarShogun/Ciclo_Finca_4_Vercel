@@ -66,8 +66,7 @@ return [
 
     'frontend_url' => env('FRONTEND_URL', env('APP_URL', 'http://localhost')),
 
-    // URL del SPA Next (storefront). Separada de frontend_url (que las
-    // notificaciones usan para el web Inertia durante la migración).
+    // URL del SPA Next. Las rutas web legacy del backend redirigen aquí.
     'spa_url' => env('SPA_URL', 'http://localhost:3000'),
 
     /*

@@ -2,2477 +2,40 @@
     "generated_by": "backend/scripts/audit-legacy-ui.php",
     "root": "backend",
     "summary": {
-        "delete": 390,
-        "keep-technical": 75,
-        "migrate-first": 70,
-        "unknown": 51
+        "delete": 0,
+        "keep-technical": 143,
+        "migrate-first": 0,
+        "unknown": 0
     },
     "findings": [
         {
             "kind": "asset",
             "path": "resources/css/admin/admin-dark-mode.css",
             "symbol": "resources/css/admin/admin-dark-mode.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/brands/brand.css",
-            "symbol": "resources/css/admin/brands/brand.css",
-            "classification": "delete"
+            "classification": "keep-technical"
         },
         {
             "kind": "asset",
             "path": "resources/css/admin/components/admin-table.css",
             "symbol": "resources/css/admin/components/admin-table.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/components/filters.css",
-            "symbol": "resources/css/admin/components/filters.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/components/kpi-card.css",
-            "symbol": "resources/css/admin/components/kpi-card.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/components/modal.css",
-            "symbol": "resources/css/admin/components/modal.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/components/page-header.css",
-            "symbol": "resources/css/admin/components/page-header.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/components/pagination.css",
-            "symbol": "resources/css/admin/components/pagination.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/components/product-combobox.css",
-            "symbol": "resources/css/admin/components/product-combobox.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/dashboard/dashboard.css",
-            "symbol": "resources/css/admin/dashboard/dashboard.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/fontawesome.css",
-            "symbol": "resources/css/admin/fontawesome.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/fonts.css",
-            "symbol": "resources/css/admin/fonts.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/login/login.css",
-            "symbol": "resources/css/admin/login/login.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/orders/orders.css",
-            "symbol": "resources/css/admin/orders/orders.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/orders/supplier-order-create.css",
-            "symbol": "resources/css/admin/orders/supplier-order-create.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/orders/supplier-order-detail.css",
-            "symbol": "resources/css/admin/orders/supplier-order-detail.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/products/inventory.css",
-            "symbol": "resources/css/admin/products/inventory.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/reports/audit-log.css",
-            "symbol": "resources/css/admin/reports/audit-log.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/reports/catalog-most-searched-report.css",
-            "symbol": "resources/css/admin/reports/catalog-most-searched-report.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/reports/client-purchase-history.css",
-            "symbol": "resources/css/admin/reports/client-purchase-history.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/reports/exports.css",
-            "symbol": "resources/css/admin/reports/exports.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/reports/product-sales.css",
-            "symbol": "resources/css/admin/reports/product-sales.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/reports/reports-hub.css",
-            "symbol": "resources/css/admin/reports/reports-hub.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/reports/sales-performance.css",
-            "symbol": "resources/css/admin/reports/sales-performance.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/sales/sales.css",
-            "symbol": "resources/css/admin/sales/sales.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/scrollbars.css",
-            "symbol": "resources/css/admin/scrollbars.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/shell-base.css",
-            "symbol": "resources/css/admin/shell-base.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/sidebar.css",
-            "symbol": "resources/css/admin/sidebar.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/suppliers/suppliers.css",
-            "symbol": "resources/css/admin/suppliers/suppliers.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/sweetalert2-modal-zindex.css",
-            "symbol": "resources/css/admin/sweetalert2-modal-zindex.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/users/clients.css",
-            "symbol": "resources/css/admin/users/clients.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/utilities.css",
-            "symbol": "resources/css/admin/utilities.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/admin/variables-reset.css",
-            "symbol": "resources/css/admin/variables-reset.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/auth-toast.css",
-            "symbol": "resources/css/client/auth-toast.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/client-ux-improvements.css",
-            "symbol": "resources/css/client/client-ux-improvements.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/clients-home.css",
-            "symbol": "resources/css/client/clients-home.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/clients-page-catalog.css",
-            "symbol": "resources/css/client/clients-page-catalog.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/clients-page-home.css",
-            "symbol": "resources/css/client/clients-page-home.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/clients-page-spotlight.css",
-            "symbol": "resources/css/client/clients-page-spotlight.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/clients-page.css",
-            "symbol": "resources/css/client/clients-page.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/clients-users.css",
-            "symbol": "resources/css/client/clients-users.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/confirm-dialog.css",
-            "symbol": "resources/css/client/confirm-dialog.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/fontawesome.css",
-            "symbol": "resources/css/client/fontawesome.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/fonts.css",
-            "symbol": "resources/css/client/fonts.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/footer.css",
-            "symbol": "resources/css/client/footer.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/header.css",
-            "symbol": "resources/css/client/header.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/invoice-detail.css",
-            "symbol": "resources/css/client/invoice-detail.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/invoice-print.css",
-            "symbol": "resources/css/client/invoice-print.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/invoices-mobile.css",
-            "symbol": "resources/css/client/invoices-mobile.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/legal-pages.css",
-            "symbol": "resources/css/client/legal-pages.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/product-badges.css",
-            "symbol": "resources/css/client/product-badges.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/product-detail.css",
-            "symbol": "resources/css/client/product-detail.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/toasts.css",
-            "symbol": "resources/css/client/toasts.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/client/variables-reset.css",
-            "symbol": "resources/css/client/variables-reset.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/css/components/modals.css",
-            "symbol": "resources/css/components/modals.css",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Auth/Login.tsx",
-            "symbol": "resources/ts/Pages/Admin/Auth/Login.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Brands/Index.tsx",
-            "symbol": "resources/ts/Pages/Admin/Brands/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Categories/CreateParent.tsx",
-            "symbol": "resources/ts/Pages/Admin/Categories/CreateParent.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Categories/CreateSubcategory.tsx",
-            "symbol": "resources/ts/Pages/Admin/Categories/CreateSubcategory.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Classifications/Index.tsx",
-            "symbol": "resources/ts/Pages/Admin/Classifications/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Classifications/Show.tsx",
-            "symbol": "resources/ts/Pages/Admin/Classifications/Show.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Classifications/Values.tsx",
-            "symbol": "resources/ts/Pages/Admin/Classifications/Values.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Clients/Index.tsx",
-            "symbol": "resources/ts/Pages/Admin/Clients/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Dashboard/Index.tsx",
-            "symbol": "resources/ts/Pages/Admin/Dashboard/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Inventory/Index.tsx",
-            "symbol": "resources/ts/Pages/Admin/Inventory/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Inventory/components/ImportModal.tsx",
-            "symbol": "resources/ts/Pages/Admin/Inventory/components/ImportModal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Inventory/components/ProductFormModal.tsx",
-            "symbol": "resources/ts/Pages/Admin/Inventory/components/ProductFormModal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Inventory/components/StockModal.tsx",
-            "symbol": "resources/ts/Pages/Admin/Inventory/components/StockModal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Inventory/components/VariantsManager.tsx",
-            "symbol": "resources/ts/Pages/Admin/Inventory/components/VariantsManager.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Inventory/components/ViewProductModal.tsx",
-            "symbol": "resources/ts/Pages/Admin/Inventory/components/ViewProductModal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Inventory/types.ts",
-            "symbol": "resources/ts/Pages/Admin/Inventory/types.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Orders/Index.tsx",
-            "symbol": "resources/ts/Pages/Admin/Orders/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Orders/components/ExpirationModal.tsx",
-            "symbol": "resources/ts/Pages/Admin/Orders/components/ExpirationModal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Orders/components/ReasonModal.tsx",
-            "symbol": "resources/ts/Pages/Admin/Orders/components/ReasonModal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Orders/types.ts",
-            "symbol": "resources/ts/Pages/Admin/Orders/types.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/ProductClassifications/Edit.tsx",
-            "symbol": "resources/ts/Pages/Admin/ProductClassifications/Edit.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/ProductClassifications/Index.tsx",
-            "symbol": "resources/ts/Pages/Admin/ProductClassifications/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Reports/AuditLog.tsx",
-            "symbol": "resources/ts/Pages/Admin/Reports/AuditLog.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Reports/ByCategory.tsx",
-            "symbol": "resources/ts/Pages/Admin/Reports/ByCategory.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Reports/CatalogSearch.tsx",
-            "symbol": "resources/ts/Pages/Admin/Reports/CatalogSearch.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Reports/ClientPurchases.tsx",
-            "symbol": "resources/ts/Pages/Admin/Reports/ClientPurchases.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Reports/ClientPurchasesShow.tsx",
-            "symbol": "resources/ts/Pages/Admin/Reports/ClientPurchasesShow.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Reports/Exports.tsx",
-            "symbol": "resources/ts/Pages/Admin/Reports/Exports.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Reports/Index.tsx",
-            "symbol": "resources/ts/Pages/Admin/Reports/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Reports/MovementsIndex.tsx",
-            "symbol": "resources/ts/Pages/Admin/Reports/MovementsIndex.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Reports/MovementsShow.tsx",
-            "symbol": "resources/ts/Pages/Admin/Reports/MovementsShow.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Reports/ProductSales.tsx",
-            "symbol": "resources/ts/Pages/Admin/Reports/ProductSales.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Reports/SalesPerformance.tsx",
-            "symbol": "resources/ts/Pages/Admin/Reports/SalesPerformance.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Sales/Index.tsx",
-            "symbol": "resources/ts/Pages/Admin/Sales/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Sales/components/NewSaleModal.tsx",
-            "symbol": "resources/ts/Pages/Admin/Sales/components/NewSaleModal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Sales/components/ProductCombobox.tsx",
-            "symbol": "resources/ts/Pages/Admin/Sales/components/ProductCombobox.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Sales/components/ReturnSaleModal.tsx",
-            "symbol": "resources/ts/Pages/Admin/Sales/components/ReturnSaleModal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Sales/components/ViewSaleModal.tsx",
-            "symbol": "resources/ts/Pages/Admin/Sales/components/ViewSaleModal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Sales/types.ts",
-            "symbol": "resources/ts/Pages/Admin/Sales/types.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/SupplierOrders/Detail.tsx",
-            "symbol": "resources/ts/Pages/Admin/SupplierOrders/Detail.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/SupplierOrders/Index.tsx",
-            "symbol": "resources/ts/Pages/Admin/SupplierOrders/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/SupplierOrders/XmlReview.tsx",
-            "symbol": "resources/ts/Pages/Admin/SupplierOrders/XmlReview.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/SupplierOrders/XmlUpload.tsx",
-            "symbol": "resources/ts/Pages/Admin/SupplierOrders/XmlUpload.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/SupplierOrders/components/CreateOrderModal.tsx",
-            "symbol": "resources/ts/Pages/Admin/SupplierOrders/components/CreateOrderModal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/SupplierOrders/components/ReceiveModal.tsx",
-            "symbol": "resources/ts/Pages/Admin/SupplierOrders/components/ReceiveModal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/SupplierOrders/components/ViewOrderModal.tsx",
-            "symbol": "resources/ts/Pages/Admin/SupplierOrders/components/ViewOrderModal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/SupplierOrders/components/ViewSupplierModal.tsx",
-            "symbol": "resources/ts/Pages/Admin/SupplierOrders/components/ViewSupplierModal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/SupplierOrders/types.ts",
-            "symbol": "resources/ts/Pages/Admin/SupplierOrders/types.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Admin/Suppliers/Index.tsx",
-            "symbol": "resources/ts/Pages/Admin/Suppliers/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Auth/Login.tsx",
-            "symbol": "resources/ts/Pages/Client/Auth/Login.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Auth/RecoveryRequest.tsx",
-            "symbol": "resources/ts/Pages/Client/Auth/RecoveryRequest.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Auth/RecoveryReset.tsx",
-            "symbol": "resources/ts/Pages/Client/Auth/RecoveryReset.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Auth/Register.tsx",
-            "symbol": "resources/ts/Pages/Client/Auth/Register.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Auth/VerifyCode.tsx",
-            "symbol": "resources/ts/Pages/Client/Auth/VerifyCode.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Cart/Index.tsx",
-            "symbol": "resources/ts/Pages/Client/Cart/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Catalog/Index.tsx",
-            "symbol": "resources/ts/Pages/Client/Catalog/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Favorites/Index.tsx",
-            "symbol": "resources/ts/Pages/Client/Favorites/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Home/Index.tsx",
-            "symbol": "resources/ts/Pages/Client/Home/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Invoices/Index.tsx",
-            "symbol": "resources/ts/Pages/Client/Invoices/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Invoices/Show.tsx",
-            "symbol": "resources/ts/Pages/Client/Invoices/Show.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Legal/Contact.tsx",
-            "symbol": "resources/ts/Pages/Client/Legal/Contact.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Legal/Privacy.tsx",
-            "symbol": "resources/ts/Pages/Client/Legal/Privacy.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Legal/Returns.tsx",
-            "symbol": "resources/ts/Pages/Client/Legal/Returns.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Legal/Terms.tsx",
-            "symbol": "resources/ts/Pages/Client/Legal/Terms.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Notifications/Index.tsx",
-            "symbol": "resources/ts/Pages/Client/Notifications/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Products/Show.tsx",
-            "symbol": "resources/ts/Pages/Client/Products/Show.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/Pages/Client/Profile/Index.tsx",
-            "symbol": "resources/ts/Pages/Client/Profile/Index.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/dashboard/dashboard.ts",
-            "symbol": "resources/ts/admin/dashboard/dashboard.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/dashboard/low-stock-toast.ts",
-            "symbol": "resources/ts/admin/dashboard/low-stock-toast.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/dashboard/weekly-report-modal.ts",
-            "symbol": "resources/ts/admin/dashboard/weekly-report-modal.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/orders/detail-supplier-page.ts",
-            "symbol": "resources/ts/admin/orders/detail-supplier-page.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/orders/supplier-orders.ts",
-            "symbol": "resources/ts/admin/orders/supplier-orders.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/reports/product-sales.ts",
-            "symbol": "resources/ts/admin/reports/product-sales.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/reports/sales-performance.ts",
-            "symbol": "resources/ts/admin/reports/sales-performance.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/sales/sale-product-combobox.ts",
-            "symbol": "resources/ts/admin/sales/sale-product-combobox.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/shared/combobox-dropdown-portal.ts",
-            "symbol": "resources/ts/admin/shared/combobox-dropdown-portal.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/shared/file-upload-zone.ts",
-            "symbol": "resources/ts/admin/shared/file-upload-zone.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/shared/kpi-value-scale.ts",
-            "symbol": "resources/ts/admin/shared/kpi-value-scale.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/shared/modal-utils.ts",
-            "symbol": "resources/ts/admin/shared/modal-utils.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/shared/static-search-combobox.ts",
-            "symbol": "resources/ts/admin/shared/static-search-combobox.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/shared/swal.ts",
-            "symbol": "resources/ts/admin/shared/swal.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/shell.ts",
-            "symbol": "resources/ts/admin/shell.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/admin/sidebar-account-menu.ts",
-            "symbol": "resources/ts/admin/sidebar-account-menu.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/app.tsx",
-            "symbol": "resources/ts/app.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/client/bundles/catalog.ts",
-            "symbol": "resources/ts/client/bundles/catalog.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/client/cart-shared.ts",
-            "symbol": "resources/ts/client/cart-shared.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/client/catalog-filter-select.ts",
-            "symbol": "resources/ts/client/catalog-filter-select.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/client/checkout-copy.ts",
-            "symbol": "resources/ts/client/checkout-copy.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/client/clients-catalog-heartbeat.ts",
-            "symbol": "resources/ts/client/clients-catalog-heartbeat.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/client/header-catalog-search.ts",
-            "symbol": "resources/ts/client/header-catalog-search.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/client/header-menu-alert.ts",
-            "symbol": "resources/ts/client/header-menu-alert.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/client/init-product-spotlight-carousel.ts",
-            "symbol": "resources/ts/client/init-product-spotlight-carousel.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/client/swal.ts",
-            "symbol": "resources/ts/client/swal.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/cart/api.ts",
-            "symbol": "resources/ts/features/client/cart/api.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/cart/components/CartCheckoutActions.tsx",
-            "symbol": "resources/ts/features/client/cart/components/CartCheckoutActions.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/cart/components/CartCheckoutConfirm.tsx",
-            "symbol": "resources/ts/features/client/cart/components/CartCheckoutConfirm.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/cart/components/CartEmptyState.tsx",
-            "symbol": "resources/ts/features/client/cart/components/CartEmptyState.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/cart/components/CartItemRow.tsx",
-            "symbol": "resources/ts/features/client/cart/components/CartItemRow.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/cart/components/CartQuantitySelector.tsx",
-            "symbol": "resources/ts/features/client/cart/components/CartQuantitySelector.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/cart/components/CartSummary.tsx",
-            "symbol": "resources/ts/features/client/cart/components/CartSummary.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/cart/hooks/useCartActions.ts",
-            "symbol": "resources/ts/features/client/cart/hooks/useCartActions.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/cart/pages/CartIndexPage.tsx",
-            "symbol": "resources/ts/features/client/cart/pages/CartIndexPage.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/cart/types.ts",
-            "symbol": "resources/ts/features/client/cart/types.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/catalog/components/CatalogActiveFilters.tsx",
-            "symbol": "resources/ts/features/client/catalog/components/CatalogActiveFilters.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/catalog/components/CatalogEmptyState.tsx",
-            "symbol": "resources/ts/features/client/catalog/components/CatalogEmptyState.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/catalog/components/CatalogFilters.tsx",
-            "symbol": "resources/ts/features/client/catalog/components/CatalogFilters.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/catalog/components/CatalogMobileControls.tsx",
-            "symbol": "resources/ts/features/client/catalog/components/CatalogMobileControls.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/catalog/components/CatalogProductCard.tsx",
-            "symbol": "resources/ts/features/client/catalog/components/CatalogProductCard.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/catalog/components/CatalogSkeletonGrid.tsx",
-            "symbol": "resources/ts/features/client/catalog/components/CatalogSkeletonGrid.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/catalog/components/CatalogSpotlightCarousel.tsx",
-            "symbol": "resources/ts/features/client/catalog/components/CatalogSpotlightCarousel.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/catalog/components/CatalogToolbar.tsx",
-            "symbol": "resources/ts/features/client/catalog/components/CatalogToolbar.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/catalog/components/CategoryRail.tsx",
-            "symbol": "resources/ts/features/client/catalog/components/CategoryRail.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/catalog/components/HeaderCatalogSearch.tsx",
-            "symbol": "resources/ts/features/client/catalog/components/HeaderCatalogSearch.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/catalog/hooks/useCatalogPageInit.ts",
-            "symbol": "resources/ts/features/client/catalog/hooks/useCatalogPageInit.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/favorites/api.ts",
-            "symbol": "resources/ts/features/client/favorites/api.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/favorites/components/FavoriteDrawerItem.tsx",
-            "symbol": "resources/ts/features/client/favorites/components/FavoriteDrawerItem.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/favorites/components/FavoritesDrawer.tsx",
-            "symbol": "resources/ts/features/client/favorites/components/FavoritesDrawer.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/favorites/context/FavoritesDrawerContext.tsx",
-            "symbol": "resources/ts/features/client/favorites/context/FavoritesDrawerContext.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/home/components/CategoryPreview.tsx",
-            "symbol": "resources/ts/features/client/home/components/CategoryPreview.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/home/components/FeaturedProducts.tsx",
-            "symbol": "resources/ts/features/client/home/components/FeaturedProducts.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/home/components/HeroSection.tsx",
-            "symbol": "resources/ts/features/client/home/components/HeroSection.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/home/components/HomeSection.tsx",
-            "symbol": "resources/ts/features/client/home/components/HomeSection.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/home/components/ProductCard.tsx",
-            "symbol": "resources/ts/features/client/home/components/ProductCard.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/invoices/components/InvoiceLineThumb.tsx",
-            "symbol": "resources/ts/features/client/invoices/components/InvoiceLineThumb.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/product/components/ProductGallery.tsx",
-            "symbol": "resources/ts/features/client/product/components/ProductGallery.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/product/components/ProductPurchasePanel.tsx",
-            "symbol": "resources/ts/features/client/product/components/ProductPurchasePanel.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/product/components/ProductReviewsSection.tsx",
-            "symbol": "resources/ts/features/client/product/components/ProductReviewsSection.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/product/components/ProductStarsInline.tsx",
-            "symbol": "resources/ts/features/client/product/components/ProductStarsInline.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/product/components/ProductStockCard.tsx",
-            "symbol": "resources/ts/features/client/product/components/ProductStockCard.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/product/components/ProductTabs.tsx",
-            "symbol": "resources/ts/features/client/product/components/ProductTabs.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/product/components/QuantitySelector.tsx",
-            "symbol": "resources/ts/features/client/product/components/QuantitySelector.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/product/components/RelatedProductCard.tsx",
-            "symbol": "resources/ts/features/client/product/components/RelatedProductCard.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/product/components/ResponsivePicture.tsx",
-            "symbol": "resources/ts/features/client/product/components/ResponsivePicture.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/product/components/ReviewRow.tsx",
-            "symbol": "resources/ts/features/client/product/components/ReviewRow.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/product/pages/ProductShowPage.tsx",
-            "symbol": "resources/ts/features/client/product/pages/ProductShowPage.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/product/types.ts",
-            "symbol": "resources/ts/features/client/product/types.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/product/utils/formatColones.ts",
-            "symbol": "resources/ts/features/client/product/utils/formatColones.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/profile/components/PasswordField.tsx",
-            "symbol": "resources/ts/features/client/profile/components/PasswordField.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/profile/components/ProfileField.tsx",
-            "symbol": "resources/ts/features/client/profile/components/ProfileField.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/profile/components/ProfileHero.tsx",
-            "symbol": "resources/ts/features/client/profile/components/ProfileHero.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/profile/components/ProfilePasswordCard.tsx",
-            "symbol": "resources/ts/features/client/profile/components/ProfilePasswordCard.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/profile/components/ProfilePersonalDataCard.tsx",
-            "symbol": "resources/ts/features/client/profile/components/ProfilePersonalDataCard.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/features/client/profile/lib/profileFormUtils.ts",
-            "symbol": "resources/ts/features/client/profile/lib/profileFormUtils.ts",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/admin/DateRangeFilter.tsx",
-            "symbol": "resources/ts/shared/components/admin/DateRangeFilter.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/client/footer/ClientFooter.tsx",
-            "symbol": "resources/ts/shared/components/client/footer/ClientFooter.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/client/footer/FooterColumn.tsx",
-            "symbol": "resources/ts/shared/components/client/footer/FooterColumn.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/client/header/ClientCartButton.tsx",
-            "symbol": "resources/ts/shared/components/client/header/ClientCartButton.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/client/header/ClientHeader.tsx",
-            "symbol": "resources/ts/shared/components/client/header/ClientHeader.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/client/header/ClientNavigation.tsx",
-            "symbol": "resources/ts/shared/components/client/header/ClientNavigation.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/client/header/ClientThemeToggle.tsx",
-            "symbol": "resources/ts/shared/components/client/header/ClientThemeToggle.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/client/header/ClientUserMenu.tsx",
-            "symbol": "resources/ts/shared/components/client/header/ClientUserMenu.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/layout/AdminLayout.tsx",
-            "symbol": "resources/ts/shared/components/layout/AdminLayout.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/layout/ClientAuthLayout.tsx",
-            "symbol": "resources/ts/shared/components/layout/ClientAuthLayout.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/layout/ClientLayout.tsx",
-            "symbol": "resources/ts/shared/components/layout/ClientLayout.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/AnimatedThemeToggle.tsx",
-            "symbol": "resources/ts/shared/components/ui/AnimatedThemeToggle.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/Badge.tsx",
-            "symbol": "resources/ts/shared/components/ui/Badge.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/Breadcrumbs.tsx",
-            "symbol": "resources/ts/shared/components/ui/Breadcrumbs.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/Button.tsx",
-            "symbol": "resources/ts/shared/components/ui/Button.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/Checkbox.tsx",
-            "symbol": "resources/ts/shared/components/ui/Checkbox.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/CollapsibleSection.tsx",
-            "symbol": "resources/ts/shared/components/ui/CollapsibleSection.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/ConfirmDialogProvider.tsx",
-            "symbol": "resources/ts/shared/components/ui/ConfirmDialogProvider.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/Drawer.tsx",
-            "symbol": "resources/ts/shared/components/ui/Drawer.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/EmptyState.tsx",
-            "symbol": "resources/ts/shared/components/ui/EmptyState.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/FieldGroup.tsx",
-            "symbol": "resources/ts/shared/components/ui/FieldGroup.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/FileUpload.tsx",
-            "symbol": "resources/ts/shared/components/ui/FileUpload.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/FiltersSection.tsx",
-            "symbol": "resources/ts/shared/components/ui/FiltersSection.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/FormError.tsx",
-            "symbol": "resources/ts/shared/components/ui/FormError.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/ImageFallback.tsx",
-            "symbol": "resources/ts/shared/components/ui/ImageFallback.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/InertiaListPagination.tsx",
-            "symbol": "resources/ts/shared/components/ui/InertiaListPagination.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/InlineAlert.tsx",
-            "symbol": "resources/ts/shared/components/ui/InlineAlert.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/Input.tsx",
-            "symbol": "resources/ts/shared/components/ui/Input.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/LoadingState.tsx",
-            "symbol": "resources/ts/shared/components/ui/LoadingState.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/Modal.tsx",
-            "symbol": "resources/ts/shared/components/ui/Modal.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/PageHeader.tsx",
-            "symbol": "resources/ts/shared/components/ui/PageHeader.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/Pagination.tsx",
-            "symbol": "resources/ts/shared/components/ui/Pagination.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/QuickActionCard.tsx",
-            "symbol": "resources/ts/shared/components/ui/QuickActionCard.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/Select.tsx",
-            "symbol": "resources/ts/shared/components/ui/Select.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/StatusBadge.tsx",
-            "symbol": "resources/ts/shared/components/ui/StatusBadge.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/Tabs.tsx",
-            "symbol": "resources/ts/shared/components/ui/Tabs.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/ToastContainer.tsx",
-            "symbol": "resources/ts/shared/components/ui/ToastContainer.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/components/ui/ToastProvider.tsx",
-            "symbol": "resources/ts/shared/components/ui/ToastProvider.tsx",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/admin/dashboard/partials/low-stock-toast.blade.php",
-            "symbol": "admin/dashboard/partials/low-stock-toast",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/admin/dashboard/partials/recent-sale-row.blade.php",
-            "symbol": "admin/dashboard/partials/recent-sale-row",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/admin/dashboard/partials/weekly-report-modal.blade.php",
-            "symbol": "admin/dashboard/partials/weekly-report-modal",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/admin/layouts/sales.blade.php",
-            "symbol": "admin/layouts/sales",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/admin/partials/cf4-flash-swal.blade.php",
-            "symbol": "admin/partials/cf4-flash-swal",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/admin/partials/cf4-theme-head.blade.php",
-            "symbol": "admin/partials/cf4-theme-head",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/admin/partials/cf4-theme-scripts.blade.php",
-            "symbol": "admin/partials/cf4-theme-scripts",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/admin/partials/cf4-theme-toggle.blade.php",
-            "symbol": "admin/partials/cf4-theme-toggle",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/admin/partials/filters.blade.php",
-            "symbol": "admin/partials/filters",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/admin/partials/page-header.blade.php",
-            "symbol": "admin/partials/page-header",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/admin/partials/sidebar-account-menu.blade.php",
-            "symbol": "admin/partials/sidebar-account-menu",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/admin/parts/aside.blade.php",
-            "symbol": "admin/parts/aside",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/app.blade.php",
-            "symbol": "app",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/components/admin-alert.blade.php",
-            "symbol": "components/admin-alert",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/components/admin/admin-alert.blade.php",
-            "symbol": "components/admin/admin-alert",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/components/admin/pagination.blade.php",
-            "symbol": "components/admin/pagination",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/components/cf-file-upload.blade.php",
-            "symbol": "components/cf-file-upload",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/components/cf4/state-card.blade.php",
-            "symbol": "components/cf4/state-card",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/components/pagination.blade.php",
-            "symbol": "components/pagination",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/components/shared/file-upload.blade.php",
-            "symbol": "components/shared/file-upload",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/components/shared/pagination.blade.php",
-            "symbol": "components/shared/pagination",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/components/shared/state-card.blade.php",
-            "symbol": "components/shared/state-card",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/shared/partials/cf4-theme-dropdown-row.blade.php",
-            "symbol": "shared/partials/cf4-theme-dropdown-row",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/shared/partials/cf4-theme-glyph.blade.php",
-            "symbol": "shared/partials/cf4-theme-glyph",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/shared/partials/cf4-theme-toggle-track.blade.php",
-            "symbol": "shared/partials/cf4-theme-toggle-track",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/vendor/pagination/bootstrap-4.blade.php",
-            "symbol": "vendor/pagination/bootstrap-4",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/vendor/pagination/bootstrap-5.blade.php",
-            "symbol": "vendor/pagination/bootstrap-5",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/vendor/pagination/semantic-ui.blade.php",
-            "symbol": "vendor/pagination/semantic-ui",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/vendor/pagination/simple-bootstrap-4.blade.php",
-            "symbol": "vendor/pagination/simple-bootstrap-4",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/vendor/pagination/simple-bootstrap-5.blade.php",
-            "symbol": "vendor/pagination/simple-bootstrap-5",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/vendor/pagination/simple-default.blade.php",
-            "symbol": "vendor/pagination/simple-default",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/vendor/pagination/simple-tailwind.blade.php",
-            "symbol": "vendor/pagination/simple-tailwind",
-            "classification": "delete"
-        },
-        {
-            "kind": "blade_view",
-            "path": "resources/views/vendor/pagination/tailwind.blade.php",
-            "symbol": "vendor/pagination/tailwind",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 55,
-            "symbol": "/jobs/catalog-import",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 67,
-            "symbol": "/admin/login",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 69,
-            "symbol": "/admin/login",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 91,
-            "symbol": "/dashboard",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 92,
-            "symbol": "/dashboard/inertia-pilot",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 93,
-            "symbol": "/dashboard/data",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 94,
-            "symbol": "/dashboard/chart-data",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 98,
-            "symbol": "/reports",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 106,
-            "symbol": "/reports/desempeno-ventas",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 107,
-            "symbol": "/reports/ventas/range",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 108,
-            "symbol": "/reports/ventas/metrics",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 109,
-            "symbol": "/reports/productos-vendidos",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 110,
-            "symbol": "/reports/productos-vendidos/table",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 114,
-            "symbol": "/reports/catalogo-busquedas",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 116,
-            "symbol": "/sales/reports/by-category",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 120,
-            "symbol": "/",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 126,
-            "symbol": "/reports/client-purchases",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 127,
-            "symbol": "/reports/client-purchases/table",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 128,
-            "symbol": "/reports/client-purchases/{client}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 131,
-            "symbol": "/reports/client-purchases/{client}/orders",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 134,
-            "symbol": "/reports/audit-log",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 137,
-            "symbol": "/inventory",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 138,
-            "symbol": "/inventory/classification-filters",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 140,
-            "symbol": "/inventory/classification-filters/dimensions",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 142,
-            "symbol": "/inventory/classification-filters/{slug}/suggest",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 147,
-            "symbol": "/classifications/catalog",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 148,
-            "symbol": "/classifications/catalog/{category}/options",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 149,
-            "symbol": "/classifications/catalog/{category}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 150,
-            "symbol": "/classifications/catalog/{category}/dimensions",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 151,
-            "symbol": "/classifications/dimensions/{dimension}/edit",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 152,
-            "symbol": "/classifications/dimensions/{dimension}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 153,
-            "symbol": "/classifications/dimensions/{dimension}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 154,
-            "symbol": "/classifications/dimensions/{dimension}/restore",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 155,
-            "symbol": "/classifications/dimensions/{dimension}/values",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 156,
-            "symbol": "/classifications/dimensions/{dimension}/values",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 157,
-            "symbol": "/classifications/values/{value}/edit",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 158,
-            "symbol": "/classifications/values/{value}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 159,
-            "symbol": "/classifications/values/{value}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 160,
-            "symbol": "/classifications/values/{value}/restore",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 163,
-            "symbol": "/product-classifications",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 164,
-            "symbol": "/products/{product}/classifications/edit",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 165,
-            "symbol": "/products/{product}/classifications",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 168,
-            "symbol": "/products/{product}/variants",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 171,
-            "symbol": "/products/{product}/variants/{variant}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 175,
-            "symbol": "/products/{product}/variants/{variant}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 181,
-            "symbol": "/products/{id}/toggle-featured",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 182,
-            "symbol": "/products/{id}/activate",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 185,
-            "symbol": "/products/{id}/gallery/{mediaId}/promote",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 186,
-            "symbol": "/products/{id}/gallery/{mediaId}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 188,
-            "symbol": "/products/{id}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 189,
-            "symbol": "/products/{id}/force-delete",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 191,
-            "symbol": "/inventory/import",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 192,
-            "symbol": "/inventory/import/active",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 193,
-            "symbol": "/inventory/import/{importId}/progress",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 194,
-            "symbol": "/inventory/import/{importId}/cancel",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 195,
-            "symbol": "/inventory/import/dismiss",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 196,
-            "symbol": "/inventory/add-manual/{id}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 199,
-            "symbol": "/inventory/remove-manual/{id}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 210,
-            "symbol": "/categories/parents/create",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 211,
-            "symbol": "/categories/parents",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 214,
-            "symbol": "/categories/subcategories/create",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 215,
-            "symbol": "/categories/subcategories",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 219,
-            "symbol": "/sales/history/heartbeat",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 223,
-            "symbol": "/sales/{id}/complete",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 224,
-            "symbol": "/sales/{id}/cancel",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 226,
-            "symbol": "/sales/{id}/return",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 234,
-            "symbol": "/orders",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 235,
-            "symbol": "/orders/settings/order-expiration",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 238,
-            "symbol": "/orders/settings/weekly-report",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 242,
-            "symbol": "/supplier-orders",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 243,
-            "symbol": "/supplier-orders",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 244,
-            "symbol": "/supplier-orders/{id}/detail",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 245,
-            "symbol": "/admin/products/search",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 250,
-            "symbol": "/",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 260,
-            "symbol": "/supplier-orders/{id}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 261,
-            "symbol": "/supplier-orders/{id}/state",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 262,
-            "symbol": "/supplier-orders/{id}/receive",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 263,
-            "symbol": "/supplier-orders/{id}/close-partial",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 267,
-            "symbol": "/clientes",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 268,
-            "symbol": "/clientes/{id}/ban",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 269,
-            "symbol": "/clientes/{id}/unban",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 272,
-            "symbol": "/admin/catalog-preview",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 303,
-            "symbol": "/admin/catalog-exit",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 314,
-            "symbol": "/",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 315,
-            "symbol": "/catalog",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 318,
-            "symbol": "/legal/terminos",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 319,
-            "symbol": "/legal/privacidad",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 320,
-            "symbol": "/legal/cambios-devoluciones",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 321,
-            "symbol": "/contacto",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 333,
-            "symbol": "/product/{id}/{slug?}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 338,
-            "symbol": "/login",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 339,
-            "symbol": "/register",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 340,
-            "symbol": "/register",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 343,
-            "symbol": "/login",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 348,
-            "symbol": "/verify",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 349,
-            "symbol": "/verify",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 350,
-            "symbol": "/verify/resend",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 353,
-            "symbol": "/recovery",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 354,
-            "symbol": "/recovery",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 355,
-            "symbol": "/recovery/verify",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 356,
-            "symbol": "/recovery/verify",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 357,
-            "symbol": "/recovery/reset",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 358,
-            "symbol": "/recovery/reset",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 418,
-            "symbol": "/cart",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 419,
-            "symbol": "/cart/add",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 420,
-            "symbol": "/cart/update",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 421,
-            "symbol": "/cart/remove/{id}",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 422,
-            "symbol": "/cart/clear",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 423,
-            "symbol": "/cart/checkout",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 426,
-            "symbol": "/products/{product}/review",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 429,
-            "symbol": "/products/reviews/batch",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 435,
-            "symbol": "/notifications/heartbeat",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 436,
-            "symbol": "/notifications",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 437,
-            "symbol": "/notifications/read-all",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 438,
-            "symbol": "/notifications/{notification}/read",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 447,
-            "symbol": "/profile",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 448,
-            "symbol": "/profile",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 449,
-            "symbol": "/profile/password",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 450,
-            "symbol": "/profile/avatar",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 453,
-            "symbol": "/favorites",
-            "classification": "delete"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 454,
-            "symbol": "/favorites/toggle",
-            "classification": "delete"
+            "classification": "keep-technical"
         },
         {
             "kind": "asset",
             "path": "resources/css/admin/dashboard/dashboard-pdf.css",
             "symbol": "resources/css/admin/dashboard/dashboard-pdf.css",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/css/admin/fontawesome.css",
+            "symbol": "resources/css/admin/fontawesome.css",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/css/admin/fonts.css",
+            "symbol": "resources/css/admin/fonts.css",
             "classification": "keep-technical"
         },
         {
@@ -2489,6 +52,48 @@
         },
         {
             "kind": "asset",
+            "path": "resources/css/admin/sidebar.css",
+            "symbol": "resources/css/admin/sidebar.css",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/css/admin/utilities.css",
+            "symbol": "resources/css/admin/utilities.css",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/css/admin/variables-reset.css",
+            "symbol": "resources/css/admin/variables-reset.css",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/css/client/fontawesome.css",
+            "symbol": "resources/css/client/fontawesome.css",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/css/client/fonts.css",
+            "symbol": "resources/css/client/fonts.css",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/css/client/invoice-print.css",
+            "symbol": "resources/css/client/invoice-print.css",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/css/client/variables-reset.css",
+            "symbol": "resources/css/client/variables-reset.css",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
             "path": "resources/css/errors/404-page.css",
             "symbol": "resources/css/errors/404-page.css",
             "classification": "keep-technical"
@@ -2501,26 +106,38 @@
         },
         {
             "kind": "asset",
+            "path": "resources/css/shared/cf4-swal.css",
+            "symbol": "resources/css/shared/cf4-swal.css",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
             "path": "resources/css/shared/fontawesome-subset.css",
             "symbol": "resources/css/shared/fontawesome-subset.css",
             "classification": "keep-technical"
         },
         {
             "kind": "asset",
-            "path": "resources/css/shared/product-media-placeholder.css",
-            "symbol": "resources/css/shared/product-media-placeholder.css",
+            "path": "resources/css/shared/scrollbars.css",
+            "symbol": "resources/css/shared/scrollbars.css",
             "classification": "keep-technical"
         },
         {
             "kind": "asset",
-            "path": "resources/ts/admin/sales/sales.ts",
-            "symbol": "resources/ts/admin/sales/sales.ts",
+            "path": "resources/ts/admin/sales/invoice-print.ts",
+            "symbol": "resources/ts/admin/sales/invoice-print.ts",
             "classification": "keep-technical"
         },
         {
             "kind": "asset",
             "path": "resources/ts/client/invoices-page.ts",
             "symbol": "resources/ts/client/invoices-page.ts",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/ts/client/swal.ts",
+            "symbol": "resources/ts/client/swal.ts",
             "classification": "keep-technical"
         },
         {
@@ -2545,6 +162,42 @@
             "kind": "asset",
             "path": "resources/ts/errors/scenes/wrong-route.ts",
             "symbol": "resources/ts/errors/scenes/wrong-route.ts",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/ts/shared/admin-per-page.ts",
+            "symbol": "resources/ts/shared/admin-per-page.ts",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/ts/shared/admin-table-responsive.ts",
+            "symbol": "resources/ts/shared/admin-table-responsive.ts",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/ts/shared/ajax-pagination.ts",
+            "symbol": "resources/ts/shared/ajax-pagination.ts",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/ts/shared/client-pagination.ts",
+            "symbol": "resources/ts/shared/client-pagination.ts",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/ts/shared/escape-html.ts",
+            "symbol": "resources/ts/shared/escape-html.ts",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "asset",
+            "path": "resources/ts/shared/legacy-dom.ts",
+            "symbol": "resources/ts/shared/legacy-dom.ts",
             "classification": "keep-technical"
         },
         {
@@ -2597,6 +250,12 @@
         },
         {
             "kind": "blade_view",
+            "path": "resources/views/admin/layouts/sales.blade.php",
+            "symbol": "admin/layouts/sales",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
             "path": "resources/views/admin/products/products-pdf.blade.php",
             "symbol": "admin/products/products-pdf",
             "classification": "keep-technical"
@@ -2641,6 +300,60 @@
             "kind": "blade_view",
             "path": "resources/views/client/layouts/print.blade.php",
             "symbol": "client/layouts/print",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/components/admin-alert.blade.php",
+            "symbol": "components/admin-alert",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/components/admin/admin-alert.blade.php",
+            "symbol": "components/admin/admin-alert",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/components/admin/pagination.blade.php",
+            "symbol": "components/admin/pagination",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/components/cf-file-upload.blade.php",
+            "symbol": "components/cf-file-upload",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/components/cf4/state-card.blade.php",
+            "symbol": "components/cf4/state-card",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/components/pagination.blade.php",
+            "symbol": "components/pagination",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/components/shared/file-upload.blade.php",
+            "symbol": "components/shared/file-upload",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/components/shared/pagination.blade.php",
+            "symbol": "components/shared/pagination",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/components/shared/state-card.blade.php",
+            "symbol": "components/shared/state-card",
             "classification": "keep-technical"
         },
         {
@@ -2771,990 +484,442 @@
         },
         {
             "kind": "blade_view",
+            "path": "resources/views/vendor/pagination/bootstrap-4.blade.php",
+            "symbol": "vendor/pagination/bootstrap-4",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/vendor/pagination/bootstrap-5.blade.php",
+            "symbol": "vendor/pagination/bootstrap-5",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/vendor/pagination/semantic-ui.blade.php",
+            "symbol": "vendor/pagination/semantic-ui",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/vendor/pagination/simple-bootstrap-4.blade.php",
+            "symbol": "vendor/pagination/simple-bootstrap-4",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/vendor/pagination/simple-bootstrap-5.blade.php",
+            "symbol": "vendor/pagination/simple-bootstrap-5",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/vendor/pagination/simple-default.blade.php",
+            "symbol": "vendor/pagination/simple-default",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/vendor/pagination/simple-tailwind.blade.php",
+            "symbol": "vendor/pagination/simple-tailwind",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
+            "path": "resources/views/vendor/pagination/tailwind.blade.php",
+            "symbol": "vendor/pagination/tailwind",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "blade_view",
             "path": "resources/views/vendor/pulse/dashboard.blade.php",
             "symbol": "vendor/pulse/dashboard",
             "classification": "keep-technical"
         },
         {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 61,
-            "symbol": "/run-migrations",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 64,
-            "symbol": "/run-seeders/{class?}",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 76,
-            "symbol": "/products/suggestions",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 80,
-            "symbol": "/catalog/search-trending",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 84,
-            "symbol": "/catalog/heartbeat",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 95,
-            "symbol": "/dashboard/export",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 99,
-            "symbol": "/reports/exportaciones",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 102,
-            "symbol": "/reports/exportaciones/descarga/{slug}",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 111,
-            "symbol": "/reports/productos-vendidos/pdf",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 112,
-            "symbol": "/reports/productos-vendidos/excel",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 190,
-            "symbol": "/inventory/export/{format?}",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 218,
-            "symbol": "/sales/export",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 228,
-            "symbol": "/sales/{id}/print",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 229,
-            "symbol": "/sales/{id}/invoice",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 316,
-            "symbol": "/api/catalog/heartbeat",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 324,
-            "symbol": "/api/products/suggestions",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 328,
-            "symbol": "/api/catalog/search-trending",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 406,
-            "symbol": "/csrf-token",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 411,
-            "symbol": "/auth/google",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 412,
-            "symbol": "/auth/google/callback",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 433,
-            "symbol": "/invoices",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 434,
-            "symbol": "/invoices/heartbeat",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 439,
-            "symbol": "/invoices/{sale}/print",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "web_route",
-            "path": "routes/web.php",
-            "line": 442,
-            "symbol": "/invoices/{sale}",
-            "classification": "keep-technical"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Actions/Client/Invoices/BuildInvoiceShowPage.php",
-            "line": 31,
-            "symbol": "return Inertia::render('Client/Invoices/Show', $this->props($sale, $client));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Actions/Client/Invoices/BuildInvoicesIndexPage.php",
-            "line": 27,
-            "symbol": "return Inertia::render('Client/Invoices/Index', $this->props($request));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Actions/Client/Product/BuildProductDetailPage.php",
-            "line": 40,
-            "symbol": "return Inertia::render('Client/Products/Show', $this->payload($request, $product));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/AuditLogController.php",
-            "line": 15,
-            "symbol": "return Inertia::render('Admin/Reports/AuditLog', $query->indexPayload($request->validated()));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Auth/AdminUserController.php",
-            "line": 24,
-            "symbol": "return Inertia::render('Admin/Auth/Login', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Brands/BrandController.php",
-            "line": 36,
-            "symbol": "return Inertia::render('Admin/Brands/Index', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Categories/CategoryController.php",
-            "line": 23,
-            "symbol": "return Inertia::render('Admin/Categories/CreateParent');",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Categories/CategoryController.php",
-            "line": 74,
-            "symbol": "return Inertia::render('Admin/Categories/CreateSubcategory', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Classifications/ClassificationCatalogController.php",
-            "line": 46,
-            "symbol": "return Inertia::render('Admin/Classifications/Index', $catalog->indexPayload($request));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Classifications/ClassificationCatalogController.php",
-            "line": 53,
-            "symbol": "return Inertia::render('Admin/Classifications/Show', $catalog->showPayload($category));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Classifications/ClassificationCatalogController.php",
-            "line": 133,
-            "symbol": "return Inertia::render('Admin/Classifications/Values', $catalog->valuesPayload($dimension));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/ClientPurchaseHistoryController.php",
-            "line": 19,
-            "symbol": "return Inertia::render('Admin/Reports/ClientPurchases', $query->indexPayload($request->validated()));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/ClientPurchaseHistoryController.php",
-            "line": 24,
-            "symbol": "return Inertia::render(",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Clients/ClientController.php",
-            "line": 72,
-            "symbol": "return Inertia::render('Admin/Clients/Index', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/DashboardController.php",
-            "line": 38,
-            "symbol": "return Inertia::render('Admin/Dashboard/Index', DashboardViewModel::from($data));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/DashboardController.php",
-            "line": 42,
-            "symbol": "return Inertia::render('Admin/Dashboard/Index', DashboardViewModel::empty());",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/DashboardController.php",
-            "line": 55,
-            "symbol": "return Inertia::render('Admin/Dashboard/Index', DashboardViewModel::from($data));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/DashboardController.php",
-            "line": 59,
-            "symbol": "return Inertia::render('Admin/Dashboard/Index', DashboardViewModel::empty());",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Inventory/InventoryMovementController.php",
-            "line": 20,
-            "symbol": "return Inertia::render('Admin/Reports/MovementsIndex', $query->indexPayload($request->validated()));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Inventory/InventoryMovementController.php",
-            "line": 31,
-            "symbol": "return Inertia::render('Admin/Reports/MovementsShow', $query->showPayload($product));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Orders/OrderController.php",
-            "line": 128,
-            "symbol": "return Inertia::render('Admin/Orders/Index', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Products/ProductClassificationController.php",
-            "line": 36,
-            "symbol": "return Inertia::render('Admin/ProductClassifications/Index', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Products/ProductClassificationController.php",
-            "line": 77,
-            "symbol": "return Inertia::render('Admin/ProductClassifications/Edit', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Products/ProductInventoryController.php",
-            "line": 14,
-            "symbol": "return Inertia::render('Admin/Inventory/Index', $payloads->inventoryIndex($request));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/ReportsController.php",
-            "line": 30,
-            "symbol": "return Inertia::render('Admin/Reports/Index', ReportsIndexViewModel::from($request->validated()));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/ReportsController.php",
-            "line": 39,
-            "symbol": "return Inertia::render('Admin/Reports/Exports', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/ReportsController.php",
-            "line": 50,
-            "symbol": "return Inertia::render('Admin/Reports/SalesPerformance', $request->initialState());",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/ReportsController.php",
-            "line": 76,
-            "symbol": "return Inertia::render('Admin/Reports/ProductSales', $productSales->initialPayload($request));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/ReportsController.php",
-            "line": 84,
-            "symbol": "return Inertia::render('Admin/Reports/CatalogSearch', $catalogSearch->payload($request->query('period')));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/ReportsController.php",
-            "line": 120,
-            "symbol": "return Inertia::render('Admin/Reports/ByCategory', $categorySales->payload($request, $request->validated()));",
-            "classification": "migrate-first"
-        },
-        {
             "kind": "ui_reference",
             "path": "app/Http/Controllers/Admin/Sales/SalesController.php",
-            "line": 38,
-            "symbol": "return Inertia::render('Admin/Sales/Index', SalesIndexViewModel::from($salesQuery->indexPayload($request)));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Sales/SalesController.php",
-            "line": 124,
+            "line": 115,
             "symbol": "return view('admin.sales.print', compact('sale'));",
-            "classification": "migrate-first"
+            "classification": "keep-technical"
         },
         {
             "kind": "ui_reference",
             "path": "app/Http/Controllers/Admin/Sales/SalesController.php",
-            "line": 136,
+            "line": 127,
             "symbol": "return view('admin.sales.invoice', compact('sale'));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Suppliers/SupplierController.php",
-            "line": 24,
-            "symbol": "return Inertia::render('Admin/Suppliers/Index', $suppliers->indexPayload($request->query()));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Suppliers/SupplierOrderController.php",
-            "line": 41,
-            "symbol": "return Inertia::render('Admin/SupplierOrders/Index', SupplierOrderIndexViewModel::from($action->handle($request)));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Suppliers/SupplierOrderController.php",
-            "line": 50,
-            "symbol": "return Inertia::render('Admin/SupplierOrders/Detail', $ordersQuery->detailPayload($order));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Suppliers/XmlPriceDeviationController.php",
-            "line": 50,
-            "symbol": "return Inertia::render('Admin/SupplierOrders/XmlUpload');",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Admin/Suppliers/XmlPriceDeviationController.php",
-            "line": 98,
-            "symbol": "return Inertia::render('Admin/SupplierOrders/XmlReview', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/Auth/LoginController.php",
-            "line": 20,
-            "symbol": "return Inertia::render('Client/Auth/Login', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/Auth/PasswordRecoveryController.php",
-            "line": 24,
-            "symbol": "return Inertia::render('Client/Auth/RecoveryRequest', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/Auth/PasswordRecoveryController.php",
-            "line": 47,
-            "symbol": "return Inertia::render('Client/Auth/VerifyCode', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/Auth/PasswordRecoveryController.php",
-            "line": 70,
-            "symbol": "return Inertia::render('Client/Auth/RecoveryReset', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/Auth/RegisterController.php",
-            "line": 15,
-            "symbol": "return Inertia::render('Client/Auth/Register', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/Auth/VerificationController.php",
-            "line": 27,
-            "symbol": "return Inertia::render('Client/Auth/VerifyCode', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/CartController.php",
-            "line": 32,
-            "symbol": "return Inertia::render('Client/Cart/Index', $buildCartPagePayload->handle($request));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/FavoriteController.php",
-            "line": 34,
-            "symbol": "return Inertia::render('Client/Favorites/Index', $payload);",
-            "classification": "migrate-first"
+            "classification": "keep-technical"
         },
         {
             "kind": "ui_reference",
             "path": "app/Http/Controllers/Client/InvoiceController.php",
-            "line": 54,
+            "line": 22,
             "symbol": "return view('client.invoice-print', compact('sale'));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/LegalController.php",
-            "line": 13,
-            "symbol": "return Inertia::render('Client/Legal/Terms', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/LegalController.php",
-            "line": 23,
-            "symbol": "return Inertia::render('Client/Legal/Privacy', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/LegalController.php",
-            "line": 33,
-            "symbol": "return Inertia::render('Client/Legal/Returns', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/LegalController.php",
-            "line": 42,
-            "symbol": "return Inertia::render('Client/Legal/Contact', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/NotificationController.php",
-            "line": 30,
-            "symbol": "return Inertia::render('Client/Notifications/Index', $notifications->handle($client, $request));",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/ProfileController.php",
-            "line": 24,
-            "symbol": "return Inertia::render('Client/Profile/Index', [",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Http/Controllers/Client/StorefrontController.php",
-            "line": 17,
-            "symbol": "return Inertia::render('Client/Home/Index', StorefrontViewModel::home());",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "app/Services/Client/Catalog/CatalogPayloadBuilder.php",
-            "line": 107,
-            "symbol": "return Inertia::render('Client/Catalog/Index', $props)",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "resources/views/admin/layouts/sales.blade.php",
-            "line": 20,
-            "symbol": "@vite(['resources/css/admin/shell-base.css', 'resources/css/admin/components/page-header.css'])",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "resources/views/admin/layouts/sales.blade.php",
-            "line": 36,
-            "symbol": "@vite(['resources/ts/admin/shell.ts'])",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "resources/views/admin/partials/cf4-theme-scripts.blade.php",
-            "line": 1,
-            "symbol": "@vite(['resources/ts/shared/theme-toggle.ts'])",
-            "classification": "migrate-first"
+            "classification": "keep-technical"
         },
         {
             "kind": "ui_reference",
             "path": "resources/views/admin/sales/invoice.blade.php",
             "line": 6,
-            "symbol": "@vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/invoice-document.css'])",
-            "classification": "migrate-first"
+            "symbol": "@vite(['resources/css/admin/fonts.css', 'resources/css/admin/fontawesome.css', 'resources/css/admin/sales/invoice-document.css'])",
+            "classification": "keep-technical"
         },
         {
             "kind": "ui_reference",
             "path": "resources/views/admin/sales/invoice.blade.php",
             "line": 10,
-            "symbol": "@vite(['resources/ts/admin/sales/sales.ts'])",
-            "classification": "migrate-first"
+            "symbol": "@vite(['resources/ts/admin/sales/invoice-print.ts'])",
+            "classification": "keep-technical"
         },
         {
             "kind": "ui_reference",
             "path": "resources/views/admin/sales/print.blade.php",
             "line": 6,
-            "symbol": "@vite(['resources/css/admin/shell-base.css', 'resources/css/admin/sales/invoice-document.css'])",
-            "classification": "migrate-first"
-        },
-        {
-            "kind": "ui_reference",
-            "path": "resources/views/app.blade.php",
-            "line": 38,
-            "symbol": "@vite(['resources/ts/app.tsx'])",
-            "classification": "migrate-first"
+            "symbol": "@vite(['resources/css/admin/fonts.css', 'resources/css/admin/fontawesome.css', 'resources/css/admin/sales/invoice-document.css'])",
+            "classification": "keep-technical"
         },
         {
             "kind": "ui_reference",
             "path": "resources/views/client/invoice-print.blade.php",
             "line": 21,
             "symbol": "@vite(['resources/ts/client/invoices-page.ts'])",
-            "classification": "migrate-first"
+            "classification": "keep-technical"
         },
         {
             "kind": "ui_reference",
             "path": "resources/views/client/layouts/print.blade.php",
             "line": 8,
             "symbol": "@vite([",
-            "classification": "migrate-first"
+            "classification": "keep-technical"
         },
         {
             "kind": "ui_reference",
             "path": "resources/views/errors/404.blade.php",
             "line": 6,
             "symbol": "@vite(['resources/css/errors/404-page.css'])",
-            "classification": "migrate-first"
+            "classification": "keep-technical"
         },
         {
             "kind": "ui_reference",
             "path": "resources/views/errors/404.blade.php",
             "line": 44,
             "symbol": "@vite(['resources/ts/errors/scenes.ts'])",
-            "classification": "migrate-first"
+            "classification": "keep-technical"
         },
         {
             "kind": "ui_reference",
             "path": "resources/views/errors/419.blade.php",
             "line": 39,
             "symbol": "@vite(['resources/ts/errors/scenes.ts'])",
-            "classification": "migrate-first"
+            "classification": "keep-technical"
         },
         {
             "kind": "ui_reference",
             "path": "resources/views/errors/500.blade.php",
             "line": 31,
             "symbol": "@vite(['resources/ts/errors/scenes.ts'])",
-            "classification": "migrate-first"
+            "classification": "keep-technical"
         },
         {
             "kind": "ui_reference",
             "path": "resources/views/errors/503.blade.php",
             "line": 31,
             "symbol": "@vite(['resources/ts/errors/scenes.ts'])",
-            "classification": "migrate-first"
+            "classification": "keep-technical"
         },
         {
             "kind": "ui_reference",
             "path": "resources/views/errors/layouts/error.blade.php",
             "line": 36,
             "symbol": "@vite([",
-            "classification": "migrate-first"
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/css/shared/cf4-swal.css",
-            "symbol": "resources/css/shared/cf4-swal.css",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 18,
+            "symbol": "/cron/scheduler",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/css/shared/components/buttons.css",
-            "symbol": "resources/css/shared/components/buttons.css",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 19,
+            "symbol": "/jobs/catalog-import",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/css/shared/components/file-upload.css",
-            "symbol": "resources/css/shared/components/file-upload.css",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 20,
+            "symbol": "/jobs/media-conversions",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/css/shared/components/form-layout.css",
-            "symbol": "resources/css/shared/components/form-layout.css",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 21,
+            "symbol": "/jobs/order-maintenance",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/css/shared/scrollbars.css",
-            "symbol": "resources/css/shared/scrollbars.css",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 24,
+            "symbol": "/run-migrations",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/ts/bootstrap.ts",
-            "symbol": "resources/ts/bootstrap.ts",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 25,
+            "symbol": "/run-seeders/{class?}",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/ts/shared/admin-per-page.ts",
-            "symbol": "resources/ts/shared/admin-per-page.ts",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 27,
+            "symbol": "/csrf-token",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/ts/shared/admin-table-responsive.ts",
-            "symbol": "resources/ts/shared/admin-table-responsive.ts",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 36,
+            "symbol": "/auth/google",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/ts/shared/ajax-pagination.ts",
-            "symbol": "resources/ts/shared/ajax-pagination.ts",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 37,
+            "symbol": "/auth/google/callback",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/ts/shared/client-pagination.ts",
-            "symbol": "resources/ts/shared/client-pagination.ts",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 39,
+            "symbol": "/products/suggestions",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/ts/shared/escape-html.ts",
-            "symbol": "resources/ts/shared/escape-html.ts",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 42,
+            "symbol": "/catalog/search-trending",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/ts/shared/hooks/useFlashToasts.ts",
-            "symbol": "resources/ts/shared/hooks/useFlashToasts.ts",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 47,
+            "symbol": "/dashboard/export",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/ts/shared/hooks/useLiveCartCount.ts",
-            "symbol": "resources/ts/shared/hooks/useLiveCartCount.ts",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 48,
+            "symbol": "/inventory/export/{format?}",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/ts/shared/hooks/useNotificationCount.ts",
-            "symbol": "resources/ts/shared/hooks/useNotificationCount.ts",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 49,
+            "symbol": "/sales/export",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/ts/shared/hooks/useRecaptchaV2.ts",
-            "symbol": "resources/ts/shared/hooks/useRecaptchaV2.ts",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 50,
+            "symbol": "/sales/{id}/print",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/ts/shared/hooks/useToast.ts",
-            "symbol": "resources/ts/shared/hooks/useToast.ts",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 51,
+            "symbol": "/sales/{id}/invoice",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/ts/shared/legacy-dom.ts",
-            "symbol": "resources/ts/shared/legacy-dom.ts",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 52,
+            "symbol": "/reports/productos-vendidos/pdf",
+            "classification": "keep-technical"
         },
         {
-            "kind": "asset",
-            "path": "resources/ts/shared/lib/confirm.ts",
-            "symbol": "resources/ts/shared/lib/confirm.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/lib/decorativeImage.ts",
-            "symbol": "resources/ts/shared/lib/decorativeImage.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/lib/imageCompression.ts",
-            "symbol": "resources/ts/shared/lib/imageCompression.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/lib/inertiaErrors.ts",
-            "symbol": "resources/ts/shared/lib/inertiaErrors.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/lib/paginationLinkKey.ts",
-            "symbol": "resources/ts/shared/lib/paginationLinkKey.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/lib/parseJsonResponse.ts",
-            "symbol": "resources/ts/shared/lib/parseJsonResponse.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/types/inertia.d.ts",
-            "symbol": "resources/ts/shared/types/inertia.d.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/shared/types/models.ts",
-            "symbol": "resources/ts/shared/types/models.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/types/catalog.ts",
-            "symbol": "resources/ts/types/catalog.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/types/home.ts",
-            "symbol": "resources/ts/types/home.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/types/invoices.ts",
-            "symbol": "resources/ts/types/invoices.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/types/legacy-client-modules.d.ts",
-            "symbol": "resources/ts/types/legacy-client-modules.d.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/types/legacy-globals.d.ts",
-            "symbol": "resources/ts/types/legacy-globals.d.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/types/notifications.ts",
-            "symbol": "resources/ts/types/notifications.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/types/pagination.ts",
-            "symbol": "resources/ts/types/pagination.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/types/profile.ts",
-            "symbol": "resources/ts/types/profile.ts",
-            "classification": "unknown"
-        },
-        {
-            "kind": "asset",
-            "path": "resources/ts/types/shims/legacy-dynamic-imports.d.ts",
-            "symbol": "resources/ts/types/shims/legacy-dynamic-imports.d.ts",
-            "classification": "unknown"
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 53,
+            "symbol": "/reports/productos-vendidos/excel",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
             "line": 54,
-            "symbol": "/cron/scheduler",
-            "classification": "unknown"
+            "symbol": "/reports/exportaciones/descarga/{slug}",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 56,
-            "symbol": "/jobs/media-conversions",
-            "classification": "unknown"
+            "line": 60,
+            "symbol": "/invoices/{sale}/print",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 57,
-            "symbol": "/jobs/order-maintenance",
-            "classification": "unknown"
+            "line": 67,
+            "symbol": "/",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 68,
+            "symbol": "/catalog",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 69,
+            "symbol": "/product/{id}/{slug?}",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 70,
+            "symbol": "/login",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 71,
+            "symbol": "/auth/login",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
             "line": 72,
-            "symbol": "/admin/logout",
-            "classification": "unknown"
+            "symbol": "/register",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 121,
-            "symbol": "/{productId}",
-            "classification": "unknown"
+            "line": 73,
+            "symbol": "/verify",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 122,
-            "symbol": "/{productId}/json",
-            "classification": "unknown"
+            "line": 74,
+            "symbol": "/recovery",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 187,
-            "symbol": "products",
-            "classification": "unknown"
+            "line": 75,
+            "symbol": "/recovery/verify",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 204,
-            "symbol": "suppliers",
-            "classification": "unknown"
+            "line": 76,
+            "symbol": "/recovery/reset",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 207,
-            "symbol": "brands",
-            "classification": "unknown"
+            "line": 77,
+            "symbol": "/cart",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 222,
-            "symbol": "sales",
-            "classification": "unknown"
+            "line": 78,
+            "symbol": "/favorites",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 230,
-            "symbol": "orders/{id}/ready-to-pickup",
-            "classification": "unknown"
+            "line": 79,
+            "symbol": "/invoices",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 252,
-            "symbol": "/analyse",
-            "classification": "unknown"
+            "line": 80,
+            "symbol": "/invoices/{sale}",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 254,
-            "symbol": "/review",
-            "classification": "unknown"
+            "line": 81,
+            "symbol": "/notifications",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 256,
-            "symbol": "/apply",
-            "classification": "unknown"
+            "line": 82,
+            "symbol": "/profile",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 264,
-            "symbol": "/supplier/details/{id}",
-            "classification": "unknown"
+            "line": 83,
+            "symbol": "/legal/terminos",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 287,
-            "symbol": "/admin/visit-store",
-            "classification": "unknown"
+            "line": 84,
+            "symbol": "/legal/privacidad",
+            "classification": "keep-technical"
         },
         {
             "kind": "web_route",
             "path": "routes/web.php",
-            "line": 361,
-            "symbol": "/logout",
-            "classification": "unknown"
+            "line": 85,
+            "symbol": "/legal/cambios-devoluciones",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 86,
+            "symbol": "/contacto",
+            "classification": "keep-technical"
+        },
+        {
+            "kind": "web_route",
+            "path": "routes/web.php",
+            "line": 87,
+            "symbol": "/admin/login",
+            "classification": "keep-technical"
         }
     ]
 }

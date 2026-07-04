@@ -27,11 +27,14 @@ $technicalViewPatterns = [
     '#^admin/products/.*pdf#',
     '#^admin/reports/.*pdf#',
     '#^admin/sales/(invoice|print|sales-pdf|partials/)#',
+    '#^admin/layouts/sales#',
     '#^client/invoice-print#',
     '#^client/layouts/print#',
+    '#^components/#',
     '#^emails/#',
     '#^errors/#',
     '#^shared/media/#',
+    '#^vendor/pagination/#',
     '#^vendor/pulse/#',
 ];
 
@@ -46,12 +49,16 @@ $legacyViewPatterns = [
 
 $technicalAssetPatterns = [
     '#^resources/css/admin/(dashboard/dashboard-pdf|products/products-pdf|sales/invoice-document)\.css$#',
+    '#^resources/css/admin/(admin-dark-mode|fontawesome|fonts|sidebar|utilities|variables-reset)\.css$#',
+    '#^resources/css/admin/components/admin-table\.css$#',
+    '#^resources/css/client/(fontawesome|fonts|invoice-print|variables-reset)\.css$#',
     '#^resources/css/errors/#',
-    '#^resources/css/shared/(fontawesome-subset|product-media-placeholder)\.css$#',
-    '#^resources/ts/admin/sales/sales\.ts$#',
+    '#^resources/css/shared/(cf4-swal|fontawesome-subset|scrollbars)\.css$#',
+    '#^resources/ts/admin/sales/invoice-print\.ts$#',
+    '#^resources/ts/client/swal\.ts$#',
     '#^resources/ts/client/invoices-page\.ts$#',
     '#^resources/ts/errors/#',
-    '#^resources/ts/shared/(product-media-placeholder|theme-toggle)\.ts$#',
+    '#^resources/ts/shared/(client-pagination|escape-html|legacy-dom)\.ts$#',
 ];
 
 $legacyAssetPatterns = [
@@ -68,6 +75,8 @@ $legacyAssetPatterns = [
 
 $technicalRoutePatterns = [
     '#/internal/vercel#',
+    '#^/cron/scheduler$#',
+    '#^/jobs/(catalog-import|media-conversions|order-maintenance)$#',
     '#/run-migrations#',
     '#/run-seeders#',
     '#/csrf-token#',
@@ -76,6 +85,12 @@ $technicalRoutePatterns = [
     '#/products/suggestions#',
     '#/catalog/(search-trending|heartbeat)#',
     '#/api/#',
+    '#^/$#',
+    '#^/(catalog|login|auth/login|register|verify|recovery|recovery/verify|recovery/reset|cart|favorites|invoices|notifications|profile|contacto)$#',
+    '#^/product/\{id\}/\{slug\?\}$#',
+    '#^/invoices/\{sale\}$#',
+    '#^/legal/(terminos|privacidad|cambios-devoluciones)$#',
+    '#^/admin/login$#',
 ];
 
 $legacyRoutePatterns = [
@@ -222,12 +237,25 @@ $scanReferences = static function (array $files, array $patterns, string $kind) 
                     continue;
                 }
 
+                $rel = $relative($path);
+                $symbol = trim($line);
+                $classification = 'migrate-first';
+
+                if (
+                    preg_match("#return\s+view\s*\(\s*['\"](?:admin\.sales\.|client\.invoice-print)#", $symbol) === 1
+                    || ($kind === 'ui_reference' && str_starts_with($rel, 'resources/views/errors/'))
+                    || ($kind === 'ui_reference' && str_starts_with($rel, 'resources/views/admin/sales/'))
+                    || ($kind === 'ui_reference' && str_starts_with($rel, 'resources/views/client/'))
+                ) {
+                    $classification = 'keep-technical';
+                }
+
                 $add([
                     'kind' => $kind,
-                    'path' => $relative($path),
+                    'path' => $rel,
                     'line' => $index + 1,
-                    'symbol' => trim($line),
-                    'classification' => 'migrate-first',
+                    'symbol' => $symbol,
+                    'classification' => $classification,
                 ]);
 
                 continue 2;

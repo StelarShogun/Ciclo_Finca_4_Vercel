@@ -11,7 +11,6 @@ use App\Actions\Admin\Sales\ReturnAdminSale;
 use App\Actions\Admin\Sales\UpdateAdminSale;
 use App\DTOs\Admin\Sales\AdminSaleData;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\Sales\AdminSalesIndexRequest;
 use App\Http\Requests\Admin\Sales\CancelAdminSaleRequest;
 use App\Http\Requests\Admin\Sales\ReturnAdminSaleRequest;
 use App\Http\Requests\Admin\Sales\StoreAdminSaleRequest;
@@ -21,23 +20,14 @@ use App\Models\Sale;
 use App\Services\Admin\Sales\AdminSalesExportService;
 use App\Services\Admin\Sales\AdminSalesQuery;
 use App\Services\Shared\Security\SensitiveDataMasker;
-use App\ViewModels\Admin\SalesIndexViewModel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
-use Inertia\Inertia;
 
 class SalesController extends Controller
 {
-    public function index(AdminSalesIndexRequest $request, AdminSalesQuery $salesQuery)
-    {
-        Gate::forUser(Auth::guard('admin')->user())->authorize('viewAny', Sale::class);
-
-        return Inertia::render('Admin/Sales/Index', SalesIndexViewModel::from($salesQuery->indexPayload($request)));
-    }
-
     public function historyHeartbeat(Request $request, AdminSalesQuery $salesQuery)
     {
         Gate::forUser(Auth::guard('admin')->user())->authorize('viewAny', Sale::class);

@@ -21,6 +21,7 @@
     "skipLibCheck": true,
     "strict": false,
     "target": "ES2022",
+    "tsBuildInfoFile": ".vite-cache/tsconfig.legacy-dom.tsbuildinfo",
     "types": ["vite/client"]
   },
   "include": [
@@ -28,11 +29,9 @@
     "resources/ts/client/**/*.ts",
     "resources/ts/errors/scenes.ts",
     "resources/ts/errors/scenes/*.ts",
-    "resources/ts/shared/ajax-pagination.ts",
     "resources/ts/shared/client-pagination.ts",
     "resources/ts/shared/legacy-dom.ts",
     "resources/ts/shared/escape-html.ts",
-    "resources/ts/shared/product-media-placeholder.ts",
     "resources/ts/types/legacy-globals.d.ts",
     "resources/ts/types/legacy-client-modules.d.ts"
   ],
