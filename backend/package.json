@@ -4,7 +4,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "build": "vite build --configLoader runner",
         "build:fa-subset": "node scripts/fonts/build-fa-subset.mjs",
         "dev": "vite",
         "typecheck": "tsc -b --force",

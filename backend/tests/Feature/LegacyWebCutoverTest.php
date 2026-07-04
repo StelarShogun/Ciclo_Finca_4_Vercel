@@ -18,19 +18,25 @@ class LegacyWebCutoverTest extends TestCase
     public function test_production_code_has_no_inertia_render_calls(): void
     {
         $backendRoot = dirname(__DIR__, 2);
-        $paths = [
-            $backendRoot.'/app',
-            $backendRoot.'/bootstrap',
-            $backendRoot.'/config',
-            $backendRoot.'/routes',
-            $backendRoot.'/resources',
-        ];
+        $violations = [];
 
-        $cmd = 'rg -n '.escapeshellarg('Inertia::render|HandleInertiaRequests|use Inertia\\\\')
-            .' '.implode(' ', array_map('escapeshellarg', $paths));
+        foreach (['app', 'bootstrap', 'config', 'routes', 'resources'] as $dir) {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($backendRoot.'/'.$dir, \FilesystemIterator::SKIP_DOTS)
+            );
 
-        exec($cmd, $output, $code);
+            foreach ($iterator as $file) {
+                if (! $file->isFile()) {
+                    continue;
+                }
 
-        $this->assertSame(1, $code, implode("\n", $output));
+                $contents = file_get_contents($file->getPathname());
+                if ($contents !== false && preg_match('/Inertia::render|HandleInertiaRequests|use Inertia\\\\/', $contents) === 1) {
+                    $violations[] = str_replace($backendRoot.'/', '', $file->getPathname());
+                }
+            }
+        }
+
+        $this->assertSame([], $violations);
     }
 }

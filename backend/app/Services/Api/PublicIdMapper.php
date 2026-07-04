@@ -203,6 +203,7 @@ final class PublicIdMapper
         foreach ($node as $key => &$value) {
             if (is_array($value)) {
                 $this->scrubUrls($value);
+
                 continue;
             }
             if (! is_string($value) || ! in_array($key, ['url', 'url_parent', 'productUrl', 'catalogUrl'], true)) {
