@@ -25,6 +25,15 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 - Cliente: `/login`, `/register`, `/verify`, `/profile`, `/account`, `/favorites`, `/invoices`, `/notifications`.
 - Admin: `/admin/login`, `/admin` y módulos bajo `/admin/*`.
 
+## Roadmap de calidad
+
+- Seguridad UX: sesión Sanctum clara, logout confiable, recuperación/verificación con feedback de rate limit.
+- Diseño: tokens en `app/globals.css`, contraste AA, focus visible y targets táctiles mínimos.
+- Ecommerce: empty/loading/error states en home, catálogo, producto, carrito y checkout.
+- Admin: tablas, filtros, reportes, acciones destructivas e import progress con componentes existentes antes de sumar librerías.
+- Accesibilidad y movimiento: teclado, labels, landmarks y `prefers-reduced-motion` en animaciones.
+- Performance: imágenes dimensionadas, skeletons de rutas críticas y build limpio.
+
 ## Validación antes de merge
 
 Desde `frontend/`:
