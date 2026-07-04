@@ -33,10 +33,13 @@ export function OtpInput({
 
   useEffect(() => {
     if (!errorSignal) return;
-    setShaking(true);
+    const frame = window.requestAnimationFrame(() => setShaking(true));
     inputsRef.current[0]?.focus();
     const t = setTimeout(() => setShaking(false), 450);
-    return () => clearTimeout(t);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      clearTimeout(t);
+    };
   }, [errorSignal]);
 
   function commit(next: string[], focusIndex?: number) {

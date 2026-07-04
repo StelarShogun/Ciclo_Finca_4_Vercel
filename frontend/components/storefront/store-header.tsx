@@ -58,10 +58,11 @@ function SmartSearch({ className }: { className?: string }) {
   const router = useRouter();
   // Sin useSearchParams: fuerza CSR bail-out y saca el header (con el nombre
   // de la marca) del HTML estático, y el verificador de Google no lo ve.
-  const [search, setSearch] = useState("");
-  useEffect(() => {
-    setSearch(new URLSearchParams(window.location.search).get("search") ?? "");
-  }, []);
+  const [search, setSearch] = useState(() =>
+    typeof window === "undefined"
+      ? ""
+      : new URLSearchParams(window.location.search).get("search") ?? "",
+  );
   const [debounced, setDebounced] = useState("");
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);

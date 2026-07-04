@@ -29,7 +29,7 @@ export default function AdminLoginPage() {
   const [showPwd, setShowPwd] = useState(false);
   const meta = useRecaptchaSiteKey();
   const siteKey = meta.data?.recaptchaSiteKey ?? null;
-  const recaptcha = useRecaptchaV2(siteKey);
+  const { widgetRef, token: recaptchaToken, reset: resetRecaptcha } = useRecaptchaV2(siteKey);
 
   const {
     register,
@@ -40,13 +40,13 @@ export default function AdminLoginPage() {
 
   const mutation = useMutation({
     mutationFn: (values: FormValues) =>
-      adminLogin(siteKey ? { ...values, "g-recaptcha-response": recaptcha.token } : values),
+      adminLogin(siteKey ? { ...values, "g-recaptcha-response": recaptchaToken } : values),
     onSuccess: (me) => {
       toast.success(`Bienvenido, ${me.user.name}`);
       router.push("/admin");
     },
     onError: (error) => {
-      recaptcha.reset();
+      resetRecaptcha();
       if (isAxiosError(error) && error.response?.status === 422) {
         const fieldErrors = error.response.data?.errors ?? {};
         for (const [field, messages] of Object.entries(fieldErrors)) {
@@ -136,14 +136,14 @@ export default function AdminLoginPage() {
               {siteKey && (
                 <div className="flex justify-center">
                   {/* El iframe de reCAPTCHA mide 304px fijos; en pantallas muy angostas se escala. */}
-                  <div ref={recaptcha.widgetRef} className="origin-center max-[359px]:scale-[0.85]" />
+                  <div ref={widgetRef} className="origin-center max-[359px]:scale-[0.85]" />
                 </div>
               )}
 
               <Button
                 type="submit"
                 className="w-full bg-brand-medium hover:bg-brand-medium-dark"
-                disabled={mutation.isPending || Boolean(siteKey && !recaptcha.token)}
+                disabled={mutation.isPending || Boolean(siteKey && !recaptchaToken)}
               >
                 <LogIn className="h-4 w-4" aria-hidden />
                 {mutation.isPending ? "Ingresando…" : "Iniciar sesión"}

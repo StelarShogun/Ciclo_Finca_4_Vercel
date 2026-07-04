@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ciclo Finca 4 Frontend
 
-## Getting Started
+Next.js App Router para la tienda y el panel administrativo. El backend Laravel vive en `../backend` y expone la API usada por `lib/api/*`.
 
-First, run the development server:
+## Comandos
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run lint
+npm test
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Entorno local
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Crear `frontend/.env.local` con la URL pública del backend:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
-## Learn More
+## Superficies
 
-To learn more about Next.js, take a look at the following resources:
+- Tienda: `/`, `/catalog`, `/product/[id]`, `/cart`, `/checkout`.
+- Cliente: `/login`, `/register`, `/verify`, `/profile`, `/account`, `/favorites`, `/invoices`, `/notifications`.
+- Admin: `/admin/login`, `/admin` y módulos bajo `/admin/*`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Validación antes de merge
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Desde `frontend/`:
 
-## Deploy on Vercel
+```bash
+npm run lint
+npm test
+npm run build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Antes de mergear a `Dev`, correr el gate completo desde la raíz:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+./scripts/ci-check-docker.sh
+```

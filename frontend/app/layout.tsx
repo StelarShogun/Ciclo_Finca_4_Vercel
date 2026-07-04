@@ -1,14 +1,6 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-
-const poppins = Poppins({
-  variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Ciclo Finca 4",
@@ -30,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning className={`${poppins.variable} h-full antialiased`}>
+    <html lang="es" suppressHydrationWarning className="h-full antialiased">
       <head>
         {/* Font Awesome (íconos del admin, modales y placeholders por categoría).
             Sin `integrity`: un hash SRI desalineado hace que el navegador (Brave)

@@ -97,6 +97,8 @@ export function ProductForm({
     defaultValues: { status: "active", is_featured: false, ...defaultValues } as FormValues,
   });
 
+  // React Hook Form's watch() is intentionally stateful.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const parentId = watch("parent_category_id");
   const subcategories = options?.subcategoriesByParent[String(parentId)] ?? [];
 
