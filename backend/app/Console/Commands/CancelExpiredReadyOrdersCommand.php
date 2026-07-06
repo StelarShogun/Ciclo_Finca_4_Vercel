@@ -4,12 +4,12 @@ namespace App\Console\Commands;
 
 use App\Models\Sale;
 use App\Services\Admin\Audit\AuditLogger;
-use App\Services\Admin\Inventory\InventoryMovementService;
+use App\Services\Admin\Sales\AdminSalesWorkflowService;
 use App\Services\Admin\Sales\OrderCancellationNotifier;
+use App\Services\Shared\Sales\OrderExpirationPolicy;
 use App\Services\Shared\Security\SensitiveDataMasker;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class CancelExpiredReadyOrdersCommand extends Command
@@ -21,7 +21,8 @@ class CancelExpiredReadyOrdersCommand extends Command
     protected $description = 'Cancela pedidos en estado "listo para recoger" que superaron el plazo configurado sin ser confirmados, devolviendo el stock al inventario.';
 
     public function handle(
-        InventoryMovementService $inventoryService,
+        AdminSalesWorkflowService $workflow,
+        OrderExpirationPolicy $expirationPolicy,
         OrderCancellationNotifier $notifier,
         AuditLogger $auditLogger,
     ): int {
@@ -36,11 +37,11 @@ class CancelExpiredReadyOrdersCommand extends Command
                 return self::FAILURE;
             }
 
-            $cutoff = Carbon::now()->subMinutes($minutes);
+            $cutoff = $expirationPolicy->readyToPickupCutoff($minutes);
             $windowLabel = $minutes.' min';
         } else {
-            $hours = Sale::getReadyToPickupExpirationHours();
-            $cutoff = Carbon::now()->subHours($hours);
+            $hours = $expirationPolicy->readyToPickupExpirationHours();
+            $cutoff = $expirationPolicy->readyToPickupCutoff();
             $windowLabel = $hours.' hora(s)';
         }
         $reason = 'Por vencimiento de encargo';
@@ -73,7 +74,7 @@ class CancelExpiredReadyOrdersCommand extends Command
             $isDryRun,
             $reason,
             $cancelledAt,
-            $inventoryService,
+            $workflow,
             $notifier,
             $auditLogger,
             &$cancelled,
@@ -88,22 +89,11 @@ class CancelExpiredReadyOrdersCommand extends Command
             }
 
             try {
-                DB::transaction(function () use ($sale, $reason, $inventoryService): void {
-                    $cancellationNote = 'Cancelado automáticamente por vencimiento del plazo de recogida.';
-                    $existingNotes = $sale->notes ? $sale->notes."\n" : '';
-                    $sale->update(['status' => 'cancelled', 'notes' => $existingNotes.$cancellationNote]);
-
-                    foreach ($sale->saleItems as $item) {
-                        if ($item->product) {
-                            $inventoryService->recordOrderCancellation(
-                                product: $item->product,
-                                quantity: (int) $item->quantity,
-                                saleId: $sale->sale_id,
-                                reason: $reason,
-                            );
-                        }
-                    }
-                });
+                $workflow->cancelExpiredReadyOrder(
+                    $sale,
+                    $reason,
+                    'Cancelado automáticamente por vencimiento del plazo de recogida.',
+                );
 
                 try {
                     $notifier->notify($sale, $reason, $cancelledAt);

@@ -26,6 +26,7 @@ final readonly class AdminSalesWorkflowService
     public function __construct(
         private InventoryMovementService $inventoryService,
         private OrderCancellationNotifier $cancellationNotifier,
+        private OrderStatusPolicy $statusPolicy,
     ) {}
 
     public function store(array $validated): JsonResponse
@@ -185,26 +186,17 @@ final readonly class AdminSalesWorkflowService
 
     public function destroy(Sale $sale, string $reason): JsonResponse
     {
-        if ($sale->status !== 'pending') {
+        $status = $this->statusPolicy->destroy($sale);
+        if (! $status['allowed']) {
             return response()->json([
                 'success' => false,
-                'message' => 'Solo los pedidos pendientes pueden cancelarse desde esta acción.',
+                'message' => $status['message'],
             ], 400);
         }
 
         DB::transaction(function () use ($sale, $reason): void {
             $sale->update(['status' => 'cancelled']);
-
-            foreach ($sale->saleItems as $item) {
-                if ($item->product) {
-                    $this->inventoryService->recordOrderCancellation(
-                        product: $item->product,
-                        quantity: (int) $item->quantity,
-                        saleId: $sale->sale_id,
-                        reason: $reason,
-                    );
-                }
-            }
+            $this->restoreCancelledOrderStock($sale, $reason);
         });
 
         $this->logAuditAction('sale_cancel', 'Venta cancelada desde endpoint de eliminación.', [
@@ -223,24 +215,9 @@ final readonly class AdminSalesWorkflowService
     public function complete(Sale $sale): JsonResponse
     {
         try {
-            if ($sale->status === 'completed') {
-                return response()->json(['success' => false, 'message' => 'Este pedido ya está confirmado. No puede confirmarse de nuevo.'], 400);
-            }
-
-            if ($sale->status === 'cancelled') {
-                return response()->json(['success' => false, 'message' => 'Este pedido fue rechazado o cancelado. No puede confirmarse.'], 400);
-            }
-
-            if ($sale->status === 'returned') {
-                return response()->json(['success' => false, 'message' => 'No se puede confirmar un pedido devuelto.'], 400);
-            }
-
-            if ($sale->status === 'pending') {
-                return response()->json(['success' => false, 'message' => 'El pedido debe estar en estado "Listo para recoger" antes de confirmarse.'], 400);
-            }
-
-            if ($sale->status !== 'ready_to_pickup') {
-                return response()->json(['success' => false, 'message' => 'Solo los pedidos listos para recoger pueden confirmarse.'], 400);
+            $status = $this->statusPolicy->complete($sale);
+            if (! $status['allowed']) {
+                return response()->json(['success' => false, 'message' => $status['message']], 400);
             }
 
             $invoiceNumber = $sale->invoice_number ?: (new Sale)->generateInvoiceNumber();
@@ -288,11 +265,12 @@ final readonly class AdminSalesWorkflowService
     public function markReadyToPickup(Sale $sale): JsonResponse
     {
         try {
-            if ($sale->status === 'ready_to_pickup') {
+            $status = $this->statusPolicy->markReadyToPickup($sale);
+            if (($status['already_done'] ?? false) === true) {
                 return response()->json([
                     'success' => true,
                     'already_done' => true,
-                    'message' => 'El pedido ya estaba marcado como listo para recoger.',
+                    'message' => $status['message'],
                     'sale' => [
                         'sale_id' => $sale->sale_id,
                         'status' => $sale->status,
@@ -300,10 +278,10 @@ final readonly class AdminSalesWorkflowService
                 ]);
             }
 
-            if ($sale->status !== 'pending') {
+            if (! $status['allowed']) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Solo los pedidos pendientes pueden marcarse como listos para recoger.',
+                    'message' => $status['message'],
                 ], 400);
             }
 
@@ -364,37 +342,16 @@ final readonly class AdminSalesWorkflowService
         try {
             $cancelledAt = now();
 
-            if ($sale->status === 'cancelled') {
-                return response()->json(['success' => false, 'message' => 'Este pedido ya está cancelado o rechazado.'], 400);
-            }
-
-            if ($sale->status === 'completed') {
-                return response()->json(['success' => false, 'message' => 'No se puede rechazar un pedido ya confirmado. Use devolución si aplica.'], 400);
-            }
-
-            if ($sale->status === 'returned') {
-                return response()->json(['success' => false, 'message' => 'Este pedido ya fue devuelto.'], 400);
-            }
-
-            if (! in_array($sale->status, ['pending', 'ready_to_pickup'], true)) {
-                return response()->json(['success' => false, 'message' => 'Solo los pedidos pendientes o listos para recoger pueden rechazarse.'], 400);
+            $status = $this->statusPolicy->cancel($sale);
+            if (! $status['allowed']) {
+                return response()->json(['success' => false, 'message' => $status['message']], 400);
             }
 
             $previousStatus = (string) $sale->status;
 
             DB::transaction(function () use ($sale, $reason): void {
                 $sale->update(['status' => 'cancelled']);
-
-                foreach ($sale->saleItems as $item) {
-                    if ($item->product) {
-                        $this->inventoryService->recordOrderCancellation(
-                            product: $item->product,
-                            quantity: (int) $item->quantity,
-                            saleId: $sale->sale_id,
-                            reason: $reason,
-                        );
-                    }
-                }
+                $this->restoreCancelledOrderStock($sale, $reason);
             });
 
             DeferAfterResponse::run(function () use ($sale, $reason, $cancelledAt): void {
@@ -427,10 +384,11 @@ final readonly class AdminSalesWorkflowService
 
     public function returnSale(Sale $sale, string $reason): JsonResponse
     {
-        if ($sale->status !== 'completed') {
+        $status = $this->statusPolicy->returnSale($sale);
+        if (! $status['allowed']) {
             return response()->json([
                 'success' => false,
-                'message' => 'Solo las ventas confirmadas pueden registrar una devolución.',
+                'message' => $status['message'],
             ], 400);
         }
 
@@ -475,6 +433,36 @@ final readonly class AdminSalesWorkflowService
     private function roundMoney(float $amount): float
     {
         return round($amount, 2);
+    }
+
+    public function cancelExpiredReadyOrder(Sale $sale, string $reason, string $note): void
+    {
+        DB::transaction(function () use ($sale, $reason, $note): void {
+            $existingNotes = $sale->notes ? $sale->notes."\n" : '';
+
+            $sale->update([
+                'status' => 'cancelled',
+                'notes' => $existingNotes.$note,
+            ]);
+
+            $this->restoreCancelledOrderStock($sale, $reason);
+        });
+    }
+
+    private function restoreCancelledOrderStock(Sale $sale, string $reason): void
+    {
+        $sale->loadMissing('saleItems.product');
+
+        foreach ($sale->saleItems as $item) {
+            if ($item->product) {
+                $this->inventoryService->recordOrderCancellation(
+                    product: $item->product,
+                    quantity: (int) $item->quantity,
+                    saleId: $sale->sale_id,
+                    reason: $reason,
+                );
+            }
+        }
     }
 
     private function ensureReviewPlaceholdersForCompletedSale(Sale $sale): void

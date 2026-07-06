@@ -83,6 +83,9 @@
         "phpstan": [
             "@php ./vendor/bin/phpstan analyse --memory-limit=1G"
         ],
+        "eval:orders": [
+            "@php -d zend.assertions=1 -d assert.exception=1 evals/order_inventory_rules.php"
+        ],
         "check": [
             "@lint",
             "@test",

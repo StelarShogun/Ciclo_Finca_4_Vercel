@@ -8,7 +8,6 @@ use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
-use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -77,14 +76,11 @@ class SalesOrderExpiryTest extends TestCase
             'sale_date' => Carbon::parse('2026-06-15 00:00:00', 'UTC'),
         ]);
 
-        $response = $this->actingAs($this->adminUser, 'admin')->get(route('sales.index'));
+        $response = $this->actingAs($this->adminUser, 'admin')->getJson('/api/v1/admin/sales?date_range=custom&date_from=2026-06-15&date_to=2026-06-15');
         $response->assertStatus(200);
-        $response->assertInertia(fn (Assert $page) => $page
-            ->component('Admin/Sales/Index', false)
-            ->where('sales.0.sale_date_label', $sale->adminSaleDateLabel())
-        );
+        $response->assertJsonPath('data.sales.0.sale_date_label', $sale->adminSaleDateLabel());
 
-        $responseJson = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
+        $responseJson = $this->actingAs($this->adminUser, 'admin')->getJson('/api/v1/admin/sales/'.$sale->sale_id);
         $responseJson->assertStatus(200);
         $sale->refresh();
         $responseJson->assertJsonPath('sale.sale_date', $sale->sale_date->toISOString());
@@ -108,7 +104,7 @@ class SalesOrderExpiryTest extends TestCase
             'sale_date' => Carbon::parse('2026-06-05 00:00:00', 'UTC'),
         ]);
 
-        $response = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
+        $response = $this->actingAs($this->adminUser, 'admin')->getJson('/api/v1/admin/sales/'.$sale->sale_id);
         $response->assertStatus(200);
         $response->assertJsonStructure(['sale' => ['days_remaining_until_expiration', 'expires_at', 'is_expiry_warning']]);
         $this->assertSame(20, $sale->fresh()->days_remaining_until_expiration);
@@ -138,7 +134,7 @@ class SalesOrderExpiryTest extends TestCase
         $this->assertGreaterThanOrEqual(0, $daysRemaining);
         $this->assertLessThanOrEqual(30, $daysRemaining);
         // El valor viene del modelo (calculado con now()), por tanto se actualiza en cada carga
-        $response = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
+        $response = $this->actingAs($this->adminUser, 'admin')->getJson('/api/v1/admin/sales/'.$sale->sale_id);
         $response->assertJsonPath('sale.days_remaining_until_expiration', $daysRemaining);
     }
 
@@ -163,7 +159,7 @@ class SalesOrderExpiryTest extends TestCase
         $this->assertTrue($sale->is_expiry_warning);
         $this->assertSame(2, $sale->days_remaining_until_expiration);
 
-        $responseJson = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
+        $responseJson = $this->actingAs($this->adminUser, 'admin')->getJson('/api/v1/admin/sales/'.$sale->sale_id);
         $responseJson->assertOk();
         $responseJson->assertJsonPath('sale.is_expiry_warning', true);
         $responseJson->assertJsonPath('sale.days_remaining_until_expiration', 2);
@@ -214,7 +210,7 @@ class SalesOrderExpiryTest extends TestCase
             'sale_date' => Carbon::parse('2026-06-15 00:00:00', 'UTC'),
         ]);
 
-        $response = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
+        $response = $this->actingAs($this->adminUser, 'admin')->getJson('/api/v1/admin/sales/'.$sale->sale_id);
         $response->assertStatus(200);
         $this->assertSame(30, $sale->days_remaining_until_expiration);
         $response->assertJsonPath('sale.days_remaining_until_expiration', 30);
@@ -238,7 +234,7 @@ class SalesOrderExpiryTest extends TestCase
             'sale_date' => Carbon::parse('2026-05-17 00:00:00', 'UTC'),
         ]);
 
-        $response = $this->actingAs($this->adminUser, 'admin')->getJson(route('sales.show', $sale->sale_id));
+        $response = $this->actingAs($this->adminUser, 'admin')->getJson('/api/v1/admin/sales/'.$sale->sale_id);
         $response->assertStatus(200);
         $this->assertSame(1, $sale->days_remaining_until_expiration);
         $response->assertJsonPath('sale.days_remaining_until_expiration', 1);
@@ -266,8 +262,8 @@ class SalesOrderExpiryTest extends TestCase
 
         $this->artisan('sales:delete-expired')->assertSuccessful();
 
-        $response = $this->actingAs($this->adminUser, 'admin')->get(route('sales.index'));
+        $response = $this->actingAs($this->adminUser, 'admin')->getJson('/api/v1/admin/sales?status=all&date_range=custom&date_from=2026-05-01&date_to=2026-06-15');
         $response->assertStatus(200);
-        $response->assertDontSee($invoice, false);
+        $response->assertJsonMissing(['invoice_number' => $invoice]);
     }
 }

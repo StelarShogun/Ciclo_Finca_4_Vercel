@@ -3,13 +3,13 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPublicId;
+use App\Services\Shared\Sales\OrderExpirationPolicy;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * @property-read Collection<int, SaleItem> $saleItems
@@ -188,31 +188,12 @@ class Sale extends Model
 
     public static function getOrderExpirationDays(): int
     {
-        return Cache::remember(AppSetting::cacheKeyOrderExpirationDays(), 3600, function () {
-            $fromDb = AppSetting::getStoredOrderExpirationDays();
-            if ($fromDb !== null && $fromDb > 0) {
-                return $fromDb;
-            }
-
-            return max(1, (int) config('sales.order_expiration_days', 30));
-        });
+        return app(OrderExpirationPolicy::class)->orderExpirationDays();
     }
 
     public static function getReadyToPickupExpirationHours(): int
     {
-        return Cache::remember(AppSetting::cacheKeyReadyToPickupExpirationHours(), 3600, function () {
-            $fromHours = AppSetting::getStoredReadyToPickupExpirationHours();
-            if ($fromHours !== null && $fromHours > 0) {
-                return max(1, $fromHours);
-            }
-
-            $fromDays = AppSetting::getStoredReadyToPickupExpirationDays();
-            if ($fromDays !== null && $fromDays > 0) {
-                return max(1, $fromDays * 24);
-            }
-
-            return max(1, (int) config('sales.ready_to_pickup_expiration_hours', 72));
-        });
+        return app(OrderExpirationPolicy::class)->readyToPickupExpirationHours();
     }
 
     /**
@@ -225,63 +206,22 @@ class Sale extends Model
 
     public function getExpiresAtAttribute(): Carbon
     {
-        $days = static::getOrderExpirationDays();
-
-        return $this->sale_date->copy()->addDays($days);
+        return app(OrderExpirationPolicy::class)->expiresAt($this);
     }
 
     public function getPickupExpiresAtAttribute(): ?Carbon
     {
-        if ($this->ready_at === null) {
-            return null;
-        }
-
-        return $this->ready_at->copy()->addHours(static::getReadyToPickupExpirationHours());
+        return app(OrderExpirationPolicy::class)->pickupExpiresAt($this);
     }
 
     public function isPickupExpired(): bool
     {
-        if ($this->ready_at === null) {
-            return false;
-        }
-
-        $expires = $this->pickup_expires_at;
-
-        return $expires !== null && now()->greaterThanOrEqualTo($expires);
+        return app(OrderExpirationPolicy::class)->isPickupExpired($this);
     }
 
     public function getPickupTimeRemainingLabelAttribute(): string
     {
-        if ($this->ready_at === null) {
-            return '';
-        }
-
-        $expires = $this->pickup_expires_at;
-        if ($expires === null) {
-            return '';
-        }
-
-        $now = now();
-        if ($now->greaterThanOrEqualTo($expires)) {
-            return 'Vencido';
-        }
-
-        $secondsLeft = max(0, $expires->getTimestamp() - $now->getTimestamp());
-        $hoursLeft = (int) floor($secondsLeft / 3600);
-
-        if ($hoursLeft >= 24) {
-            $daysLeft = (int) floor($hoursLeft / 24);
-
-            return $daysLeft === 1 ? '1 día restante' : "{$daysLeft} días restantes";
-        }
-
-        if ($hoursLeft >= 1) {
-            return $hoursLeft === 1 ? '1 hora restante' : "{$hoursLeft} horas restantes";
-        }
-
-        $minutesLeft = max(1, (int) ceil($secondsLeft / 60));
-
-        return "{$minutesLeft} min restantes";
+        return app(OrderExpirationPolicy::class)->pickupTimeRemainingLabel($this);
     }
 
     public function getDaysRemainingUntilExpirationAttribute(): int
@@ -305,10 +245,7 @@ class Sale extends Model
 
     public function scopeNotExpired(Builder $query): Builder
     {
-        $days = static::getOrderExpirationDays();
-        $limitDate = now()->subDays($days);
-
-        return $query->where('sale_date', '>=', $limitDate);
+        return $query->where('sale_date', '>=', app(OrderExpirationPolicy::class)->orderExpirationCutoff());
     }
 
     /** Admin tables/modals: d/m/Y H:i in app timezone. */
