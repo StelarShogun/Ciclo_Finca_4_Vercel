@@ -120,7 +120,7 @@ class ProductDetailPayloadBuilder
                 ->values()
                 ->all(),
             'favoriteConfig' => [
-                'toggleUrl' => route('clients.favorites.toggle'),
+                'toggleUrl' => '/api/v1/favorites/toggle',
                 'loginUrl' => route('login.show'),
             ],
             'seo' => [

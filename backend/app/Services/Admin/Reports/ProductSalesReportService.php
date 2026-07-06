@@ -54,7 +54,7 @@ final class ProductSalesReportService
             ->orderBy($sortColumn, $dir)
             ->paginate($perPage, ['*'], 'page', $page);
 
-        $paginator->setPath(route('admin.reports.product-sales.table'));
+        $paginator->setPath('/api/v1/admin/reports/product-sales');
         $paginator->appends([
             'period' => $period,
             'sort' => $sort,

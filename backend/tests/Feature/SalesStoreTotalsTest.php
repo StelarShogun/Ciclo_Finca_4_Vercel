@@ -74,7 +74,7 @@ class SalesStoreTotalsTest extends TestCase
             ],
         ];
 
-        $res = $this->postJson(route('sales.store'), $payload);
+        $res = $this->postJson('/api/v1/admin/sales', $payload);
         $res->assertStatus(200)->assertJsonPath('success', true);
 
         $sale = Sale::query()->latest('sale_id')->first();
@@ -106,7 +106,7 @@ class SalesStoreTotalsTest extends TestCase
             'status' => 'active',
         ]);
 
-        $res = $this->postJson(route('sales.store'), [
+        $res = $this->postJson('/api/v1/admin/sales', [
             'payment_method' => 'cash',
             'discount' => 150,
             'items' => [

@@ -83,7 +83,7 @@ class CF4160OrderStatusResponseTimeTest extends TestCase
         $startedAt = microtime(true);
 
         $response = $this->actingAs($admin, 'admin')
-            ->patchJson(route('admin.orders.ready-to-pickup', $sale->sale_id));
+            ->postJson("/api/v1/admin/sales/{$sale->sale_id}/ready");
 
         $elapsed = microtime(true) - $startedAt;
 
@@ -151,7 +151,7 @@ class CF4160OrderStatusResponseTimeTest extends TestCase
         $startedAt = microtime(true);
 
         $response = $this->actingAs($admin, 'admin')
-            ->postJson("/sales/{$sale->sale_id}/complete");
+            ->postJson("/api/v1/admin/sales/{$sale->sale_id}/complete");
 
         $elapsed = microtime(true) - $startedAt;
 

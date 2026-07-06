@@ -81,7 +81,7 @@ class OrderReadyToPickupNotificationTest extends TestCase
 
         $this->actingAs($admin, 'admin');
 
-        $response = $this->patchJson(route('admin.orders.ready-to-pickup', $sale->sale_id));
+        $response = $this->postJson("/api/v1/admin/sales/{$sale->sale_id}/ready");
         $response->assertOk();
         $this->assertTrue($response->json('success'));
 

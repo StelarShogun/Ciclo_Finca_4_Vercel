@@ -48,7 +48,7 @@ class ClientProductApiTest extends TestCase
         $this->getJson("/api/v1/products/{$product->public_id}")
             ->assertOk()
             ->assertJsonStructure(['data' => ['product' => ['id', 'name', 'priceFormatted', 'carouselSlides', 'canBuy'], 'specs', 'reviews', 'relatedProducts', 'taxonomy']])
-            ->assertJsonPath('data.product.id', (int) $product->product_id)
+            ->assertJsonPath('data.product.id', (string) $product->public_id)
             ->assertJsonPath('data.product.name', 'Trek Marlin Test');
     }
 

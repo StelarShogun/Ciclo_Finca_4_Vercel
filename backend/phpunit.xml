@@ -8,8 +8,19 @@
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>
-        <testsuite name="Feature">
-            <directory>tests/Feature</directory>
+        <testsuite name="ApiFeature">
+            <directory>tests/Feature/Api</directory>
+            <directory>tests/Feature/Internal</directory>
+            <directory>tests/Feature/Monitoring</directory>
+        </testsuite>
+        <testsuite name="OrderInventoryFeature">
+            <file>tests/Feature/CF4160OrderStatusResponseTimeTest.php</file>
+            <file>tests/Feature/CF455CancelExpiredReadyOrdersTest.php</file>
+            <file>tests/Feature/OrderCancellationNotificationTest.php</file>
+            <file>tests/Feature/OrderExpirationSettingsTest.php</file>
+            <file>tests/Feature/OrderReadyToPickupNotificationTest.php</file>
+            <file>tests/Feature/SalesOrderExpiryTest.php</file>
+            <file>tests/Feature/SalesStoreTotalsTest.php</file>
         </testsuite>
     </testsuites>
     <source>

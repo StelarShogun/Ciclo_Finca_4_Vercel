@@ -146,7 +146,7 @@ class OrderCancellationNotificationTest extends TestCase
         Auth::guard('web')->login($webClient);
         Auth::guard('admin')->login($adminUser);
 
-        $response = $this->postJson(route('sales.cancel', $sale->sale_id), [
+        $response = $this->postJson("/api/v1/admin/sales/{$sale->sale_id}/cancel", [
             'reason' => 'Cancelado por administración en prueba automatizada.',
         ]);
         $response->assertStatus(200)->assertJsonPath('success', true);

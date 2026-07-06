@@ -24,7 +24,7 @@ class StorefrontApiTest extends TestCase
     #[Group('seguimiento8-aaron')]
     public function test_product_suggestions_returns_empty_for_short_search(): void
     {
-        $response = $this->getJson('/api/products/suggestions?search=a');
+        $response = $this->getJson('/api/v1/catalog/suggestions?q=a');
 
         $response->assertOk();
         $response->assertJson([
@@ -36,7 +36,7 @@ class StorefrontApiTest extends TestCase
     #[Group('seguimiento8-arturo')]
     public function test_catalog_heartbeat_returns_version_key(): void
     {
-        $response = $this->getJson(route('api.catalog.heartbeat'));
+        $response = $this->getJson('/api/v1/catalog/heartbeat');
 
         $response->assertOk();
         $response->assertJsonStructure(['version']);
@@ -47,7 +47,7 @@ class StorefrontApiTest extends TestCase
     #[Group('seguimiento8-darwin')]
     public function test_search_trending_returns_expected_json_shape(): void
     {
-        $response = $this->getJson(route('api.catalog.search-trending', ['limit' => 5]));
+        $response = $this->getJson('/catalog/search-trending?limit=5');
 
         $response->assertOk();
         $response->assertJsonStructure([

@@ -71,7 +71,7 @@ final class ClientPurchaseHistoryQuery
                 ->map(fn (object $order): array => $this->showOrderRow($order))
                 ->values()
                 ->all(),
-            'listUrl' => route('admin.reports.client-purchases', $listQuery),
+            'listUrl' => '/api/v1/admin/reports/client-purchases'.($listQuery === [] ? '' : '?'.http_build_query($listQuery)),
         ];
     }
 
@@ -104,7 +104,7 @@ final class ClientPurchaseHistoryQuery
             ->values();
 
         $paginator = new LengthAwarePaginator($rows, $total, $perPage, $page, [
-            'path' => route('admin.reports.client-purchases.table'),
+            'path' => '/api/v1/admin/reports/client-purchases',
             'pageName' => 'page',
         ]);
         $paginator->appends(array_merge($filters, ['per_page' => $perPage]));
