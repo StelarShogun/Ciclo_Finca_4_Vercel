@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node lib/otp.test.ts && node lib/pagination.test.ts"
+    "test": "node lib/otp.test.ts && node lib/pagination.test.ts && node lib/frontend-helpers.test.ts && node features/cart/cart-calculations.test.ts && node features/admin-orders/order-actions.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

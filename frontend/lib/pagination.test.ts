@@ -1,7 +1,7 @@
 // Gate test: `node lib/pagination.test.ts` (Node >= 22, type stripping).
 import assert from "node:assert/strict";
 
-import { ELLIPSIS, clampPage, pageWindow } from "./pagination.ts";
+import { ELLIPSIS, buildPaginationState, clampPage, pageWindow } from "./pagination.ts";
 
 // Pocas páginas: todas, sin ellipsis.
 assert.deepEqual(pageWindow(1, 1), [1]);
@@ -35,5 +35,15 @@ assert.equal(clampPage("0", 3, 10), 1);
 assert.equal(clampPage("99", 3, 10), 10);
 assert.equal(clampPage("abc", 3, 10), 3);
 assert.equal(clampPage(" 7 ", 1, 10), 7);
+
+assert.deepEqual(buildPaginationState(25, 3, 10), {
+  currentPage: 3,
+  lastPage: 3,
+  total: 25,
+  perPage: 10,
+  start: 20,
+  end: 30,
+});
+assert.equal(buildPaginationState(0, 99, 10).currentPage, 1);
 
 console.log("pagination.test.ts OK");

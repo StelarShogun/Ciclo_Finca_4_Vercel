@@ -34,3 +34,18 @@ export function clampPage(raw: string, current: number, last: number): number {
   if (Number.isNaN(parsed)) return current;
   return Math.max(1, Math.min(last, parsed));
 }
+
+export function buildPaginationState(totalItems: number, currentPage: number, perPage: number) {
+  const lastPage = Math.max(1, Math.ceil(totalItems / perPage));
+  const safePage = Math.min(Math.max(1, currentPage), lastPage);
+  const start = (safePage - 1) * perPage;
+
+  return {
+    currentPage: safePage,
+    lastPage,
+    total: totalItems,
+    perPage,
+    start,
+    end: start + perPage,
+  };
+}
